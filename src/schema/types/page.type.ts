@@ -27,7 +27,6 @@ export const PageType = new GraphQLObjectType({
     },
     name: { type: GraphQLString },
     icon: { type: GraphQLString },
-    gridOptions: { type: GraphQLJSON },
     visible: {
       type: GraphQLBoolean,
       resolve(parent) {

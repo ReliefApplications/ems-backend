@@ -38,7 +38,6 @@ type EditPageArgs = {
   permissions?: any;
   icon?: string;
   visible?: boolean;
-  gridOptions?: any;
 };
 
 /**
@@ -54,13 +53,11 @@ export default {
     icon: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
     visible: { type: GraphQLBoolean },
-    gridOptions: { type: GraphQLJSON },
   },
   async resolve(parent, args: EditPageArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;
-      console.log('args', args);
       /**
        * Check if at least one of the required arguments is provided.
        * Else, send error.
@@ -89,7 +86,6 @@ export default {
       const update = {
         ...(args.name && { name: args.name }),
         ...(args.icon && { icon: args.icon }),
-        ...(args.gridOptions && { gridOptions: args.gridOptions }),
       };
 
       // Updating permissions

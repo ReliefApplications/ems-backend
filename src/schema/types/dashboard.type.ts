@@ -30,6 +30,7 @@ export const DashboardType = new GraphQLObjectType({
       },
     },
     buttons: { type: GraphQLJSON },
+    gridOptions: { type: GraphQLJSON },
     permissions: {
       type: AccessType,
       async resolve(parent, args, context) {

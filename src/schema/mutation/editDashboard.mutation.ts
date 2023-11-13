@@ -32,6 +32,7 @@ type EditDashboardArgs = {
   name?: string;
   showFilter?: boolean;
   buttons?: DashboardButtonArgs[];
+  gridOptions?: any;
 };
 
 /**
@@ -46,6 +47,7 @@ export default {
     name: { type: GraphQLString },
     showFilter: { type: GraphQLBoolean },
     buttons: { type: new GraphQLList(ButtonActionInputType) },
+    gridOptions: { type: GraphQLJSON },
   },
   async resolve(parent, args: EditDashboardArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -78,7 +80,8 @@ export default {
         args.structure && { structure: args.structure },
         args.name && { name: args.name },
         !isNil(args.showFilter) && { showFilter: args.showFilter },
-        args.buttons && { buttons: args.buttons }
+        args.buttons && { buttons: args.buttons },
+        args.gridOptions && { gridOptions: args.gridOptions }
       );
       dashboard = await Dashboard.findByIdAndUpdate(args.id, updateDashboard, {
         new: true,
@@ -87,6 +90,7 @@ export default {
       const update = {
         modifiedAt: dashboard.modifiedAt,
         name: dashboard.name,
+        gridOptions: dashboard.gridOptions,
       };
       await Page.findOneAndUpdate({ content: dashboard.id }, update);
       await Step.findOneAndUpdate({ content: dashboard.id }, update);
