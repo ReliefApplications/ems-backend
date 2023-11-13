@@ -1,3 +1,18 @@
+## [2.1.10](https://github.com/ReliefApplications/oort-backend/compare/v2.1.9...v2.1.10) (2023-11-12)
+
+
+### Bug Fixes
+
+* record history would not correctly display changes on resources for some users ([f2cfa5f](https://github.com/ReliefApplications/oort-backend/commit/f2cfa5f7d9f10613b2fc22d1a46ae65bce098bd3))
+
+## [2.1.9](https://github.com/ReliefApplications/oort-backend/compare/v2.1.8...v2.1.9) (2023-11-10)
+
+
+### Bug Fixes
+
+* could not revert past history versions ([d9999a1](https://github.com/ReliefApplications/oort-backend/commit/d9999a1666d12e1282c28b334ce91b0b24cf8142))
+* some requests could not be cached due to incorrect method check ([61e44c7](https://github.com/ReliefApplications/oort-backend/commit/61e44c7a2c03160a81d4d3d7fcaa05e43ec1dbb6))
+
 ## [2.1.8](https://github.com/ReliefApplications/oort-backend/compare/v2.1.7...v2.1.8) (2023-11-07)
 
 
