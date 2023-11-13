@@ -54,7 +54,6 @@ const proxyAPIRequest = async (req: Request, res: Response, api, path) => {
             jwtDecode<any>(req.headers.authorization).name
           }:${url}/${requestBody}`;
     const cacheData = client ? await client.get(cacheKey) : null;
-    console.log(cacheData);
     if (cacheData) {
       logger.info(`REDIS: get key : ${url}`);
       res.status(200).send(JSON.parse(cacheData));
