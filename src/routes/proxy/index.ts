@@ -38,10 +38,9 @@ const proxyAPIRequest = async (req: Request, res: Response, api, path) => {
       await client.connect();
     }
     //Take into account the request body when storing data
-    const requestBody = CryptoJS.AES.encrypt(
-      JSON.stringify(req.body),
-      config.get('encryption.key')
-    ).toString();
+    const requestBody = CryptoJS.SHA256(JSON.stringify(req.body)).toString(
+      CryptoJS.enc.Hex
+    );
     // Add / between endpoint and path, and ensure that double slash are removed
     const url = `${api.endpoint.replace(/\$/, '')}/${path}`.replace(
       /([^:]\/)\/+/g,
