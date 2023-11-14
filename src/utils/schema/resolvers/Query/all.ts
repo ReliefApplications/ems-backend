@@ -130,9 +130,9 @@ const getFilterByResources = (
         aggregationList.push(
           {
             $addFields: {
-              ['data.cities_lived_id']: {
+              [`data.${resourcesName}_id`]: {
                 $map: {
-                  input: '$data.cities_lived',
+                  input: `$data.${resourcesName}`,
                   in: {
                     $toObjectId: '$$this',
                   },
@@ -143,9 +143,9 @@ const getFilterByResources = (
           {
             $lookup: {
               from: 'records',
-              localField: 'data.cities_lived_id',
+              localField: `data.${resourcesName}_id`,
               foreignField: '_id',
-              as: 'data._cities_lived',
+              as: `data._${resourcesName}`,
             },
           },
           {
