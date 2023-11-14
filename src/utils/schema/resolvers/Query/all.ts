@@ -124,7 +124,7 @@ const getFilterByResources = (
         fields.find(
           (x) => x.name === elt.field || x.name === elt.field.split('.')[0]
         )?.type || '';
-      if (type === 'resources' && elt.operator === 'includes') {
+      if (type === 'resources' && elt.operator === 'contains') {
         const resourcesName = elt.field.split('.')[0];
         const resourcesFieldName = elt.field.split('.')[1];
         aggregationList.push(
