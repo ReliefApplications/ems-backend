@@ -81,90 +81,6 @@ const defaultRecordAggregation = [
 ];
 
 /**
- * List of all filters with unnested format
- */
-let filterList = [];
-
-/**
- * Updates the filterList with the filter data
- *
- * @param filter filter returned from the getFilter function
- * @returns updated filterList
- */
-const findFilter = (filter: any) => {
-  filter.map((elt) => {
-    if (elt.filters) {
-      findFilter(elt.filters);
-    } else {
-      filterList.push(elt);
-    }
-  });
-  return filterList;
-};
-
-/**
- * Aggregation used to lookup data in order to filter by Resources question
- *
- * @param filter filter returned from the getFilter question
- * @param resourcesField list of all fields of type 'Resources'
- * @param fields list of all fields
- * @returns the aggregation
- */
-const getFilterByResources = (
-  filter: any,
-  resourcesField: any[],
-  fields: any[]
-) => {
-  // If no resource/resources question, no need to aggregate
-  if (filter && resourcesField.length > 0) {
-    const resourcesFilterList = findFilter(filter.filters);
-    const aggregationList = [];
-    resourcesFilterList.map((elt) => {
-      const type: string =
-        fields.find(
-          (x) => x.name === elt.field || x.name === elt.field.split('.')[0]
-        )?.type || '';
-      if (type === 'resources' && elt.operator === 'contains') {
-        const resourcesName = elt.field.split('.')[0];
-        const resourcesFieldName = elt.field.split('.')[1];
-        aggregationList.push(
-          {
-            $addFields: {
-              [`data.${resourcesName}_id`]: {
-                $map: {
-                  input: `$data.${resourcesName}`,
-                  in: {
-                    $toObjectId: '$$this',
-                  },
-                },
-              },
-            },
-          },
-          {
-            $lookup: {
-              from: 'records',
-              localField: `data.${resourcesName}_id`,
-              foreignField: '_id',
-              as: `data._${resourcesName}`,
-            },
-          },
-          {
-            $match: {
-              [`data._${resourcesName}`]: {
-                $elemMatch: { [`data.${resourcesFieldName}`]: elt.value },
-              },
-            },
-          }
-        );
-      }
-    });
-    return aggregationList;
-  } else {
-    return [];
-  }
-};
-
-/**
  * Build At aggregation, filtering out items created after this date, and using version that matches date
  *
  * @param at Date
@@ -330,8 +246,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         usedFields.push(sortField);
       }
 
-      filterList = [];
-
       // Get list of needed resources for the aggregation
       const resourcesToQuery = [
         ...new Set(usedFields.map((x) => x.split('.')[0])),
@@ -481,7 +395,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       );
 
       // Filter from the query definition
-      const mongooseFilter = getFilter(filter, fields, context);
+      const mongooseFilter = getFilter(filter, fields, context, 'data.', false);
 
       // Add the basic records filter
       const basicFilters = {
@@ -574,9 +488,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         const aggregation = await Record.aggregate([
           { $match: basicFilters },
           ...(at ? getAtAggregation(new Date(at)) : []),
-          ...(filter
-            ? getFilterByResources(filter, resourcesFields, fields)
-            : []),
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
           ...defaultRecordAggregation,
@@ -685,10 +596,20 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             })
           )
         );
+        const filterForRelatedRecords = getFilter(
+          filter,
+          fields,
+          context,
+          'data.',
+          true
+        );
         // Fetch records
         const relatedRecords = await Record.find(
           {
             $or: [{ _id: { $in: relatedIds } }, ...relatedFilters],
+            $and: filterForRelatedRecords.$and
+              ? filterForRelatedRecords.$and
+              : [],
             archived: { $ne: true },
           },
           projection
@@ -742,7 +663,13 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         // Create the filter for each style
         const recordsIds = items.map((x) => x.id || x._id);
         for (const style of styles) {
-          const styleFilter = getFilter(style.filter, fields, context);
+          const styleFilter = getFilter(
+            style.filter,
+            fields,
+            context,
+            'data.',
+            false
+          );
           // Get the records corresponding to the style filter
           const itemsToStyle = await Record.aggregate([
             {
