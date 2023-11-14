@@ -1,3 +1,10 @@
+## [2.1.11](https://github.com/ReliefApplications/oort-backend/compare/v2.1.10...v2.1.11) (2023-11-14)
+
+
+### Bug Fixes
+
+* incorrect metadata for createdBy / lastUpdatedBy fields ([#829](https://github.com/ReliefApplications/oort-backend/issues/829)) ([c6892f3](https://github.com/ReliefApplications/oort-backend/commit/c6892f35b24d6c2b350599275de82280f9c5630a))
+
 ## [2.1.10](https://github.com/ReliefApplications/oort-backend/compare/v2.1.9...v2.1.10) (2023-11-12)
 
 
