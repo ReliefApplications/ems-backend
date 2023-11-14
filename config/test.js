@@ -4,15 +4,6 @@
  */
 
 module.exports = {
-  database: {
-    provider: 'docker',
-    prefix: 'mongodb',
-    host: 'localhost',
-    port: '27017',
-    name: 'test',
-    user: 'root',
-    pass: '123',
-  },
   auth: {
     url: 'https://id-dev.oortcloud.tech/auth',
     clientId: 'ci-client',

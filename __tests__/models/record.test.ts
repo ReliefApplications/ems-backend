@@ -149,7 +149,7 @@ describe('Record models tests', () => {
     }).save();
 
     const isDelete = await Record.deleteOne({ _id: record._id });
-    expect(isDelete.ok).toEqual(1);
+    expect(isDelete.acknowledged).toEqual(true);
     expect(isDelete.deletedCount).toEqual(1);
   });
 });

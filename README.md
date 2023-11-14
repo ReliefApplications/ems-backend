@@ -29,10 +29,26 @@ In order to execute tests locally, you can execute the command:
 docker-compose -f docker-compose.test.yml run test-server npm run test
 ```
 
+Or this command:
+```
+npm run test
+```
+
 It is also possible to run tests on a single file, by passing it as a parameter:
 ```
 docker-compose -f docker-compose.test.yml run test-server npm run test -- <path_to_file>
 ```
+
+Or with this command:
+```
+npm run test -- <path_to_file>
+```
+
+You can also limit the tests to one specific folder. For example:
+```
+npm run test -- --testPathPattern=models
+```
+Will only run tests in the **models** folder.
 
 # RabbitMQ
 
