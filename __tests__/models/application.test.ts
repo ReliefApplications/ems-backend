@@ -71,7 +71,7 @@ describe('Application models tests', () => {
     }).save();
 
     const isDelete = await Application.deleteOne({ _id: applicationData._id });
-    expect(isDelete.ok).toEqual(1);
+    expect(isDelete.acknowledged).toEqual(true);
     expect(isDelete.deletedCount).toEqual(1);
   });
 });

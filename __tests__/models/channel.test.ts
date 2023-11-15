@@ -31,7 +31,7 @@ describe('Channel models tests', () => {
       const channelData = {
         title: '',
       };
-      expect(async () => new Channel(channelData).save()).rejects.toThrow(
+      await expect(async () => new Channel(channelData).save()).rejects.toThrow(
         Error
       );
     }
@@ -50,7 +50,7 @@ describe('Channel models tests', () => {
     }
 
     const isDelete = await Channel.deleteOne({ _id: channelData._id });
-    expect(isDelete.ok).toEqual(1);
+    expect(isDelete.acknowledged).toEqual(true);
     expect(isDelete.deletedCount).toEqual(1);
   });
 });

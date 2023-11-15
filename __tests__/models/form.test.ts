@@ -186,7 +186,7 @@ describe('Form models tests', () => {
     }
 
     const isDelete = await Form.deleteOne({ _id: formData._id });
-    expect(isDelete.ok).toEqual(1);
+    expect(isDelete.acknowledged).toEqual(true);
     expect(isDelete.deletedCount).toEqual(1);
   });
 });

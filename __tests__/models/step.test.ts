@@ -83,7 +83,7 @@ describe('Step models tests', () => {
     }).save();
 
     const isDelete = await Step.deleteOne({ _id: step._id });
-    expect(isDelete.ok).toEqual(1);
+    expect(isDelete.acknowledged).toEqual(true);
     expect(isDelete.deletedCount).toEqual(1);
   });
 
@@ -99,7 +99,7 @@ describe('Step models tests', () => {
     }).save();
 
     const isDelete = await Step.deleteOne({ _id: step._id });
-    expect(isDelete.ok).toEqual(1);
+    expect(isDelete.acknowledged).toEqual(true);
     expect(isDelete.deletedCount).toEqual(1);
   });
 });

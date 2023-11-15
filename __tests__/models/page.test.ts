@@ -130,7 +130,7 @@ describe('Page models tests', () => {
     }).save();
 
     const isDelete = await Page.deleteOne({ _id: page._id });
-    expect(isDelete.ok).toEqual(1);
+    expect(isDelete.acknowledged).toEqual(true);
     expect(isDelete.deletedCount).toEqual(1);
   });
 
@@ -150,7 +150,7 @@ describe('Page models tests', () => {
     }).save();
 
     const isDelete = await Page.deleteOne({ _id: page._id });
-    expect(isDelete.ok).toEqual(1);
+    expect(isDelete.acknowledged).toEqual(true);
     expect(isDelete.deletedCount).toEqual(1);
   });
 });

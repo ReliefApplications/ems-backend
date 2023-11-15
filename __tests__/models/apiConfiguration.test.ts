@@ -60,4 +60,26 @@ describe('ApiConfiguration models tests', () => {
       ).rejects.toThrow(Error);
     }
   });
+
+  test('test with incorrect api configuration authType field', async () => {
+    for (let i = 0; i < 1; i++) {
+      const apiConfig = {
+        name: faker.random.word(),
+        status: status.pending,
+        authType: faker.random.word(), // Invalid value
+        endpoint: faker.internet.url(),
+        graphQLEndpoint: `${faker.internet.url()}/graphql`,
+        pingUrl: 'PR',
+        settings: {
+          authTargetUrl: faker.internet.url(),
+          apiClientID: faker.datatype.uuid(),
+          safeSecret: faker.datatype.uuid(),
+          scope: faker.random.word(),
+        },
+      };
+      await expect(
+        new ApiConfiguration(apiConfig).save()
+      ).rejects.toThrowError();
+    }
+  });
 });
