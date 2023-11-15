@@ -40,14 +40,19 @@ export default {
 
       const user = context.user;
       // Get data
-      const record: Record = await Record.findById(args.id).populate({
-        path: 'versions',
-        model: 'Version',
-        populate: {
-          path: 'createdBy',
-          model: 'User',
-        },
-      });
+      const record: Record = await Record.findById(args.id)
+        .populate({
+          path: 'versions',
+          model: 'Version',
+          populate: {
+            path: 'createdBy',
+            model: 'User',
+          },
+        })
+        .populate({
+          path: 'resource',
+          model: 'Resource',
+        });
       if (!record) {
         throw new GraphQLError(
           context.i18next.i18n.t('common.errors.permissionNotGranted')
@@ -61,7 +66,7 @@ export default {
       }
 
       // Check ability
-      const ability = await extendAbilityForRecords(user, form);
+      const ability = await extendAbilityForRecords(user);
       if (ability.cannot('read', record) || ability.cannot('read', form)) {
         throw new GraphQLError(
           context.i18next.i18n.t('common.errors.permissionNotGranted')
