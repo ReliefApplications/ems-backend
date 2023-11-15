@@ -119,9 +119,13 @@ export default {
 
       // Duplicate forms with new resource id
       for (const form of forms) {
+        // Add a random string at the end of the name to make it unique
+        const randomString = Math.random().toString(36).substring(7);
+        let newNameForm = form.name.split('-')[0] + '-' + randomString;
+
         const duplicatedForm = new Form({
-          name: newName,
-          graphQLTypeName: newName,
+          name: newNameForm,
+          graphQLTypeName: newNameForm,
           core: form.core,
           status: 'pending',
           permissions: [],
