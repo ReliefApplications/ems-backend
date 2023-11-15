@@ -55,6 +55,11 @@ export const extractFilterFields = (filter: any): string[] => {
   return fields;
 };
 
+let conjunctedSearch: string;
+conjunctedSearch = '';
+let conjunctedSearchUsed: boolean;
+conjunctedSearchUsed = false;
+
 /**
  * Transforms query filter into mongo filter.
  *
@@ -334,7 +339,15 @@ const buildMongoFilter = (
             if (MULTISELECT_TYPES.includes(type)) {
               return { [fieldName]: { $all: value } };
             } else {
-              return { [fieldName]: { $regex: value, $options: 'i' } };
+              if (fieldName == 'data._globalSearch') {
+                conjunctedSearch += `"${value}" `;
+                conjunctedSearchUsed = true;
+                return;
+              } else {
+                conjunctedSearch += `${value} `;
+                conjunctedSearchUsed = true;
+                return { [fieldName]: { $regex: value, $options: 'i' } };
+              }
             }
           }
           case 'doesnotcontain': {
@@ -405,8 +418,13 @@ export default (
   context?: any,
   prefix = 'data.'
 ) => {
+  conjunctedSearch = '';
+  conjunctedSearchUsed = false;
   const expandedFields = fields.concat(DEFAULT_FIELDS);
   const mongooseFilter =
     buildMongoFilter(filter, expandedFields, context, prefix) || {};
+  if (conjunctedSearchUsed) {
+    mongooseFilter?.$and.unshift({ $text: { $search: `${conjunctedSearch}` } });
+  }
   return mongooseFilter;
 };

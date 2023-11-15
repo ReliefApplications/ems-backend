@@ -1,7 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { Form, Record, ReferenceData, User } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
-import { decodeCursor, encodeCursor } from '@schema/types';
+import { encodeCursor } from '@schema/types';
 import getReversedFields from '../../introspection/getReversedFields';
 import getFilter, {
   FLAT_DEFAULT_FIELDS,
@@ -30,7 +30,7 @@ const DEFAULT_FIRST = 25;
 const projectAggregation = [
   {
     $project: {
-      id: 1,
+      id: { $toString: '$_id' },
       _id: 1,
       incrementalId: 1,
       _form: {
@@ -45,7 +45,7 @@ const projectAggregation = [
       createdAt: 1,
       _createdBy: {
         user: {
-          id: 1,
+          id: { $toString: '$_createdBy.user._id' },
           _id: 1,
           name: 1,
           username: 1,
@@ -54,28 +54,13 @@ const projectAggregation = [
       modifiedAt: 1,
       _lastUpdatedBy: {
         user: {
-          id: 1,
+          id: { $toString: '$_lastUpdatedBy.user._id' },
           _id: 1,
           name: 1,
           username: 1,
         },
       },
       data: 1,
-    },
-  },
-];
-
-/** Default aggregation common to all records to make lookups for default fields. */
-const defaultRecordAggregation = [
-  { $addFields: { id: { $toString: '$_id' } } },
-  {
-    $addFields: {
-      '_createdBy.user.id': { $toString: '$_createdBy.user._id' },
-    },
-  },
-  {
-    $addFields: {
-      '_lastUpdatedBy.user.id': { $toString: '$_lastUpdatedBy.user._id' },
     },
   },
 ];
@@ -216,7 +201,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       sortOrder = 'asc',
       first = DEFAULT_FIRST,
       skip = 0,
-      afterCursor,
       filter = {},
       display = false,
       styles = [],
@@ -396,7 +380,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       // Add the basic records filter
       const basicFilters = {
         $or: [{ resource: id }, { form: id }],
-        archived: { $ne: true },
+        archived: { $not: { $eq: true } },
       };
 
       // Additional filter from the user permissions
@@ -413,68 +397,42 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // Finally putting all filters together
       const filters = {
-        $and: [mongooseFilter, permissionFilters],
+        $and: [basicFilters, mongooseFilter, permissionFilters],
       };
 
       // === RUN AGGREGATION TO FETCH ITEMS ===
       let items: Record[] = [];
       let totalCount = 0;
 
-      // If we're using skip parameter, include them into the aggregation
-      if (skip || skip === 0) {
-        const aggregation = await Record.aggregate([
-          { $match: basicFilters },
-          ...(at ? getAtAggregation(at) : []),
-          ...linkedRecordsAggregation,
-          ...linkedReferenceDataAggregation,
-          ...defaultRecordAggregation,
-          ...calculatedFieldsAggregation,
-          { $match: filters },
-          ...projectAggregation,
-          ...(await getSortAggregation(sortField, sortOrder, fields, context)),
-          {
-            $facet: {
-              items: [{ $skip: skip }, { $limit: first + 1 }],
-              totalCount: [
-                {
-                  $count: 'count',
-                },
-              ],
-            },
-          },
-        ]);
-        items = aggregation[0].items;
-        totalCount = aggregation[0]?.totalCount[0]?.count || 0;
-      } else {
-        // If we're using cursors, get pagination filters  <---- DEPRECATED ??
-        const cursorFilters = afterCursor
-          ? {
-              _id: {
-                $gt: decodeCursor(afterCursor),
-              },
-            }
-          : {};
-        const aggregation = await Record.aggregate([
-          { $match: basicFilters },
-          ...linkedRecordsAggregation,
-          ...linkedReferenceDataAggregation,
-          ...defaultRecordAggregation,
-          ...(await getSortAggregation(sortField, sortOrder, fields, context)),
-          { $match: { $and: [filters, cursorFilters] } },
-          {
-            $facet: {
-              results: [{ $limit: first + 1 }],
-              totalCount: [
-                {
-                  $count: 'count',
-                },
-              ],
-            },
-          },
-        ]);
-        items = aggregation[0].items;
-        totalCount = aggregation[0]?.totalCount[0]?.count || 0;
-      }
+      const sort = await getSortAggregation(
+        sortField,
+        sortOrder,
+        fields,
+        context
+      );
+      const pipeline = [
+        { $match: filters },
+        ...(at ? getAtAggregation(at) : []),
+        ...linkedRecordsAggregation,
+        ...linkedReferenceDataAggregation,
+        ...calculatedFieldsAggregation,
+        ...sort,
+      ];
+      const countAggregation = await Record.aggregate([
+        { $match: filters },
+        ...(at ? getAtAggregation(at) : []),
+        ...linkedRecordsAggregation,
+        ...linkedReferenceDataAggregation,
+        ...calculatedFieldsAggregation,
+      ]).count('count');
+      const itemsAggregation = await Record.aggregate(pipeline)
+        .skip(skip)
+        .limit(first + 1)
+        .facet({
+          items: [...projectAggregation],
+        });
+      items = itemsAggregation[0].items;
+      totalCount = countAggregation[0]?.count || 0;
 
       // Deal with resource/resources questions on THIS form
       const resourcesFields: any[] = fields.reduce((arr, field) => {

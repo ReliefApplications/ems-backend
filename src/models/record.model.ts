@@ -115,6 +115,13 @@ recordSchema.index(
   { unique: true, partialFilterExpression: { resource: { $exists: true } } }
 );
 recordSchema.index({ resource: 1 });
+recordSchema.index({ '$**': 'text' });
+recordSchema.index({ 'data.$**': 1 });
+recordSchema.index({ archived: 1, form: 1, resource: 1, createdAt: 1 });
+recordSchema.index({ resource: 1, archived: 1 });
+recordSchema.index({ createdAt: 1 });
+recordSchema.index({ form: 1 });
+recordSchema.index({ incrementalId: 1, form: 1 });
 
 // handle cascading deletion
 addOnBeforeDeleteMany(recordSchema, async (records) => {
@@ -122,7 +129,6 @@ addOnBeforeDeleteMany(recordSchema, async (records) => {
   if (versions) await Version.deleteMany({ _id: { $in: versions } });
 });
 
-recordSchema.index({ incrementalId: 1, form: 1 });
 recordSchema.plugin(accessibleRecordsPlugin);
 recordSchema.plugin(accessibleFieldsPlugin);
 
