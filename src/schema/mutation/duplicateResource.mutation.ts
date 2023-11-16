@@ -85,10 +85,13 @@ export default {
 
       // Get all resources names and check if the name of the duplicated resource is already used
       // If it is, add a number at the end of the name to make it unique.
-      const existingNames = await Resource.find().distinct('name');
+      const existingNames = await Resource.find({
+        name: { $regex: `^${originalResource.name}` },
+      });
       let newName = originalResource.name;
       let count = 1;
-      while (existingNames.includes(newName)) {
+      // eslint-disable-next-line @typescript-eslint/no-loop-func
+      while (existingNames.find((r) => r.name === newName)) {
         newName = `${originalResource.name} (${count++})`;
       }
 
@@ -117,15 +120,26 @@ export default {
       // Get all forms with the resource id
       const forms = await Form.find({ resource: originalResource._id });
 
+      // Get forms that start with the same name of each form
+      const existingForms = await Form.find({
+        name: {
+          $regex: `^${forms.map((f) => f.name).join('|')}`,
+        },
+      });
+
       // Duplicate forms with new resource id
       for (const form of forms) {
-        // Add a random string at the end of the name to make it unique
-        const randomString = Math.random().toString(36).substring(7);
-        const newNameForm = form.name.split('-')[0] + '-' + randomString;
+        // Add the number at the end of the name to make it unique
+        let newNameForm = form.name;
+        let formNumber = 1;
+        // eslint-disable-next-line @typescript-eslint/no-loop-func
+        while (existingForms.find((r) => r.name === newNameForm)) {
+          newNameForm = `${form.name} (${formNumber++})`;
+        }
 
         const duplicatedForm = new Form({
           name: newNameForm,
-          graphQLTypeName: newNameForm,
+          graphQLTypeName: Form.getGraphQLTypeName(newNameForm),
           core: form.core,
           status: 'pending',
           permissions: [],
