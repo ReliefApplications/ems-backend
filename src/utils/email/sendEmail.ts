@@ -75,7 +75,9 @@ export const sendEmail = async (params: {
     attachments?: any[];
   };
 }) => {
-  Object.assign(params.locals, { locale: config.get('email.locale') || 'en' });
+  Object.assign(params.locals || {}, {
+    locale: config.get('email.locale') || 'en',
+  });
   // Split the email in multiple emails with 50 recipients max per email
   const recipients = params.message.to;
   const recipientsChunks: Address[][] = [];
