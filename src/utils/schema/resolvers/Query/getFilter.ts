@@ -135,6 +135,13 @@ const buildMongoFilter = (
       };
     }
 
+    // Special filter on id, to be used in context filters
+    if (filter.field === '__ID__') {
+      return {
+        _id: new mongoose.Types.ObjectId(filter.value),
+      };
+    }
+
     // Filter on forms, using form id
     if (['form', 'lastUpdateForm'].includes(filter.field)) {
       if (mongoose.isValidObjectId(filter.value)) {
