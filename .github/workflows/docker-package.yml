@@ -20,7 +20,7 @@ on:
     types: [published]
 
 env:
-  IMAGE_NAME: safe_api
+  IMAGE_NAME: oort_api
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.client_payload.ref || github.ref }}
