@@ -18,6 +18,7 @@ import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { flatten, get, isArray, set } from 'lodash';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { getExpressionFromString } from '@utils/aggregation/expressionFromString';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -372,15 +373,17 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       fields
         .filter((f) => f.isCalculated && shouldAddCalculatedFieldToPipeline(f))
-        .forEach((f) =>
-          calculatedFieldsAggregation.push(
-            ...buildCalculatedFieldPipeline(
-              f.expression,
-              f.name,
-              context.timeZone
-            )
-          )
-        );
+        .forEach((f) => {
+          if (typeof f.expression === 'string') {
+            calculatedFieldsAggregation.push(
+              ...buildCalculatedFieldPipeline(
+                f.expression,
+                f.name,
+                context.timeZone
+              )
+            );
+          }
+        });
 
       // Build linked records aggregations
       const linkedReferenceDataAggregation = flatten(
@@ -614,6 +617,14 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           },
           projection
         );
+        // Get all calculated fields
+        let calculatedFieldsList = [];
+        calculatedFieldsList = fields.filter((f) => f.isCalculated);
+        calculatedFieldsList.map((elt) => {
+          if (typeof elt.expression === 'string') {
+            elt.expression = getExpressionFromString(elt.expression);
+          }
+        });
         // Update items
         for (const item of itemsToUpdate) {
           if (item.record) {
@@ -631,6 +642,16 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             sortRecords(records, item.field.arguments);
             if (records) {
               item.item._relatedRecords[item.field.name] = records;
+              // Get calculated fields that use this record field and size operation
+              const relatedCalculatedSizeFields = calculatedFieldsList.filter(
+                (f) =>
+                  f.expression.operator.value === item.field.name &&
+                  f.expression.operation === 'size'
+              );
+              // Set the calculated field value to number of records
+              relatedCalculatedSizeFields.map((elt) => {
+                item.item.data[elt.name] = records.length;
+              });
             }
           }
           if (item.field.entityName) {
