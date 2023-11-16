@@ -62,6 +62,7 @@ export const extractFilterFields = (filter: any): string[] => {
  * @param fields list of structure fields
  * @param context request context
  * @param prefix prefix to access field
+ * @param shouldReturnResources handles resources questions or not
  * @returns Mongo filter.
  */
 const buildMongoFilter = (
@@ -485,6 +486,7 @@ const buildMongoFilter = (
  * @param fields list of structure fields
  * @param context request context
  * @param prefix prefix to access field
+ * @param shouldReturnResources handles resources questions or not
  * @returns Mongo filter.
  */
 export default (
