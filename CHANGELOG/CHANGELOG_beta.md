@@ -1,3 +1,24 @@
+# [2.2.0-beta.7](https://github.com/ReliefApplications/oort-backend/compare/v2.2.0-beta.6...v2.2.0-beta.7) (2023-11-09)
+
+
+### Bug Fixes
+
+* editRecord would not correctly check non editable fields ([#815](https://github.com/ReliefApplications/oort-backend/issues/815)) ([5ca7717](https://github.com/ReliefApplications/oort-backend/commit/5ca771719a84e1eee9771293ac4e979bb39e9849))
+* in some edge cases, dashboard structure would be incorrectly passed in graphql ([#817](https://github.com/ReliefApplications/oort-backend/issues/817)) ([2a5866e](https://github.com/ReliefApplications/oort-backend/commit/2a5866eca15f0fd26a2c24378a46a3fac50f3490))
+
+
+### Features
+
+* Ability to save draft record ([#802](https://github.com/ReliefApplications/oort-backend/issues/802)) ([d1b1e3b](https://github.com/ReliefApplications/oort-backend/commit/d1b1e3b263b5db5211edfc8e7c3deee05f2517bf))
+
+# [2.2.0-beta.6](https://github.com/ReliefApplications/oort-backend/compare/v2.2.0-beta.5...v2.2.0-beta.6) (2023-11-07)
+
+
+### Features
+
+* add auth code APIs ([#789](https://github.com/ReliefApplications/oort-backend/issues/789)) ([20ff5d8](https://github.com/ReliefApplications/oort-backend/commit/20ff5d8b9732b5882a98f9440411c8d69ef47986))
+* can now hide application menu by default ([2519344](https://github.com/ReliefApplications/oort-backend/commit/2519344d7bffa0f761599da8846a8db5ecf60270))
+
 # [2.2.0-beta.5](https://github.com/ReliefApplications/oort-backend/compare/v2.2.0-beta.4...v2.2.0-beta.5) (2023-10-30)
 
 

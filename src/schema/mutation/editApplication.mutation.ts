@@ -24,6 +24,7 @@ type EditApplicationArgs = {
   id: string | Types.ObjectId;
   description?: string;
   sideMenu?: boolean;
+  hideMenu?: boolean;
   name?: string;
   status?: StatusType;
   pages?: string[] | Types.ObjectId[];
@@ -43,6 +44,7 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     description: { type: GraphQLString },
     sideMenu: { type: GraphQLBoolean },
+    hideMenu: { type: GraphQLBoolean },
     name: { type: GraphQLString },
     status: { type: StatusEnumType },
     pages: { type: new GraphQLList(GraphQLID) },
@@ -96,7 +98,8 @@ export default {
         args.contextualFilterPosition && {
           contextualFilterPosition: args.contextualFilterPosition,
         },
-        !isNil(args.sideMenu) && { sideMenu: args.sideMenu }
+        !isNil(args.sideMenu) && { sideMenu: args.sideMenu },
+        !isNil(args.hideMenu) && { hideMenu: args.hideMenu }
       );
       application = await Application.findOneAndUpdate(filters, update, {
         new: true,
