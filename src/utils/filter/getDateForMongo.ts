@@ -33,7 +33,7 @@ export const getDateForMongo = (value: any): string => {
   } else {
     date = new Date(value);
   }
-  
+
   // Return the ISO string, if valid date, if not return empty string
   return isNaN(date.getTime()) ? '' : date.toISOString();
 };
