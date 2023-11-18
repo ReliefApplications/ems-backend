@@ -60,8 +60,9 @@ describe('Record models tests', () => {
       const inputData = {
         incrementalId: incrementalId,
         form: formId,
+        _form: form.toObject(),
         resource: resourceId,
-        archived: 'false',
+        archived: false,
         data: records,
         createdBy: user._id,
       };
@@ -73,14 +74,16 @@ describe('Record models tests', () => {
   });
 
   test('test record with duplicate incrementalId', async () => {
+    const form = await Form.findOne();
     const duplicateRecord = {
       incrementalId: incrementalId,
       form: formId,
+      _form: form.toObject(),
       resource: resourceId,
       data: data,
     };
     expect(async () => new Record(duplicateRecord).save()).rejects.toThrowError(
-      'E11000 duplicate key error collection: test.records index: incrementalId_1_resource_1 dup key'
+      'E11000 duplicate key error collection: citest.records index: incrementalId_1_resource_1 dup key'
     );
   });
 
@@ -92,7 +95,7 @@ describe('Record models tests', () => {
       const inputData = {
         form: form._id,
         resource: resource._id,
-        archived: 'false',
+        archived: false,
       };
       expect(async () => new Record(inputData).save()).rejects.toThrow(Error);
     }
@@ -142,8 +145,9 @@ describe('Record models tests', () => {
         '-D0000000' +
         faker.datatype.number({ min: 1000000 }),
       form: form._id,
+      _form: form.toObject(),
       resource: resource._id,
-      archived: 'false',
+      archived: false,
       data: faker.science.unit(),
       versions: versions,
     }).save();
@@ -151,5 +155,60 @@ describe('Record models tests', () => {
     const isDelete = await Record.deleteOne({ _id: record._id });
     expect(isDelete.acknowledged).toEqual(true);
     expect(isDelete.deletedCount).toEqual(1);
+  });
+
+  test('should validate record with correct data', async () => {
+    const user = await User.findOne();
+    const form = await Form.findOne();
+    const resource = await Resource.findOne();
+
+    // Crie um registro com dados corretos
+    const recordData = {
+      incrementalId:
+        new Date().getFullYear() +
+        '-D0000000' +
+        faker.datatype.number({ min: 1000000 }),
+      form: form._id,
+      _form: form.toObject(),
+      resource: resource._id,
+      archived: false,
+      data: {
+        field_1: faker.vehicle.vehicle(),
+        field_2: [faker.word.adjective(), faker.word.adjective()],
+        field_3: faker.word.adjective(),
+        user_question: [user._id],
+        user_ques_two: [user._id],
+      },
+      createdBy: user._id,
+    };
+
+    const record = await new Record(recordData).save();
+    expect(record._id).toBeDefined();
+  });
+
+  test('should not validate record without incrementalId', async () => {
+    const form = await Form.findOne();
+    const resource = await Resource.findOne();
+    const user = await User.findOne();
+
+    // Tente criar um registro sem incrementalId
+    const recordData = {
+      form: form._id,
+      _form: form.toObject(),
+      resource: resource._id,
+      archived: false,
+      data: {
+        field_1: faker.vehicle.vehicle(),
+        field_2: [faker.word.adjective(), faker.word.adjective()],
+        field_3: faker.word.adjective(),
+        user_question: [user._id],
+        user_ques_two: [user._id],
+      },
+      createdBy: user._id,
+    };
+
+    await expect(new Record(recordData).save()).rejects.toThrowError(
+      'Record validation failed: incrementalId: Path `incrementalId` is required.'
+    );
   });
 });

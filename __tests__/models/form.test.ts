@@ -3,6 +3,8 @@ import { faker } from '@faker-js/faker';
 import { status } from '@const/enumTypes';
 import { camelCase, toUpper } from 'lodash';
 
+jest.mock('@utils/files/deleteFolder'); // Mock deleteFolder module
+jest.mock('@services/logger.service'); // Mock logger module
 /**
  * Test Form Model.
  */
@@ -16,6 +18,11 @@ beforeAll(async () => {
 
 describe('Form models tests', () => {
   let form: Form;
+
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
   test('test form with correct data', async () => {
     for (let i = 0; i < 1; i++) {
       const formName = faker.random.alpha(10);
@@ -188,5 +195,30 @@ describe('Form models tests', () => {
     const isDelete = await Form.deleteOne({ _id: formData._id });
     expect(isDelete.acknowledged).toEqual(true);
     expect(isDelete.deletedCount).toEqual(1);
+  });
+
+  test('test hasDuplicate function with existing form', async () => {
+    const existingForm = await Form.findOne();
+    const hasDuplicate = await Form.hasDuplicate(
+      existingForm.graphQLTypeName,
+      existingForm._id
+    );
+    expect(hasDuplicate).toEqual(false);
+  });
+
+  test('test hasDuplicate function with non-existing form', async () => {
+    const nonExistingGraphQLTypeName = 'NonExistingGraphQLTypeName';
+    const hasDuplicate = await Form.hasDuplicate(nonExistingGraphQLTypeName);
+    expect(hasDuplicate).toEqual(false);
+  });
+
+  test('test hasDuplicate function with non-existing form and id', async () => {
+    const nonExistingGraphQLTypeName = 'NonExistingGraphQLTypeName';
+    const nonExistingId = '60c9c8572a7f5d0019c86a7f'; // Replace with a non-existing id
+    const hasDuplicate = await Form.hasDuplicate(
+      nonExistingGraphQLTypeName,
+      nonExistingId
+    );
+    expect(hasDuplicate).toEqual(false);
   });
 });

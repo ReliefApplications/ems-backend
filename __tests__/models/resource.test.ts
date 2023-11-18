@@ -1,7 +1,6 @@
 import { Resource, Form, Record } from '@models';
 import { faker } from '@faker-js/faker';
 import { status } from '@const/enumTypes';
-
 /**
  * Test Resource Model.
  */
@@ -147,7 +146,7 @@ describe('Resource models tests', () => {
       name: resource.name,
     };
     expect(async () => new Resource(inputData).save()).rejects.toThrowError(
-      'E11000 duplicate key error collection: test.resources index: name_1 dup key'
+      'E11000 duplicate key error collection: citest.resources index: name_1 dup key'
     );
   });
 
@@ -170,6 +169,7 @@ describe('Resource models tests', () => {
         '-D0000000' +
         faker.datatype.number({ min: 1000000 }),
       form: form._id,
+      _form: form.toObject(),
       resource: resourceData._id,
       archived: 'false',
       data: faker.science.unit(),
@@ -178,5 +178,43 @@ describe('Resource models tests', () => {
     const isDelete = await Resource.deleteOne({ _id: resourceData._id });
     expect(isDelete.acknowledged).toEqual(true);
     expect(isDelete.deletedCount).toEqual(1);
+  });
+
+  test('test resource delete with forms and records', async () => {
+    const formName = faker.random.alpha(10);
+    const resourceData = await new Resource({
+      name: formName,
+    }).save();
+
+    const form = await new Form({
+      name: formName,
+      graphQLTypeName: formName,
+      status: status.pending,
+      resource: resourceData._id,
+    }).save();
+
+    await new Record({
+      incrementalId:
+        new Date().getFullYear() +
+        '-D0000000' +
+        faker.datatype.number({ min: 1000000 }),
+      form: form._id,
+      _form: form.toObject(),
+      resource: resourceData._id,
+      archived: 'false',
+      data: faker.science.unit(),
+    }).save();
+
+    const isDelete = await Resource.deleteOne({ _id: resourceData._id });
+    expect(isDelete.acknowledged).toEqual(true);
+    expect(isDelete.deletedCount).toEqual(1);
+
+    const formCount = await Form.countDocuments({ resource: resourceData._id });
+    expect(formCount).toEqual(0);
+
+    const recordCount = await Record.countDocuments({
+      resource: resourceData._id,
+    });
+    expect(recordCount).toEqual(0);
   });
 });

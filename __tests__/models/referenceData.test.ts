@@ -110,8 +110,62 @@ describe('ReferenceData models tests', () => {
         fields: [faker.word.adjective(), faker.word.adjective()],
       };
       expect(async () => new ReferenceData(inputData).save()).rejects.toThrow(
-        Error
+        'E11000 duplicate key error collection: citest.referencedatas index: name_1 dup key'
       );
     }
+  });
+
+  test('should check for duplicate by name', async () => {
+    // Create a ReferenceData document with a specific name
+    const referenceData = new ReferenceData({
+      name: 'TestReferenceData', // Provide a name that doesn't exist in the collection
+      graphQLTypeName: 'SomeType',
+      // ... other fields ...
+    });
+
+    // Save the initial document to the collection
+    await referenceData.save();
+
+    // Attempt to create a new ReferenceData document with the same name
+    const duplicateReferenceData = new ReferenceData({
+      name: 'TestReferenceData', // Provide the same name to check for duplication
+      graphQLTypeName: 'SomeType',
+      // ... other fields ...
+    });
+
+    // Expect the save operation to be rejected with a duplicate key error
+    await expect(duplicateReferenceData.save()).rejects.toThrowError(
+      'E11000 duplicate key error collection: citest.referencedatas index: name_1 dup key'
+    );
+  });
+
+  test('should check for duplicate by graphQLTypeName', async () => {
+    // Create a ReferenceData with a specific graphQLTypeName
+    const referenceData1 = await new ReferenceData({
+      name: 'TestReferenceData',
+      graphQLTypeName: 'TestReferenceData_ref',
+      type: referenceDataType.graphql,
+    }).save();
+
+    // Try to create a new ReferenceData with the same graphQLTypeName
+    await expect(
+      new ReferenceData({
+        name: 'AnotherReferenceData',
+        graphQLTypeName: 'TestReferenceData_ref',
+        type: referenceDataType.graphql,
+      }).save()
+    ).rejects.toThrowError(/duplicate key error/);
+
+    // Try to create a new ReferenceData with a different graphQLTypeName
+    await expect(
+      new ReferenceData({
+        name: 'TestReferenceData2',
+        graphQLTypeName: 'TestReferenceData2_ref',
+        type: referenceDataType.graphql,
+      }).save()
+    ).resolves.toBeTruthy();
+
+    // Cleanup after tests
+    await ReferenceData.deleteOne({ _id: referenceData1._id });
   });
 });

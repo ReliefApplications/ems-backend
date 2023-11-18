@@ -102,4 +102,36 @@ describe('Step models tests', () => {
     expect(isDelete.acknowledged).toEqual(true);
     expect(isDelete.deletedCount).toEqual(1);
   });
+
+  test('test cascading deletion for steps', async () => {
+    // Create a step with a dashboard
+    const dashboard = await new Dashboard({
+      name: faker.random.word(),
+      content: faker.random.alphaNumeric(10),
+    }).save();
+
+    const step = await new Step({
+      name: faker.random.word(),
+      icon: faker.random.word(),
+      type: contentType.dashboard,
+      content: dashboard._id,
+    }).save();
+
+    // Create a workflow with the step
+    const workflow = await new Workflow({
+      name: faker.random.word(),
+      steps: [step._id],
+    }).save();
+
+    // Delete the step
+    await Step.deleteOne({ _id: step._id });
+
+    // Check if the associated dashboard is deleted
+    const dashboardExists = await Dashboard.exists({ _id: dashboard._id });
+    expect(dashboardExists).toBeFalsy();
+
+    // Check if the step is removed from the workflow
+    const updatedWorkflow = await Workflow.findById(workflow._id);
+    expect(updatedWorkflow?.steps).not.toContainEqual(step._id);
+  });
 });

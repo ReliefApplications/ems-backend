@@ -370,4 +370,35 @@ describe('Layer models tests', () => {
     };
     expect(async () => new Layer(inputData).save()).rejects.toThrow(Error);
   });
+  test('should remove references from sublayers when deleting a layer', async () => {
+    const sublayer1 = await new Layer({ name: 'Sublayer 1' }).save();
+    const sublayer2 = await new Layer({ name: 'Sublayer 2' }).save();
+
+    const layer = await new Layer({
+      name: 'Main Layer',
+      sublayers: [sublayer1._id, sublayer2._id],
+    }).save();
+
+    expect(layer.sublayers).toHaveLength(2);
+    expect(layer.sublayers).toContainEqual(sublayer1._id);
+    expect(layer.sublayers).toContainEqual(sublayer2._id);
+
+    await Layer.deleteOne({ _id: layer._id });
+
+    const updatedSublayer1 = await Layer.findById(sublayer1._id);
+    const updatedSublayer2 = await Layer.findById(sublayer2._id);
+
+    expect(updatedSublayer1.sublayers).not.toContainEqual(layer._id);
+    expect(updatedSublayer2.sublayers).not.toContainEqual(layer._id);
+  });
+
+  test('should handle deletion when no sublayers are present', async () => {
+    const layer = await new Layer({ name: 'Main Layer' }).save();
+
+    expect(layer.sublayers).toHaveLength(0);
+    await Layer.deleteOne({ _id: layer._id });
+
+    const deletedLayer = await Layer.findById(layer._id);
+    expect(deletedLayer).toBeNull();
+  });
 });
