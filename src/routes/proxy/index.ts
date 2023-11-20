@@ -35,7 +35,11 @@ const proxyAPIRequest = async (
 ) => {
   try {
     let client: RedisClientType;
-    if (config.get('redis.url') && req.method === 'get' && !ping) {
+    if (
+      config.get('redis.url') &&
+      req.method.toLowerCase() === 'get' &&
+      !ping
+    ) {
       client = createClient({
         url: config.get('redis.url'),
         password: config.get('redis.password'),
