@@ -24,12 +24,23 @@ const SETTING_PLACEHOLDER = '●●●●●●●●●●●●●';
  * @param res response
  * @param api api configuration
  * @param path url path
+ * @param ping bool: are we executing a ping request
  * @returns API request
  */
-const proxyAPIRequest = async (req: Request, res: Response, api, path) => {
+const proxyAPIRequest = async (
+  req: Request,
+  res: Response,
+  api: ApiConfiguration,
+  path: string,
+  ping = false
+) => {
   try {
     let client: RedisClientType;
-    if (config.get('redis.url') && req.method === 'get') {
+    if (
+      config.get('redis.url') &&
+      req.method.toLowerCase() === 'get' &&
+      !ping
+    ) {
       client = createClient({
         url: config.get('redis.url'),
         password: config.get('redis.password'),
@@ -58,7 +69,7 @@ const proxyAPIRequest = async (req: Request, res: Response, api, path) => {
       logger.info(`REDIS: get key : ${url}`);
       res.status(200).send(JSON.parse(cacheData));
     } else {
-      const token = await getToken(api, req.headers.accesstoken);
+      const token = await getToken(api, req.headers.accesstoken, ping);
       await axios({
         url,
         method: req.method,
@@ -135,8 +146,9 @@ router.post('/ping/**', async (req: Request, res: Response) => {
             ).toString(CryptoJS.enc.Utf8)
           )
         : {};
-      const parameters = {
+      const parameters: ApiConfiguration = {
         ...body,
+        authType: api.authType,
         settings: {
           authTargetUrl:
             get(body, 'settings.authTargetUrl', SETTING_PLACEHOLDER) !==
@@ -162,7 +174,7 @@ router.post('/ping/**', async (req: Request, res: Response) => {
       };
 
       req.method = 'GET';
-      await proxyAPIRequest(req, res, parameters, api.pingUrl);
+      await proxyAPIRequest(req, res, parameters, api.pingUrl, true);
     }
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
