@@ -252,7 +252,7 @@ export class CustomAPI extends RESTDataSource {
             .join(lastUpdate);
           break;
         default:
-          console.error('Unknown variable on refData query', variable);
+          logger.error('Unknown variable on refData query', variable);
       }
     }
     return processedQuery;

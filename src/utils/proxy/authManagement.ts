@@ -4,6 +4,7 @@ import * as CryptoJS from 'crypto-js';
 import NodeCache from 'node-cache';
 import config from 'config';
 import axios from 'axios';
+import { logger } from '@services/logger.service';
 
 /**
  * Create a cache instance to store authentication tokens for ApiConfigurations.
@@ -97,12 +98,14 @@ export const getToken = async (
   }
   if (apiConfiguration.authType === authType.userToService) {
     // Retrieve access token from settings, store it and return it
-    const settings: { token: string } = JSON.parse(
-      CryptoJS.AES.decrypt(
-        apiConfiguration.settings,
-        config.get('encryption.key')
-      ).toString(CryptoJS.enc.Utf8)
-    );
+    const settings: { token: string } = ping
+      ? apiConfiguration.settings
+      : JSON.parse(
+          CryptoJS.AES.decrypt(
+            apiConfiguration.settings,
+            config.get('encryption.key')
+          ).toString(CryptoJS.enc.Utf8)
+        );
     cache.set(tokenID, settings.token, 3570);
     return settings.token;
   }
@@ -111,7 +114,7 @@ export const getToken = async (
     return accessToken.toString();
     // Token doesn't need to be cached since the frontend always keeps it up-to-date
   }
-  console.error(`API auth type ${apiConfiguration.authType} is not recognized`);
+  logger.error(`API auth type ${apiConfiguration.authType} is not recognized`);
 };
 
 /**
