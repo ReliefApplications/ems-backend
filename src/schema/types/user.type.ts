@@ -50,7 +50,7 @@ export const UserType = new GraphQLObjectType({
         if (parent.roles && typeof parent.roles === 'object') {
           const roles = await Role.find(accessibleBy(ability, 'read').Role)
             .where('_id')
-            .in(parent.roles.map((x) => x._id));
+            .in(parent.roles.map((x) => (x._id ? x._id : x)));
           return roles;
         } else {
           const roles = await Role.find(accessibleBy(ability, 'read').Role)
