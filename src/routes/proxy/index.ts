@@ -48,8 +48,8 @@ const proxyAPIRequest = async (
       client.on('error', (error) => logger.error(`REDIS: ${error}`));
       await client.connect();
     }
-    //Take into account the request body when storing data
-    const requestBody = CryptoJS.SHA256(JSON.stringify(req.body)).toString(
+    // Generate a hash, taking into account the request body when storing data
+    const bodyHash = CryptoJS.SHA256(JSON.stringify(req.body)).toString(
       CryptoJS.enc.Hex
     );
     // Add / between endpoint and path, and ensure that double slash are removed
@@ -57,13 +57,13 @@ const proxyAPIRequest = async (
       /([^:]\/)\/+/g,
       '$1'
     );
-    //Create a cache key taking into account the body of the request, and making a user-dependant cache for auth code
-    const cacheKey =
-      api.authType === authType.authorizationCode
-        ? `${url}/${requestBody}`
-        : `${
-            jwtDecode<any>(req.headers.authorization).name
-          }:${url}/${requestBody}`;
+    // Create a cache key taking into account the body of the request, and making a user-dependant cache for auth code
+    const cacheKey = [authType.serviceToService, authType.public].includes(
+      api.authType
+    )
+      ? `${url}/${bodyHash}`
+      : `${jwtDecode<any>(req.headers.authorization).name}:${url}/${bodyHash}`;
+    // Get data from the cache
     const cacheData = client ? await client.get(cacheKey) : null;
     if (cacheData) {
       logger.info(`REDIS: get key : ${url}`);
