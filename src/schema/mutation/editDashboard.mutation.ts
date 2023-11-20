@@ -33,6 +33,8 @@ type EditDashboardArgs = {
   showFilter?: boolean;
   buttons?: DashboardButtonArgs[];
   gridOptions?: any;
+  filterVariant?: string;
+  closable?: boolean;
 };
 
 /**
@@ -48,10 +50,13 @@ export default {
     showFilter: { type: GraphQLBoolean },
     buttons: { type: new GraphQLList(ButtonActionInputType) },
     gridOptions: { type: GraphQLJSON },
+    filterVariant: { type: GraphQLString },
+    closable: { type: GraphQLBoolean },
   },
   async resolve(parent, args: EditDashboardArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
+      console.log(args);
       const user = context.user;
       // check inputs
       if (!args || isEmpty(args)) {
@@ -74,6 +79,8 @@ export default {
         structure?: any;
         name?: string;
         showFilter?: boolean;
+        filterVariant?: string;
+        closable?: boolean;
       } = {};
       Object.assign(
         updateDashboard,
@@ -81,7 +88,9 @@ export default {
         args.name && { name: args.name },
         !isNil(args.showFilter) && { showFilter: args.showFilter },
         args.buttons && { buttons: args.buttons },
-        args.gridOptions && { gridOptions: args.gridOptions }
+        args.gridOptions && { gridOptions: args.gridOptions },
+        args.filterVariant && { filterVariant: args.filterVariant },
+        !isNil(args.closable) && { closable: args.closable }
       );
       dashboard = await Dashboard.findByIdAndUpdate(args.id, updateDashboard, {
         new: true,

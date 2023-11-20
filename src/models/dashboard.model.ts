@@ -22,6 +22,8 @@ export interface Dashboard extends Document {
   archived: boolean;
   archivedAt?: Date;
   gridOptions?: any;
+  filterVariant?: string;
+  closable?: boolean;
 }
 
 /** Mongoose button schema declaration */
@@ -42,6 +44,8 @@ const dashboardSchema = new Schema<Dashboard>(
     name: String,
     structure: mongoose.Schema.Types.Mixed,
     showFilter: Boolean,
+    filterVariant: String,
+    closable: Boolean,
     buttons: [buttonSchema],
     archived: {
       type: Boolean,
