@@ -127,6 +127,7 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
         // eslint-disable-next-line no-undef
         clientID: `${config.get('auth.clientId')}`,
         passReqToCallback: true,
+        audience: config.get('auth.audience') as string[],
       }
     : {
         // eslint-disable-next-line no-undef
