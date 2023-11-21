@@ -52,6 +52,28 @@ export default {
           }
           return [min[0].data[field.name], max[0].data[field.name]];
         case 'time':
+          max = await Record.find({ resource: args.resource })
+            .sort({ [`data.${field.name}`]: -1 })
+            .limit(1);
+          min = await Record.find({ resource: args.resource })
+            .sort({ [`data.${field.name}`]: 1 })
+            .limit(1);
+          if (max.length == 0) {
+            //if there is a max, there is a min
+            return [];
+          }
+          if (
+            ability.cannot(
+              'read',
+              subject('Record', max[0]),
+              `data.${field.name}`
+            )
+          ) {
+            throw new GraphQLError(
+              context.i18next.t('common.errors.permissionNotGranted')
+            );
+          }
+          return [min[0].data[field.name], max[0].data[field.name]];
         case 'date':
           max = await Record.find({ resource: args.resource })
             .sort({ [`data.${field.name}`]: -1 })
