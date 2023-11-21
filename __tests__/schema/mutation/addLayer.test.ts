@@ -97,4 +97,24 @@ describe('Add Layer mutation tests', () => {
     expect(response.body.data.addLayer).toHaveProperty('id');
     expect(response.body.data.addLayer).toHaveProperty('sublayers');
   });
+
+  test('query without permission to create layers', async () => {
+    const nonAdminToken = `Bearer ${await acquireToken()}`;
+    const variables = {
+      layer: {
+        name: faker.random.alpha(10),
+        sublayers: [],
+      },
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', nonAdminToken)
+      .set('Accept', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('errors');
+    expect(response.body.errors[0].message).toContain('permission');
+  });
 });

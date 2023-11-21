@@ -3,7 +3,7 @@ import { SafeTestServer } from '../../server.setup';
 import { faker } from '@faker-js/faker';
 import supertest from 'supertest';
 import { acquireToken } from '../../authentication.setup';
-import { Application, Role, User, Resource, Form } from '@models';
+import { Application, Role, User, Resource, Form, Page } from '@models';
 import { status, contentType } from '@const/enumTypes';
 
 let server: SafeTestServer;
@@ -127,5 +127,55 @@ describe('Add page tests cases', () => {
         Promise.reject(new Error(response.body.errors[0].message))
       ).rejects.toThrow(response.body.errors[0].message);
     }
+  });
+  test('query without permission to add page', async () => {
+    const nonAdminToken = `Bearer ${await acquireToken()}`;
+    const variables = {
+      type: contentType.form,
+      content: form._id,
+      application: application._id,
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', nonAdminToken)
+      .set('Accept', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('errors');
+    expect(response.body.errors[0].message).toContain('permission');
+  });
+
+  test('test case add page with duplication', async () => {
+    const existingPage = await new Page({
+      name: faker.random.alpha(10),
+      type: contentType.form,
+      content: form._id,
+      permissions: {
+        canSee: [],
+        canUpdate: [],
+        canDelete: [],
+      },
+    }).save();
+
+    const variables = {
+      type: contentType.form,
+      content: form._id,
+      application: application._id,
+      duplicate: existingPage._id,
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('data');
+    expect(response.body).not.toHaveProperty('errors');
+    expect(response.body.data.addPage).toHaveProperty('id');
+    expect(response.body.data.addPage.name).toEqual(existingPage.name);
   });
 });

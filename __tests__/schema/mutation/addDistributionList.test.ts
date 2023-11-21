@@ -102,4 +102,45 @@ describe('Add distribution list tests cases', () => {
       ).rejects.toThrow(response.body.errors[0].message);
     }
   });
+
+  test('test case with insufficient permissions', async () => {
+    const nonAdminToken = `Bearer ${await acquireToken(/* criar usuário sem permissões de atualização de lista de distribuição */)}`;
+    const variables = {
+      application: application._id,
+      distributionList: {
+        name: faker.random.alpha(10),
+        emails: faker.internet.email(),
+      },
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', nonAdminToken)
+      .set('Accept', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('errors');
+    expect(response.body.errors[0].message).toContain('permission');
+  });
+
+  test('test case with invalid emails', async () => {
+    const variables = {
+      application: application._id,
+      distributionList: {
+        name: faker.random.alpha(10),
+        emails: ['email1@example.com', 'invalid-email', 'email3@example.com'],
+      },
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('errors');
+    expect(response.body.errors[0].message).toContain('invalidEmailsInput');
+  });
 });

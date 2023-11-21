@@ -181,6 +181,7 @@ describe('Form models tests', () => {
           '-D0000000' +
           faker.datatype.number({ min: 1000000 }),
         form: formData._id,
+        _form: formData.toObject(),
         data: records,
       }).save();
     }
@@ -189,6 +190,7 @@ describe('Form models tests', () => {
       await new Channel({
         title: faker.random.alpha(10),
         form: formData._id,
+        _form: formData.toObject(),
       }).save();
     }
 
@@ -220,5 +222,66 @@ describe('Form models tests', () => {
       nonExistingId
     );
     expect(hasDuplicate).toEqual(false);
+  });
+
+  test('test form delete with associated records and channels', async () => {
+    const formName = faker.random.alpha(10);
+    const formData = await new Form({
+      name: formName,
+      graphQLTypeName: formName,
+      status: status.pending,
+    }).save();
+
+    // Create associated records
+    const records = [];
+    for (let j = 0; j < 10; j++) {
+      records.push({
+        field_1: faker.vehicle.vehicle(),
+        field_2: [faker.word.adjective(), faker.word.adjective()],
+        field_3: faker.word.adjective(),
+      });
+    }
+
+    for (let i = 0; i < 10; i++) {
+      await new Record({
+        incrementalId:
+          new Date().getFullYear() +
+          '-D0000000' +
+          faker.datatype.number({ min: 1000000 }),
+        form: formData._id,
+        _form: formData.toObject(),
+        data: records,
+      }).save();
+    }
+
+    for (let i = 0; i < 10; i++) {
+      await new Channel({
+        title: faker.random.alpha(10),
+        form: formData._id,
+        _form: formData.toObject(),
+      }).save();
+    }
+
+    const recordCountBeforeDeletion = await Record.countDocuments({
+      form: formData._id,
+    });
+    const channelCountBeforeDeletion = await Channel.countDocuments({
+      form: formData._id,
+    });
+    expect(recordCountBeforeDeletion).toEqual(10);
+    expect(channelCountBeforeDeletion).toEqual(10);
+
+    const isDelete = await Form.deleteOne({ _id: formData._id });
+    expect(isDelete.acknowledged).toEqual(true);
+    expect(isDelete.deletedCount).toEqual(1);
+
+    const recordCountAfterDeletion = await Record.countDocuments({
+      form: formData._id,
+    });
+    const channelCountAfterDeletion = await Channel.countDocuments({
+      form: formData._id,
+    });
+    expect(recordCountAfterDeletion).toEqual(0);
+    expect(channelCountAfterDeletion).toEqual(0);
   });
 });

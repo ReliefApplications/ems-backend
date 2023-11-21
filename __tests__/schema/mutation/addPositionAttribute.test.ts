@@ -123,4 +123,42 @@ describe('Add position attribute mutation tests cases', () => {
       ).rejects.toThrow(response.body.errors[0].message);
     }
   });
+
+  test('test case with non-existent category and return error', async () => {
+    const variables = {
+      user: String(user._id),
+      positionAttribute: {
+        value: faker.random.alpha(10),
+        category: 'non-existent-category-id',
+      },
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('errors');
+    expect(response.body.errors[0].message).toContain('dataNotFound');
+  });
+
+  test('test case without permission to update category and return error', async () => {
+    const nonAdminToken = `Bearer ${await acquireToken()}`;
+    const variables = {
+      user: String(user._id),
+      positionAttribute: positionAttribute,
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', nonAdminToken)
+      .set('Accept', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('errors');
+    expect(response.body.errors[0].message).toContain('permissionNotGranted');
+  });
 });

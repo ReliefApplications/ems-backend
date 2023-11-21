@@ -77,4 +77,61 @@ describe('Add dashboard tests cases', () => {
       ).rejects.toThrow(response.body.errors[0].message);
     }
   });
+
+  test('test case with insufficient permissions', async () => {
+    const nonAdminToken = `Bearer ${await acquireToken(/* criar usuário sem permissões de criação de painéis */)}`;
+    const variables = {
+      name: faker.random.alpha(10),
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', nonAdminToken)
+      .set('Accept', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('errors');
+    expect(response.body.errors[0].message).toContain('permission');
+  });
+
+  test('test case with duplicate name', async () => {
+    const variables = {
+      name: faker.random.alpha(10),
+    };
+
+    // add first panel
+    await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+
+    // trying to add second panel with same name
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('errors');
+    expect(response.body.errors[0].message).toContain('unique constraint');
+  });
+
+  test('test case with invalid arguments', async () => {
+    const variables = {
+      name: '', // not valid name
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('errors');
+    expect(response.body.errors[0].message).toContain('invalidArguments');
+  });
 });

@@ -79,4 +79,52 @@ describe('Add api configuration mutation tests cases', () => {
       ).rejects.toThrow(response.body.errors[0].message);
     }
   });
+
+  test('test case with empty name and return error', async () => {
+    const variables = {
+      name: '',
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('errors');
+    expect(response.body.errors[0].message).toContain('invalidArguments');
+  });
+
+  test('test case with null name and return error', async () => {
+    const variables = {
+      name: null,
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('errors');
+    expect(response.body.errors[0].message).toContain('invalidArguments');
+  });
+
+  test('test case with invalid API name and return error', async () => {
+    const variables = {
+      name: 'Invalid_API_Name',
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('errors');
+    expect(response.body.errors[0].message).toContain('Invalid API name');
+  });
 });

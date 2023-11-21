@@ -81,4 +81,39 @@ describe('Add group tests cases', () => {
       ).rejects.toThrow(response.body.errors[0].message);
     }
   });
+
+  test('test case without permission to create groups', async () => {
+    const nonAdminToken = `Bearer ${await acquireToken()}`;
+    const variables = {
+      title: faker.random.alpha(10),
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', nonAdminToken)
+      .set('Accept', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('errors');
+    expect(response.body.errors[0].message).toContain('permission');
+  });
+
+  test('test case when manual creation of groups is disabled', async () => {
+    // Disable manual creation of groups before send the request
+
+    const variables = {
+      title: faker.random.alpha(10),
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('errors');
+    expect(response.body.errors[0].message).toContain('manualCreationDisabled');
+  });
 });

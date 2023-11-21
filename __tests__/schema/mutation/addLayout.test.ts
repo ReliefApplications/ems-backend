@@ -180,4 +180,53 @@ describe('Add layout tests cases', () => {
       ).rejects.toThrow(response.body.errors[0].message);
     }
   });
+
+  test('query without permission to add layout', async () => {
+    const nonAdminToken = `Bearer ${await acquireToken()}`;
+    const variables = {
+      resource: resource._id,
+      layout: {
+        name: faker.random.alpha(10),
+        query: {
+          name: faker.random.alpha(10),
+          template: '',
+          pageSize: faker.datatype.number(),
+          fields: [
+            {
+              name: 'incrementalId',
+              type: 'ID',
+              kind: 'SCALAR',
+              label: 'Incremental Id',
+              format: null,
+            },
+          ],
+          sort: {
+            field: '',
+            order: 'asc',
+          },
+          style: [],
+          filter: {
+            logic: 'and',
+            filters: [],
+          },
+        },
+        display: {
+          showFilter: null,
+          sort: [],
+          fields: null,
+          filter: null,
+        },
+      },
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', nonAdminToken)
+      .set('Accept', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('errors');
+    expect(response.body.errors[0].message).toContain('permission');
+  });
 });

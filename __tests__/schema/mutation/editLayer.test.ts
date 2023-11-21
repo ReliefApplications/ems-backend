@@ -110,4 +110,69 @@ describe('Edit Layer mutation tests', () => {
     expect(response.body.data.editLayer).toHaveProperty('id');
     expect(response.body.data.editLayer).toHaveProperty('sublayers');
   });
+
+  test('query with non-existent layer returns error', async () => {
+    const nonExistentLayerId = 'non-existent-layer-id';
+    const variables = {
+      id: nonExistentLayerId,
+      layer: {
+        name: faker.random.alpha(10),
+        sublayers: [],
+      },
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('errors');
+    expect(response.body.errors[0].message).toContain('dataNotFound');
+  });
+
+  test('query with non-authorized user returns permission error', async () => {
+    const nonAdminToken = `Bearer ${await acquireToken()}`;
+    const variables = {
+      id: layer._id,
+      layer: {
+        name: faker.random.alpha(10),
+        sublayers: [],
+      },
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', nonAdminToken)
+      .set('Accept', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('errors');
+    expect(response.body.errors[0].message).toContain('permissionNotGranted');
+  });
+
+  test('query with incorrect layer type and sublayers returns error', async () => {
+    const variables = {
+      id: layer._id,
+      layer: {
+        name: faker.random.alpha(10),
+        type: 'InvalidLayerType',
+        sublayers: sublayers,
+      },
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('errors');
+    expect(response.body.errors[0].message).toContain(
+      'Only group layers can have sublayers'
+    );
+  });
 });

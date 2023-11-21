@@ -122,4 +122,67 @@ describe('Add aggregation mutation tests cases', () => {
       ).rejects.toThrow(response.body.errors[0].message);
     }
   });
+
+  test('test with non-existent resource', async () => {
+    const nonExistentResourceId = 'non-existent-id';
+    const variables = {
+      resource: nonExistentResourceId,
+      aggregation: {
+        name: 'SimpleAggregation',
+        sourceFields: ['fieldName'],
+        pipeline: [
+          {
+            type: 'filter',
+            form: {
+              logic: 'and',
+              filters: [
+                {
+                  field: 'fieldName',
+                  value: 'someValue',
+                },
+              ],
+            },
+          },
+        ],
+      },
+    };
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('errors');
+  });
+
+  test('test with invalid aggregation data', async () => {
+    const variables = {
+      resource: resource._id,
+      aggregation: {
+        sourceFields: ['fieldName'],
+        pipeline: [
+          {
+            type: 'filter',
+            form: {
+              logic: 'and',
+              filters: [
+                {
+                  field: 'fieldName',
+                  value: 'someValue',
+                },
+              ],
+            },
+          },
+        ],
+      },
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('errors');
+  });
 });
