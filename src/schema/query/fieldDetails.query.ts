@@ -15,7 +15,7 @@ import { Types } from 'mongoose';
 export default {
   type: GraphQLJSON,
   args: {
-    form: { type: new GraphQLNonNull(GraphQLID) },
+    resource: { type: new GraphQLNonNull(GraphQLID) },
     field: { type: new GraphQLNonNull(GraphQLJSON) },
   },
   async resolve(parent, args, context: Context) {
@@ -29,10 +29,10 @@ export default {
       let min, max: Record[];
       switch (field.type) {
         case 'numeric':
-          max = await Record.find({ form: args.form })
+          max = await Record.find({ resource: args.resource })
             .sort({ [`data.${field.name}`]: -1 })
             .limit(1);
-          min = await Record.find({ form: args.form })
+          min = await Record.find({ resource: args.resource })
             .sort({ [`data.${field.name}`]: 1 })
             .limit(1);
           if (max.length == 0) {
@@ -53,11 +53,11 @@ export default {
           return [min[0].data[field.name], max[0].data[field.name]];
         case 'time':
         case 'date':
-          max = await Record.find({ form: args.form })
+          max = await Record.find({ resource: args.resource })
             .sort({ [`data.${field.name}`]: -1 })
             .limit(1);
 
-          min = await Record.find({ form: args.form })
+          min = await Record.find({ resource: args.resource })
             .sort({ [`data.${field.name}`]: 1 })
             .limit(1);
 
@@ -83,7 +83,7 @@ export default {
         case 'text':
           //We get the 5 most common values from the database
           const mostFrequentValues = await Record.aggregate([
-            { $match: { form: new Types.ObjectId(args.form) } },
+            { $match: { resource: new Types.ObjectId(args.resource) } },
             {
               $group: {
                 _id: `$data.${field.name}`,
