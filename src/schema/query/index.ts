@@ -2,6 +2,7 @@ import { GraphQLObjectType } from 'graphql';
 import resources from './resources.query';
 import resource from './resource.query';
 import notifications from './notifications.query';
+import fieldDetails from './fieldDetails.query';
 import forms from './forms.query';
 import form from './form.query';
 import records from './records.query';
@@ -49,6 +50,7 @@ const Query = new GraphQLObjectType({
     channels,
     dashboard,
     dashboards,
+    fieldDetails,
     form,
     forms,
     group,
