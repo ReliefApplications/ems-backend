@@ -35,6 +35,8 @@ type EditDashboardArgs = {
   gridOptions?: any;
   filterVariant?: string;
   closable?: boolean;
+  contextualFilter?: any;
+  contextualFilterPosition?: string;
 };
 
 /**
@@ -52,11 +54,12 @@ export default {
     gridOptions: { type: GraphQLJSON },
     filterVariant: { type: GraphQLString },
     closable: { type: GraphQLBoolean },
+    contextualFilter: { type: GraphQLJSON },
+    contextualFilterPosition: { type: GraphQLString },
   },
   async resolve(parent, args: EditDashboardArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
-      console.log(args);
       const user = context.user;
       // check inputs
       if (!args || isEmpty(args)) {
@@ -90,7 +93,11 @@ export default {
         args.buttons && { buttons: args.buttons },
         args.gridOptions && { gridOptions: args.gridOptions },
         args.filterVariant && { filterVariant: args.filterVariant },
-        !isNil(args.closable) && { closable: args.closable }
+        !isNil(args.closable) && { closable: args.closable },
+        args.contextualFilter && { contextualFilter: args.contextualFilter },
+        args.contextualFilterPosition && {
+          contextualFilterPosition: args.contextualFilterPosition,
+        }
       );
       dashboard = await Dashboard.findByIdAndUpdate(args.id, updateDashboard, {
         new: true,

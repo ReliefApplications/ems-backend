@@ -24,6 +24,8 @@ export interface Dashboard extends Document {
   gridOptions?: any;
   filterVariant?: string;
   closable?: boolean;
+  contextualFilter?: any;
+  contextualFilterPosition?: string;
 }
 
 /** Mongoose button schema declaration */
@@ -56,6 +58,8 @@ const dashboardSchema = new Schema<Dashboard>(
       expires: 2592000,
     },
     gridOptions: mongoose.Schema.Types.Mixed,
+    contextualFilter: mongoose.Schema.Types.Mixed,
+    contextualFilterPosition: String,
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },

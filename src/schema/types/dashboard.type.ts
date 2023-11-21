@@ -108,5 +108,7 @@ export const DashboardType = new GraphQLObjectType({
     showFilter: { type: GraphQLBoolean },
     filterVariant: { type: GraphQLString },
     closable: { type: GraphQLBoolean },
+    contextualFilter: { type: GraphQLJSON },
+    contextualFilterPosition: { type: GraphQLString },
   }),
 });
