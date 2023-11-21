@@ -1,62 +1,12 @@
-import {
-  GraphQLNonNull,
-  GraphQLError,
-  GraphQLString,
-  GraphQLID,
-} from 'graphql';
-import { Form, Record } from '@models';
+import { GraphQLNonNull, GraphQLError, GraphQLID } from 'graphql';
+import { Record } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
-import { AppAbility } from '@security/defineUserAbility';
 import { subject } from '@casl/ability';
 import GraphQLJSON from 'graphql-type-json';
-
-/**
- * Filters data from a record according to the user's ability
- * keeps only fields the user has access to
- *
- * @param record Record to filter data from
- * @param ability User ability object
- * @param field field to get data from
- * @param context Apollo context
- * @returns Record with only accessible data
- */
-const getFieldValueFromRecord = (
-  record: Record,
-  ability: AppAbility,
-  field: string,
-  context: Context
-) => {
-  if (ability.cannot('read', subject('Record', record), `data.${field}`)) {
-    throw new GraphQLError(
-      context.i18next.t('common.errors.permissionNotGranted')
-    );
-  }
-  return record.data[field];
-};
-
-/**
- * Filters data from a (list of) record(s) according to the user's ability
- * keeps only fields the user has access to
- *
- * @param element Record/Records to filter data from
- * @param ability User ability object
- * @param field field to test
- * @param context Apollo context
- * @returns Record/Records with only accessible data
- */
-export function getFieldValue(
-  element: Record | Record[],
-  ability: AppAbility,
-  field: string,
-  context: Context
-) {
-  return Array.isArray(element)
-    ? element.map((r) => getFieldValueFromRecord(r, ability, field, context))
-    : getFieldValueFromRecord(element, ability, field, context);
-}
+import { Types } from 'mongoose';
 
 /**
  * Return record from id if available for the logged user.
@@ -66,46 +16,100 @@ export default {
   type: GraphQLJSON,
   args: {
     form: { type: new GraphQLNonNull(GraphQLID) },
-    field: { type: new GraphQLNonNull(GraphQLString) },
+    field: { type: new GraphQLNonNull(GraphQLJSON) },
   },
   async resolve(parent, args, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;
-      // Get the form and the record
-      const records = await Record.where({ form: args.form });
-      const form = await Form.findById(args.form);
-      const field = form.fields.find((f) => f.name === args.field);
-
       // Check ability
-      const ability = await extendAbilityForRecords(user, form);
+      const ability = await extendAbilityForRecords(user);
+      const field = args.field;
 
-      // Return the record
-      const valuesForField = getFieldValue(
-        records,
-        ability,
-        field.name,
-        context
-      );
-
-      console.log('field type', field.type);
+      let min, max: Record[];
       switch (field.type) {
         case 'numeric':
-          return {
-            details: [Math.min(...valuesForField), Math.max(...valuesForField)],
-          };
+          max = await Record.find({ form: args.form })
+            .sort({ [`data.${field.name}`]: -1 })
+            .limit(1);
+          min = await Record.find({ form: args.form })
+            .sort({ [`data.${field.name}`]: 1 })
+            .limit(1);
+          if (max.length == 0) {
+            //if there is a max, there is a min
+            return [];
+          }
+          if (
+            ability.cannot(
+              'read',
+              subject('Record', max[0]),
+              `data.${field.name}`
+            )
+          ) {
+            throw new GraphQLError(
+              context.i18next.t('common.errors.permissionNotGranted')
+            );
+          }
+          return [min[0].data[field.name], max[0].data[field.name]];
         case 'time':
         case 'date':
-          return {
-            details: [
-              new Date(Math.min(...valuesForField)),
-              new Date(Math.max(...valuesForField)),
-            ],
-          };
+          max = await Record.find({ form: args.form })
+            .sort({ [`data.${field.name}`]: -1 })
+            .limit(1);
+
+          min = await Record.find({ form: args.form })
+            .sort({ [`data.${field.name}`]: 1 })
+            .limit(1);
+
+          if (max.length == 0) {
+            //if there is a max, there is a min
+            return [];
+          }
+          if (
+            ability.cannot(
+              'read',
+              subject('Record', max[0]),
+              `data.${field.name}`
+            )
+          ) {
+            throw new GraphQLError(
+              context.i18next.t('common.errors.permissionNotGranted')
+            );
+          }
+          return [
+            new Date(min[0].data[field.name]),
+            new Date(max[0].data[field.name]),
+          ];
         case 'text':
-          return { details: valuesForField };
+          //We get the 5 most common values from the database
+          const mostFrequentValues = await Record.aggregate([
+            { $match: { form: new Types.ObjectId(args.form) } },
+            {
+              $group: {
+                _id: `$data.${field.name}`,
+                count: { $sum: 1 },
+              },
+            },
+            { $sort: { count: -1 } },
+            { $limit: 5 },
+          ]);
+          if (mostFrequentValues.length == 0) {
+            return [];
+          }
+          if (
+            ability.cannot(
+              'read',
+              subject('Record', mostFrequentValues[0]),
+              '_id'
+            )
+          ) {
+            throw new GraphQLError(
+              context.i18next.t('common.errors.permissionNotGranted')
+            );
+          }
+          return mostFrequentValues.map((item) => item._id);
         default:
-          return new GraphQLError('unsupported type');
+          return new GraphQLError('Unsupported type');
       }
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
