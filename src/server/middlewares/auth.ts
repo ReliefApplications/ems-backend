@@ -12,6 +12,7 @@ import { updateUser, userAuthCallback } from '@utils/user';
 import config from 'config';
 import session from 'express-session';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from '@services/logger.service';
 
 /** Express application for the authorization middleware */
 const authMiddleware = express();
@@ -145,6 +146,7 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
         passReqToCallback: true,
         loggingLevel: 'info',
       };
+  console.log(credentials.audience);
   passport.use(
     new BearerStrategy(credentials, (req, token: ITokenPayload, done) => {
       // === USER ===
@@ -288,6 +290,9 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
             path: 'positionAttributes.category',
             model: 'PositionAttributeCategory',
           });
+      } else {
+        logger.info(token);
+        return done('error');
       }
     })
   );
