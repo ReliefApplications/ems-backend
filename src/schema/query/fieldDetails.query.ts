@@ -29,60 +29,14 @@ export default {
       let min, max: Record[];
       switch (field.type) {
         case 'numeric':
-          max = await Record.find({ resource: args.resource })
-            .sort({ [`data.${field.name}`]: -1 })
-            .limit(1);
-          min = await Record.find({ resource: args.resource })
-            .sort({ [`data.${field.name}`]: 1 })
-            .limit(1);
-          if (max.length == 0) {
-            //if there is a max, there is a min
-            return [];
-          }
-          if (
-            ability.cannot(
-              'read',
-              subject('Record', max[0]),
-              `data.${field.name}`
-            )
-          ) {
-            throw new GraphQLError(
-              context.i18next.t('common.errors.permissionNotGranted')
-            );
-          }
-          return [min[0].data[field.name], max[0].data[field.name]];
         case 'time':
-          max = await Record.find({ resource: args.resource })
-            .sort({ [`data.${field.name}`]: -1 })
-            .limit(1);
-          min = await Record.find({ resource: args.resource })
-            .sort({ [`data.${field.name}`]: 1 })
-            .limit(1);
-          if (max.length == 0) {
-            //if there is a max, there is a min
-            return [];
-          }
-          if (
-            ability.cannot(
-              'read',
-              subject('Record', max[0]),
-              `data.${field.name}`
-            )
-          ) {
-            throw new GraphQLError(
-              context.i18next.t('common.errors.permissionNotGranted')
-            );
-          }
-          return [min[0].data[field.name], max[0].data[field.name]];
         case 'date':
           max = await Record.find({ resource: args.resource })
             .sort({ [`data.${field.name}`]: -1 })
             .limit(1);
-
           min = await Record.find({ resource: args.resource })
             .sort({ [`data.${field.name}`]: 1 })
             .limit(1);
-
           if (max.length == 0) {
             //if there is a max, there is a min
             return [];
@@ -98,10 +52,7 @@ export default {
               context.i18next.t('common.errors.permissionNotGranted')
             );
           }
-          return [
-            new Date(min[0].data[field.name]),
-            new Date(max[0].data[field.name]),
-          ];
+          return [min[0].data[field.name], max[0].data[field.name]];
         case 'text':
           //We get the 5 most common values from the database
           const mostFrequentValues = await Record.aggregate([
