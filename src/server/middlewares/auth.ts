@@ -130,7 +130,7 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
         clientID: `${config.get('auth.clientId')}`,
         passReqToCallback: true,
         ...(audience.length > 0 && {
-          audience: audience.concat(...[`${config.get('auth.clientId')}`]),
+          audience,
         }),
       }
     : {
@@ -147,7 +147,6 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
         passReqToCallback: true,
         loggingLevel: 'info',
       };
-  console.log(credentials.audience);
   passport.use(
     new BearerStrategy(credentials, (req, token: ITokenPayload, done) => {
       // === USER ===
