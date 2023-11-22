@@ -129,7 +129,7 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
         clientID: `${config.get('auth.clientId')}`,
         passReqToCallback: true,
         audience: [`${config.get('auth.clientId')}`].concat(
-          config.get('auth.audience') as string[]
+          ...(config.get('auth.audience') as string[])
         ),
       }
     : {
