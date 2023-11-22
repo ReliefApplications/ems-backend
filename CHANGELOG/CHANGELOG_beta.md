@@ -1,3 +1,15 @@
+# [2.2.0-beta.8](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0-beta.7...v2.2.0-beta.8) (2023-11-20)
+
+
+### Bug Fixes
+
+* ping request using cache and decrypting twice ([#826](https://github.com/ReliefApplications/ems-backend/issues/826)) ([14b26c4](https://github.com/ReliefApplications/ems-backend/commit/14b26c4e125d22fd489afce95cf060f51cda07f8))
+
+
+### Features
+
+* can save custom grid options per dashboard ([#824](https://github.com/ReliefApplications/ems-backend/issues/824)) ([8779433](https://github.com/ReliefApplications/ems-backend/commit/87794338b35f5b393e22ea4e6aa2901cf346a411))
+
 # [2.2.0-beta.7](https://github.com/ReliefApplications/oort-backend/compare/v2.2.0-beta.6...v2.2.0-beta.7) (2023-11-09)
 
 
