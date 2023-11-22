@@ -116,6 +116,7 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
     }) as Strategy
   );
 } else {
+  const audience: string[] = config.get('auth.audience');
   // Azure Active Directory configuration
   const credentials: IBearerStrategyOptionWithRequest = config.get(
     'auth.tenantId'
@@ -128,9 +129,9 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
         // eslint-disable-next-line no-undef
         clientID: `${config.get('auth.clientId')}`,
         passReqToCallback: true,
-        audience: [`${config.get('auth.clientId')}`].concat(
-          ...(config.get('auth.audience') as string[])
-        ),
+        ...(audience.length > 0 && {
+          audience: audience.concat(...[`${config.get('auth.clientId')}`]),
+        }),
       }
     : {
         // eslint-disable-next-line no-undef
