@@ -102,6 +102,8 @@ export const ApplicationType = new GraphQLObjectType({
           : false;
       },
     },
+    contextualFilter: { type: GraphQLJSON },
+    contextualFilterPosition: { type: GraphQLString },
     createdBy: {
       type: UserType,
       async resolve(parent, args, context) {
