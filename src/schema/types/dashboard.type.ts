@@ -105,10 +105,8 @@ export const DashboardType = new GraphQLObjectType({
         return ability.can('delete', parent);
       },
     },
-    showFilter: { type: GraphQLBoolean },
-    filterVariant: { type: GraphQLString },
-    closable: { type: GraphQLBoolean },
-    contextualFilter: { type: GraphQLJSON },
-    contextualFilterPosition: { type: GraphQLString },
+    filter: { type: GraphQLJSON },
+    filterStructure: { type: GraphQLJSON },
+    position: { type: GraphQLString },
   }),
 });

@@ -13,12 +13,12 @@ const updateDashboard = async (
   dashboard: Dashboard,
   application: Application
 ) => {
-  dashboard.contextualFilter = application.contextualFilter;
-  dashboard.contextualFilterPosition = application.contextualFilterPosition;
+  dashboard.filterStructure = application.contextualFilter;
+  dashboard.position = application.contextualFilterPosition;
 
   await Dashboard.findByIdAndUpdate(dashboard.id, {
-    contextualFilter: dashboard.contextualFilter,
-    contextualFilterPosition: dashboard.contextualFilterPosition,
+    filterStructure: dashboard.filterStructure,
+    position: dashboard.position,
   });
 
   logger.info(

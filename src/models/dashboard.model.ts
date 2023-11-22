@@ -10,6 +10,13 @@ interface Button {
   openInNewTab: boolean;
 }
 
+/** Dashboard filter interface declaration */
+interface Filter {
+  variant?: string;
+  show?: boolean;
+  closable?: boolean;
+}
+
 /** Dashboard documents interface declaration */
 export interface Dashboard extends Document {
   kind: 'Dashboard';
@@ -17,15 +24,13 @@ export interface Dashboard extends Document {
   createdAt?: Date;
   modifiedAt?: Date;
   structure?: any;
-  showFilter?: boolean;
   buttons?: Button[];
   archived: boolean;
   archivedAt?: Date;
   gridOptions?: any;
-  filterVariant?: string;
-  closable?: boolean;
-  contextualFilter?: any;
-  contextualFilterPosition?: string;
+  filter?: Filter;
+  filterStructure?: any;
+  position?: string;
 }
 
 /** Mongoose button schema declaration */
@@ -40,14 +45,21 @@ const buttonSchema = new Schema<Button>(
   { _id: false }
 );
 
+/** Mongoose filter schema declaration */
+const filterSchema = new Schema<Filter>(
+  {
+    variant: String,
+    show: Boolean,
+    closable: Boolean,
+  },
+  { _id: false }
+);
+
 /** Mongoose dashboard schema declaration */
 const dashboardSchema = new Schema<Dashboard>(
   {
     name: String,
     structure: mongoose.Schema.Types.Mixed,
-    showFilter: Boolean,
-    filterVariant: String,
-    closable: Boolean,
     buttons: [buttonSchema],
     archived: {
       type: Boolean,
@@ -58,8 +70,9 @@ const dashboardSchema = new Schema<Dashboard>(
       expires: 2592000,
     },
     gridOptions: mongoose.Schema.Types.Mixed,
-    contextualFilter: mongoose.Schema.Types.Mixed,
-    contextualFilterPosition: String,
+    filter: filterSchema,
+    filterStructure: mongoose.Schema.Types.Mixed,
+    position: String,
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },

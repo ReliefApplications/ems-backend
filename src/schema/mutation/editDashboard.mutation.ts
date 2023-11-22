@@ -3,19 +3,19 @@ import {
   GraphQLID,
   GraphQLString,
   GraphQLError,
-  GraphQLBoolean,
   GraphQLList,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { DashboardType } from '../types';
 import { Dashboard, Page, Step } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
-import { isEmpty, isNil } from 'lodash';
+import { isEmpty } from 'lodash';
 import { logger } from '@services/logger.service';
 import ButtonActionInputType from '@schema/inputs/button-action.input';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
+import { DashboardFilterInputType } from '@schema/inputs/dashboard-filter.input';
 
 type DashboardButtonArgs = {
   text: string;
@@ -25,18 +25,22 @@ type DashboardButtonArgs = {
   openInNewTab: boolean;
 };
 
+type DashboardFilterArgs = {
+  variant?: string;
+  show?: boolean;
+  closable?: boolean;
+};
+
 /** Arguments for the editDashboard mutation */
 type EditDashboardArgs = {
   id: string | Types.ObjectId;
   structure?: any;
   name?: string;
-  showFilter?: boolean;
   buttons?: DashboardButtonArgs[];
   gridOptions?: any;
-  filterVariant?: string;
-  closable?: boolean;
-  contextualFilter?: any;
-  contextualFilterPosition?: string;
+  filter?: DashboardFilterArgs;
+  filterStructure?: any;
+  position?: string;
 };
 
 /**
@@ -49,13 +53,11 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     structure: { type: GraphQLJSON },
     name: { type: GraphQLString },
-    showFilter: { type: GraphQLBoolean },
     buttons: { type: new GraphQLList(ButtonActionInputType) },
     gridOptions: { type: GraphQLJSON },
-    filterVariant: { type: GraphQLString },
-    closable: { type: GraphQLBoolean },
-    contextualFilter: { type: GraphQLJSON },
-    contextualFilterPosition: { type: GraphQLString },
+    filter: { type: DashboardFilterInputType },
+    filterStructure: { type: GraphQLJSON },
+    position: { type: GraphQLString },
   },
   async resolve(parent, args: EditDashboardArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -81,23 +83,16 @@ export default {
         //modifiedAt?: Date;
         structure?: any;
         name?: string;
-        showFilter?: boolean;
-        filterVariant?: string;
-        closable?: boolean;
       } = {};
       Object.assign(
         updateDashboard,
         args.structure && { structure: args.structure },
         args.name && { name: args.name },
-        !isNil(args.showFilter) && { showFilter: args.showFilter },
+        args.filter && { filter: args.filter },
         args.buttons && { buttons: args.buttons },
         args.gridOptions && { gridOptions: args.gridOptions },
-        args.filterVariant && { filterVariant: args.filterVariant },
-        !isNil(args.closable) && { closable: args.closable },
-        args.contextualFilter && { contextualFilter: args.contextualFilter },
-        args.contextualFilterPosition && {
-          contextualFilterPosition: args.contextualFilterPosition,
-        }
+        args.filterStructure && { filterStructure: args.filterStructure },
+        args.position && { position: args.position }
       );
       dashboard = await Dashboard.findByIdAndUpdate(args.id, updateDashboard, {
         new: true,
