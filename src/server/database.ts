@@ -61,7 +61,6 @@ const mongoDBUrl = (): string => {
  * @param options mongo connect options
  */
 export const startDatabase = async (options?: any) => {
-  console.log(mongoDBUrl());
   await mongoose.connect(mongoDBUrl(), {
     autoIndex: true,
     ...options,
