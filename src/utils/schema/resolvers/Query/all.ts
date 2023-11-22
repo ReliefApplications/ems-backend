@@ -153,8 +153,9 @@ const getQueryFields = (
   fields?: string[];
   arguments?: any;
 }[] => {
-  return (
-    info.fieldNodes[0]?.selectionSet?.selections
+  console.log("ZZZZZZZ");
+  const a =
+    (info.fieldNodes[0]?.selectionSet?.selections
       ?.find((x) => x.name.value === 'edges')
       ?.selectionSet?.selections?.find((x) => x.name.value === 'node')
       ?.selectionSet?.selections?.reduce(
@@ -176,6 +177,8 @@ const getQueryFields = (
         []
       ) || []
   );
+  console.log("a = ", a);
+  return a;
 };
 
 /**
@@ -303,6 +306,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           },
         ]);
 
+
         // Build linked records filter
         const resourceId = fields.find((f) => f.name === resource).resource;
         const resourceName = Object.keys(idsByName).find(
@@ -322,6 +326,8 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           );
       }
 
+      console.log("linkedRecordsAggregation = ", linkedRecordsAggregation);
+
       // Get list of reference data fields to query
       const referenceDataFieldsToQuery = fields.filter(
         (f) =>
@@ -329,6 +335,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           [...new Set(usedFields.map((x) => x.split('.')[0]))].includes(f.name)
       );
 
+      console.log(referenceDataFieldsToQuery);
       // Query needed reference datas
       const referenceDatas: ReferenceData[] = await ReferenceData.find({
         _id: referenceDataFieldsToQuery.map((f) => f.referenceData?.id),
@@ -348,10 +355,12 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       // only add calculated fields that are in the query
       // in order to decrease the pipeline size
       const shouldAddCalculatedFieldToPipeline = (field: any) => {
+        console.log("1");
         // If field is requested in the query
         if (queryFields.findIndex((x) => x.name === field.name) > -1)
           return true;
 
+        console.log("2");
         // If sort field is a calculated field
         if (sortField === field.name) return true;
 
@@ -360,16 +369,20 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           return qFilter.filters?.some((f) => isUsedInFilter(f)) ?? false;
         };
 
+        console.log("3");
         // Check if the field is used in the filter
         if (isUsedInFilter(filter)) return true;
 
+        console.log("4");
         // Check if the field is used in any styles' filters
         if (styles?.some((s) => isUsedInFilter(s.filter))) return true;
 
+        console.log("5");
         // If not used in any of the above, don't add it to the pipeline
         return false;
       };
-
+      console.log("used fields = ", usedFields);
+      console.log("fields = ", fields);
       fields
         .filter((f) => f.isCalculated && shouldAddCalculatedFieldToPipeline(f))
         .forEach((f) =>
@@ -377,6 +390,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             ...buildCalculatedFieldPipeline(f.expression, f.name)
           )
         );
+      console.log("calculatedFields = ", calculatedFieldsAggregation);
 
       // Build linked records aggregations
       const linkedReferenceDataAggregation = flatten(
@@ -678,6 +692,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           },
         };
       });
+      edges.forEach((edge: any) => {
+        console.log(edge.node.data);
+      })
       return {
         pageInfo: {
           hasNextPage,
