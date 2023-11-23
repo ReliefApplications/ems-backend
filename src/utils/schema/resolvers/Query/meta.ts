@@ -22,12 +22,6 @@ export default (id) => async (parent, args, context) => {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       } else {
         const ability = await extendAbilityForRecords(user, resource);
-        console.log("\n");
-        console.log("INICIO");
-        console.log(resource);
-        console.log(resource.fields);
-        console.log("FIM");
-        console.log("\n");
         return resource.fields.reduce((fields, field) => {
           fields[field.name] = {
             ...field,

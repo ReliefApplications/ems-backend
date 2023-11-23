@@ -53,6 +53,7 @@ export const getEntityResolver = (
       if (field.relatedName && relatedResource) {
         return Object.assign({}, resolvers, {
           [field.name]: async (entity) => {
+            console.log("entity = ", entity);
             // Get from aggregation
             if (entity._relatedRecords && entity._relatedRecords[field.name]) {
               return entity._relatedRecords[field.name];
@@ -67,6 +68,7 @@ export const getEntityResolver = (
         });
       }
     }, {});
+  console.log("manyToOneResolvers = ", manyToOneResolvers['zoo']);
 
   const manyToManyResolvers = relationshipFields
     .filter((fieldName) => fieldName.endsWith(NameExtension.resources))

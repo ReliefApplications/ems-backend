@@ -326,16 +326,12 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           );
       }
 
-      console.log("linkedRecordsAggregation = ", linkedRecordsAggregation);
-
       // Get list of reference data fields to query
       const referenceDataFieldsToQuery = fields.filter(
         (f) =>
           f.referenceData?.id &&
           [...new Set(usedFields.map((x) => x.split('.')[0]))].includes(f.name)
       );
-
-      console.log(referenceDataFieldsToQuery);
       // Query needed reference datas
       const referenceDatas: ReferenceData[] = await ReferenceData.find({
         _id: referenceDataFieldsToQuery.map((f) => f.referenceData?.id),
@@ -355,6 +351,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       // only add calculated fields that are in the query
       // in order to decrease the pipeline size
       const shouldAddCalculatedFieldToPipeline = (field: any) => {
+        console.log("shouldAddCalculatedFieldToPipeline = ", field);
         console.log("1");
         // If field is requested in the query
         if (queryFields.findIndex((x) => x.name === field.name) > -1)
@@ -492,6 +489,10 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // Deal with resource/resources questions on THIS form
       const resourcesFields: any[] = fields.reduce((arr, field) => {
+        console.log("aqui2020");
+        console.log(arr);
+        console.log("field = ", field);
+        console.log("queryFields = ", queryFields);
         if (field.type === 'resource' || field.type === 'resources') {
           const queryField = queryFields.find((x) => x.name === field.name);
           if (queryField) {
@@ -509,9 +510,11 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         }
         return arr;
       }, []);
+      console.log("reosurceFields = ", resourcesFields);
       // Deal with resource/resources questions on OTHER forms if any
       let relatedFields = [];
       if (queryFields.filter((x) => x.fields).length - resourcesFields.length) {
+        console.log("aqui1010");
         const entities = Object.keys(fieldsByName);
         const mappedRelatedFields = [];
         relatedFields = entities.reduce((arr, relatedEntityName) => {
@@ -555,12 +558,15 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           record?: any;
           records?: any[];
         }[] = [];
+        console.log("items = ", items);
         const relatedFilters = [];
         for (const item of items as any) {
           item._relatedRecords = {};
           item.data = item.data || {};
           for (const field of resourcesFields) {
             if (field.type === 'resource') {
+              console.log("item.data = ", item.data);
+              console.log("field.name = ", field);
               const record = item.data[field.name];
               if (record) {
                 itemsToUpdate.push({ item, record, field });
@@ -573,6 +579,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               }
             }
           }
+          console.log("itemsToUpdate = ", itemsToUpdate);
           for (const field of relatedFields) {
             itemsToUpdate.push({ item, field });
             relatedFilters.push({
@@ -601,14 +608,34 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             })
           )
         );
+        console.log("relatedFields = ", relatedFields);
         // Fetch records
-        const relatedRecords = await Record.find(
+        const relatedRecords = await Record.aggregate([
           {
-            $or: [{ _id: { $in: relatedIds } }, ...relatedFilters],
-            archived: { $ne: true },
+            $match: {
+              $or: [{ _id: { $in: relatedIds } }, ...relatedFilters],
+              archived: { $ne: true },
+            },
+            // $project: projection, // Projection stage to shape the output
           },
-          projection
-        );
+        ]);
+
+        // const itemsToStyle = await Record.aggregate([
+        //   {
+        //     $match: {
+        //       _id: {
+        //         $in: recordsIds.map((x) => new mongoose.Types.ObjectId(x)),
+        //       },
+        //     },
+        //   },
+        //   ...calculatedFieldsAggregation,
+        //   {
+        //     $match: styleFilter,
+        //   },
+        //   { $addFields: { id: '$_id' } },
+        // ]);
+
+        console.log("relatedRecords = ", relatedRecords);
         // Update items
         for (const item of itemsToUpdate) {
           if (item.record) {
@@ -692,6 +719,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           },
         };
       });
+      console.log("ultimo");
       edges.forEach((edge: any) => {
         console.log(edge.node.data);
       })
