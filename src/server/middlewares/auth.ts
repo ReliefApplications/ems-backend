@@ -12,6 +12,7 @@ import { updateUser, userAuthCallback } from '@utils/user';
 import config from 'config';
 import session from 'express-session';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from '@services/logger.service';
 
 /** Express application for the authorization middleware */
 const authMiddleware = express();
@@ -115,6 +116,7 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
     }) as Strategy
   );
 } else {
+  const audience: string[] = config.get('auth.audience');
   // Azure Active Directory configuration
   const credentials: IBearerStrategyOptionWithRequest = config.get(
     'auth.tenantId'
@@ -127,9 +129,9 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
         // eslint-disable-next-line no-undef
         clientID: `${config.get('auth.clientId')}`,
         passReqToCallback: true,
-        audience: [`${config.get('auth.clientId')}`].concat(
-          config.get('auth.audience') as string[]
-        ),
+        ...(audience.length > 0 && {
+          audience,
+        }),
       }
     : {
         // eslint-disable-next-line no-undef
@@ -288,6 +290,9 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
             path: 'positionAttributes.category',
             model: 'PositionAttributeCategory',
           });
+      } else {
+        logger.info(token);
+        return done('error');
       }
     })
   );
