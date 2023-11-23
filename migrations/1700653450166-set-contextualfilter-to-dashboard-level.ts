@@ -44,7 +44,7 @@ export const up = async () => {
       path: 'pages',
       model: 'Page',
     })
-    .select('name pages');
+    .select('name pages contextualFilter contextualFilterPosition');
   for (const application of applications) {
     if (application.pages.length > 0) {
       logger.info(`Updating application: ${application.name}`);
