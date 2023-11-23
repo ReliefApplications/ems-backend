@@ -15,6 +15,8 @@ interface Filter {
   variant?: string;
   show?: boolean;
   closable?: boolean;
+  structure?: any;
+  position?: string;
 }
 
 /** Dashboard documents interface declaration */
@@ -29,8 +31,6 @@ export interface Dashboard extends Document {
   archivedAt?: Date;
   gridOptions?: any;
   filter?: Filter;
-  filterStructure?: any;
-  position?: string;
 }
 
 /** Mongoose button schema declaration */
@@ -51,6 +51,8 @@ const filterSchema = new Schema<Filter>(
     variant: String,
     show: Boolean,
     closable: Boolean,
+    structure: mongoose.Schema.Types.Mixed,
+    position: String,
   },
   { _id: false }
 );
@@ -71,8 +73,6 @@ const dashboardSchema = new Schema<Dashboard>(
     },
     gridOptions: mongoose.Schema.Types.Mixed,
     filter: filterSchema,
-    filterStructure: mongoose.Schema.Types.Mixed,
-    position: String,
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },

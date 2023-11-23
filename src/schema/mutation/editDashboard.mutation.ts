@@ -29,6 +29,8 @@ type DashboardFilterArgs = {
   variant?: string;
   show?: boolean;
   closable?: boolean;
+  structure?: any;
+  position?: string;
 };
 
 /** Arguments for the editDashboard mutation */
@@ -39,8 +41,6 @@ type EditDashboardArgs = {
   buttons?: DashboardButtonArgs[];
   gridOptions?: any;
   filter?: DashboardFilterArgs;
-  filterStructure?: any;
-  position?: string;
 };
 
 /**
@@ -56,8 +56,6 @@ export default {
     buttons: { type: new GraphQLList(ButtonActionInputType) },
     gridOptions: { type: GraphQLJSON },
     filter: { type: DashboardFilterInputType },
-    filterStructure: { type: GraphQLJSON },
-    position: { type: GraphQLString },
   },
   async resolve(parent, args: EditDashboardArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -90,9 +88,7 @@ export default {
         args.name && { name: args.name },
         args.filter && { filter: args.filter },
         args.buttons && { buttons: args.buttons },
-        args.gridOptions && { gridOptions: args.gridOptions },
-        args.filterStructure && { filterStructure: args.filterStructure },
-        args.position && { position: args.position }
+        args.gridOptions && { gridOptions: args.gridOptions }
       );
       dashboard = await Dashboard.findByIdAndUpdate(args.id, updateDashboard, {
         new: true,

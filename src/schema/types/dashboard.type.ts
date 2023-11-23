@@ -106,7 +106,5 @@ export const DashboardType = new GraphQLObjectType({
       },
     },
     filter: { type: GraphQLJSON },
-    filterStructure: { type: GraphQLJSON },
-    position: { type: GraphQLString },
   }),
 });
