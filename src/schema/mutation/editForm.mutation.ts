@@ -214,7 +214,12 @@ export default {
         const structure = JSON.parse(args.structure);
         const fields = [];
         for (const page of structure.pages) {
-          await extractFields(page, fields, form.core);
+          await extractFields(
+            page,
+            fields,
+            form.core,
+            structure.graphQLQueries
+          );
           findDuplicateFields(fields);
           for (const field of fields.filter((x) =>
             ['resource', 'resources'].includes(x.type)

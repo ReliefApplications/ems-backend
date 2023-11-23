@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql/error';
 import { getFieldType } from './getFieldType';
 import i18next from 'i18next';
 import { validateGraphQLFieldName } from '@utils/validators';
+import { isNil } from 'lodash';
 
 /**
  * Push in fields array all detected fields in the json structure of object.
@@ -10,12 +11,18 @@ import { validateGraphQLFieldName } from '@utils/validators';
  * @param object form structure object, page or panel
  * @param fields list of fields
  * @param core is the form core ?
+ * @param graphqlQueries survey graphql queries
  */
-export const extractFields = async (object, fields, core): Promise<void> => {
+export const extractFields = async (
+  object,
+  fields,
+  core,
+  graphqlQueries
+): Promise<void> => {
   if (object.elements) {
     for (const element of object.elements) {
       if (element.type === 'panel') {
-        await extractFields(element, fields, core);
+        await extractFields(element, fields, core, graphqlQueries);
       } else {
         if (!element.valueName) {
           throw new GraphQLError(
@@ -137,7 +144,47 @@ export const extractFields = async (object, fields, core): Promise<void> => {
           field.type === 'checkbox' ||
           field.type === 'tagbox'
         ) {
-          if (element.choicesByUrl) {
+          if (element.graphqlQuery) {
+            // Get the graphql query from the survey by the name
+            const query = graphqlQueries.find(
+              (x) => x.name === element.graphqlQuery
+            );
+
+            const variables: Record<
+              string,
+              {
+                question: string;
+                required: boolean;
+              }
+            > = {};
+
+            Object.keys(query.variables).forEach((key) => {
+              const variable = query.variables[key];
+
+              // Remove surveyJS artifacts
+              if (isNil(variable.required)) {
+                return;
+              }
+
+              variables[key] = {
+                question: variable.question,
+                required: variable.required,
+              };
+            });
+
+            Object.assign(field, {
+              choicesByGraphql: {
+                query: {
+                  query: query.query,
+                  url: query.url,
+                  variables,
+                },
+                path: element.path,
+                dataKey: element.dataKey,
+                displayKey: element.displayKey,
+              },
+            });
+          } else if (element.choicesByUrl) {
             Object.assign(field, {
               choicesByUrl: {
                 url: element.choicesByUrl.url
