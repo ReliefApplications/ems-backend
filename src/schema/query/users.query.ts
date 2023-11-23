@@ -11,6 +11,7 @@ import { accessibleBy } from '@casl/mongoose';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import getFilter from '@utils/filter/getFilter';
 import { CompositeFilterDescriptor } from '@const/compositeFilter';
+import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
@@ -24,6 +25,27 @@ const FILTER_FIELDS: { name: string; type: string }[] = [
   {
     name: 'name',
     type: 'text',
+  },
+];
+
+/** Available sort fields */
+const SORT_FIELDS = [
+  {
+    name: 'createdAt',
+    cursorId: (node: any) => node.createdAt.getTime().toString(),
+    cursorFilter: (cursor: any, sortOrder: string) => {
+      const operator = sortOrder === 'asc' ? '$gt' : '$lt';
+      return {
+        createdAt: {
+          [operator]: decodeCursor(cursor),
+        },
+      };
+    },
+    sort: (sortOrder: string) => {
+      return {
+        createdAt: getSortOrder(sortOrder),
+      };
+    },
   },
 ];
 
@@ -69,13 +91,14 @@ export default {
           const queryFilters = getFilter(args.filter, FILTER_FIELDS);
           const filters: any[] = [queryFilters, abilityFilters];
           const afterCursor = args.afterCursor;
+
+          const sortField = SORT_FIELDS.find((x) => x.name === 'createdAt');
+          const sortOrder = 'asc';
+
           const cursorFilters = afterCursor
-            ? {
-                _id: {
-                  $gt: decodeCursor(afterCursor),
-                },
-              }
+            ? sortField.cursorFilter(afterCursor, sortOrder)
             : {};
+
           let items: any[] = await User.find({
             $and: [cursorFilters, ...filters],
           })
@@ -84,15 +107,17 @@ export default {
               model: 'Role',
               match: { application: { $eq: null } },
             })
+            .sort(sortField.sort(sortOrder))
             .limit(first + 1);
           const hasNextPage = items.length > first;
           if (hasNextPage) {
             items = items.slice(0, items.length - 1);
           }
           const edges = items.map((r) => ({
-            cursor: encodeCursor(r.id.toString()),
+            cursor: encodeCursor(sortField.cursorId(r)),
             node: r,
           }));
+
           return {
             pageInfo: {
               hasNextPage,

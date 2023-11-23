@@ -4,7 +4,7 @@
  */
 module.exports = {
   email: {
-    sendInvite: true,
+    sendInvite: false,
   },
   user: {
     groups: {
