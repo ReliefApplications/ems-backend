@@ -149,6 +149,7 @@ router.post('/form/records/:id', async (req: any, res) => {
         .send(i18next.t('routes.upload.errors.missingFile'));
     // Get the file from request
     const file = req.files.excelFile;
+    console.log(file.size);
     // Check file size
     if (file.size > FILE_SIZE_LIMIT)
       return res
