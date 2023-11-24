@@ -1,7 +1,7 @@
 import { GraphQLID, GraphQLList } from 'graphql';
 import {
   defaultMetaFieldsFlat,
-  UserMetaType,
+  userMetaResolver,
 } from '@const/defaultRecordFields';
 import {
   getFields,
@@ -177,17 +177,11 @@ export const getMetaResolver = (
     );
 
   const usersResolver = {
-    createdBy: {
-      type: UserMetaType,
-      resolve(entity) {
-        return entity ? true : false;
-      },
+    createdBy: (parent, args, context, info) => {
+      return userMetaResolver(info);
     },
-    lastUpdatedBy: {
-      type: UserMetaType,
-      resolve(entity) {
-        return entity ? true : false;
-      },
+    lastUpdatedBy: (parent, args, context, info) => {
+      return userMetaResolver(info);
     },
   };
 

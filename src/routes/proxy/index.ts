@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import { ApiConfiguration } from '@models';
 import { getToken } from '@utils/proxy';
-import { get, isEmpty } from 'lodash';
+import { get, isEmpty, lowerCase } from 'lodash';
 import i18next from 'i18next';
 import { logger } from '@services/logger.service';
 import config from 'config';
@@ -36,11 +36,7 @@ const proxyAPIRequest = async (
 ) => {
   try {
     let client: RedisClientType;
-    if (
-      config.get('redis.url') &&
-      req.method.toLowerCase() === 'get' &&
-      !ping
-    ) {
+    if (config.get('redis.url') && lowerCase(req.method) === 'get' && !ping) {
       client = createClient({
         url: config.get('redis.url'),
         password: config.get('redis.password'),
