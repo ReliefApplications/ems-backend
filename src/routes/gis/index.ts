@@ -189,6 +189,7 @@ const getFeatures = async (
   if (mapping.adminField) {
     adminPolygons = await getPolygons(mapping.adminField);
   }
+  console.log('Items length is : ', items.length);
   items.forEach((item) => {
     try {
       if (mapping.adminField) {

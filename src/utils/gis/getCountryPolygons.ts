@@ -60,7 +60,10 @@ export const getAdmin0Polygons = async (
       url: config.get('redis.url'),
       password: config.get('redis.password'),
     });
-    client.on('error', (error) => logger.error(`REDIS: ${error}`));
+    client.on('error', (error) => {
+      console.log('error is here');
+      logger.error(`REDIS: ${error}`);
+    });
     await client.connect();
   }
   const cacheData = client ? await client.get(cacheKey) : null;
@@ -91,6 +94,7 @@ export const getAdmin0Polygons = async (
     })
       .then(({ data }) => {
         if (client) {
+          console.log('setting cache');
           client.set(cacheKey, JSON.stringify(data.data.countrys), {
             EX: 60 * 60 * 1, // set a cache of one hour
           });
@@ -102,12 +106,17 @@ export const getAdmin0Polygons = async (
         return [];
       });
   } else {
+    console.log('there is cache');
     admin0s = JSON.parse(cacheData);
+    console.log('And length is : ', admin0s.length);
   }
   for (const country of admin0s) {
     if (country.polygons && country[identifier]) {
       set(mapping, country[identifier].toLowerCase(), parse(country.polygons));
     }
+  }
+  if (client) {
+    await client.disconnect();
   }
   return mapping;
 };
