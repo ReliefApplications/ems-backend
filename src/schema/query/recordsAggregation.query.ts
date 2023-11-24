@@ -521,7 +521,7 @@ export default {
           },
         });
       }
-      console.log("PIPELINE = ", pipeline);
+      console.log('PIPELINE = ', pipeline);
       // Get aggregated data
       const recordAggregation = await RecordModel.aggregate(pipeline);
 
