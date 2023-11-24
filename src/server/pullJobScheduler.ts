@@ -464,7 +464,6 @@ export const insertRecords = async (
             }
             return true;
           });
-      console.log(mappedElement);
       // If everything is fine, push it in the array for saving
       if (!isDuplicate) {
         transformRecord(mappedElement, form.fields);
