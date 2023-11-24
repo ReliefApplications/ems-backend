@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { Form, Record, ReferenceData, User } from '@models';
+import { Form, Record, ReferenceData, User, Resource } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { decodeCursor, encodeCursor } from '@schema/types';
 import getReversedFields from '../../introspection/getReversedFields';
@@ -587,14 +587,51 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             })
           )
         );
+        const projectionObject = projection.reduce((acc, field) => {
+          acc[field] = 1;
+          return acc;
+        }, {});
+        // get aggregated fields from resource
+        const resourceFieldsToCalculate = [];
+        // get each resource in resourceFields
+        const promises = resourcesFields.map(async (resource: any) => {
+          // filter resource by resource id
+          const resourceData = await Resource.findById(resource.resource);
+          if (resourceData) {
+            // get each field of resourceData
+            resourceData.fields.forEach((rdField: any) => {
+              // if have the resourceDataField in resource.fields
+              if (resource.fields.includes(rdField.name) && rdField.expression) {
+                // add it to resource fields to be calculated
+                resourceFieldsToCalculate.push(rdField);
+              }
+            });
+          }
+        });
+        await Promise.all(promises);
+        // get the resource calculated fields
+        const resourceCalculatedFields = [];
+        resourceFieldsToCalculate.forEach((f) =>{
+          resourceCalculatedFields.push(
+            ...buildCalculatedFieldPipeline(f.expression, f.name)
+          )
+        });
         // Fetch records
-        const relatedRecords = await Record.find(
+        const relatedRecords = await Record.aggregate([
           {
-            $or: [{ _id: { $in: relatedIds } }, ...relatedFilters],
-            archived: { $ne: true },
+            $match: {
+              $or: [
+                { _id: { $in: relatedIds.map((x) => new mongoose.Types.ObjectId(x)), } }, 
+                ...relatedFilters
+              ],
+              archived: { $ne: true },
+            },
           },
-          projection
-        );
+          ...resourceCalculatedFields,
+          {
+            $project: projectionObject
+          },
+        ])
         // Update items
         for (const item of itemsToUpdate) {
           if (item.record) {
