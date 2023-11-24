@@ -228,12 +228,12 @@ const accessFieldIncludingNested = (data: any, identifier: string): any => {
 /**
  * Return ownership value according to list of regions
  *
- * @param regionList List of WHO regions
+ * @param user User that pinned the information
  * @param signalHQPHIAppId Id of application Signal HQ PHI
  * @returns list of user roles
  */
 const assignEIOSOwnership = async (
-  regionList: string[],
+  user: any,
   signalHQPHIAppId: any
 ): Promise<any[]> => {
   const ownersList = [];
@@ -242,28 +242,27 @@ const assignEIOSOwnership = async (
     title: 'User',
   });
   ownersList.push(signalHQPHIUserRole._id);
-  const filterList: any[] = [
-    {
-      $lookup: {
-        from: 'applications',
-        localField: 'application',
-        foreignField: '_id',
-        as: '_application',
-      },
-    },
-  ];
-  const regionFilters = [];
-  regionList.map((region) => {
-    regionFilters.push({
-      $and: [
-        { title: 'User' },
-        { _application: { $elemMatch: { name: { $regex: region } } } },
-      ],
+  if (user) {
+    // Get list of user roles
+    const userRoles = await Role.find({
+      _id: { $in: user.roles },
     });
-  });
-  filterList.push({ $match: { $or: regionFilters } });
-  const userRoles = await Role.aggregate([...filterList]);
-  ownersList.push(...userRoles.map((a) => a._id));
+    // We need to get applications linked to these roles
+    const filterList: any[] = [
+      {
+        $lookup: {
+          from: 'applications',
+          localField: 'application',
+          foreignField: '_id',
+          as: '_application',
+        },
+      },
+    ];
+    console.log(filterList, userRoles);
+  }
+
+  //const userRoles = await Role.aggregate([...filterList]);
+  //ownersList.push(...userRoles.map((a) => a._id));
   return ownersList;
 };
 
@@ -400,26 +399,6 @@ export const insertRecords = async (
         element,
         unicityConditions.concat(linkedFieldsArray.flat())
       );
-      if (isEIOS) {
-        // Get a list of all regions for each item
-        let regionList: string[];
-        for (const [key, value] of Object.entries(mappedElement)) {
-          if (key === 'region') {
-            regionList = value as string[];
-          }
-          if (regionList) {
-            // Get User role for Signal HQ PHI
-            const applicationSignalHQPHI = await Application.find({
-              name: 'Signal HQ PHI',
-            });
-            const ownersList = await assignEIOSOwnership(
-              regionList,
-              applicationSignalHQPHI[0]._id
-            );
-            mappedElement.ownership = ownersList;
-          }
-        }
-      }
       // Adapt identifiers after mapping so if arrays are involved, it will correspond to each element of the array
       for (
         let unicityIndex = 0;
@@ -464,6 +443,25 @@ export const insertRecords = async (
             }
             return true;
           });
+      if (isEIOS) {
+        // Get a list of all regions for each item
+        let userMail = '';
+        for (const [key, value] of Object.entries(mappedElement)) {
+          // Get user that pinned the element from email info
+          if (key === 'pinned_by') {
+            userMail = value as string;
+          }
+          const user = await User.findOne({ username: userMail });
+          const applicationSignalHQPHI = await Application.find({
+            name: 'Signal HQ PHI',
+          });
+          const ownersList = await assignEIOSOwnership(
+            user,
+            applicationSignalHQPHI[0]._id
+          );
+          mappedElement.ownership = ownersList;
+        }
+      }
       // If everything is fine, push it in the array for saving
       if (!isDuplicate) {
         transformRecord(mappedElement, form.fields);
