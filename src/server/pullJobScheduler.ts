@@ -10,6 +10,8 @@ import {
   PullJob,
   Record as RecordModel,
   User,
+  Role,
+  Application,
 } from '@models';
 import pubsub from './pubsub';
 import { CronJob } from 'cron';
@@ -152,7 +154,7 @@ const fetchRecordsServiceToService = (
           .then(({ data: data2 }) => {
             if (data2 && data2.result) {
               // eslint-disable-next-line @typescript-eslint/no-use-before-define
-              insertRecords(data2.result, pullJob);
+              insertRecords(data2.result, pullJob, true);
             }
           })
           .catch((err) => {
@@ -224,14 +226,58 @@ const accessFieldIncludingNested = (data: any, identifier: string): any => {
 };
 
 /**
+ * Return ownership value according to list of regions
+ *
+ * @param regionList List of WHO regions
+ * @param signalHQPHIAppId Id of application Signal HQ PHI
+ * @returns list of user roles
+ */
+const assignEIOSOwnership = async (
+  regionList: string[],
+  signalHQPHIAppId: any
+): Promise<any[]> => {
+  const ownersList = [];
+  const signalHQPHIUserRole = await Role.findOne({
+    application: signalHQPHIAppId,
+    title: 'User',
+  });
+  ownersList.push(signalHQPHIUserRole._id);
+  const filterList: any[] = [
+    {
+      $lookup: {
+        from: 'applications',
+        localField: 'application',
+        foreignField: '_id',
+        as: '_application',
+      },
+    },
+  ];
+  const regionFilters = [];
+  regionList.map((region) => {
+    regionFilters.push({
+      $and: [
+        { title: 'User' },
+        { _application: { $elemMatch: { name: { $regex: region } } } },
+      ],
+    });
+  });
+  filterList.push({ $match: { $or: regionFilters } });
+  const userRoles = await Role.aggregate([...filterList]);
+  ownersList.push(...userRoles.map((a) => a._id));
+  return ownersList;
+};
+
+/**
  *  Use the fetched data to insert records into the dB if needed.
  *
  * @param data array of data fetched from API
  * @param pullJob pull job configuration
+ * @param isEIOS is EIOS pulljob or not
  */
 export const insertRecords = async (
   data: any[],
-  pullJob: PullJob
+  pullJob: PullJob,
+  isEIOS?: boolean
 ): Promise<void> => {
   const form = await Form.findById(pullJob.convertTo);
   if (form) {
@@ -354,6 +400,26 @@ export const insertRecords = async (
         element,
         unicityConditions.concat(linkedFieldsArray.flat())
       );
+      if (isEIOS) {
+        // Get a list of all regions for each item
+        let regionList: string[];
+        for (const [key, value] of Object.entries(mappedElement)) {
+          if (key === 'region') {
+            regionList = value as string[];
+          }
+          if (regionList) {
+            // Get User role for Signal HQ PHI
+            const applicationSignalHQPHI = await Application.find({
+              name: 'Signal HQ PHI',
+            });
+            const ownersList = await assignEIOSOwnership(
+              regionList,
+              applicationSignalHQPHI[0]._id
+            );
+            mappedElement.ownership = ownersList;
+          }
+        }
+      }
       // Adapt identifiers after mapping so if arrays are involved, it will correspond to each element of the array
       for (
         let unicityIndex = 0;
@@ -398,6 +464,7 @@ export const insertRecords = async (
             }
             return true;
           });
+      console.log(mappedElement);
       // If everything is fine, push it in the array for saving
       if (!isDuplicate) {
         transformRecord(mappedElement, form.fields);
