@@ -7,6 +7,7 @@ import getFilter, {
   FLAT_DEFAULT_FIELDS,
   extractFilterFields,
 } from './getFilter';
+import getSearchFilter from './getSearchFilter';
 import getStyle from './getStyle';
 import getSortAggregation from './getSortAggregation';
 import mongoose from 'mongoose';
@@ -30,7 +31,7 @@ const DEFAULT_FIRST = 25;
 const projectAggregation = [
   {
     $project: {
-      id: { $toString: '$_id' },
+      id: 1,
       _id: 1,
       incrementalId: 1,
       _form: {
@@ -45,7 +46,7 @@ const projectAggregation = [
       createdAt: 1,
       _createdBy: {
         user: {
-          id: { $toString: '$_createdBy.user._id' },
+          id: 1,
           _id: 1,
           name: 1,
           username: 1,
@@ -54,7 +55,7 @@ const projectAggregation = [
       modifiedAt: 1,
       _lastUpdatedBy: {
         user: {
-          id: { $toString: '$_lastUpdatedBy.user._id' },
+          id: 1,
           _id: 1,
           name: 1,
           username: 1,
@@ -124,6 +125,23 @@ const getAtAggregation = (at: Date) => {
     },
   ];
 };
+
+/**
+ *
+ */
+const defaultRecordAggregation = [
+  { $addFields: { id: { $toString: '$_id' } } },
+  {
+    $addFields: {
+      '_createdBy.user.id': { $toString: '$_createdBy.user._id' },
+    },
+  },
+  {
+    $addFields: {
+      '_lastUpdatedBy.user.id': { $toString: '$_lastUpdatedBy.user._id' },
+    },
+  },
+];
 
 /**
  * Get queried fields from query definition
@@ -404,6 +422,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       const filters = {
         $and: [basicFilters, mongooseFilter, permissionFilters],
       };
+
+      const searchFilter = getSearchFilter(filter, fields, context);
+
       // === RUN AGGREGATION TO FETCH ITEMS ===
       let items: Record[] = [];
       let totalCount = 0;
@@ -416,30 +437,38 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           fields,
           context
         );
-        const pipeline = [
-          { $match: filters },
-
-          ...(at ? getAtAggregation(new Date(at)) : []),
-          ...linkedRecordsAggregation,
-          ...linkedReferenceDataAggregation,
-          ...calculatedFieldsAggregation,
-          ...sort,
-        ];
-        const count = await Record.aggregate([
-          { $match: filters },
-
-          ...(at ? getAtAggregation(new Date(at)) : []),
-          ...linkedRecordsAggregation,
-          ...linkedReferenceDataAggregation,
-          ...calculatedFieldsAggregation,
-        ]).count('count');
-        const aggregation = await Record.aggregate(pipeline)
-          .skip(skip)
-          .limit(first + 1)
-          .facet({
-            items: [...projectAggregation],
-          });
-        aggregation[0].totalCount = count;
+        let pipeline = [];
+        if (searchFilter) {
+          pipeline = [
+            searchFilter,
+            ...calculatedFieldsAggregation,
+            ...defaultRecordAggregation,
+            { $match: filters },
+            ...(at ? getAtAggregation(new Date(at)) : []),
+          ];
+        } else {
+          pipeline = [
+            ...calculatedFieldsAggregation,
+            ...defaultRecordAggregation,
+            { $match: filters },
+            ...(at ? getAtAggregation(new Date(at)) : []),
+          ];
+        }
+        const aggregation = await Record.aggregate(pipeline).facet({
+          items: [
+            ...linkedRecordsAggregation,
+            ...linkedReferenceDataAggregation,
+            ...sort,
+            ...projectAggregation,
+            { $skip: skip },
+            { $limit: first + 1 },
+          ],
+          totalCount: [
+            {
+              $count: 'count',
+            },
+          ],
+        });
         items = aggregation[0].items;
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       } else {

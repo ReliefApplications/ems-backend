@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { getDateForMongo } from '@utils/filter/getDateForMongo';
 import { getTimeForMongo } from '@utils/filter/getTimeForMongo';
 import { MULTISELECT_TYPES, DATE_TYPES } from '@const/fieldTypes';
+import { isNumber } from 'lodash';
 
 /** The default fields */
 const DEFAULT_FIELDS = [
@@ -65,10 +66,6 @@ export const extractFilterFields = (filter: any): string[] => {
  * @returns Mongo filter.
  */
 
-let conjunctedSearch: string;
-conjunctedSearch = '';
-let conjunctedSearchUsed: boolean;
-conjunctedSearchUsed = false;
 /**
  * @param filter
  * @param fields
@@ -348,21 +345,21 @@ const buildMongoFilter = (
           }
           case 'contains': {
             if (MULTISELECT_TYPES.includes(type)) {
-              if (Array.isArray(value)) {
-                return { [fieldName]: { $all: value } };
-              } else {
-                return { [fieldName]: { $all: [value] } };
-              }
+              return { [fieldName]: { $all: value } };
+              // Check if a number has been searched globally
+              //  If so, perform an 'eq' search
+            } else if (isNumber(value?.[0]?.value)) {
+              const eq = value.map((v) => {
+                return { [`data.${v.field}`]: { $eq: v.value } };
+              });
+              return { $or: eq };
+            } else if (
+              fieldName === 'data._globalSearch' &&
+              (type === 'text' || type === '')
+            ) {
+              return;
             } else {
-              if (fieldName == 'data._globalSearch') {
-                conjunctedSearch += `"${value}" `;
-                conjunctedSearchUsed = true;
-                return;
-              } else {
-                conjunctedSearch += `${value} `;
-                conjunctedSearchUsed = true;
-                return { [fieldName]: { $regex: value, $options: 'i' } };
-              }
+              return { [fieldName]: { $regex: value, $options: 'i' } };
             }
           }
           case 'doesnotcontain': {
@@ -485,13 +482,9 @@ export default (
   context?: any,
   prefix = 'data.'
 ) => {
-  conjunctedSearch = '';
-  conjunctedSearchUsed = false;
   const expandedFields = fields.concat(DEFAULT_FIELDS);
   const mongooseFilter =
     buildMongoFilter(filter, expandedFields, context, prefix) || {};
-  if (conjunctedSearchUsed) {
-    mongooseFilter?.$and.unshift({ $text: { $search: `${conjunctedSearch}` } });
-  }
+
   return mongooseFilter;
 };
