@@ -601,7 +601,10 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             // get each field of resourceData
             resourceData.fields.forEach((rdField: any) => {
               // if have the resourceDataField in resource.fields
-              if (resource.fields.includes(rdField.name) && rdField.expression) {
+              if (
+                resource.fields.includes(rdField.name) &&
+                rdField.expression
+              ) {
                 // add it to resource fields to be calculated
                 resourceFieldsToCalculate.push(rdField);
               }
@@ -611,27 +614,31 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         await Promise.all(promises);
         // get the resource calculated fields
         const resourceCalculatedFields = [];
-        resourceFieldsToCalculate.forEach((f) =>{
+        resourceFieldsToCalculate.forEach((f) => {
           resourceCalculatedFields.push(
             ...buildCalculatedFieldPipeline(f.expression, f.name)
-          )
+          );
         });
         // Fetch records
         const relatedRecords = await Record.aggregate([
           {
             $match: {
               $or: [
-                { _id: { $in: relatedIds.map((x) => new mongoose.Types.ObjectId(x)), } }, 
-                ...relatedFilters
+                {
+                  _id: {
+                    $in: relatedIds.map((x) => new mongoose.Types.ObjectId(x)),
+                  },
+                },
+                ...relatedFilters,
               ],
               archived: { $ne: true },
             },
           },
           ...resourceCalculatedFields,
           {
-            $project: projectionObject
+            $project: projectionObject,
           },
-        ])
+        ]);
         // Update items
         for (const item of itemsToUpdate) {
           if (item.record) {
