@@ -1,3 +1,29 @@
+# [2.2.0-beta.9](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0-beta.8...v2.2.0-beta.9) (2023-11-24)
+
+
+### Bug Fixes
+
+* add resource fields to history ([71e708d](https://github.com/ReliefApplications/ems-backend/commit/71e708dcfb4f36f6b955624cc15fbfc09a3b4c38))
+* allow parallel sorting in aggregations ([#798](https://github.com/ReliefApplications/ems-backend/issues/798)) ([8b7a8ec](https://github.com/ReliefApplications/ems-backend/commit/8b7a8ec84346afc686190d2b7d321375b71d7b74))
+* check of calculated fields in pipeline of 'all' query could break some queries ([00e88f8](https://github.com/ReliefApplications/ems-backend/commit/00e88f8087726ba896a35f898049105d1d55062c))
+* could not get first createdBy in history ([47b33fd](https://github.com/ReliefApplications/ems-backend/commit/47b33fd25f84c7c49ee09503a1fbe8f41b40473d))
+* could not revert past history versions ([d9999a1](https://github.com/ReliefApplications/ems-backend/commit/d9999a1666d12e1282c28b334ce91b0b24cf8142))
+* incorrect audience settings ([9c8e710](https://github.com/ReliefApplications/ems-backend/commit/9c8e710c3d08ee2ccea504a2a410dceeccd62735))
+* incorrect list of permissions sent to back-office role editor ([#786](https://github.com/ReliefApplications/ems-backend/issues/786)) ([d4377c0](https://github.com/ReliefApplications/ems-backend/commit/d4377c020674c2737d02f1781ff002bf7810cccc))
+* incorrect metadata for createdBy / lastUpdatedBy fields ([#829](https://github.com/ReliefApplications/ems-backend/issues/829)) ([c6892f3](https://github.com/ReliefApplications/ems-backend/commit/c6892f35b24d6c2b350599275de82280f9c5630a))
+* non-admin users could not download history ([#785](https://github.com/ReliefApplications/ems-backend/issues/785)) ([862fdcc](https://github.com/ReliefApplications/ems-backend/commit/862fdccc44a77264299aac2b47ecfe8024f70b41))
+* owner field could create issue in history ([0b08985](https://github.com/ReliefApplications/ems-backend/commit/0b089850852b02b7a70740c97d6aaee33c9a0c0d))
+* record history would not correctly display changes on resources for some users ([f2cfa5f](https://github.com/ReliefApplications/ems-backend/commit/f2cfa5f7d9f10613b2fc22d1a46ae65bce098bd3))
+* some requests could not be cached due to incorrect method check ([61e44c7](https://github.com/ReliefApplications/ems-backend/commit/61e44c7a2c03160a81d4d3d7fcaa05e43ec1dbb6))
+* updated editApiConfiguration mutation ([#793](https://github.com/ReliefApplications/ems-backend/issues/793)) ([dbe15c6](https://github.com/ReliefApplications/ems-backend/commit/dbe15c6cfb7b9754c2f06bda671bc4b43acc1885))
+* users roles not appearing in applications ([#835](https://github.com/ReliefApplications/ems-backend/issues/835)) ([d05d061](https://github.com/ReliefApplications/ems-backend/commit/d05d0619635bb2c26ac902fc06789b6d58b899c7))
+* using size operator on nullish values in aggregations on records ([#836](https://github.com/ReliefApplications/ems-backend/issues/836)) ([5eca1c7](https://github.com/ReliefApplications/ems-backend/commit/5eca1c704264fee19eb555f34ec6860326fa44df))
+
+
+### Features
+
+* allow caching of more API requests ([#825](https://github.com/ReliefApplications/ems-backend/issues/825)) ([105f0a5](https://github.com/ReliefApplications/ems-backend/commit/105f0a50685363f6eab3bc936df308774b7e7015))
+
 # [2.2.0-beta.8](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0-beta.7...v2.2.0-beta.8) (2023-11-20)
 
 
