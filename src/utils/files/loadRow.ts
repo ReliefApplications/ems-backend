@@ -17,7 +17,7 @@ export const loadRow = (
   const positionAttributes = [];
   for (const column of columns) {
     const value = row[column.index];
-    if (value !== undefined) {
+    if (!isNil(value)) {
       switch (column.type) {
         case 'boolean': {
           let val: string | number | boolean;
@@ -47,7 +47,7 @@ export const loadRow = (
             }
           } else {
             // General column for the field, so we can directly save the values in the record
-            set(data, column.field, value);
+            set(data, column.field, value.split(','));
           }
           break;
         }

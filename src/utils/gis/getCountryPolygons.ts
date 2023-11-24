@@ -111,9 +111,6 @@ export const getAdmin0Polygons = async (
       set(mapping, country[identifier].toLowerCase(), parse(country.polygons));
     }
   }
-  if (client) {
-    await client.disconnect();
-  }
   return mapping;
 };
 
