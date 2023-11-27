@@ -1,3 +1,11 @@
+# [2.2.0-beta.10](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0-beta.9...v2.2.0-beta.10) (2023-11-27)
+
+
+### Bug Fixes
+
+* redis client error ([2c45593](https://github.com/ReliefApplications/ems-backend/commit/2c4559334e937b62e98bfdf3bea250b36ce5f5eb))
+* upload would fail most of the time for tagbox / checkbox questions ([243f77d](https://github.com/ReliefApplications/ems-backend/commit/243f77d33971455cd1f26995d11c36dc3e37d154))
+
 # [2.2.0-beta.9](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0-beta.8...v2.2.0-beta.9) (2023-11-24)
 
 
