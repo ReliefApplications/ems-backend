@@ -278,32 +278,6 @@ export default {
             },
           },
         });
-        // get aggregated fields from resource
-        const resourceFieldsToCalculate = [];
-        const promises = resource.fields.map(async (resourceField: any) => {
-          const resourceData = await Resource.findById(resourceField.resource);
-          if (resourceData) {
-            const values = Object.values(args.mapping).flat();
-            // get each field of resourceData
-            resourceData.fields.forEach((rdField: any) => {
-              // if have the resourceDataField in resource.fields
-              if (
-                values.some((item: any) => item.includes(rdField.name)) &&
-                rdField.expression
-              ) {
-                // add it to resource fields to be calculated
-                resourceFieldsToCalculate.push(rdField);
-              }
-            });
-          }
-        });
-        await Promise.all(promises);
-        // get the resource calculated fields
-        resourceFieldsToCalculate.forEach((f) => {
-          pipeline.unshift(
-            ...buildCalculatedFieldPipeline(f.expression, f.name)
-          );
-        });
         // Loop on fields to apply lookups for special fields
         for (const fieldName of aggregation.sourceFields) {
           const field = resource.fields.find((x) => x.name === fieldName);
@@ -447,6 +421,36 @@ export default {
             pipeline.push(...referenceDataAggregation);
           }
         }
+        const resourceFieldsToCalculate = [];
+        aggregation.sourceFields
+        const promises = resource.fields.map(async (resourceField: any) => {
+          const resourceData = await Resource.findById(resourceField.resource);
+          if (resourceData) {
+            // const values = Object.values(args.mapping).flat();
+            // get each field of resourceData
+            resourceData.fields.forEach((rdField: any) => {
+              // if have the resourceDataField is a expression
+              if (rdField.expression) {
+                // add it to resource fields to be calculated
+                resourceFieldsToCalculate.push(
+                  {
+                    field: rdField,
+                    name: resourceData.name,
+                  }
+                );
+              }
+            });
+          }
+        });
+        await Promise.all(promises);
+        resourceFieldsToCalculate.forEach((obj) => {
+          pipeline.push(
+            ...buildCalculatedFieldPipeline(
+              obj.field.expression,
+              `${obj.name}.${obj.field.name}`
+            )
+          );
+        });
         pipeline.push({
           $project: {
             ...(aggregation.sourceFields as any[]).reduce(
@@ -521,11 +525,8 @@ export default {
           },
         });
       }
-      console.log('PIPELINE = ', pipeline);
       // Get aggregated data
       const recordAggregation = await RecordModel.aggregate(pipeline);
-
-      console.log(recordAggregation);
 
       let items;
       let totalCount;
