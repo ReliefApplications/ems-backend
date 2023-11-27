@@ -422,7 +422,6 @@ export default {
           }
         }
         const resourceFieldsToCalculate = [];
-        aggregation.sourceFields
         const promises = resource.fields.map(async (resourceField: any) => {
           const resourceData = await Resource.findById(resourceField.resource);
           if (resourceData) {
@@ -432,12 +431,10 @@ export default {
               // if have the resourceDataField is a expression
               if (rdField.expression) {
                 // add it to resource fields to be calculated
-                resourceFieldsToCalculate.push(
-                  {
-                    field: rdField,
-                    name: resourceData.name,
-                  }
-                );
+                resourceFieldsToCalculate.push({
+                  field: rdField,
+                  name: resourceData.name,
+                });
               }
             });
           }
