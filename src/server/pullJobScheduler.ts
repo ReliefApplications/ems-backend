@@ -251,6 +251,7 @@ const assignEIOSOwnership = async (
   });
   ownersList.push(signalHQPHIUserRole._id);
   if (user) {
+    // Only get user roles linked to regional applications
     const filterList: any[] = [
       {
         $lookup: {
@@ -271,14 +272,17 @@ const assignEIOSOwnership = async (
         },
       },
     ];
-    // Get list of user roles
     const userRoles = await Role.aggregate([...filterList]);
-    // We need to get applications linked to these roles
-    console.dir(userRoles, { depth: null });
+    // Get list of application ids and then do findAll
+    if (userRoles.length > 0) {
+      const regionalAppsIds = [...userRoles.map((a) => a._application[0]._id)];
+      const regionalRolesToAssign = await Role.find({
+        application: { $in: regionalAppsIds },
+        title: 'User',
+      }).select('_id');
+      ownersList.push(...regionalRolesToAssign.map((a) => a._id));
+    }
   }
-
-  //const userRoles = await Role.aggregate([...filterList]);
-  //ownersList.push(...userRoles.map((a) => a._id));
   return ownersList;
 };
 
