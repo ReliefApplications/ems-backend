@@ -236,6 +236,14 @@ const assignEIOSOwnership = async (
   user: any,
   signalHQPHIAppId: any
 ): Promise<any[]> => {
+  const regionalAppsList = [
+    'Signal EURO',
+    'Signal WPRO',
+    'Signal EMRO',
+    'Signal AFRO',
+    'Signal SEARO',
+    'Signal AMRO',
+  ];
   const ownersList = [];
   const signalHQPHIUserRole = await Role.findOne({
     application: signalHQPHIAppId,
@@ -243,11 +251,6 @@ const assignEIOSOwnership = async (
   });
   ownersList.push(signalHQPHIUserRole._id);
   if (user) {
-    // Get list of user roles
-    const userRoles = await Role.find({
-      _id: { $in: user.roles },
-    });
-    // We need to get applications linked to these roles
     const filterList: any[] = [
       {
         $lookup: {
@@ -257,8 +260,21 @@ const assignEIOSOwnership = async (
           as: '_application',
         },
       },
+      {
+        $match: {
+          _id: { $in: user.roles },
+        },
+      },
+      {
+        $match: {
+          _application: { $elemMatch: { name: { $in: regionalAppsList } } },
+        },
+      },
     ];
-    console.log(filterList, userRoles);
+    // Get list of user roles
+    const userRoles = await Role.aggregate([...filterList]);
+    // We need to get applications linked to these roles
+    console.dir(userRoles, { depth: null });
   }
 
   //const userRoles = await Role.aggregate([...filterList]);
