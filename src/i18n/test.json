@@ -204,6 +204,7 @@
 			},
 			"edit": {
 				"errors": {
+					"invalidArguments": "******",
 					"wrongTemplateProvided": "******"
 				}
 			}
