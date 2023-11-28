@@ -26,6 +26,7 @@ export interface Dashboard extends Document {
   createdAt?: Date;
   modifiedAt?: Date;
   structure?: any;
+  showFilter?: boolean;
   buttons?: Button[];
   archived: boolean;
   archivedAt?: Date;
@@ -62,6 +63,7 @@ const dashboardSchema = new Schema<Dashboard>(
   {
     name: String,
     structure: mongoose.Schema.Types.Mixed,
+    showFilter: Boolean,
     buttons: [buttonSchema],
     archived: {
       type: Boolean,

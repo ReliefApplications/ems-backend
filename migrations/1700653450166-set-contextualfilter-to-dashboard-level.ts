@@ -13,23 +13,24 @@ const updateDashboard = async (
   dashboard: Dashboard,
   application: Application
 ) => {
+  // Only edit dashboards where the filter is unset, to avoid erasing data
   if (!dashboard.filter) {
-    dashboard.filter = {};
+    await Dashboard.findByIdAndUpdate(dashboard.id, {
+      filter: {
+        show: true,
+        closable: false,
+        structure: application.contextualFilter,
+        position: application.contextualFilterPosition,
+        variant: 'default',
+      },
+    });
+
+    logger.info(
+      `[${application.name} / ${dashboard.name}]: updated filter of application level to dashboard level.`
+    );
+  } else {
+    return;
   }
-  dashboard.filter.structure = application.contextualFilter;
-  dashboard.filter.position = application.contextualFilterPosition;
-
-  await Dashboard.findByIdAndUpdate(dashboard.id, {
-    filter: {
-      ...dashboard.filter,
-      structure: dashboard.filter.structure,
-      position: dashboard.filter.position,
-    },
-  });
-
-  logger.info(
-    `[${application.name} / ${dashboard.name}]: updated filter of application level to dashboard level.`
-  );
 };
 
 /**
