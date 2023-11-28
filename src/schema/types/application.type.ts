@@ -480,8 +480,6 @@ export const ApplicationType = new GraphQLObjectType({
     distributionLists: {
       type: new GraphQLList(DistributionListType),
     },
-    contextualFilter: { type: GraphQLJSON },
-    contextualFilterPosition: { type: GraphQLString },
     customNotifications: {
       type: CustomNotificationConnectionConnectionType,
       args: {
