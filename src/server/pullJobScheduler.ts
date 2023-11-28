@@ -31,6 +31,11 @@ const taskMap: Record<string, CronJob> = {};
 const DEFAULT_FIELDS = ['createdBy'];
 
 /**
+ * List of regions used to assign ownership
+ */
+const regionList = ['EURO', 'WPRO', 'EMRO', 'AFRO', 'SEARO', 'AMRO'];
+
+/**
  * Global function called on server start to initialize all the pullJobs.
  */
 const pullJobScheduler = async () => {
@@ -228,61 +233,22 @@ const accessFieldIncludingNested = (data: any, identifier: string): any => {
 /**
  * Return ownership value according to list of regions
  *
- * @param user User that pinned the information
+ * @param boardName name of the EIOS board
  * @param signalHQPHIAppId Id of application Signal HQ PHI
- * @returns list of user roles
+ * @returns list of user roles ids
  */
 const assignEIOSOwnership = async (
-  user: any,
+  boardName: string,
   signalHQPHIAppId: any
 ): Promise<any[]> => {
-  const regionalAppsList = [
-    'Signal EURO',
-    'Signal WPRO',
-    'Signal EMRO',
-    'Signal AFRO',
-    'Signal SEARO',
-    'Signal AMRO',
-  ];
   const ownersList = [];
+  // Automatically assign user role for Signal HQ PHI app
   const signalHQPHIUserRole = await Role.findOne({
     application: signalHQPHIAppId,
     title: 'User',
   });
   ownersList.push(signalHQPHIUserRole._id);
-  if (user) {
-    // Only get user roles linked to regional applications
-    const filterList: any[] = [
-      {
-        $lookup: {
-          from: 'applications',
-          localField: 'application',
-          foreignField: '_id',
-          as: '_application',
-        },
-      },
-      {
-        $match: {
-          _id: { $in: user.roles },
-        },
-      },
-      {
-        $match: {
-          _application: { $elemMatch: { name: { $in: regionalAppsList } } },
-        },
-      },
-    ];
-    const userRoles = await Role.aggregate([...filterList]);
-    // Get list of application ids and then do findAll
-    if (userRoles.length > 0) {
-      const regionalAppsIds = [...userRoles.map((a) => a._application[0]._id)];
-      const regionalRolesToAssign = await Role.find({
-        application: { $in: regionalAppsIds },
-        title: 'User',
-      }).select('_id');
-      ownersList.push(...regionalRolesToAssign.map((a) => a._id));
-    }
-  }
+  console.log('REGIONS', regionList);
   return ownersList;
 };
 
@@ -464,23 +430,16 @@ export const insertRecords = async (
             return true;
           });
       if (isEIOS) {
-        // Get a list of all regions for each item
-        let userMail = '';
-        for (const [key, value] of Object.entries(mappedElement)) {
-          // Get user that pinned the element from email info
-          if (key === 'pinned_by') {
-            userMail = value as string;
-          }
-          const user = await User.findOne({ username: userMail });
-          const applicationSignalHQPHI = await Application.find({
-            name: 'Signal HQ PHI',
-          });
-          const ownersList = await assignEIOSOwnership(
-            user,
-            applicationSignalHQPHI[0]._id
-          );
-          mappedElement.ownership = ownersList;
-        }
+        const boardName = mappedElement.article_board_name;
+        // Get Id of Signal HQ PHI app
+        const applicationSignalHQPHI = await Application.find({
+          name: 'Signal HQ PHI',
+        });
+        const ownersList = await assignEIOSOwnership(
+          boardName as string,
+          applicationSignalHQPHI[0]._id
+        );
+        mappedElement.ownership = ownersList;
       }
       // If everything is fine, push it in the array for saving
       if (!isDuplicate) {
