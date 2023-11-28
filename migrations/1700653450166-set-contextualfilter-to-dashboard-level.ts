@@ -14,7 +14,7 @@ const updateDashboard = async (
   application: Application
 ) => {
   // Only edit dashboards where the filter is unset, to avoid erasing data
-  if (!dashboard.filter) {
+  if (!dashboard.filter && dashboard.showFilter) {
     await Dashboard.findByIdAndUpdate(dashboard.id, {
       filter: {
         show: true,
