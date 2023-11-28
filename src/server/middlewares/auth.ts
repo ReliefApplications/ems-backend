@@ -22,6 +22,9 @@ authMiddleware.use(
 authMiddleware.use(passport.initialize());
 authMiddleware.use(passport.session());
 
+/** Get audience */
+const audience = JSON.parse(config.get<string>('auth.audience'));
+
 // Use custom authentication endpoint or azure AD depending on config
 if (config.get('auth.provider') === AuthenticationType.keycloak) {
   const credentials = {
@@ -116,7 +119,6 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
     }) as Strategy
   );
 } else {
-  const audience: string[] = config.get('auth.audience');
   // Azure Active Directory configuration
   const credentials: IBearerStrategyOptionWithRequest = config.get(
     'auth.tenantId'
