@@ -248,7 +248,36 @@ const assignEIOSOwnership = async (
     title: 'User',
   });
   ownersList.push(signalHQPHIUserRole._id);
-  console.log('REGIONS', regionList);
+  // If board name contains region assign user role from that regional app
+  const regionToAssign = regionList.find((element) =>
+    boardName.includes(element)
+  );
+  if (regionToAssign) {
+    // Get user role
+    const filterList: any[] = [
+      {
+        $lookup: {
+          from: 'applications',
+          localField: 'application',
+          foreignField: '_id',
+          as: '_application',
+        },
+      },
+      {
+        $match: {
+          title: 'User',
+        },
+      },
+      {
+        $match: {
+          _application: { $elemMatch: { name: { $regex: regionToAssign } } },
+        },
+      },
+    ];
+    const userRole = await Role.aggregate([...filterList]);
+    ownersList.push(userRole[0]._id);
+  }
+  console.log(ownersList);
   return ownersList;
 };
 
