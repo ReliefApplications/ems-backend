@@ -274,10 +274,34 @@ const assignEIOSOwnership = async (
         },
       },
     ];
-    const userRole = await Role.aggregate([...filterList]);
-    ownersList.push(userRole[0]._id);
+    const regionalUserRole = await Role.aggregate([...filterList]);
+    ownersList.push(regionalUserRole[0]._id);
+  } else if (boardName.toLowerCase().includes('ukraine')) {
+    // Get user role
+    const ukraineApps = ['Signal EURO', 'IMST Signal management'];
+    const filterList: any[] = [
+      {
+        $lookup: {
+          from: 'applications',
+          localField: 'application',
+          foreignField: '_id',
+          as: '_application',
+        },
+      },
+      {
+        $match: {
+          title: 'User',
+        },
+      },
+      {
+        $match: {
+          _application: { $elemMatch: { name: { $in: ukraineApps } } },
+        },
+      },
+    ];
+    const ukraineUserRoles = await Role.aggregate([...filterList]);
+    ownersList.push(...ukraineUserRoles.map((a) => a._id));
   }
-  console.log(ownersList);
   return ownersList;
 };
 
