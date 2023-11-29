@@ -252,53 +252,37 @@ const assignEIOSOwnership = async (
   const regionToAssign = regionList.find((element) =>
     boardName.includes(element)
   );
+  const filterList: any[] = [
+    {
+      $lookup: {
+        from: 'applications',
+        localField: 'application',
+        foreignField: '_id',
+        as: '_application',
+      },
+    },
+    {
+      $match: {
+        title: 'User',
+      },
+    },
+  ];
+
   if (regionToAssign) {
-    // Get user role
-    const filterList: any[] = [
-      {
-        $lookup: {
-          from: 'applications',
-          localField: 'application',
-          foreignField: '_id',
-          as: '_application',
-        },
+    filterList.push({
+      $match: {
+        _application: { $elemMatch: { name: { $regex: regionToAssign } } },
       },
-      {
-        $match: {
-          title: 'User',
-        },
-      },
-      {
-        $match: {
-          _application: { $elemMatch: { name: { $regex: regionToAssign } } },
-        },
-      },
-    ];
+    });
     const regionalUserRole = await Role.aggregate([...filterList]);
     ownersList.push(regionalUserRole[0]._id);
   } else if (boardName.toLowerCase().includes('ukraine')) {
-    // Get user role
     const ukraineApps = ['Signal EURO', 'IMST Signal management'];
-    const filterList: any[] = [
-      {
-        $lookup: {
-          from: 'applications',
-          localField: 'application',
-          foreignField: '_id',
-          as: '_application',
-        },
+    filterList.push({
+      $match: {
+        _application: { $elemMatch: { name: { $in: ukraineApps } } },
       },
-      {
-        $match: {
-          title: 'User',
-        },
-      },
-      {
-        $match: {
-          _application: { $elemMatch: { name: { $in: ukraineApps } } },
-        },
-      },
-    ];
+    });
     const ukraineUserRoles = await Role.aggregate([...filterList]);
     ownersList.push(...ukraineUserRoles.map((a) => a._id));
   }
