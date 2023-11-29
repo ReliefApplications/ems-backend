@@ -84,7 +84,7 @@ export async function extendAbilityForPageOnPage(
   // within the canDelete permissions of the application
   if (ability.cannot('delete', page)) {
     await requireApplication();
-    if (hasApplicationPermission(user, application, 'canDelete')) {
+    if (hasApplicationPermission(user, application, 'canUpdate')) {
       can('delete', 'Page', { _id: page._id });
     }
   }

@@ -91,7 +91,7 @@ export async function extendAbilityForStepOnStep(
   // within the canDelete permissions of the application
   if (ability.cannot('delete', step)) {
     const app = await requireApplication();
-    if (hasApplicationPermission(user, app, 'canDelete')) {
+    if (hasApplicationPermission(user, app, 'canUpdate')) {
       can('delete', 'Step', { _id: step._id });
     }
   }
