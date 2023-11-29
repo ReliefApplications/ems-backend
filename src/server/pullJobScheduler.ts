@@ -33,7 +33,13 @@ const DEFAULT_FIELDS = ['createdBy'];
 /**
  * List of regions used to assign ownership
  */
-const regionList = ['EURO', 'WPRO', 'EMRO', 'AFRO', 'SEARO', 'AMRO'];
+const REGION_LIST = ['EURO', 'WPRO', 'EMRO', 'AFRO', 'SEARO', 'AMRO'];
+
+/**
+ * Regex used to determine what apps are related to covid
+ */
+const COVID_REGEX = new RegExp('^(?!.*(nCoV|excluding COVID)).*(COVID|Cov).*');
+
 
 /**
  * Global function called on server start to initialize all the pullJobs.
@@ -248,10 +254,6 @@ const assignEIOSOwnership = async (
     title: 'User',
   });
   ownersList.push(signalHQPHIUserRole._id);
-  // If board name contains region assign user role from that regional app
-  const regionToAssign = regionList.find((element) =>
-    boardName.includes(element)
-  );
   const filterList: any[] = [
     {
       $lookup: {
@@ -267,7 +269,12 @@ const assignEIOSOwnership = async (
       },
     },
   ];
-
+  console.log('COVID REGEX', COVID_REGEX);
+  // If board name contains region assign user role from that regional app
+  const regionToAssign = REGION_LIST.find((element) =>
+    boardName.includes(element)
+  );
+  // Special regex to find covid data
   if (regionToAssign) {
     filterList.push({
       $match: {
