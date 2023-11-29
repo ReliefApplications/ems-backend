@@ -40,7 +40,6 @@ const REGION_LIST = ['EURO', 'WPRO', 'EMRO', 'AFRO', 'SEARO', 'AMRO'];
  */
 const COVID_REGEX = new RegExp('^(?!.*(nCoV|excluding COVID)).*(COVID|Cov).*');
 
-
 /**
  * Global function called on server start to initialize all the pullJobs.
  */
