@@ -1,8 +1,4 @@
-import {
-  buildMetaQuery,
-  buildQuery,
-  buildTotalCountQuery,
-} from '@utils/query/queryBuilder';
+import { buildMetaQuery } from '@utils/query/queryBuilder';
 import config from 'config';
 import { Workbook, Worksheet } from 'exceljs';
 import get from 'lodash/get';
@@ -11,6 +7,10 @@ import { getRowsFromMeta } from './getRowsFromMeta';
 import axios from 'axios';
 import { logger } from '@services/logger.service';
 import { Parser } from 'json2csv';
+import { Record } from '@models';
+import mongoose from 'mongoose';
+import { defaultRecordFields } from '@const/defaultRecordFields';
+import getFilter from '@utils/schema/resolvers/Query/getFilter';
 
 /**
  * Export batch parameters interface
@@ -23,6 +23,7 @@ interface ExportBatchParams {
   query: any;
   sortField?: string;
   sortOrder?: 'asc' | 'desc';
+  resource?: string;
 }
 
 /**
@@ -92,45 +93,6 @@ const setHeaders = (worksheet: Worksheet, columns: any[]) => {
       right: { style: 'thin' },
     };
   }
-};
-
-/**
- * Get total count of records
- *
- * @param req current request
- * @param params export batch parameters
- * @returns total count as promise
- */
-const getTotalCount = (
-  req: any,
-  params: ExportBatchParams
-): Promise<number> => {
-  const totalCountQuery = buildTotalCountQuery(params.query);
-  return new Promise((resolve) => {
-    axios({
-      url: `${config.get('server.url')}/graphql`,
-      method: 'POST',
-      headers: {
-        Authorization: req.headers.authorization,
-        'Content-Type': 'application/json',
-      },
-      data: {
-        query: totalCountQuery,
-        variables: {
-          filter: params.filter,
-        },
-      },
-    }).then(({ data }) => {
-      if (data.errors) {
-        logger.error(data.errors[0].message);
-      }
-      for (const field in data.data) {
-        if (Object.prototype.hasOwnProperty.call(data.data, field)) {
-          resolve(data.data[field].totalCount);
-        }
-      }
-    });
-  });
 };
 
 /**
@@ -293,141 +255,135 @@ const writeRowsXlsx = (
 /**
  * Get rows for xlsx
  *
- * @param req current request
  * @param params export batch params
- * @param totalCount total count of records
  * @param worksheet worksheet to write on
  * @param columns columns to use
  */
 const getRowsXlsx = async (
-  req: any,
   params: ExportBatchParams,
-  totalCount: number,
   worksheet: Worksheet,
   columns: any[]
 ) => {
-  // Define query to execute on server
-  // todo: optimize in order to avoid using graphQL?
-  const query = buildQuery(params.query);
-  let offset = 0;
-  const batchSize = 1000;
-  do {
-    try {
-      await axios({
-        url: `${config.get('server.url')}/graphql`,
-        method: 'POST',
-        headers: {
-          Authorization: req.headers.authorization,
-          'Content-Type': 'application/json',
+  try {
+    let records: Record[] = [];
+    if (params.ids.length > 0) {
+      records = await Record.find({
+        _id: {
+          $in: params.ids.map((id: string) => new mongoose.Types.ObjectId(id)),
         },
-        data: {
-          query,
-          variables: {
-            first: batchSize,
-            skip: offset,
-            sortField: params.sortField,
-            sortOrder: params.sortOrder,
-            filter: params.filter,
-            display: true,
+      });
+    } else {
+      records = await Record.aggregate([
+        {
+          $match: {
+            $and: [
+              { resource: new mongoose.Types.ObjectId(params.resource) },
+              getFilter(params.filter, columns),
+            ],
           },
         },
-      })
-        // eslint-disable-next-line @typescript-eslint/no-loop-func
-        .then(({ data }) => {
-          if (data.errors) {
-            logger.error(data.errors[0].message);
-          }
-          for (const field in data.data) {
-            if (Object.prototype.hasOwnProperty.call(data.data, field)) {
-              if (data.data[field]) {
-                writeRowsXlsx(
-                  worksheet,
-                  getFlatColumns(columns),
-                  getRowsFromMeta(
-                    columns,
-                    data.data[field].edges.map((x) => x.node)
-                  )
-                );
+        {
+          $project: {
+            _id: 0,
+            ...columns.reduce((acc, col) => {
+              if (
+                defaultRecordFields.some((field) => field.field === col.field)
+              ) {
+                acc[col.field] = `$${col.field}`;
+              } else {
+                acc[col.field] = `$data.${col.field}`;
               }
-            }
-          }
-        });
-    } catch (err) {
-      logger.error(err);
+              return acc;
+            }, {}),
+          },
+        },
+        {
+          $sort: {
+            [params.sortField]: params.sortOrder === 'asc' ? 1 : -1,
+          },
+        },
+      ]);
     }
-
-    offset += batchSize;
-  } while (offset < totalCount);
+    console.log(records[0], JSON.stringify(columns));
+    writeRowsXlsx(
+      worksheet,
+      getFlatColumns(columns),
+      getRowsFromMeta(columns, records)
+    );
+  } catch (err) {
+    logger.error(err.message);
+  }
 };
 
 /**
  * Get rows for csv
  *
- * @param req current request
  * @param params export batch parameters
- * @param totalCount total count of records
  * @param parser csv parser
  * @param columns columns to use
  * @returns csv
  */
 const getRowsCsv = async (
-  req: any,
   params: ExportBatchParams,
-  totalCount: number,
   parser: Parser,
   columns: any[]
 ) => {
-  // Define query to execute on server
-  // todo: optimize in order to avoid using graphQL?
-  const query = buildQuery(params.query);
-  let offset = 0;
-  const batchSize = 1000;
   const csvData = [];
-  do {
-    await axios({
-      url: `${config.get('server.url')}/graphql`,
-      method: 'POST',
-      headers: {
-        Authorization: req.headers.authorization,
-        'Content-Type': 'application/json',
-      },
-      data: {
-        query,
-        variables: {
-          first: batchSize,
-          skip: offset,
-          sortField: params.sortField,
-          sortOrder: params.sortOrder,
-          filter: params.filter,
-          display: true,
+  try {
+    let records: Record[] = [];
+    if (params.ids.length > 0) {
+      records = await Record.find({
+        _id: {
+          $in: params.ids.map((id: string) => new mongoose.Types.ObjectId(id)),
         },
-      },
-    })
-      // eslint-disable-next-line @typescript-eslint/no-loop-func
-      .then(({ data }) => {
-        if (data.errors) {
-          logger.error(data.errors[0].message);
-        }
-        for (const field in data.data) {
-          if (Object.prototype.hasOwnProperty.call(data.data, field)) {
-            if (data.data[field]) {
-              for (const row of data.data[field].edges.map((x) => x.node)) {
-                const temp = {};
-                for (const column of columns) {
-                  if (column.subColumns) {
-                    temp[column.name] = (get(row, column.name) || []).length;
-                  } else {
-                    temp[column.name] = get(row, column.name, null);
-                  }
-                }
-                csvData.push(temp);
-              }
-            }
-          }
-        }
       });
-    offset += batchSize;
-  } while (offset < totalCount);
+    } else {
+      records = await Record.aggregate([
+        {
+          $match: {
+            $and: [
+              { resource: new mongoose.Types.ObjectId(params.resource) },
+              getFilter(params.filter, columns),
+            ],
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            ...columns.reduce((acc, col) => {
+              if (
+                defaultRecordFields.some((field) => field.field === col.field)
+              ) {
+                acc[col.field] = `$${col.field}`;
+              } else {
+                acc[col.field] = `$data.${col.field}`;
+              }
+              return acc;
+            }, {}),
+          },
+        },
+        {
+          $sort: {
+            [params.sortField]: params.sortOrder === 'asc' ? 1 : -1,
+          },
+        },
+      ]);
+    }
+    console.log(records[0]);
+    for (const row of records) {
+      const temp = {};
+      for (const column of columns) {
+        if (column.subColumns) {
+          temp[column.name] = (get(row, column.name) || []).length;
+        } else {
+          temp[column.name] = get(row, column.name, null);
+        }
+      }
+      csvData.push(temp);
+    }
+  } catch (err) {
+    logger.error(err.message);
+  }
   // Generate the file by parsing the data, set the response parameters and send it
   const csv = parser.parse(csvData);
   return csv;
@@ -442,23 +398,26 @@ const getRowsCsv = async (
  */
 export default async (req: any, params: ExportBatchParams) => {
   // Get total count and columns
-  const [totalCount, columns] = await Promise.all([
-    getTotalCount(req, params),
-    getColumns(req, params),
-  ]);
+  let start = Date.now();
+  const columns = await getColumns(req, params);
+  console.log('col took ', Date.now() - start);
+  start = Date.now();
   switch (params.format) {
     case 'xlsx': {
       // Create file
       const workbook = new Workbook();
       const worksheet = workbook.addWorksheet('records');
       worksheet.properties.defaultColWidth = 15;
-
+      console.log('bullshit took ', Date.now() - start);
+      start = Date.now();
       // Set headers of the file
       setHeaders(worksheet, getFlatColumns(columns));
-
+      console.log('set headers took ', Date.now() - start);
+      start = Date.now();
       // Write rows
-      await getRowsXlsx(req, params, totalCount, worksheet, columns);
-
+      await getRowsXlsx(params, worksheet, columns);
+      console.log('getting rows took ', Date.now() - start);
+      console.log(Date.now());
       return workbook.xlsx.writeBuffer();
     }
     case 'csv': {
@@ -469,7 +428,7 @@ export default async (req: any, params: ExportBatchParams) => {
       }));
       const json2csv = new Parser({ fields });
       // Generate csv, by parsing the data
-      const csv = await getRowsCsv(req, params, totalCount, json2csv, columns);
+      const csv = await getRowsCsv(params, json2csv, columns);
       return csv;
     }
   }

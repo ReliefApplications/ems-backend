@@ -363,7 +363,9 @@ router.post('/records', async (req, res) => {
           );
         }
       }
+      const start = Date.now();
       const buffer = await exportBatch(req, params);
+      console.log('MORE GOOD VIBES ', Date.now() - start);
       return res.send(buffer);
     } else {
       // Send response so the client is not frozen
