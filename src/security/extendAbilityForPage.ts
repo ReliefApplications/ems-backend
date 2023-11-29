@@ -26,10 +26,10 @@ function hasApplicationPermission(
   permissionType: ObjectPermissions
 ) {
   if (!application) return false;
-  const appRoles = application.permissions[permissionType].map(
-    (role: any) => role._id
+  const appRoles = application.permissions[permissionType].map((role: any) =>
+    role._id ? role._id.toString() : role.toString()
   );
-  const userRoles = user.roles?.map((role) => role._id);
+  const userRoles = user.roles?.map((role) => role._id.toString());
   return appRoles.some((role) => userRoles.includes(role));
 }
 

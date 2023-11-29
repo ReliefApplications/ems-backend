@@ -26,10 +26,10 @@ function hasApplicationPermission(
   permissionType: ObjectPermissions
 ) {
   if (!entity || entity.kind === 'Workflow') return false;
-  const appRoles = entity.permissions[permissionType].map(
-    (role: any) => role._id
+  const appRoles = entity.permissions[permissionType].map((role: any) =>
+    role._id ? role._id.toString() : role.toString()
   );
-  const userRoles = user.roles?.map((role) => role._id);
+  const userRoles = user.roles?.map((role) => role._id.toString());
   return appRoles.some((role) => userRoles.includes(role));
 }
 
@@ -74,7 +74,7 @@ export async function extendAbilityForStepOnStep(
   if (ability.cannot('read', step)) {
     const app = await requireApplication();
     if (hasApplicationPermission(user, app, 'canSee')) {
-      can('read', 'Step', { _id: step.id });
+      can('read', 'Step', { _id: step._id });
     }
   }
 
@@ -83,7 +83,7 @@ export async function extendAbilityForStepOnStep(
   if (ability.cannot('update', step)) {
     const app = await requireApplication();
     if (hasApplicationPermission(user, app, 'canUpdate')) {
-      can('update', 'Step', { _id: step.id });
+      can('update', 'Step', { _id: step._id });
     }
   }
 
@@ -92,7 +92,7 @@ export async function extendAbilityForStepOnStep(
   if (ability.cannot('delete', step)) {
     const app = await requireApplication();
     if (hasApplicationPermission(user, app, 'canDelete')) {
-      can('delete', 'Step', { _id: step.id });
+      can('delete', 'Step', { _id: step._id });
     }
   }
 
