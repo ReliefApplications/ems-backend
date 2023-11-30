@@ -269,7 +269,9 @@ const assignEIOSOwnership = async (
       });
       filterList.push({ $match: { $or: regionFilters } });
       const userRoles = await Role.aggregate([...filterList]);
-      ownersList.push(...userRoles.map((a) => a._id));
+      if (userRoles) {
+        ownersList.push(...userRoles.map((a) => a._id));
+      }
     }
   }
   return ownersList;
