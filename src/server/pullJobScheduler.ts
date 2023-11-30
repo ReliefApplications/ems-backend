@@ -268,7 +268,6 @@ const assignEIOSOwnership = async (
       },
     },
   ];
-  console.log('COVID REGEX', COVID_REGEX);
   // If board name contains region assign user role from that regional app
   const regionToAssign = REGION_LIST.find((element) =>
     boardName.includes(element)
@@ -282,7 +281,9 @@ const assignEIOSOwnership = async (
     });
     const regionalUserRole = await Role.aggregate([...filterList]);
     ownersList.push(regionalUserRole[0]._id);
-  } else if (boardName.toLowerCase().includes('ukraine')) {
+  }
+
+  if (boardName.toLowerCase().includes('ukraine')) {
     const ukraineApps = ['Signal EURO', 'IMST Signal management'];
     filterList.push({
       $match: {
@@ -291,6 +292,16 @@ const assignEIOSOwnership = async (
     });
     const ukraineUserRoles = await Role.aggregate([...filterList]);
     ownersList.push(...ukraineUserRoles.map((a) => a._id));
+  }
+
+  if (COVID_REGEX.test(boardName)) {
+    filterList.push({
+      $match: {
+        _application: { $elemMatch: { name: 'Signal COVID IMST' } },
+      },
+    });
+    const covidUserRoles = await Role.aggregate([...filterList]);
+    ownersList.push(...covidUserRoles.map((a) => a._id));
   }
   return ownersList;
 };
