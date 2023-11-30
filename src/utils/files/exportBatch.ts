@@ -3,7 +3,6 @@ import config from 'config';
 import { Workbook, Worksheet } from 'exceljs';
 import get from 'lodash/get';
 import { getColumnsFromMeta } from './getColumnsFromMeta';
-import { getRowsFromMeta } from './getRowsFromMeta';
 import axios from 'axios';
 import { logger } from '@services/logger.service';
 import { Parser } from 'json2csv';
@@ -16,7 +15,6 @@ import getFilter from '@utils/schema/resolvers/Query/getFilter';
  * Export batch parameters interface
  */
 interface ExportBatchParams {
-  ids?: string[];
   fields?: any[];
   filter?: any;
   format: 'csv' | 'xlsx';
@@ -207,32 +205,33 @@ const writeRowsXlsx = (
   columns: any[],
   records: any[]
 ) => {
+  console.log(columns, JSON.stringify(records));
   records.forEach((record) => {
     const temp = [];
     let maxFieldLength = 0;
-    for (const field of columns) {
-      if (field.subTitle) {
-        const value = get(record, field.field, []);
+    for (const column of columns) {
+      if (column.subTitle) {
+        const value = get(record, column.field, []);
         maxFieldLength = Math.max(maxFieldLength, value.length);
         temp.push('');
       } else {
-        temp.push(get(record, field.field, null));
+        temp.push(get(record, column.field, null));
       }
     }
 
     if (maxFieldLength > 0) {
       const subIndexes = columns.filter((x) => x.subTitle).map((x) => x.index);
       for (let i = 0; i < maxFieldLength; i++) {
-        for (const field of columns.filter((x: any) => x.subTitle)) {
-          const value = get(record, field.field, []);
+        for (const column of columns.filter((x: any) => x.subTitle)) {
+          const value = get(record, column.field, []);
           if (value && value.length > 0) {
-            temp[field.index] = get(
-              get(record, field.field, null)[i],
-              field.subField,
+            temp[column.index] = get(
+              get(record, column.field, null)[i],
+              column.subField,
               null
             );
           } else {
-            temp[field.index] = null;
+            temp[column.index] = null;
           }
         }
         const newRow = worksheet.addRow(temp);
@@ -253,6 +252,105 @@ const writeRowsXlsx = (
 };
 
 /**
+ * Get records to put into the file
+ *
+ * @param params export batch parameters
+ * @param columns columns to use
+ * @returns list of data
+ */
+const getRecords = async (params: ExportBatchParams, columns: any[]) => {
+  const pipeline = [
+    {
+      $match: {
+        $and: [
+          { resource: new mongoose.Types.ObjectId(params.resource) },
+          getFilter(params.filter, columns),
+        ],
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        ...columns.reduce((acc, col) => {
+          if (defaultRecordFields.some((field) => field.field === col.field)) {
+            acc[col.field] = `$${col.field}`;
+          } else {
+            const parentName = col.field.split('.')[0]; //We get the parent name for the resource question
+            acc[parentName] = `$data.${parentName}`;
+          }
+          return acc;
+        }, {}),
+      },
+    },
+    {
+      $sort: {
+        [params.sortField]: params.sortOrder === 'asc' ? 1 : -1,
+      },
+    },
+  ];
+  const records = await Record.aggregate<Record>(pipeline as any);
+
+  /** Get subfields for resources questions */
+  const resourceColumns = new Set(
+    columns
+      .filter((col) => col.field.includes('.'))
+      .map((col) => col.field.split('.')[0])
+  );
+  resourceColumns.forEach((resourceQuestion) => {
+    const resourceSubColumns = columns.filter(
+      (col) => col.field.split('.')[0] === resourceQuestion
+    );
+    columns.push({
+      field: resourceQuestion,
+      subColumns: resourceSubColumns.map((subColumn) => {
+        return {
+          ...subColumn,
+          name: subColumn.name.split('.')[1],
+          field: subColumn.name.split('.')[1],
+        };
+      }),
+    });
+  });
+  const resourceResourcesColumns = columns.filter((col) => col.subColumns);
+  for (const column of resourceResourcesColumns) {
+    const relatedPipe = [
+      {
+        $match: {
+          _id: {
+            $in: Array.from(
+              new Set(records.flatMap((record) => record[column.field]))
+            ).map((id) => new mongoose.Types.ObjectId(id)),
+          },
+        },
+      },
+      {
+        $project: {
+          ...column.subColumns.reduce((acc, col) => {
+            if (
+              defaultRecordFields.some((field) => field.field === col.field)
+            ) {
+              acc[col.field] = `$${col.field}`;
+            } else {
+              acc[col.field] = `$data.${col.field}`;
+            }
+            return acc;
+          }, {}),
+        },
+      },
+    ];
+    const relatedRecords = await Record.aggregate(relatedPipe);
+    // eslint-disable-next-line @typescript-eslint/no-loop-func
+    records.forEach((record) => {
+      record[column.field] = relatedRecords.filter(
+        (relatedRecord) =>
+          record[column.field]?.includes(relatedRecord._id.toString()) //works for strings and arrays
+      );
+    });
+  }
+  return records;
+};
+
+/**
  * Get rows for xlsx
  *
  * @param params export batch params
@@ -265,51 +363,8 @@ const getRowsXlsx = async (
   columns: any[]
 ) => {
   try {
-    let records: Record[] = [];
-    if (params.ids.length > 0) {
-      records = await Record.find({
-        _id: {
-          $in: params.ids.map((id: string) => new mongoose.Types.ObjectId(id)),
-        },
-      });
-    } else {
-      records = await Record.aggregate([
-        {
-          $match: {
-            $and: [
-              { resource: new mongoose.Types.ObjectId(params.resource) },
-              getFilter(params.filter, columns),
-            ],
-          },
-        },
-        {
-          $project: {
-            _id: 0,
-            ...columns.reduce((acc, col) => {
-              if (
-                defaultRecordFields.some((field) => field.field === col.field)
-              ) {
-                acc[col.field] = `$${col.field}`;
-              } else {
-                acc[col.field] = `$data.${col.field}`;
-              }
-              return acc;
-            }, {}),
-          },
-        },
-        {
-          $sort: {
-            [params.sortField]: params.sortOrder === 'asc' ? 1 : -1,
-          },
-        },
-      ]);
-    }
-    console.log(records[0], JSON.stringify(columns));
-    writeRowsXlsx(
-      worksheet,
-      getFlatColumns(columns),
-      getRowsFromMeta(columns, records)
-    );
+    const records: Record[] = await getRecords(params, columns);
+    writeRowsXlsx(worksheet, getFlatColumns(columns), records);
   } catch (err) {
     logger.error(err.message);
   }
@@ -330,46 +385,7 @@ const getRowsCsv = async (
 ) => {
   const csvData = [];
   try {
-    let records: Record[] = [];
-    if (params.ids.length > 0) {
-      records = await Record.find({
-        _id: {
-          $in: params.ids.map((id: string) => new mongoose.Types.ObjectId(id)),
-        },
-      });
-    } else {
-      records = await Record.aggregate([
-        {
-          $match: {
-            $and: [
-              { resource: new mongoose.Types.ObjectId(params.resource) },
-              getFilter(params.filter, columns),
-            ],
-          },
-        },
-        {
-          $project: {
-            _id: 0,
-            ...columns.reduce((acc, col) => {
-              if (
-                defaultRecordFields.some((field) => field.field === col.field)
-              ) {
-                acc[col.field] = `$${col.field}`;
-              } else {
-                acc[col.field] = `$data.${col.field}`;
-              }
-              return acc;
-            }, {}),
-          },
-        },
-        {
-          $sort: {
-            [params.sortField]: params.sortOrder === 'asc' ? 1 : -1,
-          },
-        },
-      ]);
-    }
-    console.log(records[0]);
+    const records: Record[] = await getRecords(params, columns);
     for (const row of records) {
       const temp = {};
       for (const column of columns) {
@@ -398,26 +414,19 @@ const getRowsCsv = async (
  */
 export default async (req: any, params: ExportBatchParams) => {
   // Get total count and columns
-  let start = Date.now();
   const columns = await getColumns(req, params);
-  console.log('col took ', Date.now() - start);
-  start = Date.now();
   switch (params.format) {
     case 'xlsx': {
       // Create file
       const workbook = new Workbook();
       const worksheet = workbook.addWorksheet('records');
       worksheet.properties.defaultColWidth = 15;
-      console.log('bullshit took ', Date.now() - start);
-      start = Date.now();
       // Set headers of the file
       setHeaders(worksheet, getFlatColumns(columns));
-      console.log('set headers took ', Date.now() - start);
-      start = Date.now();
+      const start = Date.now();
       // Write rows
       await getRowsXlsx(params, worksheet, columns);
       console.log('getting rows took ', Date.now() - start);
-      console.log(Date.now());
       return workbook.xlsx.writeBuffer();
     }
     case 'csv': {
