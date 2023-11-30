@@ -30,15 +30,13 @@ const taskMap: Record<string, CronJob> = {};
 /** Record's default fields */
 const DEFAULT_FIELDS = ['createdBy'];
 
-/**
- * List of regions used to assign ownership
- */
-const REGION_LIST = ['EURO', 'WPRO', 'EMRO', 'AFRO', 'SEARO', 'AMRO'];
-
-/**
- * Regex used to determine what apps are related to covid
- */
-const COVID_REGEX = new RegExp('^(?!.*(nCoV|excluding COVID)).*(COVID|Cov).*');
+const ownershipMappingJSON = {
+  '0_COVID Countries': ['HQ AEE'],
+  'AFRO Media Monitoring w/o COVID-19': ['AFRO'],
+  'PAHO - Priority Hazards': ['AMRO'],
+  'Shared Ukraine board': ['EURO'],
+  Ukraine: ['EURO'],
+};
 
 /**
  * Global function called on server start to initialize all the pullJobs.
@@ -253,55 +251,32 @@ const assignEIOSOwnership = async (
     title: 'User',
   });
   ownersList.push(signalHQPHIUserRole._id);
-  const filterList: any[] = [
-    {
-      $lookup: {
-        from: 'applications',
-        localField: 'application',
-        foreignField: '_id',
-        as: '_application',
-      },
-    },
-    {
-      $match: {
-        title: 'User',
-      },
-    },
-  ];
-  // If board name contains region assign user role from that regional app
-  const regionToAssign = REGION_LIST.find((element) =>
-    boardName.includes(element)
-  );
-  // Special regex to find covid data
-  if (regionToAssign) {
-    filterList.push({
-      $match: {
-        _application: { $elemMatch: { name: { $regex: regionToAssign } } },
-      },
-    });
-    const regionalUserRole = await Role.aggregate([...filterList]);
-    ownersList.push(regionalUserRole[0]._id);
-  }
 
-  if (boardName.toLowerCase().includes('ukraine')) {
-    const ukraineApps = ['Signal EURO', 'IMST Signal management'];
-    filterList.push({
-      $match: {
-        _application: { $elemMatch: { name: { $in: ukraineApps } } },
-      },
-    });
-    const ukraineUserRoles = await Role.aggregate([...filterList]);
-    ownersList.push(...ukraineUserRoles.map((a) => a._id));
-  }
-
-  if (COVID_REGEX.test(boardName)) {
-    filterList.push({
-      $match: {
-        _application: { $elemMatch: { name: 'Signal COVID IMST' } },
-      },
-    });
-    const covidUserRoles = await Role.aggregate([...filterList]);
-    ownersList.push(...covidUserRoles.map((a) => a._id));
+  for (const [key, value] of Object.entries(ownershipMappingJSON)) {
+    if (boardName === key) {
+      const filterList: any[] = [
+        {
+          $lookup: {
+            from: 'applications',
+            localField: 'application',
+            foreignField: '_id',
+            as: '_application',
+          },
+        },
+      ];
+      const regionFilters = [];
+      value.map((elt) => {
+        regionFilters.push({
+          $and: [
+            { title: 'User' },
+            { _application: { $elemMatch: { name: { $regex: elt } } } },
+          ],
+        });
+      });
+      filterList.push({ $match: { $or: regionFilters } });
+      const userRoles = await Role.aggregate([...filterList]);
+      ownersList.push(...userRoles.map((a) => a._id));
+    }
   }
   return ownersList;
 };
