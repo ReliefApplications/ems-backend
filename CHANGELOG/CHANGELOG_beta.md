@@ -1,3 +1,21 @@
+# [2.2.0-beta.11](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0-beta.10...v2.2.0-beta.11) (2023-11-30)
+
+
+### Bug Fixes
+
+* ability on records could fail due to missing resource ([b217df1](https://github.com/ReliefApplications/ems-backend/commit/b217df11982ecfdbe51293ceb3d9b0a1968521f1))
+* added sorting on id field to avoid having missing records ([#842](https://github.com/ReliefApplications/ems-backend/issues/842)) ([935fe1b](https://github.com/ReliefApplications/ems-backend/commit/935fe1b24be318485bf28faa9bc9f53d5e22df81))
+* audience would not be available ([4e76800](https://github.com/ReliefApplications/ems-backend/commit/4e76800656354c10f3c1497ae98bc33f2bfff9ee))
+* build would fail due to incorrect default value for auth audience ([8985cc0](https://github.com/ReliefApplications/ems-backend/commit/8985cc05b4d52571be6362995c90c54eed3fcc57))
+* incorrect mutation to set filter at dashboard level ([2d57100](https://github.com/ReliefApplications/ems-backend/commit/2d5710036e9eab6780137f7a129cc7190628866c))
+* some permissions issues when not admin ([794683d](https://github.com/ReliefApplications/ems-backend/commit/794683d7eeda6e82a8b0791250c7ce788a3ac984))
+* users who can edit application can now delete the steps & pages ([cf130ce](https://github.com/ReliefApplications/ems-backend/commit/cf130ce61d82a6b3690dd092239e79b2015e75db))
+
+
+### Features
+
+* now use filter at dashboard level ([#834](https://github.com/ReliefApplications/ems-backend/issues/834)) ([6b3f4e9](https://github.com/ReliefApplications/ems-backend/commit/6b3f4e9dfcacdf2fd51c787eaba958a0c392f1a5))
+
 # [2.2.0-beta.10](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0-beta.9...v2.2.0-beta.10) (2023-11-27)
 
 
