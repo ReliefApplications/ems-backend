@@ -23,52 +23,13 @@ import { logger } from '../services/logger.service';
 import * as cronValidator from 'cron-validator';
 import get from 'lodash/get';
 import axios from 'axios';
+import { ownershipMappingJSON } from './EIOSOwnernshipMapping';
 
 /** A map with the task ids as keys and the scheduled tasks as values */
 const taskMap: Record<string, CronJob> = {};
 
 /** Record's default fields */
 const DEFAULT_FIELDS = ['createdBy'];
-
-const ownershipMappingJSON = {
-  '0_COVID Countries': ['HQ AEE'],
-  AEE_Monkeypox_Expanded: ['HQ AEE'],
-  'AFRO Media Monitoring w/o COVID-19': ['AFRO'],
-  'AFRO Signals': ['AFRO'],
-  'AFRO: EVD/VHF East African monitoring board 2022': ['AFRO'],
-  'AFRO_IDSR priority diseases and conditions': ['AFRO'],
-  'Bahrain, Jordan and Lebanon Cov': ['HQ AEE'],
-  Balkans_COVID_public: ['EURO'],
-  Caucasus_COVID_public: ['EURO'],
-  CentralAsia_COVID_public: ['EURO'],
-  CentralEurope_COVID_public: ['EURO'],
-  COVID_AdHoc_EURO_public: ['EURO'],
-  'COVID-19 Intel monitoring - GLOBAL': ['HQ AEE'],
-  'ELR ADHOC': ['HQ AEE'],
-  'ELR-Samuel': ['HQ AEE'],
-  'EMRO COVID Vaccination': ['EMRO'],
-  'EMRO- Excl nCoV': ['EMRO'],
-  'EMRO new Variant': ['EMRO'],
-  EUROHIM_WEST_public: ['EURO'],
-  MM_EURO_SignalApp_Pilot: ['EURO'],
-  'Monkeypox - Global Outbreak': ['HQ AEE'],
-  'Monkeypox Global Outbreak': ['HQ AEE'],
-  'Monkeypox_Global EBS_Expanded': ['HQ AEE'],
-  'NRBC - Sahel': ['HQ FCV'],
-  'PAHO - Natural Disasters': ['AMRO'],
-  'PAHO - Priority Hazards': ['AMRO'],
-  qa: ['EMRO'],
-  'qa - euro': ['EURO'],
-  'QA- HQ- AFRO - EURO- AMRO': ['EURO', 'AFRO', 'AMRO'],
-  'qa4 - AFRO- AMRO- EURO': ['EURO', 'AFRO', 'AMRO'],
-  'SARS-CoV-2 variants': ['HQ AEE'],
-  'SEAR Signals For Export': ['SEARO'],
-  'Shared Ukraine board': ['EURO'],
-  'Signals for Follow Up- SEAR': ['SEARO'],
-  Ukraine: ['EURO'],
-  'WPRO - Disaster': ['WPRO'],
-  'WPRO Disease 2 - Not nCoV': ['WPRO'],
-};
 
 /**
  * Global function called on server start to initialize all the pullJobs.
@@ -297,7 +258,8 @@ const assignEIOSOwnership = async (
         },
       ];
       const regionFilters = [];
-      value.map((elt) => {
+      const regionArrays = value as string[];
+      regionArrays.map((elt) => {
         regionFilters.push({
           $and: [
             { title: 'User' },
