@@ -4,13 +4,14 @@ import {
   buildTotalCountQuery,
 } from '@utils/query/queryBuilder';
 import config from 'config';
-import { Workbook, Worksheet } from 'exceljs';
+import { Worksheet, stream } from 'exceljs';
 import get from 'lodash/get';
 import { getColumnsFromMeta } from './getColumnsFromMeta';
 import { getRowsFromMeta } from './getRowsFromMeta';
 import axios from 'axios';
 import { logger } from '@services/logger.service';
 import { Parser } from 'json2csv';
+import { Response } from 'express';
 
 /**
  * Export batch parameters interface
@@ -282,10 +283,12 @@ const writeRowsXlsx = (
               };
             }
           });
+          newRow.commit();
         }
       }
     } else {
-      worksheet.addRow(temp);
+      const newRow = worksheet.addRow(temp);
+      newRow.commit();
     }
   });
 };
@@ -437,10 +440,17 @@ const getRowsCsv = async (
  * Write a buffer from request, to export records as xlsx or csv
  *
  * @param req current request
+ * @param res current response
+ * @param fileName name of the file
  * @param params export batch parameters
  * @returns xlsx or csv buffer
  */
-export default async (req: any, params: ExportBatchParams) => {
+export default async (
+  req: any,
+  res: Response,
+  fileName: string,
+  params: ExportBatchParams
+) => {
   // Get total count and columns
   const [totalCount, columns] = await Promise.all([
     getTotalCount(req, params),
@@ -448,9 +458,11 @@ export default async (req: any, params: ExportBatchParams) => {
   ]);
   switch (params.format) {
     case 'xlsx': {
-      // Create file
-      const workbook = new Workbook();
-      const worksheet = workbook.addWorksheet('records');
+      // Create a new instance of a Workbook class
+      const workbook = new stream.xlsx.WorkbookWriter({
+        stream: res,
+      });
+      const worksheet = workbook.addWorksheet('Records');
       worksheet.properties.defaultColWidth = 15;
 
       // Set headers of the file
@@ -459,7 +471,10 @@ export default async (req: any, params: ExportBatchParams) => {
       // Write rows
       await getRowsXlsx(req, params, totalCount, worksheet, columns);
 
-      return workbook.xlsx.writeBuffer();
+      // Close workbook
+      workbook.commit().then(() => {
+        return `${fileName}.xlsx`;
+      });
     }
     case 'csv': {
       // Create a string array with the columns' labels or names as fallback, then construct the parser from it

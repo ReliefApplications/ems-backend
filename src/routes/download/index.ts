@@ -18,7 +18,6 @@ import {
   downloadFile,
   templateBuilder,
   getColumns,
-  getRows,
   historyFileBuilder,
 } from '@utils/files';
 import sanitize from 'sanitize-filename';
@@ -282,33 +281,36 @@ router.get('/resource/records/:id', async (req, res) => {
       .getFilter();
     const resource = await Resource.findOne(filters);
     if (resource) {
-      let records = [];
-      if (ability.can('read', 'Record')) {
-        records = await Record.find({
-          resource: req.params.id,
-          archived: { $ne: true },
-        });
-      }
       const columns = await getColumns(
         resource.fields,
         req.headers.authorization,
         req.query.template ? true : false
       );
+
       if (req.query.template) {
         return await templateBuilder(res, resource.name, columns);
-      } else {
-        const rows = await getRows(columns, records);
-        const type = (req.query ? req.query.type : 'xlsx').toString();
-        const filename = formatFilename(resource.name);
-        return await fileBuilder({
-          res,
-          fileName: filename,
-          columns,
-          data: rows,
-          ability,
-          type,
-        });
       }
+
+      const filter = {
+        resource: req.params.id,
+        archived: { $ne: true },
+        ...Record.find(accessibleBy(ability, 'read').Record).getFilter(),
+      };
+
+      const query = Record.find(filter).lean().cursor();
+
+      const type = (req.query ? req.query.type : 'xlsx').toString();
+      const filename = formatFilename(resource.name);
+      return await fileBuilder({
+        query: ability.can('read', 'Record') ? query : undefined,
+        res,
+        fileName: filename,
+        columns,
+        // As a fallback, in case we don't have access to the records, we send an empty array
+        data: [],
+        ability,
+        type,
+      });
     } else {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
@@ -371,13 +373,12 @@ router.post('/records', async (req, res) => {
           );
         }
       }
-      const buffer = await exportBatch(req, params);
-      return res.send(buffer);
+      await exportBatch(req, res, params.fileName, params);
     } else {
       // Send response so the client is not frozen
       res.status(200).send('Export ongoing');
       // Build the file
-      const file = await exportBatch(req, params);
+      const file = await exportBatch(req, res, params.fileName, params);
       // Pass it in attachment
       const attachments = [
         {
