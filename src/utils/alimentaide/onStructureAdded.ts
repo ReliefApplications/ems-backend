@@ -165,7 +165,7 @@ const getResourcesPermissions = (
     // Structure resource
     '649ade1ceae9f87c89918868': {
       canCreateRecords: [],
-      canSeeRecords: getPerms(['admin', 'user', 'userPlus'], { filter: true }),
+      canSeeRecords: getPerms(['admin', 'user', 'userPlus']),
       canUpdateRecords: getPerms(['admin'], { filter: true }),
       canDeleteRecords: [],
     },

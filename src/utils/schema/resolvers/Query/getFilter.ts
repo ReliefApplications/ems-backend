@@ -315,7 +315,7 @@ const buildMongoFilter = (
           }
 
           // If a number, also check for string values
-          if (!isNaN(numberValue)) {
+          if (!isNaN(numberValue) && typeof v !== 'boolean' && v !== null) {
             return {
               $or: [
                 { [fieldName]: { [mappedOperator]: String(v) } },
@@ -380,7 +380,7 @@ const buildMongoFilter = (
       case 'users': {
         const meID = context?.user?._id.toString();
         return getFilterForArrays(
-          value.map((x: string) => (x === 'me' ? meID : x))
+          (value ?? []).map((x: string) => (x === 'me' ? meID : x))
         );
       }
       case 'owner':
