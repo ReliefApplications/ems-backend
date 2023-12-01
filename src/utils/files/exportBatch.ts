@@ -10,6 +10,7 @@ import { Record } from '@models';
 import mongoose from 'mongoose';
 import { defaultRecordFields } from '@const/defaultRecordFields';
 import getFilter from '@utils/schema/resolvers/Query/getFilter';
+import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
 
 /**
  * Export batch parameters interface
@@ -205,7 +206,6 @@ const writeRowsXlsx = (
   columns: any[],
   records: any[]
 ) => {
-  console.log(columns, JSON.stringify(records));
   records.forEach((record) => {
     const temp = [];
     let maxFieldLength = 0;
@@ -256,9 +256,14 @@ const writeRowsXlsx = (
  *
  * @param params export batch parameters
  * @param columns columns to use
+ * @param timeZone time zone of the user
  * @returns list of data
  */
-const getRecords = async (params: ExportBatchParams, columns: any[]) => {
+const getRecords = async (
+  params: ExportBatchParams,
+  columns: any[],
+  timeZone: string
+) => {
   const pipeline = [
     {
       $match: {
@@ -288,9 +293,23 @@ const getRecords = async (params: ExportBatchParams, columns: any[]) => {
       },
     },
   ];
+  columns
+    .filter((col) => col.meta?.field?.isCalculated)
+    .forEach((col) =>
+      pipeline.unshift(
+        ...(buildCalculatedFieldPipeline(
+          col.meta.field.expression,
+          col.meta.field.name,
+          timeZone
+        ) as any)
+      )
+    );
+
   const records = await Record.aggregate<Record>(pipeline as any);
 
-  /** Get subfields for resources questions */
+  /** Resources columns */
+  const resourceResourcesColumns = columns.filter((col) => col.subColumns);
+  /** Add resource columns */
   const resourceColumns = new Set(
     columns
       .filter((col) => col.field.includes('.'))
@@ -300,7 +319,7 @@ const getRecords = async (params: ExportBatchParams, columns: any[]) => {
     const resourceSubColumns = columns.filter(
       (col) => col.field.split('.')[0] === resourceQuestion
     );
-    columns.push({
+    resourceResourcesColumns.push({
       field: resourceQuestion,
       subColumns: resourceSubColumns.map((subColumn) => {
         return {
@@ -311,7 +330,6 @@ const getRecords = async (params: ExportBatchParams, columns: any[]) => {
       }),
     });
   });
-  const resourceResourcesColumns = columns.filter((col) => col.subColumns);
   for (const column of resourceResourcesColumns) {
     const relatedPipe = [
       {
@@ -338,13 +356,26 @@ const getRecords = async (params: ExportBatchParams, columns: any[]) => {
         },
       },
     ];
+    column.subColumns
+      .filter((col) => col.meta.field.isCalculated)
+      .forEach((col) => {
+        relatedPipe.unshift(
+          ...(buildCalculatedFieldPipeline(
+            col.meta.field.expression,
+            col.meta.field.name,
+            timeZone
+          ) as any)
+        );
+      });
     const relatedRecords = await Record.aggregate(relatedPipe);
-    // eslint-disable-next-line @typescript-eslint/no-loop-func
     records.forEach((record) => {
-      record[column.field] = relatedRecords.filter(
-        (relatedRecord) =>
-          record[column.field]?.includes(relatedRecord._id.toString()) //works for strings and arrays
+      const relatedRecordsForRecord = relatedRecords.filter((relatedRecord) =>
+        record[column.field]?.includes(relatedRecord._id.toString())
       );
+      record[column.field] =
+        typeof record[column.field] === 'string'
+          ? relatedRecordsForRecord[0]
+          : relatedRecordsForRecord;
     });
   }
   return records;
@@ -356,14 +387,16 @@ const getRecords = async (params: ExportBatchParams, columns: any[]) => {
  * @param params export batch params
  * @param worksheet worksheet to write on
  * @param columns columns to use
+ * @param timeZone time zone of the user
  */
 const getRowsXlsx = async (
   params: ExportBatchParams,
   worksheet: Worksheet,
-  columns: any[]
+  columns: any[],
+  timeZone: string
 ) => {
   try {
-    const records: Record[] = await getRecords(params, columns);
+    const records: Record[] = await getRecords(params, columns, timeZone);
     writeRowsXlsx(worksheet, getFlatColumns(columns), records);
   } catch (err) {
     logger.error(err.message);
@@ -376,16 +409,18 @@ const getRowsXlsx = async (
  * @param params export batch parameters
  * @param parser csv parser
  * @param columns columns to use
+ * @param timeZone time zone of the user
  * @returns csv
  */
 const getRowsCsv = async (
   params: ExportBatchParams,
   parser: Parser,
-  columns: any[]
+  columns: any[],
+  timeZone: string
 ) => {
   const csvData = [];
   try {
-    const records: Record[] = await getRecords(params, columns);
+    const records: Record[] = await getRecords(params, columns, timeZone);
     for (const row of records) {
       const temp = {};
       for (const column of columns) {
@@ -423,10 +458,8 @@ export default async (req: any, params: ExportBatchParams) => {
       worksheet.properties.defaultColWidth = 15;
       // Set headers of the file
       setHeaders(worksheet, getFlatColumns(columns));
-      const start = Date.now();
       // Write rows
-      await getRowsXlsx(params, worksheet, columns);
-      console.log('getting rows took ', Date.now() - start);
+      await getRowsXlsx(params, worksheet, columns, 'UTC');
       return workbook.xlsx.writeBuffer();
     }
     case 'csv': {
@@ -437,7 +470,12 @@ export default async (req: any, params: ExportBatchParams) => {
       }));
       const json2csv = new Parser({ fields });
       // Generate csv, by parsing the data
-      const csv = await getRowsCsv(params, json2csv, columns);
+      const csv = await getRowsCsv(
+        params,
+        json2csv,
+        columns,
+        req.context.timeZone
+      );
       return csv;
     }
   }
