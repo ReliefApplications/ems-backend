@@ -246,7 +246,9 @@ const assignEIOSOwnership = async (
   ownersList.push(signalHQPHIUserRole._id);
 
   for (const [key, value] of Object.entries(ownershipMappingJSON)) {
+    // If board name included in mapping JSON, assign correct user role
     if (boardName === key) {
+      // Use lookup to be able to filter roles by application data
       const filterList: any[] = [
         {
           $lookup: {
@@ -258,6 +260,7 @@ const assignEIOSOwnership = async (
         },
       ];
       const regionFilters = [];
+      // Mandatory to use map function
       const regionArrays = value as string[];
       regionArrays.map((elt) => {
         regionFilters.push({
@@ -269,6 +272,7 @@ const assignEIOSOwnership = async (
       });
       filterList.push({ $match: { $or: regionFilters } });
       const userRoles = await Role.aggregate([...filterList]);
+      // Only push not undefined user Roles to owners list
       if (userRoles) {
         ownersList.push(...userRoles.map((a) => a._id));
       }
