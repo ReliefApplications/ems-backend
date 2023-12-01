@@ -9,10 +9,7 @@ import { getText } from '../form/getDisplayText';
  * @param records list of records.
  * @returns list of export rows.
  */
-export const getRows = async (
-  columns: any[],
-  records: any[]
-): Promise<any[]> => {
+export const getRows = (columns: any[], records: any[]) => {
   const rows = [];
   for (const record of records) {
     const row = {};

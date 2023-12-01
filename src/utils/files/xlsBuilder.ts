@@ -1,16 +1,37 @@
-import { Workbook } from 'exceljs';
+import { Workbook, stream } from 'exceljs';
+import { Response } from 'express';
 import get from 'lodash/get';
+import { Cursor } from 'mongoose';
+import i18next from 'i18next';
+import { getRows } from './getRows';
+import { AppAbility } from '@security/defineUserAbility';
+import { getAccessibleFields } from '@utils/form';
+
+/** Parameters for the fileBuilder */
+type XlsxBuilderParams = {
+  res: Response;
+  fileName: string;
+  columns: any[];
+  query?: Cursor<any, any>;
+  data?: any[];
+  ability: AppAbility;
+};
 
 /**
  * Builds an XLSX file.
  *
- * @param fileName Name of the file
- * @param columns Array of objects with a name property that will match the data, and optionally a label that will be the column title on the exported file
- * @param data Array of objects, that will be transformed into the rows of the csv. Each object should have [key, value] as [column's name, corresponding value].
+ * @param params Parameters for the fileBuilder
  * @returns response with file attached.
  */
-export default async (fileName: string, columns: any[], data) => {
-  const workbook = new Workbook();
+export default async (params: XlsxBuilderParams) => {
+  const { res, fileName, columns, query, data, ability } = params;
+  // Create a new instance of a Workbook class, if a query is provided, use a stream
+  // Otherwise, use a buffer
+  const workbook = query
+    ? new stream.xlsx.WorkbookWriter({
+        stream: res,
+      })
+    : new Workbook();
   const worksheet = workbook.addWorksheet(fileName);
   worksheet.properties.defaultColWidth = 15;
 
@@ -103,8 +124,7 @@ export default async (fileName: string, columns: any[], data) => {
     };
   }
 
-  // For each row, get the data for each column, then add the row
-  for (const row of data) {
+  const addRow = (row: any) => {
     const temp = [];
     let maxFieldLength = 0;
     for (const field of flatColumns) {
@@ -143,12 +163,40 @@ export default async (fileName: string, columns: any[], data) => {
               };
             }
           });
+          if (query) {
+            newRow.commit();
+          }
         }
       }
     } else {
-      worksheet.addRow(temp);
+      const newRow = worksheet.addRow(temp);
+      if (query) {
+        newRow.commit();
+      }
     }
+  };
+
+  if (query) {
+    query.on('data', (doc) => {
+      const [row] = getRows(columns, [getAccessibleFields(doc, ability)]);
+      addRow(row);
+    });
+
+    query.on('end', () => {
+      (workbook as stream.xlsx.WorkbookWriter).commit().then(() => {
+        return `${fileName}.xlsx`;
+      });
+    });
+
+    query.on('error', (error) => {
+      console.error(error);
+      res.status(500).send(i18next.t('common.errors.internalServerError'));
+    });
+    return null;
   }
+
+  // For each row, get the data for each column, then add the row
+  data.forEach((row) => addRow(row));
   // write to a new buffer
   return workbook.xlsx.writeBuffer();
 };

@@ -26,7 +26,6 @@ import mongoose from 'mongoose';
 import i18next from 'i18next';
 import { RecordHistory } from '@utils/history';
 import { logger } from '../../services/logger.service';
-import { getAccessibleFields } from '@utils/form';
 import { formatFilename } from '@utils/files/format.helper';
 import { sendEmail } from '@utils/email';
 import exportBatch from '@utils/files/exportBatch';
@@ -61,7 +60,14 @@ const buildUserExport = (req, res, users) => {
       { name: 'roles', title: 'Roles', field: 'roles' },
     ];
     const type = (req.query ? req.query.type : 'xlsx').toString();
-    return fileBuilder(res, 'users', columns, rows, type);
+    return fileBuilder({
+      res,
+      fileName: 'users',
+      columns,
+      type,
+      data: rows,
+      ability: req.context.user.ability,
+    });
   } else {
     return false;
   }
@@ -104,13 +110,6 @@ router.get('/form/records/:id', async (req, res) => {
     const form = await Form.findOne(filters);
 
     if (form) {
-      const formAbility = await extendAbilityForRecords(req.context.user, form);
-      const filter = {
-        form: req.params.id,
-        archived: { $ne: true },
-        ...Record.find(accessibleBy(formAbility, 'read').Record).getFilter(),
-      };
-      const records = await Record.find(filter);
       const columns = await getColumns(
         form.fields,
         '',
@@ -119,15 +118,27 @@ router.get('/form/records/:id', async (req, res) => {
       // If the export is only of a template, build and export it, else build and export a file with the records
       if (req.query.template) {
         return await templateBuilder(res, form.name, columns);
-      } else {
-        const rows = await getRows(
-          columns,
-          getAccessibleFields(records, formAbility)
-        );
-        const type = (req.query ? req.query.type : 'xlsx').toString();
-        const filename = formatFilename(form.name);
-        return await fileBuilder(res, filename, columns, rows, type);
       }
+
+      const formAbility = await extendAbilityForRecords(req.context.user, form);
+      const filter = {
+        form: req.params.id,
+        archived: { $ne: true },
+        ...Record.find(accessibleBy(formAbility, 'read').Record).getFilter(),
+      };
+
+      const query = Record.find(filter).lean().cursor();
+      const filename = formatFilename(form.name);
+      const type = (req.query ? req.query.type : 'xlsx').toString();
+      // res, filename, columns, [], query, type
+      return await fileBuilder({
+        ability: formAbility,
+        res,
+        fileName: filename,
+        columns,
+        query,
+        type,
+      });
     } else {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
@@ -289,7 +300,14 @@ router.get('/resource/records/:id', async (req, res) => {
         const rows = await getRows(columns, records);
         const type = (req.query ? req.query.type : 'xlsx').toString();
         const filename = formatFilename(resource.name);
-        return await fileBuilder(res, filename, columns, rows, type);
+        return await fileBuilder({
+          res,
+          fileName: filename,
+          columns,
+          data: rows,
+          ability,
+          type,
+        });
       }
     } else {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
