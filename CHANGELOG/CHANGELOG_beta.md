@@ -1,3 +1,11 @@
+# [2.2.0-beta.12](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0-beta.11...v2.2.0-beta.12) (2023-12-02)
+
+
+### Bug Fixes
+
+* Add default values for gridOptions in DashboardType to prevent unwanted results when going from one dashboard to another one ([#844](https://github.com/ReliefApplications/ems-backend/issues/844)) ([f48459f](https://github.com/ReliefApplications/ems-backend/commit/f48459f1c2eb2ab8dd98e016ef617b542a33cd41))
+* grant ability to read api configuration & reference data to all records ([d45c394](https://github.com/ReliefApplications/ems-backend/commit/d45c394beac565915fe968fbc4c7285c6fb127ce))
+
 # [2.2.0-beta.11](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0-beta.10...v2.2.0-beta.11) (2023-11-30)
 
 
