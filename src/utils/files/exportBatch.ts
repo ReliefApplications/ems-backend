@@ -11,6 +11,7 @@ import mongoose from 'mongoose';
 import { defaultRecordFields } from '@const/defaultRecordFields';
 import getFilter from '@utils/schema/resolvers/Query/getFilter';
 import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
+import { getChoices } from '@utils/proxy';
 
 /**
  * Export batch parameters interface
@@ -257,12 +258,14 @@ const writeRowsXlsx = (
  * @param params export batch parameters
  * @param columns columns to use
  * @param timeZone time zone of the user
+ * @param authorization auth token to access url choices
  * @returns list of data
  */
 const getRecords = async (
   params: ExportBatchParams,
   columns: any[],
-  timeZone: string
+  timeZone: string,
+  authorization: string
 ) => {
   const pipeline = [
     {
@@ -306,6 +309,22 @@ const getRecords = async (
     );
 
   const records = await Record.aggregate<Record>(pipeline as any);
+
+  const choicesByUrlColumns = columns.filter(
+    (col) => col.meta.field.choicesByUrl
+  );
+
+  for (const column of choicesByUrlColumns) {
+    const choices = Object.fromEntries(
+      (await getChoices(column.meta.field, authorization)).map((country) => [
+        country.value,
+        country.text,
+      ])
+    );
+    records.forEach((record) => {
+      record[column.field] = choices[record[column.field]];
+    });
+  }
 
   /** Resources columns */
   const resourceResourcesColumns = columns.filter((col) => col.subColumns);
@@ -377,67 +396,23 @@ const getRecords = async (
           ? relatedRecordsForRecord[0]
           : relatedRecordsForRecord;
     });
+
+    const choicesByUrlSubColumns = column.subColumns.filter(
+      (col) => col.meta.field.choicesByUrl
+    );
+
+    for (const subColumn of choicesByUrlSubColumns) {
+      const choices = Object.fromEntries(
+        (await getChoices(subColumn.meta.field, authorization)).map(
+          (country) => [country.value, country.text]
+        )
+      );
+      records.forEach((record) => {
+        record[column.field][subColumn.field] = choices[subColumn.field];
+      });
+    }
   }
   return records;
-};
-
-/**
- * Get rows for xlsx
- *
- * @param params export batch params
- * @param worksheet worksheet to write on
- * @param columns columns to use
- * @param timeZone time zone of the user
- */
-const getRowsXlsx = async (
-  params: ExportBatchParams,
-  worksheet: Worksheet,
-  columns: any[],
-  timeZone: string
-) => {
-  try {
-    const records: Record[] = await getRecords(params, columns, timeZone);
-    writeRowsXlsx(worksheet, getFlatColumns(columns), records);
-  } catch (err) {
-    logger.error(err.message);
-  }
-};
-
-/**
- * Get rows for csv
- *
- * @param params export batch parameters
- * @param parser csv parser
- * @param columns columns to use
- * @param timeZone time zone of the user
- * @returns csv
- */
-const getRowsCsv = async (
-  params: ExportBatchParams,
-  parser: Parser,
-  columns: any[],
-  timeZone: string
-) => {
-  const csvData = [];
-  try {
-    const records: Record[] = await getRecords(params, columns, timeZone);
-    for (const row of records) {
-      const temp = {};
-      for (const column of columns) {
-        if (column.subColumns) {
-          temp[column.name] = (get(row, column.name) || []).length;
-        } else {
-          temp[column.name] = get(row, column.name, null);
-        }
-      }
-      csvData.push(temp);
-    }
-  } catch (err) {
-    logger.error(err.message);
-  }
-  // Generate the file by parsing the data, set the response parameters and send it
-  const csv = parser.parse(csvData);
-  return csv;
 };
 
 /**
@@ -450,6 +425,12 @@ const getRowsCsv = async (
 export default async (req: any, params: ExportBatchParams) => {
   // Get total count and columns
   const columns = await getColumns(req, params);
+  const records: Record[] = await getRecords(
+    params,
+    columns,
+    'UTC',
+    req.headers.authorization
+  );
   switch (params.format) {
     case 'xlsx': {
       // Create file
@@ -458,8 +439,11 @@ export default async (req: any, params: ExportBatchParams) => {
       worksheet.properties.defaultColWidth = 15;
       // Set headers of the file
       setHeaders(worksheet, getFlatColumns(columns));
-      // Write rows
-      await getRowsXlsx(params, worksheet, columns, 'UTC');
+      try {
+        writeRowsXlsx(worksheet, getFlatColumns(columns), records);
+      } catch (err) {
+        logger.error(err.message);
+      }
       return workbook.xlsx.writeBuffer();
     }
     case 'csv': {
@@ -470,12 +454,24 @@ export default async (req: any, params: ExportBatchParams) => {
       }));
       const json2csv = new Parser({ fields });
       // Generate csv, by parsing the data
-      const csv = await getRowsCsv(
-        params,
-        json2csv,
-        columns,
-        req.context.timeZone
-      );
+      const csvData = [];
+      try {
+        for (const row of records) {
+          const temp = {};
+          for (const column of columns) {
+            if (column.subColumns) {
+              temp[column.name] = (get(row, column.name) || []).length;
+            } else {
+              temp[column.name] = get(row, column.name, null);
+            }
+          }
+          csvData.push(temp);
+        }
+      } catch (err) {
+        logger.error(err.message);
+      }
+      // Generate the file by parsing the data, set the response parameters and send it
+      const csv = json2csv.parse(csvData);
       return csv;
     }
   }
