@@ -1,3 +1,10 @@
+# [2.2.0-beta.13](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0-beta.12...v2.2.0-beta.13) (2023-12-04)
+
+
+### Bug Fixes
+
+* client flow authentication would not work due to incorrect update when migrating mongoose version ([18a4683](https://github.com/ReliefApplications/ems-backend/commit/18a46838c35b3d1e84964c7898095752736f9fa1))
+
 # [2.2.0-beta.12](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0-beta.11...v2.2.0-beta.12) (2023-12-02)
 
 
