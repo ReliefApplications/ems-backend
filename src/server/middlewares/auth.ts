@@ -233,12 +233,24 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
         // === CLIENT ===
       } else if (token.azp) {
         // Checks if client already exists in the DB
-        Client.findOne(
-          { $or: [{ oid: token.oid }, { clientId: token.azp }] },
-          (err, client: Client) => {
-            if (err) {
-              return done(err);
-            }
+        Client.findOne({
+          $or: [{ oid: token.oid }, { clientId: token.azp }],
+        })
+          .populate({
+            // Add to the context all roles / permissions the client has
+            path: 'roles',
+            model: 'Role',
+            populate: {
+              path: 'permissions',
+              model: 'Permission',
+            },
+          })
+          .populate({
+            // Add to the context all positionAttributes with corresponding categories
+            path: 'positionAttributes.category',
+            model: 'PositionAttributeCategory',
+          })
+          .then((client) => {
             if (client) {
               // Returns the client if found and add more information if first connection
               if (!client.oid || !client.clientId) {
@@ -248,7 +260,7 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                 client
                   .save()
                   .then((res) => done(null, res, token))
-                  .catch((err2) => done(err2));
+                  .catch((error) => done(error));
               } else {
                 return done(null, client, token);
               }
@@ -267,23 +279,8 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
               client
                 .save()
                 .then((res) => done(null, res, token))
-                .catch((err2) => done(err2));
+                .catch((error) => done(error));
             }
-          }
-        )
-          .populate({
-            // Add to the context all roles / permissions the client has
-            path: 'roles',
-            model: 'Role',
-            populate: {
-              path: 'permissions',
-              model: 'Permission',
-            },
-          })
-          .populate({
-            // Add to the context all positionAttributes with corresponding categories
-            path: 'positionAttributes.category',
-            model: 'PositionAttributeCategory',
           });
       }
     })
