@@ -353,6 +353,7 @@ export const insertRecords = async (
       $or: filters,
     }).select(selectedFields);
 
+    const ownershipMappingWithIds: any = {};
     if (isEIOS) {
       // BUILD MAPPING OF ownershipMappingJSON
       // Get Id of Signal HQ PHI app
@@ -363,7 +364,6 @@ export const insertRecords = async (
         application: applicationSignalHQPHI[0]._id,
         title: 'User',
       });
-      const ownershipMappingWithIds: any = {};
       for (const [key, value] of Object.entries(ownershipMappingJSON)) {
         ownershipMappingWithIds[key] = [];
         if (value.length > 0) {
@@ -452,6 +452,15 @@ export const insertRecords = async (
             }
             return true;
           });
+      if (isEIOS) {
+        const boardName = mappedElement.article_board_name;
+        mappedElement.ownership = [];
+        for (const key of Object.keys(ownershipMappingJSON)) {
+          if (boardName === key) {
+            mappedElement.ownership.push(...ownershipMappingWithIds[key]);
+          }
+        }
+      }
       // If everything is fine, push it in the array for saving
       if (!isDuplicate) {
         transformRecord(mappedElement, form.fields);
