@@ -63,7 +63,13 @@ describe('Add draft record tests cases', () => {
 
     const variables = {
       form: form._id,
-      data: {},
+      data: {
+        firstName: faker.name.firstName(),
+        lastName: faker.name.lastName(),
+        age: faker.datatype.number({ min: 18, max: 99 }),
+        email: faker.internet.email(),
+        isSubscribed: faker.datatype.boolean(),
+      },
     };
 
     const response = await request
@@ -84,7 +90,13 @@ describe('Add draft record tests cases', () => {
   test('test case add draft record with invalid form ID', async () => {
     const variables = {
       form: 'invalid-form-id',
-      data: {},
+      data: {
+        firstName: faker.name.firstName(),
+        lastName: faker.name.lastName(),
+        age: faker.datatype.number({ min: 18, max: 99 }),
+        email: faker.internet.email(),
+        isSubscribed: faker.datatype.boolean(),
+      },
     };
 
     const response = await request
@@ -109,7 +121,13 @@ describe('Add draft record tests cases', () => {
 
     const variables = {
       form: form._id,
-      data: {},
+      data: {
+        firstName: faker.name.firstName(),
+        lastName: faker.name.lastName(),
+        age: faker.datatype.number({ min: 18, max: 99 }),
+        email: faker.internet.email(),
+        isSubscribed: faker.datatype.boolean(),
+      },
     };
 
     const response = await request

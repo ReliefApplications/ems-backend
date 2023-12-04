@@ -71,17 +71,14 @@ describe('AddApplication mutation tests cases', () => {
   });
 
   test('test case with insufficient permissions and return error', async () => {
-    // Criar um usuário sem permissão de criação de aplicativos
     const userWithoutPermission = new User({
       username: 'userwithoutpermission@dummy.com',
       roles: [],
     });
     await userWithoutPermission.save();
 
-    // Obter um token para o novo usuário
     const tokenWithoutPermission = `Bearer ${await acquireToken()}`;
 
-    // Tentar adicionar uma aplicação com o novo usuário
     const response = await request
       .post('/graphql')
       .send({ query: mutation })
@@ -110,7 +107,6 @@ describe('AddApplication mutation tests cases', () => {
   });
 
   test('test case with an existing application name and increment number', async () => {
-    // Criar uma aplicação inicial com um nome específico
     const initialAppName = 'Existing application 0';
     const initialApp = new Application({
       name: initialAppName,

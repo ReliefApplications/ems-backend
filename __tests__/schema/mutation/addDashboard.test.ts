@@ -79,7 +79,7 @@ describe('Add dashboard tests cases', () => {
   });
 
   test('test case with insufficient permissions', async () => {
-    const nonAdminToken = `Bearer ${await acquireToken(/* criar usuário sem permissões de criação de painéis */)}`;
+    const nonAdminToken = `Bearer ${await acquireToken()}`;
     const variables = {
       name: faker.random.alpha(10),
     };
