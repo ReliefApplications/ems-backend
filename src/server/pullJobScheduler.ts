@@ -227,61 +227,6 @@ const accessFieldIncludingNested = (data: any, identifier: string): any => {
 };
 
 /**
- * Return ownership value according to list of regions
- *
- * @param boardName name of the EIOS board
- * @param signalHQPHIAppId Id of application Signal HQ PHI
- * @returns list of user roles ids
- */
-const assignEIOSOwnership = async (
-  boardName: string,
-  signalHQPHIAppId: any
-): Promise<any[]> => {
-  const ownersList = [];
-  // Automatically assign user role for Signal HQ PHI app
-  const signalHQPHIUserRole = await Role.findOne({
-    application: signalHQPHIAppId,
-    title: 'User',
-  });
-  ownersList.push(signalHQPHIUserRole._id);
-
-  for (const [key, value] of Object.entries(ownershipMappingJSON)) {
-    // If board name included in mapping JSON, assign correct user role
-    if (boardName === key) {
-      // Use lookup to be able to filter roles by application data
-      const filterList: any[] = [
-        {
-          $lookup: {
-            from: 'applications',
-            localField: 'application',
-            foreignField: '_id',
-            as: '_application',
-          },
-        },
-      ];
-      const regionFilters = [];
-      // Mandatory to use map function
-      const regionArrays = value as string[];
-      regionArrays.map((elt) => {
-        regionFilters.push({
-          $and: [
-            { title: 'User' },
-            { _application: { $elemMatch: { name: { $regex: elt } } } },
-          ],
-        });
-      });
-      filterList.push({ $match: { $or: regionFilters } });
-      const userRoles = await Role.aggregate([...filterList]);
-      // Only push not undefined user Roles to owners list
-      if (userRoles) {
-        ownersList.push(...userRoles.map((a) => a._id));
-      }
-    }
-  }
-  return ownersList;
-};
-
-/**
  *  Use the fetched data to insert records into the dB if needed.
  *
  * @param data array of data fetched from API
@@ -407,6 +352,55 @@ export const insertRecords = async (
       form: pullJob.convertTo,
       $or: filters,
     }).select(selectedFields);
+
+    if (isEIOS) {
+      // BUILD MAPPING OF ownershipMappingJSON
+      // Get Id of Signal HQ PHI app
+      const applicationSignalHQPHI = await Application.find({
+        name: 'Signal HQ PHI',
+      });
+      const signalHQPHIUserRole = await Role.findOne({
+        application: applicationSignalHQPHI[0]._id,
+        title: 'User',
+      });
+      const ownershipMappingWithIds: any = {};
+      for (const [key, value] of Object.entries(ownershipMappingJSON)) {
+        ownershipMappingWithIds[key] = [];
+        if (value.length > 0) {
+          const filterList: any[] = [
+            {
+              $lookup: {
+                from: 'applications',
+                localField: 'application',
+                foreignField: '_id',
+                as: '_application',
+              },
+            },
+          ];
+          const regionFilters = [];
+          // Mandatory to use map function
+          const regionArrays = value as string[];
+          regionArrays.map((elt) => {
+            regionFilters.push({
+              $and: [
+                { title: 'User' },
+                { _application: { $elemMatch: { name: { $regex: elt } } } },
+              ],
+            });
+          });
+          if (regionFilters.length > 0) {
+            filterList.push({ $match: { $or: regionFilters } });
+          }
+          const userRoles = await Role.aggregate([...filterList]);
+          // Only push not undefined user Roles to owners list
+          if (userRoles) {
+            ownershipMappingWithIds[key].push(...userRoles.map((a) => a._id));
+          }
+        }
+        ownershipMappingWithIds[key].push(signalHQPHIUserRole._id);
+      }
+    }
+
     for (const element of data) {
       // eslint-disable-next-line @typescript-eslint/no-use-before-define
       const mappedElement = mapData(
@@ -458,18 +452,6 @@ export const insertRecords = async (
             }
             return true;
           });
-      if (isEIOS) {
-        const boardName = mappedElement.article_board_name;
-        // Get Id of Signal HQ PHI app
-        const applicationSignalHQPHI = await Application.find({
-          name: 'Signal HQ PHI',
-        });
-        const ownersList = await assignEIOSOwnership(
-          boardName as string,
-          applicationSignalHQPHI[0]._id
-        );
-        mappedElement.ownership = ownersList;
-      }
       // If everything is fine, push it in the array for saving
       if (!isDuplicate) {
         transformRecord(mappedElement, form.fields);

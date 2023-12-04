@@ -15,6 +15,7 @@ export const ownershipMappingJSON = {
   CentralEurope_COVID_public: ['EURO'],
   COVID_AdHoc_EURO_public: ['EURO'],
   'COVID-19 Intel monitoring - GLOBAL': ['HQ AEE'],
+  'Ebola/MVD alert board': [],
   'ELR ADHOC': ['HQ AEE'],
   'ELR-Samuel': ['HQ AEE'],
   'EMRO COVID Vaccination': ['EMRO'],
@@ -28,6 +29,25 @@ export const ownershipMappingJSON = {
   'NRBC - Sahel': ['HQ FCV'],
   'PAHO - Natural Disasters': ['AMRO'],
   'PAHO - Priority Hazards': ['AMRO'],
+  'Pilot - Daily Monitoring': [],
+  'Priority disease Global - excluding COVID-19 and Mpox category definition':
+    [],
+  'Priority disease Global - excluding COVID-19 category definition': [],
+  'Priority disease Global - excluding nCoV and monkeypox category definition':
+    [],
+  'Priority disease Global - not including nCoV and monkeypox category definition':
+    [],
+  'Priority diseases Global - not including coronavirus & Monkeypox  category definition':
+    [],
+  'Priority diseases Global - not including coronavirus category definition':
+    [],
+  'Priority Hazards': [],
+  'Priority sources - excluding COVID-19': [],
+  'Priority sources - excluding COVID-19 and mpox': [],
+  'Priority sources - excluding nCoV and monkeypox': [],
+  'Priority sources - not including coronavirus & Monkeypox category definition':
+    [],
+  'Priority sources - not including coronavirus category definition': [],
   qa: ['EMRO'],
   'qa - euro': ['EURO'],
   'QA- HQ- AFRO - EURO- AMRO': ['EURO', 'AFRO', 'AMRO'],
@@ -36,6 +56,8 @@ export const ownershipMappingJSON = {
   'SEAR Signals For Export': ['SEARO'],
   'Shared Ukraine board': ['EURO'],
   'Signals for Follow Up- SEAR': ['SEARO'],
+  'Sudan virus disease Uganda - October 2022': [],
+  TestHWF20210322: [],
   Ukraine: ['EURO'],
   'WPRO - Disaster': ['WPRO'],
   'WPRO Disease 2 - Not nCoV': ['WPRO'],
