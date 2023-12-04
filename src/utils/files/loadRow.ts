@@ -1,7 +1,6 @@
 import { isArray, isNil } from 'lodash';
 import set from 'lodash/set';
 import { PositionAttribute } from '@models';
-import { JSONObject } from 'graphql-scalars/typings/mocks';
 
 /**
  * Transforms uploaded row into record data, using fiels definition.
