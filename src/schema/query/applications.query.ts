@@ -130,13 +130,6 @@ export default {
 
       const ability: AppAbility = context.user.ability;
 
-      // Inputs check
-      if (args.sortField) {
-        if (!SORT_FIELDS.map((x) => x.name).includes(args.sortField)) {
-          throw new GraphQLError(`Cannot sort by ${args.sortField} field`);
-        }
-      }
-
       const abilityFilters = Application.find(
         accessibleBy(ability, 'read').Application
       ).getFilter();
