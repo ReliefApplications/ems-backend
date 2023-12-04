@@ -353,10 +353,10 @@ export const insertRecords = async (
       $or: filters,
     }).select(selectedFields);
 
+    // If EIOS pullJob, build a mapping JSON to assign ownership (role ids)
     const ownershipMappingWithIds: any = {};
     if (isEIOS) {
-      // BUILD MAPPING OF ownershipMappingJSON
-      // Get Id of Signal HQ PHI app
+      // Get Id of Signal HQ PHI app to assign to every element
       const applicationSignalHQPHI = await Application.find({
         name: 'Signal HQ PHI',
       });
@@ -367,6 +367,7 @@ export const insertRecords = async (
       for (const [key, value] of Object.entries(ownershipMappingJSON)) {
         ownershipMappingWithIds[key] = [];
         if (value.length > 0) {
+          //Create a filter to get roles based on application name(s)
           const filterList: any[] = [
             {
               $lookup: {
@@ -388,15 +389,17 @@ export const insertRecords = async (
               ],
             });
           });
+          // Need to check if regionFilters not empty, otherwise error
           if (regionFilters.length > 0) {
             filterList.push({ $match: { $or: regionFilters } });
           }
           const userRoles = await Role.aggregate([...filterList]);
-          // Only push not undefined user Roles to owners list
+          // Only push defined user Roles to owners list
           if (userRoles) {
             ownershipMappingWithIds[key].push(...userRoles.map((a) => a._id));
           }
         }
+        // Always push HQ PHI User role
         ownershipMappingWithIds[key].push(signalHQPHIUserRole._id);
       }
     }
@@ -452,10 +455,12 @@ export const insertRecords = async (
             }
             return true;
           });
+
       if (isEIOS) {
+        // Assign correct ownership value based on mapping JSON and board name
         const boardName = mappedElement.article_board_name;
         mappedElement.ownership = [];
-        for (const key of Object.keys(ownershipMappingJSON)) {
+        for (const key of Object.keys(ownershipMappingWithIds)) {
           if (boardName === key) {
             mappedElement.ownership.push(...ownershipMappingWithIds[key]);
           }
