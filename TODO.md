@@ -5,4 +5,3 @@ List there all actions to do ( eg: update to perform on some environments when r
 ## Done in 2.x.x
 [ ] - Update of Apollo
 [ ] - Update of CASL
-
