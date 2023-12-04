@@ -1,6 +1,7 @@
 import { isArray, isNil } from 'lodash';
 import set from 'lodash/set';
 import { PositionAttribute } from '@models';
+import { JSONObject } from 'graphql-scalars/typings/mocks';
 
 /**
  * Transforms uploaded row into record data, using fiels definition.
@@ -68,6 +69,10 @@ export const loadRow = (
             value,
             category: column.category,
           });
+          break;
+        }
+        case 'geospatial': {
+          data[column.field] = JSON.parse(value);
           break;
         }
         default: {
