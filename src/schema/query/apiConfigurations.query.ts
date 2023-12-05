@@ -40,6 +40,9 @@ const FILTER_FIELDS: { name: string; type: string }[] = [
   },
 ];
 
+/** Default sort by */
+const DEFAULT_SORT_FIELD = 'name';
+
 /** Available sort fields */
 const SORT_FIELDS = [
   {
@@ -60,21 +63,6 @@ const SORT_FIELDS = [
     },
   },
 ];
-
-/** Default sort field by id */
-const DEFAULT_SORT_FIELD = {
-  cursorId: (node: any) => node.id.toString(),
-  cursorFilter: (cursor: any) => {
-    return {
-      _id: {
-        $gt: decodeCursor(cursor),
-      },
-    };
-  },
-  sort: (sortOrder: any = 1) => {
-    return { _id: sortOrder };
-  },
-};
 
 /**
  * List all apiConfiguration available for the logged user.
@@ -110,23 +98,20 @@ export default {
       const filters: any[] = [queryFilters, abilityFilters];
 
       const afterCursor = args.afterCursor;
+      const sortField =
+        SORT_FIELDS.find((x) => x.name === args.sortField) ||
+        SORT_FIELDS.find((x) => x.name === DEFAULT_SORT_FIELD);
+      const sortOrder = args.sortOrder || 'asc';
 
-      // We only use one sort field, if exists, apply it
-      const sortField = args.sortField ? SORT_FIELDS[0] : DEFAULT_SORT_FIELD;
-      const sortOrder = args.sortOrder;
-
-      let cursorFilters = {};
-      if (afterCursor) {
-        if ('name' in sortField) {
-          cursorFilters = sortField.cursorFilter(afterCursor, sortOrder);
-        } else {
-          cursorFilters = sortField.cursorFilter(afterCursor);
-        }
-      }
+      const cursorFilters = afterCursor
+        ? sortField.cursorFilter(afterCursor, sortOrder)
+        : {};
 
       let items: any[] = await ApiConfiguration.find({
         $and: [cursorFilters, ...filters],
       })
+        // Make it case insensitive
+        .collation({ locale: 'en' })
         .sort(sortField.sort(sortOrder))
         .limit(first + 1);
 
