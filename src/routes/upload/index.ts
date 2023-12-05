@@ -17,6 +17,7 @@ import i18next from 'i18next';
 import get from 'lodash/get';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { insertRecords as insertRecordsPulljob } from '@server/pullJobScheduler';
 
 /** File size limit, in bytes  */
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
@@ -205,6 +206,22 @@ router.post('/resource/records/:id', async (req: any, res) => {
 
     // Insert records if authorized
     return await insertRecords(res, file, form, resource.fields, req.context);
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    return res.status(500).send(req.t('common.errors.internalServerError'));
+  }
+});
+
+/**
+ * Upload a list of records for a resource in json format
+ */
+router.post('/resource/insert', async (req: any, res) => {
+  try {
+    // Insert records if authorized
+    insertRecordsPulljob(req.body.records, req.body.parameters);
+
+    const insertReportMessage = `${req.body.records.length} objects received from webjob "${req.body.parameters.name}"`;
+    return res.status(200).send(insertReportMessage);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
     return res.status(500).send(req.t('common.errors.internalServerError'));
