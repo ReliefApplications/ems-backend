@@ -87,6 +87,8 @@ export default {
           ).toString(),
         }),
       };
+
+      // Find API configuration and update it using User permissions
       const filters = ApiConfiguration.find(
         accessibleBy(ability, 'update').ApiConfiguration
       )

@@ -50,7 +50,9 @@ export default {
 
       let items: any[] = await PullJob.find({
         $and: [cursorFilters, ...filters],
-      }).limit(first + 1);
+      })
+        .sort({ _id: 1 })
+        .limit(first + 1);
 
       const hasNextPage = items.length > first;
       if (hasNextPage) {

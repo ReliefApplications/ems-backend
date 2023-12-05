@@ -364,7 +364,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         if (isUsedInFilter(filter)) return true;
 
         // Check if the field is used in any styles' filters
-        if (styles.some((s) => isUsedInFilter(s.filter))) return true;
+        if (styles?.some((s) => isUsedInFilter(s.filter))) return true;
 
         // If not used in any of the above, don't add it to the pipeline
         return false;

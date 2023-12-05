@@ -1,3 +1,63 @@
+## [2.1.11](https://github.com/ReliefApplications/oort-backend/compare/v2.1.10...v2.1.11) (2023-11-14)
+
+
+### Bug Fixes
+
+* incorrect metadata for createdBy / lastUpdatedBy fields ([#829](https://github.com/ReliefApplications/oort-backend/issues/829)) ([c6892f3](https://github.com/ReliefApplications/oort-backend/commit/c6892f35b24d6c2b350599275de82280f9c5630a))
+
+## [2.1.10](https://github.com/ReliefApplications/oort-backend/compare/v2.1.9...v2.1.10) (2023-11-12)
+
+
+### Bug Fixes
+
+* record history would not correctly display changes on resources for some users ([f2cfa5f](https://github.com/ReliefApplications/oort-backend/commit/f2cfa5f7d9f10613b2fc22d1a46ae65bce098bd3))
+
+## [2.1.9](https://github.com/ReliefApplications/oort-backend/compare/v2.1.8...v2.1.9) (2023-11-10)
+
+
+### Bug Fixes
+
+* could not revert past history versions ([d9999a1](https://github.com/ReliefApplications/oort-backend/commit/d9999a1666d12e1282c28b334ce91b0b24cf8142))
+* some requests could not be cached due to incorrect method check ([61e44c7](https://github.com/ReliefApplications/oort-backend/commit/61e44c7a2c03160a81d4d3d7fcaa05e43ec1dbb6))
+
+## [2.1.8](https://github.com/ReliefApplications/oort-backend/compare/v2.1.7...v2.1.8) (2023-11-07)
+
+
+### Bug Fixes
+
+* add resource fields to history ([71e708d](https://github.com/ReliefApplications/oort-backend/commit/71e708dcfb4f36f6b955624cc15fbfc09a3b4c38))
+* owner field could create issue in history ([0b08985](https://github.com/ReliefApplications/oort-backend/commit/0b089850852b02b7a70740c97d6aaee33c9a0c0d))
+
+## [2.1.7](https://github.com/ReliefApplications/oort-backend/compare/v2.1.6...v2.1.7) (2023-11-06)
+
+
+### Bug Fixes
+
+* allow parallel sorting in aggregations ([#798](https://github.com/ReliefApplications/oort-backend/issues/798)) ([8b7a8ec](https://github.com/ReliefApplications/oort-backend/commit/8b7a8ec84346afc686190d2b7d321375b71d7b74))
+
+## [2.1.6](https://github.com/ReliefApplications/oort-backend/compare/v2.1.5...v2.1.6) (2023-11-03)
+
+
+### Bug Fixes
+
+* check of calculated fields in pipeline of 'all' query could break some queries ([00e88f8](https://github.com/ReliefApplications/oort-backend/commit/00e88f8087726ba896a35f898049105d1d55062c))
+* updated editApiConfiguration mutation ([#793](https://github.com/ReliefApplications/oort-backend/issues/793)) ([dbe15c6](https://github.com/ReliefApplications/oort-backend/commit/dbe15c6cfb7b9754c2f06bda671bc4b43acc1885))
+
+## [2.1.5](https://github.com/ReliefApplications/oort-backend/compare/v2.1.4...v2.1.5) (2023-10-25)
+
+
+### Bug Fixes
+
+* could not get first createdBy in history ([47b33fd](https://github.com/ReliefApplications/oort-backend/commit/47b33fd25f84c7c49ee09503a1fbe8f41b40473d))
+
+## [2.1.4](https://github.com/ReliefApplications/oort-backend/compare/v2.1.3...v2.1.4) (2023-10-24)
+
+
+### Bug Fixes
+
+* incorrect list of permissions sent to back-office role editor ([#786](https://github.com/ReliefApplications/oort-backend/issues/786)) ([d4377c0](https://github.com/ReliefApplications/oort-backend/commit/d4377c020674c2737d02f1781ff002bf7810cccc))
+* non-admin users could not download history ([#785](https://github.com/ReliefApplications/oort-backend/issues/785)) ([862fdcc](https://github.com/ReliefApplications/oort-backend/commit/862fdccc44a77264299aac2b47ecfe8024f70b41))
+
 ## [2.1.3](https://github.com/ReliefApplications/oort-backend/compare/v2.1.2...v2.1.3) (2023-10-18)
 
 

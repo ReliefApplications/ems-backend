@@ -95,8 +95,6 @@ export default {
               canUpdate: baseApplication.permissions.canUpdate,
               canDelete: baseApplication.permissions.canDelete,
             },
-            contextualFilter: baseApplication.contextualFilter,
-            contextualFilterPosition: baseApplication.contextualFilterPosition,
           });
           // Copy files from base application
           await copyFolder('applications', baseApplication.id, application.id);

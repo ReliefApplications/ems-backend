@@ -140,7 +140,7 @@ function extendAbilityForRecordsOnForm(
   ability?: AppAbility
 ): AppAbility {
   if (ability === undefined) ability = user.ability;
-  if (ability.cannot('manage', 'Record')) {
+  if (ability.cannot('manage', 'Record') && resource) {
     const abilityBuilder = new AbilityBuilder(appAbility);
     const can = abilityBuilder.can;
     const cannot = abilityBuilder.cannot;

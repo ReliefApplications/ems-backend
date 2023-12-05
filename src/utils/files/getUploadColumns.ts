@@ -11,7 +11,8 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
     switch (field.type) {
       case 'checkbox':
       case 'tagbox': {
-        if (field.choices) {
+        // One column per option, if question has choices & we don't find it in the list of the excel columns.
+        if (field.choices && !(headers.indexOf(field.name) > 0)) {
           for (const item of field.choices) {
             const name = `${field.name}.${item.value}`;
             const index = headers.indexOf(name);

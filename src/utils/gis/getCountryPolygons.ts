@@ -60,7 +60,9 @@ export const getAdmin0Polygons = async (
       url: config.get('redis.url'),
       password: config.get('redis.password'),
     });
-    client.on('error', (error) => logger.error(`REDIS: ${error}`));
+    client.on('error', (error) => {
+      logger.error(`REDIS: ${error}`);
+    });
     await client.connect();
   }
   const cacheData = client ? await client.get(cacheKey) : null;
