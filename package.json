@@ -1,6 +1,6 @@
 {
   "name": "oort-backend",
-  "version": "2.2.0-beta.13",
+  "version": "2.2.0-beta.14",
   "description": "",
   "main": "index.js",
   "scripts": {

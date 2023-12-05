@@ -1,3 +1,10 @@
+# [2.2.0-beta.14](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0-beta.13...v2.2.0-beta.14) (2023-12-05)
+
+
+### Bug Fixes
+
+* incorrect sorting on api configurations ([#852](https://github.com/ReliefApplications/ems-backend/issues/852)) ([1260ceb](https://github.com/ReliefApplications/ems-backend/commit/1260cebd5c88b7a6da8236a723a422729ab88723))
+
 # [2.2.0-beta.13](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0-beta.12...v2.2.0-beta.13) (2023-12-04)
 
 
