@@ -28,7 +28,7 @@ const FILTER_FIELDS: { name: string; type: string }[] = [
 ];
 
 /** Default sort by */
-const DEFAULT_SORT_FIELD = 'createdAt';
+const DEFAULT_SORT_FIELD = 'name';
 
 /** Available sort fields */
 const SORT_FIELDS = [
@@ -125,7 +125,7 @@ export default {
         $and: [cursorFilters, ...filters],
       })
         // Make it case insensitive
-        // .collation({ locale: context.locale, strength: 1 })
+        .collation({ locale: 'en' })
         .sort(sortField.sort(sortOrder))
         .limit(first + 1);
 
