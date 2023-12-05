@@ -263,6 +263,217 @@ const buildPipeline = (
         }
         break;
       }
+      case PipelineStage.LABEL: {
+        const questionsWithChoices = resource.fields.filter(
+          (item) => 'choices' in item
+        );
+        const choiceQuestionsNames = questionsWithChoices.map(
+          (item) => item.name
+        );
+        if (choiceQuestionsNames.includes(stage.form.field)) {
+          const questionType = questionsWithChoices.find(
+            (item) => item.name === stage.form.field
+          ).type;
+          const questionChoices = questionsWithChoices.find(
+            (item) => item.name === stage.form.field
+          ).choices;
+
+          switch (questionType) {
+            // Matrixdropdown is an object of objects of either arrays or single values
+            case 'matrixdropdown': {
+              pipeline.push({
+                $addFields: {
+                  [stage.form.field]: {
+                    $arrayToObject: {
+                      $map: {
+                        input: { $objectToArray: `$${stage.form.field}` },
+                        as: 'row',
+                        in: {
+                          k: '$$row.k',
+                          v: {
+                            $arrayToObject: {
+                              $map: {
+                                input: { $objectToArray: '$$row.v' },
+                                as: 'column',
+                                in: {
+                                  k: '$$column.k',
+                                  v: {
+                                    $cond: {
+                                      if: { $isArray: '$$column.v' },
+                                      then: {
+                                        $map: {
+                                          input: '$$column.v',
+                                          as: 'value',
+                                          in: {
+                                            $switch: {
+                                              branches: [
+                                                ...questionChoices.map(
+                                                  (choice) => ({
+                                                    case: {
+                                                      $eq: [
+                                                        '$$value',
+                                                        choice.value,
+                                                      ],
+                                                    },
+                                                    then: choice.text,
+                                                  })
+                                                ),
+                                              ],
+                                              default: 'value',
+                                            },
+                                          },
+                                        },
+                                      },
+                                      else: {
+                                        $switch: {
+                                          branches: [
+                                            ...questionChoices.map(
+                                              (choice) => ({
+                                                case: {
+                                                  $eq: [
+                                                    '$$column.v',
+                                                    choice.value,
+                                                  ],
+                                                },
+                                                then: choice.text,
+                                              })
+                                            ),
+                                          ],
+                                          default: '$$column.v',
+                                        },
+                                      },
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                  id: 1,
+                },
+              });
+              break;
+            }
+            // Matrixdynamic is an array of objects of either arrays or single values
+            case 'matrixdynamic': {
+              pipeline.push({
+                $addFields: {
+                  [stage.form.field]: {
+                    $map: {
+                      input: `$${stage.form.field}`,
+                      as: 'ans',
+                      in: {
+                        $arrayToObject: {
+                          $map: {
+                            input: { $objectToArray: '$$ans' },
+                            as: 'col',
+                            in: {
+                              k: '$$col.k',
+                              v: {
+                                $cond: {
+                                  if: { $isArray: '$$col.v' },
+                                  then: {
+                                    $map: {
+                                      input: '$$col.v',
+                                      as: 'value',
+                                      in: {
+                                        $switch: {
+                                          branches: [
+                                            ...questionChoices.map(
+                                              (choice) => ({
+                                                case: {
+                                                  $eq: [
+                                                    '$$value',
+                                                    choice.value,
+                                                  ],
+                                                },
+                                                then: choice.text,
+                                              })
+                                            ),
+                                          ],
+                                          default: 'value',
+                                        },
+                                      },
+                                    },
+                                  },
+                                  else: {
+                                    $switch: {
+                                      branches: [
+                                        ...questionChoices.map((choice) => ({
+                                          case: {
+                                            $eq: ['$$col.v', choice.value],
+                                          },
+                                          then: choice.text,
+                                        })),
+                                      ],
+                                      default: '$$col.v',
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              });
+              break;
+            }
+            // Everything else is either an array or single value
+            default: {
+              pipeline.push({
+                $addFields: {
+                  [stage.form.field]: {
+                    $cond: {
+                      if: { $isArray: `$${stage.form.field}` },
+                      then: {
+                        $map: {
+                          input: `$${stage.form.field}`,
+                          as: 'value',
+                          in: {
+                            $switch: {
+                              branches: [
+                                ...questionChoices.map((choice) => ({
+                                  case: {
+                                    $eq: ['$$value', choice.value],
+                                  },
+                                  then: choice.text,
+                                })),
+                              ],
+                              default: '$$value',
+                            },
+                          },
+                        },
+                      },
+                      else: {
+                        $switch: {
+                          branches: [
+                            ...questionChoices.map((choice) => ({
+                              case: {
+                                $eq: [`$${stage.form.field}`, choice.value],
+                              },
+                              then: choice.text,
+                            })),
+                          ],
+                          default: `$${stage.form.field}`,
+                        },
+                      },
+                    },
+                  },
+                },
+              });
+              break;
+            }
+          }
+        }
+        break;
+      }
+
       case PipelineStage.CUSTOM: {
         const custom: string = stage.form.raw;
         if (forbiddenKeywords.some((x: string) => custom.includes(x))) {
