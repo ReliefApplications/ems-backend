@@ -8,7 +8,13 @@ import {
 import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
 import { cloneDeep, get, isEqual, set, unset } from 'lodash';
-import { Form, Record as RecordModel, ReferenceData, Resource } from '@models';
+import {
+  Aggregation,
+  Form,
+  Record as RecordModel,
+  ReferenceData,
+  Resource,
+} from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import buildPipeline from '@utils/aggregation/buildPipeline';
 import buildReferenceDataAggregation from '@utils/aggregation/buildReferenceDataAggregation';
@@ -64,7 +70,7 @@ const CREATED_BY_STAGES = [
 /** Arguments for the recordsAggregation query */
 type RecordsAggregationArgs = {
   resource: string | mongoose.Types.ObjectId;
-  aggregation: string | mongoose.Types.ObjectId;
+  aggregation: string | mongoose.Types.ObjectId | Aggregation;
   mapping?: any;
   first?: number;
   skip?: number;
@@ -168,7 +174,7 @@ export default {
   type: GraphQLJSON,
   args: {
     resource: { type: new GraphQLNonNull(GraphQLID) },
-    aggregation: { type: new GraphQLNonNull(GraphQLID) },
+    aggregation: { type: new GraphQLNonNull(GraphQLJSON) },
     contextFilters: { type: GraphQLJSON },
     mapping: { type: GraphQLJSON },
     first: { type: GraphQLInt },
@@ -204,9 +210,16 @@ export default {
       ).getFilter();
 
       // As we only queried one aggregation
-      const aggregation = resource.aggregations.find((x) =>
-        isEqual(x.id, args.aggregation)
-      );
+      let aggregation: any;
+      // Aggregation is an id
+      if (typeof args.aggregation === 'string') {
+        aggregation = resource.aggregations.find((x) =>
+          isEqual(x.id, args.aggregation)
+        );
+      } else {
+        // Else, if it's supplied for the preview of the aggregation
+        aggregation = args.aggregation;
+      }
 
       const refDataNameMap: Record<string, string> = {};
       if (aggregation?.sourceFields && aggregation.pipeline) {
