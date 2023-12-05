@@ -24,6 +24,7 @@ interface ExportBatchParams {
   sortField?: string;
   sortOrder?: 'asc' | 'desc';
   resource?: string;
+  timeZone: string;
 }
 
 /**
@@ -257,14 +258,12 @@ const writeRowsXlsx = (
  *
  * @param params export batch parameters
  * @param columns columns to use
- * @param timeZone time zone of the user
  * @param authorization auth token to access url choices
  * @returns list of data
  */
 const getRecords = async (
   params: ExportBatchParams,
   columns: any[],
-  timeZone: string,
   authorization: string
 ) => {
   const pipeline = [
@@ -303,7 +302,7 @@ const getRecords = async (
         ...(buildCalculatedFieldPipeline(
           col.meta.field.expression,
           col.meta.field.name,
-          timeZone
+          params.timeZone
         ) as any)
       )
     );
@@ -382,7 +381,7 @@ const getRecords = async (
           ...(buildCalculatedFieldPipeline(
             col.meta.field.expression,
             col.meta.field.name,
-            timeZone
+            params.timeZone
           ) as any)
         );
       });
@@ -428,7 +427,6 @@ export default async (req: any, params: ExportBatchParams) => {
   const records: Record[] = await getRecords(
     params,
     columns,
-    'UTC',
     req.headers.authorization
   );
   switch (params.format) {
