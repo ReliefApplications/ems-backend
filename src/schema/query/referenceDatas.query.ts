@@ -28,7 +28,7 @@ const FILTER_FIELDS: { name: string; type: string }[] = [
 ];
 
 /** Default sort by */
-const DEFAULT_SORT_FIELD = 'createdAt';
+const DEFAULT_SORT_FIELD = 'name';
 
 /** Available sort fields */
 const SORT_FIELDS = [
@@ -46,23 +46,6 @@ const SORT_FIELDS = [
     sort: (sortOrder: string) => {
       return {
         name: getSortOrder(sortOrder),
-      };
-    },
-  },
-  {
-    name: 'createdAt',
-    cursorId: (node: any) => node.createdAt.getTime().toString(),
-    cursorFilter: (cursor: any, sortOrder: string) => {
-      const operator = sortOrder === 'asc' ? '$gt' : '$lt';
-      return {
-        createdAt: {
-          [operator]: decodeCursor(cursor),
-        },
-      };
-    },
-    sort: (sortOrder: string) => {
-      return {
-        createdAt: getSortOrder(sortOrder),
       };
     },
   },
