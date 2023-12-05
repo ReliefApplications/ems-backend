@@ -150,6 +150,8 @@ export default {
       let items: any[] = await Application.find({
         $and: [cursorFilters, ...filters],
       })
+        // Make it case insensitive
+        .collation({ locale: 'en' })
         .sort(sortField.sort(sortOrder))
         .limit(first + 1);
 
