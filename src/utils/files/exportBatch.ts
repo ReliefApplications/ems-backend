@@ -308,9 +308,9 @@ const getRecords = async (
     );
 
   const records = await Record.aggregate<Record>(pipeline as any);
-
+  console.log(records.slice(0, 5));
   const choicesByUrlColumns = columns.filter(
-    (col) => col.meta.field.choicesByUrl
+    (col) => col.meta?.field?.choicesByUrl && !col.field.includes('.') //dot questions are treated with resources
   );
 
   for (const column of choicesByUrlColumns) {
@@ -324,7 +324,7 @@ const getRecords = async (
       record[column.field] = choices[record[column.field]];
     });
   }
-
+  console.log(records.slice(0, 5));
   /** Resources columns */
   const resourceResourcesColumns = columns.filter((col) => col.subColumns);
   /** Add resource columns */
@@ -397,7 +397,7 @@ const getRecords = async (
     });
 
     const choicesByUrlSubColumns = column.subColumns.filter(
-      (col) => col.meta.field.choicesByUrl
+      (col) => col.meta?.field?.choicesByUrl
     );
 
     for (const subColumn of choicesByUrlSubColumns) {
@@ -407,7 +407,8 @@ const getRecords = async (
         )
       );
       records.forEach((record) => {
-        record[column.field][subColumn.field] = choices[subColumn.field];
+        record[column.field][subColumn.field] =
+          choices[record[column.field][subColumn.field]];
       });
     }
   }
