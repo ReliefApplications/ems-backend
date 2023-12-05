@@ -63,7 +63,6 @@ const SORT_FIELDS = [
 
 /** Default sort field by id */
 const DEFAULT_SORT_FIELD = {
-  isDefault: true,
   cursorId: (node: any) => node.id.toString(),
   cursorFilter: (cursor: any) => {
     return {
@@ -118,10 +117,10 @@ export default {
 
       let cursorFilters = {};
       if (afterCursor) {
-        if ('isDefault' in sortField) {
-          cursorFilters = sortField.cursorFilter(afterCursor);
-        } else {
+        if ('name' in sortField) {
           cursorFilters = sortField.cursorFilter(afterCursor, sortOrder);
+        } else {
+          cursorFilters = sortField.cursorFilter(afterCursor);
         }
       }
 
