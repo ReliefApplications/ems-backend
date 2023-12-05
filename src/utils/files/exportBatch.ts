@@ -308,7 +308,6 @@ const getRecords = async (
     );
 
   const records = await Record.aggregate<Record>(pipeline as any);
-  console.log(records.slice(0, 5));
   const choicesByUrlColumns = columns.filter(
     (col) => col.meta?.field?.choicesByUrl && !col.field.includes('.') //dot questions are treated with resources
   );
@@ -324,7 +323,6 @@ const getRecords = async (
       record[column.field] = choices[record[column.field]];
     });
   }
-  console.log(records.slice(0, 5));
   /** Resources columns */
   const resourceResourcesColumns = columns.filter((col) => col.subColumns);
   /** Add resource columns */
