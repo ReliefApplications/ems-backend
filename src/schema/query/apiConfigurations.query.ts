@@ -61,6 +61,22 @@ const SORT_FIELDS = [
   },
 ];
 
+/** Default sort field by id */
+const DEFAULT_SORT_FIELD = {
+  isDefault: true,
+  cursorId: (node: any) => node.id.toString(),
+  cursorFilter: (cursor: any) => {
+    return {
+      _id: {
+        $gt: decodeCursor(cursor),
+      },
+    };
+  },
+  sort: (sortOrder: any = 1) => {
+    return { _id: sortOrder };
+  },
+};
+
 /**
  * List all apiConfiguration available for the logged user.
  * Throw GraphQL error if not logged.
@@ -96,13 +112,18 @@ export default {
 
       const afterCursor = args.afterCursor;
 
-      // We only use one sort field
-      const sortField = SORT_FIELDS[0];
-      const sortOrder = args.sortOrder || 'asc';
+      // We only use one sort field, if exists, apply it
+      const sortField = args.sortField ? SORT_FIELDS[0] : DEFAULT_SORT_FIELD;
+      const sortOrder = args.sortOrder;
 
-      const cursorFilters = afterCursor
-        ? sortField.cursorFilter(afterCursor, sortOrder)
-        : {};
+      let cursorFilters = {};
+      if (afterCursor) {
+        if ('isDefault' in sortField) {
+          cursorFilters = sortField.cursorFilter(afterCursor);
+        } else {
+          cursorFilters = sortField.cursorFilter(afterCursor, sortOrder);
+        }
+      }
 
       let items: any[] = await ApiConfiguration.find({
         $and: [cursorFilters, ...filters],
