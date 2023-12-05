@@ -49,6 +49,23 @@ const SORT_FIELDS = [
       };
     },
   },
+  {
+    name: 'createdAt',
+    cursorId: (node: any) => node.createdAt.getTime().toString(),
+    cursorFilter: (cursor: any, sortOrder: string) => {
+      const operator = sortOrder === 'asc' ? '$gt' : '$lt';
+      return {
+        createdAt: {
+          [operator]: decodeCursor(cursor),
+        },
+      };
+    },
+    sort: (sortOrder: string) => {
+      return {
+        createdAt: getSortOrder(sortOrder),
+      };
+    },
+  },
 ];
 /** Arguments for the referenceDatas query */
 type ReferenceDatasArgs = {
@@ -108,7 +125,7 @@ export default {
         $and: [cursorFilters, ...filters],
       })
         // Make it case insensitive
-        // .collation({ locale: context.locale, strength: 1 })
+        .collation({ locale: 'en' })
         .sort(sortField.sort(sortOrder))
         .limit(first + 1);
 
