@@ -97,12 +97,10 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
         case 'dropdown': {
           let value: any = get(data, column.field.split('.')[0]);
           const choices = column.meta.field.choices || [];
-          console.log("value = ", value);
           if (choices.length > 0) {
             if (Array.isArray(value)) {
               value = value.map((x) => getText(choices, x));
             } else {
-              console.log("choices = ", choices);
               value = getText(choices, value);
             }
           }

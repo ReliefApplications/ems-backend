@@ -18,7 +18,6 @@ export const getText = (choices: any[], value: any): string => {
         ? x.value.toString() === values.toString()
         : x.toString() === value.toString()
     );
-    console.log("choice = ", choice);
     if (choice != null) {
       if (choice.text) {
         if (choice.text.default) {
