@@ -326,7 +326,7 @@ router.get('/feature', async (req, res) => {
       // const filterPolygon = getFilterPolygon(req.query);
 
       if (aggregation) {
-        query = `query recordsAggregation($resource: ID!, $aggregation: ID!, $contextFilters: JSON, $first: Int, $at: Date) {
+        query = `query recordsAggregation($resource: ID!, $aggregation: JSON!, $contextFilters: JSON, $first: Int, $at: Date) {
           recordsAggregation(resource: $resource, aggregation: $aggregation, contextFilters: $contextFilters, first: $first, at: $at)
         }`;
         variables = {

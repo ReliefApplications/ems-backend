@@ -11,29 +11,25 @@ import {
  * @param value input date value
  * @returns calculated day
  */
-export const getDateForMongo = (value: any): string => {
+export const getDateForMongo = (value: any) => {
   // today's date
-  let date: Date;
+  let date: Date = new Date();
 
   if (value === Placeholder.TODAY) {
-    date = new Date();
     // today + number of days
   } else if (REGEX_TODAY_PLUS.test(value)) {
     const difference = parseInt(extractStringFromBrackets(value).split('+')[1]);
-    date = new Date();
     date.setDate(date.getDate() + difference);
     // today - number of days
   } else if (REGEX_TODAY_MINUS.test(value)) {
     const difference = -parseInt(
       extractStringFromBrackets(value).split('-')[1]
     );
-    date = new Date();
     date.setDate(date.getDate() + difference);
     // classic date
   } else {
     date = new Date(value);
   }
 
-  // Return the ISO string, if valid date, if not return empty string
-  return isNaN(date.getTime()) ? '' : date.toISOString();
+  return date;
 };

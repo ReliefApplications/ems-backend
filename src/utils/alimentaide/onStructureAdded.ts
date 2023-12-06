@@ -210,7 +210,7 @@ const getResourcesPermissions = (
       canDeleteRecords: getPerms(['admin'], { filter: true }),
     },
     // Family transfer
-    '651cc305ae23f4bcd3f3f67a': {
+    '651cc305ae23f4bcd3f3f678': {
       canCreateRecords: getPerms(['admin', 'user', 'userPlus']),
       canSeeRecords: getPerms(['admin', 'user', 'userPlus']),
       canUpdateRecords: [],
@@ -373,7 +373,7 @@ const onStructureAdded = async (rec: Record) => {
   const roleChannels = rolesToAdd.map(
     (r) =>
       new Channel({
-        title: `Role - ${structName} - ${r.title}`,
+        title: `Role - ${structName} - ${r.title} - ${r._id.toString()}`,
         role: r._id,
       })
   );
@@ -428,4 +428,33 @@ const onStructureAdded = async (rec: Record) => {
   await newApp.save();
 };
 
+/** Script that creates applications for the existing structures */
+export const createAppsForExistingStructures = async () => {
+  const STRUCTURE_FORM_ID = new Types.ObjectId('649ade1ceae9f80d6591886a');
+  // Get all the structures
+  const structures = await Record.find({
+    form: STRUCTURE_FORM_ID,
+    archived: false,
+  });
+
+  // Get applications that already exist for the structures
+  const existingApps = await Application.find({
+    description: { $in: structures.map((s) => s._id.toString()) },
+  });
+
+  // Get the structures that do not have an application
+  const structuresWithoutApp = structures.filter(
+    (s) => !existingApps.find((a) => a.description === s._id.toString())
+  );
+
+  // Create an application for each structure
+  for (const s of structuresWithoutApp) {
+    console.log(
+      `[${structuresWithoutApp.indexOf(s) + 1}/${
+        structuresWithoutApp.length
+      }] Creating app for ${s.data.name_struct}...`
+    );
+    await onStructureAdded(s);
+  }
+};
 export default onStructureAdded;
