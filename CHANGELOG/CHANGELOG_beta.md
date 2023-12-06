@@ -1,3 +1,17 @@
+# [2.2.0-beta.14](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0-beta.13...v2.2.0-beta.14) (2023-12-05)
+
+
+### Bug Fixes
+
+* incorrect sorting on api configurations ([#852](https://github.com/ReliefApplications/ems-backend/issues/852)) ([1260ceb](https://github.com/ReliefApplications/ems-backend/commit/1260cebd5c88b7a6da8236a723a422729ab88723))
+
+# [2.2.0-beta.13](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0-beta.12...v2.2.0-beta.13) (2023-12-04)
+
+
+### Bug Fixes
+
+* client flow authentication would not work due to incorrect update when migrating mongoose version ([18a4683](https://github.com/ReliefApplications/ems-backend/commit/18a46838c35b3d1e84964c7898095752736f9fa1))
+
 # [2.2.0-beta.12](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0-beta.11...v2.2.0-beta.12) (2023-12-02)
 
 
