@@ -22,7 +22,14 @@ const setMultiselectRow = (column: any, data: any, row: any) => {
       const attribute = column.name.split('.')[1];
       const values = get(data, path);
       if (Array.isArray(values)) {
-        value = values.map((x) => x[attribute]);
+        const lowercasedValues = values.map((obj) => {
+          const lowercasedObject = Object.keys(obj).reduce((acc, key) => {
+            acc[key.toLowerCase()] = obj[key];
+            return acc;
+          }, {});
+          return lowercasedObject;
+        });
+        value = lowercasedValues.map((x) => x[attribute.toLowerCase()]);
       }
     } else {
       value = get(data, column.field);
@@ -88,12 +95,14 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
           break;
         }
         case 'dropdown': {
-          let value: any = get(data, column.field);
+          let value: any = get(data, column.field.split('.')[0]);
           const choices = column.meta.field.choices || [];
+          console.log("value = ", value);
           if (choices.length > 0) {
             if (Array.isArray(value)) {
               value = value.map((x) => getText(choices, x));
             } else {
+              console.log("choices = ", choices);
               value = getText(choices, value);
             }
           }

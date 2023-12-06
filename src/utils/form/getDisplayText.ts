@@ -12,11 +12,13 @@ import { logger } from '@services/logger.service';
  */
 export const getText = (choices: any[], value: any): string => {
   if (value) {
+    const values = Object.values(value)[0];
     const choice = choices.find((x) =>
       x.value
-        ? x.value.toString() === value.toString()
+        ? x.value.toString() === values.toString()
         : x.toString() === value.toString()
     );
+    console.log("choice = ", choice);
     if (choice != null) {
       if (choice.text) {
         if (choice.text.default) {
