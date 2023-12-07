@@ -102,14 +102,13 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
               value = value.map((x) => getText(choices, x));
             } else {
               if (typeof value === 'object') {
-                for (const field in value){
+                for (const field in value) {
                   if (value.hasOwnProperty(field)) {
-                    if (field.toLowerCase() === column.name.split('.')[1]){
+                    if (field.toLowerCase() === column.name.split('.')[1]) {
                       value = getText(choices, value[field]);
                     }
                   }
                 }
-
               } else {
                 value = getText(choices, value);
               }
