@@ -70,6 +70,10 @@ export const loadRow = (
           });
           break;
         }
+        case 'geospatial': {
+          data[column.field] = JSON.parse(value);
+          break;
+        }
         default: {
           data[column.field] = value;
           break;
