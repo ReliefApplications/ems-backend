@@ -17,7 +17,7 @@ const setMultiselectRow = (column: any, data: any, row: any) => {
   } else {
     let value: any;
     // If it's a referenceData field, extract value differently.
-    if (column.name.includes('.') && column.meta.field.generated) {
+    if (column.meta.field.graphQLFieldName) {
       const path = column.name.split('.')[0];
       const attribute = column.name.split('.')[1];
       const values = get(data, path);
@@ -95,20 +95,13 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
           break;
         }
         case 'dropdown': {
-          let value: any = get(data, column.field.split('.')[0]);
-          const choices = column.meta.field.choices || [];
-          if (choices.length > 0) {
-            if (Array.isArray(value)) {
-              value = value.map((x) => getText(choices, x));
-            } else {
-              if (typeof value === 'object') {
-                for (const field in value) {
-                  if (value.hasOwnProperty(field)) {
-                    if (field.toLowerCase() === column.name.split('.')[1]) {
-                      value = getText(choices, value[field]);
-                    }
-                  }
-                }
+          let value: any = get(data, column.field);
+          // Only enter if not reference data
+          if (!column.meta.field.graphQLFieldName) {
+            const choices = column.meta.field.choices || [];
+            if (choices.length > 0) {
+              if (Array.isArray(value)) {
+                value = value.map((x) => getText(choices, x));
               } else {
                 value = getText(choices, value);
               }
