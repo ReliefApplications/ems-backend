@@ -314,6 +314,16 @@ const buildMongoFilter = (
             };
           }
 
+          // If a date, also check for string values
+          if (v instanceof Date) {
+            return {
+              $or: [
+                { [fieldName]: { [mappedOperator]: v } },
+                { [fieldName]: { [mappedOperator]: v.toISOString() } },
+              ],
+            };
+          }
+
           // If a number, also check for string values
           if (!isNaN(numberValue) && typeof v !== 'boolean' && v !== null) {
             return {

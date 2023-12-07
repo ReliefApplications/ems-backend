@@ -13,7 +13,7 @@ import isNil from 'lodash/isNil';
 export const formatValue = (field: any, value: any): any => {
   switch (field.type) {
     // For the date, we don't want to store the time
-    // case 'date':
+    case 'date':
     case 'datetime':
     case 'datetime-local':
       if (!isNil(value)) {

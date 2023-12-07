@@ -12,6 +12,15 @@ import {
  * @returns calculated day
  */
 export const getDateForMongo = (value: any) => {
+  // Check if value is in YYYY-MM-DD format
+  const REGEX_DATE = /^\d{4}-\d{2}-\d{2}$/;
+  if (REGEX_DATE.test(value)) {
+    // Append T00:00:00.000Z to the date
+    // On the backend we do the opposite,
+    // but we need to store ISO strings for the filters to work
+    value += 'T00:00:00.000Z';
+  }
+
   // today's date
   let date: Date = new Date();
 
