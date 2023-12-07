@@ -169,8 +169,8 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
               date.toLocaleTimeString('en-US', {
                 timeZone: 'UTC',
                 hour12: true,
-                hour: 'numeric',
-                minute: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
               })
             );
           } else {
