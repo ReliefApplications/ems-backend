@@ -315,7 +315,7 @@ const buildMongoFilter = (
           }
 
           // If a date, also check for string values
-          if (v instanceof Date) {
+          if (v instanceof Date && !isNaN(v.getTime())) {
             return {
               $or: [
                 { [fieldName]: { [mappedOperator]: v } },
