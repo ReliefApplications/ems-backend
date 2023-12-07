@@ -12,6 +12,11 @@ const WORKER_ID = new Types.ObjectId('651b61b82313350f9e79c772');
 /** The ID for the super admin role */
 const SUPER_ADMIN_ROLE_ID = new Types.ObjectId('64934ecc859314002ab554aa');
 
+/** The ID of the structure form */
+const STRUCTURE_FORM_ID = new Types.ObjectId('649ade1ceae9f80d6591886a');
+
+/** The ID for the person form */
+const PERSON_FORM_ID = new Types.ObjectId('64de7da43fb2a1a78b8de289');
 /** Application page id map */
 const APPLICATION_PAGES = [
   {
@@ -403,13 +408,13 @@ const onStructureAdded = async (rec: Record) => {
         if (r.equals(rolesToAdd[0]._id)) {
           return true;
         }
-        // If utilisateur plus, no access to structure_wf
-        if (r.equals(rolesToAdd[1]._id)) {
-          return p.page !== 'structure_wf';
-        }
         // If utilisateur, no access to structure_wf and stats
-        if (r.equals(rolesToAdd[2]._id)) {
+        if (r.equals(rolesToAdd[1]._id)) {
           return p.page !== 'structure_wf' && p.page !== 'stats';
+        }
+        // If utilisateur plus, no access to structure_wf
+        if (r.equals(rolesToAdd[2]._id)) {
+          return p.page !== 'structure_wf';
         }
         return false;
       });
@@ -430,7 +435,6 @@ const onStructureAdded = async (rec: Record) => {
 
 /** Script that creates applications for the existing structures */
 export const createAppsForExistingStructures = async () => {
-  const STRUCTURE_FORM_ID = new Types.ObjectId('649ade1ceae9f80d6591886a');
   // Get all the structures
   const structures = await Record.find({
     form: STRUCTURE_FORM_ID,
@@ -457,4 +461,35 @@ export const createAppsForExistingStructures = async () => {
     await onStructureAdded(s);
   }
 };
+
+/** Script that delete all structure apps */
+export const clearAllStructureApps = async () => {
+  // Get applications with a set description
+  const apps = await Application.find({
+    description: { $exists: true },
+  });
+
+  // Get all records from the structure form that has their id in the description
+  const records = await Record.find({
+    form: STRUCTURE_FORM_ID,
+    _id: {
+      $in: apps
+        .filter((a) => !a._id.equals(BASE_APP_ID))
+        .map((a) => a.description),
+    },
+  });
+
+  // The applications linked to a structure
+  const structureApps = apps.filter((a) =>
+    records.find((r) => r._id.equals(a.description))
+  );
+
+  console.log(`Deleting ${structureApps.length} structure apps...`);
+
+  // Delete the applications
+  await Application.deleteMany({
+    _id: { $in: structureApps.map((a) => a._id) },
+  });
+};
+
 export default onStructureAdded;
