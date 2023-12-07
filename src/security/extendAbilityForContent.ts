@@ -38,7 +38,27 @@ export default async function extendAbilityForContent(
 ): Promise<AppAbility> {
   if (ability === undefined) ability = user.ability;
   if (container === undefined) {
-    container = await Page.findOne({ content: content._id });
+    container = await Page.findOne({
+      $expr: {
+        $or: [
+          {
+            $eq: [content._id, '$content'],
+          },
+          {
+            $in: [
+              content._id,
+              {
+                $map: {
+                  input: '$contentWithContext',
+                  as: 'c',
+                  in: '$$c.content',
+                },
+              },
+            ],
+          },
+        ],
+      },
+    });
     if (!container) container = await Step.findOne({ content: content._id });
     // if the content is not on any pages (eg a form), do not change anything
     if (!container) return ability;
@@ -70,10 +90,17 @@ export default async function extendAbilityForContent(
   // for each permission, give it if one page with this content already has the permission
   for (const action of ['read', 'update', 'delete'] as Actions[]) {
     if (ability.cannot(action, content) && ability.can(action, container)) {
-      if (content instanceof Dashboard)
+      if (content instanceof Dashboard) {
         can(action, 'Dashboard', { _id: content._id });
-      if (content instanceof Workflow)
+        if (container instanceof Page) {
+          container.contentWithContext?.forEach((dash) => {
+            can(action, 'Dashboard', { _id: dash.content });
+          });
+        }
+      }
+      if (content instanceof Workflow) {
         can(action, 'Workflow', { _id: content._id });
+      }
       if (content instanceof Form) can(action, 'Form', { _id: content._id });
     }
   }
