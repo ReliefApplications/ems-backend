@@ -1,4 +1,4 @@
-import { GraphQLNonNull, GraphQLError, GraphQLID } from 'graphql';
+import { GraphQLNonNull, GraphQLError, GraphQLID, GraphQLString } from 'graphql';
 import {
   ApiConfiguration,
   Dashboard,
@@ -72,6 +72,7 @@ const hasDuplicate = (
   entry: {
     element?: any;
     record?: string | Types.ObjectId;
+    geographic: string;
   }
 ) => {
   const uniqueEntries = new Set();
@@ -84,9 +85,18 @@ const hasDuplicate = (
     if (uniqueEntries.has(entry.record.toString())) {
       return true;
     }
-  } else {
+  } else if (!isNil(get(context, 'element'))) {
     for (const item of contentWithContext) {
       if (get(item, 'element')) {
+        uniqueEntries.add((item as any).element.toString());
+      }
+    }
+    if (uniqueEntries.has(entry.element.toString())) {
+      return true;
+    }
+  } else {
+    for (const item of contentWithContext) {
+      if (get(item, 'geographic')) {
         uniqueEntries.add((item as any).element.toString());
       }
     }
@@ -102,6 +112,7 @@ type AddDashboardWithContextArgs = {
   page: string;
   element?: any;
   record?: string | Types.ObjectId;
+  geographic?: string;
 };
 
 /**
@@ -114,6 +125,7 @@ export default {
     page: { type: new GraphQLNonNull(GraphQLID) },
     element: { type: GraphQLJSON },
     record: { type: GraphQLID },
+    geographic: { type: GraphQLString }
   },
   async resolve(parent, args: AddDashboardWithContextArgs, context: Context) {
     // Authentication check
@@ -121,7 +133,8 @@ export default {
     try {
       const user = context.user;
       // Check arguments
-      if ((!args.element && !args.record) || (args.element && args.record)) {
+      if ((!args.element && !args.record && !args.geographic) || 
+      ((args.element && args.record) || (args.element && args.geographic)  || (args.record && args.geographic))) {
         throw new GraphQLError(
           context.i18next.t(
             'mutations.dashboard.addWithContext.errors.invalidArguments'
@@ -167,6 +180,7 @@ export default {
         hasDuplicate(page.context, page.contentWithContext, {
           ...(args.record && { record: args.record }),
           ...(args.element && { element: args.element }),
+          ...(args.geographic && { geographic: args.geographic })
         })
       ) {
         throw new GraphQLError(
@@ -181,23 +195,30 @@ export default {
         name: await getNewDashboardName(
           template,
           page.context,
-          args.record || args.element,
+          args.record || args.element || args.geographic,
           context.dataSources
         ),
         // Copy structure from template dashboard
         structure: template.structure || [],
       }).save();
-
-      const newContentWithContext = args.record
-        ? ({
+      
+      let newContentWithContext: any;
+      if (args.record) {
+        newContentWithContext = ({
             record: args.record,
             content: newDashboard._id,
           } as Page['contentWithContext'][number])
-        : ({
+      } else if (args.element){
+        newContentWithContext = ({
             element: args.element,
             content: newDashboard._id,
           } as Page['contentWithContext'][number]);
-
+      } else {
+        newContentWithContext = ({
+          geographic: args.geographic,
+          content: newDashboard._id,
+        } as Page['contentWithContext'][number]);
+      }
       // Adds the dashboard to the page
       page.contentWithContext.push(newContentWithContext);
       await page.save();

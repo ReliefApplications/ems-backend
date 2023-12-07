@@ -49,6 +49,9 @@ export interface Page extends Document {
     | {
         record: mongoose.Types.ObjectId | Record;
       }
+    | {
+      geographic: string | number;
+    }
   ) & {
     content: mongoose.Types.ObjectId | Form | Workflow | Dashboard;
   })[];
