@@ -149,7 +149,10 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
             set(
               row,
               column.name,
-              `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`
+              `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}`
             );
           } else {
             set(row, column.name, value);
@@ -160,7 +163,16 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
           const value = get(data, column.field);
           if (value) {
             const date = new Date(value);
-            set(row, column.name, date.toISOString().split('T')[1].slice(0, 5));
+            set(
+              row,
+              column.name,
+              date.toLocaleTimeString('en-US', {
+                timeZone: 'UTC',
+                hour12: true,
+                hour: 'numeric',
+                minute: 'numeric',
+              })
+            );
           } else {
             set(row, column.name, value);
           }
