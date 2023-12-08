@@ -217,6 +217,10 @@ const buildMongoFilter = (
             }
             break;
           }
+          case 'boolean': {
+            // Avoid the int value to be set
+            break;
+          }
           default:
             try {
               intValue = Number(value);
@@ -469,5 +473,6 @@ export default (
   const expandedFields = fields.concat(DEFAULT_FIELDS);
   const mongooseFilter =
     buildMongoFilter(filter, expandedFields, context, prefix) || {};
+  console.log(JSON.stringify(mongooseFilter));
   return mongooseFilter;
 };
