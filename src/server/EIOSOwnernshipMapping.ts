@@ -1,19 +1,20 @@
+/* eslint-disable prettier/prettier */
 /**
  * JSON used to map ownership for EIOS Pulljob
  */
 export const ownershipMappingJSON = {
   '0_COVID Countries': ['Signal HQ AEE'],
-  AEE_Monkeypox_Expanded: ['Signal HQ AEE'],
+  'AEE_Monkeypox_Expanded': ['Signal HQ AEE'],
   'AFRO Media Monitoring w/o COVID-19': ['Signal AFRO'],
   'AFRO Signals': ['Signal AFRO'],
   'AFRO: EVD/VHF East African monitoring board 2022': ['Signal AFRO'],
   'AFRO_IDSR priority diseases and conditions': ['Signal AFRO'],
   'Bahrain, Jordan and Lebanon Cov': ['Signal HQ AEE'],
-  Balkans_COVID_public: ['Signal EURO'],
-  Caucasus_COVID_public: ['Signal EURO'],
-  CentralAsia_COVID_public: ['Signal EURO'],
-  CentralEurope_COVID_public: ['Signal EURO'],
-  COVID_AdHoc_EURO_public: ['Signal EURO'],
+  'Balkans_COVID_public': ['Signal EURO'],
+  'Caucasus_COVID_public': ['Signal EURO'],
+  'CentralAsia_COVID_public': ['Signal EURO'],
+  'CentralEurope_COVID_public': ['Signal EURO'],
+  'COVID_AdHoc_EURO_public': ['Signal EURO'],
   'COVID-19 Intel monitoring - GLOBAL': ['Signal HQ AEE'],
   'Ebola/MVD alert board': [],
   'ELR ADHOC': ['Signal HQ AEE'],
@@ -21,8 +22,8 @@ export const ownershipMappingJSON = {
   'EMRO COVID Vaccination': ['Signal EMRO'],
   'EMRO- Excl nCoV': ['Signal EMRO'],
   'EMRO new Variant': ['Signal EMRO'],
-  EUROHIM_WEST_public: ['Signal EURO'],
-  MM_EURO_SignalApp_Pilot: ['Signal EURO'],
+  'EUROHIM_WEST_public': ['Signal EURO'],
+  'MM_EURO_SignalApp_Pilot': ['Signal EURO'],
   'Monkeypox - Global Outbreak': ['Signal HQ AEE'],
   'Monkeypox Global Outbreak': ['Signal HQ AEE'],
   'Monkeypox_Global EBS_Expanded': ['Signal HQ AEE'],
@@ -48,7 +49,7 @@ export const ownershipMappingJSON = {
   'Priority sources - not including coronavirus & Monkeypox category definition':
     [],
   'Priority sources - not including coronavirus category definition': [],
-  qa: ['Signal EMRO'],
+  'qa': ['Signal EMRO'],
   'qa - euro': ['Signal EURO'],
   'QA- HQ- AFRO - EURO- AMRO': ['Signal EURO', 'Signal AFRO', 'Signal AMRO'],
   'qa4 - AFRO- AMRO- EURO': ['Signal EURO', 'Signal AFRO', 'Signal AMRO'],
@@ -57,8 +58,8 @@ export const ownershipMappingJSON = {
   'Shared Ukraine board': ['Signal EURO'],
   'Signals for Follow Up- SEAR': ['Signal SEARO'],
   'Sudan virus disease Uganda - October 2022': [],
-  TestHWF20210322: [],
-  Ukraine: ['Signal EURO'],
+  'TestHWF20210322': [],
+  'Ukraine': ['Signal EURO'],
   'WPRO - Disaster': ['Signal WPRO'],
   'WPRO Disease 2 - Not nCoV': ['Signal WPRO'],
 };
