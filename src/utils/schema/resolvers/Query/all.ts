@@ -18,6 +18,7 @@ import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { flatten, get, isArray, set } from 'lodash';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { getExpressionFromString } from '@utils/aggregation/expressionFromString';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -372,15 +373,17 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       fields
         .filter((f) => f.isCalculated && shouldAddCalculatedFieldToPipeline(f))
-        .forEach((f) =>
-          calculatedFieldsAggregation.push(
-            ...buildCalculatedFieldPipeline(
-              f.expression,
-              f.name,
-              context.timeZone
-            )
-          )
-        );
+        .forEach((f) => {
+          if (typeof f.expression === 'string') {
+            calculatedFieldsAggregation.push(
+              ...buildCalculatedFieldPipeline(
+                f.expression,
+                f.name,
+                context.timeZone
+              )
+            );
+          }
+        });
 
       // Build linked records aggregations
       const linkedReferenceDataAggregation = flatten(
@@ -395,7 +398,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       );
 
       // Filter from the query definition
-      const mongooseFilter = getFilter(filter, fields, context);
+      const mongooseFilter = getFilter(filter, fields, context, 'data.', false);
 
       // Add the basic records filter
       const basicFilters = {
@@ -499,6 +502,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         }
         return arr;
       }, []);
+
       // Deal with resource/resources questions on OTHER forms if any
       let relatedFields = [];
       if (queryFields.filter((x) => x.fields).length - resourcesFields.length) {
@@ -537,6 +541,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           return arr;
         }, []);
       }
+
       // If we need to do this optimization, mark each item to update
       if (resourcesFields.length > 0 || relatedFields.length > 0) {
         const itemsToUpdate: {
@@ -594,14 +599,32 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             })
           )
         );
+        const filterForRelatedRecords = getFilter(
+          filter,
+          fields,
+          context,
+          'data.',
+          true
+        );
         // Fetch records
         const relatedRecords = await Record.find(
           {
             $or: [{ _id: { $in: relatedIds } }, ...relatedFilters],
+            $and: filterForRelatedRecords.$and
+              ? filterForRelatedRecords.$and
+              : [],
             archived: { $ne: true },
           },
           projection
         );
+        // Get all calculated fields
+        let calculatedFieldsList = [];
+        calculatedFieldsList = fields.filter((f) => f.isCalculated);
+        calculatedFieldsList.map((elt) => {
+          if (typeof elt.expression === 'string') {
+            elt.expression = getExpressionFromString(elt.expression);
+          }
+        });
         // Update items
         for (const item of itemsToUpdate) {
           if (item.record) {
@@ -619,6 +642,16 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             sortRecords(records, item.field.arguments);
             if (records) {
               item.item._relatedRecords[item.field.name] = records;
+              // Get calculated fields that use this record field and size operation
+              const relatedCalculatedSizeFields = calculatedFieldsList.filter(
+                (f) =>
+                  f.expression.operator.value === item.field.name &&
+                  f.expression.operation === 'size'
+              );
+              // Set the calculated field value to number of records
+              relatedCalculatedSizeFields.map((elt) => {
+                item.item.data[elt.name] = records.length;
+              });
             }
           }
           if (item.field.entityName) {
@@ -651,7 +684,13 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         // Create the filter for each style
         const recordsIds = items.map((x) => x.id || x._id);
         for (const style of styles) {
-          const styleFilter = getFilter(style.filter, fields, context);
+          const styleFilter = getFilter(
+            style.filter,
+            fields,
+            context,
+            'data.',
+            false
+          );
           // Get the records corresponding to the style filter
           const itemsToStyle = await Record.aggregate([
             {

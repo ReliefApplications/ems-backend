@@ -62,17 +62,21 @@ export const extractFilterFields = (filter: any): string[] => {
  * @param fields list of structure fields
  * @param context request context
  * @param prefix prefix to access field
+ * @param shouldReturnResources handles resources questions or not
  * @returns Mongo filter.
  */
 const buildMongoFilter = (
   filter: any,
   fields: any[],
   context: any,
-  prefix = ''
+  prefix = '',
+  shouldReturnResources: boolean
 ): any => {
   if (filter.filters) {
     const filters = filter.filters
-      .map((x: any) => buildMongoFilter(x, fields, context, prefix))
+      .map((x: any) =>
+        buildMongoFilter(x, fields, context, prefix, shouldReturnResources)
+      )
       .filter((x) => x);
     if (filters.length > 0) {
       switch (filter.logic) {
@@ -101,6 +105,30 @@ const buildMongoFilter = (
           (x) =>
             x.name === filter.field || x.name === filter.field.split('.')[0]
         )?.type || '';
+
+      // If type is resources and refers to a nested field, get the type of the nested field
+      if (type === 'resources') {
+        if (shouldReturnResources) {
+          const resourcesField = fields.find(
+            (x) => x.name === filter.field.split('.')[0]
+          );
+          if (
+            resourcesField?.resource &&
+            resourcesField?.gridFieldsSettings.fields
+          ) {
+            // Find the nested field
+            const nestedField = resourcesField?.gridFieldsSettings.fields.find(
+              (x) => x.name === filter.field.split(['.'])[1]
+            );
+            // get the type of the nested field
+            type = nestedField?.type || type;
+            filter.field = nestedField.name;
+            fieldName = `data.${nestedField.name}`;
+          }
+        } else {
+          return {};
+        }
+      }
 
       // If type is resource and refers to a nested field, get the type of the nested field
       if (type === 'resource' && context.resourceFieldsById) {
@@ -458,16 +486,24 @@ const buildMongoFilter = (
  * @param fields list of structure fields
  * @param context request context
  * @param prefix prefix to access field
+ * @param shouldReturnResources handles resources questions or not
  * @returns Mongo filter.
  */
 export default (
   filter: any,
   fields: any[],
   context?: any,
-  prefix = 'data.'
+  prefix = 'data.',
+  shouldReturnResources?: boolean
 ) => {
   const expandedFields = fields.concat(DEFAULT_FIELDS);
   const mongooseFilter =
-    buildMongoFilter(filter, expandedFields, context, prefix) || {};
+    buildMongoFilter(
+      filter,
+      expandedFields,
+      context,
+      prefix,
+      shouldReturnResources
+    ) || {};
   return mongooseFilter;
 };
