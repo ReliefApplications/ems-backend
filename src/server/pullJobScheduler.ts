@@ -201,7 +201,7 @@ const fetchRecordsServiceToService = (
         const records = pullJob.path ? get(data, pullJob.path) : data;
         if (records) {
           // eslint-disable-next-line @typescript-eslint/no-use-before-define
-          insertRecords(records, pullJob, false);
+          insertRecords(records, pullJob);
         }
       })
       .catch((err) => {
@@ -302,7 +302,7 @@ const getUserRoleFiltersFromApp = (appName: string): any => {
 export const insertRecords = async (
   data: any[],
   pullJob: PullJob,
-  isEIOS?: boolean
+  isEIOS = false
 ): Promise<void> => {
   const form = await Form.findById(pullJob.convertTo);
   if (form) {
