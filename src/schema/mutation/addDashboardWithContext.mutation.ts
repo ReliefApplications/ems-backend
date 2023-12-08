@@ -33,7 +33,10 @@ const getNewDashboardName = async (
   id: string | Types.ObjectId,
   dataSources: any
 ) => {
+  console.log("context = ", context);
+  console.log("id = ", id);
   if ('refData' in context && context.refData) {
+    console.log("HERE2");
     // Get items from reference data
     const referenceData = await ReferenceData.findById(context.refData);
     const apiConfiguration = await ApiConfiguration.findById(
@@ -48,6 +51,7 @@ const getNewDashboardName = async (
     const item = data.find((x) => x[referenceData.valueField] === id);
     return `${item?.[context.displayField]}`;
   } else if ('resource' in context && context.resource) {
+    console.log("HERE3");
     const record = await Record.findById(id);
     return `${record.data[context.displayField]}`;
   }
@@ -72,38 +76,92 @@ const hasDuplicate = (
   entry: {
     element?: any;
     record?: string | Types.ObjectId;
-    geographic: string;
+    geographic?: string;
   }
 ) => {
+  console.log("contentWithContext = ", contentWithContext);
+  console.log("entry = ", entry);
   const uniqueEntries = new Set();
-  if (!isNil(get(context, 'resource'))) {
-    for (const item of contentWithContext) {
-      if (get(item, 'record')) {
-        uniqueEntries.add((item as any).record.toString());
+
+  if ('geographic' in entry && 'geography') {
+    // record and geographic
+    if ('record' in entry) {
+
+      const contains = contentWithContext.some((item: any) => item.record === entry.record && item.geographic === entry.geographic);
+      console.log(contains);
+      if (contains) {
+        return true;
+      }
+
+    // element and geographic
+    } else if ('element' in entry) {
+      const contains = contentWithContext.some((item: any) => item.element === entry.element && item.element === entry.element);
+      console.log(contains);
+      if (contains) {
+        return true;
+      }
+    // geographic
+    } else {
+      for (const item of contentWithContext) {
+        if (get(item, 'geographic')) {
+          uniqueEntries.add((item as any).geographic.toString());
+        }
+      }
+      if (uniqueEntries.has(entry.geographic.toString())) {
+        return true;
       }
     }
-    if (uniqueEntries.has(entry.record.toString())) {
-      return true;
-    }
-  } else if (!isNil(get(context, 'element'))) {
-    for (const item of contentWithContext) {
-      if (get(item, 'element')) {
-        uniqueEntries.add((item as any).element.toString());
-      }
-    }
-    if (uniqueEntries.has(entry.element.toString())) {
-      return true;
-    }
+  // record or element
   } else {
-    for (const item of contentWithContext) {
-      if (get(item, 'geographic')) {
-        uniqueEntries.add((item as any).element.toString());
+    if (!isNil(get(context, 'resource'))) {
+      for (const item of contentWithContext) {
+        if (get(item, 'record')) {
+          uniqueEntries.add((item as any).record.toString());
+        }
       }
-    }
-    if (uniqueEntries.has(entry.element.toString())) {
-      return true;
+      if (uniqueEntries.has(entry.record.toString())) {
+        return true;
+      }
+    } else if (!isNil(get(context, 'element'))) {
+      for (const item of contentWithContext) {
+        if (get(item, 'element')) {
+          uniqueEntries.add((item as any).element.toString());
+        }
+      }
+      if (uniqueEntries.has(entry.element.toString())) {
+        return true;
+      }
     }
   }
+
+  // if (!isNil(get(context, 'resource'))) {
+  //   for (const item of contentWithContext) {
+  //     if (get(item, 'record')) {
+  //       uniqueEntries.add((item as any).record.toString());
+  //     }
+  //   }
+  //   if (uniqueEntries.has(entry.record.toString())) {
+  //     return true;
+  //   }
+  // } else if (!isNil(get(context, 'element'))) {
+  //   for (const item of contentWithContext) {
+  //     if (get(item, 'element')) {
+  //       uniqueEntries.add((item as any).element.toString());
+  //     }
+  //   }
+  //   if (uniqueEntries.has(entry.element.toString())) {
+  //     return true;
+  //   }
+  // } else {
+  //   for (const item of contentWithContext) {
+  //     if (get(item, 'geographic')) {
+  //       uniqueEntries.add((item as any).geographic.toString());
+  //     }
+  //   }
+  //   if (uniqueEntries.has(entry.geographic.toString())) {
+  //     return true;
+  //   }
+  // }
   return false;
 };
 
@@ -128,13 +186,19 @@ export default {
     geographic: { type: GraphQLString }
   },
   async resolve(parent, args: AddDashboardWithContextArgs, context: Context) {
+    console.log("AQUI123");
+    console.log(args);
+  
     // Authentication check
     graphQLAuthCheck(context);
     try {
       const user = context.user;
       // Check arguments
-      if ((!args.element && !args.record && !args.geographic) || 
-      ((args.element && args.record) || (args.element && args.geographic)  || (args.record && args.geographic))) {
+      if (
+        (!args.element && !args.record && !args.geographic) ||
+        (args.element && args.record && args.geographic) &&
+        (args.element && args.record)
+      ) {
         throw new GraphQLError(
           context.i18next.t(
             'mutations.dashboard.addWithContext.errors.invalidArguments'
@@ -187,7 +251,6 @@ export default {
           context.i18next.t('mutations.dashboard.add.errors.invalidPageType')
         );
       }
-
       // Fetches the dashboard from the page
       const template = await Dashboard.findById(page.content);
       // Duplicates the dashboard
@@ -195,12 +258,14 @@ export default {
         name: await getNewDashboardName(
           template,
           page.context,
-          args.record || args.element || args.geographic,
+          args.record || args.element,
           context.dataSources
         ),
         // Copy structure from template dashboard
         structure: template.structure || [],
       }).save();
+
+      console.log("OUT");
       
       let newContentWithContext: any;
       if (args.record) {
@@ -219,10 +284,14 @@ export default {
           content: newDashboard._id,
         } as Page['contentWithContext'][number]);
       }
+      console.log("newContentWithContext = ", newContentWithContext);
       // Adds the dashboard to the page
       page.contentWithContext.push(newContentWithContext);
+      console.log("page.contentWithContext = ", page.contentWithContext);
       await page.save();
 
+      console.log("page = ", page);
+      console.log("newDashboard = ", newDashboard);
       return newDashboard;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

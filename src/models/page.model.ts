@@ -49,10 +49,9 @@ export interface Page extends Document {
     | {
         record: mongoose.Types.ObjectId | Record;
       }
-    | {
-      geographic: string | number;
-    }
   ) & {
+    geographic?: string;
+  } & {
     content: mongoose.Types.ObjectId | Form | Workflow | Dashboard;
   })[];
   geographicContext: PageGeographicContextT;
@@ -91,6 +90,7 @@ const pageSchema = new Schema<Page>(
     contentWithContext: [
       {
         element: mongoose.Schema.Types.Mixed,
+        geographic: mongoose.Schema.Types.Mixed,
         record: {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'Record',
