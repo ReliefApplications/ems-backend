@@ -278,6 +278,18 @@ const buildPipeline = (
             (item) => item.name === stage.form.field
           ).choices;
 
+          const questionMatrixChoices = [];
+          questionsWithChoices
+            .find((item) => item.name === stage.form.field)
+            .columns?.forEach((column: any) => {
+              const columnName: string = column.name;
+              if (column.choices) {
+                questionMatrixChoices[columnName] = column.choices;
+              } else {
+                questionMatrixChoices[columnName] = questionChoices;
+              }
+            });
+
           switch (questionType) {
             // Matrixdropdown is an object of objects of either arrays or single values
             case 'matrixdropdown': {
@@ -319,7 +331,7 @@ const buildPipeline = (
                                                   })
                                                 ),
                                               ],
-                                              default: 'value',
+                                              default: '$$value',
                                             },
                                           },
                                         },

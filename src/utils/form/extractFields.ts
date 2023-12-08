@@ -86,6 +86,12 @@ export const extractFields = async (object, fields, core): Promise<void> => {
                 name: x.name,
                 label: x.title,
                 type: x.cellType ? x.cellType : element.cellType,
+                choices: x.choices?.map((y) => {
+                  return {
+                    value: y.value ? y.value : y,
+                    text: y.text ? y.text : y,
+                  };
+                }),
               };
             }),
             choices: element.choices.map((x) => {
@@ -121,6 +127,12 @@ export const extractFields = async (object, fields, core): Promise<void> => {
                 name: x.name,
                 type: x.cellType,
                 label: x.title,
+                choices: x.choices?.map((y) => {
+                  return {
+                    value: y.value ? y.value : y,
+                    text: y.text ? y.text : y,
+                  };
+                }),
               };
             }),
             choices: element.choices.map((x) => {
