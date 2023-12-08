@@ -36,6 +36,7 @@ export const authType = {
   public: 'public',
   serviceToService: 'service-to-service',
   userToService: 'user-to-service',
+  authorizationCode: 'authorization-code',
 };
 
 /** AuthType type for queries/mutations argument */
@@ -117,3 +118,31 @@ export const customNotificationLastExecutionStatus = {
   process: 'process',
   pending: 'pending',
 };
+
+/**
+ * Enum of geospatial data type.
+ */
+export const geospatialType = {
+  Point: 'Point',
+  LineString: 'LineString',
+  Polygon: 'Polygon',
+};
+
+/**
+ * GraphQL Enum of geospatial data type.
+ */
+export const GeospatialEnumType = new GraphQLEnumType({
+  name: 'GeospatialType',
+  values: objToEnum(geospatialType),
+});
+
+/** Possible layer type */
+export const layerType = {
+  featureLayer: 'FeatureLayer',
+};
+
+/** GraphQL layer type enum definition */
+export const LayerTypeEnum = new GraphQLEnumType({
+  name: 'LayerType',
+  values: objToEnum(layerType),
+});

@@ -9,7 +9,7 @@ module.exports = {
     url: '',
     rateLimit: {
       windowMs: 1 * 60 * 1000, // 1 minute
-      max: 100,
+      max: 500,
     },
     pagination: {
       limit: 1000,
@@ -49,6 +49,7 @@ module.exports = {
     clientId: '',
     tenantId: '',
     allowedIssuers: [],
+    audience: '[]',
   },
   encryption: {
     key: '',
@@ -170,5 +171,8 @@ module.exports = {
   },
   logger: {
     keep: true,
+  },
+  archive: {
+    expires: 60 * 60 * 24 * 30, // Default archive time, in seconds. Set to 30 days
   },
 };

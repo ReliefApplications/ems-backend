@@ -6,6 +6,7 @@ import { logger } from '@services/logger.service';
 import { downloadFile } from '@utils/files';
 import fs from 'fs';
 import sanitize from 'sanitize-filename';
+import { compileString } from 'sass';
 
 /**
  * Exports css or scss custom style files
@@ -37,6 +38,19 @@ router.get('/application/:id', async (req, res) => {
     } else {
       res.status(201).send(i18next.t('routes.style.noStyle'));
     }
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    res.status(500).send(req.t('routes.style.errors.notFound'));
+  }
+});
+
+/**
+ * Get raw scss and return it to css.
+ */
+router.post('/scss-to-css', async (req, res) => {
+  try {
+    const scss = req.body.scss;
+    res.status(200).send(compileString(scss).css);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
     res.status(500).send(req.t('common.errors.internalServerError'));

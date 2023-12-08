@@ -36,7 +36,8 @@ export const checkIfRoleIsAssigned = (
 
   // filter descriptor
   if (filter.field === '{{groups}}') {
-    const value = filter.value.filter((x) => x !== null);
+    // todo: check other versions of the code
+    const value = (filter.value || []).filter((x) => x !== null);
     switch (filter.operator) {
       case 'eq': {
         return isEqual(

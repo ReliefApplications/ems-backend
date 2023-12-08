@@ -17,12 +17,19 @@ const setMultiselectRow = (column: any, data: any, row: any) => {
   } else {
     let value: any;
     // If it's a referenceData field, extract value differently.
-    if (column.name.includes('.') && column.meta.field.generated) {
+    if (column.meta.field.graphQLFieldName) {
       const path = column.name.split('.')[0];
       const attribute = column.name.split('.')[1];
       const values = get(data, path);
       if (Array.isArray(values)) {
-        value = values.map((x) => x[attribute]);
+        const lowercasedValues = values.map((obj) => {
+          const lowercasedObject = Object.keys(obj).reduce((acc, key) => {
+            acc[key.toLowerCase()] = obj[key];
+            return acc;
+          }, {});
+          return lowercasedObject;
+        });
+        value = lowercasedValues.map((x) => x[attribute.toLowerCase()]);
       }
     } else {
       value = get(data, column.field);
@@ -89,12 +96,15 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
         }
         case 'dropdown': {
           let value: any = get(data, column.field);
-          const choices = column.meta.field.choices || [];
-          if (choices.length > 0) {
-            if (Array.isArray(value)) {
-              value = value.map((x) => getText(choices, x));
-            } else {
-              value = getText(choices, value);
+          // Only enter if not reference data
+          if (!column.meta.field.graphQLFieldName) {
+            const choices = column.meta.field.choices || [];
+            if (choices.length > 0) {
+              if (Array.isArray(value)) {
+                value = value.map((x) => getText(choices, x));
+              } else {
+                value = getText(choices, value);
+              }
             }
           }
           set(row, column.name, Array.isArray(value) ? value.join(',') : value);
@@ -134,8 +144,8 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
         case 'date': {
           const value = get(data, column.field);
           if (value) {
-            const date = new Date(value);
-            set(row, column.name, date.toISOString().split('T')[0]);
+            const date = new Date(value).toLocaleDateString();
+            set(row, column.name, date);
           } else {
             set(row, column.name, value);
           }
@@ -149,10 +159,10 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
             set(
               row,
               column.name,
-              `${date.toISOString().split('T')[0]} ${date
-                .toISOString()
-                .split('T')[1]
-                .slice(0, 5)}`
+              `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}`
             );
           } else {
             set(row, column.name, value);
@@ -163,10 +173,24 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
           const value = get(data, column.field);
           if (value) {
             const date = new Date(value);
-            set(row, column.name, date.toISOString().split('T')[1].slice(0, 5));
+            set(
+              row,
+              column.name,
+              date.toLocaleTimeString('en-US', {
+                timeZone: 'UTC',
+                hour12: true,
+                hour: '2-digit',
+                minute: '2-digit',
+              })
+            );
           } else {
             set(row, column.name, value);
           }
+          break;
+        }
+        case 'file': {
+          const value = get(data, `${column.field}.[0].name`);
+          set(row, column.name, value);
           break;
         }
         default: {

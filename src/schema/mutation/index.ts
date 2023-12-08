@@ -79,8 +79,15 @@ import deleteDistributionList from './deleteDistributionList.mutation';
 import addCustomNotification from './addCustomNotification.mutation';
 import editCustomNotification from './editCustomNotification.mutation';
 import deleteCustomNotification from './deleteCustomNotification.mutation';
+import addLayer from './addLayer.mutation';
+import editLayer from './editLayer.mutation';
+import deleteLayer from './deleteLayer.mutation';
 import editPageContext from './editPageContext.mutation';
 import addDashboardWithContext from './addDashboardWithContext.mutation';
+import restorePage from './restorePage.mutation';
+import addDraftRecord from './addDraftRecord.mutation';
+import deleteDraftRecord from './deleteDraftRecord.mutation';
+import editDraftRecord from './editDraftRecord.mutation';
 
 /** GraphQL mutation definition */
 const Mutation = new GraphQLObjectType({
@@ -168,6 +175,13 @@ const Mutation = new GraphQLObjectType({
     addCustomNotification,
     editCustomNotification,
     deleteCustomNotification,
+    addLayer,
+    editLayer,
+    deleteLayer,
+    restorePage,
+    addDraftRecord,
+    deleteDraftRecord,
+    editDraftRecord,
   },
 });
 

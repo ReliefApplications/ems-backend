@@ -65,6 +65,17 @@ export const ApplicationType = new GraphQLObjectType({
         }
       },
     },
+    hideMenu: {
+      type: GraphQLBoolean,
+      resolve(parent) {
+        // Default to true
+        if (isNil(parent.hideMenu)) {
+          return false;
+        } else {
+          return parent.hideMenu;
+        }
+      },
+    },
     status: { type: StatusEnumType },
     locked: {
       type: GraphQLBoolean,
@@ -104,6 +115,9 @@ export const ApplicationType = new GraphQLObjectType({
     },
     pages: {
       type: new GraphQLList(PageType),
+      args: {
+        archived: { type: GraphQLBoolean },
+      },
       async resolve(parent: Application, args, context) {
         // Filter the pages based on the access given by app builders.
         const ability = await extendAbilityForPage(context.user, parent);
@@ -113,7 +127,13 @@ export const ApplicationType = new GraphQLObjectType({
         const pages = await Page.aggregate([
           {
             $match: {
-              $and: [filter, { _id: { $in: parent.pages } }],
+              $and: [
+                filter,
+                { _id: { $in: parent.pages } },
+                args.archived
+                  ? { archived: true }
+                  : { archived: { $ne: true } },
+              ],
             },
           },
           {
@@ -460,8 +480,6 @@ export const ApplicationType = new GraphQLObjectType({
     distributionLists: {
       type: new GraphQLList(DistributionListType),
     },
-    contextualFilter: { type: GraphQLJSON },
-    contextualFilterPosition: { type: GraphQLString },
     customNotifications: {
       type: CustomNotificationConnectionConnectionType,
       args: {

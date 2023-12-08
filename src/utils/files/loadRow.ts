@@ -1,4 +1,4 @@
-import { isArray } from 'lodash';
+import { isArray, isNil } from 'lodash';
 import set from 'lodash/set';
 import { PositionAttribute } from '@models';
 
@@ -17,7 +17,7 @@ export const loadRow = (
   const positionAttributes = [];
   for (const column of columns) {
     const value = row[column.index];
-    if (value !== undefined) {
+    if (!isNil(value)) {
       switch (column.type) {
         case 'boolean': {
           let val: string | number | boolean;
@@ -36,19 +36,18 @@ export const loadRow = (
             data[column.field] = false;
           }
         }
-        case 'checkbox': {
-          if (value === 1) {
-            data[column.field] = (
-              isArray(data[column.field]) ? data[column.field] : []
-            ).concat(column.value);
-          }
-          break;
-        }
+        case 'checkbox':
         case 'tagbox': {
-          if (value === 1) {
-            data[column.field] = (
-              isArray(data[column.field]) ? data[column.field] : []
-            ).concat(column.value);
+          // Column is linked to a specific value
+          if (!isNil(column.value)) {
+            if (value === 1) {
+              data[column.field] = (
+                isArray(data[column.field]) ? data[column.field] : []
+              ).concat(column.value);
+            }
+          } else {
+            // General column for the field, so we can directly save the values in the record
+            set(data, column.field, value.split(','));
           }
           break;
         }
@@ -69,6 +68,10 @@ export const loadRow = (
             value,
             category: column.category,
           });
+          break;
+        }
+        case 'geospatial': {
+          data[column.field] = JSON.parse(value);
           break;
         }
         default: {

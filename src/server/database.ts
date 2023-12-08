@@ -97,6 +97,8 @@ export const initDatabase = async () => {
       'can_manage_applications',
       'can_manage_api_configurations',
       'can_create_applications',
+      'can_manage_layer',
+      'can_see_layer',
     ];
     const currPermissions = await Permission.find();
     for (const type of globalPermissions.filter(

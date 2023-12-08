@@ -82,7 +82,8 @@
 			},
 			"duplicate": {
 				"errors": {
-					"invalidArguments": "******"
+					"invalidArguments": "******",
+					"namedDuplicated": "****** {{name}} ******"
 				}
 			},
 			"edit": {
@@ -131,6 +132,7 @@
 			"edit": {
 				"errors": {
 					"coreFieldMissing": "****** {{name}} ******",
+					"defaultFieldDuplicated": "****** {{name}} ******",
 					"relatedNameDuplicated": "****** {{name}} ******"
 				}
 			}
@@ -143,6 +145,7 @@
 			},
 			"fetch": {
 				"errors": {
+					"fetchRequestFailed": "******",
 					"groupsFromServiceDisabled": "******"
 				}
 			}
@@ -289,7 +292,19 @@
 				"missingFile": "******"
 			}
 		},
+		"gis": {
+			"feature": {
+				"errors": {
+					"invalidFields": "******",
+					"missingPolygonGeoField": "******",
+					"unexpected": "******"
+				}
+			}
+		},
 		"style": {
+			"errors": {
+				"notFound": "******"
+			},
 			"noStyle": "******"
 		},
 		"upload": {
