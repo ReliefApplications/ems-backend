@@ -10,10 +10,13 @@ import { graphQLAuthCheck } from '@schema/shared';
  * @returns A resolver function that fetches a record by id
  */
 export default () =>
-  async (_, { id }, context) => {
+  async (_, { id, data }, context) => {
     graphQLAuthCheck(context);
     try {
       const record = await Record.findOne({ _id: id, archived: { $ne: true } });
+      if (data) {
+        record.data = data;
+      }
       return record;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

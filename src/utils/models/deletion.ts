@@ -29,7 +29,7 @@ export const addOnBeforeDeleteMany = <DocType>(
     { document: false, query: true },
     async function () {
       try {
-        const doc = await this.findOne();
+        const doc = await this.clone().findOne();
         if (!doc) return logger.error('No document found');
         await callback([doc]);
       } catch (err) {
@@ -45,7 +45,7 @@ export const addOnBeforeDeleteMany = <DocType>(
     { document: false, query: true },
     async function () {
       try {
-        const docs = await this.find();
+        const docs = await this.clone().find();
         if (!docs.length) return logger.error('No documents found');
         await callback(docs);
       } catch (err) {

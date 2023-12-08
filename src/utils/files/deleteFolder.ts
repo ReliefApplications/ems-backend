@@ -26,7 +26,7 @@ export const deleteFolder = async (
   const blobNames: string[] = [];
   for await (const blob of containerClient.listBlobsFlat({ prefix: folder })) {
     blobNames.push(blob.name);
-    promises.push(containerClient.deleteBlob(blob.name));
+    //promises.push(containerClient.deleteBlob(blob.name));
   }
   for (const blobName of new Set(blobNames)) {
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
@@ -42,5 +42,7 @@ export const deleteFolder = async (
       })
     );
   }
-  return Promise.all(promises);
+  return Promise.all(promises).catch((err) => {
+    throw new Error(err.message);
+  });
 };

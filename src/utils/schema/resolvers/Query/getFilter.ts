@@ -124,8 +124,12 @@ const buildMongoFilter = (
       }
       // Filter on forms, using form id
       if (['form', 'lastUpdateForm'].includes(filter.field)) {
-        filter.value = new mongoose.Types.ObjectId(filter.value);
-        fieldName = `_${filter.field}._id`;
+        if (mongoose.isValidObjectId(filter.value)) {
+          filter.value = new mongoose.Types.ObjectId(filter.value);
+          fieldName = `_${filter.field}._id`;
+        } else {
+          fieldName = `_${filter.field}.name`;
+        }
       }
       // Filter on user attribute
       if (['createdBy', 'lastUpdatedBy'].includes(filter.field.split('.')[0])) {
@@ -213,6 +217,10 @@ const buildMongoFilter = (
             }
             break;
           }
+          case 'boolean': {
+            // Avoid the int value to be set
+            break;
+          }
           default:
             try {
               intValue = Number(value);
@@ -237,7 +245,8 @@ const buildMongoFilter = (
               } else {
                 return {
                   $or: [
-                    { [fieldName]: { $eq: value } },
+                    // Make sure that we compare both strings & numbers
+                    { [fieldName]: { $eq: String(value) } },
                     { [fieldName]: { $eq: intValue } },
                   ],
                 };
@@ -258,7 +267,7 @@ const buildMongoFilter = (
               } else {
                 return {
                   $and: [
-                    { [fieldName]: { $ne: value } },
+                    { [fieldName]: { $ne: String(value) } },
                     { [fieldName]: { $ne: intValue } },
                   ],
                 };
@@ -282,7 +291,7 @@ const buildMongoFilter = (
             } else {
               return {
                 $or: [
-                  { [fieldName]: { $lt: value } },
+                  { [fieldName]: { $lt: String(value) } },
                   { [fieldName]: { $lt: intValue } },
                 ],
               };
@@ -294,7 +303,7 @@ const buildMongoFilter = (
             } else {
               return {
                 $or: [
-                  { [fieldName]: { $lte: value } },
+                  { [fieldName]: { $lte: String(value) } },
                   { [fieldName]: { $lte: intValue } },
                 ],
               };
@@ -306,7 +315,7 @@ const buildMongoFilter = (
             } else {
               return {
                 $or: [
-                  { [fieldName]: { $gt: value } },
+                  { [fieldName]: { $gt: String(value) } },
                   { [fieldName]: { $gt: intValue } },
                 ],
               };
@@ -318,7 +327,7 @@ const buildMongoFilter = (
             } else {
               return {
                 $or: [
-                  { [fieldName]: { $gte: value } },
+                  { [fieldName]: { $gte: String(value) } },
                   { [fieldName]: { $gte: intValue } },
                 ],
               };
@@ -332,7 +341,11 @@ const buildMongoFilter = (
           }
           case 'contains': {
             if (MULTISELECT_TYPES.includes(type)) {
-              return { [fieldName]: { $all: value } };
+              if (Array.isArray(value)) {
+                return { [fieldName]: { $all: value } };
+              } else {
+                return { [fieldName]: { $all: [value] } };
+              }
             } else {
               return { [fieldName]: { $regex: value, $options: 'i' } };
             }
@@ -378,6 +391,58 @@ const buildMongoFilter = (
             } else {
               return { [fieldName]: { $exists: true, $ne: '' } };
             }
+          }
+          case 'near': {
+            return {
+              [fieldName]: {
+                $near: {
+                  $geometry: {
+                    type: 'Point',
+                    coordinates: value.geometry,
+                  },
+                  $maxDistance: value.distance,
+                },
+              },
+            };
+          }
+          case 'notnear': {
+            return {
+              [fieldName]: {
+                $near: {
+                  $geometry: {
+                    type: 'Point',
+                    coordinates: value.geometry,
+                  },
+                  $minDistance: value.distance,
+                },
+              },
+            };
+          }
+          case 'intersects': {
+            return {
+              [fieldName]: {
+                $geoIntersects: {
+                  $geometry: {
+                    type: 'Polygon',
+                    coordinates: value.geometry,
+                  },
+                },
+              },
+            };
+          }
+          case 'notintersects': {
+            return {
+              [fieldName]: {
+                $not: {
+                  $geoIntersects: {
+                    $geometry: {
+                      type: 'Polygon',
+                      coordinates: value.geometry,
+                    },
+                  },
+                },
+              },
+            };
           }
           default: {
             return;

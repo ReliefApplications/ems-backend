@@ -30,7 +30,6 @@ export default {
   async resolve(parent, args: SeeNotificationsArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
 
       const ability: AppAbility = context.user.ability;

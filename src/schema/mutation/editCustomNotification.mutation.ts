@@ -72,6 +72,8 @@ export default {
           'customNotifications.$.template': args.notification.template,
           'customNotifications.$.recipients': args.notification.recipients,
           'customNotifications.$.status': args.notification.notification_status,
+          'customNotifications.$.recipientsType':
+            args.notification.recipientsType,
         },
       };
 

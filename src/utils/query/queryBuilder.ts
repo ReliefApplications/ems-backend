@@ -146,7 +146,7 @@ export const buildQuery = (query: any): any => {
   if (query && query.fields.length > 0) {
     const fields = ['canUpdate\ncanDelete\n'].concat(buildFields(query.fields));
     const gqlQuery = `
-      query GetCustomQuery($first: Int, $skip: Int, $filter: JSON, $sortField: String, $sortOrder: String, $display: Boolean) {
+      query GetCustomQuery($first: Int, $skip: Int, $filter: JSON, $sortField: String, $sortOrder: String, $display: Boolean, $at: Date) {
         ${query.name}(
         first: $first,
         skip: $skip,
@@ -154,6 +154,7 @@ export const buildQuery = (query: any): any => {
         sortOrder: $sortOrder,
         filter: $filter,
         display: $display
+        at: $at
         ) {
           edges {
             node {

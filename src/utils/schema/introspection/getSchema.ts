@@ -128,6 +128,7 @@ export const getSchema = (
           args: {
             id: { type: new GraphQLNonNull(GraphQLID) },
             display: { type: GraphQLBoolean },
+            data: { type: GraphQLJSON },
           },
         };
         // === MULTI ENTITIES ===

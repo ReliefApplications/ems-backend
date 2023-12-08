@@ -92,8 +92,8 @@ async function insertRecords(
             String(form.resource ? form.resource : form.id)
           ),
           form: form.id,
-          createdAt: new Date(),
-          modifiedAt: new Date(),
+          // createdAt: new Date(),
+          // modifiedAt: new Date(),
           data: dataSet.data,
           resource: form.resource ? form.resource : null,
           createdBy: {
@@ -398,6 +398,7 @@ router.post('/style/:application', async (req, res) => {
         .send(i18next.t('common.errors.fileSizeLimitReached'));
     }
     // Authentication check
+    // todo: check if useless
     const user = context.user;
     if (!user) {
       return res.status(401).send(i18next.t('common.errors.userNotLogged'));
