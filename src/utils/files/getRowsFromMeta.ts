@@ -188,6 +188,11 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
           }
           break;
         }
+        case 'file': {
+          const value = get(data, `${column.field}.[0].name`);
+          set(row, column.name, value);
+          break;
+        }
         default: {
           const value = get(data, column.field);
           if (column.subColumns) {
