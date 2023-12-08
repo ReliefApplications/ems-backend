@@ -17,7 +17,7 @@ const onFamilyAdded = async (rec: RecordModel) => {
   }
 
   // Deletes all the empty families created by the same user before
-  await RecordModel.find({
+  await RecordModel.deleteMany({
     $expr: {
       $and: [
         { $eq: ['$form', FAMILY_FORM_ID] },
