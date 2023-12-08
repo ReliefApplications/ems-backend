@@ -352,6 +352,9 @@ router.get('/feature', async (req, res) => {
         headers: {
           Authorization: req.headers.authorization,
           'Content-Type': 'application/json',
+          ...(req.headers.accesstoken && {
+            accesstoken: req.headers.accesstoken,
+          }),
         },
         data: {
           query,
