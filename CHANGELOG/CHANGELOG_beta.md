@@ -1,3 +1,15 @@
+# [2.2.0-beta.15](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0-beta.14...v2.2.0-beta.15) (2023-12-08)
+
+
+### Bug Fixes
+
+* add access tokens to all internal requests ([067bd1c](https://github.com/ReliefApplications/ems-backend/commit/067bd1c788070a05c02053eb8919c5ddf2e1288e))
+* boolean would not correctly be calculated in getFilter ([58dc862](https://github.com/ReliefApplications/ems-backend/commit/58dc8621b4237e92eb6f17e5b189be647bd86ad3))
+* cloning application would not clone filter & grid options in dashboards ([3162811](https://github.com/ReliefApplications/ems-backend/commit/3162811fdc0c2775190d9abce12d6fd3f8031d99))
+* could not always get fields from ref data ([32e83d4](https://github.com/ReliefApplications/ems-backend/commit/32e83d44995fc7fe1e2c5d8f191cb0a6211f4739))
+* incorrect display of date fields in export & history ([#857](https://github.com/ReliefApplications/ems-backend/issues/857)) ([5262f8b](https://github.com/ReliefApplications/ems-backend/commit/5262f8b5c50315633ff45bc3a777fd7dcd1c4a87))
+* reference data not getting exported ([#858](https://github.com/ReliefApplications/ems-backend/issues/858)) ([24ad915](https://github.com/ReliefApplications/ems-backend/commit/24ad915ba5eceb38d263c2094372f6d15d30a4fb))
+
 # [2.2.0-beta.14](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0-beta.13...v2.2.0-beta.14) (2023-12-05)
 
 
