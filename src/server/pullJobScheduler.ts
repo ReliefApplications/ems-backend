@@ -30,6 +30,17 @@ const taskMap: Record<string, CronJob> = {};
 /** Record's default fields */
 const DEFAULT_FIELDS = ['createdBy'];
 
+const EIOS_APP_NAMES = [
+  'Signal EURO',
+  'Signal AFRO',
+  'Signal WPRO',
+  'Signal EMRO',
+  'Signal SEARO',
+  'Signal HQ AEE',
+  'Signal HQ FCV',
+  'Signal AMRO',
+];
+
 /**
  * Global function called on server start to initialize all the pullJobs.
  */
@@ -355,6 +366,32 @@ export const insertRecords = async (
     // If EIOS pullJob, build a mapping JSON to assign ownership (role ids)
     const ownershipMappingWithIds: any = {};
     if (isEIOS) {
+      // Create a dictionnary of user roles ids
+      const appRolesWithIds = {};
+      EIOS_APP_NAMES.map(async (application) => {
+        const appUserRole = await Role.aggregate([
+          {
+            $lookup: {
+              from: 'applications',
+              localField: 'application',
+              foreignField: '_id',
+              as: '_application',
+            },
+          },
+          {
+            $match: {
+              $and: [
+                { title: 'User' },
+                { _application: { $elemMatch: { name: application } } },
+              ],
+            },
+          },
+        ]);
+        if (appUserRole[0]) {
+          appRolesWithIds[application] = appUserRole[0]._id;
+        }
+      });
+
       const signalHQPHIUserRole = await Role.aggregate([
         {
           $lookup: {
@@ -373,40 +410,15 @@ export const insertRecords = async (
           },
         },
       ]);
+
       for (const [key, value] of Object.entries(ownershipMappingJSON)) {
         ownershipMappingWithIds[key] = [];
         if (value.length > 0) {
-          //Create a filter to get roles based on application name(s)
-          const filterList: any[] = [
-            {
-              $lookup: {
-                from: 'applications',
-                localField: 'application',
-                foreignField: '_id',
-                as: '_application',
-              },
-            },
-          ];
-          const regionFilters = [];
-          // Mandatory to use map function
-          const regionArrays = value as string[];
-          regionArrays.map((elt) => {
-            regionFilters.push({
-              $and: [
-                { title: 'User' },
-                { _application: { $elemMatch: { name: elt } } },
-              ],
-            });
+          value.map((elt) => {
+            if (appRolesWithIds[elt]) {
+              ownershipMappingWithIds[key].push(appRolesWithIds[elt]);
+            }
           });
-          // Need to check if regionFilters not empty, otherwise error
-          if (regionFilters.length > 0) {
-            filterList.push({ $match: { $or: regionFilters } });
-          }
-          const userRoles = await Role.aggregate([...filterList]);
-          // Only push defined user Roles to owners list
-          if (userRoles) {
-            ownershipMappingWithIds[key].push(...userRoles.map((a) => a._id));
-          }
         }
         // Always push HQ PHI User role
         ownershipMappingWithIds[key].push(signalHQPHIUserRole[0]._id);
