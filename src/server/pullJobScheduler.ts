@@ -394,7 +394,7 @@ export const insertRecords = async (
             regionFilters.push({
               $and: [
                 { title: 'User' },
-                { _application: { $elemMatch: { name: { $regex: elt } } } },
+                { _application: { $elemMatch: { name: elt } } },
               ],
             });
           });
