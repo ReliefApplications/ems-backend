@@ -3,6 +3,8 @@ import config from 'config';
 import onStructureAdded from './onStructureAdded';
 import onFamilyTransfer from './onFamilyTransfer';
 import onFamilyUpdated from './onFamilyEdited';
+import onFamilyAdded from './onFamilyAdded';
+import { Record } from '@models';
 
 /** Whether or not the current environment is Alimentaide */
 const IS_ALIMENTAIDE =
@@ -41,6 +43,16 @@ export const setupCustomListeners = <DocType>(schema: Schema<DocType>) => {
   schema.post('findOneAndUpdate', async function (doc) {
     if (FAMILY_FORM_ID.equals(doc.form)) {
       await onFamilyUpdated(doc);
+    }
+  });
+
+  schema.post('save', async function (doc) {
+    if (!(doc instanceof Record)) {
+      return;
+    }
+    const rec = doc as Record;
+    if (FAMILY_FORM_ID.equals(rec.form)) {
+      await onFamilyAdded(rec);
     }
   });
 };
