@@ -30,6 +30,9 @@ const taskMap: Record<string, CronJob> = {};
 /** Record's default fields */
 const DEFAULT_FIELDS = ['createdBy'];
 
+/**
+ * Name of Signal Apps for EIOS
+ */
 const EIOS_APP_NAMES = [
   'Signal EURO',
   'Signal AFRO',
@@ -236,6 +239,12 @@ const accessFieldIncludingNested = (data: any, identifier: string): any => {
   }
 };
 
+/**
+ * Get Mongo Filters to get user role for a specific application
+ *
+ * @param appName Name of the application
+ * @returns List of Mongo filters
+ */
 const getUserRoleFiltersFromApp = (appName: string): any => {
   return [
     {
