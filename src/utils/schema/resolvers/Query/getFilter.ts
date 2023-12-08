@@ -473,6 +473,5 @@ export default (
   const expandedFields = fields.concat(DEFAULT_FIELDS);
   const mongooseFilter =
     buildMongoFilter(filter, expandedFields, context, prefix) || {};
-  console.log(JSON.stringify(mongooseFilter));
   return mongooseFilter;
 };

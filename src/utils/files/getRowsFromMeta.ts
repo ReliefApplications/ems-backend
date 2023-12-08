@@ -144,8 +144,8 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
         case 'date': {
           const value = get(data, column.field);
           if (value) {
-            const date = new Date(value);
-            set(row, column.name, date.toISOString().split('T')[0]);
+            const date = new Date(value).toLocaleDateString();
+            set(row, column.name, date);
           } else {
             set(row, column.name, value);
           }
@@ -159,10 +159,10 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
             set(
               row,
               column.name,
-              `${date.toISOString().split('T')[0]} ${date
-                .toISOString()
-                .split('T')[1]
-                .slice(0, 5)}`
+              `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}`
             );
           } else {
             set(row, column.name, value);
@@ -173,7 +173,16 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
           const value = get(data, column.field);
           if (value) {
             const date = new Date(value);
-            set(row, column.name, date.toISOString().split('T')[1].slice(0, 5));
+            set(
+              row,
+              column.name,
+              date.toLocaleTimeString('en-US', {
+                timeZone: 'UTC',
+                hour12: true,
+                hour: '2-digit',
+                minute: '2-digit',
+              })
+            );
           } else {
             set(row, column.name, value);
           }
