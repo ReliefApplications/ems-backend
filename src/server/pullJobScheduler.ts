@@ -471,12 +471,7 @@ export const insertRecords = async (
       if (isEIOS) {
         // Assign correct ownership value based on mapping JSON and board name
         const boardName = mappedElement.article_board_name;
-        mappedElement.ownership = [];
-        for (const key of Object.keys(ownershipMappingWithIds)) {
-          if (boardName === key) {
-            mappedElement.ownership.push(...ownershipMappingWithIds[key]);
-          }
-        }
+        mappedElement.ownership = ownershipMappingWithIds[boardName];
       }
       // If everything is fine, push it in the array for saving
       if (!isDuplicate) {
