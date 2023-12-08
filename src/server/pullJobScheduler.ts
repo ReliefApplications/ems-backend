@@ -31,17 +31,15 @@ const taskMap: Record<string, CronJob> = {};
 const DEFAULT_FIELDS = ['createdBy'];
 
 /**
- * Name of Signal Apps for EIOS
+ * Dynamically building the list of Signal Apps names for EIOS
  */
-const EIOS_APP_NAMES = [
-  'Signal EURO',
-  'Signal AFRO',
-  'Signal WPRO',
-  'Signal EMRO',
-  'Signal SEARO',
-  'Signal HQ AEE',
-  'Signal HQ FCV',
-  'Signal AMRO',
+const EIOS_APP_NAMES: string[] = [
+  ...new Set( // Remove duplicate values
+    Object.values(ownershipMappingJSON).reduce((prev, curr) => {
+      prev.push(...curr); // Push all the Apps names into an array
+      return prev;
+    }, [])
+  ),
 ];
 
 /**
