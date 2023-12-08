@@ -236,6 +236,27 @@ const accessFieldIncludingNested = (data: any, identifier: string): any => {
   }
 };
 
+const getUserRoleFiltersFromApp = (appName: string): any => {
+  return [
+    {
+      $lookup: {
+        from: 'applications',
+        localField: 'application',
+        foreignField: '_id',
+        as: '_application',
+      },
+    },
+    {
+      $match: {
+        $and: [
+          { title: 'User' },
+          { _application: { $elemMatch: { name: appName } } },
+        ],
+      },
+    },
+  ];
+};
+
 /**
  *  Use the fetched data to insert records into the dB if needed.
  *
@@ -366,50 +387,20 @@ export const insertRecords = async (
     // If EIOS pullJob, build a mapping JSON to assign ownership (role ids)
     const ownershipMappingWithIds: any = {};
     if (isEIOS) {
-      // Create a dictionnary of user roles ids
+      // Create a dictionary of user roles ids
       const appRolesWithIds = {};
       EIOS_APP_NAMES.map(async (application) => {
-        const appUserRole = await Role.aggregate([
-          {
-            $lookup: {
-              from: 'applications',
-              localField: 'application',
-              foreignField: '_id',
-              as: '_application',
-            },
-          },
-          {
-            $match: {
-              $and: [
-                { title: 'User' },
-                { _application: { $elemMatch: { name: application } } },
-              ],
-            },
-          },
-        ]);
+        const appUserRole = await Role.aggregate(
+          getUserRoleFiltersFromApp(application)
+        );
         if (appUserRole[0]) {
           appRolesWithIds[application] = appUserRole[0]._id;
         }
       });
 
-      const signalHQPHIUserRole = await Role.aggregate([
-        {
-          $lookup: {
-            from: 'applications',
-            localField: 'application',
-            foreignField: '_id',
-            as: '_application',
-          },
-        },
-        {
-          $match: {
-            $and: [
-              { title: 'User' },
-              { _application: { $elemMatch: { name: 'Signal HQ PHI' } } },
-            ],
-          },
-        },
-      ]);
+      const signalHQPHIUserRole = await Role.aggregate(
+        getUserRoleFiltersFromApp('Signal HQ PHI')
+      );
 
       for (const [key, value] of Object.entries(ownershipMappingJSON)) {
         ownershipMappingWithIds[key] = [];
