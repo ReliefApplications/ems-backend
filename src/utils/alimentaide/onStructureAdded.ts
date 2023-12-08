@@ -15,8 +15,6 @@ const SUPER_ADMIN_ROLE_ID = new Types.ObjectId('64934ecc859314002ab554aa');
 /** The ID of the structure form */
 const STRUCTURE_FORM_ID = new Types.ObjectId('649ade1ceae9f80d6591886a');
 
-/** The ID for the person form */
-const PERSON_FORM_ID = new Types.ObjectId('64de7da43fb2a1a78b8de289');
 /** Application page id map */
 const APPLICATION_PAGES = [
   {
