@@ -11,7 +11,6 @@ import {
   Record as RecordModel,
   User,
   Role,
-  Application,
 } from '@models';
 import pubsub from './pubsub';
 import { CronJob } from 'cron';
@@ -356,14 +355,24 @@ export const insertRecords = async (
     // If EIOS pullJob, build a mapping JSON to assign ownership (role ids)
     const ownershipMappingWithIds: any = {};
     if (isEIOS) {
-      // Get Id of Signal HQ PHI app to assign to every element
-      const applicationSignalHQPHI = await Application.find({
-        name: 'Signal HQ PHI',
-      });
-      const signalHQPHIUserRole = await Role.findOne({
-        application: applicationSignalHQPHI[0]._id,
-        title: 'User',
-      });
+      const signalHQPHIUserRole = await Role.aggregate([
+        {
+          $lookup: {
+            from: 'applications',
+            localField: 'application',
+            foreignField: '_id',
+            as: '_application',
+          },
+        },
+        {
+          $match: {
+            $and: [
+              { title: 'User' },
+              { _application: { $elemMatch: { name: 'Signal HQ PHI' } } },
+            ],
+          },
+        },
+      ]);
       for (const [key, value] of Object.entries(ownershipMappingJSON)) {
         ownershipMappingWithIds[key] = [];
         if (value.length > 0) {
@@ -400,7 +409,7 @@ export const insertRecords = async (
           }
         }
         // Always push HQ PHI User role
-        ownershipMappingWithIds[key].push(signalHQPHIUserRole._id);
+        ownershipMappingWithIds[key].push(signalHQPHIUserRole[0]._id);
       }
     }
 
