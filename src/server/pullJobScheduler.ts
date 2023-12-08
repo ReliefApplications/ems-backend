@@ -302,7 +302,7 @@ const getUserRoleFiltersFromApp = (appName: string): any => {
 export const insertRecords = async (
   data: any[],
   pullJob: PullJob,
-  isEIOS?: boolean
+  isEIOS = false
 ): Promise<void> => {
   const form = await Form.findById(pullJob.convertTo);
   if (form) {
