@@ -24,6 +24,7 @@ import unionWith from 'lodash/unionWith';
 import i18next from 'i18next';
 import { get, isArray } from 'lodash';
 import { logger } from '@services/logger.service';
+import checkDefaultFields from '@utils/form/checkDefaultFields';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 
@@ -252,6 +253,9 @@ export default {
             }
           }
         }
+        // Check if default fields are used
+        checkDefaultFields(fields);
+
         // === Resource inheritance management ===
         const prevStructure = JSON.parse(
           form.structure ? form.structure : '{}'

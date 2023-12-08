@@ -113,6 +113,9 @@ const getTotalCount = (
       headers: {
         Authorization: req.headers.authorization,
         'Content-Type': 'application/json',
+        ...(req.headers.accesstoken && {
+          accesstoken: req.headers.accesstoken,
+        }),
       },
       data: {
         query: totalCountQuery,
@@ -197,6 +200,9 @@ const getColumns = (req: any, params: ExportBatchParams): Promise<any[]> => {
       headers: {
         Authorization: req.headers.authorization,
         'Content-Type': 'application/json',
+        ...(req.headers.accesstoken && {
+          accesstoken: req.headers.accesstoken,
+        }),
       },
       data: {
         query: metaQuery,
@@ -319,6 +325,9 @@ const getRowsXlsx = async (
         headers: {
           Authorization: req.headers.authorization,
           'Content-Type': 'application/json',
+          ...(req.headers.accesstoken && {
+            accesstoken: req.headers.accesstoken,
+          }),
         },
         data: {
           query,
@@ -390,6 +399,9 @@ const getRowsCsv = async (
       headers: {
         Authorization: req.headers.authorization,
         'Content-Type': 'application/json',
+        ...(req.headers.accesstoken && {
+          accesstoken: req.headers.accesstoken,
+        }),
       },
       data: {
         query,
