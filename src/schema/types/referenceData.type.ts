@@ -34,6 +34,7 @@ export const ReferenceDataType = new GraphQLObjectType({
         return apiConfig;
       },
     },
+    graphQLTypeName: { type: GraphQLString },
     query: { type: GraphQLString },
     fields: { type: GraphQLJSON },
     valueField: { type: GraphQLString },
