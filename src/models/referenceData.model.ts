@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 import { getGraphQLTypeName } from '@utils/validators';
 import { referenceDataType } from '@const/enumTypes';
 import { snakeCase } from 'lodash';
+import { aggregationSchema } from './aggregation.model';
 
 /** Reference data document interface. */
 interface ReferenceDataDocument extends Document {
@@ -23,6 +24,7 @@ interface ReferenceDataDocument extends Document {
     canUpdate?: any[];
     canDelete?: any[];
   };
+  aggregations: any;
 }
 
 /** Interface of Reference Data */
@@ -81,6 +83,7 @@ const schema = new Schema<ReferenceData>(
         },
       ],
     },
+    aggregations: [aggregationSchema],
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
