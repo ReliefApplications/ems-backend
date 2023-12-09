@@ -25,6 +25,7 @@ import {
 } from 'lodash';
 import { graphQLAuthCheck } from '@schema/shared';
 import { CustomAPI } from '@server/apollo/dataSources';
+import { GraphQLDate } from 'graphql-scalars';
 
 /**
  * Apply the filter provided to the specified field
@@ -162,11 +163,13 @@ export default {
   args: {
     referenceData: { type: new GraphQLNonNull(GraphQLID) },
     aggregation: { type: new GraphQLNonNull(GraphQLID) },
+    contextFilters: { type: GraphQLJSON },
     mapping: { type: GraphQLJSON },
     first: { type: GraphQLInt },
     skip: { type: GraphQLInt },
     sortOrder: { type: GraphQLString },
     sortField: { type: GraphQLString },
+    at: { type: GraphQLDate },
   },
   async resolve(parent, args, context) {
     graphQLAuthCheck(context);
