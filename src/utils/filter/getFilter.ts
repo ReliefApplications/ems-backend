@@ -58,6 +58,10 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
             value = getTimeForMongo(value);
             break;
           }
+          case 'boolean': {
+            // Avoid the int value to be set
+            break;
+          }
           default:
             try {
               intValue = Number(value);
