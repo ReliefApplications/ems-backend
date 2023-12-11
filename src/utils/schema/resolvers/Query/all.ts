@@ -426,7 +426,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // If we're using skip parameter, include them into the aggregation
       if (skip || skip === 0) {
-        const aggregation = await Record.aggregate([
+        const pipeline = [
           { $match: basicFilters },
           ...(at ? getAtAggregation(new Date(at)) : []),
           ...linkedRecordsAggregation,
@@ -446,7 +446,8 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               ],
             },
           },
-        ]);
+        ];
+        const aggregation = await Record.aggregate(pipeline);
         items = aggregation[0].items;
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       } else {
@@ -458,7 +459,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               },
             }
           : {};
-        const aggregation = await Record.aggregate([
+        const pipeline = [
           { $match: basicFilters },
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
@@ -475,7 +476,8 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               ],
             },
           },
-        ]);
+        ];
+        const aggregation = await Record.aggregate(pipeline);
         items = aggregation[0].items;
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       }
