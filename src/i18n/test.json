@@ -1,5 +1,8 @@
 {
 	"common": {
+		"copyright": {
+			"who": "******"
+		},
 		"errors": {
 			"authenticationTokenNotFound": "******",
 			"dataNotFound": "******",

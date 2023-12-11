@@ -38,6 +38,8 @@ import layers from './layers.query';
 import layer from './layer.query';
 import draftRecords from './draftRecords.query';
 import referenceDataAggregation from './referenceDataAggregation.query';
+import dataSet from './dataSet.query';
+import emailNotifications from './emailNotifications.query';
 
 /** GraphQL query type definition */
 const Query = new GraphQLObjectType({
@@ -50,6 +52,7 @@ const Query = new GraphQLObjectType({
     channels,
     dashboard,
     dashboards,
+    emailNotifications,
     form,
     forms,
     group,
@@ -58,6 +61,7 @@ const Query = new GraphQLObjectType({
     notifications,
     page,
     pages,
+    dataSet,
     permissions,
     pullJobs,
     record,
