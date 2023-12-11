@@ -1,4 +1,9 @@
-import { GraphQLNonNull, GraphQLError, GraphQLID, GraphQLString } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLError,
+  GraphQLID,
+  GraphQLString,
+} from 'graphql';
 import {
   ApiConfiguration,
   Dashboard,
@@ -24,6 +29,7 @@ import { get, isNil } from 'lodash';
  * @param dashboard The dashboard being duplicated
  * @param context The context of the dashboard
  * @param id The id of the record or element
+ * @param geographicContext Geographic context value
  * @param dataSources The data sources
  * @returns The name of the new dashboard
  */
@@ -63,7 +69,6 @@ const getNewDashboardName = async (
     return `${dashboard.name} - ${geographicContext}`;
   }
   return `${dashboard.name}`;
-
 };
 
 /**
@@ -74,6 +79,7 @@ const getNewDashboardName = async (
  * @param entry new entry
  * @param entry.element new element ( if ref data )
  * @param entry.record new record ( if resource )
+ * @param entry.geographic new geographic
  * @returns is entry duplicated or not
  */
 const hasDuplicate = (
@@ -90,17 +96,23 @@ const hasDuplicate = (
   if ('geographic' in entry && 'geography') {
     // record and geographic
     if ('record' in entry) {
-      const contains = contentWithContext.some((item: any) => item.record === entry.record && item.geographic === entry.geographic);
+      const contains = contentWithContext.some(
+        (item: any) =>
+          item.record === entry.record && item.geographic === entry.geographic
+      );
       if (contains) {
         return true;
       }
-    // element and geographic
+      // element and geographic
     } else if ('element' in entry) {
-      const contains = contentWithContext.some((item: any) => item.element === entry.element && item.geographic === entry.geographic);
+      const contains = contentWithContext.some(
+        (item: any) =>
+          item.element === entry.element && item.geographic === entry.geographic
+      );
       if (contains) {
         return true;
       }
-    // geographic
+      // geographic
     } else {
       for (const item of contentWithContext) {
         if (get(item, 'geographic')) {
@@ -111,7 +123,7 @@ const hasDuplicate = (
         return true;
       }
     }
-  // record or element
+    // record or element
   } else {
     if (!isNil(get(context, 'resource'))) {
       for (const item of contentWithContext) {
@@ -154,9 +166,9 @@ export default {
     page: { type: new GraphQLNonNull(GraphQLID) },
     element: { type: GraphQLJSON },
     record: { type: GraphQLID },
-    geographic: { type: GraphQLString }
+    geographic: { type: GraphQLString },
   },
-  async resolve(parent, args: AddDashboardWithContextArgs, context: Context) {  
+  async resolve(parent, args: AddDashboardWithContextArgs, context: Context) {
     // Authentication check
     graphQLAuthCheck(context);
     try {
@@ -164,7 +176,6 @@ export default {
       // Check arguments
       if (
         (!args.element && !args.record && !args.geographic) ||
-        (args.element && args.record && args.geographic) &&
         (args.element && args.record)
       ) {
         throw new GraphQLError(
@@ -212,7 +223,7 @@ export default {
         hasDuplicate(page.context, page.contentWithContext, {
           ...(args.record && { record: args.record }),
           ...(args.element && { element: args.element }),
-          ...(args.geographic && { geographic: args.geographic })
+          ...(args.geographic && { geographic: args.geographic }),
         })
       ) {
         throw new GraphQLError(
@@ -232,35 +243,35 @@ export default {
         ),
         // Copy structure from template dashboard
         structure: template.structure || [],
-      }).save();      
+      }).save();
       let newContentWithContext: any;
       if (args.record && !args.geographic) {
-        newContentWithContext = ({
-            record: args.record,
-            content: newDashboard._id,
-          } as Page['contentWithContext'][number])
-      } else if (args.element && !args.geographic){
-        newContentWithContext = ({
-            element: args.element,
-            content: newDashboard._id,
-          } as Page['contentWithContext'][number]);
+        newContentWithContext = {
+          record: args.record,
+          content: newDashboard._id,
+        } as Page['contentWithContext'][number];
+      } else if (args.element && !args.geographic) {
+        newContentWithContext = {
+          element: args.element,
+          content: newDashboard._id,
+        } as Page['contentWithContext'][number];
       } else if (args.record && args.geographic) {
-        newContentWithContext = ({
+        newContentWithContext = {
           record: args.record,
           geographic: args.geographic,
           content: newDashboard._id,
-        } as Page['contentWithContext'][number]);
+        } as Page['contentWithContext'][number];
       } else if (args.element && args.geographic) {
-        newContentWithContext = ({
+        newContentWithContext = {
           element: args.element,
           geographic: args.geographic,
           content: newDashboard._id,
-        } as Page['contentWithContext'][number]);
+        } as Page['contentWithContext'][number];
       } else {
-        newContentWithContext = ({
+        newContentWithContext = {
           geographic: args.geographic,
           content: newDashboard._id,
-        } as Page['contentWithContext'][number]);
+        } as Page['contentWithContext'][number];
       }
       // Adds the dashboard to the page
       page.contentWithContext.push(newContentWithContext);
