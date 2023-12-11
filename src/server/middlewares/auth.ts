@@ -12,6 +12,7 @@ import { updateUser, userAuthCallback } from '@utils/user';
 import config from 'config';
 import session from 'express-session';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from '@services/logger.service';
 
 /** Express application for the authorization middleware */
 const authMiddleware = express();
@@ -20,6 +21,9 @@ authMiddleware.use(
 );
 authMiddleware.use(passport.initialize());
 authMiddleware.use(passport.session());
+
+/** Get audience */
+const audience = JSON.parse(config.get<string>('auth.audience'));
 
 // Use custom authentication endpoint or azure AD depending on config
 if (config.get('auth.provider') === AuthenticationType.keycloak) {
@@ -127,6 +131,9 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
         // eslint-disable-next-line no-undef
         clientID: `${config.get('auth.clientId')}`,
         passReqToCallback: true,
+        ...(audience.length > 0 && {
+          audience,
+        }),
       }
     : {
         // eslint-disable-next-line no-undef
@@ -282,6 +289,9 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                 .catch((error) => done(error));
             }
           });
+      } else {
+        logger.info(token);
+        return done('error');
       }
     })
   );

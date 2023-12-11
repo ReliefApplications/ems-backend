@@ -18,11 +18,11 @@ import * as CryptoJS from 'crypto-js';
 import { validateApi } from '@utils/validators/validateApi';
 import config from 'config';
 import { logger } from '@services/logger.service';
+import { cloneDeep, isEmpty, omit } from 'lodash';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
-import { cloneDeep, isEmpty, omit } from 'lodash';
 
 /** Arguments for the editApiConfiguration mutation */
 type EditApiConfigurationArgs = {
@@ -117,7 +117,6 @@ export default {
             ).toString(),
           });
         }
-
         return await ApiConfiguration.findOneAndUpdate(filters, update, {
           new: true,
         });

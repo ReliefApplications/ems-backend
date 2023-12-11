@@ -38,6 +38,7 @@ module.exports = {
     clientId: 'AUTH_CLIENT_ID',
     tenantId: 'AUTH_TENANT_ID',
     allowedIssuers: 'AUTH_ALLOWED_ISSUERS',
+    audience: 'AUTH_AUDIENCE',
   },
   encryption: {
     key: 'ENCRYPTION_KEY',
@@ -55,5 +56,10 @@ module.exports = {
   redis: {
     url: 'REDIS_URL',
     password: 'REDIS_PASS',
+  },
+  commonServices: {
+    clientId: 'COMMON_SERVICES_CLIENT_ID',
+    clientSecret: 'COMMON_SERVICES_CLIENT_SECRET',
+    scope: 'COMMON_SERVICES_SCOPE',
   },
 };
