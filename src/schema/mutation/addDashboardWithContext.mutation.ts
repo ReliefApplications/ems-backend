@@ -31,12 +31,10 @@ const getNewDashboardName = async (
   dashboard: Dashboard,
   context: Page['context'],
   id: string | Types.ObjectId,
+  geographicContext: string,
   dataSources: any
 ) => {
-  console.log("context = ", context);
-  console.log("id = ", id);
-  if ('refData' in context && context.refData) {
-    console.log("HERE2");
+  if ('refData' in context && context.refData && id) {
     // Get items from reference data
     const referenceData = await ReferenceData.findById(context.refData);
     const apiConfiguration = await ApiConfiguration.findById(
@@ -49,15 +47,23 @@ const getNewDashboardName = async (
       : referenceData.data;
 
     const item = data.find((x) => x[referenceData.valueField] === id);
+    if (geographicContext) {
+      return `${item?.[context.displayField]} - ${geographicContext}`;
+    }
     return `${item?.[context.displayField]}`;
-  } else if ('resource' in context && context.resource) {
-    console.log("HERE3");
+  } else if ('resource' in context && context.resource && id) {
     const record = await Record.findById(id);
+    if (geographicContext) {
+      return `${record.data[context.displayField]} - ${geographicContext}`;
+    }
     return `${record.data[context.displayField]}`;
   }
+  // Default return
+  if (geographicContext) {
+    return `${dashboard.name} - ${geographicContext}`;
+  }
+  return `${dashboard.name}`;
 
-  // Default return, should never happen
-  return dashboard.name;
 };
 
 /**
@@ -79,24 +85,18 @@ const hasDuplicate = (
     geographic?: string;
   }
 ) => {
-  console.log("contentWithContext = ", contentWithContext);
-  console.log("entry = ", entry);
   const uniqueEntries = new Set();
 
   if ('geographic' in entry && 'geography') {
     // record and geographic
     if ('record' in entry) {
-
       const contains = contentWithContext.some((item: any) => item.record === entry.record && item.geographic === entry.geographic);
-      console.log(contains);
       if (contains) {
         return true;
       }
-
     // element and geographic
     } else if ('element' in entry) {
-      const contains = contentWithContext.some((item: any) => item.element === entry.element && item.element === entry.element);
-      console.log(contains);
+      const contains = contentWithContext.some((item: any) => item.element === entry.element && item.geographic === entry.geographic);
       if (contains) {
         return true;
       }
@@ -133,35 +133,6 @@ const hasDuplicate = (
       }
     }
   }
-
-  // if (!isNil(get(context, 'resource'))) {
-  //   for (const item of contentWithContext) {
-  //     if (get(item, 'record')) {
-  //       uniqueEntries.add((item as any).record.toString());
-  //     }
-  //   }
-  //   if (uniqueEntries.has(entry.record.toString())) {
-  //     return true;
-  //   }
-  // } else if (!isNil(get(context, 'element'))) {
-  //   for (const item of contentWithContext) {
-  //     if (get(item, 'element')) {
-  //       uniqueEntries.add((item as any).element.toString());
-  //     }
-  //   }
-  //   if (uniqueEntries.has(entry.element.toString())) {
-  //     return true;
-  //   }
-  // } else {
-  //   for (const item of contentWithContext) {
-  //     if (get(item, 'geographic')) {
-  //       uniqueEntries.add((item as any).geographic.toString());
-  //     }
-  //   }
-  //   if (uniqueEntries.has(entry.geographic.toString())) {
-  //     return true;
-  //   }
-  // }
   return false;
 };
 
@@ -185,10 +156,7 @@ export default {
     record: { type: GraphQLID },
     geographic: { type: GraphQLString }
   },
-  async resolve(parent, args: AddDashboardWithContextArgs, context: Context) {
-    console.log("AQUI123");
-    console.log(args);
-  
+  async resolve(parent, args: AddDashboardWithContextArgs, context: Context) {  
     // Authentication check
     graphQLAuthCheck(context);
     try {
@@ -259,39 +227,44 @@ export default {
           template,
           page.context,
           args.record || args.element,
+          args.geographic,
           context.dataSources
         ),
         // Copy structure from template dashboard
         structure: template.structure || [],
-      }).save();
-
-      console.log("OUT");
-      
+      }).save();      
       let newContentWithContext: any;
-      if (args.record) {
+      if (args.record && !args.geographic) {
         newContentWithContext = ({
             record: args.record,
             content: newDashboard._id,
           } as Page['contentWithContext'][number])
-      } else if (args.element){
+      } else if (args.element && !args.geographic){
         newContentWithContext = ({
             element: args.element,
             content: newDashboard._id,
           } as Page['contentWithContext'][number]);
+      } else if (args.record && args.geographic) {
+        newContentWithContext = ({
+          record: args.record,
+          geographic: args.geographic,
+          content: newDashboard._id,
+        } as Page['contentWithContext'][number]);
+      } else if (args.element && args.geographic) {
+        newContentWithContext = ({
+          element: args.element,
+          geographic: args.geographic,
+          content: newDashboard._id,
+        } as Page['contentWithContext'][number]);
       } else {
         newContentWithContext = ({
           geographic: args.geographic,
           content: newDashboard._id,
         } as Page['contentWithContext'][number]);
       }
-      console.log("newContentWithContext = ", newContentWithContext);
       // Adds the dashboard to the page
       page.contentWithContext.push(newContentWithContext);
-      console.log("page.contentWithContext = ", page.contentWithContext);
       await page.save();
-
-      console.log("page = ", page);
-      console.log("newDashboard = ", newDashboard);
       return newDashboard;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
