@@ -10,7 +10,6 @@ import {
   PullJob,
   Record as RecordModel,
   User,
-  Role,
 } from '@models';
 import pubsub from './pubsub';
 import { CronJob } from 'cron';
@@ -22,25 +21,12 @@ import { logger } from '../services/logger.service';
 import * as cronValidator from 'cron-validator';
 import get from 'lodash/get';
 import axios from 'axios';
-import { ownershipMappingJSON } from './EIOSOwnernshipMapping';
 
 /** A map with the task ids as keys and the scheduled tasks as values */
 const taskMap: Record<string, CronJob> = {};
 
 /** Record's default fields */
 const DEFAULT_FIELDS = ['createdBy'];
-
-/**
- * Dynamically building the list of Signal Apps names for EIOS
- */
-const EIOS_APP_NAMES: string[] = [
-  ...new Set( // Remove duplicate values
-    Object.values(ownershipMappingJSON).reduce((prev, curr) => {
-      prev.push(...curr); // Push all the Apps names into an array
-      return prev;
-    }, [])
-  ),
-];
 
 /**
  * Global function called on server start to initialize all the pullJobs.
@@ -175,7 +161,7 @@ const fetchRecordsServiceToService = (
             .then(({ data: data2 }) => {
               if (data2 && data2.result) {
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                insertRecords(data2.result, pullJob, true);
+                insertRecords(data2.result, pullJob);
               }
             })
             .catch((err) => {
@@ -266,43 +252,14 @@ const accessFieldIncludingNested = (data: any, identifier: string): any => {
 };
 
 /**
- * Get Mongo Filters to get user role for a specific application
- *
- * @param appName Name of the application
- * @returns List of Mongo filters
- */
-const getUserRoleFiltersFromApp = (appName: string): any => {
-  return [
-    {
-      $lookup: {
-        from: 'applications',
-        localField: 'application',
-        foreignField: '_id',
-        as: '_application',
-      },
-    },
-    {
-      $match: {
-        $and: [
-          { title: 'User' },
-          { _application: { $elemMatch: { name: appName } } },
-        ],
-      },
-    },
-  ];
-};
-
-/**
  *  Use the fetched data to insert records into the dB if needed.
  *
  * @param data array of data fetched from API
  * @param pullJob pull job configuration
- * @param isEIOS is EIOS pulljob or not
  */
 export const insertRecords = async (
   data: any[],
-  pullJob: PullJob,
-  isEIOS = false
+  pullJob: PullJob
 ): Promise<void> => {
   const form = await Form.findById(pullJob.convertTo);
   if (form) {
@@ -418,38 +375,6 @@ export const insertRecords = async (
       form: pullJob.convertTo,
       $or: filters,
     }).select(selectedFields);
-
-    // If EIOS pullJob, build a mapping JSON to assign ownership (role ids)
-    const ownershipMappingWithIds: any = {};
-    if (isEIOS) {
-      // Create a dictionary of user roles ids
-      const appRolesWithIds = {};
-      const promisesStack = [];
-      EIOS_APP_NAMES.forEach((appName) => {
-        promisesStack.push(
-          Role.aggregate(getUserRoleFiltersFromApp(appName)).then(
-            (appUserRole) => {
-              if (appUserRole[0]) {
-                appRolesWithIds[appName] = appUserRole[0]._id;
-              }
-            }
-          )
-        );
-      });
-      await Promise.allSettled(promisesStack);
-
-      for (const [key, value] of Object.entries(ownershipMappingJSON)) {
-        ownershipMappingWithIds[key] = [];
-        if (value.length > 0) {
-          value.forEach((elt) => {
-            if (appRolesWithIds[elt]) {
-              ownershipMappingWithIds[key].push(appRolesWithIds[elt]);
-            }
-          });
-        }
-      }
-    }
-
     for (const element of data) {
       // eslint-disable-next-line @typescript-eslint/no-use-before-define
       const mappedElement = mapData(
@@ -501,12 +426,6 @@ export const insertRecords = async (
             }
             return true;
           });
-
-      if (isEIOS) {
-        // Assign correct ownership value based on mapping JSON and board name
-        const boardName = mappedElement.article_board_name;
-        mappedElement.ownership = ownershipMappingWithIds[boardName];
-      }
       // If everything is fine, push it in the array for saving
       if (!isDuplicate) {
         transformRecord(mappedElement, form.fields);
