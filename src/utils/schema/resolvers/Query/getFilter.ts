@@ -65,13 +65,6 @@ export const extractFilterFields = (filter: any): string[] => {
  * @param prefix prefix to access field
  * @returns Mongo filter.
  */
-
-/**
- * @param filter
- * @param fields
- * @param context
- * @param prefix
- */
 const buildMongoFilter = (
   filter: any,
   fields: any[],

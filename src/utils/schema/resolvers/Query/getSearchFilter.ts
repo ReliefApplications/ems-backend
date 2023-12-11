@@ -93,6 +93,8 @@ export const extractFilterFields = (filter: any): string[] => {
   return fields;
 };
 
+let searchStageUsed = false;
+
 /**
  * Transforms query filter into mongo filter.
  *
@@ -101,20 +103,6 @@ export const extractFilterFields = (filter: any): string[] => {
  * @param context request context
  * @param prefix prefix to access field
  * @returns Mongo filter.
- */
-
-/**
- * @param filter
- * @param fields
- * @param context
- * @param prefix
- */
-let searchStageUsed = false;
-/**
- * @param filter
- * @param fields
- * @param context
- * @param prefix
  */
 const buildMongoFilter = (
   filter: any,
