@@ -1,4 +1,4 @@
-import { GraphQLError, GraphQLInt, GraphQLID } from 'graphql';
+import { GraphQLError, GraphQLInt, GraphQLID, GraphQLString } from 'graphql';
 import {
   ReferenceDataConnectionType,
   encodeCursor,
@@ -10,6 +10,7 @@ import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import GraphQLJSON from 'graphql-type-json';
 import getFilter from '@utils/filter/getFilter';
+import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { CompositeFilterDescriptor } from '@const/compositeFilter';
@@ -26,11 +27,53 @@ const FILTER_FIELDS: { name: string; type: string }[] = [
   },
 ];
 
+/** Default sort by */
+const DEFAULT_SORT_FIELD = 'name';
+
+/** Available sort fields */
+const SORT_FIELDS = [
+  {
+    name: 'name',
+    cursorId: (node: any) => node.name,
+    cursorFilter: (cursor: any, sortOrder: string) => {
+      const operator = sortOrder === 'asc' ? '$gt' : '$lt';
+      return {
+        name: {
+          [operator]: decodeCursor(cursor),
+        },
+      };
+    },
+    sort: (sortOrder: string) => {
+      return {
+        name: getSortOrder(sortOrder),
+      };
+    },
+  },
+  {
+    name: 'createdAt',
+    cursorId: (node: any) => node.createdAt.getTime().toString(),
+    cursorFilter: (cursor: any, sortOrder: string) => {
+      const operator = sortOrder === 'asc' ? '$gt' : '$lt';
+      return {
+        createdAt: {
+          [operator]: decodeCursor(cursor),
+        },
+      };
+    },
+    sort: (sortOrder: string) => {
+      return {
+        createdAt: getSortOrder(sortOrder),
+      };
+    },
+  },
+];
 /** Arguments for the referenceDatas query */
 type ReferenceDatasArgs = {
   first?: number;
   afterCursor?: string;
   filter?: CompositeFilterDescriptor;
+  sortField?: string;
+  sortOrder?: string;
 };
 
 /**
@@ -43,6 +86,8 @@ export default {
     first: { type: GraphQLInt },
     afterCursor: { type: GraphQLID },
     filter: { type: GraphQLJSON },
+    sortField: { type: GraphQLString },
+    sortOrder: { type: GraphQLString },
   },
   async resolve(parent, args: ReferenceDatasArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -50,6 +95,13 @@ export default {
     const first = args.first || DEFAULT_FIRST;
     checkPageSize(first);
     try {
+      // Inputs check
+      if (args.sortField) {
+        if (!SORT_FIELDS.map((x) => x.name).includes(args.sortField)) {
+          throw new GraphQLError(`Cannot sort by ${args.sortField} field`);
+        }
+      }
+
       const ability: AppAbility = context.user.ability;
 
       const abilityFilters = ReferenceData.find(
@@ -59,26 +111,34 @@ export default {
       const filters: any[] = [queryFilters, abilityFilters];
 
       const afterCursor = args.afterCursor;
+      const sortField =
+        SORT_FIELDS.find((x) => x.name === args.sortField) ||
+        SORT_FIELDS.find((x) => x.name === DEFAULT_SORT_FIELD);
+
+      const sortOrder = args.sortOrder || 'asc';
+
       const cursorFilters = afterCursor
-        ? {
-            _id: {
-              $gt: decodeCursor(afterCursor),
-            },
-          }
+        ? sortField.cursorFilter(afterCursor, sortOrder)
         : {};
 
       let items: any[] = await ReferenceData.find({
         $and: [cursorFilters, ...filters],
-      }).limit(first + 1);
+      })
+        // Make it case insensitive
+        .collation({ locale: 'en' })
+        .sort(sortField.sort(sortOrder))
+        .limit(first + 1);
 
       const hasNextPage = items.length > first;
       if (hasNextPage) {
         items = items.slice(0, items.length - 1);
       }
+
       const edges = items.map((r) => ({
-        cursor: encodeCursor(r.id.toString()),
+        cursor: encodeCursor(sortField.cursorId(r)),
         node: r,
       }));
+
       return {
         pageInfo: {
           hasNextPage,

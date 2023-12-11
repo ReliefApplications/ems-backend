@@ -235,8 +235,11 @@ describe('Page service tests', () => {
       status: status.pending,
       pages: [formPage._id, dashboardPage._id, workflowPage._id],
     }).save();
-
-    const pages = await duplicatePages(application);
+    const newPermissions = {};
+    newPermissions[formPage._id] = formPage._id;
+    newPermissions[dashboardPage._id] = dashboardPage._id;
+    newPermissions[workflowPage._id] = workflowPage._id;
+    const pages = await duplicatePages(application, newPermissions);
     expect(pages).toBeDefined();
   });
 

@@ -31,6 +31,7 @@ import { formatFilename } from '@utils/files/format.helper';
 import { sendEmail } from '@utils/email';
 import exportBatch from '@utils/files/exportBatch';
 import { accessibleBy } from '@casl/mongoose';
+import dataSources from '@server/apollo/dataSources';
 
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwise
@@ -110,7 +111,6 @@ router.get('/form/records/:id', async (req, res) => {
         archived: { $ne: true },
         ...Record.find(accessibleBy(formAbility, 'read').Record).getFilter(),
       };
-      const records = await Record.find(filter);
       const columns = await getColumns(
         form.fields,
         '',
@@ -120,6 +120,7 @@ router.get('/form/records/:id', async (req, res) => {
       if (req.query.template) {
         return await templateBuilder(res, form.name, columns);
       } else {
+        const records = await Record.find(filter);
         const rows = await getRows(
           columns,
           getAccessibleFields(records, formAbility)
@@ -214,6 +215,15 @@ router.get('/form/records/:id/history', async (req, res) => {
         {
           translate: req.t,
           ability,
+          context: {
+            // Need to use 'any' in order to use a class which is supposed to initialize with Apollo context
+            dataSources: (
+              await dataSources({
+                // Passing upstream request so accesstoken can be used for authentication
+                req: req,
+              } as any)
+            )(),
+          },
         }
       ).getHistory();
       const fields = filters.fields;
@@ -271,13 +281,6 @@ router.get('/resource/records/:id', async (req, res) => {
       .getFilter();
     const resource = await Resource.findOne(filters);
     if (resource) {
-      let records = [];
-      if (ability.can('read', 'Record')) {
-        records = await Record.find({
-          resource: req.params.id,
-          archived: { $ne: true },
-        });
-      }
       const columns = await getColumns(
         resource.fields,
         req.headers.authorization,
@@ -286,6 +289,13 @@ router.get('/resource/records/:id', async (req, res) => {
       if (req.query.template) {
         return await templateBuilder(res, resource.name, columns);
       } else {
+        let records = [];
+        if (ability.can('read', 'Record')) {
+          records = await Record.find({
+            resource: req.params.id,
+            archived: { $ne: true },
+          });
+        }
         const rows = await getRows(columns, records);
         const type = (req.query ? req.query.type : 'xlsx').toString();
         const filename = formatFilename(resource.name);

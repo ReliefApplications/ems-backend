@@ -121,7 +121,6 @@ export default {
     const first = args.first || DEFAULT_FIRST;
     checkPageSize(first);
     try {
-      // Authentication check
       const user = context.user;
       // Inputs check
       if (args.sortField) {
@@ -152,6 +151,8 @@ export default {
       let items: any[] = await Form.find({
         $and: [cursorFilters, ...filters],
       })
+        // Make it case insensitive
+        .collation({ locale: 'en' })
         .sort(sortField.sort(sortOrder))
         .limit(first + 1);
 

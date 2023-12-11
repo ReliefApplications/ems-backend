@@ -19,7 +19,32 @@ export const DashboardType = new GraphQLObjectType({
     name: { type: GraphQLString },
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
-    structure: { type: GraphQLJSON },
+    structure: {
+      type: GraphQLJSON,
+      resolve(parent) {
+        if (Array.isArray(parent.structure)) {
+          return parent.structure;
+        } else {
+          return [];
+        }
+      },
+    },
+    buttons: { type: GraphQLJSON },
+    gridOptions: {
+      type: GraphQLJSON,
+      resolve(parent) {
+        if (parent.gridOptions) {
+          return parent.gridOptions;
+        } else {
+          return {
+            minCols: 8,
+            maxCols: 8,
+            fixedRowHeight: 200,
+            margin: 10,
+          };
+        }
+      },
+    },
     permissions: {
       type: AccessType,
       async resolve(parent, args, context) {
@@ -94,6 +119,6 @@ export const DashboardType = new GraphQLObjectType({
         return ability.can('delete', parent);
       },
     },
-    showFilter: { type: GraphQLBoolean },
+    filter: { type: GraphQLJSON },
   }),
 });

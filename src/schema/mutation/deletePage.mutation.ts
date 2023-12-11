@@ -39,7 +39,16 @@ export default {
       }
 
       // delete page
-      await page.deleteOne();
+      if (page.archived) {
+        // If archived, hard delete it
+        await page.deleteOne();
+      } else {
+        // Else, archive it
+        await page.updateOne({
+          archived: true,
+          archivedAt: new Date(),
+        });
+      }
       return page;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

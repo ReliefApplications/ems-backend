@@ -56,7 +56,6 @@ export default {
           context.i18next.t('mutations.record.edit.errors.invalidArguments')
         );
       }
-      // Authentication check
       const user = context.user;
 
       // Get records and forms

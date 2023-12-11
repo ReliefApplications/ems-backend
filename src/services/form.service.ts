@@ -20,6 +20,7 @@ export class FormService {
     this.initResourcesComponent();
     this.initOwnerComponent();
     this.initUsersComponent();
+    this.initGeoSpatialComponent();
   }
 
   /**
@@ -109,6 +110,29 @@ export class FormService {
         type: 'tagbox',
         choicesOrder: 'asc',
         choices: [] as any[],
+      },
+      onInit: () => {},
+      onCreated: () => {},
+      onLoaded: () => {},
+      onAfterRender: () => {},
+      onAfterRenderContentElement: () => {},
+      onPropertyChanged: () => {},
+      onValueChanged: () => {},
+      onItemValuePropertyChanged: () => {},
+    };
+    Survey.ComponentCollection.Instance.add(component);
+  }
+
+  /**
+   * Init GeoSpatial component.
+   */
+  private initGeoSpatialComponent() {
+    const component: Survey.ICustomQuestionTypeConfiguration = {
+      name: 'geospatial',
+      title: 'Geospatial',
+      questionJSON: {
+        name: 'geospatial',
+        type: 'text',
       },
       onInit: () => {},
       onCreated: () => {},
