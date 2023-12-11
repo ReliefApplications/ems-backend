@@ -40,7 +40,7 @@ router.get('/application/:id', async (req, res) => {
     }
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('common.errors.internalServerError'));
+    res.status(500).send(req.t('routes.style.errors.notFound'));
   }
 });
 

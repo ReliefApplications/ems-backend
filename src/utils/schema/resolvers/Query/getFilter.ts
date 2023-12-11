@@ -225,6 +225,10 @@ const buildMongoFilter = (
             }
             break;
           }
+          case 'boolean': {
+            // Avoid the int value to be set
+            break;
+          }
           default:
             try {
               intValue = Number(value);
