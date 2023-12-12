@@ -1,3 +1,10 @@
+# [2.4.0-beta.1](https://github.com/ReliefApplications/ems-backend/compare/v2.3.0...v2.4.0-beta.1) (2023-12-12)
+
+
+### Features
+
+* allow reference data to be used in charts ([#867](https://github.com/ReliefApplications/ems-backend/issues/867)) ([56a1d79](https://github.com/ReliefApplications/ems-backend/commit/56a1d79b2b440179db9fe34b88ba37469a9a8fb7)), closes [#68346](https://github.com/ReliefApplications/ems-backend/issues/68346) [#68346](https://github.com/ReliefApplications/ems-backend/issues/68346) [#68346](https://github.com/ReliefApplications/ems-backend/issues/68346)
+
 # [2.3.0-beta.1](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0...v2.3.0-beta.1) (2023-12-11)
 
 
