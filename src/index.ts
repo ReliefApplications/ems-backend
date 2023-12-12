@@ -23,38 +23,41 @@ declare global {
   }
 }
 
-// Ensure that all mandatory keys exist
-checkConfig();
-
 // Merge configs from who-XXX.js to who.js and override the default config with the result
-mergeWhoConfigs();
+mergeWhoConfigs()
+  .then(() => {
+    // Ensure that all mandatory keys exist
+    checkConfig();
 
-/** SafeServer server port */
-const PORT = config.get('server.port');
+    /** SafeServer server port */
+    const PORT = config.get('server.port');
 
-startDatabase();
-mongoose.connection.once('open', () => {
-  logger.log({ level: 'info', message: '📶 Connected to database' });
-  subscriberSafe();
-  pullJobScheduler();
-  customNotificationScheduler();
-});
-
-/** Starts the server */
-const launchServer = async () => {
-  const schema = await buildSchema();
-  const safeServer = new SafeServer();
-  await safeServer.start(schema);
-  safeServer.httpServer.listen(PORT, () => {
-    logger.info(`🚀 Server ready at http://localhost:${PORT}/graphql`);
-    logger.info(`🚀 Server ready at ws://localhost:${PORT}/graphql`);
-  });
-  safeServer.status.on('ready', () => {
-    safeServer.httpServer.listen(PORT, () => {
-      logger.info(`🚀 Server ready at http://localhost:${PORT}/graphql`);
-      logger.info(`🚀 Server ready at ws://localhost:${PORT}/graphql`);
+    startDatabase();
+    mongoose.connection.once('open', () => {
+      logger.log({ level: 'info', message: '📶 Connected to database' });
+      subscriberSafe();
+      pullJobScheduler();
+      customNotificationScheduler();
     });
-  });
-};
 
-launchServer();
+    /** Starts the server */
+    const launchServer = async () => {
+      const schema = await buildSchema();
+      const safeServer = new SafeServer();
+      await safeServer.start(schema);
+      safeServer.httpServer.listen(PORT, () => {
+        logger.info(`🚀 Server ready at http://localhost:${PORT}/graphql`);
+        logger.info(`🚀 Server ready at ws://localhost:${PORT}/graphql`);
+      });
+      safeServer.status.on('ready', () => {
+        safeServer.httpServer.listen(PORT, () => {
+          logger.info(`🚀 Server ready at http://localhost:${PORT}/graphql`);
+          logger.info(`🚀 Server ready at ws://localhost:${PORT}/graphql`);
+        });
+      });
+    };
+    launchServer();
+  })
+  .catch((err) => {
+    logger.error(err);
+  });
