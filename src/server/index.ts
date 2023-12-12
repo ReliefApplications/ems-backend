@@ -74,7 +74,7 @@ class SafeServer {
           data.updateDescription.updatedFields
         );
         if (
-          updatedDocFields.some(
+          updatedDocFields?.some(
             (f) =>
               fieldsThatRequireSchemaUpdate.includes(f) &&
               data.updateDescription.updatedFields[f].some(
