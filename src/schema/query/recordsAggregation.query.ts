@@ -7,7 +7,7 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
-import { cloneDeep, get, isEqual, set, unset } from 'lodash';
+import { cloneDeep, get, isEqual } from 'lodash';
 import { Form, Record as RecordModel, ReferenceData, Resource } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import buildPipeline from '@utils/aggregation/buildPipeline';
@@ -188,49 +188,16 @@ export default {
         isEqual(x.id, args.aggregation)
       );
 
-      const refDataNameMap: Record<string, string> = {};
-      if (aggregation?.sourceFields && aggregation.pipeline) {
-        if (args.contextFilters) {
-          extractSourceFields(args.contextFilters, aggregation.sourceFields);
-          aggregation.pipeline.unshift({
-            type: 'filter',
-            form: args.contextFilters,
-          });
-        }
-        // Go through the aggregation source fields to update possible refData field names
-        for (const field of aggregation.sourceFields) {
-          // find field in resource fields
-          const resourceField = resource.fields.find((x) => x.name === field);
-
-          // check if field is a refData field
-          if (resourceField?.referenceData?.id) {
-            const refData = await ReferenceData.findById(
-              resourceField.referenceData.id
-            );
-
-            // if so, update the map
-            if (refData)
-              refData.fields.forEach((f) => {
-                refDataNameMap[
-                  `${field}.${f.graphQLFieldName}`
-                ] = `${field}.${f.name}`;
-              });
-          }
-        }
-
-        const hasRefDataField = Object.keys(refDataNameMap).length > 0;
-        if (hasRefDataField) {
-          // update the aggregation pipeline with the actual field names from the refData
-          let strPipeline = JSON.stringify(aggregation.pipeline);
-          for (const [key, value] of Object.entries(refDataNameMap)) {
-            strPipeline = strPipeline.replace(
-              `"field":"${key}"`,
-              `"field":"${value}"`
-            );
-          }
-
-          aggregation.pipeline = JSON.parse(strPipeline);
-        }
+      if (
+        aggregation?.sourceFields &&
+        aggregation.pipeline &&
+        args.contextFilters
+      ) {
+        extractSourceFields(args.contextFilters, aggregation.sourceFields);
+        aggregation.pipeline.unshift({
+          type: 'filter',
+          form: args.contextFilters,
+        });
       }
 
       const mongooseFilter = {};
@@ -568,23 +535,13 @@ export default {
       }
       // Build mapping step
       if (args.mapping) {
-        // Also check if any of the mapped fields are from referenceData
-        let mappingStr = JSON.stringify(args.mapping);
-        const hasRefDataField = Object.keys(refDataNameMap).length > 0;
-        if (hasRefDataField) {
-          // update the aggregation pipeline with the actual field names from the refData
-          for (const [key, value] of Object.entries(refDataNameMap)) {
-            mappingStr = mappingStr.replace(`:"${key}"`, `:"${value}"`);
-          }
-        }
-        const mapping = JSON.parse(mappingStr);
         pipeline.push({
           $project: {
-            category: `$${mapping.category}`,
-            field: `$${mapping.field}`,
+            category: `$${args.mapping.category}`,
+            field: `$${args.mapping.field}`,
             id: '$_id',
-            ...(mapping.series && {
-              series: `$${mapping.series}`,
+            ...(args.mapping.series && {
+              series: `$${args.mapping.series}`,
             }),
           },
         });
@@ -625,19 +582,7 @@ export default {
         items = recordAggregation[0].items;
         totalCount = recordAggregation[0]?.totalCount[0]?.count || 0;
       }
-      let copiedItems = cloneDeep(items);
-
-      // If we have refData fields, revert back to the graphql names of the fields
-      for (const [graphqlName, name] of Object.entries(refDataNameMap)) {
-        copiedItems = copiedItems.map((item: any) => {
-          const currVal = get(item, name);
-          if (currVal) {
-            set(item, graphqlName, currVal);
-            unset(item, name);
-          }
-          return item;
-        });
-      }
+      const copiedItems = cloneDeep(items);
 
       // For each detected field with choices, set the value of each entry to be display text value and then return
       try {

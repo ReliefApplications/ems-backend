@@ -15,10 +15,12 @@ export const getColumnsFromMeta = (
   for (const key in meta) {
     const field = meta[key];
     if (field && field.name && typeof field.name === 'string') {
+      // To get reference data fields
+      const name = field.graphQLFieldName || field.name;
       // Classic field
       columns.push({
-        name: prefix ? `${prefix}.${field.name}` : field.name,
-        field: prefix ? `${prefix}.${field.name}` : field.name,
+        name: prefix ? `${prefix}.${name}` : name,
+        field: prefix ? `${prefix}.${name}` : name,
         type: field.type,
         meta: {
           field,

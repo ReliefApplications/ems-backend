@@ -302,6 +302,9 @@
 			}
 		},
 		"style": {
+			"errors": {
+				"notFound": "******"
+			},
 			"noStyle": "******"
 		},
 		"upload": {
