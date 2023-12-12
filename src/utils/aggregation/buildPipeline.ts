@@ -264,43 +264,50 @@ const buildPipeline = (
         break;
       }
       case PipelineStage.LABEL: {
+        const { copyFrom, field: copyTo } = stage.form;
+
         const questionsWithChoices = resource.fields.filter(
-          (item) => 'choices' in item
+          (item) => 'choices' in item && item.choices
         );
-        const choiceQuestionsNames = questionsWithChoices.map(
-          (item) => item.name
-        );
-        if (choiceQuestionsNames.includes(stage.form.field)) {
+
+        // If the we are copying from a question with choices
+        if (questionsWithChoices.map((item) => item.name).includes(copyFrom)) {
           const questionType = questionsWithChoices.find(
-            (item) => item.name === stage.form.field
+            (item) => item.name === copyFrom
           ).type;
           const questionChoices = questionsWithChoices.find(
-            (item) => item.name === stage.form.field
+            (item) => item.name === copyFrom
           ).choices;
-
-          const questionMatrixChoices = [];
-          questionsWithChoices
-            .find((item) => item.name === stage.form.field)
-            .columns?.forEach((column: any) => {
-              const columnName: string = column.name;
-              const columnChoices = column.choices || questionChoices;
-
-              // Create an object with name and choices properties
-              const columnObject = { name: columnName, choices: columnChoices };
-
-              // Push the object into the questionMatrixChoices array
-              questionMatrixChoices.push(columnObject);
-            });
 
           switch (questionType) {
             // Matrixdropdown is an object of objects of either arrays or single values
             case 'matrixdropdown': {
+              const colChoiceMap: {
+                col: string;
+                value: any;
+                label: string;
+              }[] = [];
+
+              questionsWithChoices
+                .find((item) => item.name === copyFrom)
+                .columns?.forEach((column: any) => {
+                  const columnChoices = column.choices || questionChoices;
+
+                  colChoiceMap.push(
+                    ...columnChoices.map((choice) => ({
+                      col: column.name,
+                      value: choice.value,
+                      label: choice.text,
+                    }))
+                  );
+                });
+
               pipeline.push({
                 $addFields: {
-                  [stage.form.field]: {
+                  [copyTo]: {
                     $arrayToObject: {
                       $map: {
-                        input: { $objectToArray: `$${stage.form.field}` },
+                        input: { $objectToArray: `$${copyTo}` },
                         as: 'row',
                         in: {
                           k: '$$row.k',
@@ -324,13 +331,21 @@ const buildPipeline = (
                                                 ...questionChoices.map(
                                                   (choice) => ({
                                                     case: {
-                                                      $eq: [
+                                                      $and: [
                                                         {
-                                                          $toString: '$$value',
+                                                          $eq: [
+                                                            '$$value',
+                                                            choice.value,
+                                                          ],
                                                         },
                                                         {
-                                                          $toString:
-                                                            choice.value,
+                                                          $eq: [
+                                                            {
+                                                              $toString:
+                                                                '$$column.k',
+                                                            },
+                                                            choice.col,
+                                                          ],
                                                         },
                                                       ],
                                                     },
@@ -346,17 +361,25 @@ const buildPipeline = (
                                       else: {
                                         $switch: {
                                           branches: [
-                                            ...questionChoices.map(
-                                              (choice) => ({
-                                                case: {
-                                                  $eq: [
-                                                    '$$column.v',
-                                                    choice.value,
-                                                  ],
-                                                },
-                                                then: choice.text,
-                                              })
-                                            ),
+                                            ...colChoiceMap.map((choice) => ({
+                                              case: {
+                                                $and: [
+                                                  {
+                                                    $eq: [
+                                                      '$$column.v',
+                                                      choice.value,
+                                                    ],
+                                                  },
+                                                  {
+                                                    $eq: [
+                                                      '$$column.k',
+                                                      choice.col,
+                                                    ],
+                                                  },
+                                                ],
+                                              },
+                                              then: choice.label,
+                                            })),
                                           ],
                                           default: '$$column.v',
                                         },
@@ -413,7 +436,7 @@ const buildPipeline = (
                                               })
                                             ),
                                           ],
-                                          default: 'value',
+                                          default: '$$value',
                                         },
                                       },
                                     },
@@ -447,12 +470,12 @@ const buildPipeline = (
             default: {
               pipeline.push({
                 $addFields: {
-                  [stage.form.field]: {
+                  [copyTo]: {
                     $cond: {
-                      if: { $isArray: `$${stage.form.field}` },
+                      if: { $isArray: `$${copyTo}` },
                       then: {
                         $map: {
-                          input: `$${stage.form.field}`,
+                          input: `$${copyTo}`,
                           as: 'value',
                           in: {
                             $switch: {
@@ -474,12 +497,12 @@ const buildPipeline = (
                           branches: [
                             ...questionChoices.map((choice) => ({
                               case: {
-                                $eq: [`$${stage.form.field}`, choice.value],
+                                $eq: [`$${copyTo}`, choice.value],
                               },
                               then: choice.text,
                             })),
                           ],
-                          default: `$${stage.form.field}`,
+                          default: `$${copyTo}`,
                         },
                       },
                     },
