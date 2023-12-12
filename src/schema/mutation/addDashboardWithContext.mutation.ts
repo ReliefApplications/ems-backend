@@ -93,10 +93,10 @@ const hasDuplicate = (
 ) => {
   const uniqueEntries = new Set();
 
-  if ('geographic' in entry && 'geography') {
+  if ('geographic' in entry) {
     const contextTypeKey =
       'record' in entry ? 'record' : 'element' in entry ? 'element' : null;
-    // record and geographic
+    // record or element and geographic
     if (contextTypeKey) {
       const contains = contentWithContext.some(
         (item: any) =>
