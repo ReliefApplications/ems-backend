@@ -8,12 +8,12 @@ import fs from 'fs';
  */
 export const mergeWhoConfigs = () => {
   // Load the module who.js config
-  const whoConfig = require('../../../config/who.js');
+  const whoConfig = import('../../../config/who');
 
   // Find the file that start with who- and end with .js in the config folder
   fs.readdirSync('./config').forEach((file) => {
     if (file.startsWith('who-') && file.endsWith('.js')) {
-      const whoXXXConfig = require('../../../config/' + file);
+      const whoXXXConfig = import('../../../config/' + file);
       // Override the default who.js config with the who-XXX.js config
       config.util.extendDeep(whoConfig, whoXXXConfig);
     }
