@@ -133,10 +133,8 @@ export default {
 
       // Update geographic context
       if (!isNil(args.geographicContext)) {
-        const geographicContext = page.geographicContext;
         Object.assign(update, {
           geographicContext: {
-            ...geographicContext,
             ...args.geographicContext,
           },
         });
