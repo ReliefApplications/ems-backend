@@ -257,47 +257,69 @@ const writeRowsXlsx = (
 };
 
 /**
- * Get records to put into the file
+ * Builds the pipeline to fetch records
  *
- * @param params export batch parameters
- * @param columns columns to use
- * @param authorization auth token to access url choices
- * @returns list of data
+ * @param columns Columns needed in the export
+ * @param params export parameters
+ * @param idsList list of ids, used in the case of subcolumns (resource and resources)
+ * @returns a built pipeline
  */
-const getRecords = async (
+const buildPipeline = (
+  columns: any,
   params: ExportBatchParams,
-  columns: any[],
-  authorization: string
+  idsList?: mongoose.Types.ObjectId[]
 ) => {
-  const pipeline = [
-    {
-      $match: {
-        $and: [
-          { resource: new mongoose.Types.ObjectId(params.resource) },
-          getFilter(params.filter, columns),
-        ],
-      },
+  let pipeline: any;
+
+  const projectStep = {
+    $project: {
+      ...columns.reduce((acc, col) => {
+        if (defaultRecordFields.some((field) => field.field === col.field)) {
+          acc[col.field] = `$${col.field}`;
+        } else {
+          const parentName = col.field.split('.')[0]; //We get the parent name for the resource question
+          acc[parentName] = `$data.${parentName}`;
+        }
+        return acc;
+      }, {}),
     },
-    {
-      $project: {
-        _id: 0,
-        ...columns.reduce((acc, col) => {
-          if (defaultRecordFields.some((field) => field.field === col.field)) {
-            acc[col.field] = `$${col.field}`;
-          } else {
-            const parentName = col.field.split('.')[0]; //We get the parent name for the resource question
-            acc[parentName] = `$data.${parentName}`;
-          }
-          return acc;
-        }, {}),
+  };
+  if (!idsList) {
+    //idsList is used when getting subcolumns
+    pipeline = [
+      {
+        $match: {
+          $and: [
+            { resource: new mongoose.Types.ObjectId(params.resource) },
+            getFilter(params.filter, columns),
+            { archived: { $ne: true } },
+          ],
+        },
       },
-    },
-    {
-      $sort: {
-        [params.sortField]: params.sortOrder === 'asc' ? 1 : -1,
+      projectStep,
+      {
+        $sort: {
+          [params.sortField]: params.sortOrder === 'asc' ? 1 : -1,
+        },
       },
-    },
-  ];
+    ];
+  } else {
+    pipeline = [
+      {
+        $match: {
+          $and: [
+            {
+              _id: {
+                $in: idsList,
+              },
+            },
+            { archived: { $ne: true } },
+          ],
+        },
+      },
+      projectStep,
+    ];
+  }
   columns
     .filter((col) => col.meta?.field?.isCalculated)
     .forEach((col) =>
@@ -309,12 +331,23 @@ const getRecords = async (
         ) as any)
       )
     );
+  return pipeline;
+};
 
-  const records = await Record.aggregate<Record>(pipeline as any);
-  const choicesByUrlColumns = columns.filter(
-    (col) => col.meta?.field?.choicesByUrl && !col.field.includes('.') //dot questions are treated with resources
-  );
-
+/**
+ * Gets right value for choices by url questions
+ *
+ * @param choicesByUrlColumns columns with choices by url
+ * @param authorization authorization token to fetch choices by url
+ * @param records records to modify with correct value
+ * @param columnField column field if subcolumn
+ */
+const getChoicesByUrl = async (
+  choicesByUrlColumns: any,
+  authorization: string,
+  records: any,
+  columnField?: string
+) => {
   for (const column of choicesByUrlColumns) {
     const choices = Object.fromEntries(
       (await getChoices(column.meta.field, authorization)).map((country) => [
@@ -322,16 +355,36 @@ const getRecords = async (
         country.text,
       ])
     );
-    records.forEach((record) => {
-      record[column.field] = choices[record[column.field]];
-    });
+    for (const record of records) {
+      if (columnField) {
+        record[columnField][column.field] =
+          choices[record[columnField][column.field]];
+      } else {
+        record[column.field] = choices[record[column.field]];
+      }
+    }
   }
+};
+
+/**
+ * Gets resource and resources questions
+ *
+ * @param columns columns to extract the resource and resources columns
+ * @returns a list of resource and resources columns
+ */
+const getResourceAndResourcesQuestions = (columns: any) => {
   /** Resources columns */
   const resourceResourcesColumns = columns.filter((col) => col.subColumns);
   /** Add resource columns */
   const resourceColumns = new Set(
     columns
-      .filter((col) => col.field.includes('.'))
+      .filter(
+        (col) =>
+          col.field.includes('.') &&
+          !(
+            col.meta.field.graphQLFieldName && col.field.split('.').length === 2
+          )
+      )
       .map((col) => col.field.split('.')[0])
   );
   resourceColumns.forEach((resourceQuestion) => {
@@ -349,44 +402,62 @@ const getRecords = async (
       }),
     });
   });
+  return resourceResourcesColumns;
+};
+
+/**
+ * Get records to put into the file
+ *
+ * @param params export batch parameters
+ * @param columns columns to use
+ * @param authorization auth token to access url choices
+ * @returns list of data
+ */
+const getRecords = async (
+  params: ExportBatchParams,
+  columns: any[],
+  authorization: string
+) => {
+  /** @todo refactor, columns and subcolumns logic is pretty much the same */
+
+  const records = await Record.aggregate<Record>(
+    buildPipeline(columns, params)
+  );
+
+  getChoicesByUrl(
+    columns.filter(
+      (col) => col.meta?.field?.choicesByUrl && !col.field.includes('.') //dot questions are treated with resources
+    ),
+    authorization,
+    records
+  );
+
+  const referenceDataColumns = columns.filter(
+    (col) => col.meta?.field?.graphQLFieldName
+  );
+  for (const column of referenceDataColumns) {
+    const choices = Object.fromEntries(
+      column.meta.field.choices.map((choice) => [choice.value, choice.text])
+    );
+    records.forEach((record) => {
+      record[column.field.split('.')[0]] =
+        choices[record[column.field.split('.')[0]]];
+    });
+  }
+
+  const resourceResourcesColumns = getResourceAndResourcesQuestions(columns);
+
   for (const column of resourceResourcesColumns) {
-    const relatedPipe = [
-      {
-        $match: {
-          _id: {
-            $in: Array.from(
-              new Set(records.flatMap((record) => record[column.field]))
-            ).map((id) => new mongoose.Types.ObjectId(id)),
-          },
-        },
-      },
-      {
-        $project: {
-          ...column.subColumns.reduce((acc, col) => {
-            if (
-              defaultRecordFields.some((field) => field.field === col.field)
-            ) {
-              acc[col.field] = `$${col.field}`;
-            } else {
-              acc[col.field] = `$data.${col.field}`;
-            }
-            return acc;
-          }, {}),
-        },
-      },
-    ];
-    column.subColumns
-      .filter((col) => col.meta.field.isCalculated)
-      .forEach((col) => {
-        relatedPipe.unshift(
-          ...(buildCalculatedFieldPipeline(
-            col.meta.field.expression,
-            col.meta.field.name,
-            params.timeZone
-          ) as any)
-        );
-      });
-    const relatedRecords = await Record.aggregate(relatedPipe);
+    const relatedRecords = await Record.aggregate(
+      buildPipeline(
+        column.subColumns,
+        params,
+        Array.from(
+          new Set(records.flatMap((record) => record[column.field]))
+        ).map((id) => new mongoose.Types.ObjectId(id))
+      )
+    );
+
     records.forEach((record) => {
       const relatedRecordsForRecord = relatedRecords.filter((relatedRecord) =>
         record[column.field]?.includes(relatedRecord._id.toString())
@@ -397,22 +468,14 @@ const getRecords = async (
           : relatedRecordsForRecord;
     });
 
-    const choicesByUrlSubColumns = column.subColumns.filter(
-      (col) => col.meta?.field?.choicesByUrl
+    getChoicesByUrl(
+      column.subColumns.filter((col) => col.meta?.field?.choicesByUrl),
+      authorization,
+      records,
+      column.field
     );
-
-    for (const subColumn of choicesByUrlSubColumns) {
-      const choices = Object.fromEntries(
-        (await getChoices(subColumn.meta.field, authorization)).map(
-          (country) => [country.value, country.text]
-        )
-      );
-      records.forEach((record) => {
-        record[column.field][subColumn.field] =
-          choices[record[column.field][subColumn.field]];
-      });
-    }
   }
+  console.log(records);
   return records;
 };
 
