@@ -113,7 +113,12 @@ const procOperator = (data: any, operator) => {
  * @param referenceDataFields referenceData fields
  * @returns filtered data
  */
-const procPipelineStep = (pipelineStep, data, sourceFields, referenceDataFields) => {
+const procPipelineStep = (
+  pipelineStep,
+  data,
+  sourceFields,
+  referenceDataFields
+) => {
   switch (pipelineStep.type) {
     case 'group':
       const operators = pipelineStep.form?.addFields?.map(
@@ -251,7 +256,12 @@ export default {
           }
 
           aggregation.pipeline.forEach((step: any) => {
-            items = procPipelineStep(step, items, aggregation.sourceFields, referenceData.fields);
+            items = procPipelineStep(
+              step,
+              items,
+              aggregation.sourceFields,
+              referenceData.fields
+            );
           });
           if (args.mapping) {
             return items.map((item) => {
