@@ -283,11 +283,13 @@ const buildPipeline = (
             .find((item) => item.name === stage.form.field)
             .columns?.forEach((column: any) => {
               const columnName: string = column.name;
-              if (column.choices) {
-                questionMatrixChoices[columnName] = column.choices;
-              } else {
-                questionMatrixChoices[columnName] = questionChoices;
-              }
+              const columnChoices = column.choices || questionChoices;
+
+              // Create an object with name and choices properties
+              const columnObject = { name: columnName, choices: columnChoices };
+
+              // Push the object into the questionMatrixChoices array
+              questionMatrixChoices.push(columnObject);
             });
 
           switch (questionType) {
