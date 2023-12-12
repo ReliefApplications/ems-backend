@@ -24,6 +24,13 @@ export type PageContextT = (
   displayField: string;
 };
 
+/** Interface for the page geographic context */
+export type PageGeographicContextT = {
+  enabled: boolean;
+  region?: string;
+  country?: string;
+};
+
 /** Page documents interface declaration */
 export interface Page extends Document {
   kind: 'Page';
@@ -45,6 +52,7 @@ export interface Page extends Document {
   ) & {
     content: mongoose.Types.ObjectId | Form | Workflow | Dashboard;
   })[];
+  geographicContext: PageGeographicContextT;
   permissions?: {
     canSee?: (mongoose.Types.ObjectId | Role)[];
     canUpdate?: (mongoose.Types.ObjectId | Role)[];
@@ -90,6 +98,14 @@ const pageSchema = new Schema<Page>(
         _id: false,
       },
     ],
+    geographicContext: {
+      enabled: {
+        type: Boolean,
+        default: false,
+      },
+      region: String,
+      country: String,
+    },
     permissions: {
       canSee: [
         {
