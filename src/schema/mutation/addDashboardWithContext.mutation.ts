@@ -94,20 +94,14 @@ const hasDuplicate = (
   const uniqueEntries = new Set();
 
   if ('geographic' in entry && 'geography') {
+    const contextTypeKey =
+      'record' in entry ? 'record' : 'element' in entry ? 'element' : null;
     // record and geographic
-    if ('record' in entry) {
+    if (contextTypeKey) {
       const contains = contentWithContext.some(
         (item: any) =>
-          item.record === entry.record && item.geographic === entry.geographic
-      );
-      if (contains) {
-        return true;
-      }
-      // element and geographic
-    } else if ('element' in entry) {
-      const contains = contentWithContext.some(
-        (item: any) =>
-          item.element === entry.element && item.geographic === entry.geographic
+          item[contextTypeKey] === entry[contextTypeKey] &&
+          item.geographic === entry.geographic
       );
       if (contains) {
         return true;
@@ -125,22 +119,18 @@ const hasDuplicate = (
     }
     // record or element
   } else {
-    if (!isNil(get(context, 'resource'))) {
+    const contextTypeKey = !isNil(get(context, 'resource'))
+      ? 'record'
+      : !isNil(get(context, 'element'))
+      ? 'element'
+      : null;
+    if (contextTypeKey) {
       for (const item of contentWithContext) {
-        if (get(item, 'record')) {
-          uniqueEntries.add((item as any).record.toString());
+        if (get(item, contextTypeKey)) {
+          uniqueEntries.add((item as any)[contextTypeKey].toString());
         }
       }
-      if (uniqueEntries.has(entry.record.toString())) {
-        return true;
-      }
-    } else if (!isNil(get(context, 'element'))) {
-      for (const item of contentWithContext) {
-        if (get(item, 'element')) {
-          uniqueEntries.add((item as any).element.toString());
-        }
-      }
-      if (uniqueEntries.has(entry.element.toString())) {
+      if (uniqueEntries.has(entry[contextTypeKey].toString())) {
         return true;
       }
     }
@@ -244,31 +234,23 @@ export default {
         // Copy structure from template dashboard
         structure: template.structure || [],
       }).save();
+
       let newContentWithContext: any;
-      if (args.record && !args.geographic) {
-        newContentWithContext = {
-          record: args.record,
-          content: newDashboard._id,
-        } as Page['contentWithContext'][number];
-      } else if (args.element && !args.geographic) {
-        newContentWithContext = {
-          element: args.element,
-          content: newDashboard._id,
-        } as Page['contentWithContext'][number];
-      } else if (args.record && args.geographic) {
-        newContentWithContext = {
-          record: args.record,
-          geographic: args.geographic,
-          content: newDashboard._id,
-        } as Page['contentWithContext'][number];
-      } else if (args.element && args.geographic) {
-        newContentWithContext = {
-          element: args.element,
-          geographic: args.geographic,
-          content: newDashboard._id,
-        } as Page['contentWithContext'][number];
+      const contextKey = args.record
+        ? 'record'
+        : args.element
+        ? 'element'
+        : null;
+      if (!args.geographic) {
+        if (contextKey) {
+          newContentWithContext = {
+            [contextKey]: args[contextKey],
+            content: newDashboard._id,
+          } as Page['contentWithContext'][number];
+        }
       } else {
         newContentWithContext = {
+          ...(contextKey && { [contextKey]: args[contextKey] }),
           geographic: args.geographic,
           content: newDashboard._id,
         } as Page['contentWithContext'][number];
