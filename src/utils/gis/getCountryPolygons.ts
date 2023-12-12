@@ -71,7 +71,7 @@ export const getAdmin0Polygons = async (
   if (!cacheData) {
     const token = await getToken();
     admin0s = await axios({
-      url: 'https://portal-test.who.int/ems-core-api-dev/api/graphql',
+      url: config.get('commonServices.url'),
       method: 'post',
       headers: {
         Authorization: `Bearer ${token}`,
