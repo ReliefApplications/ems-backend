@@ -323,8 +323,13 @@ const buildPipeline = (
                                                   (choice) => ({
                                                     case: {
                                                       $eq: [
-                                                        '$$value',
-                                                        choice.value,
+                                                        {
+                                                          $toString: '$$value',
+                                                        },
+                                                        {
+                                                          $toString:
+                                                            choice.value,
+                                                        },
                                                       ],
                                                     },
                                                     then: choice.text,
