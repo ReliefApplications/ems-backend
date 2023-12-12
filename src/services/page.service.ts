@@ -142,6 +142,9 @@ const duplicateContent = async (
         name: name || d.name,
         createdAt: new Date(),
         structure: d.structure,
+        buttons: d.buttons,
+        gridOptions: d.gridOptions,
+        filter: d.filter,
       });
       await dashboard.save();
       content = dashboard._id;
