@@ -1,0 +1,65 @@
+/* eslint-disable prettier/prettier */
+/**
+ * JSON used to map ownership for EIOS Pulljob
+ */
+export const ownershipMappingJSON = {
+  '0_COVID Countries': ['Signal HQ AEE'],
+  'AEE_Monkeypox_Expanded': ['Signal HQ AEE'],
+  'AFRO Media Monitoring w/o COVID-19': ['Signal AFRO'],
+  'AFRO Signals': ['Signal AFRO'],
+  'AFRO: EVD/VHF East African monitoring board 2022': ['Signal AFRO'],
+  'AFRO_IDSR priority diseases and conditions': ['Signal AFRO'],
+  'Bahrain, Jordan and Lebanon Cov': ['Signal HQ AEE'],
+  'Balkans_COVID_public': ['Signal EURO'],
+  'Caucasus_COVID_public': ['Signal EURO'],
+  'CentralAsia_COVID_public': ['Signal EURO'],
+  'CentralEurope_COVID_public': ['Signal EURO'],
+  'COVID_AdHoc_EURO_public': ['Signal EURO'],
+  'COVID-19 Intel monitoring - GLOBAL': ['Signal HQ AEE'],
+  'Ebola/MVD alert board': [],
+  'ELR ADHOC': ['Signal HQ AEE'],
+  'ELR-Samuel': ['Signal HQ AEE'],
+  'EMRO COVID Vaccination': ['Signal EMRO'],
+  'EMRO- Excl nCoV': ['Signal EMRO'],
+  'EMRO new Variant': ['Signal EMRO'],
+  'EUROHIM_WEST_public': ['Signal EURO'],
+  'MM_EURO_SignalApp_Pilot': ['Signal EURO'],
+  'Monkeypox - Global Outbreak': ['Signal HQ AEE'],
+  'Monkeypox Global Outbreak': ['Signal HQ AEE'],
+  'Monkeypox_Global EBS_Expanded': ['Signal HQ AEE'],
+  'NRBC - Sahel': ['Signal HQ FCV'],
+  'PAHO - Natural Disasters': ['Signal AMRO'],
+  'PAHO - Priority Hazards': ['Signal AMRO'],
+  'Pilot - Daily Monitoring': [],
+  'Priority disease Global - excluding COVID-19 and Mpox category definition':
+    [],
+  'Priority disease Global - excluding COVID-19 category definition': [],
+  'Priority disease Global - excluding nCoV and monkeypox category definition':
+    [],
+  'Priority disease Global - not including nCoV and monkeypox category definition':
+    [],
+  'Priority diseases Global - not including coronavirus & Monkeypox  category definition':
+    [],
+  'Priority diseases Global - not including coronavirus category definition':
+    [],
+  'Priority Hazards': [],
+  'Priority sources - excluding COVID-19': [],
+  'Priority sources - excluding COVID-19 and mpox': [],
+  'Priority sources - excluding nCoV and monkeypox': [],
+  'Priority sources - not including coronavirus & Monkeypox category definition':
+    [],
+  'Priority sources - not including coronavirus category definition': [],
+  'qa': ['Signal EMRO'],
+  'qa - euro': ['Signal EURO'],
+  'QA- HQ- AFRO - EURO- AMRO': ['Signal EURO', 'Signal AFRO', 'Signal AMRO'],
+  'qa4 - AFRO- AMRO- EURO': ['Signal EURO', 'Signal AFRO', 'Signal AMRO'],
+  'SARS-CoV-2 variants': ['Signal HQ AEE'],
+  'SEAR Signals For Export': ['Signal SEARO'],
+  'Shared Ukraine board': ['Signal EURO'],
+  'Signals for Follow Up- SEAR': ['Signal SEARO'],
+  'Sudan virus disease Uganda - October 2022': [],
+  'TestHWF20210322': [],
+  'Ukraine': ['Signal EURO'],
+  'WPRO - Disaster': ['Signal WPRO'],
+  'WPRO Disease 2 - Not nCoV': ['Signal WPRO'],
+};
