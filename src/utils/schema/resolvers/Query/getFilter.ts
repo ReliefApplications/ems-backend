@@ -315,13 +315,15 @@ const buildMongoFilter = (
           }
 
           // If a date, also check for string values
-          if (v instanceof Date && !isNaN(v.getTime())) {
-            return {
-              $or: [
-                { [fieldName]: { [mappedOperator]: v } },
-                { [fieldName]: { [mappedOperator]: v.toISOString() } },
-              ],
-            };
+          if (v instanceof Date) {
+            return !isNaN(v.getTime())
+              ? {
+                  $or: [
+                    { [fieldName]: { [mappedOperator]: v } },
+                    { [fieldName]: { [mappedOperator]: v.toISOString() } },
+                  ],
+                }
+              : { [fieldName]: { [mappedOperator]: undefined } }; // If not a valid date, would always be false for the remaining operators
           }
 
           // If a number, also check for string values
