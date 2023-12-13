@@ -15,39 +15,50 @@ type ReferenceDataArgs = {
 };
 
 /**
- * Transforms query filter into mongo filter.
+ * Apply filter to item.
  *
- * @param filter filter to transform to mongo filter.
- * @returns Mongo filter.
+ * @param item item to filter.
+ * @param filter filter to apply.
+ * @returns true if item matches filter, false otherwise.
  */
-async function buildQuery(filter, doc) {
-  // Em seguida, crie um conjunto dos nomes dos campos para facilitar a verificação
-  const fieldNames = new Set(doc.fields.map((field) => field.name));
-
+function applyFilter(item, filter) {
   if (filter.logic && filter.filters) {
-    const mongoFilters = await Promise.all(
-      filter.filters.map((subFilter) => {
-        console.log(subFilter); // remove this line
-        if (subFilter.logic && subFilter.filters) {
-          return buildQuery(subFilter, doc);
-        } else {
-          if (fieldNames.has(subFilter.field)) {
-            const obj = {};
-            if (subFilter.operator) {
-              obj[`data.${subFilter.field}`] = {
-                ['$' + subFilter.operator]: subFilter.value,
-              };
-            } else {
-              obj[`data.${subFilter.field}`] = subFilter.value;
-            }
-            return obj;
-          } else {
-            return;
-          }
-        }
-      })
+    const results = filter.filters.map((subFilter) =>
+      applyFilter(item, subFilter)
     );
-    return { ['$' + filter.logic]: mongoFilters };
+    return filter.logic === 'and'
+      ? results.every(Boolean)
+      : results.some(Boolean);
+  } else {
+    switch (filter.operator) {
+      case 'eq':
+        return item[filter.field] === filter.value;
+      case 'ne':
+      case 'neq':
+        return item[filter.field] !== filter.value;
+      case 'gt':
+        return item[filter.field] > filter.value;
+      case 'gte':
+        return item[filter.field] >= filter.value;
+      case 'lt':
+        return item[filter.field] < filter.value;
+      case 'lte':
+        return item[filter.field] <= filter.value;
+      case 'isnull':
+        return item[filter.field] === null;
+      case 'isnotnull':
+        return item[filter.field] !== null;
+      case 'startswith':
+        return item[filter.field].startsWith(filter.value);
+      case 'endswith':
+        return item[filter.field].endsWith(filter.value);
+      case 'contains':
+        return item[filter.field].includes(filter.value);
+      case 'doesnotcontain':
+        return !item[filter.field].includes(filter.value);
+      default:
+        return true;
+    }
   }
 }
 
@@ -64,16 +75,15 @@ export default {
   async resolve(parent, args: ReferenceDataArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
-      const query: any = { _id: args.id }; // Pesquisa por ID sempre
+      const referenceData = await ReferenceData.findById(args.id);
 
-      if (args.contextFilters) {
-        const doc = await ReferenceData.findById(args.id);
-        const filterQuery = await buildQuery(args.contextFilters, doc);
-        query.$and = [query, filterQuery];
+      if (args.contextFilters && args.contextFilters.filters.length > 0) {
+        referenceData.data = referenceData.data.filter((item) =>
+          applyFilter(item, args.contextFilters)
+        );
       }
 
-      //console.log(query, args.contextFilters);
-      return await ReferenceData.find(query);
+      return referenceData ? referenceData : [];
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {
