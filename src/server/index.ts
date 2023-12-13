@@ -77,7 +77,7 @@ class SafeServer {
           updatedDocFields.some(
             (f) =>
               fieldsThatRequireSchemaUpdate.includes(f) &&
-              data.updateDescription.updatedFields[f].some(
+              data.updateDescription.updatedFields[f]?.some(
                 (field) => field.isCalculated === true
               )
           )
