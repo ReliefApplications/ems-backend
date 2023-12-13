@@ -171,6 +171,7 @@ const getColumns = (req: any, params: ExportBatchParams): Promise<any[]> => {
       for (const field in data.data) {
         if (Object.prototype.hasOwnProperty.call(data.data, field)) {
           const meta = data.data[field];
+          console.log(JSON.stringify(meta));
           const rawColumns = getColumnsFromMeta(meta, params.fields);
           const columns = rawColumns.filter((x) =>
             params.fields.find((f) => f.name === x.name)
@@ -418,8 +419,6 @@ const getRecords = async (
   columns: any[],
   authorization: string
 ) => {
-  /** @todo refactor, columns and subcolumns logic is pretty much the same */
-
   const records = await Record.aggregate<Record>(
     buildPipeline(columns, params)
   );
