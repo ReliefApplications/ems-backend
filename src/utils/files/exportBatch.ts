@@ -14,7 +14,7 @@ import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFiel
 import { getChoices } from '@utils/proxy';
 import { referenceDataType } from '@const/enumTypes';
 import jsonpath from 'jsonpath';
-import { isArray, snakeCase } from 'lodash';
+import { isArray } from 'lodash';
 
 /**
  * Export batch parameters interface
@@ -378,8 +378,8 @@ const getReferenceData = async (
   referenceDataColumns: string[],
   resourceId: string,
   req: any,
-  records: any,
-  columnField?: string
+  records: any
+  //columnField?: string
 ) => {
   const refactoredColumns = referenceDataColumns.reduce((acc, item) => {
     const [key, value] = item.split('.');
