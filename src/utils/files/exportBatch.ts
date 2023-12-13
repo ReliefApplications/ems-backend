@@ -113,9 +113,6 @@ const getTotalCount = (
       headers: {
         Authorization: req.headers.authorization,
         'Content-Type': 'application/json',
-        ...(req.headers.accesstoken && {
-          accesstoken: req.headers.accesstoken,
-        }),
       },
       data: {
         query: totalCountQuery,
@@ -146,32 +143,20 @@ const getFlatColumns = (columns: any[]) => {
   let index = -1;
   return columns.reduce((acc, value) => {
     if (value.subColumns) {
-      // Create nested headers
-      if (value.subColumns.length > 0) {
-        return acc.concat(
-          value.subColumns.map((x) => {
-            index += 1;
-            return {
-              name: value.name,
-              title: value.title || value.name,
-              subName: x.name,
-              subTitle: x.title || x.name,
-              field: value.field,
-              subField: x.field,
-              index,
-            };
-          })
-        );
-      } else {
-        // Create a single column as we see in the grid
-        index += 1;
-        return acc.concat({
-          name: value.name,
-          title: value.title || value.name,
-          field: value.field,
-          index,
-        });
-      }
+      return acc.concat(
+        value.subColumns.map((x) => {
+          index += 1;
+          return {
+            name: value.name,
+            title: value.title || value.name,
+            subName: x.name,
+            subTitle: x.title || x.name,
+            field: value.field,
+            subField: x.field,
+            index,
+          };
+        })
+      );
     } else {
       index += 1;
       return acc.concat({
@@ -200,9 +185,6 @@ const getColumns = (req: any, params: ExportBatchParams): Promise<any[]> => {
       headers: {
         Authorization: req.headers.authorization,
         'Content-Type': 'application/json',
-        ...(req.headers.accesstoken && {
-          accesstoken: req.headers.accesstoken,
-        }),
       },
       data: {
         query: metaQuery,
@@ -213,20 +195,16 @@ const getColumns = (req: any, params: ExportBatchParams): Promise<any[]> => {
           const meta = data.data[field];
           const rawColumns = getColumnsFromMeta(meta, params.fields);
           // Edits the column to match with the fields
-          rawColumns.forEach((column) => {
-            const queryField = params.fields.find(
-              (f) => f.name.toLowerCase() === column.name.toLowerCase()
-            );
-            column.title = queryField.title;
-            if (column.subColumns) {
-              if ((queryField.subFields || []).length > 0) {
-                column.subColumns.forEach((f) => {
-                  const subQueryField = queryField.subFields.find(
-                    (z) => z.name === `${column.name}.${f.name}`
-                  );
-                  f.title = subQueryField.title;
-                });
-              }
+          rawColumns.forEach((x) => {
+            const queryField = params.fields.find((f) => f.name === x.name);
+            x.title = queryField.title;
+            if (x.subColumns) {
+              x.subColumns.forEach((f) => {
+                const subQueryField = queryField.subFields.find(
+                  (z) => z.name === `${x.name}.${f.name}`
+                );
+                f.title = subQueryField.title;
+              });
             }
           });
           resolve(rawColumns);
@@ -322,9 +300,6 @@ const getRowsXlsx = async (
         headers: {
           Authorization: req.headers.authorization,
           'Content-Type': 'application/json',
-          ...(req.headers.accesstoken && {
-            accesstoken: req.headers.accesstoken,
-          }),
         },
         data: {
           query,
@@ -396,9 +371,6 @@ const getRowsCsv = async (
       headers: {
         Authorization: req.headers.authorization,
         'Content-Type': 'application/json',
-        ...(req.headers.accesstoken && {
-          accesstoken: req.headers.accesstoken,
-        }),
       },
       data: {
         query,
