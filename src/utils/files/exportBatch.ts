@@ -196,7 +196,9 @@ const getColumns = (req: any, params: ExportBatchParams): Promise<any[]> => {
           const rawColumns = getColumnsFromMeta(meta, params.fields);
           // Edits the column to match with the fields
           rawColumns.forEach((x) => {
-            const queryField = params.fields.find((f) => f.name === x.name);
+            const queryField = params.fields.find(
+              (f) => f.name.toLowerCase() === x.name.toLowerCase()
+            );
             x.title = queryField.title;
             if (x.subColumns) {
               x.subColumns.forEach((f) => {
