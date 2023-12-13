@@ -37,7 +37,6 @@ type LayerArgs = {
   sortOrder?: string;
 };
 
-
 /**
  * List all layers.
  * Throw GraphQL error if not logged and if not permission to access.
@@ -69,15 +68,12 @@ export default {
       const queryFilters = getFilter(args.filter, FILTER_FIELDS);
       const filters: any[] = [queryFilters, abilityFilters];
 
-      const sortField =
-        SORT_FIELDS.find((x) => x.name === args.sortField)
+      const sortField = SORT_FIELDS.find((x) => x.name === args.sortField);
       const sortOrder = args.sortOrder || 'asc';
 
       return await Layer.find({
         $and: [...filters],
-      })
-        .sort(sortField.sort(sortOrder))
-
+      }).sort(sortField.sort(sortOrder));
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {
