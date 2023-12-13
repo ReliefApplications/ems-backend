@@ -31,15 +31,17 @@ const taskMap: Record<string, CronJob> = {};
 const DEFAULT_FIELDS = ['createdBy'];
 
 /**
- * Dynamically building the list of Signal Apps names for EIOS
+ * Name of Signal Apps for EIOS
  */
-const EIOS_APP_NAMES: string[] = [
-  ...new Set( // Remove duplicate values
-    Object.values(ownershipMappingJSON).reduce((prev, curr) => {
-      prev.push(...curr); // Push all the Apps names into an array
-      return prev;
-    }, [])
-  ),
+const EIOS_APP_NAMES = [
+  'Signal EURO',
+  'Signal AFRO',
+  'Signal WPRO',
+  'Signal EMRO',
+  'Signal SEARO',
+  'Signal HQ AEE',
+  'Signal HQ FCV',
+  'Signal AMRO',
 ];
 
 /**
@@ -302,7 +304,7 @@ const getUserRoleFiltersFromApp = (appName: string): any => {
 export const insertRecords = async (
   data: any[],
   pullJob: PullJob,
-  isEIOS = false
+  isEIOS?: boolean
 ): Promise<void> => {
   const form = await Form.findById(pullJob.convertTo);
   if (form) {
@@ -424,29 +426,30 @@ export const insertRecords = async (
     if (isEIOS) {
       // Create a dictionary of user roles ids
       const appRolesWithIds = {};
-      const promisesStack = [];
-      EIOS_APP_NAMES.forEach((appName) => {
-        promisesStack.push(
-          Role.aggregate(getUserRoleFiltersFromApp(appName)).then(
-            (appUserRole) => {
-              if (appUserRole[0]) {
-                appRolesWithIds[appName] = appUserRole[0]._id;
-              }
-            }
-          )
+      EIOS_APP_NAMES.map(async (application) => {
+        const appUserRole = await Role.aggregate(
+          getUserRoleFiltersFromApp(application)
         );
+        if (appUserRole[0]) {
+          appRolesWithIds[application] = appUserRole[0]._id;
+        }
       });
-      await Promise.allSettled(promisesStack);
+
+      const signalHQPHIUserRole = await Role.aggregate(
+        getUserRoleFiltersFromApp('Signal HQ PHI')
+      );
 
       for (const [key, value] of Object.entries(ownershipMappingJSON)) {
         ownershipMappingWithIds[key] = [];
         if (value.length > 0) {
-          value.forEach((elt) => {
+          value.map((elt) => {
             if (appRolesWithIds[elt]) {
               ownershipMappingWithIds[key].push(appRolesWithIds[elt]);
             }
           });
         }
+        // Always push HQ PHI User role
+        ownershipMappingWithIds[key].push(signalHQPHIUserRole[0]._id);
       }
     }
 
@@ -505,7 +508,8 @@ export const insertRecords = async (
       if (isEIOS) {
         // Assign correct ownership value based on mapping JSON and board name
         const boardName = mappedElement.article_board_name;
-        mappedElement.ownership = ownershipMappingWithIds[boardName];
+        mappedElement.ownership =
+          ownershipMappingWithIds[boardName].map(String);
       }
       // If everything is fine, push it in the array for saving
       if (!isDuplicate) {
