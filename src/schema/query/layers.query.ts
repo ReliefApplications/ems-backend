@@ -9,6 +9,7 @@ import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 import { accessibleBy } from '@casl/mongoose';
 import { CompositeFilterDescriptor } from '@const/compositeFilter';
 import { GraphQLJSON } from 'graphql-type-json';
+import { Context } from '@server/apollo/context';
 
 /** Default filter fields */
 const FILTER_FIELDS: { name: string; type: string }[] = [
@@ -30,7 +31,7 @@ const SORT_FIELDS = [
   },
 ];
 
-/** Arguments for the forms query */
+/** Arguments for the layers query */
 type LayerArgs = {
   filter?: CompositeFilterDescriptor;
   sortField?: string;
@@ -48,7 +49,7 @@ export default {
     sortField: { type: GraphQLString },
     sortOrder: { type: GraphQLString },
   },
-  async resolve(parent, args: LayerArgs, context) {
+  async resolve(parent, args: LayerArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;
