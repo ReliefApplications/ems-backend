@@ -9,6 +9,7 @@ import { Workflow } from './workflow.model';
 export interface Step extends Document {
   kind: 'Step';
   name: string;
+  icon: string;
   createdAt: Date;
   modifiedAt: Date;
   type: string;
@@ -21,12 +22,15 @@ export interface Step extends Document {
   canSee?: any;
   canUpdate?: any;
   canDelete?: any;
+  archived: boolean;
+  archivedAt?: Date;
 }
 
 /** Mongoose step schema definition */
 const stepSchema = new Schema<Step>(
   {
     name: String,
+    icon: String,
     type: {
       type: String,
       enum: Object.values(contentType),
@@ -52,6 +56,14 @@ const stepSchema = new Schema<Step>(
           ref: 'Role',
         },
       ],
+    },
+    archived: {
+      type: Boolean,
+      default: false,
+    },
+    archivedAt: {
+      type: Date,
+      expires: 2592000,
     },
   },
   {

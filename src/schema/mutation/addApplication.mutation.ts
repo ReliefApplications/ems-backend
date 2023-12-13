@@ -7,6 +7,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { status } from '@const/enumTypes';
 import permissions from '@const/permissions';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 
 /** Arguments for the addApplication mutation */
@@ -21,13 +22,9 @@ export default {
   type: ApplicationType,
   args: {},
   async resolve(parent, args: AddApplicationArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
       if (ability.can('create', 'Application')) {
         // Find suitable application name

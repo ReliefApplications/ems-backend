@@ -12,6 +12,7 @@ import { updateUser, userAuthCallback } from '@utils/user';
 import config from 'config';
 import session from 'express-session';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from '@services/logger.service';
 
 /** Express application for the authorization middleware */
 const authMiddleware = express();
@@ -20,6 +21,9 @@ authMiddleware.use(
 );
 authMiddleware.use(passport.initialize());
 authMiddleware.use(passport.session());
+
+/** Get audience */
+const audience = JSON.parse(config.get<string>('auth.audience'));
 
 // Use custom authentication endpoint or azure AD depending on config
 if (config.get('auth.provider') === AuthenticationType.keycloak) {
@@ -127,6 +131,9 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
         // eslint-disable-next-line no-undef
         clientID: `${config.get('auth.clientId')}`,
         passReqToCallback: true,
+        ...(audience.length > 0 && {
+          audience,
+        }),
       }
     : {
         // eslint-disable-next-line no-undef
@@ -233,12 +240,24 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
         // === CLIENT ===
       } else if (token.azp) {
         // Checks if client already exists in the DB
-        Client.findOne(
-          { $or: [{ oid: token.oid }, { clientId: token.azp }] },
-          (err, client: Client) => {
-            if (err) {
-              return done(err);
-            }
+        Client.findOne({
+          $or: [{ oid: token.oid }, { clientId: token.azp }],
+        })
+          .populate({
+            // Add to the context all roles / permissions the client has
+            path: 'roles',
+            model: 'Role',
+            populate: {
+              path: 'permissions',
+              model: 'Permission',
+            },
+          })
+          .populate({
+            // Add to the context all positionAttributes with corresponding categories
+            path: 'positionAttributes.category',
+            model: 'PositionAttributeCategory',
+          })
+          .then((client) => {
             if (client) {
               // Returns the client if found and add more information if first connection
               if (!client.oid || !client.clientId) {
@@ -248,7 +267,7 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                 client
                   .save()
                   .then((res) => done(null, res, token))
-                  .catch((err2) => done(err2));
+                  .catch((error) => done(error));
               } else {
                 return done(null, client, token);
               }
@@ -267,24 +286,12 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
               client
                 .save()
                 .then((res) => done(null, res, token))
-                .catch((err2) => done(err2));
+                .catch((error) => done(error));
             }
-          }
-        )
-          .populate({
-            // Add to the context all roles / permissions the client has
-            path: 'roles',
-            model: 'Role',
-            populate: {
-              path: 'permissions',
-              model: 'Permission',
-            },
-          })
-          .populate({
-            // Add to the context all positionAttributes with corresponding categories
-            path: 'positionAttributes.category',
-            model: 'PositionAttributeCategory',
           });
+      } else {
+        logger.info(token);
+        return done('error');
       }
     })
   );

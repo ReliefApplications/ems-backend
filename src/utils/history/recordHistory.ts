@@ -4,7 +4,7 @@ import {
   RecordHistory as RecordHistoryType,
 } from '@models/history.model';
 import { AppAbility } from 'security/defineUserAbility';
-import dataSources, { CustomAPI } from '../../server/apollo/dataSources';
+import { CustomAPI } from '../../server/apollo/dataSources';
 import {
   differenceWith,
   get,
@@ -42,15 +42,6 @@ export class RecordHistory {
     }
   ) {
     this.getFields();
-  }
-
-  /**
-   * Init dataSources in the case we're invoking this class from REST and not graphQL.
-   */
-  private async initDataSources(): Promise<void> {
-    if (!this.options.context) {
-      this.options.context = { dataSources: (await dataSources())() };
-    }
   }
 
   /**
@@ -328,11 +319,9 @@ export class RecordHistory {
     const formatSelectable = async (field: any, change: Change) => {
       // If it's using reference Data, fetch the choices to display the display field
       if (field.referenceData) {
-        const res = await Promise.all([
-          await this.initDataSources(),
-          memoizedGetReferenceData(field.referenceData.id),
-        ]);
-        const referenceData: ReferenceData = res[1];
+        const referenceData: ReferenceData = await memoizedGetReferenceData(
+          field.referenceData.id
+        );
         const dataSource: CustomAPI =
           this.options.context.dataSources[
             (referenceData.apiConfiguration as any)?.name
@@ -368,7 +357,6 @@ export class RecordHistory {
           }
         });
       } else {
-        await this.initDataSources();
         // Otherwise, get the display value from choices stored in the field/choicesByUrl
         const choices = await getFullChoices(field, this.options.context);
         if (change.old !== undefined) {
@@ -608,17 +596,41 @@ export class RecordHistory {
               change.new = new Date(change.new).toLocaleDateString();
             break;
           case 'datetime':
-          case 'datetimelocal':
+          case 'datetime-local':
             if (change.old !== undefined)
-              change.old = new Date(change.old).toLocaleString();
+              change.old = new Date(change.old).toLocaleString([], {
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true,
+              });
             if (change.new !== undefined)
-              change.new = new Date(change.new).toLocaleString();
+              change.new = new Date(change.new).toLocaleString([], {
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true,
+              });
             break;
           case 'time':
             if (change.old !== undefined)
-              change.old = new Date(change.old).toTimeString();
+              change.old = new Date(change.old).toLocaleTimeString('en-US', {
+                timeZone: 'UTC',
+                hour12: true,
+                hour: '2-digit',
+                minute: '2-digit',
+              });
             if (change.new !== undefined)
-              change.new = new Date(change.new).toTimeString();
+              change.new = new Date(change.new).toLocaleTimeString('en-US', {
+                timeZone: 'UTC',
+                hour12: true,
+                hour: '2-digit',
+                minute: '2-digit',
+              });
             break;
           default:
             // for all other cases, keep the values

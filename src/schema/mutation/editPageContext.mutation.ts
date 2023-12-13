@@ -25,6 +25,7 @@ export default {
     context: { type: PageContextInputType },
   },
   async resolve(parent, args: EditPageContextArgs, context: Context) {
+    // Authentication check
     graphQLAuthCheck(context);
     try {
       const user = context.user;
@@ -40,13 +41,13 @@ export default {
           )
         );
 
-      // get data
+      // Retrieve page, throw error if does not exist
       const page = await Page.findById(args.id);
       if (!page) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
 
-      // check permission
+      // Check if user can update page, throw error if not
       const ability = await extendAbilityForPage(user, page);
       if (ability.cannot('update', page)) {
         throw new GraphQLError(

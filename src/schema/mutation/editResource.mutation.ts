@@ -712,7 +712,11 @@ export default {
           const expression =
             calculatedField.add?.expression ??
             calculatedField.update?.expression;
-          const pipeline = buildCalculatedFieldPipeline(expression, '');
+          const pipeline = buildCalculatedFieldPipeline(
+            expression,
+            '',
+            context.timeZone
+          );
           if (pipeline[0].$facet.calcFieldFacet.length > 50) {
             throw new GraphQLError(
               context.i18next.t(

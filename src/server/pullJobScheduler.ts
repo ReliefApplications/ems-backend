@@ -103,6 +103,11 @@ export const scheduleJob = (pullJob: PullJob) => {
               // eslint-disable-next-line @typescript-eslint/no-use-before-define
               fetchRecordsPublic(pullJob);
             }
+            if (apiConfiguration.authType === authType.authorizationCode) {
+              throw new Error(
+                'Unsupported Api configuration with Authorization Code authentication.'
+              );
+            }
           } catch (err) {
             logger.error(err.message, { stack: err.stack });
           }
@@ -145,44 +150,66 @@ const fetchRecordsServiceToService = (
   token: string
 ): void => {
   const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
-  // === HARD CODED ENDPOINTS ===
-  const boardsUrl = 'GetBoards?tags=signal+app';
-  const articlesUrl = 'GetPinnedArticles';
+  // Hard coded for EIOS due to specific behavior
+  const EIOS_ORIGIN = 'https://portal.who.int/eios/';
   // === HARD CODED ENDPOINTS ===
   const headers: any = {
     Authorization: 'Bearer ' + token,
   };
-  axios({
-    url: apiConfiguration.endpoint + boardsUrl,
-    method: 'get',
-    headers,
-  })
-    .then(({ data }) => {
-      if (data && data.result) {
-        const boardIds = data.result.map((x) => x.id);
-        axios({
-          url: `${apiConfiguration.endpoint}${articlesUrl}?boardIds=${boardIds}`,
-          method: 'get',
-          headers,
-        })
-          .then(({ data: data2 }) => {
-            if (data2 && data2.result) {
-              // eslint-disable-next-line @typescript-eslint/no-use-before-define
-              insertRecords(data2.result, pullJob, true);
-            }
-          })
-          .catch((err) => {
-            logger.error(
-              `Job ${pullJob.name} : Failed to get pinned articles : ${err}`
-            );
-          });
-      }
+  // Hardcoded specific behavior for EIOS
+  if (apiConfiguration.endpoint.startsWith(EIOS_ORIGIN)) {
+    // === HARD CODED ENDPOINTS ===
+    const boardsUrl = 'GetBoards?tags=signal+app';
+    const articlesUrl = 'GetPinnedArticles';
+    axios({
+      url: apiConfiguration.endpoint + boardsUrl,
+      method: 'get',
+      headers,
     })
-    .catch((err) => {
-      logger.error(
-        `Job ${pullJob.name} : Failed to get signal app boards : ${err}`
-      );
-    });
+      .then(({ data }) => {
+        if (data && data.result) {
+          const boardIds = data.result.map((x) => x.id);
+          axios({
+            url: `${apiConfiguration.endpoint}${articlesUrl}?boardIds=${boardIds}`,
+            method: 'get',
+            headers,
+          })
+            .then(({ data: data2 }) => {
+              if (data2 && data2.result) {
+                // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                insertRecords(data2.result, pullJob, true);
+              }
+            })
+            .catch((err) => {
+              logger.error(
+                `Job ${pullJob.name} : Failed to get pinned articles : ${err}`
+              );
+            });
+        }
+      })
+      .catch((err) => {
+        logger.error(
+          `Job ${pullJob.name} : Failed to get signal app boards : ${err}`
+        );
+      });
+  } else {
+    // Generic case
+    axios({
+      url: apiConfiguration.endpoint + pullJob.url,
+      method: 'get',
+      headers,
+    })
+      .then(({ data }) => {
+        const records = pullJob.path ? get(data, pullJob.path) : data;
+        if (records) {
+          // eslint-disable-next-line @typescript-eslint/no-use-before-define
+          insertRecords(records, pullJob);
+        }
+      })
+      .catch((err) => {
+        logger.error(`Job ${pullJob.name} : Failed to fetch data : ${err}`);
+      });
+  }
 };
 
 /**
@@ -198,9 +225,10 @@ const fetchRecordsPublic = (pullJob: PullJob): void => {
     method: 'get',
   })
     .then(({ data }) => {
-      if (data && data[pullJob.path]) {
+      const records = pullJob.path ? get(data, pullJob.path) : data;
+      if (records) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        insertRecords(data[pullJob.path], pullJob);
+        insertRecords(records, pullJob);
       }
     })
     .catch((err) => {
@@ -505,9 +533,11 @@ export const insertRecords = async (
     }
 
     RecordModel.insertMany(records).then(async () => {
+      const insertReportMessage = `${records.length} new records of form "${form.name}" created from pulljob "${pullJob.name}"`;
+      logger.info(insertReportMessage);
       if (pullJob.channel && records.length > 0) {
         const notification = new Notification({
-          action: `${records.length} ${form.name} created from ${pullJob.name}`,
+          action: insertReportMessage,
           content: '',
           createdAt: new Date(),
           channel: pullJob.channel.toString(),

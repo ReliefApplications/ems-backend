@@ -7,10 +7,13 @@ import {
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { AccessType, ApplicationType } from '.';
 import { ContentEnumType } from '@const/enumTypes';
-import { Application } from '@models';
+import { Application, Page } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
+import { isNil } from 'lodash';
 import { accessibleBy } from '@casl/mongoose';
+import { GraphQLDate } from 'graphql-scalars';
+import config from 'config';
 
 /** GraphQL page type type definition */
 export const PageType = new GraphQLObjectType({
@@ -23,6 +26,13 @@ export const PageType = new GraphQLObjectType({
       },
     },
     name: { type: GraphQLString },
+    icon: { type: GraphQLString },
+    visible: {
+      type: GraphQLBoolean,
+      resolve(parent) {
+        return isNil(parent.visible) ? true : parent.visible;
+      },
+    },
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     type: { type: ContentEnumType },
@@ -85,6 +95,16 @@ export const PageType = new GraphQLObjectType({
       async resolve(parent, args, context) {
         const ability = await extendAbilityForPage(context.user, parent);
         return ability.can('delete', parent);
+      },
+    },
+    autoDeletedAt: {
+      type: GraphQLDate,
+      resolve(parent: Page) {
+        const date = new Date(parent.archivedAt);
+        date.setSeconds(
+          date.getSeconds() + Number(config.get<string>('archive.expires'))
+        );
+        return date;
       },
     },
   }),

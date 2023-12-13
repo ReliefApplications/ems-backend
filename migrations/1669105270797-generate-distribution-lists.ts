@@ -2,6 +2,7 @@ import { Application, Dashboard, Step, Workflow, Page } from '@models';
 import { startDatabaseForMigration } from '@utils/migrations/database.helper';
 import { isArray, cloneDeep } from 'lodash';
 import { contentType } from '@const/enumTypes';
+import { logger } from '@services/logger.service';
 
 /** Distribution List interface */
 interface DistributionList {
@@ -38,7 +39,7 @@ const updateWorkflowDashboard = async (
           for (const j in widget.settings.floatingButtons) {
             const button = widget.settings.floatingButtons[j];
             if (button.sendMail) {
-              console.log(
+              logger.info(
                 `[${application.name} / ${workflow.name} / ${step.name}] - ${widget.settings.title}`
               );
               if (
@@ -46,7 +47,7 @@ const updateWorkflowDashboard = async (
                 isArray(button.distributionList) &&
                 button.distributionList.length > 0
               ) {
-                console.log('\tCreated distribution list for email');
+                logger.info('\tCreated distribution list for email');
                 newDistributionLists.push({
                   widgetIndex: Number(i),
                   buttonIndex: Number(j),
@@ -123,7 +124,7 @@ const updateDashboard = async (
           for (const j in widget.settings.floatingButtons) {
             const button = widget.settings.floatingButtons[j];
             if (button.sendMail) {
-              console.log(
+              logger.info(
                 `[${application.name} / ${dashboard.name}] - ${widget.settings.title}`
               );
               if (
@@ -131,8 +132,8 @@ const updateDashboard = async (
                 isArray(button.distributionList) &&
                 button.distributionList.length > 0
               ) {
-                console.log('\tCreated distribution list for email');
-                console.log(button.distributionList);
+                logger.info('\tCreated distribution list for email');
+                logger.info(button.distributionList);
                 newDistributionLists.push({
                   widgetIndex: Number(i),
                   buttonIndex: Number(j),

@@ -67,7 +67,7 @@
 			},
 			"edit": {
 				"errors": {
-					"invalidArguments": "Either name, status, authType, endpoint, pingUrl, settings or permissions must be provided."
+					"invalidArguments": "Either name, status, authType, endpoint, graphqlEndpoint, pingUrl, settings or permissions must be provided."
 				}
 			}
 		},
@@ -82,7 +82,8 @@
 			},
 			"duplicate": {
 				"errors": {
-					"invalidArguments": "Application name must be provided."
+					"invalidArguments": "Application name must be provided.",
+					"namedDuplicated": "Application with name {{name}} already exists. This name cannot be used. Please provide a different name."
 				}
 			},
 			"edit": {
@@ -131,6 +132,7 @@
 			"edit": {
 				"errors": {
 					"coreFieldMissing": "Core field missing : {{name}}. Please implement this field.",
+					"defaultFieldDuplicated": "Default field name duplicated: {{name}}. This name cannot be used. Please provide a different name.",
 					"relatedNameDuplicated": "Related name duplicated : {{name}}. The target Resource already contains a field with that name. Please provide a different name."
 				}
 			}
@@ -143,6 +145,7 @@
 			},
 			"fetch": {
 				"errors": {
+					"fetchRequestFailed": "Failed to fetch groups.",
 					"groupsFromServiceDisabled": "Fetching groups from service not available."
 				}
 			}
@@ -189,7 +192,7 @@
 					}
 				},
 				"errors": {
-					"invalidArguments": "Either name or permissions must be provided."
+					"invalidArguments": "Either name, permissions, visibility or icon must be provided to update the page."
 				}
 			}
 		},
@@ -244,7 +247,7 @@
 			},
 			"edit": {
 				"errors": {
-					"invalidArguments": "Either name, type, content or permissions must be provided."
+					"invalidArguments": "Either name, type, content, icon or permissions must be provided."
 				}
 			}
 		},
@@ -289,7 +292,19 @@
 				"missingFile": "No file detected."
 			}
 		},
+		"gis": {
+			"feature": {
+				"errors": {
+					"invalidFields": "Please provide either geoField or latitudeField and longitudeField to the request parameters.",
+					"missingPolygonGeoField": "Please provide a geoField when querying polygons.",
+					"unexpected": "System failed to query data."
+				}
+			}
+		},
 		"style": {
+			"errors": {
+				"notFound": "Unable to load application's style"
+			},
 			"noStyle": "This application don't have a custom style file."
 		},
 		"upload": {

@@ -24,7 +24,6 @@ describe('ApiConfigurations query tests', () => {
   });
   test('query with admin user returns expected number of apiConfigurations', async () => {
     const count = await ApiConfiguration.countDocuments();
-    console.log('ApiConfiguration count ==>> ', count);
     const admin = await Role.findOne(
       { title: 'admin' },
       'id permissions'
