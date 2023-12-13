@@ -596,41 +596,17 @@ export class RecordHistory {
               change.new = new Date(change.new).toLocaleDateString();
             break;
           case 'datetime':
-          case 'datetime-local':
+          case 'datetimelocal':
             if (change.old !== undefined)
-              change.old = new Date(change.old).toLocaleString([], {
-                year: 'numeric',
-                month: 'numeric',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true,
-              });
+              change.old = new Date(change.old).toLocaleString();
             if (change.new !== undefined)
-              change.new = new Date(change.new).toLocaleString([], {
-                year: 'numeric',
-                month: 'numeric',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true,
-              });
+              change.new = new Date(change.new).toLocaleString();
             break;
           case 'time':
             if (change.old !== undefined)
-              change.old = new Date(change.old).toLocaleTimeString('en-US', {
-                timeZone: 'UTC',
-                hour12: true,
-                hour: '2-digit',
-                minute: '2-digit',
-              });
+              change.old = new Date(change.old).toTimeString();
             if (change.new !== undefined)
-              change.new = new Date(change.new).toLocaleTimeString('en-US', {
-                timeZone: 'UTC',
-                hour12: true,
-                hour: '2-digit',
-                minute: '2-digit',
-              });
+              change.new = new Date(change.new).toTimeString();
             break;
           default:
             // for all other cases, keep the values

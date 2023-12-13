@@ -212,13 +212,10 @@ const getColumns = (req: any, params: ExportBatchParams): Promise<any[]> => {
         if (Object.prototype.hasOwnProperty.call(data.data, field)) {
           const meta = data.data[field];
           const rawColumns = getColumnsFromMeta(meta, params.fields);
-          const columns = rawColumns.filter((x) =>
-            params.fields.find((f) => f.name === x.name)
-          );
           // Edits the column to match with the fields
-          columns.forEach((column) => {
+          rawColumns.forEach((column) => {
             const queryField = params.fields.find(
-              (f) => f.name === column.name
+              (f) => f.name.toLowerCase() === column.name.toLowerCase()
             );
             column.title = queryField.title;
             if (column.subColumns) {
@@ -232,7 +229,7 @@ const getColumns = (req: any, params: ExportBatchParams): Promise<any[]> => {
               }
             }
           });
-          resolve(columns);
+          resolve(rawColumns);
         }
       }
     });
