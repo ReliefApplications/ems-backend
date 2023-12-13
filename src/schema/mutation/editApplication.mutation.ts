@@ -30,8 +30,6 @@ type EditApplicationArgs = {
   pages?: string[] | Types.ObjectId[];
   settings?: any;
   permissions?: any;
-  contextualFilter?: any;
-  contextualFilterPosition?: string;
 };
 
 /**
@@ -50,8 +48,6 @@ export default {
     pages: { type: new GraphQLList(GraphQLID) },
     settings: { type: GraphQLJSON },
     permissions: { type: GraphQLJSON },
-    contextualFilter: { type: GraphQLJSON },
-    contextualFilterPosition: { type: GraphQLString },
   },
   async resolve(parent, args: EditApplicationArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -94,10 +90,6 @@ export default {
         args.pages && { pages: args.pages },
         args.settings && { settings: args.settings },
         args.permissions && { permissions: args.permissions },
-        args.contextualFilter && { contextualFilter: args.contextualFilter },
-        args.contextualFilterPosition && {
-          contextualFilterPosition: args.contextualFilterPosition,
-        },
         !isNil(args.sideMenu) && { sideMenu: args.sideMenu },
         !isNil(args.hideMenu) && { hideMenu: args.hideMenu }
       );

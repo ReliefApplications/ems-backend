@@ -5,9 +5,17 @@ import {
 } from '@models/history.model';
 import { AppAbility } from 'security/defineUserAbility';
 import { CustomAPI } from '../../server/apollo/dataSources';
-import { isArray, isEqual, memoize, pick } from 'lodash';
+import {
+  differenceWith,
+  get,
+  isArray,
+  isEqual,
+  memoize,
+  pick,
+  startCase,
+  isNil,
+} from 'lodash';
 import { getFullChoices } from '@utils/form';
-import { isNil } from 'lodash';
 import { accessibleBy } from '@casl/mongoose';
 
 /**
@@ -41,16 +49,21 @@ export class RecordHistory {
    */
   private getFields(): void {
     // No form, break the display
-    if (!this.record.form) {
+    if (!this.record.resource) {
       this.fields = [];
     } else {
       // Take the fields from the form
-      this.fields = this.record.form.fields;
+      this.fields = this.record.resource.fields;
       if (this.record.form.structure) {
         const structure = JSON.parse(this.record.form.structure);
         if (!structure.pages || !structure.pages.length) return;
         for (const page of structure.pages) {
           this.extractFields(page);
+        }
+      }
+      for (const field of this.fields) {
+        if (!field.title) {
+          field.title = startCase(field.name);
         }
       }
     }
@@ -93,235 +106,126 @@ export class RecordHistory {
   }
 
   /**
-   * Get the change object for field modification
-   *
-   * @param key The field name
-   * @param after The subsequent version
-   * @param current The current version
-   * @returns The change object
-   */
-  private modifyField(key: string, after: any, current: any): Change {
-    if (isNil(after[key]) || !after[key].length) {
-      return {
-        type: 'remove',
-        displayType: this.options.translate('history.value.delete'),
-        displayName: this.getDisplayName(key),
-        field: key,
-        old: current[key],
-      };
-    } else {
-      return {
-        type: 'modify',
-        displayType: this.options.translate('history.value.change'),
-        displayName: this.getDisplayName(key),
-        field: key,
-        old: current[key],
-        new: after[key],
-      };
-    }
-  }
-
-  /**
    * Get the change object for value insertion
    *
    * @param key The field name
-   * @param current The current version
+   * @param next previous version
    * @returns The change object
    */
-  private addField(key: string, current: any): Change {
+  private addEntry(key: string, next: any): Change {
     return {
       type: 'add',
       displayType: this.options.translate('history.value.add'),
       displayName: this.getDisplayName(key),
       field: key,
-      new: current[key],
+      new: get(next, key),
     };
   }
 
   /**
-   * Get the change object for field modification
+   * Edit an entry in the history
    *
-   * @param after The subsequent version
-   * @param current The current version
-   * @param key The field name
-   * @returns The change object
+   * @param key Field key
+   * @param previous Previous value
+   * @param next Next value
+   * @returns History change
    */
-  private modifyObjects(
-    after: any,
-    current: any,
-    key: string
-  ): Change | undefined {
-    const afterKeys = Object.keys(after[key] ? after[key] : current[key]);
-
-    const res: Change = {
+  private editEntry(key: string, previous: any, next: any): Change {
+    return {
       type: 'modify',
       displayType: this.options.translate('history.value.change'),
       displayName: this.getDisplayName(key),
       field: key,
-      old: {},
-      new: {},
+      old: get(previous, key),
+      new: get(next, key),
     };
-
-    afterKeys.forEach((k) => {
-      let afterValues = [];
-      let currentValues = [];
-      if (after[key] && after[key][k]) {
-        if (after[key][k] instanceof Object) {
-          afterValues = Object.values(after[key][k]);
-        } else {
-          afterValues = after[key][k];
-        }
-      }
-      if (current[key] && current[key][k]) {
-        if (current[key][k] instanceof Object) {
-          currentValues = Object.values(current[key][k]);
-        } else {
-          currentValues = current[key][k];
-        }
-      }
-
-      if (currentValues.toString() !== afterValues.toString()) {
-        res.new[k] = afterValues;
-        res.old[k] = currentValues;
-      }
-    });
-
-    if (Object.keys(res.new).length > 0) return res;
   }
 
   /**
-   * Get the change object for object field insertion
+   * Delete an entry in the history
    *
-   * @param current The current version
-   * @param key The field name
-   * @returns The change object
+   * @param key Field key
+   * @param previous Previous value
+   * @returns History change
    */
-  private addObject(current: any, key: string): Change {
-    const currentKeys = Object.keys(current[key]);
-
-    const res: Change = {
-      type: 'add',
-      displayType: this.options.translate('history.value.add'),
+  private deleteEntry(key: string, previous: any): Change {
+    return {
+      type: 'remove',
+      displayType: this.options.translate('history.value.delete'),
       displayName: this.getDisplayName(key),
       field: key,
-      new: {},
+      old: get(previous, key),
     };
-
-    currentKeys.forEach((k) => {
-      let currentValues: any;
-      if (current[key][k] instanceof Object) {
-        currentValues = Object.values(current[key][k]);
-      } else {
-        currentValues = current[key][k];
-      }
-      res.new[k] = currentValues;
-    });
-
-    return res;
   }
 
   /**
    * Gets the difference between two versions of a record
    *
-   * @param current initial version of the record
-   * @param after subsequent version of the record
-   * @returns The difference between the versions
+   * @param previous previous value
+   * @param next next value
+   * @returns List of history changes
    */
-  private getDifference(current: any, after: any) {
+  private getDifference(previous: any, next: any) {
     const changes: Change[] = [];
-
-    if (current) {
-      const keysCurrent = Object.keys(current);
-      keysCurrent.forEach((key) => {
-        const field = this.fields.find((f) => f.name === key);
-        if (!field) {
-          return;
-        } else {
-          // Boolean fields
-          if (
-            typeof after[key] === 'boolean' ||
-            typeof current[key] === 'boolean'
-          ) {
-            if (current[key] !== null && after[key] !== current[key]) {
-              changes.push(this.modifyField(key, after, current));
-            }
-          } else if (
-            // Non array fields
-            !Array.isArray(after[key]) &&
-            !Array.isArray(current[key])
-          ) {
-            if (!isNil(after[key])) {
-              if (after[key] instanceof Date && current[key]) {
-                if (after[key].getTime() !== new Date(current[key]).getTime()) {
-                  changes.push(this.modifyField(key, after, current));
-                }
-              } else if (after[key] instanceof Object && current[key]) {
-                const element = this.modifyObjects(after, current, key);
-                if (element) {
-                  changes.push(element);
-                }
-              } else if (after[key] !== current[key] && current[key]) {
-                changes.push(this.modifyField(key, after, current));
-              } else if (!(after[key] instanceof Object) && !current[key]) {
-                changes.push(this.addField(key, after));
-              }
-            } else if (!isNil(current[key])) {
-              if (current[key] instanceof Date) {
-                changes.push(this.modifyField(key, after, current));
-              } else if (current[key] instanceof Object) {
-                const element = this.modifyObjects(after, current, key);
-                if (element) {
-                  changes.push(element);
-                }
-              } else if (after[key] !== current[key]) {
-                changes.push(this.modifyField(key, after, current));
-              }
-            }
-          } else {
-            // Array fields
-            if (!isEqual(after[key], current[key])) {
-              changes.push(this.modifyField(key, after, current));
-            } else if (!after[key] && current[key]) {
-              changes.push(this.addField(key, current));
+    // Previous version exists
+    if (previous) {
+      // Previous & next versions exist
+      if (next) {
+        const previousEntries = Object.entries(previous);
+        const nextEntries = Object.entries(next);
+        const previousDifferences = differenceWith(
+          previousEntries,
+          nextEntries,
+          isEqual
+        );
+        const nextDifferences = differenceWith(
+          nextEntries,
+          previousEntries,
+          isEqual
+        );
+        nextDifferences.forEach((diff) => {
+          const key = diff[0];
+          const field = this.fields.find((f) => f.name === key);
+          if (!field) {
+            // Cannot be converted to a field
+            return;
+          }
+          const previousValue = get(previous, key);
+          const nextValue = get(next, key);
+          if (!isNil(nextValue)) {
+            if (isNil(previousValue)) {
+              changes.push(this.addEntry(key, next));
+            } else {
+              changes.push(this.editEntry(key, previous, next));
             }
           }
-        }
-      });
-    }
-
-    const keysAfter = Object.keys(after);
-    keysAfter.forEach((key) => {
-      if (typeof after[key] === 'boolean') {
-        if ((!current || current[key]) === null && after[key] !== null) {
-          changes.push({
-            type: 'add',
-            displayType: this.options.translate('history.value.add'),
-            displayName: this.getDisplayName(key),
-            field: key,
-            new: after[key],
-          });
-        }
-      } else if (
-        (!current || current[key] === null || current[key] === undefined) &&
-        !Array.isArray(after[key]) &&
-        after[key] instanceof Object &&
-        !(after[key] instanceof Date)
-      ) {
-        const element = this.addObject(after, key);
-        changes.push(element);
-      } else if (
-        (!current || current[key] === null || current[key] === undefined) &&
-        after[key]
-      ) {
-        changes.push({
-          type: 'add',
-          displayType: this.options.translate('history.value.add'),
-          displayName: this.getDisplayName(key),
-          field: key,
-          new: after[key],
         });
+        previousDifferences.forEach((diff) => {
+          const key = diff[0];
+          const field = this.fields.find((f) => f.name === key);
+          if (!field) {
+            // Cannot be converted to a field
+            return;
+          }
+          const nextValue = get(next, key);
+          if (isNil(nextValue)) {
+            changes.push(this.deleteEntry(key, previous));
+          } else {
+            // Already tracked by previous block
+          }
+        });
+      } else {
+        // Only previous version exists (should not happen)
       }
-    });
+    } else {
+      // Only next version
+      const nextEntries = Object.keys(next);
+      for (const key of nextEntries) {
+        if (!isNil(get(next, key))) {
+          changes.push(this.addEntry(key, next));
+        }
+      }
+    }
     return changes;
   }
 
@@ -342,47 +246,47 @@ export class RecordHistory {
       this.record,
       this.record.accessibleFieldsBy(this.options.ability)
     ).data;
-    let difference: any;
+    let changes: any;
     if (versions.length === 0) {
-      difference = this.getDifference(null, filteredData);
+      changes = this.getDifference(null, filteredData);
       res.push({
         createdAt: this.record.createdAt,
-        createdBy: this.record.createdBy?.user?.name,
-        changes: difference,
+        createdBy: this.record._createdBy?.user?.name,
+        changes,
       });
 
       const formatted = await this.formatValues(res);
       return formatted;
     }
-    difference = this.getDifference(null, versions[0].data);
+    changes = this.getDifference(null, versions[0].data);
     res.push({
       createdAt: versions[0].createdAt,
-      createdBy: this.record.createdBy?.user?.name,
-      changes: difference,
+      createdBy: this.record._createdBy?.user?.name,
+      changes,
       version: versions[0],
     });
 
     for (let i = 1; i < versions.length; i++) {
-      difference = this.getDifference(versions[i - 1].data, versions[i].data);
+      changes = this.getDifference(versions[i - 1].data, versions[i].data);
       res.push({
         createdAt: versions[i].createdAt,
         createdBy: versions[i - 1].createdBy?.name,
-        changes: difference,
+        changes,
         version: versions[i],
       });
     }
-    difference = this.getDifference(
+    changes = this.getDifference(
       versions[versions.length - 1].data,
       filteredData
     );
     res.push({
       createdAt: this.record.modifiedAt,
       createdBy: versions[versions.length - 1].createdBy?.name,
-      changes: difference,
+      changes,
     });
 
-    const formated = await this.formatValues(res.reverse());
-    return formated;
+    const formatted = await this.formatValues(res.reverse());
+    return formatted;
   }
 
   /**
@@ -501,6 +405,13 @@ export class RecordHistory {
       return array.find((c) => c.name === name).title;
     };
 
+    const getLabelFromName = (
+      name: string,
+      array: { name: string; label: string }[]
+    ) => {
+      return array.find((c) => c.name === name).label;
+    };
+
     const getResourcesIncrementalID = async (ids: string[]) => {
       const recordFilters = Record.find(
         accessibleBy(this.options.ability, 'read').Record
@@ -531,7 +442,7 @@ export class RecordHistory {
         path: 'application',
         model: 'Application',
       });
-      return `${role.application.name} - ${role.title}`;
+      return role ? `${role.application?.name} - ${role.title}` : '';
     };
 
     for (const version of history) {
@@ -569,7 +480,7 @@ export class RecordHistory {
               if (change[state] !== undefined) {
                 const keys = Object.keys(change[state]);
                 keys.forEach((key) => {
-                  const newKey = getTitleFromName(key, field.items);
+                  const newKey = getLabelFromName(key, field.items);
                   const valCpy = change[state][key];
 
                   delete change[state][key];
@@ -685,17 +596,41 @@ export class RecordHistory {
               change.new = new Date(change.new).toLocaleDateString();
             break;
           case 'datetime':
-          case 'datetimelocal':
+          case 'datetime-local':
             if (change.old !== undefined)
-              change.old = new Date(change.old).toLocaleString();
+              change.old = new Date(change.old).toLocaleString([], {
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true,
+              });
             if (change.new !== undefined)
-              change.new = new Date(change.new).toLocaleString();
+              change.new = new Date(change.new).toLocaleString([], {
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true,
+              });
             break;
           case 'time':
             if (change.old !== undefined)
-              change.old = new Date(change.old).toTimeString();
+              change.old = new Date(change.old).toLocaleTimeString('en-US', {
+                timeZone: 'UTC',
+                hour12: true,
+                hour: '2-digit',
+                minute: '2-digit',
+              });
             if (change.new !== undefined)
-              change.new = new Date(change.new).toTimeString();
+              change.new = new Date(change.new).toLocaleTimeString('en-US', {
+                timeZone: 'UTC',
+                hour12: true,
+                hour: '2-digit',
+                minute: '2-digit',
+              });
             break;
           default:
             // for all other cases, keep the values

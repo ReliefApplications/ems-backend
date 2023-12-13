@@ -1,7 +1,7 @@
 OORT Back-end
 =======
-[![GitHub version](https://img.shields.io/github/v/release/ReliefApplications/oort-backend)](https://img.shields.io/github/v/release/ReliefApplications/oort-backend)
-[![CodeQL](https://github.com/ReliefApplications/oort-backend/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/ReliefApplications/oort-backend/actions/workflows/codeql-analysis.yml)
+[![GitHub version](https://img.shields.io/github/v/release/ReliefApplications/ems-backend)](https://img.shields.io/github/v/release/ReliefApplications/ems-backend)
+[![CodeQL](https://github.com/ReliefApplications/ems-backend/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/ReliefApplications/ems-backend/actions/workflows/codeql-analysis.yml)
 
 # Introduction
 
