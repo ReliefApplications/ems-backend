@@ -14,7 +14,7 @@ import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFiel
 import { getChoices } from '@utils/proxy';
 import { referenceDataType } from '@const/enumTypes';
 import jsonpath from 'jsonpath';
-import { isArray } from 'lodash';
+import { isArray, set } from 'lodash';
 
 /**
  * Export batch parameters interface
@@ -285,6 +285,7 @@ const buildPipeline = (
         }
         return acc;
       }, {}),
+      ...(idsList ? { resource: 1 } : {}), //add the resource for subcolumns
     },
   };
   if (!idsList) {
@@ -353,9 +354,9 @@ const getChoicesByUrl = async (
 ) => {
   for (const column of choicesByUrlColumns) {
     const choices = Object.fromEntries(
-      (await getChoices(column.meta.field, authorization)).map((country) => [
-        country.value,
-        country.text,
+      (await getChoices(column.meta.field, authorization)).map((choice) => [
+        choice.value,
+        choice.text,
       ])
     );
     for (const record of records) {
@@ -374,20 +375,66 @@ const getChoicesByUrl = async (
   }
 };
 
+/**
+ * Gets corresponding values for records with ref data
+ *
+ * @param referenceDataColumns columns that use reference data
+ * @param resourceId resource id to get the fields from
+ * @param req original request to get auth from
+ * @param records records to modify
+ */
 const getReferenceData = async (
   referenceDataColumns: string[],
   resourceId: string,
   req: any,
   records: any
-  //columnField?: string
 ) => {
-  const refactoredColumns = referenceDataColumns.reduce((acc, item) => {
-    const [key, value] = item.split('.');
+  const refactoredColumns = referenceDataColumns.reduce((acc, columnName) => {
+    const splitColumnName = columnName.split('.');
+    const [key, value] =
+      splitColumnName.length === 2
+        ? splitColumnName
+        : [splitColumnName.slice(0, 2).join('.'), splitColumnName[2]];
     acc[key] = [...new Set([...(acc[key] || []), value])];
     return acc;
   }, {});
-  console.log(refactoredColumns, referenceDataColumns, records);
-  const resource = await Resource.findById(resourceId).select('fields');
+  const mainResource = await Resource.findById(resourceId).select('fields');
+  let mappedNestedResources: { [key: string]: any } = {};
+  /** get resources fields inside */
+  const nestedResources = await Resource.find({
+    _id: {
+      $in: Array.from(
+        new Set(
+          referenceDataColumns
+            .filter((col) => col.split('.').length === 3)
+            .map((col) => col.split('.')[0])
+        )
+      )
+        .map((col) => {
+          const firstRecordWithResource = records.find(
+            (record: any) => record[col] && record[col].resource
+          );
+          if (firstRecordWithResource) {
+            const nestedResourceId = isArray(firstRecordWithResource[col])
+              ? firstRecordWithResource[col][0].resource
+              : firstRecordWithResource[col].resource;
+            mappedNestedResources[col] = nestedResourceId;
+            return nestedResourceId;
+          }
+          return '';
+        })
+        .filter(Boolean), //remove empty strings
+    },
+  }).select('fields'); //get resources for nested ref data
+  mappedNestedResources = Object.entries(mappedNestedResources).reduce(
+    (acc, [name, nestedResourceId]) => {
+      acc[name] = nestedResources.find(
+        (resource) => resource.id === nestedResourceId.toString()
+      );
+      return acc;
+    },
+    {}
+  );
   const referenceDataQuery = `query GetShortReferenceDataById($id: ID!) {
     referenceData(id: $id) {
       id
@@ -408,8 +455,18 @@ const getReferenceData = async (
     }
   }`;
   for (const refDataColumn in refactoredColumns) {
-    const referenceDataId = resource.fields.find(
-      (field) => refDataColumn === field.name
+    const relatedResource = refDataColumn.includes('.')
+      ? mappedNestedResources[refDataColumn.split('.')[0]]
+      : mainResource; //if there is a dot, it means it is a resource/resources question, otherwise take base resource
+    const fieldName = refDataColumn.includes('.')
+      ? refDataColumn.split('.')[1]
+      : refDataColumn;
+    if (!fieldName || !relatedResource) {
+      //if no record has a reference to the nested resource, relatedResource will be null => we avoid error and there is no need for data
+      continue;
+    }
+    const referenceDataId = relatedResource.fields.find(
+      (field) => field.name === fieldName
     ).referenceData.id;
     /** Get the reference data with a detailed apiconfiguration */
     let referenceData;
@@ -511,24 +568,29 @@ const getReferenceData = async (
       }
     }
     records.forEach((record) => {
-      record[refDataColumn] = isArray(record[refDataColumn])
-        ? record[refDataColumn].reduce((acc, choice) => {
-            const dataRow = data.find(
-              (obj) => obj[referenceData.valueField] === choice
-            );
-            if (dataRow) {
-              Object.keys(dataRow).forEach((key) => {
-                if (!acc[key]) {
-                  acc[key] = [];
-                }
-                acc[key].push(dataRow[key]);
-              });
-            }
-            return acc;
-          }, {})
-        : data.find(
-            (obj) => obj[referenceData.valueField] === record[refDataColumn] //affecting all row, not optimal but gets the job done
-          );
+      const recordValue = get(record, refDataColumn);
+      set(
+        record,
+        refDataColumn,
+        isArray(recordValue)
+          ? recordValue.reduce((acc, choice) => {
+              const dataRow = data.find(
+                (obj) => obj[referenceData.valueField] === choice
+              );
+              if (dataRow) {
+                Object.keys(dataRow).forEach((key) => {
+                  if (!acc[key]) {
+                    acc[key] = [];
+                  }
+                  acc[key].push(dataRow[key]);
+                });
+              }
+              return acc;
+            }, {})
+          : data.find(
+              (obj) => obj[referenceData.valueField] === recordValue //affecting all row, not optimal but gets the job done
+            )
+      );
     });
   }
 };
