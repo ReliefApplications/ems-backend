@@ -120,7 +120,7 @@ export default {
         if (channel && role) {
           // @TODO: Localize this
           const notification = new Notification({
-            action: `${user.name} a été attribué le rôle de ${role.title} par ${x.email}`,
+            action: `${user.name} a attribué le rôle d’${role.title} à ${x.email}`,
             content: user._id,
             channel: channel.id,
           });
