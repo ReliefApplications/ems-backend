@@ -279,29 +279,86 @@ const buildPipeline = (
             (item) => item.name === copyFrom
           ).choices;
 
+          const colChoiceMap: {
+            col: string;
+            value: any;
+            label: string;
+          }[] = [];
+
+          const generateSwitchOperation = (val: string, col: string) => ({
+            $cond: {
+              if: { $isArray: val },
+              then: {
+                $map: {
+                  input: val,
+                  as: 'value',
+                  in: {
+                    $switch: {
+                      branches: [
+                        ...colChoiceMap.map((choice) => ({
+                          case: {
+                            $and: [
+                              {
+                                $eq: ['$$value', choice.value],
+                              },
+                              {
+                                $eq: [
+                                  {
+                                    $toString: col,
+                                  },
+                                  choice.col,
+                                ],
+                              },
+                            ],
+                          },
+                          then: choice.label,
+                        })),
+                      ],
+                      default: '$$value',
+                    },
+                  },
+                },
+              },
+              else: {
+                $switch: {
+                  branches: [
+                    ...colChoiceMap.map((choice) => ({
+                      case: {
+                        $and: [
+                          {
+                            $eq: [val, choice.value],
+                          },
+                          {
+                            $eq: [col, choice.col],
+                          },
+                        ],
+                      },
+                      then: choice.label,
+                    })),
+                  ],
+                  default: val,
+                },
+              },
+            },
+          });
+
+          questionsWithChoices
+            .find((item) => item.name === copyFrom)
+            .columns?.forEach((column: any) => {
+              const columnChoices = column.choices || questionChoices;
+
+              colChoiceMap.push(
+                ...columnChoices.map((choice) => ({
+                  col: column.name,
+                  value: choice.value,
+                  label: choice.text,
+                }))
+              );
+            });
+
           switch (questionType) {
             // Matrixdropdown is an object of objects of either arrays or single values
             case 'matrixdropdown': {
-              const colChoiceMap: {
-                col: string;
-                value: any;
-                label: string;
-              }[] = [];
-
-              questionsWithChoices
-                .find((item) => item.name === copyFrom)
-                .columns?.forEach((column: any) => {
-                  const columnChoices = column.choices || questionChoices;
-
-                  colChoiceMap.push(
-                    ...columnChoices.map((choice) => ({
-                      col: column.name,
-                      value: choice.value,
-                      label: choice.text,
-                    }))
-                  );
-                });
-
               pipeline.push({
                 $addFields: {
                   [copyTo]: {
@@ -318,74 +375,10 @@ const buildPipeline = (
                                 as: 'column',
                                 in: {
                                   k: '$$column.k',
-                                  v: {
-                                    $cond: {
-                                      if: { $isArray: '$$column.v' },
-                                      then: {
-                                        $map: {
-                                          input: '$$column.v',
-                                          as: 'value',
-                                          in: {
-                                            $switch: {
-                                              branches: [
-                                                ...questionChoices.map(
-                                                  (choice) => ({
-                                                    case: {
-                                                      $and: [
-                                                        {
-                                                          $eq: [
-                                                            '$$value',
-                                                            choice.value,
-                                                          ],
-                                                        },
-                                                        {
-                                                          $eq: [
-                                                            {
-                                                              $toString:
-                                                                '$$column.k',
-                                                            },
-                                                            choice.col,
-                                                          ],
-                                                        },
-                                                      ],
-                                                    },
-                                                    then: choice.text,
-                                                  })
-                                                ),
-                                              ],
-                                              default: '$$value',
-                                            },
-                                          },
-                                        },
-                                      },
-                                      else: {
-                                        $switch: {
-                                          branches: [
-                                            ...colChoiceMap.map((choice) => ({
-                                              case: {
-                                                $and: [
-                                                  {
-                                                    $eq: [
-                                                      '$$column.v',
-                                                      choice.value,
-                                                    ],
-                                                  },
-                                                  {
-                                                    $eq: [
-                                                      '$$column.k',
-                                                      choice.col,
-                                                    ],
-                                                  },
-                                                ],
-                                              },
-                                              then: choice.label,
-                                            })),
-                                          ],
-                                          default: '$$column.v',
-                                        },
-                                      },
-                                    },
-                                  },
+                                  v: generateSwitchOperation(
+                                    '$$column.v',
+                                    '$$column.k'
+                                  ),
                                 },
                               },
                             },
@@ -403,9 +396,9 @@ const buildPipeline = (
             case 'matrixdynamic': {
               pipeline.push({
                 $addFields: {
-                  [stage.form.field]: {
+                  [copyTo]: {
                     $map: {
-                      input: `$${stage.form.field}`,
+                      input: `$${copyTo}`,
                       as: 'ans',
                       in: {
                         $arrayToObject: {
@@ -414,48 +407,7 @@ const buildPipeline = (
                             as: 'col',
                             in: {
                               k: '$$col.k',
-                              v: {
-                                $cond: {
-                                  if: { $isArray: '$$col.v' },
-                                  then: {
-                                    $map: {
-                                      input: '$$col.v',
-                                      as: 'value',
-                                      in: {
-                                        $switch: {
-                                          branches: [
-                                            ...questionChoices.map(
-                                              (choice) => ({
-                                                case: {
-                                                  $eq: [
-                                                    '$$value',
-                                                    choice.value,
-                                                  ],
-                                                },
-                                                then: choice.text,
-                                              })
-                                            ),
-                                          ],
-                                          default: '$$value',
-                                        },
-                                      },
-                                    },
-                                  },
-                                  else: {
-                                    $switch: {
-                                      branches: [
-                                        ...questionChoices.map((choice) => ({
-                                          case: {
-                                            $eq: ['$$col.v', choice.value],
-                                          },
-                                          then: choice.text,
-                                        })),
-                                      ],
-                                      default: '$$col.v',
-                                    },
-                                  },
-                                },
-                              },
+                              v: generateSwitchOperation('$$col.v', '$$col.k'),
                             },
                           },
                         },
