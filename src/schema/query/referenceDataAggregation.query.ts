@@ -45,7 +45,26 @@ const applyFilters = (data: any, filter: any): boolean => {
         return data;
     }
   }
-  return data[filter.field] === filter.value;
+
+  if (filter.field && filter.operator) {
+    switch (filter.operator) {
+      case 'neq':
+        return data[filter.field] !== filter.value;
+      case 'eq':
+        return data[filter.field] === filter.value;
+      case 'lt':
+        return data[filter.field] < filter.value;
+      case 'lte':
+        return data[filter.field] <= filter.value;
+      case 'gt':
+        return data[filter.field] > filter.value;
+      case 'gte':
+        return data[filter.field] >= filter.value;
+      default:
+        // For any unknown operator, we return false
+        return false;
+    }
+  }
 };
 
 /**
