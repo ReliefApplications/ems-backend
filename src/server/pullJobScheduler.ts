@@ -177,7 +177,7 @@ const fetchRecordsServiceToService = (
             .then(({ data: data2 }) => {
               if (data2 && data2.result) {
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                insertRecords(data2.result, pullJob);
+                insertRecords(data2.result, pullJob, true);
               }
             })
             .catch((err) => {
@@ -508,7 +508,8 @@ export const insertRecords = async (
       if (isEIOS) {
         // Assign correct ownership value based on mapping JSON and board name
         const boardName = mappedElement.article_board_name;
-        mappedElement.ownership = ownershipMappingWithIds[boardName];
+        mappedElement.ownership =
+          ownershipMappingWithIds[boardName].map(String);
       }
       // If everything is fine, push it in the array for saving
       if (!isDuplicate) {

@@ -129,16 +129,32 @@ const procOperator = (data: any, operator) => {
  * @param pipelineStep step of the pipeline to build a result from
  * @param data the reference data
  * @param sourceFields fields we want to get in our final data
+ * @param referenceDataFields referenceData fields
  * @returns filtered data
  */
-const procPipelineStep = (pipelineStep, data, sourceFields) => {
+const procPipelineStep = (
+  pipelineStep,
+  data,
+  sourceFields,
+  referenceDataFields
+) => {
   switch (pipelineStep.type) {
     case 'group':
       const operators = pipelineStep.form?.addFields?.map(
         (operator) => operator.expression
       );
+      const mappedData = data.map((item) => {
+        const newItem = Object.keys(item).reduce((obj, key) => {
+          const currField = referenceDataFields.find((f) => f.name === key);
+          if (currField) {
+            obj[currField.graphQLFieldName ?? key] = item[key];
+          }
+          return obj;
+        }, {});
+        return newItem;
+      });
       const keysToGroupBy = pipelineStep.form.groupBy.map((key) => key.field);
-      data = groupBy(data, (dataKey) =>
+      data = groupBy(mappedData, (dataKey) =>
         keysToGroupBy.map((key) => dataKey[key])
       );
       for (const key in data) {
@@ -259,7 +275,12 @@ export default {
           }
 
           aggregation.pipeline.forEach((step: any) => {
-            items = procPipelineStep(step, items, aggregation.sourceFields);
+            items = procPipelineStep(
+              step,
+              items,
+              aggregation.sourceFields,
+              referenceData.fields
+            );
           });
           if (args.mapping) {
             return items.map((item) => {
