@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-loop-func */
 import { buildMetaQuery } from '@utils/query/queryBuilder';
 import config from 'config';
 import { Workbook, Worksheet } from 'exceljs';
@@ -14,7 +15,7 @@ import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFiel
 import { getChoices } from '@utils/proxy';
 import { referenceDataType } from '@const/enumTypes';
 import jsonpath from 'jsonpath';
-import { isArray, set } from 'lodash';
+import { each, isArray, set } from 'lodash';
 
 /**
  * Export batch parameters interface
@@ -100,6 +101,22 @@ const setHeaders = (worksheet: Worksheet, columns: any[]) => {
 };
 
 /**
+ * headers for axios queries
+ *
+ * @param req original request from the user
+ * @returns axios headers
+ */
+const axiosHeaders = (req) => {
+  return {
+    Authorization: req.headers.authorization,
+    'Content-Type': 'application/json',
+    ...(req.headers.accesstoken && {
+      accesstoken: req.headers.accesstoken,
+    }),
+  };
+};
+
+/**
  * Get flat columns from raw columns
  *
  * @param columns raw columns
@@ -160,13 +177,7 @@ const getColumns = (req: any, params: ExportBatchParams): Promise<any[]> => {
     axios({
       url: `${config.get('server.url')}/graphql`,
       method: 'POST',
-      headers: {
-        Authorization: req.headers.authorization,
-        'Content-Type': 'application/json',
-        ...(req.headers.accesstoken && {
-          accesstoken: req.headers.accesstoken,
-        }),
-      },
+      headers: axiosHeaders(req),
       data: {
         query: metaQuery,
       },
@@ -186,11 +197,13 @@ const getColumns = (req: any, params: ExportBatchParams): Promise<any[]> => {
             column.title = queryField.title;
             if (column.subColumns) {
               if ((queryField.subFields || []).length > 0) {
-                column.subColumns.forEach((f) => {
+                column.subColumns.forEach((subColumn) => {
                   const subQueryField = queryField.subFields.find(
-                    (z) => z.name === `${column.name}.${f.name}`
+                    (z) =>
+                      z.name ===
+                      `${column.name}.${subColumn.name.split('.')[0]}`
                   );
-                  f.title = subQueryField.title;
+                  subColumn.title = subQueryField.title;
                 });
               }
             }
@@ -344,13 +357,11 @@ const buildPipeline = (
  * @param choicesByUrlColumns columns with choices by url
  * @param authorization authorization token to fetch choices by url
  * @param records records to modify with correct value
- * @param columnField column field if subcolumn
  */
 const getChoicesByUrl = async (
   choicesByUrlColumns: any,
   authorization: string,
-  records: any,
-  columnField?: string
+  records: any
 ) => {
   for (const column of choicesByUrlColumns) {
     const choices = Object.fromEntries(
@@ -360,16 +371,28 @@ const getChoicesByUrl = async (
       ])
     );
     for (const record of records) {
-      if (columnField) {
-        record[columnField][column.field] = isArray(
-          record[columnField][column.field]
-        )
-          ? record[columnField][column.field].map((choice) => choices[choice])
-          : choices[record[columnField][column.field]];
+      const resourcesField = column.field.split('.')[0];
+      if (isArray(record[resourcesField])) {
+        const resourcesSubfield = column.field.split('.')[1];
+        each(record[resourcesField], (value) => {
+          const recordValue = get(value, resourcesSubfield);
+          set(
+            value,
+            resourcesSubfield,
+            isArray(recordValue)
+              ? recordValue.map((choice) => choices[choice])
+              : choices[recordValue]
+          );
+        });
       } else {
-        record[column.field] = isArray(record[column.field])
-          ? record[column.field].map((choice) => choices[choice])
-          : choices[record[column.field]];
+        const recordValue = get(record, column.field);
+        set(
+          record,
+          column.field,
+          isArray(recordValue)
+            ? recordValue.map((choice) => choices[choice])
+            : choices[recordValue]
+        );
       }
     }
   }
@@ -389,6 +412,7 @@ const getReferenceData = async (
   req: any,
   records: any
 ) => {
+  console.log(referenceDataColumns);
   const refactoredColumns = referenceDataColumns.reduce((acc, columnName) => {
     const splitColumnName = columnName.split('.');
     const [key, value] =
@@ -454,17 +478,18 @@ const getReferenceData = async (
       graphQLFilter
     }
   }`;
-  for (const refDataColumn in refactoredColumns) {
-    const relatedResource = refDataColumn.includes('.')
-      ? mappedNestedResources[refDataColumn.split('.')[0]]
+  for (const refDataPath in refactoredColumns) {
+    const relatedResource = refDataPath.includes('.')
+      ? mappedNestedResources[refDataPath.split('.')[0]]
       : mainResource; //if there is a dot, it means it is a resource/resources question, otherwise take base resource
-    const fieldName = refDataColumn.includes('.')
-      ? refDataColumn.split('.')[1]
-      : refDataColumn;
+    const fieldName = refDataPath.includes('.')
+      ? refDataPath.split('.')[1]
+      : refDataPath;
     if (!fieldName || !relatedResource) {
       //if no record has a reference to the nested resource, relatedResource will be null => we avoid error and there is no need for data
       continue;
     }
+    console.log(relatedResource, fieldName, refDataPath, mappedNestedResources);
     const referenceDataId = relatedResource.fields.find(
       (field) => field.name === fieldName
     ).referenceData.id;
@@ -473,13 +498,7 @@ const getReferenceData = async (
     await axios({
       url: `${config.get('server.url')}/graphql`,
       method: 'POST',
-      headers: {
-        Authorization: req.headers.authorization,
-        'Content-Type': 'application/json',
-        ...(req.headers.accesstoken && {
-          accesstoken: req.headers.accesstoken,
-        }),
-      },
+      headers: axiosHeaders(req),
       data: {
         query: referenceDataQuery,
         variables: { id: referenceDataId },
@@ -492,86 +511,59 @@ const getReferenceData = async (
         logger.error(error.message);
       });
 
-    let url: string;
     let data: any;
-    switch (referenceData.type) {
-      case referenceDataType.graphql: {
-        url =
-          (referenceData.apiConfiguration?.name ?? '') +
-          (referenceData.apiConfiguration?.graphQLEndpoint ?? '');
-        await axios({
-          url: `${config.get('server.url')}/proxy/${url}`,
-          method: 'POST',
-          headers: {
-            Authorization: req.headers.authorization,
-            'Content-Type': 'application/json',
-            ...(req.headers.accesstoken && {
-              accesstoken: req.headers.accesstoken,
-            }),
-          },
-          data: {
-            query: referenceData.query,
-          },
-        })
-          .then((response) => {
-            data = (
-              referenceData.path
-                ? jsonpath.query(response.data, referenceData.path)
-                : response.data
-            ).map((obj) => {
-              const newObj = {};
-              for (const key in obj) {
-                newObj[ReferenceData.getGraphQLFieldName(key)] = obj[key];
-              }
-              return newObj;
-            });
-          })
-          .catch((error) => {
-            logger.error(error);
-          });
-        break;
-      }
-      case referenceDataType.rest: {
-        url = referenceData.apiConfiguration?.name + referenceData.query;
-        await axios({
-          url: `${config.get('server.url')}/proxy/${url}`,
-          method: 'GET',
-          headers: {
-            Authorization: req.headers.authorization,
-            'Content-Type': 'application/json',
-            ...(req.headers.accesstoken && {
-              accesstoken: req.headers.accesstoken,
-            }),
-          },
-        })
-          .then((response) => {
-            data = (
-              referenceData.path
-                ? jsonpath.query(response.data, referenceData.path)
-                : response.data
-            ).map((obj) => {
-              const newObj = {};
-              for (const key in obj) {
-                newObj[ReferenceData.getGraphQLFieldName(key)] = obj[key];
-              }
-              return newObj;
-            });
-          })
-          .catch((error) => {
-            logger.error(error);
-          });
-        break;
-      }
-      case referenceDataType.static: {
-        data = referenceData.data;
-        break;
-      }
+
+    if (!Object.values(referenceDataType).includes(referenceData.type)) {
+      logger.error('reference data type not supported yet');
+      continue;
     }
+    if (referenceData.type === referenceDataType.static) {
+      data = referenceData.data;
+    } else {
+      const axiosQuery =
+        referenceData.type === referenceDataType.graphql
+          ? axios({
+              url: `${config.get('server.url')}/proxy/${
+                (referenceData.apiConfiguration?.name ?? '') +
+                (referenceData.apiConfiguration?.graphQLEndpoint ?? '')
+              }`,
+              method: 'POST',
+              headers: axiosHeaders(req),
+              data: {
+                query: referenceData.query,
+              },
+            })
+          : axios({
+              url: `${config.get('server.url')}/proxy/${
+                referenceData.apiConfiguration?.name + referenceData.query
+              }`,
+              method: 'GET',
+              headers: axiosHeaders(req),
+            });
+      await axiosQuery
+        .then((response) => {
+          data = (
+            referenceData.path
+              ? jsonpath.query(response.data, referenceData.path)
+              : response.data
+          ).map((obj) => {
+            const newObj = {};
+            for (const key in obj) {
+              newObj[ReferenceData.getGraphQLFieldName(key)] = obj[key];
+            }
+            return newObj;
+          });
+        })
+        .catch((error) => {
+          logger.error(error);
+        });
+    }
+
     records.forEach((record) => {
-      const recordValue = get(record, refDataColumn);
+      const recordValue = get(record, refDataPath);
       set(
         record,
-        refDataColumn,
+        refDataPath,
         isArray(recordValue)
           ? recordValue.reduce((acc, choice) => {
               const dataRow = data.find(
@@ -623,8 +615,10 @@ const getResourceAndResourcesQuestions = (columns: any) => {
     resourceResourcesColumns.push({
       field: resourceQuestion,
       subColumns: resourceSubColumns.map((subColumn) => {
+        const { graphQLFieldName, subColumnWithoutGraphQLFieldName } =
+          subColumn;
         return {
-          ...subColumn,
+          ...subColumnWithoutGraphQLFieldName,
           name: subColumn.name.split('.')[1],
           field: subColumn.name.split('.')[1],
         };
@@ -651,17 +645,16 @@ const getRecords = async (
     buildPipeline(columns, params)
   );
 
-  getChoicesByUrl(
-    columns.filter(
-      (col) => col.meta?.field?.choicesByUrl && !col.field.includes('.') //dot questions are treated with resources
-    ),
-    req.headers.authorization,
-    records
-  );
-
   const resourceResourcesColumns = getResourceAndResourcesQuestions(columns);
+  let choicesByUrlColumns = columns.filter(
+    (col) => col.meta?.field?.choicesByUrl
+  );
+  let referenceDataColumns = columns
+    .filter((col) => col.meta?.field?.graphQLFieldName)
+    .map((col) => col.field);
 
   for (const column of resourceResourcesColumns) {
+    //replaces questions with ids with their actual values
     const relatedRecords = await Record.aggregate(
       buildPipeline(
         column.subColumns,
@@ -672,26 +665,36 @@ const getRecords = async (
       )
     );
 
+    choicesByUrlColumns = [
+      ...choicesByUrlColumns,
+      ...column.subColumns
+        .filter((subCol) => subCol.meta?.field?.choicesByUrl)
+        .map((subCol) => {
+          return { ...subCol, field: `${column.field}.${subCol.field}` };
+        }),
+    ];
+    referenceDataColumns = [
+      ...referenceDataColumns,
+      ...column.subColumns
+        .filter((subCol) => subCol.meta?.field?.graphQLFieldName)
+        .map((subCol) => `${column.field}.${subCol.field}`),
+    ];
+    console.log(referenceDataColumns, column.subColumns);
+
     records.forEach((record) => {
       const relatedRecordsForRecord = relatedRecords.filter((relatedRecord) =>
         record[column.field]?.includes(relatedRecord._id.toString())
       );
-      record[column.field] =
-        typeof record[column.field] === 'string'
-          ? relatedRecordsForRecord[0]
-          : relatedRecordsForRecord;
+      record[column.field] = isArray(record[column.field])
+        ? relatedRecordsForRecord
+        : relatedRecordsForRecord[0]; //convert it to single record in the case of resource question
     });
-
-    getChoicesByUrl(
-      column.subColumns.filter((col) => col.meta?.field?.choicesByUrl),
-      req.headers.authorization,
-      records,
-      column.field
-    );
   }
-  const referenceDataColumns = columns
-    .filter((col) => col.meta?.field?.graphQLFieldName)
-    .map((col) => col.field);
+  await getChoicesByUrl(
+    choicesByUrlColumns,
+    req.headers.authorization,
+    records
+  );
   await getReferenceData(referenceDataColumns, params.resource, req, records);
   return records;
 };
