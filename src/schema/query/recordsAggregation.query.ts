@@ -55,6 +55,8 @@ type RecordsAggregationArgs = {
   resource: string | mongoose.Types.ObjectId;
   aggregation: string | mongoose.Types.ObjectId;
   mapping?: any;
+  pipeline?: any[];
+  sourceFields?: any[];
   first?: number;
   skip?: number;
   at?: Date;
@@ -149,6 +151,8 @@ export default {
   args: {
     resource: { type: new GraphQLNonNull(GraphQLID) },
     aggregation: { type: new GraphQLNonNull(GraphQLID) },
+    pipeline: { type: GraphQLJSON },
+    sourceFields: { type: GraphQLJSON },
     contextFilters: { type: GraphQLJSON },
     mapping: { type: GraphQLJSON },
     first: { type: GraphQLInt },
@@ -161,7 +165,10 @@ export default {
     graphQLAuthCheck(context);
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
-    checkPageSize(first);
+    // If first equal to -1, no need for page size check, that means we want to fetch all records
+    if (first > 0) {
+      checkPageSize(first);
+    }
     try {
       const user = context.user;
       // global variables
@@ -187,14 +194,14 @@ export default {
       const aggregation = resource.aggregations.find((x) =>
         isEqual(x.id, args.aggregation)
       );
-
-      if (
-        aggregation?.sourceFields &&
-        aggregation.pipeline &&
-        args.contextFilters
-      ) {
-        extractSourceFields(args.contextFilters, aggregation.sourceFields);
-        aggregation.pipeline.unshift({
+      // sourceFields and pipeline from args have priority over current aggregation ones
+      // for the aggregation preview feature on aggregation builder
+      const sourceFields = args.sourceFields ?? aggregation?.sourceFields;
+      const aggregationPipeline = args.pipeline ?? aggregation?.pipeline ?? [];
+      // Build the source fields step
+      if (sourceFields && aggregationPipeline && args.contextFilters) {
+        extractSourceFields(args.contextFilters, sourceFields);
+        aggregationPipeline.unshift({
           type: 'filter',
           form: args.contextFilters,
         });
@@ -219,10 +226,10 @@ export default {
       // });
 
       // Build the source fields step
-      if (aggregation.sourceFields && aggregation.sourceFields.length) {
+      if (sourceFields && sourceFields.length) {
         // If we have user fields
         if (
-          aggregation.sourceFields.some((x) =>
+          sourceFields.some((x) =>
             defaultRecordFields.some(
               (y) =>
                 (x === y.field && y.type === UserType) ||
@@ -231,7 +238,7 @@ export default {
           )
         ) {
           // Form
-          if (aggregation.sourceFields.includes('form')) {
+          if (sourceFields.includes('form')) {
             const relatedForms = await Form.find({
               resource: args.resource,
             }).select('id name');
@@ -243,12 +250,12 @@ export default {
             });
           }
           // Created By
-          if (aggregation.sourceFields.includes('createdBy')) {
+          if (sourceFields.includes('createdBy')) {
             pipeline = pipeline.concat(CREATED_BY_STAGES);
           }
           // Last updated by
-          if (aggregation.sourceFields.includes('lastUpdatedBy')) {
-            if (!aggregation.sourceFields.includes('createdBy')) {
+          if (sourceFields.includes('lastUpdatedBy')) {
+            if (!sourceFields.includes('createdBy')) {
               pipeline = pipeline.concat(CREATED_BY_STAGES);
             }
             pipeline = pipeline.concat([
@@ -346,7 +353,7 @@ export default {
           },
         });
         // Loop on fields to apply lookups for special fields
-        for (const fieldName of aggregation.sourceFields) {
+        for (const fieldName of sourceFields) {
           const field = resource.fields.find((x) => x.name === fieldName);
           // If field is a calculated field
           if (field && field.isCalculated) {
@@ -500,7 +507,7 @@ export default {
         }
         pipeline.push({
           $project: {
-            ...(aggregation.sourceFields as any[]).reduce(
+            ...(sourceFields as any[]).reduce(
               (o, field) =>
                 Object.assign(o, {
                   [field]: selectableDefaultRecordFieldsFlat.includes(field)
@@ -530,8 +537,8 @@ export default {
         ]
       );
       // Build pipeline stages
-      if (aggregation.pipeline && aggregation.pipeline.length) {
-        buildPipeline(pipeline, aggregation.pipeline, resource, context);
+      if (aggregationPipeline && aggregationPipeline.length) {
+        buildPipeline(pipeline, aggregationPipeline, resource, context);
       }
       // Build mapping step
       if (args.mapping) {
@@ -561,7 +568,11 @@ export default {
         }
         pipeline.push({
           $facet: {
-            items: [{ $skip: skip }, { $limit: first }],
+            items:
+              // If first is negative number, that means we want the whole record list for the preview
+              first > 0
+                ? [{ $skip: skip }, { $limit: first }]
+                : [{ $skip: skip }],
             totalCount: [
               {
                 $count: 'count',
