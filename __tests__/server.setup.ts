@@ -1,6 +1,6 @@
 import express from 'express';
-import { graphqlUploadExpress } from 'graphql-upload';
-import apollo from '@server/apollo';
+// import { graphqlUploadExpress } from 'graphql-upload';
+// import apollo from '@server/apollo';
 import i18next from 'i18next';
 import Backend from 'i18next-node-fs-backend';
 import { createServer, Server } from 'http';
@@ -16,6 +16,7 @@ import EventEmitter from 'events';
 import dataSources from '@server/apollo/dataSources';
 import defineUserAbility from '@security/defineUserAbility';
 import i18nextMiddleware from 'i18next-http-middleware';
+import { User } from '@models';
 
 /**
  * Definition of test server.
@@ -58,20 +59,19 @@ class SafeTestServer {
     this.app.use(corsMiddleware);
     // this.app.use(authMiddleware);
     this.app.use('/graphql', graphqlMiddleware);
-    this.app.use(
-      '/graphql',
-      graphqlUploadExpress({ maxFileSize: 7340032, maxFiles: 10 })
-    );
 
     this.app.use(i18nextMiddleware.handle(i18next));
 
     // === APOLLO ===
-    this.apolloServer = await apollo(schema);
+    this.apolloServer = await SafeTestServer.createApolloTestServer(
+      schema,
+      User
+    );
     this.apolloServer.applyMiddleware({ app: this.app });
 
     // === SUBSCRIPTIONS ===
     this.httpServer = createServer(this.app);
-    this.apolloServer.installSubscriptionHandlers(this.httpServer);
+    // this.apolloServer.installSubscriptionHandlers(this.httpServer);
 
     // === REST ===
     this.app.use(router);
@@ -90,13 +90,19 @@ class SafeTestServer {
     schema: GraphQLSchema,
     user: any
   ): Promise<ApolloServer> {
+    const context = SafeTestServer.context(user);
+    const dataSourcesInstance = await dataSources();
     return new ApolloServer({
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //@ts-ignore
       uploads: false,
-      schema: schema,
+      schema,
       introspection: true,
       playground: true,
-      context: this.context(user),
-      dataSources: await dataSources(),
+      context,
+      dataSources: () => ({
+        ...dataSourcesInstance,
+      }),
     });
   }
 
