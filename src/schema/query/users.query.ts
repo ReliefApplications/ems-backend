@@ -83,7 +83,6 @@ export default {
             accessibleBy(ability, 'read').User
           ).getFilter();
           const queryFilters = getFilter(args.filter, FILTER_FIELDS);
-          console.log(JSON.stringify(queryFilters));
           const filters: any[] = [queryFilters, abilityFilters];
           const afterCursor = args.afterCursor;
 
@@ -154,8 +153,27 @@ export default {
             // Filter users that have at least one role in the application(s).
             { $match: { 'roles.0': { $exists: true } } },
           ];
-          const aggregation = await User.aggregate(aggregations);
-          return aggregation;
+          let aggregation = await User.aggregate(aggregations);
+
+          const hasNextPage = aggregation.length > first;
+          if (hasNextPage) {
+            aggregation = aggregation.slice(0, aggregation.length - 1);
+          }
+          const sortField = SORT_FIELDS.find((x) => x.name === '_id');
+          const edges = aggregation.map((r) => ({
+            cursor: encodeCursor(sortField.cursorId(r)),
+            node: r,
+          }));
+          return {
+            pageInfo: {
+              hasNextPage,
+              startCursor: edges.length > 0 ? edges[0].cursor : null,
+              endCursor:
+                edges.length > 0 ? edges[edges.length - 1].cursor : null,
+            },
+            edges,
+            totalCount: await User.countDocuments({ $and: aggregation }),
+          };
         }
       } else {
         throw new GraphQLError(
