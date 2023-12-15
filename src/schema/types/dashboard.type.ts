@@ -13,6 +13,7 @@ import extendAbilityForStep from '@security/extendAbilityForStep';
 import { Types } from 'mongoose';
 import { CustomAPI } from '@server/apollo/dataSources';
 import { getContextData } from '@utils/context/getContextData';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
 
 /** GraphQL dashboard type definition */
 export const DashboardType = new GraphQLObjectType({
@@ -22,8 +23,32 @@ export const DashboardType = new GraphQLObjectType({
     name: { type: GraphQLString },
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
-    structure: { type: GraphQLJSON },
+    structure: {
+      type: GraphQLJSON,
+      resolve(parent) {
+        if (Array.isArray(parent.structure)) {
+          return parent.structure;
+        } else {
+          return [];
+        }
+      },
+    },
     buttons: { type: GraphQLJSON },
+    gridOptions: {
+      type: GraphQLJSON,
+      resolve(parent) {
+        if (parent.gridOptions) {
+          return parent.gridOptions;
+        } else {
+          return {
+            minCols: 8,
+            maxCols: 8,
+            fixedRowHeight: 200,
+            margin: 10,
+          };
+        }
+      },
+    },
     permissions: {
       type: AccessType,
       async resolve(parent, args, context) {
@@ -98,8 +123,6 @@ export const DashboardType = new GraphQLObjectType({
         return ability.can('delete', parent);
       },
     },
-    showFilter: { type: GraphQLBoolean },
-
     contextData: {
       type: GraphQLJSON,
       async resolve(parent, args, context) {
@@ -125,14 +148,17 @@ export const DashboardType = new GraphQLObjectType({
         const ctx = page.context;
 
         if (recordId) {
+          console.log('ici');
           const resource = 'resource' in ctx ? ctx.resource : null;
-          const data = await getContextData(
-            resource,
-            recordId,
-            context.user,
-            context
-          );
-          return data;
+          try {
+            context.user.ability = await extendAbilityForRecords(context.user);
+            const data = await getContextData(resource, recordId, context);
+            console.log('là');
+            return data;
+          } catch (err) {
+            console.log(err);
+            return null;
+          }
         } else if (elementId) {
           const refData = 'refData' in ctx ? ctx.refData : null;
           // get refData from page
@@ -151,5 +177,6 @@ export const DashboardType = new GraphQLObjectType({
         return null;
       },
     },
+    filter: { type: GraphQLJSON },
   }),
 });

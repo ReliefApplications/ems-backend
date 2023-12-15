@@ -1,9 +1,9 @@
-import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { getAccessibleFields } from '@utils/form';
 import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
 import { Types } from 'mongoose';
-import { Record, Resource, User } from '@models';
+import { Record, Resource } from '@models';
 import { accessibleBy } from '@casl/mongoose';
+import get from 'lodash/get';
 
 /** Maximum recursion depth for getting the context data */
 const MAX_DEPTH = 10;
@@ -13,7 +13,6 @@ const MAX_DEPTH = 10;
  *
  * @param resourceID Resource ID or Resource the record belongs to
  * @param recordID Record to get the context data from
- * @param user User to check permissions
  * @param context graphql context
  * @param depth Current depth of the recursion
  * @returns Context data
@@ -21,7 +20,6 @@ const MAX_DEPTH = 10;
 export const getContextData = async (
   resourceID: Types.ObjectId | Resource,
   recordID: Types.ObjectId | Record,
-  user: User,
   context: any,
   depth = 0
 ) => {
@@ -38,13 +36,18 @@ export const getContextData = async (
 
   const fields = resource.fields;
   const data: { [key: string]: any } = {};
+  console.log('a');
   for (const field of fields) {
-    const ability = await extendAbilityForRecords(user);
+    console.log('aa');
     if (field.type === 'resource') {
-      const refRecordID = record.data[field.name];
+      console.log('ab');
+      const refRecordID = get(record.data, field.name);
+      if (!refRecordID) {
+        continue;
+      }
       const refRecord = getAccessibleFields(
         await Record.findById(refRecordID),
-        ability
+        context.user.ability
       );
 
       // if related record is not found, skip this field
@@ -54,7 +57,7 @@ export const getContextData = async (
       const refRecordData = await getContextData(
         field.resource,
         refRecord,
-        user,
+        context,
         depth + 1
       );
 
@@ -74,7 +77,7 @@ export const getContextData = async (
     } else if (field.isCalculated) {
       // Check abilities
       const permissionFilters = Record.find(
-        accessibleBy(ability, 'read')
+        accessibleBy(context.user.ability, 'read').Record
       ).getFilter();
 
       const pipeline = [
@@ -106,6 +109,7 @@ export const getContextData = async (
       Object.assign(data, { [field.name]: record.data[field.name] });
     }
   }
+  console.log('aaa');
 
   return data;
 };

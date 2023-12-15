@@ -1,13 +1,15 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { ApiConfiguration } from '@models';
 import { getToken } from '@utils/proxy';
-import { get, isEmpty } from 'lodash';
+import { get, isEmpty, lowerCase } from 'lodash';
 import i18next from 'i18next';
 import { logger } from '@services/logger.service';
 import config from 'config';
 import * as CryptoJS from 'crypto-js';
 import axios from 'axios';
 import { createClient, RedisClientType } from 'redis';
+import { authType } from '@const/enumTypes';
+import jwtDecode from 'jwt-decode';
 
 /** Express router */
 const router = express.Router();
@@ -22,12 +24,19 @@ const SETTING_PLACEHOLDER = '●●●●●●●●●●●●●';
  * @param res response
  * @param api api configuration
  * @param path url path
+ * @param ping bool: are we executing a ping request
  * @returns API request
  */
-const proxyAPIRequest = async (req, res, api, path) => {
+const proxyAPIRequest = async (
+  req: Request,
+  res: Response,
+  api: ApiConfiguration,
+  path: string,
+  ping = false
+) => {
   try {
     let client: RedisClientType;
-    if (config.get('redis.url') && req.method === 'get') {
+    if (config.get('redis.url') && lowerCase(req.method) === 'get' && !ping) {
       client = createClient({
         url: config.get('redis.url'),
         password: config.get('redis.password'),
@@ -35,17 +44,28 @@ const proxyAPIRequest = async (req, res, api, path) => {
       client.on('error', (error) => logger.error(`REDIS: ${error}`));
       await client.connect();
     }
+    // Generate a hash, taking into account the request body when storing data
+    const bodyHash = CryptoJS.SHA256(JSON.stringify(req.body)).toString(
+      CryptoJS.enc.Hex
+    );
     // Add / between endpoint and path, and ensure that double slash are removed
     const url = `${api.endpoint.replace(/\$/, '')}/${path}`.replace(
       /([^:]\/)\/+/g,
       '$1'
     );
-    const cacheData = client ? await client.get(url) : null;
+    // Create a cache key taking into account the body of the request, and making a user-dependant cache for auth code
+    const cacheKey = [authType.serviceToService, authType.public].includes(
+      api.authType
+    )
+      ? `${url}/${bodyHash}`
+      : `${jwtDecode<any>(req.headers.authorization).name}:${url}/${bodyHash}`;
+    // Get data from the cache
+    const cacheData = client ? await client.get(cacheKey) : null;
     if (cacheData) {
       logger.info(`REDIS: get key : ${url}`);
       res.status(200).send(JSON.parse(cacheData));
     } else {
-      const token = await getToken(api);
+      const token = await getToken(api, req.headers.accesstoken, ping);
       await axios({
         url,
         method: req.method,
@@ -59,16 +79,28 @@ const proxyAPIRequest = async (req, res, api, path) => {
         }),
       })
         .then(async ({ data, status }) => {
+          // We are only caching the results of requests that are not user-dependent.
+          // Otherwise, unwanted users could access cached data of other users.
+          // As an improvement, we could include a stringified unique property of the user to the cache-key to enable user-specific cache.
           if (
             client &&
-            ['service-to-service', 'public'].includes(api.authType) &&
+            [authType.serviceToService, authType.public].includes(
+              api.authType
+            ) &&
             status === 200
           ) {
             await client
-              .set(url, JSON.stringify(data), {
+              .set(cacheKey, JSON.stringify(data), {
                 EX: 60 * 60 * 24, // set a cache of one day
               })
-              .then(() => logger.info(`REDIS: set key : ${url}`));
+              .then(() => logger.info(`REDIS: set key : ${cacheKey}`));
+          }
+          if (client && api.authType === authType.authorizationCode) {
+            await client
+              .set(cacheKey, JSON.stringify(data), {
+                EX: 60 * 60 * 24, // set a cache of one day
+              })
+              .then(() => logger.info(`REDIS: set key : ${cacheKey}`));
           }
           res.status(200).send(data);
         })
@@ -86,7 +118,7 @@ const proxyAPIRequest = async (req, res, api, path) => {
   }
 };
 
-router.post('/ping/**', async (req, res) => {
+router.post('/ping/**', async (req: Request, res: Response) => {
   try {
     const body = req.body;
     if (body) {
@@ -110,8 +142,9 @@ router.post('/ping/**', async (req, res) => {
             ).toString(CryptoJS.enc.Utf8)
           )
         : {};
-      const parameters = {
+      const parameters: ApiConfiguration = {
         ...body,
+        authType: api.authType,
         settings: {
           authTargetUrl:
             get(body, 'settings.authTargetUrl', SETTING_PLACEHOLDER) !==
@@ -137,7 +170,7 @@ router.post('/ping/**', async (req, res) => {
       };
 
       req.method = 'GET';
-      await proxyAPIRequest(req, res, parameters, api.pingUrl);
+      await proxyAPIRequest(req, res, parameters, api.pingUrl, true);
     }
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
@@ -148,7 +181,7 @@ router.post('/ping/**', async (req, res) => {
 /**
  * Forward requests to actual API using the API Configuration
  */
-router.all('/:name/**', async (req, res) => {
+router.all('/:name/**', async (req: Request, res: Response) => {
   try {
     const api = await ApiConfiguration.findOne({
       $or: [{ name: req.params.name }, { id: req.params.name }],

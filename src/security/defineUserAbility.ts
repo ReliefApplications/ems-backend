@@ -326,10 +326,12 @@ export default function defineUserAbility(user: User | Client): AppAbility {
       ['ApiConfiguration', 'PullJob', 'ReferenceData']
     );
   } else {
-    can('read', 'ApiConfiguration', filters('canSee', user));
+    // can('read', 'ApiConfiguration', filters('canSee', user));
+    can('read', 'ApiConfiguration');
     can('update', 'ApiConfiguration', filters('canUpdate', user));
     can('delete', 'ApiConfiguration', filters('canDelete', user));
-    can('read', 'ReferenceData', filters('canSee', user));
+    // can('read', 'ReferenceData', filters('canSee', user));
+    can('read', 'ReferenceData');
     can('update', 'ReferenceData', filters('canUpdate', user));
     can('delete', 'ReferenceData', filters('canDelete', user));
   }

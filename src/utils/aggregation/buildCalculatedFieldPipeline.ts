@@ -8,6 +8,7 @@ import {
   SingleOperatorOperationsTypes,
 } from '../../const/calculatedFields';
 import { getExpressionFromString } from './expressionFromString';
+import { PipelineStage } from 'mongoose';
 
 type Dependency = {
   operation: Operation;
@@ -96,7 +97,7 @@ const resolveTodayOperator = (operator: Operator | null, path: string) => {
     return `$${auxPath.startsWith('aux.') ? '' : 'aux.'}${auxPath}`;
   };
 
-  const step = {
+  const step: PipelineStage = {
     $addFields: {
       [path.startsWith('aux.') ? path : `data.${path}`]: operator
         ? {
@@ -140,17 +141,67 @@ const resolveSingleOperator = (
     });
     return `$${auxPath.startsWith('aux.') ? '' : 'aux.'}${auxPath}`;
   };
-  const step = ['exists', 'size', 'date', 'toLong', 'toInt'].includes(operation)
-    ? // Simple operations
-      {
+
+  let step: PipelineStage = null;
+
+  switch (operation) {
+    case 'exists':
+    case 'toInt':
+    case 'toLong': {
+      // Simple operations
+      step = {
         $addFields: {
           [path.startsWith('aux.') ? path : `data.${path}`]: {
             [operationMap[operation]]: getValueString(),
           },
         },
-      }
-    : // Date operations
-      {
+      };
+      break;
+    }
+    case 'size': {
+      // Size operation
+      step = {
+        $addFields: {
+          [path.startsWith('aux.') ? path : `data.${path}`]: {
+            [operationMap[operation]]: {
+              $cond: {
+                if: { $isArray: getValueString() },
+                then: getValueString(),
+                else: [],
+              },
+            },
+          },
+        },
+      };
+      break;
+    }
+    case 'date': {
+      // To date operation
+      step = {
+        $addFields: {
+          [path.startsWith('aux.') ? path : `data.${path}`]: {
+            [operationMap[operation]]: {
+              $convert: {
+                input: getValueString(),
+                to: 'date',
+                onError: null,
+                onNull: null,
+              },
+            },
+          },
+        },
+      };
+      break;
+    }
+    case 'year':
+    case 'month':
+    case 'day':
+    case 'hour':
+    case 'minute':
+    case 'second':
+    case 'millisecond': {
+      // Date operations
+      step = {
         $addFields: {
           [path.startsWith('aux.') ? path : `data.${path}`]: {
             $getField: {
@@ -167,6 +218,12 @@ const resolveSingleOperator = (
           },
         },
       };
+      break;
+    }
+    default: {
+      throw new Error(`Invalid operation: ${operation}`);
+    }
+  }
 
   return { step, dependencies };
 };
@@ -204,7 +261,7 @@ const resolveDoubleOperator = (
     return `$${auxPath.startsWith('aux.') ? '' : 'aux.'}${auxPath}`;
   };
 
-  let step: any = null;
+  let step: PipelineStage = null;
 
   switch (operation) {
     case 'datediff':
@@ -268,7 +325,7 @@ const resolveMultipleOperators = (
 ) => {
   const dependencies: Dependency[] = [];
 
-  const step = {
+  const step: PipelineStage = {
     $addFields: {
       [path.startsWith('aux.') ? path : `data.${path}`]: {
         [operationMap[operation]]: operators.map((operator, index) => {
@@ -340,12 +397,8 @@ const resolveMultipleOperators = (
  * @param timeZone the current timezone of the user
  * @returns The pipeline for the calculated field
  */
-const buildPipeline = (
-  op: Operation,
-  path: string,
-  timeZone: string
-): any[] => {
-  const pipeline: any[] = [];
+const buildPipeline = (op: Operation, path: string, timeZone: string) => {
+  const pipeline: PipelineStage.AddFields[] = [];
   switch (op.operation) {
     case 'add':
     case 'mul':
@@ -459,7 +512,7 @@ const buildCalculatedFieldPipeline = (
   expression: string,
   name: string,
   timeZone: string
-): any[] => {
+) => {
   const operation = getExpressionFromString(expression);
   const pipeline = buildPipeline(operation, name, timeZone);
   return [
@@ -467,16 +520,16 @@ const buildCalculatedFieldPipeline = (
       $facet: {
         calcFieldFacet: pipeline,
       },
-    },
+    } as PipelineStage.Facet,
     {
       $unwind: '$calcFieldFacet',
-    },
+    } as PipelineStage.Unwind,
     {
       $replaceRoot: {
         newRoot: '$calcFieldFacet',
       },
-    },
-  ];
+    } as PipelineStage.ReplaceRoot,
+  ] as const;
 };
 
 export default buildCalculatedFieldPipeline;

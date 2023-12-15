@@ -36,6 +36,8 @@ import group from './group.query';
 import groups from './groups.query';
 import layers from './layers.query';
 import layer from './layer.query';
+import draftRecords from './draftRecords.query';
+import referenceDataAggregation from './referenceDataAggregation.query';
 
 /** GraphQL query type definition */
 const Query = new GraphQLObjectType({
@@ -63,6 +65,7 @@ const Query = new GraphQLObjectType({
     recordsAggregation,
     referenceData,
     referenceDatas,
+    referenceDataAggregation,
     resource,
     resources,
     role,
@@ -78,6 +81,7 @@ const Query = new GraphQLObjectType({
     recordHistory,
     layers,
     layer,
+    draftRecords,
   },
 });
 

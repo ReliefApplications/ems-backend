@@ -31,6 +31,7 @@ import { formatFilename } from '@utils/files/format.helper';
 import { sendEmail } from '@utils/email';
 import exportBatch from '@utils/files/exportBatch';
 import { accessibleBy } from '@casl/mongoose';
+import dataSources from '@server/apollo/dataSources';
 
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwise
@@ -147,7 +148,6 @@ router.get('/form/records/:id/history', async (req, res) => {
     // localization
     await req.i18n.changeLanguage(req.language);
     const dateLocale = req.query.dateLocale.toString();
-    const ability: AppAbility = req.context.user.ability;
     // setting up filters
     let filters: {
       fromDate?: Date;
@@ -166,10 +166,10 @@ router.get('/form/records/:id/history', async (req, res) => {
       if (filters.toDate) filters.toDate.setDate(filters.toDate.getDate() + 1);
     }
 
-    const recordFilters = Record.find(accessibleBy(ability, 'read').Record)
-      .where({ _id: req.params.id, archived: { $ne: true } })
-      .getFilter();
-    const record: Record = await Record.findOne(recordFilters)
+    const record: Record = await Record.findOne({
+      _id: req.params.id,
+      archived: { $ne: true },
+    })
       .populate({
         path: 'versions',
         model: 'Version',
@@ -179,16 +179,23 @@ router.get('/form/records/:id/history', async (req, res) => {
         },
       })
       .populate({
-        path: 'createdBy.user',
-        model: 'User',
+        path: 'resource',
+        model: 'Resource',
       });
-    const formFilters = Form.find(accessibleBy(ability, 'read').Form)
-      .where({ _id: record.form })
-      .getFilter();
-    const form = await Form.findOne(formFilters).populate({
-      path: 'resource',
-      model: 'Resource',
-    });
+    if (!record) {
+      return res.status(404).send(req.t('common.errors.dataNotFound'));
+    }
+    const form = await Form.findById(record.form);
+    if (!form) {
+      return res.status(404).send(req.t('common.errors.dataNotFound'));
+    }
+    // Check ability
+    const ability = await extendAbilityForRecords(req.context.user);
+    if (ability.cannot('read', record) || ability.cannot('read', form)) {
+      return res
+        .status(403)
+        .send(i18next.t('common.errors.permissionNotGranted'));
+    }
     if (form) {
       record.form = form;
       const meta: RecordHistoryMeta = {
@@ -208,6 +215,15 @@ router.get('/form/records/:id/history', async (req, res) => {
         {
           translate: req.t,
           ability,
+          context: {
+            // Need to use 'any' in order to use a class which is supposed to initialize with Apollo context
+            dataSources: (
+              await dataSources({
+                // Passing upstream request so accesstoken can be used for authentication
+                req: req,
+              } as any)
+            )(),
+          },
         }
       ).getHistory();
       const fields = filters.fields;

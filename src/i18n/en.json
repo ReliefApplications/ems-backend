@@ -45,17 +45,17 @@
 		"aggregation": {
 			"add": {
 				"errors": {
-					"invalidArguments": "Resource and aggregation must be provided when you are added new Aggregation"
+					"invalidArguments": "Resource or reference data and aggregation must be provided when adding a new aggregation"
 				}
 			},
 			"delete": {
 				"errors": {
-					"invalidArguments": "Resource and aggregation id must be provided when you are delete Aggregation"
+					"invalidArguments": "Resource or reference data and aggregation id must be provided when deleting an aggregation"
 				}
 			},
 			"edit": {
 				"errors": {
-					"invalidArguments": "Resource and aggregation and aggregation id must be provided when you are update Aggregation"
+					"invalidArguments": "Resource or reference data and aggregation and aggregation id must be provided when editing an aggregation"
 				}
 			}
 		},
@@ -82,7 +82,8 @@
 			},
 			"duplicate": {
 				"errors": {
-					"invalidArguments": "Application name must be provided."
+					"invalidArguments": "Application name must be provided.",
+					"namedDuplicated": "Application with name {{name}} already exists. This name cannot be used. Please provide a different name."
 				}
 			},
 			"edit": {
@@ -144,6 +145,7 @@
 			},
 			"fetch": {
 				"errors": {
+					"fetchRequestFailed": "Failed to fetch groups.",
 					"groupsFromServiceDisabled": "Fetching groups from service not available."
 				}
 			}
@@ -202,6 +204,7 @@
 			},
 			"edit": {
 				"errors": {
+					"invalidArguments": "Either data or version must be provided.",
 					"wrongTemplateProvided": "Template must sharing the same resource as the parent form of the edited record."
 				}
 			}
@@ -299,6 +302,9 @@
 			}
 		},
 		"style": {
+			"errors": {
+				"notFound": "Unable to load application's style"
+			},
 			"noStyle": "This application don't have a custom style file."
 		},
 		"upload": {

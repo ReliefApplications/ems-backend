@@ -82,7 +82,8 @@
 			},
 			"duplicate": {
 				"errors": {
-					"invalidArguments": "******"
+					"invalidArguments": "******",
+					"namedDuplicated": "****** {{name}} ******"
 				}
 			},
 			"edit": {
@@ -144,6 +145,7 @@
 			},
 			"fetch": {
 				"errors": {
+					"fetchRequestFailed": "******",
 					"groupsFromServiceDisabled": "******"
 				}
 			}
@@ -202,6 +204,7 @@
 			},
 			"edit": {
 				"errors": {
+					"invalidArguments": "******",
 					"wrongTemplateProvided": "******"
 				}
 			}
@@ -299,6 +302,9 @@
 			}
 		},
 		"style": {
+			"errors": {
+				"notFound": "******"
+			},
 			"noStyle": "******"
 		},
 		"upload": {

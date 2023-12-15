@@ -152,6 +152,19 @@ const buildPipeline = (
         break;
       }
       case PipelineStage.SORT: {
+        // Try to group sort stages together ( when they are following )
+        if (pipeline.length > 0) {
+          const previousStage = pipeline[pipeline.length - 1];
+          if (Object.keys(previousStage)[0] === '$sort') {
+            // Join with previous sort criteria to add a single sort stage with all fields with criteria and not multiple sort stages
+            // (necessary for sort on multiple fields to work)
+            previousStage.$sort = {
+              ...previousStage.$sort,
+              [stage.form.field]: stage.form.order === 'asc' ? 1 : -1,
+            };
+            break;
+          }
+        }
         pipeline.push({
           $sort: {
             [stage.form.field]: stage.form.order === 'asc' ? 1 : -1,

@@ -10,6 +10,7 @@ import {
   PullJob,
   Record as RecordModel,
   User,
+  Role,
 } from '@models';
 import pubsub from './pubsub';
 import { CronJob } from 'cron';
@@ -21,12 +22,27 @@ import { logger } from '../services/logger.service';
 import * as cronValidator from 'cron-validator';
 import get from 'lodash/get';
 import axios from 'axios';
+import { ownershipMappingJSON } from './EIOSOwnernshipMapping';
 
 /** A map with the task ids as keys and the scheduled tasks as values */
 const taskMap: Record<string, CronJob> = {};
 
 /** Record's default fields */
 const DEFAULT_FIELDS = ['createdBy'];
+
+/**
+ * Name of Signal Apps for EIOS
+ */
+const EIOS_APP_NAMES = [
+  'Signal EURO',
+  'Signal AFRO',
+  'Signal WPRO',
+  'Signal EMRO',
+  'Signal SEARO',
+  'Signal HQ AEE',
+  'Signal HQ FCV',
+  'Signal AMRO',
+];
 
 /**
  * Global function called on server start to initialize all the pullJobs.
@@ -86,6 +102,11 @@ export const scheduleJob = (pullJob: PullJob) => {
             if (apiConfiguration.authType === authType.public) {
               // eslint-disable-next-line @typescript-eslint/no-use-before-define
               fetchRecordsPublic(pullJob);
+            }
+            if (apiConfiguration.authType === authType.authorizationCode) {
+              throw new Error(
+                'Unsupported Api configuration with Authorization Code authentication.'
+              );
             }
           } catch (err) {
             logger.error(err.message, { stack: err.stack });
@@ -156,7 +177,7 @@ const fetchRecordsServiceToService = (
             .then(({ data: data2 }) => {
               if (data2 && data2.result) {
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                insertRecords(data2.result, pullJob);
+                insertRecords(data2.result, pullJob, true);
               }
             })
             .catch((err) => {
@@ -247,14 +268,43 @@ const accessFieldIncludingNested = (data: any, identifier: string): any => {
 };
 
 /**
+ * Get Mongo Filters to get user role for a specific application
+ *
+ * @param appName Name of the application
+ * @returns List of Mongo filters
+ */
+const getUserRoleFiltersFromApp = (appName: string): any => {
+  return [
+    {
+      $lookup: {
+        from: 'applications',
+        localField: 'application',
+        foreignField: '_id',
+        as: '_application',
+      },
+    },
+    {
+      $match: {
+        $and: [
+          { title: 'User' },
+          { _application: { $elemMatch: { name: appName } } },
+        ],
+      },
+    },
+  ];
+};
+
+/**
  *  Use the fetched data to insert records into the dB if needed.
  *
  * @param data array of data fetched from API
  * @param pullJob pull job configuration
+ * @param isEIOS is EIOS pulljob or not
  */
 export const insertRecords = async (
   data: any[],
-  pullJob: PullJob
+  pullJob: PullJob,
+  isEIOS?: boolean
 ): Promise<void> => {
   const form = await Form.findById(pullJob.convertTo);
   if (form) {
@@ -370,6 +420,39 @@ export const insertRecords = async (
       form: pullJob.convertTo,
       $or: filters,
     }).select(selectedFields);
+
+    // If EIOS pullJob, build a mapping JSON to assign ownership (role ids)
+    const ownershipMappingWithIds: any = {};
+    if (isEIOS) {
+      // Create a dictionary of user roles ids
+      const appRolesWithIds = {};
+      EIOS_APP_NAMES.map(async (application) => {
+        const appUserRole = await Role.aggregate(
+          getUserRoleFiltersFromApp(application)
+        );
+        if (appUserRole[0]) {
+          appRolesWithIds[application] = appUserRole[0]._id;
+        }
+      });
+
+      const signalHQPHIUserRole = await Role.aggregate(
+        getUserRoleFiltersFromApp('Signal HQ PHI')
+      );
+
+      for (const [key, value] of Object.entries(ownershipMappingJSON)) {
+        ownershipMappingWithIds[key] = [];
+        if (value.length > 0) {
+          value.map((elt) => {
+            if (appRolesWithIds[elt]) {
+              ownershipMappingWithIds[key].push(appRolesWithIds[elt]);
+            }
+          });
+        }
+        // Always push HQ PHI User role
+        ownershipMappingWithIds[key].push(signalHQPHIUserRole[0]._id);
+      }
+    }
+
     for (const element of data) {
       // eslint-disable-next-line @typescript-eslint/no-use-before-define
       const mappedElement = mapData(
@@ -421,6 +504,13 @@ export const insertRecords = async (
             }
             return true;
           });
+
+      if (isEIOS) {
+        // Assign correct ownership value based on mapping JSON and board name
+        const boardName = mappedElement.article_board_name;
+        mappedElement.ownership =
+          ownershipMappingWithIds[boardName].map(String);
+      }
       // If everything is fine, push it in the array for saving
       if (!isDuplicate) {
         transformRecord(mappedElement, form.fields);
