@@ -74,7 +74,9 @@ export default {
 
       return await Layer.find({
         $and: [...filters],
-      }).sort(sortField.sort(sortOrder));
+      })
+        .collation({ locale: 'en' })
+        .sort(sortField.sort(sortOrder));
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {
