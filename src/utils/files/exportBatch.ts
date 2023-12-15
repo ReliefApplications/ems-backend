@@ -15,7 +15,7 @@ import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFiel
 import { getChoices } from '@utils/proxy';
 import { referenceDataType } from '@const/enumTypes';
 import jsonpath from 'jsonpath';
-import { each, isArray, omit, set } from 'lodash';
+import { cloneDeep, each, isArray, omit, set } from 'lodash';
 
 /**
  * Export batch parameters interface
@@ -410,7 +410,6 @@ const getReferenceData = async (
   req: any,
   records: any
 ) => {
-  console.log(referenceDataColumns);
   const refactoredColumns = referenceDataColumns.reduce((acc, columnName) => {
     const splitColumnName = columnName.split('.');
     const [key, value] =
@@ -434,12 +433,16 @@ const getReferenceData = async (
       )
         .map((col) => {
           const firstRecordWithResource = records.find(
-            (record: any) => record[col] && record[col].resource
-          );
+            (record: any) =>
+              record[col] &&
+              (isArray(record[col])
+                ? record[col][0].resource
+                : record[col].resource)
+          )[col];
           if (firstRecordWithResource) {
-            const nestedResourceId = isArray(firstRecordWithResource[col])
-              ? firstRecordWithResource[col][0].resource
-              : firstRecordWithResource[col].resource;
+            const nestedResourceId = isArray(firstRecordWithResource)
+              ? firstRecordWithResource[0].resource
+              : firstRecordWithResource.resource;
             mappedNestedResources[col] = nestedResourceId;
             return nestedResourceId;
           }
@@ -487,7 +490,6 @@ const getReferenceData = async (
       //if no record has a reference to the nested resource, relatedResource will be null => we avoid error and there is no need for data
       continue;
     }
-    console.log(relatedResource, fieldName, refDataPath, mappedNestedResources);
     const referenceDataId = relatedResource.fields.find(
       (field) => field.name === fieldName
     ).referenceData.id;
@@ -556,32 +558,40 @@ const getReferenceData = async (
           logger.error(error);
         });
     }
+    const getReferenceDataValue = (recordValue) => {
+      return isArray(recordValue)
+        ? recordValue.reduce((acc, choice) => {
+            const dataRow = data.find(
+              (obj) => obj[referenceData.valueField] === choice
+            );
+            if (dataRow) {
+              Object.keys(dataRow).forEach((key) => {
+                if (!acc[key]) {
+                  acc[key] = [];
+                }
+                acc[key].push(dataRow[key]);
+              });
+            }
+            return acc;
+          }, {})
+        : data.find(
+            (obj) => obj[referenceData.valueField] === recordValue //affecting all row, not optimal but gets the job done
+          );
+    };
 
-    records.forEach((record) => {
-      const recordValue = get(record, refDataPath);
-      set(
-        record,
-        refDataPath,
-        isArray(recordValue)
-          ? recordValue.reduce((acc, choice) => {
-              const dataRow = data.find(
-                (obj) => obj[referenceData.valueField] === choice
-              );
-              if (dataRow) {
-                Object.keys(dataRow).forEach((key) => {
-                  if (!acc[key]) {
-                    acc[key] = [];
-                  }
-                  acc[key].push(dataRow[key]);
-                });
-              }
-              return acc;
-            }, {})
-          : data.find(
-              (obj) => obj[referenceData.valueField] === recordValue //affecting all row, not optimal but gets the job done
-            )
-      );
-    });
+    for (const record of records) {
+      const resourcesField = refDataPath.split('.')[0];
+      if (isArray(record[resourcesField])) {
+        const resourcesSubfield = refDataPath.split('.')[1];
+        each(record[resourcesField], (value) => {
+          const recordValue = get(value, resourcesSubfield);
+          set(value, resourcesSubfield, getReferenceDataValue(recordValue));
+        });
+      } else {
+        const recordValue = get(record, refDataPath);
+        set(record, refDataPath, getReferenceDataValue(recordValue));
+      }
+    }
   }
 };
 
@@ -614,7 +624,7 @@ const getResourceAndResourcesQuestions = (columns: any) => {
       field: resourceQuestion,
       subColumns: resourceSubColumns.map((subColumn) => {
         return {
-          ...omit(subColumn, 'graphQLFieldName'),
+          ...omit(subColumn, 'meta.field.graphQLFieldName'),
           name: subColumn.name.split('.')[1],
           field: subColumn.name.split('.')[1],
         };
@@ -675,15 +685,14 @@ const getRecords = async (
         .filter((subCol) => subCol.meta?.field?.graphQLFieldName)
         .map((subCol) => `${column.field}.${subCol.field}`),
     ];
-    console.log(referenceDataColumns, column.subColumns);
 
     records.forEach((record) => {
       const relatedRecordsForRecord = relatedRecords.filter((relatedRecord) =>
         record[column.field]?.includes(relatedRecord._id.toString())
       );
       record[column.field] = isArray(record[column.field])
-        ? relatedRecordsForRecord
-        : relatedRecordsForRecord[0]; //convert it to single record in the case of resource question
+        ? cloneDeep(relatedRecordsForRecord)
+        : cloneDeep(relatedRecordsForRecord[0]); //convert it to single record in the case of resource question
     });
   }
   await getChoicesByUrl(
@@ -692,6 +701,7 @@ const getRecords = async (
     records
   );
   await getReferenceData(referenceDataColumns, params.resource, req, records);
+
   return records;
 };
 
