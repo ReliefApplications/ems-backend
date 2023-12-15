@@ -199,9 +199,7 @@ const getColumns = (req: any, params: ExportBatchParams): Promise<any[]> => {
               if ((queryField.subFields || []).length > 0) {
                 column.subColumns.forEach((subColumn) => {
                   const subQueryField = queryField.subFields.find(
-                    (z) =>
-                      z.name ===
-                      `${column.name}.${subColumn.name.split('.')[0]}`
+                    (z) => z.name === `${column.name}.${subColumn.name}`
                   );
                   subColumn.title = subQueryField.title;
                 });
