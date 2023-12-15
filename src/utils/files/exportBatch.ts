@@ -15,7 +15,7 @@ import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFiel
 import { getChoices } from '@utils/proxy';
 import { referenceDataType } from '@const/enumTypes';
 import jsonpath from 'jsonpath';
-import { each, isArray, set } from 'lodash';
+import { each, isArray, omit, set } from 'lodash';
 
 /**
  * Export batch parameters interface
@@ -615,10 +615,8 @@ const getResourceAndResourcesQuestions = (columns: any) => {
     resourceResourcesColumns.push({
       field: resourceQuestion,
       subColumns: resourceSubColumns.map((subColumn) => {
-        const { graphQLFieldName, subColumnWithoutGraphQLFieldName } =
-          subColumn;
         return {
-          ...subColumnWithoutGraphQLFieldName,
+          ...omit(subColumn, 'graphQLFieldName'),
           name: subColumn.name.split('.')[1],
           field: subColumn.name.split('.')[1],
         };
