@@ -198,6 +198,8 @@ export default {
   args: {
     referenceData: { type: new GraphQLNonNull(GraphQLID) },
     aggregation: { type: new GraphQLNonNull(GraphQLID) },
+    pipeline: { type: GraphQLJSON },
+    sourceFields: { type: GraphQLJSON },
     contextFilters: { type: GraphQLJSON },
     mapping: { type: GraphQLJSON },
     first: { type: GraphQLInt },
@@ -210,7 +212,10 @@ export default {
     graphQLAuthCheck(context);
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
-    checkPageSize(first);
+    // If first equal to -1, no need for page size check, that means we want to fetch all records
+    if (first > 0) {
+      checkPageSize(first);
+    }
     try {
       const referenceData = await ReferenceData.findById(
         args.referenceData
@@ -228,12 +233,12 @@ export default {
       if (!(referenceData && aggregation && referenceData.data)) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
+      // sourceFields and pipeline from args have priority over current aggregation ones
+      // for the aggregation preview feature on aggregation builder
+      const sourceFields = args.sourceFields ?? aggregation.sourceFields;
+      const pipeline = args.pipeline ?? aggregation.pipeline;
       // Build the source fields step
-      if (
-        aggregation.sourceFields &&
-        aggregation.sourceFields.length &&
-        aggregation.pipeline
-      ) {
+      if (sourceFields && sourceFields.length && pipeline) {
         try {
           let rawItems = [];
           if (referenceData.type === 'static') {
@@ -265,7 +270,7 @@ export default {
           }
           // Build the pipeline
           if (args.sortField && args.sortOrder) {
-            aggregation.pipeline.push({
+            pipeline.push({
               type: 'sort',
               form: {
                 field: args.sortField,
@@ -274,11 +279,11 @@ export default {
             });
           }
 
-          aggregation.pipeline.forEach((step: any) => {
+          pipeline.forEach((step: any) => {
             items = procPipelineStep(
               step,
               items,
-              aggregation.sourceFields,
+              sourceFields,
               referenceData.fields
             );
           });
