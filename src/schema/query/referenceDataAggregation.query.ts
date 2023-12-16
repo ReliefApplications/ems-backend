@@ -22,6 +22,9 @@ import {
   pick,
   orderBy,
   cloneDeep,
+  eq,
+  isNil,
+  get,
 } from 'lodash';
 import { graphQLAuthCheck } from '@schema/shared';
 import { CustomAPI } from '@server/apollo/dataSources';
@@ -47,19 +50,33 @@ const applyFilters = (data: any, filter: any): boolean => {
   }
 
   if (filter.field && filter.operator) {
+    const value = get(data, filter.field);
     switch (filter.operator) {
-      case 'neq':
-        return data[filter.field] !== filter.value;
       case 'eq':
-        return data[filter.field] === filter.value;
-      case 'lt':
-        return data[filter.field] < filter.value;
-      case 'lte':
-        return data[filter.field] <= filter.value;
+        return eq(value, filter.value);
+      case 'ne':
+      case 'neq':
+        return !eq(value, filter.value);
       case 'gt':
-        return data[filter.field] > filter.value;
+        return !isNil(value) && value > filter.value;
       case 'gte':
-        return data[filter.field] >= filter.value;
+        return !isNil(value) && value >= filter.value;
+      case 'lt':
+        return !isNil(value) && value < filter.value;
+      case 'lte':
+        return !isNil(value) && value <= filter.value;
+      case 'isnull':
+        return isNil(value);
+      case 'isnotnull':
+        return !isNil(value);
+      case 'startswith':
+        return !isNil(value) && value.startsWith(filter.value);
+      case 'endswith':
+        return !isNil(value) && value.endsWith(filter.value);
+      case 'contains':
+        return !isNil(value) && value.includes(filter.value);
+      case 'doesnotcontain':
+        return isNil(value) || !value.includes(filter.value);
       default:
         // For any unknown operator, we return false
         return false;
