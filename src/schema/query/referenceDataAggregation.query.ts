@@ -29,6 +29,8 @@ import {
 import { graphQLAuthCheck } from '@schema/shared';
 import { CustomAPI } from '@server/apollo/dataSources';
 import { GraphQLDate } from 'graphql-scalars';
+import mongoose from 'mongoose';
+import { CompositeFilterDescriptor } from '@const/compositeFilter';
 
 /**
  * Apply the filter provided to the specified field
@@ -206,6 +208,21 @@ const procPipelineStep = (
   }
 };
 
+/** Arguments for the recordsAggregation query */
+type ReferenceDataAggregationArgs = {
+  referenceData: string | mongoose.Types.ObjectId;
+  aggregation: string | mongoose.Types.ObjectId;
+  mapping?: any;
+  pipeline?: any[];
+  sourceFields?: any[];
+  first?: number;
+  skip?: number;
+  at?: Date;
+  sortField?: string;
+  sortOrder?: string;
+  contextFilters?: CompositeFilterDescriptor;
+};
+
 /**
  * Take an aggregation configuration as parameter.
  * Return aggregated records data.
@@ -225,7 +242,7 @@ export default {
     sortField: { type: GraphQLString },
     at: { type: GraphQLDate },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: ReferenceDataAggregationArgs, context) {
     graphQLAuthCheck(context);
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
