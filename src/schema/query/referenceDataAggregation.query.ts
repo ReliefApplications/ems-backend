@@ -53,12 +53,16 @@ const applyFilters = (data: any, filter: any): boolean => {
 
   if (filter.field && filter.operator) {
     const value = get(data, filter.field);
+    let intValue: number;
+    try {
+      intValue = Number(filter.value);
+    } catch {}
     switch (filter.operator) {
       case 'eq':
-        return eq(value, filter.value);
+        return eq(value, String(filter.value)) || eq(value, intValue);
       case 'ne':
       case 'neq':
-        return !eq(value, filter.value);
+        return !(eq(value, String(filter.value)) || eq(value, intValue));
       case 'gt':
         return !isNil(value) && value > filter.value;
       case 'gte':
@@ -270,7 +274,7 @@ export default {
       // sourceFields and pipeline from args have priority over current aggregation ones
       // for the aggregation preview feature on aggregation builder
       const sourceFields = args.sourceFields ?? aggregation.sourceFields;
-      const pipeline = args.pipeline ?? aggregation.pipeline;
+      const pipeline = args.pipeline ?? aggregation.pipeline ?? [];
       // Build the source fields step
       if (sourceFields && sourceFields.length && pipeline) {
         try {
@@ -301,6 +305,12 @@ export default {
                 delete item[key];
               }
             }
+          }
+          if (args.contextFilters) {
+            pipeline.unshift({
+              type: 'filter',
+              form: args.contextFilters,
+            });
           }
           // Build the pipeline
           if (args.sortField && args.sortOrder) {
