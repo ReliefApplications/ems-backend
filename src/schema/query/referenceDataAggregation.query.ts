@@ -22,10 +22,15 @@ import {
   pick,
   orderBy,
   cloneDeep,
+  eq,
+  isNil,
+  get,
 } from 'lodash';
 import { graphQLAuthCheck } from '@schema/shared';
 import { CustomAPI } from '@server/apollo/dataSources';
 import { GraphQLDate } from 'graphql-scalars';
+import mongoose from 'mongoose';
+import { CompositeFilterDescriptor } from '@const/compositeFilter';
 
 /**
  * Apply the filter provided to the specified field
@@ -45,7 +50,44 @@ const applyFilters = (data: any, filter: any): boolean => {
         return data;
     }
   }
-  return data[filter.field] === filter.value;
+
+  if (filter.field && filter.operator) {
+    const value = get(data, filter.field);
+    let intValue: number;
+    try {
+      intValue = Number(filter.value);
+    } catch {}
+    switch (filter.operator) {
+      case 'eq':
+        return eq(value, String(filter.value)) || eq(value, intValue);
+      case 'ne':
+      case 'neq':
+        return !(eq(value, String(filter.value)) || eq(value, intValue));
+      case 'gt':
+        return !isNil(value) && value > filter.value;
+      case 'gte':
+        return !isNil(value) && value >= filter.value;
+      case 'lt':
+        return !isNil(value) && value < filter.value;
+      case 'lte':
+        return !isNil(value) && value <= filter.value;
+      case 'isnull':
+        return isNil(value);
+      case 'isnotnull':
+        return !isNil(value);
+      case 'startswith':
+        return !isNil(value) && value.startsWith(filter.value);
+      case 'endswith':
+        return !isNil(value) && value.endsWith(filter.value);
+      case 'contains':
+        return !isNil(value) && value.includes(filter.value);
+      case 'doesnotcontain':
+        return isNil(value) || !value.includes(filter.value);
+      default:
+        // For any unknown operator, we return false
+        return false;
+    }
+  }
 };
 
 /**
@@ -170,6 +212,21 @@ const procPipelineStep = (
   }
 };
 
+/** Arguments for the recordsAggregation query */
+type ReferenceDataAggregationArgs = {
+  referenceData: string | mongoose.Types.ObjectId;
+  aggregation: string | mongoose.Types.ObjectId;
+  mapping?: any;
+  pipeline?: any[];
+  sourceFields?: any[];
+  first?: number;
+  skip?: number;
+  at?: Date;
+  sortField?: string;
+  sortOrder?: string;
+  contextFilters?: CompositeFilterDescriptor;
+};
+
 /**
  * Take an aggregation configuration as parameter.
  * Return aggregated records data.
@@ -179,6 +236,8 @@ export default {
   args: {
     referenceData: { type: new GraphQLNonNull(GraphQLID) },
     aggregation: { type: new GraphQLNonNull(GraphQLID) },
+    pipeline: { type: GraphQLJSON },
+    sourceFields: { type: GraphQLJSON },
     contextFilters: { type: GraphQLJSON },
     mapping: { type: GraphQLJSON },
     first: { type: GraphQLInt },
@@ -187,11 +246,14 @@ export default {
     sortField: { type: GraphQLString },
     at: { type: GraphQLDate },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: ReferenceDataAggregationArgs, context) {
     graphQLAuthCheck(context);
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
-    checkPageSize(first);
+    // If first equal to -1, no need for page size check, that means we want to fetch all records
+    if (first > 0) {
+      checkPageSize(first);
+    }
     try {
       const referenceData = await ReferenceData.findById(
         args.referenceData
@@ -209,12 +271,12 @@ export default {
       if (!(referenceData && aggregation && referenceData.data)) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
+      // sourceFields and pipeline from args have priority over current aggregation ones
+      // for the aggregation preview feature on aggregation builder
+      const sourceFields = args.sourceFields ?? aggregation.sourceFields;
+      const pipeline = args.pipeline ?? aggregation.pipeline ?? [];
       // Build the source fields step
-      if (
-        aggregation.sourceFields &&
-        aggregation.sourceFields.length &&
-        aggregation.pipeline
-      ) {
+      if (sourceFields && sourceFields.length && pipeline) {
         try {
           let rawItems = [];
           if (referenceData.type === 'static') {
@@ -244,9 +306,15 @@ export default {
               }
             }
           }
+          if (args.contextFilters) {
+            pipeline.unshift({
+              type: 'filter',
+              form: args.contextFilters,
+            });
+          }
           // Build the pipeline
           if (args.sortField && args.sortOrder) {
-            aggregation.pipeline.push({
+            pipeline.push({
               type: 'sort',
               form: {
                 field: args.sortField,
@@ -255,11 +323,11 @@ export default {
             });
           }
 
-          aggregation.pipeline.forEach((step: any) => {
+          pipeline.forEach((step: any) => {
             items = procPipelineStep(
               step,
               items,
-              aggregation.sourceFields,
+              sourceFields,
               referenceData.fields
             );
           });
