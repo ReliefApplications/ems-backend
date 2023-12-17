@@ -7,7 +7,7 @@ import { filterOperator } from './filterOperators';
 /**
  * A basic filter expression. Usually is a part of CompositeFilterDescriptor.
  */
-type FilterDescriptor = {
+export type FilterDescriptor = {
   /** The data item field to which the filter operator is applied. */
   field?: string;
   /** The filter operator (comparison). */

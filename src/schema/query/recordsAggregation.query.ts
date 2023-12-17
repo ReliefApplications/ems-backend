@@ -31,7 +31,10 @@ import { accessibleBy } from '@casl/mongoose';
 import { GraphQLDate } from 'graphql-scalars';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
-import { CompositeFilterDescriptor } from '@const/compositeFilter';
+import {
+  CompositeFilterDescriptor,
+  FilterDescriptor,
+} from '@const/compositeFilter';
 
 /** Pagination default items per query */
 const DEFAULT_FIRST = 10;
@@ -164,6 +167,38 @@ const getAtAggregation = (at: Date) => {
       },
     },
   ];
+};
+
+/**
+ * Removes filters that start with "__FILTER__." and add them o a separate array
+ *
+ * @param filter the filters to extract the __FILTER__ from
+ * @returns an array of filters to be injected in the pipeline
+ */
+const extractFilters = (
+  filter?: CompositeFilterDescriptor | FilterDescriptor
+) => {
+  if (!filter) {
+    return [];
+  }
+  const extractedFilters = [];
+  if (
+    'field' in filter &&
+    filter.field &&
+    typeof filter.field === 'string' &&
+    filter.field.startsWith('__FILTER__.') &&
+    filter.value
+  ) {
+    extractedFilters.push({
+      filter: filter.field.replace('__FILTER__.', ''),
+      value: filter.value,
+    });
+  } else if ('filters' in filter && filter.filters) {
+    filter.filters.forEach((f) => {
+      extractedFilters.push(...extractFilters(f));
+    });
+  }
+  return extractedFilters;
 };
 
 /**
@@ -606,6 +641,20 @@ export default {
           ...(args.at ? getAtAggregation(new Date(args.at)) : []),
         ]
       );
+      const injectedFilters = extractFilters(args.contextFilters);
+      // Add the filters to the aggregation pipeline
+      if (injectedFilters.length) {
+        pipeline.push({
+          $addFields: {
+            __FILTERS__: injectedFilters.reduce((obj, filter) => {
+              return {
+                ...obj,
+                [filter.filter]: filter.value,
+              };
+            }, {}),
+          },
+        });
+      }
       // Build pipeline stages
       if (aggregation.pipeline && aggregation.pipeline.length) {
         buildPipeline(pipeline, aggregation.pipeline, resource, context);
