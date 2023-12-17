@@ -14,6 +14,7 @@ import { Types } from 'mongoose';
 import { CustomAPI } from '@server/apollo/dataSources';
 import { getContextData } from '@utils/context/getContextData';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
+import get from 'lodash/get';
 
 /** GraphQL dashboard type definition */
 export const DashboardType = new GraphQLObjectType({
@@ -148,15 +149,12 @@ export const DashboardType = new GraphQLObjectType({
         const ctx = page.context;
 
         if (recordId) {
-          console.log('ici');
           const resource = 'resource' in ctx ? ctx.resource : null;
           try {
             context.user.ability = await extendAbilityForRecords(context.user);
             const data = await getContextData(resource, recordId, context);
-            console.log('là');
             return data;
           } catch (err) {
-            console.log(err);
             return null;
           }
         } else if (elementId) {
@@ -171,7 +169,10 @@ export const DashboardType = new GraphQLObjectType({
                 context.dataSources[apiConfiguration.name] as CustomAPI
               ).getReferenceDataItems(referenceData, apiConfiguration)
             : referenceData.data;
-          return items.find((x) => x[referenceData.valueField] === elementId);
+          // Use '==' for number / string comparison
+          return items.find(
+            (x) => get(x, referenceData.valueField) == elementId
+          );
         }
 
         return null;

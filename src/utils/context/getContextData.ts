@@ -36,11 +36,8 @@ export const getContextData = async (
 
   const fields = resource.fields;
   const data: { [key: string]: any } = {};
-  console.log('a');
   for (const field of fields) {
-    console.log('aa');
     if (field.type === 'resource') {
-      console.log('ab');
       const refRecordID = get(record.data, field.name);
       if (!refRecordID) {
         continue;
@@ -109,7 +106,6 @@ export const getContextData = async (
       Object.assign(data, { [field.name]: record.data[field.name] });
     }
   }
-  console.log('aaa');
 
   return data;
 };
