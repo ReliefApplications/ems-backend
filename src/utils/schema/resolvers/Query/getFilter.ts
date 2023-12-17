@@ -188,6 +188,16 @@ const buildMongoFilter = (
           }
         }
 
+        // In case type is multi-select and value is not an array, we treat as scalar
+        // As it was probably unwinded in the aggregation
+        if (
+          MULTISELECT_TYPES.includes(type) &&
+          filter.value &&
+          !Array.isArray(filter.value)
+        ) {
+          type = 'text';
+        }
+
         // const fieldName = FLAT_DEFAULT_FIELDS.includes(filter.field) ? filter.field : `data.${filter.field}`;
         // const field = fields.find(x => x.name === filter.field);
         let value = filter.value;
