@@ -7,7 +7,7 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
-import { cloneDeep, get, isEqual, set, unset } from 'lodash';
+import { cloneDeep, get, isEqual } from 'lodash';
 import { Form, Record as RecordModel, ReferenceData, Resource } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import buildPipeline from '@utils/aggregation/buildPipeline';
@@ -55,6 +55,8 @@ type RecordsAggregationArgs = {
   resource: string | mongoose.Types.ObjectId;
   aggregation: string | mongoose.Types.ObjectId;
   mapping?: any;
+  pipeline?: any[];
+  sourceFields?: any[];
   first?: number;
   skip?: number;
   at?: Date;
@@ -149,6 +151,8 @@ export default {
   args: {
     resource: { type: new GraphQLNonNull(GraphQLID) },
     aggregation: { type: new GraphQLNonNull(GraphQLID) },
+    pipeline: { type: GraphQLJSON },
+    sourceFields: { type: GraphQLJSON },
     contextFilters: { type: GraphQLJSON },
     mapping: { type: GraphQLJSON },
     first: { type: GraphQLInt },
@@ -161,7 +165,10 @@ export default {
     graphQLAuthCheck(context);
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
-    checkPageSize(first);
+    // If first equal to -1, no need for page size check, that means we want to fetch all records
+    if (first > 0) {
+      checkPageSize(first);
+    }
     try {
       const user = context.user;
       // global variables
@@ -187,50 +194,17 @@ export default {
       const aggregation = resource.aggregations.find((x) =>
         isEqual(x.id, args.aggregation)
       );
-
-      const refDataNameMap: Record<string, string> = {};
-      if (aggregation?.sourceFields && aggregation.pipeline) {
-        if (args.contextFilters) {
-          extractSourceFields(args.contextFilters, aggregation.sourceFields);
-          aggregation.pipeline.unshift({
-            type: 'filter',
-            form: args.contextFilters,
-          });
-        }
-        // Go through the aggregation source fields to update possible refData field names
-        for (const field of aggregation.sourceFields) {
-          // find field in resource fields
-          const resourceField = resource.fields.find((x) => x.name === field);
-
-          // check if field is a refData field
-          if (resourceField?.referenceData?.id) {
-            const refData = await ReferenceData.findById(
-              resourceField.referenceData.id
-            );
-
-            // if so, update the map
-            if (refData)
-              refData.fields.forEach((f) => {
-                refDataNameMap[
-                  `${field}.${f.graphQLFieldName}`
-                ] = `${field}.${f.name}`;
-              });
-          }
-        }
-
-        const hasRefDataField = Object.keys(refDataNameMap).length > 0;
-        if (hasRefDataField) {
-          // update the aggregation pipeline with the actual field names from the refData
-          let strPipeline = JSON.stringify(aggregation.pipeline);
-          for (const [key, value] of Object.entries(refDataNameMap)) {
-            strPipeline = strPipeline.replace(
-              `"field":"${key}"`,
-              `"field":"${value}"`
-            );
-          }
-
-          aggregation.pipeline = JSON.parse(strPipeline);
-        }
+      // sourceFields and pipeline from args have priority over current aggregation ones
+      // for the aggregation preview feature on aggregation builder
+      const sourceFields = args.sourceFields ?? aggregation?.sourceFields;
+      const aggregationPipeline = args.pipeline ?? aggregation?.pipeline ?? [];
+      // Build the source fields step
+      if (sourceFields && aggregationPipeline && args.contextFilters) {
+        extractSourceFields(args.contextFilters, sourceFields);
+        aggregationPipeline.unshift({
+          type: 'filter',
+          form: args.contextFilters,
+        });
       }
 
       const mongooseFilter = {};
@@ -252,10 +226,10 @@ export default {
       // });
 
       // Build the source fields step
-      if (aggregation.sourceFields && aggregation.sourceFields.length) {
+      if (sourceFields && sourceFields.length) {
         // If we have user fields
         if (
-          aggregation.sourceFields.some((x) =>
+          sourceFields.some((x) =>
             defaultRecordFields.some(
               (y) =>
                 (x === y.field && y.type === UserType) ||
@@ -264,7 +238,7 @@ export default {
           )
         ) {
           // Form
-          if (aggregation.sourceFields.includes('form')) {
+          if (sourceFields.includes('form')) {
             const relatedForms = await Form.find({
               resource: args.resource,
             }).select('id name');
@@ -276,12 +250,12 @@ export default {
             });
           }
           // Created By
-          if (aggregation.sourceFields.includes('createdBy')) {
+          if (sourceFields.includes('createdBy')) {
             pipeline = pipeline.concat(CREATED_BY_STAGES);
           }
           // Last updated by
-          if (aggregation.sourceFields.includes('lastUpdatedBy')) {
-            if (!aggregation.sourceFields.includes('createdBy')) {
+          if (sourceFields.includes('lastUpdatedBy')) {
+            if (!sourceFields.includes('createdBy')) {
               pipeline = pipeline.concat(CREATED_BY_STAGES);
             }
             pipeline = pipeline.concat([
@@ -379,7 +353,7 @@ export default {
           },
         });
         // Loop on fields to apply lookups for special fields
-        for (const fieldName of aggregation.sourceFields) {
+        for (const fieldName of sourceFields) {
           const field = resource.fields.find((x) => x.name === fieldName);
           // If field is a calculated field
           if (field && field.isCalculated) {
@@ -533,7 +507,7 @@ export default {
         }
         pipeline.push({
           $project: {
-            ...(aggregation.sourceFields as any[]).reduce(
+            ...(sourceFields as any[]).reduce(
               (o, field) =>
                 Object.assign(o, {
                   [field]: selectableDefaultRecordFieldsFlat.includes(field)
@@ -563,28 +537,18 @@ export default {
         ]
       );
       // Build pipeline stages
-      if (aggregation.pipeline && aggregation.pipeline.length) {
-        buildPipeline(pipeline, aggregation.pipeline, resource, context);
+      if (aggregationPipeline && aggregationPipeline.length) {
+        buildPipeline(pipeline, aggregationPipeline, resource, context);
       }
       // Build mapping step
       if (args.mapping) {
-        // Also check if any of the mapped fields are from referenceData
-        let mappingStr = JSON.stringify(args.mapping);
-        const hasRefDataField = Object.keys(refDataNameMap).length > 0;
-        if (hasRefDataField) {
-          // update the aggregation pipeline with the actual field names from the refData
-          for (const [key, value] of Object.entries(refDataNameMap)) {
-            mappingStr = mappingStr.replace(`:"${key}"`, `:"${value}"`);
-          }
-        }
-        const mapping = JSON.parse(mappingStr);
         pipeline.push({
           $project: {
-            category: `$${mapping.category}`,
-            field: `$${mapping.field}`,
+            category: `$${args.mapping.category}`,
+            field: `$${args.mapping.field}`,
             id: '$_id',
-            ...(mapping.series && {
-              series: `$${mapping.series}`,
+            ...(args.mapping.series && {
+              series: `$${args.mapping.series}`,
             }),
           },
         });
@@ -604,7 +568,11 @@ export default {
         }
         pipeline.push({
           $facet: {
-            items: [{ $skip: skip }, { $limit: first }],
+            items:
+              // If first is negative number, that means we want the whole record list for the preview
+              first > 0
+                ? [{ $skip: skip }, { $limit: first }]
+                : [{ $skip: skip }],
             totalCount: [
               {
                 $count: 'count',
@@ -625,19 +593,7 @@ export default {
         items = recordAggregation[0].items;
         totalCount = recordAggregation[0]?.totalCount[0]?.count || 0;
       }
-      let copiedItems = cloneDeep(items);
-
-      // If we have refData fields, revert back to the graphql names of the fields
-      for (const [graphqlName, name] of Object.entries(refDataNameMap)) {
-        copiedItems = copiedItems.map((item: any) => {
-          const currVal = get(item, name);
-          if (currVal) {
-            set(item, graphqlName, currVal);
-            unset(item, name);
-          }
-          return item;
-        });
-      }
+      const copiedItems = cloneDeep(items);
 
       // For each detected field with choices, set the value of each entry to be display text value and then return
       try {
