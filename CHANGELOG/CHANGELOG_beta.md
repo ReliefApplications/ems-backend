@@ -1,3 +1,15 @@
+# [2.4.0-beta.4](https://github.com/ReliefApplications/ems-backend/compare/v2.4.0-beta.3...v2.4.0-beta.4) (2023-12-18)
+
+
+### Bug Fixes
+
+* aggregation on reference data not working correctly ([392b624](https://github.com/ReliefApplications/ems-backend/commit/392b6241db5b4dc11591bdd0918046d96f4ed74c))
+
+
+### Features
+
+* support unwind in ref data aggregations ([#893](https://github.com/ReliefApplications/ems-backend/issues/893)) ([a041262](https://github.com/ReliefApplications/ems-backend/commit/a041262c3433495be28d83b49e0454904cff1759))
+
 # [2.4.0-beta.3](https://github.com/ReliefApplications/ems-backend/compare/v2.4.0-beta.2...v2.4.0-beta.3) (2023-12-18)
 
 
