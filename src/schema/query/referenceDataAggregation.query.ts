@@ -25,6 +25,9 @@ import {
   eq,
   isNil,
   get,
+  flatMap,
+  map,
+  isArray,
 } from 'lodash';
 import { graphQLAuthCheck } from '@schema/shared';
 import { CustomAPI } from '@server/apollo/dataSources';
@@ -206,6 +209,24 @@ const procPipelineStep = (
       return getFilteredArray(data, pipelineStep.form);
     case 'sort':
       return orderBy(data, pipelineStep.form.field, pipelineStep.form.order);
+    case 'unwind':
+      return flatMap(data, (item) => {
+        let fieldToUnwind = item[pipelineStep.form.field];
+        try {
+          fieldToUnwind =
+            typeof fieldToUnwind === 'string'
+              ? JSON.parse(fieldToUnwind.replace(/'/g, '"')) //replace single quotes to correctly get JSON fields
+              : fieldToUnwind;
+        } catch {
+          console.log(`error while parsing field ${fieldToUnwind}`);
+        }
+        if (isArray(fieldToUnwind)) {
+          return map(fieldToUnwind, (value) => {
+            return { ...cloneDeep(item), [pipelineStep.form.field]: value };
+          });
+        }
+        return item;
+      });
     default:
       console.error('Aggregation not supported yet');
       return;
