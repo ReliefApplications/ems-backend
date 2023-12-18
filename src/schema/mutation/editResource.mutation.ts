@@ -11,7 +11,6 @@ import { Resource } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { get, has, isArray, isEqual, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
-import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 
@@ -706,25 +705,6 @@ export default {
       // Update calculated fields
       if (args.calculatedField) {
         const calculatedField: CalculatedFieldChange = args.calculatedField;
-
-        // Check if calculated field expression is too long
-        if (calculatedField.add || calculatedField.update) {
-          const expression =
-            calculatedField.add?.expression ??
-            calculatedField.update?.expression;
-          const pipeline = buildCalculatedFieldPipeline(
-            expression,
-            '',
-            context.timeZone
-          );
-          if (pipeline[0].$facet.calcFieldFacet.length > 50) {
-            throw new GraphQLError(
-              context.i18next.t(
-                'mutations.resource.edit.errors.calculatedFieldTooLong'
-              )
-            );
-          }
-        }
 
         // Add new calculated field
         if (calculatedField.add) {

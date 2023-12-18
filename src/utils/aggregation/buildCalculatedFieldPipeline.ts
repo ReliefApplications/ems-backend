@@ -515,21 +515,7 @@ const buildCalculatedFieldPipeline = (
 ) => {
   const operation = getExpressionFromString(expression);
   const pipeline = buildPipeline(operation, name, timeZone);
-  return [
-    {
-      $facet: {
-        calcFieldFacet: pipeline,
-      },
-    } as PipelineStage.Facet,
-    {
-      $unwind: '$calcFieldFacet',
-    } as PipelineStage.Unwind,
-    {
-      $replaceRoot: {
-        newRoot: '$calcFieldFacet',
-      },
-    } as PipelineStage.ReplaceRoot,
-  ] as const;
+  return pipeline;
 };
 
 export default buildCalculatedFieldPipeline;
