@@ -1,3 +1,10 @@
+# [2.4.0-beta.3](https://github.com/ReliefApplications/ems-backend/compare/v2.4.0-beta.2...v2.4.0-beta.3) (2023-12-18)
+
+
+### Features
+
+* allow to use context in page widgets ([#595](https://github.com/ReliefApplications/ems-backend/issues/595)) ([e2772dc](https://github.com/ReliefApplications/ems-backend/commit/e2772dc0664e67e3c8557b22782d89ca8b23d742))
+
 # [2.4.0-beta.2](https://github.com/ReliefApplications/ems-backend/compare/v2.4.0-beta.1...v2.4.0-beta.2) (2023-12-16)
 
 
