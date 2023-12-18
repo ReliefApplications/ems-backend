@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { getDateForMongo } from '@utils/filter/getDateForMongo';
 import { getTimeForMongo } from '@utils/filter/getTimeForMongo';
 import { MULTISELECT_TYPES, DATE_TYPES } from '@const/fieldTypes';
+import { isNumber } from 'lodash';
 
 /** The default fields */
 const DEFAULT_FIELDS = [
@@ -351,11 +352,19 @@ const buildMongoFilter = (
           }
           case 'contains': {
             if (MULTISELECT_TYPES.includes(type)) {
-              if (Array.isArray(value)) {
-                return { [fieldName]: { $all: value } };
-              } else {
-                return { [fieldName]: { $all: [value] } };
-              }
+              return { [fieldName]: { $all: value } };
+              // Check if a number has been searched globally
+              //  If so, perform an 'eq' search
+            } else if (isNumber(value?.[0]?.value)) {
+              const eq = value.map((v) => {
+                return { [`data.${v.field}`]: { $eq: v.value } };
+              });
+              return { $or: eq };
+            } else if (
+              fieldName === 'data._globalSearch' &&
+              (type === 'text' || type === '')
+            ) {
+              return;
             } else {
               return { [fieldName]: { $regex: value, $options: 'i' } };
             }
@@ -483,5 +492,6 @@ export default (
   const expandedFields = fields.concat(DEFAULT_FIELDS);
   const mongooseFilter =
     buildMongoFilter(filter, expandedFields, context, prefix) || {};
+
   return mongooseFilter;
 };

@@ -186,6 +186,8 @@ schema.index(
   { unique: true, partialFilterExpression: { core: true } }
 );
 schema.index({ graphQLTypeName: 1 }, { unique: true });
+schema.index({ createdAt: 1 });
+
 schema.plugin(accessibleRecordsPlugin);
 
 /** Mongoose form model definition */

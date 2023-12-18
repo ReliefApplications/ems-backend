@@ -138,6 +138,8 @@ addOnBeforeDeleteMany(resourceSchema, async (resources) => {
   }
 });
 
+resourceSchema.index({ createdAt: 1 });
+
 resourceSchema.plugin(accessibleRecordsPlugin);
 
 /** Mongoose resource model definition */
