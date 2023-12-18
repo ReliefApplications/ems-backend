@@ -211,7 +211,7 @@ const procPipelineStep = (
       return orderBy(data, pipelineStep.form.field, pipelineStep.form.order);
     case 'unwind':
       return flatMap(data, (item) => {
-        let fieldToUnwind = item[pipelineStep.form.field];
+        let fieldToUnwind = get(item, pipelineStep.form.field);
         try {
           fieldToUnwind =
             typeof fieldToUnwind === 'string'
