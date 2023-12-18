@@ -6,7 +6,7 @@ import {
   GraphQLString,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { ReferenceData } from '@models';
+import { DataTransformer, ReferenceData } from '@models';
 import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import {
@@ -28,6 +28,7 @@ import {
   flatMap,
   map,
   isArray,
+  isEmpty,
 } from 'lodash';
 import { graphQLAuthCheck } from '@schema/shared';
 import { CustomAPI } from '@server/apollo/dataSources';
@@ -101,9 +102,13 @@ const applyFilters = (data: any, filter: any): boolean => {
  * @returns filtered data
  */
 const getFilteredArray = (data: any, filter: any): any => {
-  return data.filter((item) => {
-    return applyFilters(item, filter);
-  });
+  if (isEmpty(filter)) {
+    return data;
+  } else {
+    return data.filter((item) => {
+      return applyFilters(item, filter);
+    });
+  }
 };
 
 /** Pagination default items per query */
@@ -155,32 +160,16 @@ const procOperator = (data: any, operator) => {
  * @param pipelineStep step of the pipeline to build a result from
  * @param data the reference data
  * @param sourceFields fields we want to get in our final data
- * @param referenceDataFields referenceData fields
  * @returns filtered data
  */
-const procPipelineStep = (
-  pipelineStep,
-  data,
-  sourceFields,
-  referenceDataFields
-) => {
+const procPipelineStep = (pipelineStep, data, sourceFields) => {
   switch (pipelineStep.type) {
     case 'group':
       const operators = pipelineStep.form?.addFields?.map(
         (operator) => operator.expression
       );
-      const mappedData = data.map((item) => {
-        const newItem = Object.keys(item).reduce((obj, key) => {
-          const currField = referenceDataFields.find((f) => f.name === key);
-          if (currField) {
-            obj[currField.graphQLFieldName ?? key] = item[key];
-          }
-          return obj;
-        }, {});
-        return newItem;
-      });
       const keysToGroupBy = pipelineStep.form.groupBy.map((key) => key.field);
-      data = groupBy(mappedData, (dataKey) =>
+      data = groupBy(data, (dataKey) =>
         keysToGroupBy.map((key) => dataKey[key])
       );
       for (const key in data) {
@@ -218,7 +207,7 @@ const procPipelineStep = (
               ? JSON.parse(fieldToUnwind.replace(/'/g, '"')) //replace single quotes to correctly get JSON fields
               : fieldToUnwind;
         } catch {
-          console.log(`error while parsing field ${fieldToUnwind}`);
+          logger.error(`error while parsing field ${fieldToUnwind}`);
         }
         if (isArray(fieldToUnwind)) {
           return map(fieldToUnwind, (value) => {
@@ -228,7 +217,7 @@ const procPipelineStep = (
         return item;
       });
     default:
-      console.error('Aggregation not supported yet');
+      logger.error('Aggregation not supported yet');
       return;
   }
 };
@@ -312,12 +301,11 @@ export default {
                 referenceData.apiConfiguration as any
               )) || [];
           }
-          // const transformer = new DataTransformer(
-          //   referenceData.fields,
-          //   rawItems
-          // );
-          // let items = transformer.transformData();
-          let items = cloneDeep(rawItems);
+          const transformer = new DataTransformer(
+            referenceData.fields,
+            cloneDeep(rawItems)
+          );
+          let items = transformer.transformData();
           for (const item of items) {
             //we remove white spaces as they end up being a mess, but probably a temp fix as I think we should remove white spaces straight when saving ref data in mongo
             for (const key in item) {
@@ -345,12 +333,7 @@ export default {
           }
 
           pipeline.forEach((step: any) => {
-            items = procPipelineStep(
-              step,
-              items,
-              sourceFields,
-              referenceData.fields
-            );
+            items = procPipelineStep(step, items, sourceFields);
           });
           if (args.mapping) {
             return items.map((item) => {
