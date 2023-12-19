@@ -55,6 +55,7 @@ type UsersArgs = {
   first?: number;
   filter?: CompositeFilterDescriptor;
   afterCursor?: string;
+  skip?: number;
 };
 
 /**
@@ -68,6 +69,7 @@ export default {
     first: { type: GraphQLInt },
     afterCursor: { type: GraphQLID },
     filter: { type: GraphQLJSON },
+    skip: { type: GraphQLInt },
   },
   async resolve(parent, args: UsersArgs, context: Context) {
     // Authentication check
@@ -153,7 +155,8 @@ export default {
             // Filter users that have at least one role in the application(s).
             { $match: { 'roles.0': { $exists: true } } },
           ];
-          let aggregation = await User.aggregate(aggregations);
+          const skip = args.skip ? args.skip : 10;
+          let aggregation = await User.aggregate(aggregations).skip(skip).limit(first + 1)
 
           const hasNextPage = aggregation.length > first;
           if (hasNextPage) {
