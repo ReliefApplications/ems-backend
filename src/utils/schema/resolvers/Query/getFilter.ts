@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import { getDateForMongo } from '@utils/filter/getDateForMongo';
 import { getTimeForMongo } from '@utils/filter/getTimeForMongo';
 
@@ -131,21 +131,26 @@ const buildMongoFilter = (
     // If trying to filter ids, currently we disregard the operator and use $in
     if (filter.field === 'ids') {
       return {
-        _id: { $in: filter.value.map((x) => new mongoose.Types.ObjectId(x)) },
+        _id: { $in: filter.value.map((x) => new Types.ObjectId(x)) },
       };
     }
 
     // Special filter on id, to be used in context filters
     if (filter.field === '__ID__') {
-      return {
-        _id: new mongoose.Types.ObjectId(filter.value),
-      };
+      switch (filter.operator) {
+        case 'eq':
+          return { _id: new Types.ObjectId(filter.value) };
+        case 'neq':
+          return { _id: { $ne: new Types.ObjectId(filter.value) } };
+        default:
+          return {};
+      }
     }
 
     // Filter on forms, using form id
     if (['form', 'lastUpdateForm'].includes(filter.field)) {
       if (mongoose.isValidObjectId(filter.value)) {
-        filter.value = new mongoose.Types.ObjectId(filter.value);
+        filter.value = new Types.ObjectId(filter.value);
         fieldName = `_${filter.field}._id`;
       } else {
         fieldName = `_${filter.field}.name`;
