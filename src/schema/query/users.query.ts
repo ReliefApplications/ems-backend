@@ -157,8 +157,8 @@ export default {
           ];
           const skip = args.skip ? args.skip : 10;
           let aggregation = await User.aggregate(aggregations)
-            .skip(skip).
-            limit(first + 1)
+            .skip(skip)
+            .limit(first + 1)
 
           const hasNextPage = aggregation.length > first;
           if (hasNextPage) {
