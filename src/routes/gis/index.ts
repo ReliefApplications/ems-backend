@@ -227,6 +227,70 @@ const getFeatures = async (
 };
 
 /**
+ * Graphql query to fetch records from layouts and aggregations
+ *
+ * @param query gql query
+ * @param variables parameters of the gql query
+ * @param req original query
+ * @param featureCollection Feature collection to populate
+ * @param layerType Type of layer we are getting
+ * @param mapping mapping used in aggregations
+ * @returns error if fails, otherwise populates feature collection
+ */
+const gqlQuery = (
+  query: any,
+  variables: any,
+  req: any,
+  featureCollection: any,
+  layerType: GeometryType,
+  mapping: any
+) =>
+  axios({
+    url: `${config.get('server.url')}/graphql`,
+    method: 'POST',
+    headers: {
+      Authorization: req.headers.authorization,
+      'Content-Type': 'application/json',
+      ...(req.headers.accesstoken && {
+        accesstoken: req.headers.accesstoken,
+      }),
+    },
+    data: {
+      query,
+      variables,
+    },
+  }).then(async ({ data }) => {
+    if (data.errors) {
+      logger.error(data.errors[0].message);
+    }
+    try {
+      for (const field in data.data) {
+        if (Object.prototype.hasOwnProperty.call(data.data, field)) {
+          if (data.data[field].items?.length > 0) {
+            // Aggregation
+            await getFeatures(
+              featureCollection.features,
+              layerType,
+              data.data[field].items,
+              mapping
+            );
+          } else if (data.data[field].edges?.length > 0) {
+            // Query
+            await getFeatures(
+              featureCollection.features,
+              layerType,
+              data.data[field].edges.map((x) => x.node),
+              mapping
+            );
+          }
+        }
+      }
+    } catch (err) {
+      throw new Error(err);
+    }
+  });
+
+/**
  * Build endpoint
  *
  * @param req current http request
@@ -345,52 +409,9 @@ router.get('/feature', async (req, res) => {
       } else {
         return res.status(404).send(i18next.t('common.errors.dataNotFound'));
       }
-
-      const gqlQuery = axios({
-        url: `${config.get('server.url')}/graphql`,
-        method: 'POST',
-        headers: {
-          Authorization: req.headers.authorization,
-          'Content-Type': 'application/json',
-          ...(req.headers.accesstoken && {
-            accesstoken: req.headers.accesstoken,
-          }),
-        },
-        data: {
-          query,
-          variables,
-        },
-      }).then(async ({ data }) => {
-        if (data.errors) {
-          logger.error(data.errors[0].message);
-        }
-        try {
-          for (const field in data.data) {
-            if (Object.prototype.hasOwnProperty.call(data.data, field)) {
-              if (data.data[field].items?.length > 0) {
-                // Aggregation
-                await getFeatures(
-                  featureCollection.features,
-                  layerType,
-                  data.data[field].items,
-                  mapping
-                );
-              } else if (data.data[field].edges?.length > 0) {
-                // Query
-                await getFeatures(
-                  featureCollection.features,
-                  layerType,
-                  data.data[field].edges.map((x) => x.node),
-                  mapping
-                );
-              }
-            }
-          }
-        } catch (err) {
-          throw new Error(err);
-        }
-      });
-      await Promise.all([gqlQuery]).catch((err) => {
+      await Promise.all([
+        gqlQuery(query, variables, req, featureCollection, layerType, mapping),
+      ]).catch((err) => {
         throw new Error(err);
       });
     } else if (get(req, 'query.refData')) {
@@ -398,7 +419,31 @@ router.get('/feature', async (req, res) => {
         new mongoose.Types.ObjectId(get(req, 'query.refData') as string)
       );
       if (referenceData) {
-        if (referenceData.type === 'static') {
+        if (get(req, 'query.aggregation')) {
+          const aggregation = get(req, 'query.aggregation') as string;
+          const query = `query referenceDataAggregation($referenceData: ID!, $aggregation: ID!, $contextFilters: JSON, $first: Int, $at: Date) {
+              referenceDataAggregation(referenceData: $referenceData, aggregation: $aggregation, contextFilters: $contextFilters, first: $first, at: $at)
+            }`;
+          const variables = {
+            referenceData: referenceData._id,
+            aggregation: aggregation,
+            contextFilters,
+            first: 1000,
+            at: at ? new Date(at) : undefined,
+          };
+          await Promise.all([
+            gqlQuery(
+              query,
+              variables,
+              req,
+              featureCollection,
+              layerType,
+              mapping
+            ),
+          ]).catch((err) => {
+            throw new Error(err);
+          });
+        } else if (referenceData.type === 'static') {
           const data = referenceData.data || [];
           await getFeatures(
             featureCollection.features,
