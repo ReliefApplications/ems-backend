@@ -338,6 +338,16 @@ router.post('/records', async (req, res) => {
         .send(i18next.t('routes.download.errors.missingParameters'));
     }
 
+    /** check if user has access to resource before allowing him to download */
+    const ability: AppAbility = req.context.user.ability;
+    const filters = Resource.find(accessibleBy(ability, 'read').Resource)
+      .where({ _id: params.resource })
+      .getFilter();
+    const resource = await Resource.findOne(filters);
+    if (!resource) {
+      return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    }
+
     // Initialization
     // let columns: any[] = [];
     // let rows: any[] = [];
