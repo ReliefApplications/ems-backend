@@ -1,4 +1,9 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLBoolean } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLError,
+  GraphQLBoolean,
+} from 'graphql';
 import { ApiConfigurationType } from '../types';
 import { ApiConfiguration } from '@models';
 import { logger } from '@services/logger.service';
