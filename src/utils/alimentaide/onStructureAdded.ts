@@ -73,6 +73,69 @@ const ROLE_ID_MAP = {
   userPlus: new Types.ObjectId('651157468e4cb3d8a3f22a7a'),
 };
 
+/** Script that updated all the structure applications by copying the structure of each demo app page */
+export const linkStructureAppsToDemo = async () => {
+  // Get applications with a set description
+  const apps = await Application.find({
+    description: { $exists: true },
+  })
+    .select('_id name description pages')
+    .populate({
+      path: 'pages',
+      model: 'Page',
+      select: '_id name type content',
+    });
+
+  // Get all records from the structure form that has their id in the description
+  const records = await Record.find({
+    form: STRUCTURE_FORM_ID,
+    _id: {
+      $in: apps.map((a) => a.description),
+    },
+  });
+
+  // Get the application to copy pages content from
+  const baseAppIndex = apps.findIndex((a) => a._id.equals(BASE_APP_ID));
+  if (baseAppIndex === -1) {
+    console.error('Could not find base app');
+    return;
+  }
+
+  const baseApp = apps.splice(baseAppIndex, 1)[0];
+  const baseAppPages = baseApp.pages as Page[];
+
+  // Filter out applications that are not linked to a structure
+  const structureApps = apps.filter((a) =>
+    records.find((r) => r._id.equals(a.description))
+  );
+
+  const pagesToSave = [] as Page[];
+  baseAppPages.forEach((page) => {
+    structureApps.forEach((app) => {
+      const appPage = (app.pages as Page[]).find((p) => p.name === page.name);
+      if (!appPage) {
+        return;
+      }
+      // If not already linked to the base app
+      if (
+        !(appPage.content as Types.ObjectId).equals(
+          page.content as Types.ObjectId
+        )
+      ) {
+        // We copy the content from the base app, meaning any changes done to it would be reflected in all structure apps (also, the other way around)
+        appPage.content = page.content;
+        pagesToSave.push(appPage);
+        appPage.markModified('content');
+      }
+    });
+  });
+
+  if (pagesToSave.length) {
+    console.log(`Linking ${pagesToSave.length} pages to the DEMO app...`);
+    await Page.bulkSave(pagesToSave);
+  }
+};
+
 /**
  * Gets the permissions of a resource for a list of roles
  *
@@ -429,6 +492,9 @@ const onStructureAdded = async (rec: Record) => {
   }
   // We save the new app
   await newApp.save();
+
+  // We link to to the demo app
+  await linkStructureAppsToDemo();
 };
 
 /** Script that creates applications for the existing structures */
