@@ -113,6 +113,7 @@ export const initDatabase = async () => {
     }
     const appPermissions = [
       'can_see_roles',
+      'can_see_layer',
       'can_see_users',
       'can_manage_templates',
       'can_manage_distribution_lists',
