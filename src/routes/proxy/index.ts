@@ -1,15 +1,12 @@
 import express, { Request, Response } from 'express';
 import { ApiConfiguration } from '@models';
-import { cache, getToken } from '@utils/proxy';
-import { get, isEmpty, lowerCase } from 'lodash';
+import { getToken } from '@utils/proxy';
+import { get, isEmpty } from 'lodash';
 import i18next from 'i18next';
 import { logger } from '@services/logger.service';
 import config from 'config';
 import * as CryptoJS from 'crypto-js';
 import axios from 'axios';
-import { createClient, RedisClientType } from 'redis';
-import { authType } from '@const/enumTypes';
-import jwtDecode from 'jwt-decode';
 
 /** Express router */
 const router = express.Router();
@@ -52,7 +49,7 @@ const proxyAPIRequest = async (
         data: JSON.stringify(req.body),
       }),
     })
-      .then(async ({ data, status }) => {
+      .then(async ({ data }) => {
         res.status(200).send(data);
       })
       .catch((err) => {
