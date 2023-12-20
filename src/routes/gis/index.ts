@@ -447,9 +447,7 @@ router.get('/feature', async (req, res) => {
         } else if (referenceData.type === 'static') {
           let data = referenceData.data || [];
           if (contextFilters) {
-            data = data.filter((x) =>
-              filterReferenceData(x.rawValue, contextFilters)
-            );
+            data = data.filter((x) => filterReferenceData(x, contextFilters));
           }
           await getFeatures(
             featureCollection.features,
