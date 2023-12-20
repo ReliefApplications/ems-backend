@@ -15,6 +15,7 @@ import { isEqual, isNil, get, flattenDeep, uniq, omit, isObject } from 'lodash';
 import turf, { Feature, booleanPointInPolygon } from '@turf/turf';
 import dataSources, { CustomAPI } from '@server/apollo/dataSources';
 import { getPolygons } from '@utils/gis/getCountryPolygons';
+import filterReferenceData from '@utils/referenceData/referenceDataFilter.util';
 
 /**
  * Interface of feature query
@@ -444,7 +445,12 @@ router.get('/feature', async (req, res) => {
             throw new Error(err);
           });
         } else if (referenceData.type === 'static') {
-          const data = referenceData.data || [];
+          let data = referenceData.data || [];
+          if (contextFilters) {
+            data = data.filter((x) =>
+              filterReferenceData(x.rawValue, contextFilters)
+            );
+          }
           await getFeatures(
             featureCollection.features,
             layerType,
