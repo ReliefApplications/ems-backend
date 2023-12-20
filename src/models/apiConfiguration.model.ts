@@ -5,6 +5,7 @@ import { authType, status } from '@const/enumTypes';
 /** Mongoose api configuration schema declaration */
 const apiConfigurationSchema = new Schema({
   name: String,
+  skipCache: Boolean,
   status: {
     type: String,
     enum: Object.values(status),
@@ -45,6 +46,7 @@ apiConfigurationSchema.index({ name: 1 }, { unique: true });
 export interface ApiConfiguration extends Document {
   kind: 'ApiConfiguration';
   name: string;
+  skipCache: boolean;
   status: string;
   authType: string;
   endpoint: string;

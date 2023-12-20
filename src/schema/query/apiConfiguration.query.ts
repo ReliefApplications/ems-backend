@@ -1,4 +1,4 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLBoolean } from 'graphql';
 import { ApiConfigurationType } from '../types';
 import { ApiConfiguration } from '@models';
 import { logger } from '@services/logger.service';
@@ -9,6 +9,7 @@ import { Context } from '@server/apollo/context';
 /** Arguments for the apiConfiguration query */
 type ApiConfigurationArgs = {
   id: string | Types.ObjectId;
+  skipCache?: boolean;
 };
 
 /**
@@ -19,8 +20,11 @@ export default {
   type: ApiConfigurationType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
+    skipCache: { type: GraphQLBoolean },
   },
   async resolve(parent, args: ApiConfigurationArgs, context: Context) {
+    //log the variables
+    console.log('query variables', args);
     graphQLAuthCheck(context);
     try {
       const ability = context.user.ability;

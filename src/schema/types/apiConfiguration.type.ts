@@ -19,6 +19,7 @@ export const ApiConfigurationType = new GraphQLObjectType({
   fields: () => ({
     id: { type: GraphQLID },
     name: { type: GraphQLString },
+    skipCache: { type: GraphQLBoolean },
     status: { type: StatusEnumType },
     authType: {
       type: AuthEnumType,
