@@ -1,3 +1,10 @@
+## [2.4.1](https://github.com/ReliefApplications/ems-backend/compare/v2.4.0...v2.4.1) (2023-12-20)
+
+
+### Bug Fixes
+
+* changes on reference data would break the back ([73ca9de](https://github.com/ReliefApplications/ems-backend/commit/73ca9de0b05dc4cff44b0799d8f9a9ac10ed8162))
+
 # [2.4.0](https://github.com/ReliefApplications/ems-backend/compare/v2.3.1...v2.4.0) (2023-12-18)
 
 
