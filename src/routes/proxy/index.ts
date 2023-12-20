@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import { ApiConfiguration } from '@models';
-import { getToken } from '@utils/proxy';
+import { cache, getToken } from '@utils/proxy';
 import { get, isEmpty, lowerCase } from 'lodash';
 import i18next from 'i18next';
 import { logger } from '@services/logger.service';
@@ -35,83 +35,30 @@ const proxyAPIRequest = async (
   ping = false
 ) => {
   try {
-    let client: RedisClientType;
-    if (config.get('redis.url') && lowerCase(req.method) === 'get' && !ping) {
-      client = createClient({
-        url: config.get('redis.url'),
-        password: config.get('redis.password'),
-      });
-      client.on('error', (error) => logger.error(`REDIS: ${error}`));
-      await client.connect();
-    }
-    // Generate a hash, taking into account the request body when storing data
-    const bodyHash = CryptoJS.SHA256(JSON.stringify(req.body)).toString(
-      CryptoJS.enc.Hex
-    );
-    // Add / between endpoint and path, and ensure that double slash are removed
+    const token = await getToken(api, req.headers.accesstoken, ping);
     const url = `${api.endpoint.replace(/\$/, '')}/${path}`.replace(
       /([^:]\/)\/+/g,
       '$1'
     );
-    // Create a cache key taking into account the body of the request, and making a user-dependant cache for auth code
-    const cacheKey = [authType.serviceToService, authType.public].includes(
-      api.authType
-    )
-      ? `${url}/${bodyHash}`
-      : `${jwtDecode<any>(req.headers.authorization).name}:${url}/${bodyHash}`;
-    // Get data from the cache
-    const cacheData = client ? await client.get(cacheKey) : null;
-    if (cacheData) {
-      logger.info(`REDIS: get key : ${url}`);
-      res.status(200).send(JSON.parse(cacheData));
-    } else {
-      const token = await getToken(api, req.headers.accesstoken, ping);
-      await axios({
-        url,
-        method: req.method,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        maxRedirects: 5,
-        ...(!isEmpty(req.body) && {
-          data: JSON.stringify(req.body),
-        }),
+    await axios({
+      url,
+      method: req.method,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      maxRedirects: 5,
+      ...(!isEmpty(req.body) && {
+        data: JSON.stringify(req.body),
+      }),
+    })
+      .then(async ({ data, status }) => {
+        res.status(200).send(data);
       })
-        .then(async ({ data, status }) => {
-          // We are only caching the results of requests that are not user-dependent.
-          // Otherwise, unwanted users could access cached data of other users.
-          // As an improvement, we could include a stringified unique property of the user to the cache-key to enable user-specific cache.
-          if (
-            client &&
-            [authType.serviceToService, authType.public].includes(
-              api.authType
-            ) &&
-            status === 200
-          ) {
-            await client
-              .set(cacheKey, JSON.stringify(data), {
-                EX: 60 * 60 * 24, // set a cache of one day
-              })
-              .then(() => logger.info(`REDIS: set key : ${cacheKey}`));
-          }
-          if (client && api.authType === authType.authorizationCode) {
-            await client
-              .set(cacheKey, JSON.stringify(data), {
-                EX: 60 * 60 * 24, // set a cache of one day
-              })
-              .then(() => logger.info(`REDIS: set key : ${cacheKey}`));
-          }
-          res.status(200).send(data);
-        })
-        .catch((err) => {
-          logger.error(err.message, { stack: err.stack });
-          return res.status(503).send('Service currently unavailable');
-        });
-    }
-    if (client) {
-      await client.disconnect();
-    }
+      .catch((err) => {
+        logger.error(err.message, { stack: err.stack });
+        return res.status(503).send('Service currently unavailable');
+      });
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
     return res.status(500).send(req.t('common.errors.internalServerError'));
