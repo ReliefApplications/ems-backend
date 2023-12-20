@@ -447,6 +447,8 @@ router.get('/feature', async (req, res) => {
         } else if (referenceData.type === 'static') {
           let data = referenceData.data || [];
           if (contextFilters) {
+            console.log('there');
+            console.log(contextFilters);
             data = data.filter((x) => filterReferenceData(x, contextFilters));
           }
           await getFeatures(
