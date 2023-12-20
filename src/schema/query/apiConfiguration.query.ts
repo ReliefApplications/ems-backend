@@ -30,6 +30,9 @@ export default {
   async resolve(parent, args: ApiConfigurationArgs, context: Context) {
     //log the variables
     console.log('query variables', args);
+    // if skipCache is true, call the proxyAPIRequest to fetch the data from the API
+    //TODO
+
     graphQLAuthCheck(context);
     try {
       const ability = context.user.ability;

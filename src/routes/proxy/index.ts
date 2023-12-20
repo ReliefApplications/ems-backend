@@ -25,6 +25,7 @@ const SETTING_PLACEHOLDER = '●●●●●●●●●●●●●';
  * @param api api configuration
  * @param path url path
  * @param ping bool: are we executing a ping request
+ * @param skipCache bool: are we skipping the cache
  * @returns API request
  */
 const proxyAPIRequest = async (
@@ -32,8 +33,10 @@ const proxyAPIRequest = async (
   res: Response,
   api: ApiConfiguration,
   path: string,
-  ping = false
+  ping = false,
+  skipCache = false
 ) => {
+  console.log('proxyAPIRequest');
   try {
     let client: RedisClientType;
     if (config.get('redis.url') && lowerCase(req.method) === 'get' && !ping) {
@@ -61,7 +64,8 @@ const proxyAPIRequest = async (
       : `${jwtDecode<any>(req.headers.authorization).name}:${url}/${bodyHash}`;
     // Get data from the cache
     const cacheData = client ? await client.get(cacheKey) : null;
-    if (cacheData) {
+    if (cacheData && !skipCache) {
+      // if (cacheData) {
       logger.info(`REDIS: get key : ${url}`);
       res.status(200).send(JSON.parse(cacheData));
     } else {
