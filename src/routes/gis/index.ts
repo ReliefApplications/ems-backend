@@ -447,8 +447,6 @@ router.get('/feature', async (req, res) => {
         } else if (referenceData.type === 'static') {
           let data = referenceData.data || [];
           if (contextFilters) {
-            console.log('there');
-            console.log(contextFilters);
             data = data.filter((x) => filterReferenceData(x, contextFilters));
           }
           await getFeatures(
@@ -472,17 +470,14 @@ router.get('/feature', async (req, res) => {
           const dataSource = contextDataSources[
             apiConfiguration.name
           ] as CustomAPI;
-          // if (dataSource && !dataSource.httpCache) {
-          //   dataSource.initialize({
-          //     context: {},
-          //     cache: new InMemoryLRUCache(),
-          //   });
-          // }
-          const data: any =
+          let data: any =
             (await dataSource.getReferenceDataItems(
               referenceData,
               apiConfiguration
             )) || [];
+          if (contextFilters) {
+            data = data.filter((x) => filterReferenceData(x, contextFilters));
+          }
           await getFeatures(
             featureCollection.features,
             layerType,
