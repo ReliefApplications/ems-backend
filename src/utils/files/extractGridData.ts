@@ -40,6 +40,9 @@ const getTotalCount = (
       headers: {
         Authorization: req.headers.authorization,
         'Content-Type': 'application/json',
+        ...(req.headers.accesstoken && {
+          accesstoken: req.headers.accesstoken,
+        }),
       },
       data: {
         query: totalCountQuery,
@@ -76,6 +79,9 @@ const getColumns = (req: any, params: GridExtractParams): Promise<any[]> => {
       headers: {
         Authorization: req.headers.authorization,
         'Content-Type': 'application/json',
+        ...(req.headers.accesstoken && {
+          accesstoken: req.headers.accesstoken,
+        }),
       },
       data: {
         query: metaQuery,
@@ -138,6 +144,9 @@ const getRows = async (
         headers: {
           Authorization: req.headers.authorization,
           'Content-Type': 'application/json',
+          ...(req.headers.accesstoken && {
+            accesstoken: req.headers.accesstoken,
+          }),
         },
         data: {
           query,

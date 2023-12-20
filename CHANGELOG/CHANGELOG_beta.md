@@ -1,3 +1,150 @@
+# [2.4.0-beta.4](https://github.com/ReliefApplications/ems-backend/compare/v2.4.0-beta.3...v2.4.0-beta.4) (2023-12-18)
+
+
+### Bug Fixes
+
+* aggregation on reference data not working correctly ([392b624](https://github.com/ReliefApplications/ems-backend/commit/392b6241db5b4dc11591bdd0918046d96f4ed74c))
+
+
+### Features
+
+* support unwind in ref data aggregations ([#893](https://github.com/ReliefApplications/ems-backend/issues/893)) ([a041262](https://github.com/ReliefApplications/ems-backend/commit/a041262c3433495be28d83b49e0454904cff1759))
+
+# [2.4.0-beta.3](https://github.com/ReliefApplications/ems-backend/compare/v2.4.0-beta.2...v2.4.0-beta.3) (2023-12-18)
+
+
+### Features
+
+* allow to use context in page widgets ([#595](https://github.com/ReliefApplications/ems-backend/issues/595)) ([e2772dc](https://github.com/ReliefApplications/ems-backend/commit/e2772dc0664e67e3c8557b22782d89ca8b23d742))
+
+# [2.4.0-beta.2](https://github.com/ReliefApplications/ems-backend/compare/v2.4.0-beta.1...v2.4.0-beta.2) (2023-12-16)
+
+
+### Bug Fixes
+
+* aggregation not working fine for most ref data ([#877](https://github.com/ReliefApplications/ems-backend/issues/877)) ([27740e2](https://github.com/ReliefApplications/ems-backend/commit/27740e29377c31abf53611612fae8d87e0cb0c3e))
+* revert changes on time fields in exports ([5d60245](https://github.com/ReliefApplications/ems-backend/commit/5d60245d0c7d7a69cf31ebe944143e768234b862))
+
+
+### Features
+
+* add support for reference data aggregations in layers ([#875](https://github.com/ReliefApplications/ems-backend/issues/875)) ([cb7af9a](https://github.com/ReliefApplications/ems-backend/commit/cb7af9a127e917241c421acf82cfe074c8e752d7))
+* allow filtering on ref data aggregations ([#885](https://github.com/ReliefApplications/ems-backend/issues/885)) ([8c4fec3](https://github.com/ReliefApplications/ems-backend/commit/8c4fec3f212a87a1165a7e699e5b532f1bd21093))
+* allow to preview aggregation data ([#886](https://github.com/ReliefApplications/ems-backend/issues/886)) ([3952cb5](https://github.com/ReliefApplications/ems-backend/commit/3952cb5a42ed91213579818c9efd58b7a6dd033a))
+* use context filter in ref data aggregation ([843c5c0](https://github.com/ReliefApplications/ems-backend/commit/843c5c0301dc077ded2a664cece3628d20cb3799))
+
+# [2.4.0-beta.1](https://github.com/ReliefApplications/ems-backend/compare/v2.3.0...v2.4.0-beta.1) (2023-12-12)
+
+
+### Features
+
+* allow reference data to be used in charts ([#867](https://github.com/ReliefApplications/ems-backend/issues/867)) ([56a1d79](https://github.com/ReliefApplications/ems-backend/commit/56a1d79b2b440179db9fe34b88ba37469a9a8fb7)), closes [#68346](https://github.com/ReliefApplications/ems-backend/issues/68346) [#68346](https://github.com/ReliefApplications/ems-backend/issues/68346) [#68346](https://github.com/ReliefApplications/ems-backend/issues/68346)
+
+# [2.3.0-beta.1](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0...v2.3.0-beta.1) (2023-12-11)
+
+
+### Features
+
+* allow reference data to be used in charts ([#867](https://github.com/ReliefApplications/ems-backend/issues/867)) ([56a1d79](https://github.com/ReliefApplications/ems-backend/commit/56a1d79b2b440179db9fe34b88ba37469a9a8fb7)), closes [#68346](https://github.com/ReliefApplications/ems-backend/issues/68346) [#68346](https://github.com/ReliefApplications/ems-backend/issues/68346) [#68346](https://github.com/ReliefApplications/ems-backend/issues/68346)
+
+# [2.2.0-beta.15](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0-beta.14...v2.2.0-beta.15) (2023-12-08)
+
+
+### Bug Fixes
+
+* add access tokens to all internal requests ([067bd1c](https://github.com/ReliefApplications/ems-backend/commit/067bd1c788070a05c02053eb8919c5ddf2e1288e))
+* boolean would not correctly be calculated in getFilter ([58dc862](https://github.com/ReliefApplications/ems-backend/commit/58dc8621b4237e92eb6f17e5b189be647bd86ad3))
+* cloning application would not clone filter & grid options in dashboards ([3162811](https://github.com/ReliefApplications/ems-backend/commit/3162811fdc0c2775190d9abce12d6fd3f8031d99))
+* could not always get fields from ref data ([32e83d4](https://github.com/ReliefApplications/ems-backend/commit/32e83d44995fc7fe1e2c5d8f191cb0a6211f4739))
+* incorrect display of date fields in export & history ([#857](https://github.com/ReliefApplications/ems-backend/issues/857)) ([5262f8b](https://github.com/ReliefApplications/ems-backend/commit/5262f8b5c50315633ff45bc3a777fd7dcd1c4a87))
+* reference data not getting exported ([#858](https://github.com/ReliefApplications/ems-backend/issues/858)) ([24ad915](https://github.com/ReliefApplications/ems-backend/commit/24ad915ba5eceb38d263c2094372f6d15d30a4fb))
+
+# [2.2.0-beta.14](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0-beta.13...v2.2.0-beta.14) (2023-12-05)
+
+
+### Bug Fixes
+
+* incorrect sorting on api configurations ([#852](https://github.com/ReliefApplications/ems-backend/issues/852)) ([1260ceb](https://github.com/ReliefApplications/ems-backend/commit/1260cebd5c88b7a6da8236a723a422729ab88723))
+
+# [2.2.0-beta.13](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0-beta.12...v2.2.0-beta.13) (2023-12-04)
+
+
+### Bug Fixes
+
+* client flow authentication would not work due to incorrect update when migrating mongoose version ([18a4683](https://github.com/ReliefApplications/ems-backend/commit/18a46838c35b3d1e84964c7898095752736f9fa1))
+
+# [2.2.0-beta.12](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0-beta.11...v2.2.0-beta.12) (2023-12-02)
+
+
+### Bug Fixes
+
+* Add default values for gridOptions in DashboardType to prevent unwanted results when going from one dashboard to another one ([#844](https://github.com/ReliefApplications/ems-backend/issues/844)) ([f48459f](https://github.com/ReliefApplications/ems-backend/commit/f48459f1c2eb2ab8dd98e016ef617b542a33cd41))
+* grant ability to read api configuration & reference data to all records ([d45c394](https://github.com/ReliefApplications/ems-backend/commit/d45c394beac565915fe968fbc4c7285c6fb127ce))
+
+# [2.2.0-beta.11](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0-beta.10...v2.2.0-beta.11) (2023-11-30)
+
+
+### Bug Fixes
+
+* ability on records could fail due to missing resource ([b217df1](https://github.com/ReliefApplications/ems-backend/commit/b217df11982ecfdbe51293ceb3d9b0a1968521f1))
+* added sorting on id field to avoid having missing records ([#842](https://github.com/ReliefApplications/ems-backend/issues/842)) ([935fe1b](https://github.com/ReliefApplications/ems-backend/commit/935fe1b24be318485bf28faa9bc9f53d5e22df81))
+* audience would not be available ([4e76800](https://github.com/ReliefApplications/ems-backend/commit/4e76800656354c10f3c1497ae98bc33f2bfff9ee))
+* build would fail due to incorrect default value for auth audience ([8985cc0](https://github.com/ReliefApplications/ems-backend/commit/8985cc05b4d52571be6362995c90c54eed3fcc57))
+* incorrect mutation to set filter at dashboard level ([2d57100](https://github.com/ReliefApplications/ems-backend/commit/2d5710036e9eab6780137f7a129cc7190628866c))
+* some permissions issues when not admin ([794683d](https://github.com/ReliefApplications/ems-backend/commit/794683d7eeda6e82a8b0791250c7ce788a3ac984))
+* users who can edit application can now delete the steps & pages ([cf130ce](https://github.com/ReliefApplications/ems-backend/commit/cf130ce61d82a6b3690dd092239e79b2015e75db))
+
+
+### Features
+
+* now use filter at dashboard level ([#834](https://github.com/ReliefApplications/ems-backend/issues/834)) ([6b3f4e9](https://github.com/ReliefApplications/ems-backend/commit/6b3f4e9dfcacdf2fd51c787eaba958a0c392f1a5))
+
+# [2.2.0-beta.10](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0-beta.9...v2.2.0-beta.10) (2023-11-27)
+
+
+### Bug Fixes
+
+* redis client error ([2c45593](https://github.com/ReliefApplications/ems-backend/commit/2c4559334e937b62e98bfdf3bea250b36ce5f5eb))
+* upload would fail most of the time for tagbox / checkbox questions ([243f77d](https://github.com/ReliefApplications/ems-backend/commit/243f77d33971455cd1f26995d11c36dc3e37d154))
+
+# [2.2.0-beta.9](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0-beta.8...v2.2.0-beta.9) (2023-11-24)
+
+
+### Bug Fixes
+
+* add resource fields to history ([71e708d](https://github.com/ReliefApplications/ems-backend/commit/71e708dcfb4f36f6b955624cc15fbfc09a3b4c38))
+* allow parallel sorting in aggregations ([#798](https://github.com/ReliefApplications/ems-backend/issues/798)) ([8b7a8ec](https://github.com/ReliefApplications/ems-backend/commit/8b7a8ec84346afc686190d2b7d321375b71d7b74))
+* check of calculated fields in pipeline of 'all' query could break some queries ([00e88f8](https://github.com/ReliefApplications/ems-backend/commit/00e88f8087726ba896a35f898049105d1d55062c))
+* could not get first createdBy in history ([47b33fd](https://github.com/ReliefApplications/ems-backend/commit/47b33fd25f84c7c49ee09503a1fbe8f41b40473d))
+* could not revert past history versions ([d9999a1](https://github.com/ReliefApplications/ems-backend/commit/d9999a1666d12e1282c28b334ce91b0b24cf8142))
+* incorrect audience settings ([9c8e710](https://github.com/ReliefApplications/ems-backend/commit/9c8e710c3d08ee2ccea504a2a410dceeccd62735))
+* incorrect list of permissions sent to back-office role editor ([#786](https://github.com/ReliefApplications/ems-backend/issues/786)) ([d4377c0](https://github.com/ReliefApplications/ems-backend/commit/d4377c020674c2737d02f1781ff002bf7810cccc))
+* incorrect metadata for createdBy / lastUpdatedBy fields ([#829](https://github.com/ReliefApplications/ems-backend/issues/829)) ([c6892f3](https://github.com/ReliefApplications/ems-backend/commit/c6892f35b24d6c2b350599275de82280f9c5630a))
+* non-admin users could not download history ([#785](https://github.com/ReliefApplications/ems-backend/issues/785)) ([862fdcc](https://github.com/ReliefApplications/ems-backend/commit/862fdccc44a77264299aac2b47ecfe8024f70b41))
+* owner field could create issue in history ([0b08985](https://github.com/ReliefApplications/ems-backend/commit/0b089850852b02b7a70740c97d6aaee33c9a0c0d))
+* record history would not correctly display changes on resources for some users ([f2cfa5f](https://github.com/ReliefApplications/ems-backend/commit/f2cfa5f7d9f10613b2fc22d1a46ae65bce098bd3))
+* some requests could not be cached due to incorrect method check ([61e44c7](https://github.com/ReliefApplications/ems-backend/commit/61e44c7a2c03160a81d4d3d7fcaa05e43ec1dbb6))
+* updated editApiConfiguration mutation ([#793](https://github.com/ReliefApplications/ems-backend/issues/793)) ([dbe15c6](https://github.com/ReliefApplications/ems-backend/commit/dbe15c6cfb7b9754c2f06bda671bc4b43acc1885))
+* users roles not appearing in applications ([#835](https://github.com/ReliefApplications/ems-backend/issues/835)) ([d05d061](https://github.com/ReliefApplications/ems-backend/commit/d05d0619635bb2c26ac902fc06789b6d58b899c7))
+* using size operator on nullish values in aggregations on records ([#836](https://github.com/ReliefApplications/ems-backend/issues/836)) ([5eca1c7](https://github.com/ReliefApplications/ems-backend/commit/5eca1c704264fee19eb555f34ec6860326fa44df))
+
+
+### Features
+
+* allow caching of more API requests ([#825](https://github.com/ReliefApplications/ems-backend/issues/825)) ([105f0a5](https://github.com/ReliefApplications/ems-backend/commit/105f0a50685363f6eab3bc936df308774b7e7015))
+
+# [2.2.0-beta.8](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0-beta.7...v2.2.0-beta.8) (2023-11-20)
+
+
+### Bug Fixes
+
+* ping request using cache and decrypting twice ([#826](https://github.com/ReliefApplications/ems-backend/issues/826)) ([14b26c4](https://github.com/ReliefApplications/ems-backend/commit/14b26c4e125d22fd489afce95cf060f51cda07f8))
+
+
+### Features
+
+* can save custom grid options per dashboard ([#824](https://github.com/ReliefApplications/ems-backend/issues/824)) ([8779433](https://github.com/ReliefApplications/ems-backend/commit/87794338b35f5b393e22ea4e6aa2901cf346a411))
+
 # [2.2.0-beta.7](https://github.com/ReliefApplications/oort-backend/compare/v2.2.0-beta.6...v2.2.0-beta.7) (2023-11-09)
 
 

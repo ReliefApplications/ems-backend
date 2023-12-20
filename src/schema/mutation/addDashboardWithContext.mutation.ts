@@ -45,7 +45,7 @@ const getNewDashboardName = async (
         ).getReferenceDataItems(referenceData, apiConfiguration)
       : referenceData.data;
 
-    const item = data.find((x) => x[referenceData.valueField] === id);
+    const item = data.find((x) => get(x, referenceData.valueField) == id);
     return `${item?.[context.displayField]}`;
   } else if ('resource' in context && context.resource) {
     const record = await Record.findById(id);

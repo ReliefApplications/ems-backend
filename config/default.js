@@ -49,6 +49,7 @@ module.exports = {
     clientId: '',
     tenantId: '',
     allowedIssuers: [],
+    audience: '[]',
   },
   encryption: {
     key: '',

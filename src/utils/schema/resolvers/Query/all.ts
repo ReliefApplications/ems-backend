@@ -7,6 +7,7 @@ import getFilter, {
   FLAT_DEFAULT_FIELDS,
   extractFilterFields,
 } from './getFilter';
+import getSearchFilter from './getSearchFilter';
 import getStyle from './getStyle';
 import getSortAggregation from './getSortAggregation';
 import mongoose from 'mongoose';
@@ -61,21 +62,6 @@ const projectAggregation = [
         },
       },
       data: 1,
-    },
-  },
-];
-
-/** Default aggregation common to all records to make lookups for default fields. */
-const defaultRecordAggregation = [
-  { $addFields: { id: { $toString: '$_id' } } },
-  {
-    $addFields: {
-      '_createdBy.user.id': { $toString: '$_createdBy.user._id' },
-    },
-  },
-  {
-    $addFields: {
-      '_lastUpdatedBy.user.id': { $toString: '$_lastUpdatedBy.user._id' },
     },
   },
 ];
@@ -139,6 +125,23 @@ const getAtAggregation = (at: Date) => {
     },
   ];
 };
+
+/**
+ *
+ */
+const defaultRecordAggregation = [
+  { $addFields: { id: { $toString: '$_id' } } },
+  {
+    $addFields: {
+      '_createdBy.user.id': { $toString: '$_createdBy.user._id' },
+    },
+  },
+  {
+    $addFields: {
+      '_lastUpdatedBy.user.id': { $toString: '$_lastUpdatedBy.user._id' },
+    },
+  },
+];
 
 /**
  * Get queried fields from query definition
@@ -364,7 +367,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         if (isUsedInFilter(filter)) return true;
 
         // Check if the field is used in any styles' filters
-        if (styles.some((s) => isUsedInFilter(s.filter))) return true;
+        if (styles?.some((s) => isUsedInFilter(s.filter))) return true;
 
         // If not used in any of the above, don't add it to the pipeline
         return false;
@@ -400,7 +403,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       // Add the basic records filter
       const basicFilters = {
         $or: [{ resource: id }, { form: id }],
-        archived: { $ne: true },
+        archived: { $not: { $eq: true } },
       };
 
       // Additional filter from the user permissions
@@ -417,8 +420,10 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // Finally putting all filters together
       const filters = {
-        $and: [mongooseFilter, permissionFilters],
+        $and: [basicFilters, mongooseFilter, permissionFilters],
       };
+
+      const searchFilter = getSearchFilter(filter, fields, context);
 
       // === RUN AGGREGATION TO FETCH ITEMS ===
       let items: Record[] = [];
@@ -426,27 +431,44 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // If we're using skip parameter, include them into the aggregation
       if (skip || skip === 0) {
-        const aggregation = await Record.aggregate([
-          { $match: basicFilters },
-          ...(at ? getAtAggregation(new Date(at)) : []),
-          ...linkedRecordsAggregation,
-          ...linkedReferenceDataAggregation,
-          ...defaultRecordAggregation,
-          ...calculatedFieldsAggregation,
-          { $match: filters },
-          ...projectAggregation,
-          ...(await getSortAggregation(sortField, sortOrder, fields, context)),
-          {
-            $facet: {
-              items: [{ $skip: skip }, { $limit: first + 1 }],
-              totalCount: [
-                {
-                  $count: 'count',
-                },
-              ],
+        const sort = await getSortAggregation(
+          sortField,
+          sortOrder,
+          fields,
+          context
+        );
+        let pipeline = [];
+        if (searchFilter) {
+          pipeline = [
+            searchFilter,
+            ...calculatedFieldsAggregation,
+            ...defaultRecordAggregation,
+            { $match: filters },
+            ...(at ? getAtAggregation(new Date(at)) : []),
+          ];
+        } else {
+          pipeline = [
+            ...calculatedFieldsAggregation,
+            ...defaultRecordAggregation,
+            { $match: filters },
+            ...(at ? getAtAggregation(new Date(at)) : []),
+          ];
+        }
+        const aggregation = await Record.aggregate(pipeline).facet({
+          items: [
+            ...linkedRecordsAggregation,
+            ...linkedReferenceDataAggregation,
+            ...sort,
+            ...projectAggregation,
+            { $skip: skip },
+            { $limit: first + 1 },
+          ],
+          totalCount: [
+            {
+              $count: 'count',
             },
-          },
-        ]);
+          ],
+        });
         items = aggregation[0].items;
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       } else {
@@ -458,16 +480,22 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               },
             }
           : {};
-        const aggregation = await Record.aggregate([
+        const pipeline = [
           { $match: basicFilters },
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
-          ...defaultRecordAggregation,
-          ...(await getSortAggregation(sortField, sortOrder, fields, context)),
           { $match: { $and: [filters, cursorFilters] } },
           {
             $facet: {
-              results: [{ $limit: first + 1 }],
+              results: [
+                ...(await getSortAggregation(
+                  sortField,
+                  sortOrder,
+                  fields,
+                  context
+                )),
+                { $limit: first + 1 },
+              ],
               totalCount: [
                 {
                   $count: 'count',
@@ -475,7 +503,8 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               ],
             },
           },
-        ]);
+        ];
+        const aggregation = await Record.aggregate(pipeline);
         items = aggregation[0].items;
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       }

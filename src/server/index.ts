@@ -60,8 +60,27 @@ class SafeServer {
     });
 
     // All reference data changes require schema update
-    ReferenceData.watch().on('change', () => {
-      this.update();
+    ReferenceData.watch().on('change', (data) => {
+      // this.update();
+      if (data.operationType === 'update') {
+        const fieldsThatRequireSchemaUpdate = [
+          'name',
+          'type',
+          'apiConfiguration',
+          'fields',
+          'data',
+        ];
+        const updatedDocFields = Object.keys(
+          data.updateDescription.updatedFields
+        );
+        if (
+          updatedDocFields.some((f) =>
+            fieldsThatRequireSchemaUpdate.includes(f)
+          )
+        ) {
+          this.update();
+        }
+      }
     });
 
     // All resource changes require schema update
