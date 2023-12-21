@@ -34,7 +34,25 @@ const buildReferenceDataAggregation = async (
     // Log error but continue execution
     logger.error(err.message, { stack: err.stack });
   }
+
+  // We map the items to create objects with the graphQLFieldName as key and the value as value.
+  const mappedItems = items.map((item) => {
+    const newItem = Object.keys(item).reduce((obj, key) => {
+      const currField = referenceData.fields.find((f) => f.name === key);
+      if (currField) {
+        obj[currField.graphQLFieldName ?? key] = item[key];
+      }
+      return obj;
+    }, {});
+
+    return newItem;
+  });
+
   const itemsIds = items.map((item) => item[referenceData.valueField]);
+  const valueFieldGraphqlName = referenceData.fields.find(
+    (f) => f.name === referenceData.valueField
+  )?.graphQLFieldName;
+
   if (MULTISELECT_TYPES.includes(field.type)) {
     return [
       {
@@ -55,14 +73,16 @@ const buildReferenceDataAggregation = async (
           [`data.${field.name}`]: {
             $let: {
               vars: {
-                items,
+                items: mappedItems,
               },
               in: {
                 $filter: {
                   input: '$$items',
                   cond: {
                     $in: [
-                      `$$this.${referenceData.valueField}`,
+                      `$$this.${
+                        valueFieldGraphqlName ?? referenceData.valueField
+                      }`,
                       `$data.${field.name}`,
                     ],
                   },
@@ -80,7 +100,10 @@ const buildReferenceDataAggregation = async (
           [`data.${field.name}`]: {
             $let: {
               vars: {
-                items,
+                // We concat null at the end because if there is no value for a particular record
+                // indexOfArray would return -1 and if we pass a negative index (-n for example) to $arrayElemAt
+                // it would return the nth element starting from the last element of the array
+                items: mappedItems.concat(null),
                 itemsIds,
               },
               in: {
