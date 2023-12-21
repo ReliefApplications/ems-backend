@@ -505,6 +505,33 @@ export default {
             pipeline.push(...referenceDataAggregation);
           }
         }
+        const resourceFieldsToCalculate = [];
+        const promises = resource.fields.map(async (resourceField: any) => {
+          const resourceData = await Resource.findById(resourceField.resource);
+          if (resourceData) {
+            // const values = Object.values(args.mapping).flat();
+            // get each field of resourceData
+            resourceData.fields.forEach((rdField: any) => {
+              // if have the resourceDataField is a expression
+              if (rdField.expression) {
+                // add it to resource fields to be calculated
+                resourceFieldsToCalculate.push({
+                  field: rdField,
+                  name: resourceData.name,
+                });
+              }
+            });
+          }
+        });
+        await Promise.all(promises);
+        resourceFieldsToCalculate.forEach((obj) => {
+          pipeline.push(
+            ...buildCalculatedFieldPipeline(
+              obj.field.expression,
+              `${obj.name}.${obj.field.name}`
+            )
+          );
+        });
         pipeline.push({
           $project: {
             ...(sourceFields as any[]).reduce(
