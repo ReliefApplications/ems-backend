@@ -3,12 +3,14 @@ import { faker } from '@faker-js/faker';
 import { status } from '@const/enumTypes';
 import { camelCase, toUpper } from 'lodash';
 
-jest.mock('@utils/files/deleteFolder'); // Mock deleteFolder module
+jest.mock('@utils/files/deleteFolder', () => {
+  return Promise.resolve();
+}); // Mock deleteFolder module
 jest.mock('@services/logger.service'); // Mock logger module
+
 /**
  * Test Form Model.
  */
-
 beforeAll(async () => {
   await new Application({
     name: faker.random.alpha(10),

@@ -18,6 +18,7 @@ beforeAll(async () => {
   const dashboard = await new Dashboard({
     name: faker.word.adjective(),
   }).save();
+  console.log(dashboard);
   dashboardId = dashboard._id;
 
   await new Workflow({
@@ -235,6 +236,8 @@ test('should update dashboard and related dashboards when page is updated with a
     { archived: true, archivedAt: new Date() },
     { new: true }
   );
+
+  console.log(await Dashboard.findOne());
 
   // Retrieve the updated dashboard
   const updatedDashboard = await Dashboard.findById(page.content);
