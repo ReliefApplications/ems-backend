@@ -165,6 +165,8 @@ const procOperator = (data: any, operator) => {
 const procPipelineStep = (pipelineStep, data, sourceFields) => {
   switch (pipelineStep.type) {
     case 'group':
+      console.dir(pipelineStep, { depth: null });
+      console.log('DATA', data);
       const operators = pipelineStep.form?.addFields?.map(
         (operator) => operator.expression
       );
@@ -218,10 +220,21 @@ const procPipelineStep = (pipelineStep, data, sourceFields) => {
       });
     case 'addFields':
       pipelineStep.form?.map((elt) => {
-        if (elt.expression.operator === 'add') {
-          data.map((obj: any) => {
-            obj[elt.name] = obj[elt.expression.field];
-          });
+        switch (elt.expression.operator) {
+          case 'add':
+            data.map((obj: any) => {
+              obj[elt.name] = obj[elt.expression.field];
+            });
+          case 'month':
+            data.map((obj: any) => {
+              const month = new Date(obj[elt.expression.field]).getMonth() + 1;
+              const monthAsString = month < 10 ? '0' + month : month.toString;
+              const dateWithMonth =
+                new Date(obj[elt.expression.field]).getFullYear() +
+                '-' +
+                monthAsString;
+              obj[elt.name] = dateWithMonth;
+            });
         }
       });
       return data;
