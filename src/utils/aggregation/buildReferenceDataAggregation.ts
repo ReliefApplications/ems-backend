@@ -100,7 +100,10 @@ const buildReferenceDataAggregation = async (
           [`data.${field.name}`]: {
             $let: {
               vars: {
-                items: mappedItems,
+                // We concat null at the end because if there is no value for a particular record
+                // indexOfArray would return -1 and if we pass a negative index (-n for example) to $arrayElemAt
+                // it would return the nth element starting from the last element of the array
+                items: mappedItems.concat(null),
                 itemsIds,
               },
               in: {
