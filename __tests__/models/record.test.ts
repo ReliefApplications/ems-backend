@@ -82,9 +82,11 @@ describe('Record models tests', () => {
       resource: resourceId,
       data: data,
     };
-    expect(async () => new Record(duplicateRecord).save()).rejects.toThrowError(
-      'E11000 duplicate key error collection: citest.records index: incrementalId_1_resource_1 dup key'
-    );
+    expect(async () =>
+      new Record(duplicateRecord).save()
+    ).rejects.toMatchObject({
+      code: 11000,
+    });
   });
 
   test('test Record model without incrementalId', async () => {

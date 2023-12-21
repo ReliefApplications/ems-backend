@@ -34,9 +34,9 @@ describe('ApiConfiguration models tests', () => {
     };
     expect(async () =>
       new ApiConfiguration(duplicateApiConfig).save()
-    ).rejects.toThrowError(
-      'E11000 duplicate key error collection: test.apiconfigurations index: name_1 dup key'
-    );
+    ).rejects.toMatchObject({
+      code: 11000,
+    });
   });
 
   test('test with incorrect api configuration status field', async () => {

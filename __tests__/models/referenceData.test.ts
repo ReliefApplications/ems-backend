@@ -95,9 +95,9 @@ describe('ReferenceData models tests', () => {
     };
     expect(async () =>
       new ReferenceData(duplicateReferenceData).save()
-    ).rejects.toThrowError(
-      'E11000 duplicate key error collection: test.referencedatas index: name_1 dup key'
-    );
+    ).rejects.toMatchObject({
+      code: 11000,
+    });
   });
 
   test('test ReferenceData model with wrong type', async () => {
@@ -109,9 +109,11 @@ describe('ReferenceData models tests', () => {
         type: faker.random.alpha(10),
         fields: [faker.word.adjective(), faker.word.adjective()],
       };
-      expect(async () => new ReferenceData(inputData).save()).rejects.toThrow(
-        'E11000 duplicate key error collection: citest.referencedatas index: name_1 dup key'
-      );
+      expect(async () =>
+        new ReferenceData(inputData).save()
+      ).rejects.toMatchObject({
+        code: 11000,
+      });
     }
   });
 
@@ -134,9 +136,9 @@ describe('ReferenceData models tests', () => {
     });
 
     // Expect the save operation to be rejected with a duplicate key error
-    await expect(duplicateReferenceData.save()).rejects.toThrowError(
-      'E11000 duplicate key error collection: citest.referencedatas index: name_1 dup key'
-    );
+    await expect(duplicateReferenceData.save()).rejects.toMatchObject({
+      code: 11000,
+    });
   });
 
   test('should check for duplicate by graphQLTypeName', async () => {

@@ -33,9 +33,9 @@ describe('Permission models tests', () => {
     };
     expect(async () =>
       new Permission(duplicatePermission).save()
-    ).rejects.toThrowError(
-      'E11000 duplicate key error collection: test.permissions index: type_1_global_1 dup key'
-    );
+    ).rejects.toMatchObject({
+      code: 11000,
+    });
   });
 
   test('test with blank type permission', async () => {

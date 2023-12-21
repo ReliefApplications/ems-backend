@@ -38,9 +38,9 @@ describe('Application models tests', () => {
     };
     expect(async () =>
       new Application(duplicateApplication).save()
-    ).rejects.toThrowError(
-      'E11000 duplicate key error collection: test.applications index: name_1 dup key'
-    );
+    ).rejects.toMatchObject({
+      code: 11000,
+    });
   });
 
   test('test application delete', async () => {

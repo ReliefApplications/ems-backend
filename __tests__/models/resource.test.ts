@@ -145,9 +145,9 @@ describe('Resource models tests', () => {
     const inputData = {
       name: resource.name,
     };
-    expect(async () => new Resource(inputData).save()).rejects.toThrowError(
-      'E11000 duplicate key error collection: citest.resources index: name_1 dup key'
-    );
+    expect(async () => new Resource(inputData).save()).rejects.toMatchObject({
+      code: 11000,
+    });
   });
 
   test('test resource delete', async () => {

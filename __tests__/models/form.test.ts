@@ -124,9 +124,9 @@ describe('Form models tests', () => {
       status: status.pending,
       resource: form.resource,
     };
-    expect(async () => new Form(duplicateForm).save()).rejects.toThrowError(
-      'E11000 duplicate key error collection: test.forms index: graphQLTypeName_1 dup key'
-    );
+    expect(async () => new Form(duplicateForm).save()).rejects.toMatchObject({
+      code: 11000,
+    });
   });
 
   test('test from getGraphQLTypeName without space in form name', () => {
