@@ -9,14 +9,16 @@ import {
 import { faker } from '@faker-js/faker';
 import { contentType, status } from '@const/enumTypes';
 
+let dashboardId;
+
 /**
  * Test Page Model.
  */
-
 beforeAll(async () => {
-  await new Dashboard({
+  const dashboard = await new Dashboard({
     name: faker.word.adjective(),
   }).save();
+  dashboardId = dashboard._id;
 
   await new Workflow({
     name: faker.random.alpha(10),
@@ -43,11 +45,10 @@ describe('Page models tests', () => {
   test('test with correct data and with dashboard as a content', async () => {
     for (let i = 0; i < 1; i++) {
       name = faker.word.adjective();
-      const dashboard = await Dashboard.findOne();
       const saveData = await new Page({
         name: name,
         type: contentType.dashboard,
-        content: dashboard._id,
+        content: dashboardId,
       }).save();
       expect(saveData._id).toBeDefined();
       expect(saveData).toHaveProperty('createdAt');
@@ -117,12 +118,10 @@ describe('Page models tests', () => {
   });
 
   test('test page delete with dashboard', async () => {
-    const dashboard = await Dashboard.findOne();
-
     const page = await new Page({
       name: faker.word.adjective(),
       type: contentType.dashboard,
-      content: dashboard._id,
+      content: dashboardId,
     }).save();
 
     await new Application({
@@ -158,34 +157,31 @@ describe('Page models tests', () => {
 });
 
 test('test with archived set to true', async () => {
-  const dashboard = await Dashboard.findOne();
   const saveData = await new Page({
     name: faker.word.adjective(),
     type: contentType.dashboard,
-    content: dashboard._id,
+    content: dashboardId,
     archived: true,
   }).save();
   expect(saveData.archived).toEqual(true);
 });
 
 test('test with archived set to false', async () => {
-  const dashboard = await Dashboard.findOne();
   const saveData = await new Page({
     name: faker.word.adjective(),
     type: contentType.dashboard,
-    content: dashboard._id,
+    content: dashboardId,
     archived: false,
   }).save();
   expect(saveData.archived).toEqual(false);
 });
 
 test('test with archivedAt set', async () => {
-  const dashboard = await Dashboard.findOne();
   const archivedAt = new Date();
   const saveData = await new Page({
     name: faker.word.adjective(),
     type: contentType.dashboard,
-    content: dashboard._id,
+    content: dashboardId,
     archivedAt: archivedAt,
   }).save();
   expect(saveData.archivedAt).toEqual(archivedAt);
@@ -220,19 +216,14 @@ test('should update workflow when page is updated with archived flag', async () 
 });
 
 test('should update dashboard and related dashboards when page is updated with archived flag', async () => {
-  // Create a dashboard
-  const dashboard = await new Dashboard({
-    name: 'Test Dashboard',
-  }).save();
-
   // Create a page with the dashboard and related dashboards
   const page = await new Page({
     name: 'Test Page',
     type: contentType.dashboard,
-    content: dashboard._id,
+    content: dashboardId,
     contentWithContext: [
       {
-        content: dashboard._id,
+        content: dashboardId,
       },
       // Add more related dashboards if needed
     ],
