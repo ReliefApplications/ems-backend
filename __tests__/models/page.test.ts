@@ -237,6 +237,7 @@ test('should update dashboard and related dashboards when page is updated with a
     { new: true }
   );
 
+  console.log(dashboardId);
   console.log(await Dashboard.findOne());
 
   // Retrieve the updated dashboard
