@@ -3,9 +3,7 @@ import { faker } from '@faker-js/faker';
 import { status } from '@const/enumTypes';
 import { camelCase, toUpper } from 'lodash';
 
-jest.mock('@utils/files/deleteFolder', () => {
-  return Promise.resolve();
-}); // Mock deleteFolder module
+jest.mock('@utils/files/deleteFolder'); // Mock deleteFolder module
 jest.mock('@services/logger.service'); // Mock logger module
 
 /**
@@ -18,12 +16,12 @@ beforeAll(async () => {
   }).save();
 });
 
+afterAll(() => {
+  jest.resetAllMocks();
+});
+
 describe('Form models tests', () => {
   let form: Form;
-
-  afterEach(() => {
-    jest.resetAllMocks();
-  });
 
   test('test form with correct data', async () => {
     for (let i = 0; i < 1; i++) {
