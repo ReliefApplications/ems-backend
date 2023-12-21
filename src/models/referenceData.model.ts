@@ -2,8 +2,52 @@ import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { getGraphQLTypeName } from '@utils/validators';
 import { referenceDataType } from '@const/enumTypes';
-import { snakeCase } from 'lodash';
+import { get, set, snakeCase } from 'lodash';
 import { aggregationSchema } from './aggregation.model';
+
+/**
+ * Reference data transformer.
+ * Convert data from reference data into graphQL data.
+ */
+export class DataTransformer {
+  /** Reference data fields */
+  fields: any[];
+
+  /** Reference data raw data */
+  data: any[];
+
+  /**
+   * Reference data transformer.
+   * Convert data from reference data into graphQL data.
+   *
+   * @param fields Reference data fields
+   * @param data Reference data raw data
+   */
+  constructor(fields, data) {
+    this.fields = fields;
+    this.data = data;
+  }
+
+  /**
+   * Transform raw data into graphQL data
+   *
+   * @returns graphQL data
+   */
+  transformData() {
+    return this.data.map((item) => {
+      const transformedItem = {};
+
+      this.fields.forEach((field) => {
+        const { name, graphQLFieldName } = field;
+        const value = get(item, name);
+
+        set(transformedItem, graphQLFieldName, value);
+      });
+
+      return transformedItem;
+    });
+  }
+}
 
 /** Reference data document interface. */
 interface ReferenceDataDocument extends Document {
