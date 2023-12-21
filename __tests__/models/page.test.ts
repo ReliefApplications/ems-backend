@@ -9,25 +9,11 @@ import {
 import { faker } from '@faker-js/faker';
 import { contentType, status } from '@const/enumTypes';
 
-let dashboardId;
-
 /**
  * Test Page Model.
  */
 beforeAll(async () => {
-  const dashboard = await new Dashboard({
-    name: faker.word.adjective(),
-  }).save();
-  console.log(dashboard);
-  dashboardId = dashboard._id;
-
-  await new Workflow({
-    name: faker.random.alpha(10),
-  }).save();
-
   const formName = faker.word.adjective();
-
-  console.log('executing');
 
   const resource = await new Resource({
     name: formName,
@@ -46,10 +32,13 @@ describe('Page models tests', () => {
   test('test with correct data and with dashboard as a content', async () => {
     for (let i = 0; i < 1; i++) {
       name = faker.word.adjective();
+      const dashboard = await new Dashboard({
+        name: faker.word.adjective(),
+      }).save();
       const saveData = await new Page({
         name: name,
         type: contentType.dashboard,
-        content: dashboardId,
+        content: dashboard._id,
       }).save();
       expect(saveData._id).toBeDefined();
       expect(saveData).toHaveProperty('createdAt');
@@ -73,7 +62,9 @@ describe('Page models tests', () => {
 
   test('test with correct data and with workflow as a content', async () => {
     for (let i = 0; i < 1; i++) {
-      const workflow = await Workflow.findOne();
+      const workflow = await new Workflow({
+        name: faker.random.alpha(10),
+      }).save();
       const saveData = await new Page({
         name: faker.word.adjective(),
         type: contentType.workflow,
@@ -119,10 +110,13 @@ describe('Page models tests', () => {
   });
 
   test('test page delete with dashboard', async () => {
+    const dashboard = await new Dashboard({
+      name: faker.word.adjective(),
+    }).save();
     const page = await new Page({
       name: faker.word.adjective(),
       type: contentType.dashboard,
-      content: dashboardId,
+      content: dashboard._id,
     }).save();
 
     await new Application({
@@ -137,7 +131,9 @@ describe('Page models tests', () => {
   });
 
   test('test page delete with workflow', async () => {
-    const workflow = await Workflow.findOne();
+    const workflow = await new Workflow({
+      name: faker.random.alpha(10),
+    }).save();
 
     const page = await new Page({
       name: faker.word.adjective(),
@@ -158,31 +154,40 @@ describe('Page models tests', () => {
 });
 
 test('test with archived set to true', async () => {
+  const dashboard = await new Dashboard({
+    name: faker.word.adjective(),
+  }).save();
   const saveData = await new Page({
     name: faker.word.adjective(),
     type: contentType.dashboard,
-    content: dashboardId,
+    content: dashboard._id,
     archived: true,
   }).save();
   expect(saveData.archived).toEqual(true);
 });
 
 test('test with archived set to false', async () => {
+  const dashboard = await new Dashboard({
+    name: faker.word.adjective(),
+  }).save();
   const saveData = await new Page({
     name: faker.word.adjective(),
     type: contentType.dashboard,
-    content: dashboardId,
+    content: dashboard._id,
     archived: false,
   }).save();
   expect(saveData.archived).toEqual(false);
 });
 
 test('test with archivedAt set', async () => {
+  const dashboard = await new Dashboard({
+    name: faker.word.adjective(),
+  }).save();
   const archivedAt = new Date();
   const saveData = await new Page({
     name: faker.word.adjective(),
     type: contentType.dashboard,
-    content: dashboardId,
+    content: dashboard._id,
     archivedAt: archivedAt,
   }).save();
   expect(saveData.archivedAt).toEqual(archivedAt);
@@ -217,14 +222,17 @@ test('should update workflow when page is updated with archived flag', async () 
 });
 
 test('should update dashboard and related dashboards when page is updated with archived flag', async () => {
+  const dashboard = await new Dashboard({
+    name: faker.word.adjective(),
+  }).save();
   // Create a page with the dashboard and related dashboards
   const page = await new Page({
     name: 'Test Page',
     type: contentType.dashboard,
-    content: dashboardId,
+    content: dashboard._id,
     contentWithContext: [
       {
-        content: dashboardId,
+        content: dashboard._id,
       },
       // Add more related dashboards if needed
     ],
@@ -236,9 +244,6 @@ test('should update dashboard and related dashboards when page is updated with a
     { archived: true, archivedAt: new Date() },
     { new: true }
   );
-
-  console.log(dashboardId);
-  console.log(await Dashboard.findOne());
 
   // Retrieve the updated dashboard
   const updatedDashboard = await Dashboard.findById(page.content);
