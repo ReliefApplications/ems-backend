@@ -216,6 +216,15 @@ const procPipelineStep = (pipelineStep, data, sourceFields) => {
         }
         return item;
       });
+    case 'addFields':
+      pipelineStep.form?.map((elt) => {
+        if (elt.expression.operator === 'add') {
+          data.map((obj: any) => {
+            obj[elt.name] = obj[elt.expression.field];
+          });
+        }
+      });
+      return data;
     default:
       logger.error('Aggregation not supported yet');
       return;
