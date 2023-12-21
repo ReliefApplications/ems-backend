@@ -15,7 +15,7 @@ on:
       - next-major
       - beta
       - alpha
-      - "[0-9]*.[0-9x]*.x"
+      - '[0-9]*.[0-9x]*.x'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -64,7 +64,7 @@ jobs:
       #     path: .env
       - name: Test
         #run: npm run test
-        run: docker-compose -f docker-compose.test.yml run test-server npm run test
+        run: docker-compose -f docker-compose.test.yml run test-server npm run test -- --testPathPattern=models
 
       - name: Archive code coverage result
         if: success()

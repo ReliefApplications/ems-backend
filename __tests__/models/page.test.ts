@@ -24,6 +24,8 @@ beforeAll(async () => {
 
   const formName = faker.word.adjective();
 
+  console.log('executing');
+
   const resource = await new Resource({
     name: formName,
   }).save();
