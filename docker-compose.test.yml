@@ -23,7 +23,7 @@ services:
       - NODE_OPTIONS=--max-old-space-size=8192
 
   mongodb_test: # If mongo docker
-    image: mongo:5.0
+    image: mongo:6
     restart: unless-stopped
     environment:
       - MONGO_INITDB_ROOT_USERNAME=root
