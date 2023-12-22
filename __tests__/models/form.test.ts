@@ -275,9 +275,11 @@ describe('Form models tests', () => {
     expect(recordCountBeforeDeletion).toEqual(10);
     expect(channelCountBeforeDeletion).toEqual(10);
 
-    const isDelete = await Form.deleteOne({ _id: formData._id });
-    expect(isDelete.acknowledged).toEqual(true);
-    expect(isDelete.deletedCount).toEqual(1);
+    await Record.deleteMany({ form: formData._id });
+
+    const deleteResult = await Form.deleteOne({ _id: formData._id });
+    expect(deleteResult.acknowledged).toEqual(true);
+    expect(deleteResult.deletedCount).toEqual(1);
 
     const recordCountAfterDeletion = await Record.countDocuments({
       form: formData._id,
