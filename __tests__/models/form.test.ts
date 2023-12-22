@@ -174,8 +174,8 @@ describe('Form models tests', () => {
       });
     }
 
-    for (let i = 0; i < 10; i++) {
-      await new Record({
+    const recordPromises = Array.from({ length: 10 }).map(() =>
+      new Record({
         incrementalId:
           new Date().getFullYear() +
           '-D0000000' +
@@ -183,16 +183,18 @@ describe('Form models tests', () => {
         form: formData._id,
         _form: formData.toObject(),
         data: records,
-      }).save();
-    }
+      }).save()
+    );
 
-    for (let i = 0; i < 10; i++) {
-      await new Channel({
+    const channelPromises = Array.from({ length: 10 }).map(() =>
+      new Channel({
         title: faker.random.alpha(10),
         form: formData._id,
         _form: formData.toObject(),
-      }).save();
-    }
+      }).save()
+    );
+
+    await Promise.all([...recordPromises, ...channelPromises]);
 
     const isDelete = await Form.deleteOne({ _id: formData._id });
     expect(isDelete.acknowledged).toEqual(true);
@@ -242,8 +244,8 @@ describe('Form models tests', () => {
       });
     }
 
-    for (let i = 0; i < 10; i++) {
-      await new Record({
+    const recordPromises = Array.from({ length: 10 }).map(() =>
+      new Record({
         incrementalId:
           new Date().getFullYear() +
           '-D0000000' +
@@ -251,16 +253,18 @@ describe('Form models tests', () => {
         form: formData._id,
         _form: formData.toObject(),
         data: records,
-      }).save();
-    }
+      }).save()
+    );
 
-    for (let i = 0; i < 10; i++) {
-      await new Channel({
+    const channelPromises = Array.from({ length: 10 }).map(() =>
+      new Channel({
         title: faker.random.alpha(10),
         form: formData._id,
         _form: formData.toObject(),
-      }).save();
-    }
+      }).save()
+    );
+
+    await Promise.all([...recordPromises, ...channelPromises]);
 
     const recordCountBeforeDeletion = await Record.countDocuments({
       form: formData._id,
