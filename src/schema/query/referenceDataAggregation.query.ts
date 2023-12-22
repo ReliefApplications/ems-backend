@@ -242,6 +242,36 @@ const procPipelineStep = (pipelineStep, data, sourceFields) => {
               obj[elt.name] = yearAsString;
             });
             break;
+          case 'day':
+            data.map((obj: any) => {
+              const date = new Date(obj[elt.expression.field]);
+              const dayAsString =
+                date.getFullYear() +
+                '-' +
+                (date.getMonth() + 1).toString() +
+                '-' +
+                (date.getDate() + 1).toString();
+              obj[elt.name] = dayAsString;
+            });
+            break;
+          case 'week':
+            data.map((obj: any) => {
+              const date = new Date(obj[elt.expression.field]);
+              const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+              const pastDaysOfYear =
+                (date.valueOf() - firstDayOfYear.valueOf()) / 86400000;
+              const weekNo = Math.ceil(
+                (pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7
+              );
+              const dateWithWeek = date.getFullYear() + '-week' + weekNo;
+              obj[elt.name] = dateWithWeek;
+            });
+            break;
+          case 'multiply':
+            data.map((obj: any) => {
+              obj[elt.name] = obj[elt.expression.field];
+            });
+            break;
         }
       });
       return data;
