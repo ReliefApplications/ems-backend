@@ -156,9 +156,23 @@ export default {
             { $match: { 'roles.0': { $exists: true } } },
           ];
           const skip = args.skip ? args.skip : 0;
-          let aggregation = await User.aggregate(aggregations)
+          let aggregation;
+          
+          // if (args.filter.filters.length > 0) {
+          //   const value = (args.filter.filters[0] as any).value;
+          //   aggregation = await User.aggregate(aggregations);
+          //   aggregation = aggregation.filter((agg: any) => {
+          //     return agg.username.includes(value)
+          //   })
+          // } else {
+          //   aggregation = await User.aggregate(aggregations)
+          //     .skip(skip)
+          //     .limit(first + 1);
+          // }
+          aggregation = await User.aggregate(aggregations)
             .skip(skip)
             .limit(first + 1);
+          
           const totalCount = await User.aggregate(aggregations)
             .count('totalCount')
             .exec();
