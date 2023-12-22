@@ -3,7 +3,7 @@ import { faker } from '@faker-js/faker';
 import { status } from '@const/enumTypes';
 import { camelCase, toUpper } from 'lodash';
 
-//jest.mock('@utils/files/deleteFolder'); // Mock deleteFolder module
+jest.mock('@utils/files/deleteFolder'); // Mock deleteFolder module
 jest.mock('@services/logger.service'); // Mock logger module
 
 /**
