@@ -256,11 +256,13 @@ const accessFieldIncludingNested = (data: any, identifier: string): any => {
  *
  * @param data array of data fetched from API
  * @param pullJob pull job configuration
+ * @param fromRoute tells if the insertion is done from pull-job or route
  */
 export const insertRecords = async (
   data: any[],
-  pullJob: PullJob
-): Promise<void> => {
+  pullJob: PullJob,
+  fromRoute?: boolean
+): Promise<string> => {
   const form = await Form.findById(pullJob.convertTo);
   if (form) {
     const records = [];
@@ -446,9 +448,14 @@ export const insertRecords = async (
         records.push(record);
       }
     }
-
-    RecordModel.insertMany(records).then(async () => {
-      const insertReportMessage = `${records.length} new records of form "${form.name}" created from pulljob "${pullJob.name}"`;
+    let insertReportMessage = '';
+    try {
+      await RecordModel.insertMany(records);
+      if (fromRoute) {
+        insertReportMessage = `${records.length} new records of form "${form.name}" created from records insertion route`;
+      } else {
+        insertReportMessage = `${records.length} new records of form "${form.name}" created from pulljob "${pullJob.name}"`;
+      }
       logger.info(insertReportMessage);
       if (pullJob.channel && records.length > 0) {
         const notification = new Notification({
@@ -462,7 +469,12 @@ export const insertRecords = async (
         const publisher = await pubsub();
         publisher.publish(pullJob.channel.toString(), { notification });
       }
-    });
+      return insertReportMessage;
+    } catch (err) {
+      return 'Record insertion failed';
+    }
+  } else {
+    return 'Cannot find form with id ' + pullJob.convertTo;
   }
 };
 

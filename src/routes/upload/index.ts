@@ -218,10 +218,12 @@ router.post('/resource/records/:id', async (req: any, res) => {
 router.post('/resource/insert', async (req: any, res) => {
   try {
     // Insert records if authorized
-    insertRecordsPulljob(req.body.records, req.body.parameters);
-
-    const insertReportMessage = `${req.body.records.length} objects received from webjob "${req.body.parameters.name}"`;
-    return res.status(200).send(insertReportMessage);
+    const insertRecordsMessage = await insertRecordsPulljob(
+      req.body.records,
+      req.body.parameters,
+      true
+    );
+    return res.status(200).send(insertRecordsMessage);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
     return res.status(500).send(req.t('common.errors.internalServerError'));
