@@ -1,3 +1,11 @@
+## [2.4.2](https://github.com/ReliefApplications/ems-backend/compare/v2.4.1...v2.4.2) (2023-12-21)
+
+
+### Bug Fixes
+
+* add missing context filter in ref data layer ([e9ed89f](https://github.com/ReliefApplications/ems-backend/commit/e9ed89f34682ae710e67c4c18ba4cd286ca5895b))
+* aggregation on null question using choices from refData ([#905](https://github.com/ReliefApplications/ems-backend/issues/905)) ([fad6120](https://github.com/ReliefApplications/ems-backend/commit/fad6120954a2ed76e65785bf68afb30dcc49391e))
+
 ## [2.4.1](https://github.com/ReliefApplications/ems-backend/compare/v2.4.0...v2.4.1) (2023-12-20)
 
 
