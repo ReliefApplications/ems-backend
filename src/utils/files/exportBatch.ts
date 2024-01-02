@@ -15,7 +15,8 @@ import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFiel
 import { getChoices } from '@utils/proxy';
 import { referenceDataType } from '@const/enumTypes';
 import jsonpath from 'jsonpath';
-import { cloneDeep, each, isArray, omit, set } from 'lodash';
+import { each, isArray, omit, set } from 'lodash';
+import { getRowsFromMeta } from './getRowsFromMeta';
 
 /**
  * Export batch parameters interface
@@ -361,45 +362,14 @@ const buildPipeline = (
  *
  * @param choicesByUrlColumns columns with choices by url
  * @param authorization authorization token to fetch choices by url
- * @param records records to modify with correct value
  */
 const getChoicesByUrl = async (
   choicesByUrlColumns: any,
-  authorization: string,
-  records: any
+  authorization: string
 ) => {
   for (const column of choicesByUrlColumns) {
-    const choices = Object.fromEntries(
-      (await getChoices(column.meta.field, authorization)).map((choice) => [
-        choice.value,
-        choice.text,
-      ])
-    );
-    for (const record of records) {
-      const resourcesField = column.field.split('.')[0];
-      if (isArray(record[resourcesField])) {
-        const resourcesSubfield = column.field.split('.')[1];
-        each(record[resourcesField], (value) => {
-          const recordValue = get(value, resourcesSubfield);
-          set(
-            value,
-            resourcesSubfield,
-            isArray(recordValue)
-              ? recordValue.map((choice) => choices[choice])
-              : choices[recordValue]
-          );
-        });
-      } else {
-        const recordValue = get(record, column.field);
-        set(
-          record,
-          column.field,
-          isArray(recordValue)
-            ? recordValue.map((choice) => choices[choice])
-            : choices[recordValue]
-        );
-      }
-    }
+    const choices = await getChoices(column.meta.field, authorization);
+    set(column, 'meta.field.choices', choices);
   }
 };
 
@@ -658,10 +628,16 @@ const getRecords = async (
   columns: any[],
   req: any
 ) => {
+  /**
+   * todo(export): Missing:
+   * - reference data
+   * - links to other resources, when resource is used as field in related resource ( value not directly in data field )
+   */
   console.time('export');
   const records = await Record.aggregate<Record>(
     buildPipeline(columns, params)
   );
+  console.log('Records fetched');
   console.timeLog('export');
 
   const resourceResourcesColumns = getResourceAndResourcesQuestions(columns);
@@ -672,17 +648,40 @@ const getRecords = async (
     .filter((col) => col.meta?.field?.graphQLFieldName)
     .map((col) => col.field);
 
+  const promises: Promise<any>[] = [];
+
   for (const column of resourceResourcesColumns) {
-    //replaces questions with ids with their actual values
-    // todo(export): check why it fails
-    const relatedRecords = await Record.aggregate(
-      buildPipeline(
-        column.subColumns,
-        params,
-        Array.from(
-          new Set(records.flatMap((record) => record[column.field]))
-        ).map((id) => new mongoose.Types.ObjectId(id))
-      )
+    console.log('Fetching column: ', column.field);
+    const relatedResourcePromises: Promise<any>[] = [];
+    for (const record of records) {
+      const columnValue = get(record, column.field) || null;
+      if (columnValue) {
+        relatedResourcePromises.push(
+          Record.aggregate(
+            buildPipeline(
+              column.subColumns,
+              params,
+              Array.from(new Set(columnValue)).map(
+                (id: any) => new mongoose.Types.ObjectId(id)
+              )
+            )
+          ).then((relatedRecords) => {
+            if (relatedRecords.length > 0) {
+              if (isArray(columnValue)) {
+                set(record, column.field, relatedRecords);
+              } else {
+                set(record, column.field, relatedRecords[0]);
+              }
+            }
+          })
+        );
+      }
+    }
+    promises.push(
+      Promise.all(relatedResourcePromises).then(() => {
+        console.log('Related resource fetched');
+        console.timeLog('export');
+      })
     );
 
     choicesByUrlColumns = [
@@ -699,22 +698,15 @@ const getRecords = async (
         .filter((subCol) => subCol.meta?.field?.graphQLFieldName)
         .map((subCol) => `${column.field}.${subCol.field}`),
     ];
-
-    records.forEach((record) => {
-      const relatedRecordsForRecord = relatedRecords.filter((relatedRecord) =>
-        record[column.field]?.includes(relatedRecord._id.toString())
-      );
-      record[column.field] = isArray(record[column.field])
-        ? cloneDeep(relatedRecordsForRecord)
-        : cloneDeep(relatedRecordsForRecord[0]); //convert it to single record in the case of resource question
-    });
   }
-  await getChoicesByUrl(
-    choicesByUrlColumns,
-    req.headers.authorization,
-    records
+  promises.push(
+    getChoicesByUrl(choicesByUrlColumns, req.headers.authorization).then(() => {
+      console.log('Choices by url fetched');
+      console.timeLog('export');
+    })
   );
-  await getReferenceData(referenceDataColumns, params.resource, req, records);
+  // await getReferenceData(referenceDataColumns, params.resource, req, records);
+  await Promise.all(promises);
   return records;
 };
 
@@ -737,11 +729,18 @@ export default async (req: any, params: ExportBatchParams) => {
       worksheet.properties.defaultColWidth = 15;
       // Set headers of the file
       setHeaders(worksheet, getFlatColumns(columns));
+      console.log('Ready to write');
+      console.timeLog('export');
       try {
-        writeRowsXlsx(worksheet, getFlatColumns(columns), records);
+        writeRowsXlsx(
+          worksheet,
+          getFlatColumns(columns),
+          getRowsFromMeta(columns, records)
+        );
       } catch (err) {
         logger.error(err.message);
       }
+      console.log('Sending file');
       console.timeEnd('export');
       return workbook.xlsx.writeBuffer();
     }

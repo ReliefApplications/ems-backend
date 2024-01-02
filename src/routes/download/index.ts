@@ -341,16 +341,16 @@ router.post('/records', async (req, res) => {
     /** check if user has access to resource before allowing him to download */
     const ability: AppAbility = req.context.user.ability;
     const filters = Resource.find(accessibleBy(ability, 'read').Resource)
-      .where({ _id: params.resource })
+      .where({
+        _id: {
+          $eq: params.resource,
+        },
+      })
       .getFilter();
     const resource = await Resource.findOne(filters);
     if (!resource) {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
-
-    // Initialization
-    // let columns: any[] = [];
-    // let rows: any[] = [];
 
     // Make distinction if we send the file by email or in the response
     if (!params.email) {
