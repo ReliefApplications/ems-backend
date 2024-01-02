@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-loop-func */
 import { buildMetaQuery } from '@utils/query/queryBuilder';
 import config from 'config';
-import { Workbook, Worksheet } from 'exceljs';
+import { Workbook, Worksheet, stream } from 'exceljs';
 import get from 'lodash/get';
 import { getColumnsFromMeta } from './getColumnsFromMeta';
 import axios from 'axios';
@@ -17,6 +17,7 @@ import { referenceDataType } from '@const/enumTypes';
 import jsonpath from 'jsonpath';
 import { each, isArray, omit, set } from 'lodash';
 import { getRowsFromMeta } from './getRowsFromMeta';
+import { Response } from 'express';
 
 /**
  * Export batch parameters interface
@@ -30,6 +31,7 @@ interface ExportBatchParams {
   sortOrder?: 'asc' | 'desc';
   resource?: string;
   timeZone: string;
+  fileName: string;
 }
 
 /**
@@ -254,9 +256,9 @@ const writeRowsXlsx = (
             temp[column.index] = null;
           }
         }
-        const newRow = worksheet.addRow(temp);
+        const row = worksheet.addRow(temp);
         if (i !== 0) {
-          newRow.eachCell((cell, colNumber) => {
+          row.eachCell((cell, colNumber) => {
             if (!subIndexes.includes(colNumber - 1)) {
               cell.font = {
                 color: { argb: 'FFFFFFFF' },
@@ -264,9 +266,11 @@ const writeRowsXlsx = (
             }
           });
         }
+        row.commit();
       }
     } else {
-      worksheet.addRow(temp);
+      const row = worksheet.addRow(temp);
+      row.commit();
     }
   });
 };
@@ -713,18 +717,27 @@ const getRecords = async (
 /**
  * Write a buffer from request, to export records as xlsx or csv
  *
- * @param req current request
+ * @param req user request
+ * @param res server response
  * @param params export batch parameters
  * @returns xlsx or csv buffer
  */
-export default async (req: any, params: ExportBatchParams) => {
+export default async (req: any, res: Response, params: ExportBatchParams) => {
   // Get total count and columns
   const columns = await getColumns(req, params);
   const records: Record[] = await getRecords(params, columns, req);
   switch (params.format) {
     case 'xlsx': {
-      // Create file
-      const workbook = new Workbook();
+      let workbook: Workbook | stream.xlsx.WorkbookWriter;
+      // Create a new instance of a Workbook class
+      if (res.closed) {
+        workbook = new Workbook();
+      } else {
+        workbook = new stream.xlsx.WorkbookWriter({
+          stream: res,
+          useStyles: true,
+        });
+      }
       const worksheet = workbook.addWorksheet('records');
       worksheet.properties.defaultColWidth = 15;
       // Set headers of the file
@@ -742,7 +755,14 @@ export default async (req: any, params: ExportBatchParams) => {
       }
       console.log('Sending file');
       console.timeEnd('export');
-      return workbook.xlsx.writeBuffer();
+      // Close workbook
+      if (workbook instanceof stream.xlsx.WorkbookWriter) {
+        workbook.commit().then(() => {
+          return `${params.fileName}.xlsx`;
+        });
+      } else {
+        return workbook.xlsx.writeBuffer();
+      }
     }
     case 'csv': {
       // Create a string array with the columns' labels or names as fallback, then construct the parser from it
