@@ -18,6 +18,8 @@ export const deleteFolder = async (
   containerName: string,
   folder: string
 ): Promise<any> => {
+  if (process.env.NODE_ENV == 'test') return true;
+
   const blobServiceClient = BlobServiceClient.fromConnectionString(
     AZURE_STORAGE_CONNECTION_STRING
   );

@@ -1,9 +1,8 @@
-import { Application, Resource, Form, Record, Channel } from '@models';
+import { Application, Resource, Record, Channel, Form } from '@models';
 import { faker } from '@faker-js/faker';
 import { status } from '@const/enumTypes';
 import { camelCase, toUpper } from 'lodash';
 
-jest.mock('@utils/files/deleteFolder'); // Mock deleteFolder module
 jest.mock('@services/logger.service'); // Mock logger module
 
 /**
@@ -275,11 +274,9 @@ describe('Form models tests', () => {
     expect(recordCountBeforeDeletion).toEqual(10);
     expect(channelCountBeforeDeletion).toEqual(10);
 
-    await Record.deleteMany({ form: formData._id });
-
-    const deleteResult = await Form.deleteOne({ _id: formData._id });
-    expect(deleteResult.acknowledged).toEqual(true);
-    expect(deleteResult.deletedCount).toEqual(1);
+    const isDelete = await Form.deleteOne({ _id: formData._id });
+    expect(isDelete.acknowledged).toEqual(true);
+    expect(isDelete.deletedCount).toEqual(1);
 
     const recordCountAfterDeletion = await Record.countDocuments({
       form: formData._id,
