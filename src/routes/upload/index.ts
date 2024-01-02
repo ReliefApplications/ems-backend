@@ -217,6 +217,10 @@ router.post('/resource/records/:id', async (req: any, res) => {
  */
 router.post('/resource/insert', async (req: any, res) => {
   try {
+    const authToken = req.rawHeaders
+      .filter((elt) => elt.includes('Bearer'))[0]
+      .split(' ')[1];
+    console.log(authToken);
     // Insert records if authorized
     const insertRecordsMessage = await insertRecordsPulljob(
       req.body.records,
