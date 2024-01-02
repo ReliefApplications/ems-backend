@@ -101,7 +101,7 @@ const setHeaders = (worksheet: Worksheet, columns: any[]) => {
 };
 
 /**
- * headers for axios queries
+ * Generate headers for axios queries
  *
  * @param req original request from the user
  * @returns axios headers
@@ -288,8 +288,15 @@ const buildPipeline = (
   const projectStep = {
     $project: {
       ...columns.reduce((acc, col) => {
-        if (defaultRecordFields.some((field) => field.field === col.field)) {
-          acc[col.field] = `$${col.field}`;
+        const field = defaultRecordFields.find(
+          (f) => f.field === col.field.split('.')[0]
+        );
+        if (field) {
+          if (field.project) {
+            acc[field.field] = field.project;
+          } else {
+            acc[field.field] = `$${field.field}`;
+          }
         } else {
           const parentName = col.field.split('.')[0]; //We get the parent name for the resource question
           acc[parentName] = `$data.${parentName}`;
@@ -612,6 +619,10 @@ const getResourceAndResourcesQuestions = (columns: any) => {
           col.field.includes('.') &&
           !(
             col.meta.field.graphQLFieldName && col.field.split('.').length === 2
+          ) &&
+          !(
+            col.field.startsWith('createdBy') ||
+            col.field.startsWith('lastUpdatedBy')
           )
       )
       .map((col) => col.field.split('.')[0])
@@ -647,9 +658,11 @@ const getRecords = async (
   columns: any[],
   req: any
 ) => {
+  console.time('export');
   const records = await Record.aggregate<Record>(
     buildPipeline(columns, params)
   );
+  console.timeLog('export');
 
   const resourceResourcesColumns = getResourceAndResourcesQuestions(columns);
   let choicesByUrlColumns = columns.filter(
@@ -661,6 +674,7 @@ const getRecords = async (
 
   for (const column of resourceResourcesColumns) {
     //replaces questions with ids with their actual values
+    // todo(export): check why it fails
     const relatedRecords = await Record.aggregate(
       buildPipeline(
         column.subColumns,
@@ -701,7 +715,6 @@ const getRecords = async (
     records
   );
   await getReferenceData(referenceDataColumns, params.resource, req, records);
-
   return records;
 };
 
@@ -729,6 +742,7 @@ export default async (req: any, params: ExportBatchParams) => {
       } catch (err) {
         logger.error(err.message);
       }
+      console.timeEnd('export');
       return workbook.xlsx.writeBuffer();
     }
     case 'csv': {
