@@ -18,6 +18,7 @@ import get from 'lodash/get';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { insertRecords as insertRecordsPulljob } from '@server/pullJobScheduler';
+import jwtDecode from 'jwt-decode';
 
 /** File size limit, in bytes  */
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
@@ -220,14 +221,19 @@ router.post('/resource/insert', async (req: any, res) => {
     const authToken = req.rawHeaders
       .filter((elt) => elt.includes('Bearer'))[0]
       .split(' ')[1];
-    console.log(authToken);
-    // Insert records if authorized
-    const insertRecordsMessage = await insertRecordsPulljob(
-      req.body.records,
-      req.body.parameters,
-      true
-    );
-    return res.status(200).send(insertRecordsMessage);
+    const decodedToken = jwtDecode(authToken) as any;
+    // Block if connected with user to Service 
+    if (!decodedToken.email && !decodedToken.name) {
+      // Insert records if authorized
+      const insertRecordsMessage = await insertRecordsPulljob(
+        req.body.records,
+        req.body.parameters,
+        true
+      );
+      return res.status(200).send(insertRecordsMessage);
+    } else {
+      return res.status(500).send(req.t('common.errors.internalServerError'));
+    }
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
     return res.status(500).send(req.t('common.errors.internalServerError'));
