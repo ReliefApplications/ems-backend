@@ -373,13 +373,12 @@ router.post('/records', async (req, res) => {
           );
         }
       }
-      const buffer = await exportBatch(req, params);
-      return res.send(buffer);
+      await exportBatch(req, res, params);
     } else {
       // Send response so the client is not frozen
       res.status(200).send('Export ongoing');
       // Build the file
-      const file = await exportBatch(req, params);
+      const file = await exportBatch(req, res, params);
       // Pass it in attachment
       const attachments = [
         {
