@@ -222,7 +222,7 @@ router.post('/resource/insert', async (req: any, res) => {
       .filter((elt) => elt.includes('Bearer'))[0]
       .split(' ')[1];
     const decodedToken = jwtDecode(authToken) as any;
-    // Block if connected with user to Service 
+    // Block if connected with user to Service
     if (!decodedToken.email && !decodedToken.name) {
       // Insert records if authorized
       const insertRecordsMessage = await insertRecordsPulljob(
