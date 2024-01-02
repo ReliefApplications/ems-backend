@@ -6,7 +6,7 @@ import {
   GraphQLString,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { ReferenceData } from '@models';
+import { DataTransformer, ReferenceData } from '@models';
 import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import {
@@ -22,10 +22,19 @@ import {
   pick,
   orderBy,
   cloneDeep,
+  eq,
+  isNil,
+  get,
+  flatMap,
+  map,
+  isArray,
+  isEmpty,
 } from 'lodash';
 import { graphQLAuthCheck } from '@schema/shared';
 import { CustomAPI } from '@server/apollo/dataSources';
 import { GraphQLDate } from 'graphql-scalars';
+import mongoose from 'mongoose';
+import { CompositeFilterDescriptor } from '@const/compositeFilter';
 
 /**
  * Apply the filter provided to the specified field
@@ -45,7 +54,44 @@ const applyFilters = (data: any, filter: any): boolean => {
         return data;
     }
   }
-  return data[filter.field] === filter.value;
+
+  if (filter.field && filter.operator) {
+    const value = get(data, filter.field);
+    let intValue: number;
+    try {
+      intValue = Number(filter.value);
+    } catch {}
+    switch (filter.operator) {
+      case 'eq':
+        return eq(value, String(filter.value)) || eq(value, intValue);
+      case 'ne':
+      case 'neq':
+        return !(eq(value, String(filter.value)) || eq(value, intValue));
+      case 'gt':
+        return !isNil(value) && value > filter.value;
+      case 'gte':
+        return !isNil(value) && value >= filter.value;
+      case 'lt':
+        return !isNil(value) && value < filter.value;
+      case 'lte':
+        return !isNil(value) && value <= filter.value;
+      case 'isnull':
+        return isNil(value);
+      case 'isnotnull':
+        return !isNil(value);
+      case 'startswith':
+        return !isNil(value) && value.startsWith(filter.value);
+      case 'endswith':
+        return !isNil(value) && value.endsWith(filter.value);
+      case 'contains':
+        return !isNil(value) && value.includes(filter.value);
+      case 'doesnotcontain':
+        return isNil(value) || !value.includes(filter.value);
+      default:
+        // For any unknown operator, we return false
+        return false;
+    }
+  }
 };
 
 /**
@@ -56,9 +102,13 @@ const applyFilters = (data: any, filter: any): boolean => {
  * @returns filtered data
  */
 const getFilteredArray = (data: any, filter: any): any => {
-  return data.filter((item) => {
-    return applyFilters(item, filter);
-  });
+  if (isEmpty(filter)) {
+    return data;
+  } else {
+    return data.filter((item) => {
+      return applyFilters(item, filter);
+    });
+  }
 };
 
 /** Pagination default items per query */
@@ -148,10 +198,43 @@ const procPipelineStep = (pipelineStep, data, sourceFields) => {
       return getFilteredArray(data, pipelineStep.form);
     case 'sort':
       return orderBy(data, pipelineStep.form.field, pipelineStep.form.order);
+    case 'unwind':
+      return flatMap(data, (item) => {
+        let fieldToUnwind = get(item, pipelineStep.form.field);
+        try {
+          fieldToUnwind =
+            typeof fieldToUnwind === 'string'
+              ? JSON.parse(fieldToUnwind.replace(/'/g, '"')) //replace single quotes to correctly get JSON fields
+              : fieldToUnwind;
+        } catch {
+          logger.error(`error while parsing field ${fieldToUnwind}`);
+        }
+        if (isArray(fieldToUnwind)) {
+          return map(fieldToUnwind, (value) => {
+            return { ...cloneDeep(item), [pipelineStep.form.field]: value };
+          });
+        }
+        return item;
+      });
     default:
-      console.error('Aggregation not supported yet');
+      logger.error('Aggregation not supported yet');
       return;
   }
+};
+
+/** Arguments for the recordsAggregation query */
+type ReferenceDataAggregationArgs = {
+  referenceData: string | mongoose.Types.ObjectId;
+  aggregation: string | mongoose.Types.ObjectId;
+  mapping?: any;
+  pipeline?: any[];
+  sourceFields?: any[];
+  first?: number;
+  skip?: number;
+  at?: Date;
+  sortField?: string;
+  sortOrder?: string;
+  contextFilters?: CompositeFilterDescriptor;
 };
 
 /**
@@ -163,6 +246,8 @@ export default {
   args: {
     referenceData: { type: new GraphQLNonNull(GraphQLID) },
     aggregation: { type: new GraphQLNonNull(GraphQLID) },
+    pipeline: { type: GraphQLJSON },
+    sourceFields: { type: GraphQLJSON },
     contextFilters: { type: GraphQLJSON },
     mapping: { type: GraphQLJSON },
     first: { type: GraphQLInt },
@@ -171,11 +256,14 @@ export default {
     sortField: { type: GraphQLString },
     at: { type: GraphQLDate },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: ReferenceDataAggregationArgs, context) {
     graphQLAuthCheck(context);
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
-    checkPageSize(first);
+    // If first equal to -1, no need for page size check, that means we want to fetch all records
+    if (first > 0) {
+      checkPageSize(first);
+    }
     try {
       const referenceData = await ReferenceData.findById(
         args.referenceData
@@ -193,12 +281,12 @@ export default {
       if (!(referenceData && aggregation && referenceData.data)) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
+      // sourceFields and pipeline from args have priority over current aggregation ones
+      // for the aggregation preview feature on aggregation builder
+      const sourceFields = args.sourceFields ?? aggregation.sourceFields;
+      const pipeline = args.pipeline ?? aggregation.pipeline ?? [];
       // Build the source fields step
-      if (
-        aggregation.sourceFields &&
-        aggregation.sourceFields.length &&
-        aggregation.pipeline
-      ) {
+      if (sourceFields && sourceFields.length && pipeline) {
         try {
           let rawItems = [];
           if (referenceData.type === 'static') {
@@ -213,12 +301,11 @@ export default {
                 referenceData.apiConfiguration as any
               )) || [];
           }
-          // const transformer = new DataTransformer(
-          //   referenceData.fields,
-          //   rawItems
-          // );
-          // let items = transformer.transformData();
-          let items = cloneDeep(rawItems);
+          const transformer = new DataTransformer(
+            referenceData.fields,
+            cloneDeep(rawItems)
+          );
+          let items = transformer.transformData();
           for (const item of items) {
             //we remove white spaces as they end up being a mess, but probably a temp fix as I think we should remove white spaces straight when saving ref data in mongo
             for (const key in item) {
@@ -228,9 +315,15 @@ export default {
               }
             }
           }
+          if (args.contextFilters) {
+            pipeline.unshift({
+              type: 'filter',
+              form: args.contextFilters,
+            });
+          }
           // Build the pipeline
           if (args.sortField && args.sortOrder) {
-            aggregation.pipeline.push({
+            pipeline.push({
               type: 'sort',
               form: {
                 field: args.sortField,
@@ -239,8 +332,8 @@ export default {
             });
           }
 
-          aggregation.pipeline.forEach((step: any) => {
-            items = procPipelineStep(step, items, aggregation.sourceFields);
+          pipeline.forEach((step: any) => {
+            items = procPipelineStep(step, items, sourceFields);
           });
           if (args.mapping) {
             return items.map((item) => {

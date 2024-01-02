@@ -1,9 +1,58 @@
+## [2.4.2](https://github.com/ReliefApplications/ems-backend/compare/v2.4.1...v2.4.2) (2023-12-21)
+
+
+### Bug Fixes
+
+* add missing context filter in ref data layer ([e9ed89f](https://github.com/ReliefApplications/ems-backend/commit/e9ed89f34682ae710e67c4c18ba4cd286ca5895b))
+* aggregation on null question using choices from refData ([#905](https://github.com/ReliefApplications/ems-backend/issues/905)) ([fad6120](https://github.com/ReliefApplications/ems-backend/commit/fad6120954a2ed76e65785bf68afb30dcc49391e))
+
+## [2.4.1](https://github.com/ReliefApplications/ems-backend/compare/v2.4.0...v2.4.1) (2023-12-20)
+
+
+### Bug Fixes
+
+* changes on reference data would break the back ([73ca9de](https://github.com/ReliefApplications/ems-backend/commit/73ca9de0b05dc4cff44b0799d8f9a9ac10ed8162))
+
+# [2.4.0](https://github.com/ReliefApplications/ems-backend/compare/v2.3.1...v2.4.0) (2023-12-18)
+
+
+### Bug Fixes
+
+* aggregation not working fine for most ref data ([#877](https://github.com/ReliefApplications/ems-backend/issues/877)) ([27740e2](https://github.com/ReliefApplications/ems-backend/commit/27740e29377c31abf53611612fae8d87e0cb0c3e))
+* aggregation on reference data not working correctly ([392b624](https://github.com/ReliefApplications/ems-backend/commit/392b6241db5b4dc11591bdd0918046d96f4ed74c))
+
+
+### Features
+
+* add support for reference data aggregations in layers ([#875](https://github.com/ReliefApplications/ems-backend/issues/875)) ([cb7af9a](https://github.com/ReliefApplications/ems-backend/commit/cb7af9a127e917241c421acf82cfe074c8e752d7))
+* allow filtering on ref data aggregations ([#885](https://github.com/ReliefApplications/ems-backend/issues/885)) ([8c4fec3](https://github.com/ReliefApplications/ems-backend/commit/8c4fec3f212a87a1165a7e699e5b532f1bd21093))
+* allow reference data to be used in charts ([#867](https://github.com/ReliefApplications/ems-backend/issues/867)) ([56a1d79](https://github.com/ReliefApplications/ems-backend/commit/56a1d79b2b440179db9fe34b88ba37469a9a8fb7)), closes [#68346](https://github.com/ReliefApplications/ems-backend/issues/68346) [#68346](https://github.com/ReliefApplications/ems-backend/issues/68346) [#68346](https://github.com/ReliefApplications/ems-backend/issues/68346)
+* allow to preview aggregation data ([#886](https://github.com/ReliefApplications/ems-backend/issues/886)) ([3952cb5](https://github.com/ReliefApplications/ems-backend/commit/3952cb5a42ed91213579818c9efd58b7a6dd033a))
+* allow to use context in page widgets ([#595](https://github.com/ReliefApplications/ems-backend/issues/595)) ([e2772dc](https://github.com/ReliefApplications/ems-backend/commit/e2772dc0664e67e3c8557b22782d89ca8b23d742))
+* support unwind in ref data aggregations ([#893](https://github.com/ReliefApplications/ems-backend/issues/893)) ([a041262](https://github.com/ReliefApplications/ems-backend/commit/a041262c3433495be28d83b49e0454904cff1759))
+* use context filter in ref data aggregation ([843c5c0](https://github.com/ReliefApplications/ems-backend/commit/843c5c0301dc077ded2a664cece3628d20cb3799))
+
+## [2.3.1](https://github.com/ReliefApplications/ems-backend/compare/v2.3.0...v2.3.1) (2023-12-13)
+
+
+### Bug Fixes
+
+* revert changes on time fields in exports ([5d60245](https://github.com/ReliefApplications/ems-backend/commit/5d60245d0c7d7a69cf31ebe944143e768234b862))
+
 # [2.3.0](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0...v2.3.0) (2023-12-12)
 
 
 ### Features
 
 * eios pulljob assign ownership ([#871](https://github.com/ReliefApplications/ems-backend/issues/871)) ([54261bc](https://github.com/ReliefApplications/ems-backend/commit/54261bca332bc3b9c6e4a167d188f9e630adfa19))
+  
+
+## [2.2.1](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0...v2.2.1) (2023-12-13)
+
+
+### Bug Fixes
+
+* revert changes on time fields in exports ([5d60245](https://github.com/ReliefApplications/ems-backend/commit/5d60245d0c7d7a69cf31ebe944143e768234b862))
 
 # [2.2.0](https://github.com/ReliefApplications/ems-backend/compare/v2.1.11...v2.2.0) (2023-12-08)
 
