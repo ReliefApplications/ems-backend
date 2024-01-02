@@ -73,8 +73,12 @@ const ROLE_ID_MAP = {
   userPlus: new Types.ObjectId('651157468e4cb3d8a3f22a7a'),
 };
 
-/** Script that updated all the structure applications by copying the structure of each demo app page */
-export const linkStructureAppsToDemo = async () => {
+/**
+ * Script that updated all the structure applications by copying the structure of each demo app page
+ *
+ * @param rerun If true, will run the script again even for already linked applications
+ */
+export const linkStructureAppsToDemo = async (rerun = false) => {
   // Get applications with a set description
   const apps = await Application.find({
     description: { $exists: true },
@@ -83,7 +87,7 @@ export const linkStructureAppsToDemo = async () => {
     .populate({
       path: 'pages',
       model: 'Page',
-      select: '_id name type content',
+      select: '_id name type content permissions',
     });
 
   // Get all records from the structure form that has their id in the description
@@ -109,6 +113,10 @@ export const linkStructureAppsToDemo = async () => {
     records.find((r) => r._id.equals(a.description))
   );
 
+  const structureAppRoles = await Role.find({
+    application: { $in: structureApps.map((a) => a._id) },
+  });
+
   const pagesToSave = [] as Page[];
   baseAppPages.forEach((page) => {
     structureApps.forEach((app) => {
@@ -120,19 +128,51 @@ export const linkStructureAppsToDemo = async () => {
       if (
         !(appPage.content as Types.ObjectId).equals(
           page.content as Types.ObjectId
-        )
+        ) ||
+        rerun
       ) {
         // We copy the content from the base app, meaning any changes done to it would be reflected in all structure apps (also, the other way around)
         appPage.content = page.content;
         pagesToSave.push(appPage);
         appPage.markModified('content');
+
+        // Because of the way the ability for content is extended
+        // we also need to add the new roles to the permissions of the base app page
+        const roles = structureAppRoles.filter((r) =>
+          r.application.equals(app._id)
+        );
+
+        const pageAlias = APPLICATION_PAGES.find(
+          (p) => p.id === page._id.toString()
+        ).page;
+
+        const permissions = roles.filter((r) => {
+          // If administrateur (chef de structure), access to all pages
+          if (r.title === 'administrateur (chef de structure)') {
+            return true;
+          }
+          // If utilisateur, no access to structure_wf and stats
+          if (r.title === 'utilisateur') {
+            return pageAlias !== 'structure_wf' && pageAlias !== 'stats';
+          }
+          // If utilisateur plus, no access to structure_wf
+          if (r.title === 'utilisateur plus') {
+            return pageAlias !== 'structure_wf';
+          }
+          return false;
+        });
+
+        page.permissions.canSee.push(...permissions.map((r) => r._id));
+        page.markModified('permissions');
       }
     });
   });
 
   if (pagesToSave.length) {
     console.log(`Linking ${pagesToSave.length} pages to the DEMO app...`);
-    await Page.bulkSave(pagesToSave);
+    await Page.bulkSave([...pagesToSave, ...baseAppPages]);
+  } else {
+    console.log('All structure apps are already linked to the DEMO app');
   }
 };
 
