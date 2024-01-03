@@ -3,6 +3,7 @@
  */
 module.exports = {
   server: {
+    port: 'SERVER_PORT',
     url: 'SERVER_URL',
     allowedOrigins: 'SERVER_ALLOWED_ORIGINS',
   },
