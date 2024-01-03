@@ -14,10 +14,10 @@ import buildTypes from './buildTypes';
  */
 const buildSchema = async (): Promise<GraphQLSchema> => {
   try {
+    const typeDefs = await buildTypes();
+
     const structures = await getStructures();
     const referenceDatas = await getReferenceDatas();
-
-    const typeDefs = await buildTypes();
 
     const forms = (await Form.find({}).select('name resource')) as {
       name: string;
