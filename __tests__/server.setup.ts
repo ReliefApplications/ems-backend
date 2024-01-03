@@ -11,7 +11,7 @@ import {
 } from '@server/middlewares';
 import { router } from '../src/routes';
 import { GraphQLSchema } from 'graphql';
-import { ApolloServer } from 'apollo-server-express';
+import { ApolloServer } from '@apollo/server';
 import EventEmitter from 'events';
 import dataSources from '@server/apollo/dataSources';
 import defineUserAbility from '@security/defineUserAbility';
@@ -67,7 +67,7 @@ class SafeTestServer {
       schema,
       User
     );
-    this.apolloServer.applyMiddleware({ app: this.app });
+    //this.apolloServer.getMiddleware({ app: this.app });
 
     // === SUBSCRIPTIONS ===
     this.httpServer = createServer(this.app);
@@ -90,19 +90,16 @@ class SafeTestServer {
     schema: GraphQLSchema,
     user: any
   ): Promise<ApolloServer> {
-    const context = SafeTestServer.context(user);
-    const dataSourcesInstance = await dataSources();
+    //const dataSourcesInstance = await dataSources();
     return new ApolloServer({
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       //@ts-ignore
       uploads: false,
-      schema,
+      schema: schema,
       introspection: true,
       playground: true,
-      context,
-      dataSources: () => ({
-        ...dataSourcesInstance,
-      }),
+      context: this.context(user),
+      dataSources: await dataSources(),
     });
   }
 

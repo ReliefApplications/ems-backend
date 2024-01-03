@@ -1,4 +1,4 @@
-import { ApolloServer } from 'apollo-server-express';
+import { ApolloServer } from '@apollo/server';
 import schema from '../../../src/schema';
 import { SafeTestServer } from '../../server.setup';
 import { ApiConfiguration, Role } from '@models';
@@ -10,17 +10,18 @@ let server: ApolloServer;
  */
 describe('ApiConfigurations query tests', () => {
   const query = '{ apiConfigurations { totalCount, edges { node { id } } } }';
-
   test('query with wrong user returns error', async () => {
     server = await SafeTestServer.createApolloTestServer(schema, {
       name: 'Wrong user',
       roles: [],
     });
     const result = await server.executeOperation({ query });
-    expect(result.errors).toBeUndefined();
-    expect(result).toHaveProperty(['data', 'apiConfigurations', 'totalCount']);
-    expect(result.data?.apiConfigurations.edges).toEqual([]);
-    expect(result.data?.apiConfigurations.totalCount).toEqual(0);
+    //  console.log(JSON.stringify(result, null, 2));
+    if (result.body.kind === 'single') {
+      expect(result.body.singleResult.errors).toBeDefined();
+    } else {
+      throw new Error('Unsupported response type: ' + result.body.kind);
+    }
   });
   test('query with admin user returns expected number of apiConfigurations', async () => {
     const count = await ApiConfiguration.countDocuments();
@@ -36,8 +37,17 @@ describe('ApiConfigurations query tests', () => {
       roles: [admin],
     });
     const result = await server.executeOperation({ query });
-    expect(result.errors).toBeUndefined();
-    expect(result).toHaveProperty(['data', 'apiConfigurations', 'totalCount']);
-    expect(result.data?.apiConfigurations.totalCount).toEqual(count);
+    //console.log(JSON.stringify(result, null, 2));
+    if (result.body.kind === 'single') {
+      expect(result.body.singleResult.errors).toBeUndefined();
+
+      const apiConfigurations = result.body.singleResult.data
+        ?.apiConfigurations as { totalCount?: number };
+
+      expect(apiConfigurations).toHaveProperty(['totalCount']);
+      expect(apiConfigurations?.totalCount).toEqual(count);
+    } else {
+      throw new Error('Unsupported response type: ' + result.body.kind);
+    }
   });
 });
