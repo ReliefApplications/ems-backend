@@ -709,7 +709,8 @@ const getRecords = async (
       console.timeLog('export');
     })
   );
-  // await getReferenceData(referenceDataColumns, params.resource, req, records);
+  console.log('HERE');
+  await getReferenceData(referenceDataColumns, params.resource, req, records);
   await Promise.all(promises);
   return records;
 };
