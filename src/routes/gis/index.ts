@@ -183,13 +183,15 @@ const getFeatures = async (
   features: any[],
   layerType: GeometryType,
   items: any[],
-  mapping: any
+  mapping: any,
+  adminPolygons?: any,
 ) => {
   // Aggregation
-  let adminPolygons = {};
-  if (mapping.adminField) {
-    adminPolygons = await getPolygons(mapping.adminField);
-  }
+  // let adminPolygons = {};
+  // if (mapping.adminField) {
+  //   adminPolygons = await getPolygons(mapping.adminField);
+  //   console.log("adminPolygons = ", adminPolygons);
+  // }
   items.forEach((item) => {
     try {
       if (mapping.adminField) {
@@ -244,7 +246,8 @@ const gqlQuery = (
   req: any,
   featureCollection: any,
   layerType: GeometryType,
-  mapping: any
+  mapping: any,
+  adminPolygons?: any,
 ) =>
   axios({
     url: `${config.get('server.url')}/graphql`,
@@ -273,7 +276,8 @@ const gqlQuery = (
               featureCollection.features,
               layerType,
               data.data[field].items,
-              mapping
+              mapping,
+              adminPolygons
             );
           } else if (data.data[field].edges?.length > 0) {
             // Query
@@ -281,7 +285,8 @@ const gqlQuery = (
               featureCollection.features,
               layerType,
               data.data[field].edges.map((x) => x.node),
-              mapping
+              mapping,
+              adminPolygons
             );
           }
         }
@@ -290,6 +295,12 @@ const gqlQuery = (
       throw new Error(err);
     }
   });
+
+router.get('/admin0Polygons', async (req, res) => {
+  const adminField = get(req, 'query.adminField') as any;
+  const adminPolygons = await getPolygons(adminField);
+  return res.send(adminPolygons);
+})
 
 /**
  * Build endpoint
@@ -309,10 +320,23 @@ router.get('/feature', async (req, res) => {
   const adminField = get(req, 'query.adminField');
   const layerType = (get(req, 'query.type') ||
     GeometryType.POINT) as GeometryType;
+  
+  console.log("query.contextFilters = ", req.query.contextFilters);
+
   const contextFilters = JSON.parse(
     decodeURIComponent(get(req, 'query.contextFilters', null))
   );
+  console.log("contextFilters = ", contextFilters);
   const at = get(req, 'query.at') as string | undefined;
+  console.log(req.query.adminPolygons);
+  console.log(req.query);
+  
+  // const adminPolygons = JSON.parse(
+  //   decodeURIComponent(get(req, 'query.adminPolygons', null))
+  // );
+  // console.log("adminPolygons = ", adminPolygons);
+  const adminPolygons = get(req, 'query.adminPolygons', null);
+
   // const tolerance = get(req, 'query.tolerance', 1);
   // const highQuality = get(req, 'query.highquality', true);
   // turf.simplify(geoJsonData, {
@@ -411,7 +435,7 @@ router.get('/feature', async (req, res) => {
         return res.status(404).send(i18next.t('common.errors.dataNotFound'));
       }
       await Promise.all([
-        gqlQuery(query, variables, req, featureCollection, layerType, mapping),
+        gqlQuery(query, variables, req, featureCollection, layerType, mapping, adminPolygons),
       ]).catch((err) => {
         throw new Error(err);
       });
@@ -439,7 +463,8 @@ router.get('/feature', async (req, res) => {
               req,
               featureCollection,
               layerType,
-              mapping
+              mapping,
+              adminPolygons
             ),
           ]).catch((err) => {
             throw new Error(err);
@@ -453,7 +478,8 @@ router.get('/feature', async (req, res) => {
             featureCollection.features,
             layerType,
             data,
-            mapping
+            mapping,
+            adminPolygons
           );
         } else {
           // todo: populate
@@ -482,7 +508,8 @@ router.get('/feature', async (req, res) => {
             featureCollection.features,
             layerType,
             data,
-            mapping
+            mapping,
+            adminPolygons
           );
         }
       } else {
