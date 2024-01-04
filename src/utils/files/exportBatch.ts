@@ -18,6 +18,7 @@ import jsonpath from 'jsonpath';
 import { each, isArray, omit, set } from 'lodash';
 import { getRowsFromMeta } from './getRowsFromMeta';
 import { Response } from 'express';
+import getReversedFields from '@utils/schema/introspection/getReversedFields';
 
 /**
  * Export batch parameters interface
@@ -289,28 +290,30 @@ const buildPipeline = (
   idsList?: mongoose.Types.ObjectId[]
 ) => {
   let pipeline: any;
-
   const projectStep = {
     $project: {
       ...columns.reduce((acc, col) => {
         const field = defaultRecordFields.find(
           (f) => f.field === col.field.split('.')[0]
         );
-        if (field) {
-          if (field.project) {
-            acc[field.field] = field.project;
+        if (col.meta) {
+          if (field) {
+            if (field.project) {
+              acc[field.field] = field.project;
+            } else {
+              acc[field.field] = `$${field.field}`;
+            }
           } else {
-            acc[field.field] = `$${field.field}`;
+            const parentName = col.field.split('.')[0]; //We get the parent name for the resource question
+            acc[parentName] = `$data.${parentName}`;
           }
-        } else {
-          const parentName = col.field.split('.')[0]; //We get the parent name for the resource question
-          acc[parentName] = `$data.${parentName}`;
         }
         return acc;
       }, {}),
       ...(idsList ? { resource: 1 } : {}), //add the resource for subcolumns
     },
   };
+  // TO DO : ADD A NEW STEP WITH LOOK-UP FOR REVERSE RESOURCES
   if (!idsList) {
     //idsList is used when getting subcolumns
     pipeline = [
@@ -634,7 +637,6 @@ const getRecords = async (
 ) => {
   /**
    * todo(export): Missing:
-   * - reference data
    * - links to other resources, when resource is used as field in related resource ( value not directly in data field )
    */
   console.time('export');
@@ -709,7 +711,6 @@ const getRecords = async (
       console.timeLog('export');
     })
   );
-  console.log('HERE');
   await getReferenceData(referenceDataColumns, params.resource, req, records);
   await Promise.all(promises);
   return records;
