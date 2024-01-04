@@ -18,7 +18,6 @@ import jsonpath from 'jsonpath';
 import { each, isArray, omit, set } from 'lodash';
 import { getRowsFromMeta } from './getRowsFromMeta';
 import { Response } from 'express';
-import getReversedFields from '@utils/schema/introspection/getReversedFields';
 
 /**
  * Export batch parameters interface
