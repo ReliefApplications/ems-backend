@@ -23,6 +23,22 @@ import { WebSocketServer } from 'ws';
 import { useServer } from 'graphql-ws/lib/use/ws';
 import onConnect from './apollo/onConnect';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+import {
+  INTROSPECTION_QUERY,
+  IntrospectionResult as IntrospectionQueryResult,
+} from './apollo/queries/introspection.query';
+import { pluralize } from 'inflection';
+
+/** List of user fields */
+const USER_FIELDS = ['id', 'name', 'username'];
+/** ReferenceData identifier convention */
+const REFERENCE_DATA_END = 'Ref';
+
+/** Introspection result for the current schema loaded */
+export let introspectionResult: {
+  availableQueries: any[];
+  userFields: any[];
+} | null;
 
 // List of beneficiaries that were
 /**
@@ -112,6 +128,7 @@ class SafeServer {
    * @param schema GraphQL schema.
    */
   public async start(schema: GraphQLSchema): Promise<void> {
+    introspectionResult = null;
     // === EXPRESS ===
     this.app = express();
 
@@ -171,12 +188,56 @@ class SafeServer {
       ],
     });
     await this.apolloServer.start();
+
     this.app.use(
       '/graphql',
       expressMiddleware<Context>(this.apolloServer, {
         context: context(this.apolloServer),
       })
     );
+
+    // We do the introspection and filter out useless data
+    // so the client can query only needed data instead
+    const queryRes =
+      await this.apolloServer.executeOperation<IntrospectionQueryResult>({
+        query: INTROSPECTION_QUERY,
+      });
+
+    if (queryRes.body.kind === 'single') {
+      const data = queryRes.body.singleResult.data;
+      if (typeof data === 'object' && data !== null) {
+        // Create the introspection result object
+        introspectionResult = {
+          availableQueries: data.__schema.queryType.fields.filter(
+            (x: any) =>
+              x.name.startsWith('all') || x.name.endsWith(REFERENCE_DATA_END)
+          ),
+          userFields: data.__schema.types
+            .find((x: any) => x.name === 'User')
+            .fields.filter((x: any) => USER_FIELDS.includes(x.name)),
+        };
+
+        data.__schema.types.forEach((t) => {
+          const resourceTypeName = `all${pluralize(t.name)}`;
+          const refDataTypeName = t.name;
+
+          const query = introspectionResult?.availableQueries.find(
+            (x: any) =>
+              x.name === resourceTypeName || x.name === refDataTypeName
+          );
+
+          if (query) {
+            if (query.name === resourceTypeName) {
+              query.resourceType = t;
+            } else {
+              query.refDataType = t;
+              if (t.name === 'multi_color') console.log(t);
+            }
+            return;
+          }
+        });
+      }
+    }
 
     // === REST ===
     this.app.use(router);
