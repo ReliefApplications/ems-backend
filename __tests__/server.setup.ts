@@ -14,10 +14,17 @@ import { GraphQLSchema } from 'graphql';
 import { ApolloServer } from '@apollo/server';
 import EventEmitter from 'events';
 import dataSources from '@server/apollo/dataSources';
-import defineUserAbility from '@security/defineUserAbility';
+import { AppAbility, conditionsMatcher } from '@security/defineUserAbility';
 import i18nextMiddleware from 'i18next-http-middleware';
-import { User } from '@models';
+import { Role, User } from '@models';
+import { AbilityBuilder } from '@casl/ability';
+import { Ability, AbilityClass } from '@casl/ability';
 
+/**
+ * Define the ability of the server.
+ */
+// eslint-disable-next-line deprecation/deprecation
+const appAbility = Ability as AbilityClass<AppAbility>;
 /**
  * Definition of test server.
  */
@@ -62,10 +69,12 @@ class SafeTestServer {
 
     this.app.use(i18nextMiddleware.handle(i18next));
 
+    const user = this.getUserTest();
+
     // === APOLLO ===
     this.apolloServer = await SafeTestServer.createApolloTestServer(
       schema,
-      User
+      user
     );
     //this.apolloServer.getMiddleware({ app: this.app });
 
@@ -125,13 +134,59 @@ class SafeTestServer {
    */
   private static context(user: any): any {
     if (user) {
-      user.ability = defineUserAbility(user);
+      user.ability = this.defineUserAbilityMock();
       return {
         user,
       };
     } else {
       return null;
     }
+  }
+
+  /**
+   * Defines abilities for the mock test user.
+   *
+   * @returns ability definition of the user
+   */
+  private static defineUserAbilityMock(): AppAbility {
+    const abilityBuilder = new AbilityBuilder(appAbility);
+    const can = abilityBuilder.can;
+    can(
+      ['read', 'create', 'update', 'delete', 'manage'],
+      [
+        'Application',
+        'Dashboard',
+        'Channel',
+        'Page',
+        'Step',
+        'Workflow',
+        'Template',
+        'DistributionList',
+        'CustomNotification',
+      ]
+    );
+    return abilityBuilder.build({ conditionsMatcher });
+  }
+
+  /**
+   * Create user if necessary.
+   */
+  private async getUserTest() {
+    const user = await User.find({
+      username: { $in: 'dummy@dummy.com' },
+    });
+    if (user.length > 0) return user;
+
+    const admin = await Role.findOne({ title: 'admin' });
+    const newUser = new User();
+    newUser.username = 'dummy@dummy.com';
+    newUser.roles = [admin];
+    const date = new Date();
+    date.setDate(date.getDate() + 7);
+    newUser.deleteAt = date;
+    await newUser.save();
+
+    return newUser;
   }
 }
 
