@@ -24,7 +24,6 @@ import { useServer } from 'graphql-ws/lib/use/ws';
 import onConnect from './apollo/onConnect';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 
-// List of beneficiaries that were
 /**
  * Definition of the main server.
  */

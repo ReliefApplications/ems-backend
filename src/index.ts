@@ -49,6 +49,11 @@ const launchServer = async () => {
       logger.info(`🚀 Server ready at http://localhost:${PORT}/graphql`);
       logger.info(`🚀 Server ready at ws://localhost:${PORT}/graphql`);
     });
+    setTimeout(() => {
+      console.log('I should break');
+      console.log((safeServer as any).super.super);
+      throw new Error('test');
+    }, 3000);
   });
 };
 
