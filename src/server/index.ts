@@ -231,7 +231,6 @@ class SafeServer {
               query.resourceType = t;
             } else {
               query.refDataType = t;
-              if (t.name === 'multi_color') console.log(t);
             }
             return;
           }
