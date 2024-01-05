@@ -41,7 +41,7 @@ export const preserveChildProperties = (
   // so the hasOwnProperty doesn't always work correctly
   propertiesToPreserve.forEach((property: string) => {
     // If the child has its own property
-    if (!isEqual(childField[property], oldField[property])) {
+    if (!isEqual(childField?.[property], oldField?.[property])) {
       // Replace child's field by parent's field with child's field property's value
       newField = { ...newField, [property]: childField[property] };
       preserve = true;
