@@ -312,7 +312,6 @@ const buildPipeline = (
       ...(idsList ? { resource: 1 } : {}), //add the resource for subcolumns
     },
   };
-  // TO DO : ADD A NEW STEP WITH LOOK-UP FOR REVERSE RESOURCES
   if (!idsList) {
     //idsList is used when getting subcolumns
     pipeline = [
@@ -622,6 +621,23 @@ const getResourceAndResourcesQuestions = (columns: any) => {
 };
 
 /**
+ * Add fields that are "reverse resources" to records
+ *
+ * @param columns Columns that need to be exported
+ * @param records Records that are missing the "reverse resources" fields
+ * @returns updated records
+ */
+const addReverseResourcesField = (columns: any, records: any) => {
+  const firstRecord = records[0];
+  columns.map((col) => {
+    if (!Object.keys(firstRecord).includes(col.field) && !col.meta) {
+      // TO DO : GET ID/NAME OF RESOURCE THAT IS "REVERSE LINKED"
+    }
+  });
+  return records;
+};
+
+/**
  * Get records to put into the file
  *
  * @param params export batch parameters
@@ -639,9 +655,9 @@ const getRecords = async (
    * - links to other resources, when resource is used as field in related resource ( value not directly in data field )
    */
   console.time('export');
-  const records = await Record.aggregate<Record>(
-    buildPipeline(columns, params)
-  );
+  let records = await Record.aggregate<Record>(buildPipeline(columns, params));
+  records = addReverseResourcesField(columns, records);
+
   console.log('Records fetched');
   console.timeLog('export');
 
