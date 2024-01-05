@@ -5,6 +5,7 @@ import i18next from 'i18next';
 import Backend from 'i18next-node-fs-backend';
 import { createServer, Server } from 'http';
 import {
+  authMiddleware,
   corsMiddleware,
   graphqlMiddleware,
   rateLimitMiddleware,
@@ -19,6 +20,12 @@ import i18nextMiddleware from 'i18next-http-middleware';
 import { Role, User } from '@models';
 import { AbilityBuilder } from '@casl/ability';
 import { Ability, AbilityClass } from '@casl/ability';
+import { useServer } from 'graphql-ws/lib/use/ws';
+import onConnect from '@server/apollo/onConnect';
+import context, { Context } from '@server/apollo/context';
+import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+import { expressMiddleware } from '@apollo/server/express4';
+import { WebSocketServer } from 'ws';
 
 /**
  * Define the ability of the server.
@@ -33,7 +40,7 @@ class SafeTestServer {
 
   public httpServer: Server;
 
-  public apolloServer: ApolloServer;
+  public apolloServer: ApolloServer<Context>;
 
   public status = new EventEmitter();
 
@@ -64,17 +71,48 @@ class SafeTestServer {
     // === MIDDLEWARES ===
     this.app.use(rateLimitMiddleware);
     this.app.use(corsMiddleware);
-    // this.app.use(authMiddleware);
+    this.app.use(authMiddleware);
     this.app.use('/graphql', graphqlMiddleware);
-
     this.app.use(i18nextMiddleware.handle(i18next));
 
-    const user = this.getUserTest();
+    // === SUBSCRIPTIONS ===
+    this.httpServer = createServer(this.app);
+    const wsServer = new WebSocketServer({
+      server: this.httpServer,
+      path: '/graphql',
+    });
+    const serverCleanup = useServer(
+      {
+        schema,
+        context: onConnect,
+      },
+      wsServer
+    );
 
     // === APOLLO ===
-    this.apolloServer = await SafeTestServer.createApolloTestServer(
-      schema,
-      user
+    this.apolloServer = new ApolloServer<Context>({
+      schema: schema,
+      introspection: true,
+      plugins: [
+        ApolloServerPluginLandingPageLocalDefault(),
+        // Proper shutdown for the WebSocket server.
+        {
+          async serverWillStart() {
+            return {
+              async drainServer() {
+                await serverCleanup.dispose();
+              },
+            };
+          },
+        },
+      ],
+    });
+    await this.apolloServer.start();
+    this.app.use(
+      '/graphql',
+      expressMiddleware<Context>(this.apolloServer, {
+        context: context(this.apolloServer),
+      })
     );
     //this.apolloServer.getMiddleware({ app: this.app });
 
@@ -84,6 +122,11 @@ class SafeTestServer {
 
     // === REST ===
     this.app.use(router);
+
+    // test route
+    this.app.get('/status', (req, res) => {
+      res.send('Server is working!');
+    });
 
     this.status.emit('ready');
   }
@@ -181,6 +224,7 @@ class SafeTestServer {
     const newUser = new User();
     newUser.username = 'dummy@dummy.com';
     newUser.roles = [admin];
+    newUser.ability = SafeTestServer.defineUserAbilityMock();
     const date = new Date();
     date.setDate(date.getDate() + 7);
     newUser.deleteAt = date;

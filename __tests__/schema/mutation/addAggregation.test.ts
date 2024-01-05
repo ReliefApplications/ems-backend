@@ -13,7 +13,6 @@ let token: string;
 beforeAll(async () => {
   const admin = await Role.findOne({ title: 'admin' });
   await User.updateOne({ username: 'dummy@dummy.com' }, { roles: [admin._id] });
-
   server = new SafeTestServer();
   await server.start(schema);
   request = supertest(server.app);
@@ -26,12 +25,46 @@ beforeAll(async () => {
   }).save();
 });
 
+describe('Server test', () => {
+  test('Must respond to the GET method on the /status route', async () => {
+    const response = await request
+      .get('/status')
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    expect(response.statusCode).toBe(200);
+    expect(response.text).toBe('Server is working!');
+  });
+});
+
+describe('GraphQL route test', () => {
+  test('Should respond to POST method on /graphql route', async () => {
+    const response = await request
+      .post('/graphql')
+      .send({
+        query: `
+          query {
+            __schema {
+              types {
+                name
+              }
+            }
+          }
+        `,
+      })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveProperty('data.__schema.types');
+  });
+});
+
 /**
  * Test Add Aggregation Mutation.
  */
 describe('Add aggregation mutation tests cases', () => {
-  const query = `mutation addAggregation($resource: ID!, $aggregation: AggregationInputType!) {
-    addAggregation(resource: $resource, aggregation:$aggregation ){
+  const query = `mutation addAggregation($resource: ID, $referenceData: ID, $aggregation: AggregationInputType!) {
+    addAggregation(resource: $resource, referenceData: $referenceData, aggregation:$aggregation ){
       id
       name
     }
@@ -66,6 +99,7 @@ describe('Add aggregation mutation tests cases', () => {
       .send({ query, variables })
       .set('Authorization', token)
       .set('Accept', 'application/json');
+
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body).not.toHaveProperty('errors');
