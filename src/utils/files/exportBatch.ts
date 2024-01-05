@@ -629,9 +629,16 @@ const getResourceAndResourcesQuestions = (columns: any) => {
  */
 const addReverseResourcesField = (columns: any, records: any) => {
   const firstRecord = records[0];
-  columns.map((col) => {
+  columns.map(async (col) => {
     if (!Object.keys(firstRecord).includes(col.field) && !col.meta) {
-      // TO DO : GET ID/NAME OF RESOURCE THAT IS "REVERSE LINKED"
+      const relatedResource = await Resource.findOne({
+        fields: {
+          $elemMatch: {
+            relatedName: 'association_cities_action',
+          },
+        },
+      }).select('_id');
+      console.log('RELATED RESOURCE', relatedResource._id);
     }
   });
   return records;
