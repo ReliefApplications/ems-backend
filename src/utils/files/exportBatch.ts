@@ -629,16 +629,28 @@ const getResourceAndResourcesQuestions = (columns: any) => {
  */
 const addReverseResourcesField = (columns: any, records: any) => {
   const firstRecord = records[0];
+  const recordIdsList = records.map((value) => value._id.toString());
   columns.map(async (col) => {
     if (!Object.keys(firstRecord).includes(col.field) && !col.meta) {
       const relatedResource = await Resource.findOne({
         fields: {
           $elemMatch: {
-            relatedName: 'association_cities_action',
+            relatedName: col.field,
           },
         },
+      });
+      // Get the name of the "resources" question
+      let relatedFieldName = '';
+      relatedResource.fields.map((value) => {
+        if (value.relatedName === col.field) {
+          relatedFieldName = value.name;
+        }
+      });
+      const relatedRecords = await Record.find({
+        resource: relatedResource._id,
+        ['data.' + relatedFieldName]: { $in: recordIdsList },
       }).select('_id');
-      console.log('RELATED RESOURCE', relatedResource._id);
+      console.log(relatedRecords);
     }
   });
   return records;
