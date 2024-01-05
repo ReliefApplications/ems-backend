@@ -74,6 +74,28 @@ const ROLE_ID_MAP = {
 };
 
 /**
+ * Adds the context filter of the base app to the structure apps
+ * @param structureApps The structure apps
+ */
+const addContextFilterToStructureApps = async (structureApps) => {
+  // Filter out the base app from the structure apps
+  const appsWithoutBaseApp = structureApps.filter(
+    (a) => !a._id.equals(BASE_APP_ID)
+  );
+  // We fetch the base app
+  const baseApp = await Application.findById(BASE_APP_ID).populate({
+    path: 'pages',
+    model: 'Page',
+  });
+  // Add context filter of the base app to the structure apps
+  appsWithoutBaseApp.forEach((app) => {
+    app.contextualFilter = baseApp.contextualFilter;
+  });
+  // Save the structure apps
+  await Application.bulkSave(appsWithoutBaseApp);
+};
+
+/**
  * Script that updated all the structure applications by copying the structure of each demo app page
  *
  * @param rerun If true, will run the script again even for already linked applications
@@ -116,6 +138,9 @@ export const linkStructureAppsToDemo = async (rerun = false) => {
   const structureAppRoles = await Role.find({
     application: { $in: structureApps.map((a) => a._id) },
   });
+
+  // Add the context filter from the base app to existing structure apps
+  addContextFilterToStructureApps(structureApps);
 
   const pagesToSave = [] as Page[];
   baseAppPages.forEach((page) => {
