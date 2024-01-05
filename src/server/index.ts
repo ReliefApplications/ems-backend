@@ -186,14 +186,16 @@ class SafeServer {
 
   /** Re-launches the server with updated schema */
   private async update(): Promise<void> {
-    const schema = await buildSchema();
-    this.httpServer.removeListener('request', this.app);
-    this.httpServer.close();
-    logger.info('🛑 Stopping server');
-    this.apolloServer.stop().then(() => {
-      logger.info('🔁 Reloading server');
-      this.start(schema);
-    });
+    setTimeout(async () => {
+      const schema = await buildSchema();
+      this.httpServer.removeListener('request', this.app);
+      this.httpServer.close();
+      logger.info('🛑 Stopping server');
+      this.apolloServer.stop().then(() => {
+        logger.info('🔁 Reloading server');
+        this.start(schema);
+      });
+    }, 5000);
   }
 }
 
