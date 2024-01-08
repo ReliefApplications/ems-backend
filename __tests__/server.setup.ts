@@ -88,6 +88,7 @@ class SafeTestServer {
       },
       wsServer
     );
+    this.getUserTest();
 
     // === APOLLO ===
     this.apolloServer = new ApolloServer<Context>({
