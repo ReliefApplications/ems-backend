@@ -627,32 +627,41 @@ const getResourceAndResourcesQuestions = (columns: any) => {
  * @param records Records that are missing the "reverse resources" fields
  * @returns updated records
  */
-const addReverseResourcesField = (columns: any, records: any) => {
-  const firstRecord = records[0];
-  const recordIdsList = records.map((value) => value._id.toString());
-  columns.map(async (col) => {
-    if (!Object.keys(firstRecord).includes(col.field) && !col.meta) {
-      const relatedResource = await Resource.findOne({
-        fields: {
-          $elemMatch: {
-            relatedName: col.field,
-          },
-        },
-      });
-      // Get the name of the "resources" question
-      let relatedFieldName = '';
-      relatedResource.fields.map((value) => {
-        if (value.relatedName === col.field) {
-          relatedFieldName = value.name;
-        }
-      });
-      const relatedRecords = await Record.find({
-        resource: relatedResource._id,
-        ['data.' + relatedFieldName]: { $in: recordIdsList },
-      }).select('_id');
-      console.log(relatedRecords);
-    }
-  });
+const addReverseResourcesField = async (columns: any, records: any) => {
+  await Promise.all(
+    records.map(async (record) => {
+      await Promise.all(
+        columns.map(async (col) => {
+          // Identify the "reverse resources" field
+          if (!Object.keys(record).includes(col.field) && !col.meta) {
+            // Get the resource that has a "resources" question linked to these records
+            const relatedResource = await Resource.findOne({
+              fields: {
+                $elemMatch: {
+                  relatedName: col.field,
+                },
+              },
+            });
+            // Get the name of the "resources" question that is present in the other resource
+            let relatedFieldName = '';
+            relatedResource.fields.map((value) => {
+              if (value.relatedName === col.field) {
+                relatedFieldName = value.name;
+              }
+            });
+            // Get the records ids from the related resources
+            const relatedRecords = await Record.find({
+              resource: relatedResource._id,
+              ['data.' + relatedFieldName]: record._id.toString(),
+            }).select('_id');
+            record[col.field] = [
+              ...relatedRecords.map((value) => value._id.toString()),
+            ];
+          }
+        })
+      );
+    })
+  );
   return records;
 };
 
@@ -675,7 +684,7 @@ const getRecords = async (
    */
   console.time('export');
   let records = await Record.aggregate<Record>(buildPipeline(columns, params));
-  records = addReverseResourcesField(columns, records);
+  records = await addReverseResourcesField(columns, records);
 
   console.log('Records fetched');
   console.timeLog('export');
