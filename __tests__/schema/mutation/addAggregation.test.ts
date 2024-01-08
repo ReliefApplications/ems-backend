@@ -1,6 +1,6 @@
 import schema from '../../../src/schema';
 import { SafeTestServer } from '../../server.setup';
-import { Resource, Role, User } from '@models';
+import { Resource, User } from '@models';
 import { faker } from '@faker-js/faker';
 import supertest from 'supertest';
 import { acquireToken } from '../../authentication.setup';
@@ -11,8 +11,7 @@ let request: supertest.SuperTest<supertest.Test>;
 let token: string;
 
 beforeAll(async () => {
-  const admin = await Role.findOne({ title: 'admin' });
-  await User.updateOne({ username: 'dummy@dummy.com' }, { roles: [admin._id] });
+  await User.deleteOne({ username: 'dummy@dummy.com' });
   server = new SafeTestServer();
   await server.start(schema);
   request = supertest(server.app);
