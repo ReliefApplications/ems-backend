@@ -28,7 +28,7 @@ export default {
       const user = context.user;
       const ability: AppAbility = user.ability;
       if (ability.can('create', 'ApiConfiguration')) {
-        if (args.name !== '') {
+        if (args.name !== '' && args.name !== null && args.name !== undefined) {
           validateApi(args.name);
           const apiConfiguration = new ApiConfiguration({
             name: args.name,

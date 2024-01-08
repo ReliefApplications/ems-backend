@@ -3,16 +3,12 @@ import { SafeTestServer } from '../../server.setup';
 import { faker } from '@faker-js/faker';
 import supertest from 'supertest';
 import { acquireToken } from '../../authentication.setup';
-import { Role, User } from '@models';
 
 let server: SafeTestServer;
 let request: supertest.SuperTest<supertest.Test>;
 let token: string;
 
 beforeAll(async () => {
-  const admin = await Role.findOne({ title: 'admin' });
-  await User.updateOne({ username: 'dummy@dummy.com' }, { roles: [admin._id] });
-
   server = new SafeTestServer();
   await server.start(schema);
   request = supertest(server.app);
@@ -73,11 +69,11 @@ describe('Add api configuration mutation tests cases', () => {
       .send({ query, variables })
       .set('Authorization', token)
       .set('Accept', 'application/json');
-    if (!!response.body.errors && !!response.body.errors[0].message) {
-      expect(
-        Promise.reject(new Error(response.body.errors[0].message))
-      ).rejects.toThrow(response.body.errors[0].message);
-    }
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('errors');
+    expect(response.body.errors[0].message).toContain(
+      'Variable "$name" of required type "String!" was not provided.'
+    );
   });
 
   test('test case with empty name and return error', async () => {
@@ -93,7 +89,9 @@ describe('Add api configuration mutation tests cases', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain('invalidArguments');
+    expect(response.body.errors[0].message).toContain(
+      'API name must be provided'
+    );
   });
 
   test('test case with null name and return error', async () => {
@@ -109,12 +107,14 @@ describe('Add api configuration mutation tests cases', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain('invalidArguments');
+    expect(response.body.errors[0].message).toContain(
+      'Variable "$name" of non-null type "String!" must not be null.'
+    );
   });
 
   test('test case with invalid API name and return error', async () => {
     const variables = {
-      name: 'Invalid_API_Name',
+      name: '123InvalidName',
     };
 
     const response = await request
@@ -125,6 +125,8 @@ describe('Add api configuration mutation tests cases', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain('Invalid API name');
+    expect(response.body.errors[0].message).toContain(
+      'The name can only consist of alphanumeric characters and underscores, and must start with a letter. Please choose a different name.'
+    );
   });
 });
