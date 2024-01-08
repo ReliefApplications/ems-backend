@@ -289,22 +289,23 @@ const buildPipeline = (
   idsList?: mongoose.Types.ObjectId[]
 ) => {
   let pipeline: any;
-
   const projectStep = {
     $project: {
       ...columns.reduce((acc, col) => {
         const field = defaultRecordFields.find(
           (f) => f.field === col.field.split('.')[0]
         );
-        if (field) {
-          if (field.project) {
-            acc[field.field] = field.project;
+        if (col.meta) {
+          if (field) {
+            if (field.project) {
+              acc[field.field] = field.project;
+            } else {
+              acc[field.field] = `$${field.field}`;
+            }
           } else {
-            acc[field.field] = `$${field.field}`;
+            const parentName = col.field.split('.')[0]; //We get the parent name for the resource question
+            acc[parentName] = `$data.${parentName}`;
           }
-        } else {
-          const parentName = col.field.split('.')[0]; //We get the parent name for the resource question
-          acc[parentName] = `$data.${parentName}`;
         }
         return acc;
       }, {}),
@@ -620,6 +621,42 @@ const getResourceAndResourcesQuestions = (columns: any) => {
 };
 
 /**
+ * Add fields that are "reverse resources" to records
+ *
+ * @param columns Columns that need to be exported
+ * @param records Records that are missing the "reverse resources" fields
+ * @returns updated records
+ */
+const addReverseResourcesField = (columns: any, records: any) => {
+  const firstRecord = records[0];
+  const recordIdsList = records.map((value) => value._id.toString());
+  columns.map(async (col) => {
+    if (!Object.keys(firstRecord).includes(col.field) && !col.meta) {
+      const relatedResource = await Resource.findOne({
+        fields: {
+          $elemMatch: {
+            relatedName: col.field,
+          },
+        },
+      });
+      // Get the name of the "resources" question
+      let relatedFieldName = '';
+      relatedResource.fields.map((value) => {
+        if (value.relatedName === col.field) {
+          relatedFieldName = value.name;
+        }
+      });
+      const relatedRecords = await Record.find({
+        resource: relatedResource._id,
+        ['data.' + relatedFieldName]: { $in: recordIdsList },
+      }).select('_id');
+      console.log(relatedRecords);
+    }
+  });
+  return records;
+};
+
+/**
  * Get records to put into the file
  *
  * @param params export batch parameters
@@ -634,13 +671,12 @@ const getRecords = async (
 ) => {
   /**
    * todo(export): Missing:
-   * - reference data
    * - links to other resources, when resource is used as field in related resource ( value not directly in data field )
    */
   console.time('export');
-  const records = await Record.aggregate<Record>(
-    buildPipeline(columns, params)
-  );
+  let records = await Record.aggregate<Record>(buildPipeline(columns, params));
+  records = addReverseResourcesField(columns, records);
+
   console.log('Records fetched');
   console.timeLog('export');
 
@@ -709,7 +745,7 @@ const getRecords = async (
       console.timeLog('export');
     })
   );
-  // await getReferenceData(referenceDataColumns, params.resource, req, records);
+  await getReferenceData(referenceDataColumns, params.resource, req, records);
   await Promise.all(promises);
   return records;
 };
