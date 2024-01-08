@@ -7,7 +7,6 @@ import {
 import mongoose from 'mongoose';
 import { Application, Channel, Form } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
-import { createAndConsumeQueue } from '../../server/subscriberSafe';
 import { SubscriptionType } from '../types/subscription.type';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
@@ -86,7 +85,7 @@ export default {
         .where({ _id: args.application })
         .getFilter();
       await Application.findOneAndUpdate(filters, update);
-      createAndConsumeQueue(args.routingKey);
+      // createAndConsumeQueue(args.routingKey);
       return subscription;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
