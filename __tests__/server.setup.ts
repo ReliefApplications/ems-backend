@@ -219,7 +219,10 @@ class SafeTestServer {
     const user = await User.find({
       username: { $in: 'dummy@dummy.com' },
     });
-    if (user.length > 0) await User.deleteOne({ _id: user[0]._id });
+    if (user.length > 0)
+      user.forEach(async (u) => {
+        await User.deleteOne({ _id: u._id });
+      });
 
     const admin = await Role.findOne({ title: 'admin' });
     const newUser = new User();

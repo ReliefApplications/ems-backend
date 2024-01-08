@@ -1,6 +1,6 @@
 import schema from '../../../src/schema';
 import { SafeTestServer } from '../../server.setup';
-import { Resource, User } from '@models';
+import { Resource } from '@models';
 import { faker } from '@faker-js/faker';
 import supertest from 'supertest';
 import { acquireToken } from '../../authentication.setup';
@@ -11,7 +11,6 @@ let request: supertest.SuperTest<supertest.Test>;
 let token: string;
 
 beforeAll(async () => {
-  await User.deleteOne({ username: 'dummy@dummy.com' });
   server = new SafeTestServer();
   await server.start(schema);
   request = supertest(server.app);
