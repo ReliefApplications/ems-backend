@@ -206,13 +206,19 @@ const buildMongoFilter = (
         let startDate: Date;
         let endDate: Date;
         let dateForFilter: any;
+        console.log('value', value);
         switch (type) {
           case 'date':
           case 'datetime':
           case 'datetime-local':
             dateForFilter = getDateForMongo(value);
-            startDate = dateForFilter.startDate;
-            endDate = dateForFilter.endDate;
+            // startDate = dateForFilter.startDate;
+            // endDate = dateForFilter.endDate;
+            // value = dateForFilter.date;
+            startDate = new Date(value);
+            endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + 1);
+            endDate.setMilliseconds(-1);
             value = dateForFilter.date;
             break;
           case 'time': {
@@ -240,6 +246,18 @@ const buildMongoFilter = (
               break;
             }
         }
+        console.log(
+          'current date', // To check the timezone of the server
+          new Date(),
+          'dateForFilter',
+          dateForFilter,
+          'startDate',
+          startDate,
+          'endDate',
+          endDate,
+          'value',
+          value
+        );
         switch (filter.operator) {
           case 'eq': {
             // user attributes
