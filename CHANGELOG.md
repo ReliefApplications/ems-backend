@@ -1,3 +1,16 @@
+## [2.4.3](https://github.com/ReliefApplications/ems-backend/compare/v2.4.2...v2.4.3) (2024-01-08)
+
+
+### Bug Fixes
+
+* check if permission exists when editing resources, during application duplication ([#914](https://github.com/ReliefApplications/ems-backend/issues/914)) ([838cc6c](https://github.com/ReliefApplications/ems-backend/commit/838cc6c36eb0d4a107e98663aa14c4f4e913bd00))
+* duplication of application would sometimes fail due to incorrect test on existence of pages ([51f417f](https://github.com/ReliefApplications/ems-backend/commit/51f417fa0bccbc41068c99a80da23410c3479cd1))
+
+
+### Performance Improvements
+
+* replace rabbitmq with redis ([#810](https://github.com/ReliefApplications/ems-backend/issues/810)) ([8d1e175](https://github.com/ReliefApplications/ems-backend/commit/8d1e175b1efb0a36f700335f324e048915800faf))
+
 ## [2.4.2](https://github.com/ReliefApplications/ems-backend/compare/v2.4.1...v2.4.2) (2023-12-21)
 
 
