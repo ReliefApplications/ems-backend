@@ -232,10 +232,6 @@ const buildMongoFilter = (
           return { [fieldName]: { $regex: '^' + v, $options: 'i' } };
         case 'endswith':
           return { [fieldName]: { $regex: v + '$', $options: 'i' } };
-        case 'inArray':
-          return { [fieldName]: { $in: v } };
-        case 'notInArray':
-          return { [fieldName]: { $not: { $in: v } } };
         case 'in':
         case 'contains':
           return { [fieldName]: { $regex: v, $options: 'i' } };
@@ -372,10 +368,15 @@ const buildMongoFilter = (
           return {
             [fieldName]: { $not: { $size: v.length, $all: v } },
           };
-        case 'inArray':
+        case 'in':
+        case 'intersects':
           return { [fieldName]: { $in: v } };
-        case 'notInArray':
-          return { [fieldName]: { $not: { $in: v } } };
+        case 'notin':
+          return { [fieldName]: { $nin: v } };
+        case 'issubset':
+          return { [fieldName]: { $all: v } };
+        case 'isnotsubset':
+          return { $not: { [fieldName]: { $all: v } } };
         case 'contains':
           return { [fieldName]: { $all: v } };
         case 'doesnotcontain':
