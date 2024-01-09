@@ -19,7 +19,7 @@ const DEFAULT_FIRST = 10;
 /** Default filter fields */
 const FILTER_FIELDS: { name: string; type: string }[] = [
   { name: 'id', type: 'ObjectId' },
-  { name: 'roles', type: 'ObjectId' },
+  { name: 'roles', type: 'users' },
   { name: 'name', type: 'text' },
   { name: 'username', type: 'text' },
 ];
