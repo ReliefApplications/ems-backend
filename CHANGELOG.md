@@ -1,3 +1,10 @@
+## [2.4.4](https://github.com/ReliefApplications/ems-backend/compare/v2.4.3...v2.4.4) (2024-01-09)
+
+
+### Bug Fixes
+
+* dashboard filter would not correctly save in some cases ([4f67ce2](https://github.com/ReliefApplications/ems-backend/commit/4f67ce29019b0dd862d27897ed16c0764aca171b))
+
 ## [2.4.3](https://github.com/ReliefApplications/ems-backend/compare/v2.4.2...v2.4.3) (2024-01-08)
 
 
