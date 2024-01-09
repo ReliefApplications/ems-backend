@@ -1,15 +1,61 @@
-import { GraphQLList, GraphQLError, GraphQLID } from 'graphql';
+import { GraphQLList, GraphQLError, GraphQLID, GraphQLInt } from 'graphql';
 import { User } from '@models';
-import { UserType } from '../types';
+import { UserConnectionType, decodeCursor, encodeCursor } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
-import { Types } from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
+import { CompositeFilterDescriptor } from '@const/compositeFilter';
+import GraphQLJSON from 'graphql-type-json';
+import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
+import checkPageSize from '@utils/schema/errors/checkPageSize.util';
+import { accessibleBy } from '@casl/mongoose';
+import getFilter from '@utils/filter/getFilter';
+
+/** Default page size */
+const DEFAULT_FIRST = 10;
+
+/** Default filter fields */
+const FILTER_FIELDS: { name: string; type: string }[] = [
+  {
+    name: 'roles',
+    type: 'ObjectId',
+  },
+  {
+    name: 'name',
+    type: 'text',
+  },
+];
+
+/** Available sort fields */
+const SORT_FIELDS = [
+  {
+    name: '_id',
+    cursorId: (node: any) => node._id.toString(),
+    cursorFilter: (cursor: any, sortOrder: string) => {
+      const operator = sortOrder === 'asc' ? '$gt' : '$lt';
+      return {
+        _id: {
+          [operator]: new mongoose.Types.ObjectId(decodeCursor(cursor)),
+        },
+      };
+    },
+    sort: (sortOrder: string) => {
+      return {
+        _id: getSortOrder(sortOrder),
+      };
+    },
+  },
+];
 
 /** Arguments for the users query */
 type UsersArgs = {
   applications?: string[] | Types.ObjectId[];
+  first?: number;
+  filter?: CompositeFilterDescriptor;
+  afterCursor?: string;
+  skip?: number;
 };
 
 /**
@@ -17,22 +63,67 @@ type UsersArgs = {
  * Throw GraphQL error if not logged or not authorized.
  */
 export default {
-  type: new GraphQLList(UserType),
+  type: UserConnectionType,
   args: {
     applications: { type: new GraphQLList(GraphQLID) },
+    first: { type: GraphQLInt },
+    afterCursor: { type: GraphQLID },
+    filter: { type: GraphQLJSON },
+    skip: { type: GraphQLInt },
   },
   async resolve(parent, args: UsersArgs, context: Context) {
+    // Authentication check
     graphQLAuthCheck(context);
     try {
+      // Make sure that the page size is not too important
+      const first = args.first || DEFAULT_FIRST;
+      checkPageSize(first);
       const ability: AppAbility = context.user.ability;
       if (ability.can('read', 'User')) {
         if (!args.applications) {
-          const users = await User.find({}).populate({
-            path: 'roles',
-            model: 'Role',
-            match: { application: { $eq: null } },
-          });
-          return users;
+          const abilityFilters = User.find(
+            accessibleBy(ability, 'read').User
+          ).getFilter();
+          const queryFilters = getFilter(args.filter, FILTER_FIELDS);
+          const filters: any[] = [queryFilters, abilityFilters];
+          const afterCursor = args.afterCursor;
+
+          const sortField = SORT_FIELDS.find((x) => x.name === '_id');
+          const sortOrder = 'asc';
+
+          const cursorFilters = afterCursor
+            ? sortField.cursorFilter(afterCursor, sortOrder)
+            : {};
+
+          let items: any[] = await User.find({
+            $and: [cursorFilters, ...filters],
+          })
+            .populate({
+              path: 'roles',
+              model: 'Role',
+              match: { application: { $eq: null } },
+            })
+            .sort(sortField.sort(sortOrder))
+            .limit(first + 1);
+          const hasNextPage = items.length > first;
+          if (hasNextPage) {
+            items = items.slice(0, items.length - 1);
+          }
+          const edges = items.map((r) => ({
+            cursor: encodeCursor(sortField.cursorId(r)),
+            node: r,
+          }));
+
+          return {
+            pageInfo: {
+              hasNextPage,
+              startCursor: edges.length > 0 ? edges[0].cursor : null,
+              endCursor:
+                edges.length > 0 ? edges[edges.length - 1].cursor : null,
+            },
+            edges,
+            totalCount: await User.countDocuments({ $and: filters }),
+          };
         } else {
           const aggregations = [
             // Left join
@@ -64,8 +155,30 @@ export default {
             // Filter users that have at least one role in the application(s).
             { $match: { 'roles.0': { $exists: true } } },
           ];
-          const aggregation = await User.aggregate(aggregations);
-          return aggregation;
+          const skip = args.skip ? args.skip : 10;
+          let aggregation = await User.aggregate(aggregations)
+            .skip(skip).
+            limit(first + 1)
+
+          const hasNextPage = aggregation.length > first;
+          if (hasNextPage) {
+            aggregation = aggregation.slice(0, aggregation.length - 1);
+          }
+          const sortField = SORT_FIELDS.find((x) => x.name === '_id');
+          const edges = aggregation.map((r) => ({
+            cursor: encodeCursor(sortField.cursorId(r)),
+            node: r,
+          }));
+          return {
+            pageInfo: {
+              hasNextPage,
+              startCursor: edges.length > 0 ? edges[0].cursor : null,
+              endCursor:
+                edges.length > 0 ? edges[edges.length - 1].cursor : null,
+            },
+            edges,
+            totalCount: await User.countDocuments({ $and: aggregation }),
+          };
         }
       } else {
         throw new GraphQLError(
