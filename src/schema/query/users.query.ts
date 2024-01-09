@@ -159,7 +159,9 @@ export default {
           let aggregation = await User.aggregate(aggregations)
             .skip(skip)
             .limit(first + 1);
-          const totalCount = await User.aggregate(aggregations).count('totalCount').exec();
+          const totalCount = await User.aggregate(aggregations)
+            .count('totalCount')
+            .exec();
           const hasNextPage = aggregation.length > first;
           if (hasNextPage) {
             aggregation = aggregation.slice(0, aggregation.length - 1);
