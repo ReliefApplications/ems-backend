@@ -1,5 +1,5 @@
 import { GraphQLList, GraphQLError, GraphQLID, GraphQLInt } from 'graphql';
-import { User } from '@models';
+import { Role, User } from '@models';
 import { UserConnectionType, decodeCursor, encodeCursor } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import mongoose, { Types } from 'mongoose';
@@ -18,14 +18,10 @@ const DEFAULT_FIRST = 10;
 
 /** Default filter fields */
 const FILTER_FIELDS: { name: string; type: string }[] = [
-  {
-    name: 'roles',
-    type: 'ObjectId',
-  },
-  {
-    name: 'name',
-    type: 'text',
-  },
+  { name: 'id', type: 'ObjectId' },
+  { name: 'roles', type: 'ObjectId' },
+  { name: 'name', type: 'text' },
+  { name: 'username', type: 'text' },
 ];
 
 /** Available sort fields */
@@ -80,122 +76,71 @@ export default {
       checkPageSize(first);
       const ability: AppAbility = context.user.ability;
       if (ability.can('read', 'User')) {
-        if (!args.applications) {
-          const abilityFilters = User.find(
-            accessibleBy(ability, 'read').User
-          ).getFilter();
-          const queryFilters = getFilter(args.filter, FILTER_FIELDS);
-          const filters: any[] = [queryFilters, abilityFilters];
-          const afterCursor = args.afterCursor;
+        const abilityFilters = User.find(
+          accessibleBy(ability, 'read').User
+        ).getFilter();
+        // Get filters for the searched value
+        const queryFilters = getFilter(args.filter, FILTER_FIELDS);
+        const filters: any[] = [queryFilters, abilityFilters];
+        const afterCursor = args.afterCursor;
 
-          const sortField = SORT_FIELDS.find((x) => x.name === '_id');
-          const sortOrder = 'asc';
+        const sortField = SORT_FIELDS.find((x) => x.name === '_id');
+        const sortOrder = 'asc';
 
-          const cursorFilters = afterCursor
-            ? sortField.cursorFilter(afterCursor, sortOrder)
-            : {};
+        const cursorFilters = afterCursor
+          ? sortField.cursorFilter(afterCursor, sortOrder)
+          : {};
 
-          let items: any[] = await User.find({
-            $and: [cursorFilters, ...filters],
-          })
-            .populate({
-              path: 'roles',
-              model: 'Role',
-              match: { application: { $eq: null } },
-            })
-            .sort(sortField.sort(sortOrder))
-            .limit(first + 1);
-          const hasNextPage = items.length > first;
-          if (hasNextPage) {
-            items = items.slice(0, items.length - 1);
-          }
-          const edges = items.map((r) => ({
-            cursor: encodeCursor(sortField.cursorId(r)),
-            node: r,
-          }));
+        // If querying the users for a list of applications, we also need to add
+        // another filter to the array of filters, to only get users that have a role
+        // in any of the applications provided
+        if (args.applications) {
+          // We get the roles for the queried applications
+          const appRoles = await Role.find({
+            application: {
+              $in: args.applications.map((x) => new Types.ObjectId(x)),
+            },
+          }).select('_id');
 
-          return {
-            pageInfo: {
-              hasNextPage,
-              startCursor: edges.length > 0 ? edges[0].cursor : null,
-              endCursor:
-                edges.length > 0 ? edges[edges.length - 1].cursor : null,
-            },
-            edges,
-            totalCount: await User.countDocuments({ $and: filters }),
-          };
-        } else {
-          const aggregations = [
-            // Left join
-            {
-              $lookup: {
-                from: 'roles',
-                localField: 'roles',
-                foreignField: '_id',
-                as: 'roles',
-              },
-            },
-            // Replace the roles field with a filtered array, containing only roles that are part of the application(s).
-            {
-              $addFields: {
-                roles: {
-                  $filter: {
-                    input: '$roles',
-                    as: 'role',
-                    cond: {
-                      $in: [
-                        '$$role.application',
-                        args.applications.map((x) => new Types.ObjectId(x)),
-                      ],
-                    },
-                  },
-                },
-              },
-            },
-            // Filter users that have at least one role in the application(s).
-            { $match: { 'roles.0': { $exists: true } } },
-          ];
-          const skip = args.skip ? args.skip : 0;
-          let aggregation;
-          
-          // if (args.filter.filters.length > 0) {
-          //   const value = (args.filter.filters[0] as any).value;
-          //   aggregation = await User.aggregate(aggregations);
-          //   aggregation = aggregation.filter((agg: any) => {
-          //     return agg.username.includes(value)
-          //   })
-          // } else {
-          //   aggregation = await User.aggregate(aggregations)
-          //     .skip(skip)
-          //     .limit(first + 1);
-          // }
-          aggregation = await User.aggregate(aggregations)
-            .skip(skip)
-            .limit(first + 1);
-          
-          const totalCount = await User.aggregate(aggregations)
-            .count('totalCount')
-            .exec();
-          const hasNextPage = aggregation.length > first;
-          if (hasNextPage) {
-            aggregation = aggregation.slice(0, aggregation.length - 1);
-          }
-          const sortField = SORT_FIELDS.find((x) => x.name === '_id');
-          const edges = aggregation.map((r) => ({
-            cursor: encodeCursor(sortField.cursorId(r)),
-            node: r,
-          }));
-          return {
-            pageInfo: {
-              hasNextPage,
-              startCursor: edges.length > 0 ? edges[0].cursor : null,
-              endCursor:
-                edges.length > 0 ? edges[edges.length - 1].cursor : null,
-            },
-            edges,
-            totalCount: totalCount.length > 0 ? totalCount[0].totalCount : 0,
-          };
+          // We add the filter to get the users that have at least one role in the application(s)
+          // besides meeting the other filter criteria
+          filters.push({ roles: { $in: appRoles } });
         }
+
+        let items: any[] = await User.find({
+          $and: [cursorFilters, ...filters],
+        })
+          .populate({
+            path: 'roles',
+            model: 'Role',
+            match: {
+              application: args.applications
+                ? { $in: args.applications.map((x) => new Types.ObjectId(x)) } // Filters out roles that are not part of the application(s) provided
+                : { $eq: null }, // Filters out all front-office roles
+            },
+          })
+          .sort(sortField.sort(sortOrder))
+          .skip(args.skip || 0)
+          .limit(first + 1);
+
+        const hasNextPage = items.length > first;
+        if (hasNextPage) {
+          items = items.slice(0, items.length - 1);
+        }
+        const edges = items.map((r) => ({
+          cursor: encodeCursor(sortField.cursorId(r)),
+          node: r,
+        }));
+
+        return {
+          pageInfo: {
+            hasNextPage,
+            startCursor: edges.length > 0 ? edges[0].cursor : null,
+            endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+          },
+          edges,
+          totalCount: await User.countDocuments({ $and: filters }),
+        };
       } else {
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')
