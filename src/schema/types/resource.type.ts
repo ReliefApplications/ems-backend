@@ -138,6 +138,22 @@ export const ResourceType = new GraphQLObjectType({
         return forms;
       },
     },
+    form: {
+      type: FormType,
+      args: {
+        id: { type: GraphQLID },
+      },
+      async resolve(parent, args, context) {
+        if (args.id) {
+          const ability: AppAbility = context.user.ability;
+          const form = await Form.findById({
+            _id: args.id,
+            ...accessibleBy(ability, 'read').Form,
+          });
+          return form;
+        }
+      },
+    },
     relatedForms: {
       type: new GraphQLList(FormType),
       async resolve(parent, args, context) {
