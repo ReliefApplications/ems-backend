@@ -81,12 +81,17 @@ export default {
         //modifiedAt?: Date;
         structure?: any;
         name?: string;
+        filter?: any;
+        buttons?: any;
+        gridOptions?: any;
       } = {};
       Object.assign(
         updateDashboard,
         args.structure && { structure: args.structure },
         args.name && { name: args.name },
-        args.filter && { filter: args.filter },
+        args.filter && {
+          filter: { ...dashboard.toObject().filter, ...args.filter },
+        },
         args.buttons && { buttons: args.buttons },
         args.gridOptions && { gridOptions: args.gridOptions }
       );
