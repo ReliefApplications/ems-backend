@@ -368,6 +368,14 @@ const buildMongoFilter = (
           return {
             [fieldName]: { $not: { $size: v.length, $all: v } },
           };
+        case 'in':
+        case 'intersects':
+          return { [fieldName]: { $in: v } };
+        case 'notin':
+          return { [fieldName]: { $nin: v } };
+        case 'isnotsubset':
+          return { $not: { [fieldName]: { $all: v } } };
+        case 'issubset':
         case 'contains':
           return { [fieldName]: { $all: v } };
         case 'doesnotcontain':
