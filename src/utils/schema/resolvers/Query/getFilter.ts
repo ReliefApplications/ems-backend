@@ -373,10 +373,9 @@ const buildMongoFilter = (
           return { [fieldName]: { $in: v } };
         case 'notin':
           return { [fieldName]: { $nin: v } };
-        case 'issubset':
-          return { [fieldName]: { $all: v } };
         case 'isnotsubset':
           return { $not: { [fieldName]: { $all: v } } };
+        case 'issubset':
         case 'contains':
           return { [fieldName]: { $all: v } };
         case 'doesnotcontain':
