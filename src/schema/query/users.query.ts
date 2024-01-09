@@ -155,11 +155,11 @@ export default {
             // Filter users that have at least one role in the application(s).
             { $match: { 'roles.0': { $exists: true } } },
           ];
-          const skip = args.skip ? args.skip : 10;
+          const skip = args.skip ? args.skip : 0;
           let aggregation = await User.aggregate(aggregations)
             .skip(skip)
             .limit(first + 1);
-
+          const totalCount = await User.aggregate(aggregations).count('totalCount').exec();
           const hasNextPage = aggregation.length > first;
           if (hasNextPage) {
             aggregation = aggregation.slice(0, aggregation.length - 1);
@@ -177,7 +177,7 @@ export default {
                 edges.length > 0 ? edges[edges.length - 1].cursor : null,
             },
             edges,
-            totalCount: await User.countDocuments({ $and: aggregation }),
+            totalCount: totalCount.length > 0 ? totalCount[0].totalCount : 0,
           };
         }
       } else {
