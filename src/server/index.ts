@@ -107,7 +107,13 @@ class SafeServer {
         const updatedDocFields = Object.keys(
           data.updateDescription.updatedFields
         );
+        // Permissions update on the fields should not be considered as a change of the schema
+        const updatePermissions = Object.hasOwn(
+          data.updateDescription.updatedFields,
+          'permissions'
+        );
         if (
+          !updatePermissions &&
           updatedDocFields.some(
             (f) =>
               fieldsThatRequireSchemaUpdate.includes(f) &&
@@ -246,16 +252,14 @@ class SafeServer {
 
   /** Re-launches the server with updated schema */
   private async update(): Promise<void> {
-    setTimeout(async () => {
-      const schema = await buildSchema();
-      this.httpServer.removeListener('request', this.app);
-      this.httpServer.close();
-      logger.info('🛑 Stopping server');
-      this.apolloServer.stop().then(() => {
-        logger.info('🔁 Reloading server');
-        this.start(schema);
-      });
-    }, 5000);
+    const schema = await buildSchema();
+    this.httpServer.removeListener('request', this.app);
+    this.httpServer.close();
+    logger.info('🛑 Stopping server');
+    this.apolloServer.stop().then(() => {
+      logger.info('🔁 Reloading server');
+      this.start(schema);
+    });
   }
 }
 
