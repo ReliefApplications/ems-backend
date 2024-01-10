@@ -680,10 +680,7 @@ const getRecords = async (
   columns: any[],
   req: any
 ) => {
-  /**
-   * todo(export): Missing:
-   * - links to other resources, when resource is used as field in related resource ( value not directly in data field )
-   */
+  console.log('starting');
   console.time('export');
   let records = await Record.aggregate<Record>(buildPipeline(columns, params));
   records = await addReverseResourcesField(columns, records);
