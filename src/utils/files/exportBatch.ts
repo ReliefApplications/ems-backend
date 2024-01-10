@@ -627,12 +627,13 @@ const getResourceAndResourcesQuestions = (columns: any) => {
  * @returns updated records
  */
 const addReverseResourcesField = async (columns: any, records: any) => {
+  const reverseColumns = columns.filter((col) => col.parent); //they also take the normal resources questions but that will cause no issue
   await Promise.all(
     records.map(async (record) => {
       await Promise.all(
-        columns.map(async (col) => {
-          // Identify the "reverse resources" field
-          if (col.parent && !Object.keys(record).includes(col.field)) {
+        reverseColumns.map(async (col) => {
+          //avoids overwriting resources questions
+          if (!Object.keys(record).includes(col.field)) {
             const parentName = `[${col.parent
               .charAt(0)
               .toUpperCase()}${col.parent
