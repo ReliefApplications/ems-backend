@@ -686,9 +686,8 @@ const getRecords = async (
    */
   console.time('export');
   let records = await Record.aggregate<Record>(buildPipeline(columns, params));
-  console.log(records);
   records = await addReverseResourcesField(columns, records);
-  console.log(records);
+
   console.log('Records fetched');
   console.timeLog('export');
 
