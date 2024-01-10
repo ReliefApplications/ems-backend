@@ -198,6 +198,7 @@ const getColumns = (req: any, params: ExportBatchParams): Promise<any[]> => {
               (f) => f.name === column.name
             );
             column.title = queryField.title;
+            column.parent = queryField.parent;
             if (column.subColumns) {
               if ((queryField.subFields || []).length > 0) {
                 column.subColumns.forEach((subColumn) => {
@@ -295,17 +296,15 @@ const buildPipeline = (
         const field = defaultRecordFields.find(
           (f) => f.field === col.field.split('.')[0]
         );
-        if (col.meta) {
-          if (field) {
-            if (field.project) {
-              acc[field.field] = field.project;
-            } else {
-              acc[field.field] = `$${field.field}`;
-            }
+        if (field) {
+          if (field.project) {
+            acc[field.field] = field.project;
           } else {
-            const parentName = col.field.split('.')[0]; //We get the parent name for the resource question
-            acc[parentName] = `$data.${parentName}`;
+            acc[field.field] = `$${field.field}`;
           }
+        } else {
+          const parentName = col.field.split('.')[0]; //We get the parent name for the resource question
+          acc[parentName] = `$data.${parentName}`;
         }
         return acc;
       }, {}),
@@ -414,13 +413,14 @@ const getReferenceData = async (
         )
       )
         .map((col) => {
+          console.log(col, records);
           const firstRecordWithResource = records.find(
             (record: any) =>
               record[col] &&
               (isArray(record[col])
                 ? record[col][0].resource
                 : record[col].resource)
-          )[col];
+          )?.[col];
           if (firstRecordWithResource) {
             const nestedResourceId = isArray(firstRecordWithResource)
               ? firstRecordWithResource[0].resource
@@ -562,9 +562,8 @@ const getReferenceData = async (
     };
 
     for (const record of records) {
-      const resourcesField = refDataPath.split('.')[0];
-      if (isArray(record[resourcesField])) {
-        const resourcesSubfield = refDataPath.split('.')[1];
+      const [resourcesField, resourcesSubfield] = refDataPath.split('.');
+      if (isArray(record[resourcesField]) && resourcesSubfield) {
         each(record[resourcesField], (value) => {
           const recordValue = get(value, resourcesSubfield);
           set(value, resourcesSubfield, getReferenceDataValue(recordValue));
@@ -627,32 +626,44 @@ const getResourceAndResourcesQuestions = (columns: any) => {
  * @param records Records that are missing the "reverse resources" fields
  * @returns updated records
  */
-const addReverseResourcesField = (columns: any, records: any) => {
-  const firstRecord = records[0];
-  const recordIdsList = records.map((value) => value._id.toString());
-  columns.map(async (col) => {
-    if (!Object.keys(firstRecord).includes(col.field) && !col.meta) {
-      const relatedResource = await Resource.findOne({
-        fields: {
-          $elemMatch: {
-            relatedName: col.field,
-          },
-        },
-      });
-      // Get the name of the "resources" question
-      let relatedFieldName = '';
-      relatedResource.fields.map((value) => {
-        if (value.relatedName === col.field) {
-          relatedFieldName = value.name;
-        }
-      });
-      const relatedRecords = await Record.find({
-        resource: relatedResource._id,
-        ['data.' + relatedFieldName]: { $in: recordIdsList },
-      }).select('_id');
-      console.log(relatedRecords);
-    }
-  });
+const addReverseResourcesField = async (columns: any, records: any) => {
+  const reverseColumns = columns.filter((col) => col.parent); //they also take the normal resources questions but that will cause no issue
+  await Promise.all(
+    records.map(async (record) => {
+      await Promise.all(
+        reverseColumns.map(async (col) => {
+          //avoids overwriting resources questions
+          if (!Object.keys(record).includes(col.field)) {
+            const parentName = `[${col.parent
+              .charAt(0)
+              .toUpperCase()}${col.parent
+              .charAt(0)
+              .toLowerCase()}]${col.parent.slice(1)}`; //parent name can be capitalized differently than resource name
+            // Get the resource that has a "resources" question linked to these records
+            const relatedResource = await Resource.findOne({
+              name: { $regex: parentName },
+            });
+            if (relatedResource) {
+              // Get the name of the "resources" question that is present in the other resource
+              const relatedFieldName = relatedResource.fields.find(
+                (field) => field.relatedName === col.field
+              )?.name;
+              // Get the records ids from the related resources
+              const relatedRecords = await Record.find({
+                resource: relatedResource._id,
+                ['data.' + relatedFieldName]: record._id.toString(),
+              }).select('_id');
+              if (relatedRecords.length > 0) {
+                record[col.field] = [
+                  ...relatedRecords.map((value) => value._id.toString()),
+                ];
+              }
+            }
+          }
+        })
+      );
+    })
+  );
   return records;
 };
 
@@ -669,13 +680,10 @@ const getRecords = async (
   columns: any[],
   req: any
 ) => {
-  /**
-   * todo(export): Missing:
-   * - links to other resources, when resource is used as field in related resource ( value not directly in data field )
-   */
+  console.log('starting');
   console.time('export');
   let records = await Record.aggregate<Record>(buildPipeline(columns, params));
-  records = addReverseResourcesField(columns, records);
+  records = await addReverseResourcesField(columns, records);
 
   console.log('Records fetched');
   console.timeLog('export');
@@ -701,9 +709,11 @@ const getRecords = async (
             buildPipeline(
               column.subColumns,
               params,
-              Array.from(new Set(columnValue)).map(
-                (id: any) => new mongoose.Types.ObjectId(id)
-              )
+              isArray(columnValue)
+                ? Array.from(new Set(columnValue)).map(
+                    (id: any) => new mongoose.Types.ObjectId(id)
+                  )
+                : [new mongoose.Types.ObjectId(columnValue)]
             )
           ).then((relatedRecords) => {
             if (relatedRecords.length > 0) {
@@ -745,8 +755,8 @@ const getRecords = async (
       console.timeLog('export');
     })
   );
-  await getReferenceData(referenceDataColumns, params.resource, req, records);
   await Promise.all(promises);
+  await getReferenceData(referenceDataColumns, params.resource, req, records);
   return records;
 };
 
