@@ -216,9 +216,11 @@ export default {
                 }
 
                 // Add the new permissions to the field
-                field.permissions[permType].push(...newPermissions);
-                added = true;
-                resource.markModified('fields');
+                if (field.permissions[permType]) {
+                  field.permissions[permType].push(...newPermissions);
+                  added = true;
+                  resource.markModified('fields');
+                }
               });
             });
             if (added) {
