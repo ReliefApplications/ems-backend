@@ -413,6 +413,7 @@ const getReferenceData = async (
         )
       )
         .map((col) => {
+          console.log(col, records);
           const firstRecordWithResource = records.find(
             (record: any) =>
               record[col] &&
@@ -631,10 +632,15 @@ const addReverseResourcesField = async (columns: any, records: any) => {
       await Promise.all(
         columns.map(async (col) => {
           // Identify the "reverse resources" field
-          if (col.parent) {
+          if (col.parent && !Object.keys(record).includes(col.field)) {
+            const parentName = `[${col.parent
+              .charAt(0)
+              .toUpperCase()}${col.parent
+              .charAt(0)
+              .toLowerCase()}]${col.parent.slice(1)}`; //parent name can be capitalized differently than resource name
             // Get the resource that has a "resources" question linked to these records
             const relatedResource = await Resource.findOne({
-              name: col.parent, //problem with this: it seems that the name of the resource can be capitalized or not, but col.parent is always capitalized
+              name: { $regex: parentName },
             });
             if (relatedResource) {
               // Get the name of the "resources" question that is present in the other resource
@@ -646,9 +652,11 @@ const addReverseResourcesField = async (columns: any, records: any) => {
                 resource: relatedResource._id,
                 ['data.' + relatedFieldName]: record._id.toString(),
               }).select('_id');
-              record[col.field] = [
-                ...relatedRecords.map((value) => value._id.toString()),
-              ];
+              if (relatedRecords.length > 0) {
+                record[col.field] = [
+                  ...relatedRecords.map((value) => value._id.toString()),
+                ];
+              }
             }
           }
         })
@@ -677,8 +685,9 @@ const getRecords = async (
    */
   console.time('export');
   let records = await Record.aggregate<Record>(buildPipeline(columns, params));
+  console.log(records);
   records = await addReverseResourcesField(columns, records);
-
+  console.log(records);
   console.log('Records fetched');
   console.timeLog('export');
 
