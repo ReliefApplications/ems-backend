@@ -377,8 +377,15 @@ export const ResourceType = new GraphQLObjectType({
     },
     metadata: {
       type: new GraphQLList(FieldMetaDataType),
-      resolve(parent, _, context) {
-        return getMetaData(parent, context);
+      args: {
+        // To ignore all the metadata data (to cases when the summary card widget don't use a layout so don't need
+        // metadata info to build fields and send this data is useless)
+        ignore: { type: GraphQLBoolean },
+      },
+      resolve(parent, args, context) {
+        if (!args.ignore) {
+          return getMetaData(parent, context);
+        }
       },
     },
   }),
