@@ -176,11 +176,17 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
           }
           case 'contains': {
             if (MULTISELECT_TYPES.includes(field.type)) {
-              if (Array.isArray(value)) {
-                return { [fieldName]: { $all: value } };
-              } else {
-                return { [fieldName]: { $all: [value] } };
-              }
+              const v = Array.isArray(value) ? value : [value];
+              return {
+                $or: [
+                  { [fieldName]: { $all: v } },
+                  {
+                    [fieldName]: {
+                      $all: v.map((x) => new mongoose.Types.ObjectId(x)),
+                    },
+                  },
+                ],
+              };
             } else {
               return { [fieldName]: { $regex: value, $options: 'i' } };
             }
