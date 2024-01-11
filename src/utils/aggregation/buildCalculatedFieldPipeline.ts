@@ -52,6 +52,7 @@ const operationMap: {
   toInt: '$toInt',
   length: '$size',
   toLong: '$toLong',
+  trim: '$trim',
   includes: '$in',
 };
 
@@ -161,6 +162,16 @@ const resolveSingleOperator = (
                 },
                 else: getValueString(),
               },
+            },
+          },
+        },
+      }
+    : operation === 'trim'
+    ? {
+        $addFields: {
+          [path.startsWith('aux.') ? path : `data.${path}`]: {
+            $trim: {
+              input: getValueString(),
             },
           },
         },
@@ -427,6 +438,7 @@ const buildPipeline = (
     case 'size':
     case 'length':
     case 'toInt':
+    case 'trim':
     case 'toLong': {
       const { step, dependencies } = resolveSingleOperator(
         op.operation,

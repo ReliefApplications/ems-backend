@@ -22,6 +22,7 @@ const SINGLE_OPERATORS_OPERATIONS: SingleOperatorOperationsTypes[] = [
   'toInt',
   'length',
   'toLong',
+  'trim',
 ];
 
 /** All the available operations with two operators */
@@ -81,6 +82,7 @@ export const OperationTypeMap: { [key in OperationTypes]: string } = {
   toInt: 'numeric',
   length: 'numeric',
   toLong: 'numeric',
+  trim: 'text',
   includes: 'boolean',
 };
 
