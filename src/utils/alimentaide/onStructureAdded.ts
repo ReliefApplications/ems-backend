@@ -377,7 +377,6 @@ const onStructureAdded = async (rec: Record) => {
     permissions: baseApp.permissions,
     createdBy: WORKER_ID,
     pages: [],
-    contextualFilter: baseApp.contextualFilter,
     sideMenu: baseApp.sideMenu,
   });
 
