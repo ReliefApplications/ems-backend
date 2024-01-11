@@ -198,7 +198,13 @@ const getColumns = (req: any, params: ExportBatchParams): Promise<any[]> => {
               (f) => f.name === column.name
             );
             column.title = queryField.title;
-            column.parent = queryField.parent;
+            if (queryField.parent) {
+              column.parent = `[${queryField.parent
+                .charAt(0)
+                .toUpperCase()}${queryField.parent
+                .charAt(0)
+                .toLowerCase()}]${queryField.parent.slice(1)}`;
+            }
             if (column.subColumns) {
               if ((queryField.subFields || []).length > 0) {
                 column.subColumns.forEach((subColumn) => {
@@ -628,42 +634,39 @@ const getResourceAndResourcesQuestions = (columns: any) => {
  */
 const addReverseResourcesField = async (columns: any, records: any) => {
   const reverseColumns = columns.filter((col) => col.parent); //they also take the normal resources questions but that will cause no issue
-  await Promise.all(
-    records.map(async (record) => {
-      await Promise.all(
-        reverseColumns.map(async (col) => {
-          //avoids overwriting resources questions
-          if (!Object.keys(record).includes(col.field)) {
-            const parentName = `[${col.parent
-              .charAt(0)
-              .toUpperCase()}${col.parent
-              .charAt(0)
-              .toLowerCase()}]${col.parent.slice(1)}`; //parent name can be capitalized differently than resource name
-            // Get the resource that has a "resources" question linked to these records
-            const relatedResource = await Resource.findOne({
-              name: { $regex: parentName },
-            });
-            if (relatedResource) {
-              // Get the name of the "resources" question that is present in the other resource
-              const relatedFieldName = relatedResource.fields.find(
-                (field) => field.relatedName === col.field
-              )?.name;
-              // Get the records ids from the related resources
-              const relatedRecords = await Record.find({
-                resource: relatedResource._id,
-                ['data.' + relatedFieldName]: record._id.toString(),
-              }).select('_id');
+  const parentResources = await Resource.find({
+    name: {
+      $regex: reverseColumns.map((col) => col.parent).join('|'),
+    },
+  }).select('name fields');
+  const promises: Promise<any>[] = [];
+  for (const col of reverseColumns) {
+    const parentResource = parentResources.find((resource) =>
+      new RegExp(col.parent).test(resource.name)
+    );
+    const relatedFieldName = parentResource.fields.find(
+      (field) => field.relatedName === col.field
+    )?.name;
+    for (const record of records) {
+      if (!Object.keys(record).includes(col.field)) {
+        promises.push(
+          Record.find({
+            resource: parentResource._id,
+            ['data.' + relatedFieldName]: record._id.toString(),
+          })
+            .select('_id')
+            .then((relatedRecords) => {
               if (relatedRecords.length > 0) {
                 record[col.field] = [
                   ...relatedRecords.map((value) => value._id.toString()),
                 ];
               }
-            }
-          }
-        })
-      );
-    })
-  );
+            })
+        );
+      }
+    }
+  }
+  await Promise.all(promises);
   return records;
 };
 
