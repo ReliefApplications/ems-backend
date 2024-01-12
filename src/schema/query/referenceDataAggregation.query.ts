@@ -56,8 +56,8 @@ const applyFilters = (data: any, filter: any): boolean => {
   }
 
   if (filter.field && filter.operator) {
-    const value = get(data, filter.field.toLowerCase());
-    const regex = new RegExp(filter.value);
+    const value = get(data, filter.field);
+    const regex = new RegExp(filter.value, 'i');
     let intValue: number;
     try {
       intValue = Number(filter.value);
@@ -85,13 +85,9 @@ const applyFilters = (data: any, filter: any): boolean => {
       case 'endswith':
         return !isNil(value) && value.endsWith(filter.value);
       case 'contains':
-        return (
-          !isNil(value) && (value.includes(filter.value) || regex.test(value))
-        );
+        return !isNil(value) && regex.test(value);
       case 'doesnotcontain':
-        return (
-          isNil(value) || (!value.includes(filter.value) && !regex.test(value))
-        );
+        return isNil(value) || !regex.test(value);
       default:
         // For any unknown operator, we return false
         return false;
