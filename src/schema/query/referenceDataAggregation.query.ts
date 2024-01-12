@@ -57,7 +57,6 @@ const applyFilters = (data: any, filter: any): boolean => {
 
   if (filter.field && filter.operator) {
     const value = get(data, filter.field);
-    const regex = new RegExp(filter.value, 'i');
     let intValue: number;
     try {
       intValue = Number(filter.value);
@@ -85,9 +84,27 @@ const applyFilters = (data: any, filter: any): boolean => {
       case 'endswith':
         return !isNil(value) && value.endsWith(filter.value);
       case 'contains':
-        return !isNil(value) && regex.test(value);
+        if (typeof filter.value === 'string') {
+          const regex = new RegExp(filter.value, 'i');
+          if (typeof value === 'string') {
+            return !isNil(value) && regex.test(value);
+          } else {
+            return !isNil(value) && value.includes(filter.value);
+          }
+        } else {
+          return !isNil(value) && value.includes(filter.value);
+        }
       case 'doesnotcontain':
-        return isNil(value) || !regex.test(value);
+        if (typeof filter.value === 'string') {
+          const regex = new RegExp(filter.value, 'i');
+          if (typeof value === 'string') {
+            return isNil(value) || !regex.test(value);
+          } else {
+            return isNil(value) || !value.includes(filter.value);
+          }
+        } else {
+          return isNil(value) || !value.includes(filter.value);
+        }
       default:
         // For any unknown operator, we return false
         return false;
