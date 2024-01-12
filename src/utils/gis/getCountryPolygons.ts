@@ -1,7 +1,7 @@
+import redis from '../../server/redis';
 import { logger } from '@services/logger.service';
 import axios from 'axios';
 import config from 'config';
-import { RedisClientType, createClient } from 'redis';
 import { parse } from 'wellknown';
 import { simplify } from '@turf/turf';
 
@@ -44,17 +44,7 @@ export const getToken = async () => {
  */
 export const getAdmin0Polygons = async () => {
   const cacheKey = 'admin0:polygons';
-  let client: RedisClientType;
-  if (config.get('redis.url')) {
-    client = createClient({
-      url: config.get('redis.url'),
-      password: config.get('redis.password'),
-    });
-    client.on('error', (error) => {
-      logger.error(`REDIS: ${error}`);
-    });
-    await client.connect();
-  }
+  const client = await redis();
   const cacheData = client ? await client.get(cacheKey) : null;
   let admin0s: any[] = [];
   if (!cacheData) {
