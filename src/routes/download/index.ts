@@ -338,9 +338,19 @@ router.post('/records', async (req, res) => {
         .send(i18next.t('routes.download.errors.missingParameters'));
     }
 
-    // Initialization
-    // let columns: any[] = [];
-    // let rows: any[] = [];
+    /** check if user has access to resource before allowing him to download */
+    const ability: AppAbility = req.context.user.ability;
+    const filters = Resource.find(accessibleBy(ability, 'read').Resource)
+      .where({
+        _id: {
+          $eq: params.resource,
+        },
+      })
+      .getFilter();
+    const resource = await Resource.findOne(filters);
+    if (!resource) {
+      return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    }
 
     // Make distinction if we send the file by email or in the response
     if (!params.email) {
@@ -363,13 +373,12 @@ router.post('/records', async (req, res) => {
           );
         }
       }
-      const buffer = await exportBatch(req, params);
-      return res.send(buffer);
+      await exportBatch(req, res, params);
     } else {
       // Send response so the client is not frozen
       res.status(200).send('Export ongoing');
       // Build the file
-      const file = await exportBatch(req, params);
+      const file = await exportBatch(req, res, params);
       // Pass it in attachment
       const attachments = [
         {
