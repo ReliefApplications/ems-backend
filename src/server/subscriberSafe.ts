@@ -84,15 +84,18 @@ export function createAndConsumeQueue(routingKey: string): void {
                       const publisher = await pubsub();
                       if (Array.isArray(data)) {
                         for (const element of data) {
+                          const { incrementalId, incID } = await getNextId(
+                            String(
+                              form.resource
+                                ? form.resource
+                                : subscription.convertTo
+                            )
+                          );
+
                           records.push(
                             new Record({
-                              incrementalId: await getNextId(
-                                String(
-                                  form.resource
-                                    ? form.resource
-                                    : subscription.convertTo
-                                )
-                              ),
+                              incrementalId,
+                              incID,
                               form: subscription.convertTo,
                               createdAt: new Date(),
                               modifiedAt: new Date(),
@@ -102,17 +105,19 @@ export function createAndConsumeQueue(routingKey: string): void {
                           );
                         }
                       } else {
+                        const { incrementalId, incID } = await getNextId(
+                          String(
+                            form.resource
+                              ? form.resource
+                              : subscription.convertTo
+                          )
+                        );
                         records.push(
                           // @AntoineRelief do you know what's going on here?
                           // not sure who the createdBy should be
                           new Record({
-                            incrementalId: await getNextId(
-                              String(
-                                form.resource
-                                  ? form.resource
-                                  : subscription.convertTo
-                              )
-                            ),
+                            incrementalId,
+                            incID,
                             form: subscription.convertTo,
                             createdAt: new Date(),
                             modifiedAt: new Date(),

@@ -168,11 +168,13 @@ async function insertRecords(
     }
     // Create records one by one so the incrementalId works correctly
     for (const dataSet of newRecordsData) {
+      const { incrementalId, incID } = await getNextId(
+        String(form.resource ? form.resource : form.id)
+      );
       newRecords.push(
         new Record({
-          incrementalId: await getNextId(
-            String(form.resource ? form.resource : form.id)
-          ),
+          incrementalId,
+          incID,
           form: form.id,
           createdAt: new Date(),
           modifiedAt: new Date(),
