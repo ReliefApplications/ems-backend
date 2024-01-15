@@ -50,7 +50,7 @@ export const getAdmin0Polygons = async () => {
   if (!cacheData) {
     const token = await getToken();
     admin0s = await axios({
-      url: 'https://ems-safe-dev.who.int/csapi/graphql',
+      url: 'https://ems-safe-dev.who.int/csapi/api/graphql/',
       method: 'post',
       headers: {
         Authorization: `Bearer ${token}`,
