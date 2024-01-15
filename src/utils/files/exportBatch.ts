@@ -286,7 +286,11 @@ const writeRowsXlsx = (
 const buildPipeline = (
   columns: any,
   params: ExportBatchParams,
-  idsList?: mongoose.Types.ObjectId[]
+  options?: {
+    meta: any;
+    ids?: mongoose.Types.ObjectId[];
+    id?: mongoose.Types.ObjectId;
+  }
 ) => {
   let pipeline: any;
 
@@ -308,10 +312,41 @@ const buildPipeline = (
         }
         return acc;
       }, {}),
-      ...(idsList ? { resource: 1 } : {}), //add the resource for subcolumns
+      ...(options ? { resource: 1 } : {}), //add the resource for subcolumns
     },
   };
-  if (!idsList) {
+  if (options?.ids) {
+    console.log(options.meta);
+    pipeline = [
+      {
+        $match: {
+          $and: [
+            {
+              resource: options.meta.field.resource,
+            },
+            {
+              _id: {
+                $in: options.ids,
+              },
+            },
+            { archived: { $ne: true } },
+          ],
+        },
+      },
+      projectStep,
+    ];
+  } else if (options?.id) {
+    pipeline = [
+      {
+        $match: {
+          resource: options.meta.resource,
+          [`data.${options.meta.relatedName}`]: options.id,
+          archived: { $ne: true },
+        },
+      },
+      projectStep,
+    ];
+  } else {
     //idsList is used when getting subcolumns
     pipeline = [
       {
@@ -329,22 +364,6 @@ const buildPipeline = (
           [params.sortField]: params.sortOrder === 'asc' ? 1 : -1,
         },
       },
-    ];
-  } else {
-    pipeline = [
-      {
-        $match: {
-          $and: [
-            {
-              _id: {
-                $in: idsList,
-              },
-            },
-            { archived: { $ne: true } },
-          ],
-        },
-      },
-      projectStep,
     ];
   }
   columns
@@ -419,7 +438,7 @@ const getReferenceData = async (
               (isArray(record[col])
                 ? record[col][0].resource
                 : record[col].resource)
-          )[col];
+          )?.[col];
           if (firstRecordWithResource) {
             const nestedResourceId = isArray(firstRecordWithResource)
               ? firstRecordWithResource[0].resource
@@ -561,9 +580,8 @@ const getReferenceData = async (
     };
 
     for (const record of records) {
-      const resourcesField = refDataPath.split('.')[0];
-      if (isArray(record[resourcesField])) {
-        const resourcesSubfield = refDataPath.split('.')[1];
+      const [resourcesField, resourcesSubfield] = refDataPath.split('.');
+      if (isArray(record[resourcesField]) && resourcesSubfield) {
         each(record[resourcesField], (value) => {
           const recordValue = get(value, resourcesSubfield);
           set(value, resourcesSubfield, getReferenceDataValue(recordValue));
@@ -582,9 +600,11 @@ const getReferenceData = async (
  * @param columns columns to extract the resource and resources columns
  * @returns a list of resource and resources columns
  */
-const getResourceAndResourcesQuestions = (columns: any) => {
+const getResourceAndResourcesQuestions = async (columns: any) => {
   /** Resources columns */
-  const resourceResourcesColumns = columns.filter((col) => col.subColumns);
+  const resourceResourcesColumns = columns.filter(
+    (col) => col.subColumns && col.meta
+  );
   /** Add resource columns */
   const resourceColumns = new Set(
     columns
@@ -601,6 +621,7 @@ const getResourceAndResourcesQuestions = (columns: any) => {
       )
       .map((col) => col.field.split('.')[0])
   );
+  console.log(resourceColumns);
   resourceColumns.forEach((resourceQuestion) => {
     const resourceSubColumns = columns.filter(
       (col) => col.field.split('.')[0] === resourceQuestion
@@ -616,6 +637,33 @@ const getResourceAndResourcesQuestions = (columns: any) => {
       }),
     });
   });
+  for (const column of columns) {
+    if (column.type === 'resources' && !column.meta) {
+      console.log('this is a related resource, not directly in the form!');
+      const relatedResource = await Resource.findOne(
+        {
+          fields: {
+            $elemMatch: {
+              resource: '608a7ab942eaf0001edb5d63',
+              relatedName: column.name,
+            },
+          },
+        },
+        {
+          'fields.$': 1,
+        }
+      );
+      if (relatedResource) {
+        resourceResourcesColumns.push({
+          ...column,
+          meta: relatedResource.fields[0],
+        });
+      }
+      console.log('Candidates aaaare');
+      console.log(relatedResource);
+    }
+  }
+  console.log(resourceResourcesColumns);
   return resourceResourcesColumns;
 };
 
@@ -638,13 +686,17 @@ const getRecords = async (
    * - links to other resources, when resource is used as field in related resource ( value not directly in data field )
    */
   console.time('export');
+  // const resource = await Resource.findById(params.resource).select('fields');
+  console.log(columns);
   const records = await Record.aggregate<Record>(
     buildPipeline(columns, params)
   );
   console.log('Records fetched');
   console.timeLog('export');
 
-  const resourceResourcesColumns = getResourceAndResourcesQuestions(columns);
+  const resourceResourcesColumns = await getResourceAndResourcesQuestions(
+    columns
+  );
   let choicesByUrlColumns = columns.filter(
     (col) => col.meta?.field?.choicesByUrl
   );
@@ -658,25 +710,40 @@ const getRecords = async (
     console.log('Fetching column: ', column.field);
     const relatedResourcePromises: Promise<any>[] = [];
     for (const record of records) {
-      const columnValue = get(record, column.field) || null;
-      if (columnValue) {
+      console.log(column);
+      // Question is in the resource
+      if (column.name === column.meta.name) {
+        const columnValue = get(record, column.field) || null;
+        if (columnValue) {
+          relatedResourcePromises.push(
+            Record.aggregate(
+              buildPipeline(column.subColumns, params, {
+                meta: column.meta,
+                ids: Array.from(new Set(columnValue)).map(
+                  (id: any) => new mongoose.Types.ObjectId(id)
+                ),
+              })
+            ).then((relatedRecords) => {
+              if (relatedRecords.length > 0) {
+                if (isArray(columnValue)) {
+                  set(record, column.field, relatedRecords);
+                } else {
+                  set(record, column.field, relatedRecords[0]);
+                }
+              }
+            })
+          );
+        }
+      } else {
+        // Question definition comes from another resource
         relatedResourcePromises.push(
           Record.aggregate(
-            buildPipeline(
-              column.subColumns,
-              params,
-              Array.from(new Set(columnValue)).map(
-                (id: any) => new mongoose.Types.ObjectId(id)
-              )
-            )
+            buildPipeline(column.subColumns, params, {
+              meta: column.meta,
+              id: record._id,
+            })
           ).then((relatedRecords) => {
-            if (relatedRecords.length > 0) {
-              if (isArray(columnValue)) {
-                set(record, column.field, relatedRecords);
-              } else {
-                set(record, column.field, relatedRecords[0]);
-              }
-            }
+            set(record, column.field, relatedRecords);
           })
         );
       }
@@ -710,8 +777,8 @@ const getRecords = async (
     })
   );
   console.log('HERE');
-  await getReferenceData(referenceDataColumns, params.resource, req, records);
   await Promise.all(promises);
+  await getReferenceData(referenceDataColumns, params.resource, req, records);
   return records;
 };
 
