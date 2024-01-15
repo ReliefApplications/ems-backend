@@ -17,6 +17,7 @@ import { setupCustomListeners } from '@utils/alimentaide/setupCustomListeners';
 export interface Record extends AccessibleFieldsDocument {
   kind: 'Record';
   incrementalId: string;
+  incID: number;
   form: any;
   _form: Form;
   resource: any;
@@ -42,6 +43,10 @@ const recordSchema = new Schema<Record>(
   {
     incrementalId: {
       type: String,
+      required: true,
+    },
+    incID: {
+      type: Number,
       required: true,
     },
     form: {

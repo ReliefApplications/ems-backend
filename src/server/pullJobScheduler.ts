@@ -424,10 +424,12 @@ export const insertRecords = async (
       // If everything is fine, push it in the array for saving
       if (!isDuplicate) {
         transformRecord(mappedElement, form.fields);
+        const { incrementalId, incID } = await getNextId(
+          String(form.resource ? form.resource : pullJob.convertTo)
+        );
         let record = new RecordModel({
-          incrementalId: await getNextId(
-            String(form.resource ? form.resource : pullJob.convertTo)
-          ),
+          incrementalId,
+          incID,
           form: pullJob.convertTo,
           data: mappedElement,
           resource: form.resource ? form.resource : null,
