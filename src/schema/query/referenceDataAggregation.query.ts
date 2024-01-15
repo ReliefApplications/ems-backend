@@ -358,8 +358,9 @@ export default {
           if (args.mapping) {
             return items.map((item) => {
               return {
-                category: item[args.mapping.category],
-                field: item[args.mapping.field],
+                category: get(item, args.mapping.category),
+                field: get(item, args.mapping.field),
+                ...(args.mapping.series && { series: get(item, args.mapping.series) })
               };
             });
           }
