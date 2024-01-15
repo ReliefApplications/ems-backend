@@ -360,7 +360,9 @@ export default {
               return {
                 category: get(item, args.mapping.category),
                 field: get(item, args.mapping.field),
-                ...(args.mapping.series && { series: get(item, args.mapping.series) })
+                ...(args.mapping.series && {
+                  series: get(item, args.mapping.series),
+                }),
               };
             });
           }
