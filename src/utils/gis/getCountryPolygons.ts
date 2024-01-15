@@ -50,7 +50,7 @@ export const getAdmin0Polygons = async () => {
   if (!cacheData) {
     const token = await getToken();
     admin0s = await axios({
-      url: 'https://portal-test.who.int/ems-core-api-dev/api/graphql',
+      url: 'https://ems-safe-dev.who.int/csapi/graphql',
       method: 'post',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -64,6 +64,9 @@ export const getAdmin0Polygons = async () => {
               id
               iso3code
               iso2code
+              name
+              centerlatitude
+              centerlongitude
               polygons
             }
           }
