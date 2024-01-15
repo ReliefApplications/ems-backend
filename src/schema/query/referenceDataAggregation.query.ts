@@ -47,7 +47,9 @@ const applyFilters = (data: any, filter: any): boolean => {
   if (filter.logic) {
     switch (filter.logic) {
       case 'or':
-        return filter.filters.some((f: any) => applyFilters(data, f));
+        return filter.filters.length
+          ? filter.filters.some((f: any) => applyFilters(data, f))
+          : true;
       case 'and':
         return filter.filters.every((f: any) => applyFilters(data, f));
       default:
