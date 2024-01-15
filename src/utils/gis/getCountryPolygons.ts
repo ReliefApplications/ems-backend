@@ -77,6 +77,7 @@ export const getAdmin0Polygons = async () => {
         const mapping = [];
         for (const country of data.data.countrys) {
           if (country.polygons) {
+            console.log(country.iso2code);
             mapping.push({
               ...country,
               polygons: simplify(parse(country.polygons), {
@@ -95,7 +96,8 @@ export const getAdmin0Polygons = async () => {
         return mapping;
       })
       .catch((err) => {
-        logger.error(err.message);
+        console.log('error is there');
+        logger.error(`Failed to fetch admin0s: ${err.message}`);
         return [];
       });
   } else {
