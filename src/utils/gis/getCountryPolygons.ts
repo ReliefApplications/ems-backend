@@ -77,15 +77,20 @@ export const getAdmin0Polygons = async () => {
         const mapping = [];
         for (const country of data.data.countrys) {
           if (country.polygons) {
-            console.log(country.iso2code);
-            mapping.push({
-              ...country,
-              polygons: simplify(parse(country.polygons), {
-                tolerance: 0.1,
-                highQuality: true,
-                mutate: true,
-              }),
-            });
+            try {
+              mapping.push({
+                ...country,
+                polygons: simplify(parse(country.polygons), {
+                  tolerance: 0.1,
+                  highQuality: true,
+                  mutate: true,
+                }),
+              });
+            } catch (err) {
+              logger.error(
+                `Failed to fetch admin0s for country ${country.iso3code}: ${err.message}`
+              );
+            }
           }
         }
         if (client) {
@@ -96,7 +101,6 @@ export const getAdmin0Polygons = async () => {
         return mapping;
       })
       .catch((err) => {
-        console.log('error is there');
         logger.error(`Failed to fetch admin0s: ${err.message}`);
         return [];
       });
