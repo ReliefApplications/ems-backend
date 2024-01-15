@@ -47,7 +47,9 @@ const applyFilters = (data: any, filter: any): boolean => {
   if (filter.logic) {
     switch (filter.logic) {
       case 'or':
-        return filter.filters.some((f: any) => applyFilters(data, f));
+        return filter.filters.length
+          ? filter.filters.some((f: any) => applyFilters(data, f))
+          : true;
       case 'and':
         return filter.filters.every((f: any) => applyFilters(data, f));
       default:
@@ -84,9 +86,27 @@ const applyFilters = (data: any, filter: any): boolean => {
       case 'endswith':
         return !isNil(value) && value.endsWith(filter.value);
       case 'contains':
-        return !isNil(value) && value.includes(filter.value);
+        if (typeof filter.value === 'string') {
+          const regex = new RegExp(filter.value, 'i');
+          if (typeof value === 'string') {
+            return !isNil(value) && regex.test(value);
+          } else {
+            return !isNil(value) && value.includes(filter.value);
+          }
+        } else {
+          return !isNil(value) && value.includes(filter.value);
+        }
       case 'doesnotcontain':
-        return isNil(value) || !value.includes(filter.value);
+        if (typeof filter.value === 'string') {
+          const regex = new RegExp(filter.value, 'i');
+          if (typeof value === 'string') {
+            return isNil(value) || !regex.test(value);
+          } else {
+            return isNil(value) || !value.includes(filter.value);
+          }
+        } else {
+          return isNil(value) || !value.includes(filter.value);
+        }
       default:
         // For any unknown operator, we return false
         return false;
