@@ -226,6 +226,7 @@ router.post('/resource/insert', async (req: any, res) => {
       const insertRecordsMessage = await insertRecordsPulljob(
         req.body.records,
         req.body.parameters,
+        true,
         true
       );
       return res.status(200).send(insertRecordsMessage);

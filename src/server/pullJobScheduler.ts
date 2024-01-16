@@ -175,7 +175,7 @@ const fetchRecordsServiceToService = (
             .then(({ data: data2 }) => {
               if (data2 && data2.result) {
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                insertRecords(data2.result, pullJob, true);
+                insertRecords(data2.result, pullJob, true, false);
               }
             })
             .catch((err) => {
@@ -201,7 +201,7 @@ const fetchRecordsServiceToService = (
         const records = pullJob.path ? get(data, pullJob.path) : data;
         if (records) {
           // eslint-disable-next-line @typescript-eslint/no-use-before-define
-          insertRecords(records, pullJob);
+          insertRecords(records, pullJob, false, false);
         }
       })
       .catch((err) => {
@@ -226,7 +226,7 @@ const fetchRecordsPublic = (pullJob: PullJob): void => {
       const records = pullJob.path ? get(data, pullJob.path) : data;
       if (records) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        insertRecords(records, pullJob);
+        insertRecords(records, pullJob, false, false);
       }
     })
     .catch((err) => {
