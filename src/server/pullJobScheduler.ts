@@ -11,7 +11,6 @@ import {
   Role,
 } from '@models';
 import pubsub from './pubsub';
-import { CronJob } from 'cron';
 // import * as CryptoJS from 'crypto-js';
 import mongoose from 'mongoose';
 import { getNextId, transformRecord } from '@utils/form';
@@ -96,8 +95,8 @@ const getUserRoleFiltersFromApp = (appName: string): any => {
  *
  * @param data array of data fetched from API
  * @param pullJob pull job configuration
- * @param fromRoute tells if the insertion is done from pull-job or route
  * @param isEIOS is EIOS pulljob or not
+ * @param fromRoute tells if the insertion is done from pull-job or route
  */
 export const insertRecords = async (
   data: any[],
