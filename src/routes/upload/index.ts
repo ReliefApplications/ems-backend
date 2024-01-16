@@ -17,7 +17,6 @@ import i18next from 'i18next';
 import get from 'lodash/get';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
-import jwtDecode from 'jwt-decode';
 
 /** File size limit, in bytes  */
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
