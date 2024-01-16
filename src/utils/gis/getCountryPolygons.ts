@@ -1,9 +1,9 @@
+import redis from '../../server/redis';
 import { logger } from '@services/logger.service';
 import axios from 'axios';
 import config from 'config';
-import { set } from 'lodash';
-import { RedisClientType, createClient } from 'redis';
 import { parse } from 'wellknown';
+import { simplify } from '@turf/turf';
 
 /**
  * Get token for common services API.
@@ -37,41 +37,20 @@ export const getToken = async () => {
   ).data.access_token;
 };
 
-// todo: automatically from amdin0
-/** Admin identifiers */
-type AdminIdentifier = 'admin0.iso2code' | 'admin0.iso3code' | 'admin0.id';
-
-/** Admin 0 available identifiers */
-type Admin0Identifier = 'iso2code' | 'iso3code' | 'id';
-
 /**
  * Get country polygons from common services.
  *
- * @param identifier admin 0 identifier
  * @returns mapping of polygons
  */
-export const getAdmin0Polygons = async (
-  identifier: Admin0Identifier = 'iso3code'
-) => {
+export const getAdmin0Polygons = async () => {
   const cacheKey = 'admin0:polygons';
-  let client: RedisClientType;
-  if (config.get('redis.url')) {
-    client = createClient({
-      url: config.get('redis.url'),
-      password: config.get('redis.password'),
-    });
-    client.on('error', (error) => {
-      logger.error(`REDIS: ${error}`);
-    });
-    await client.connect();
-  }
+  const client = await redis();
   const cacheData = client ? await client.get(cacheKey) : null;
   let admin0s: any[] = [];
-  const mapping = {};
   if (!cacheData) {
     const token = await getToken();
     admin0s = await axios({
-      url: 'https://portal-test.who.int/ems-core-api-dev/api/graphql',
+      url: 'https://ems-safe-dev.who.int/csapi/api/graphql/',
       method: 'post',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -85,6 +64,9 @@ export const getAdmin0Polygons = async (
               id
               iso3code
               iso2code
+              name
+              centerlatitude
+              centerlongitude
               polygons
             }
           }
@@ -92,42 +74,38 @@ export const getAdmin0Polygons = async (
       },
     })
       .then(({ data }) => {
+        const mapping = [];
+        for (const country of data.data.countrys) {
+          if (country.polygons) {
+            try {
+              mapping.push({
+                ...country,
+                polygons: simplify(parse(country.polygons), {
+                  tolerance: 0.1,
+                  highQuality: true,
+                  mutate: true,
+                }),
+              });
+            } catch (err) {
+              logger.error(
+                `Failed to fetch admin0s for country ${country.iso3code}: ${err.message}`
+              );
+            }
+          }
+        }
         if (client) {
-          client.set(cacheKey, JSON.stringify(data.data.countrys), {
+          client.set(cacheKey, JSON.stringify(mapping), {
             EX: 60 * 60 * 1, // set a cache of one hour
           });
         }
-        return data.data.countrys;
+        return mapping;
       })
       .catch((err) => {
-        logger.error(err.message);
+        logger.error(`Failed to fetch admin0s: ${err.message}`);
         return [];
       });
   } else {
     admin0s = JSON.parse(cacheData);
   }
-  for (const country of admin0s) {
-    if (country.polygons && country[identifier]) {
-      set(mapping, country[identifier].toLowerCase(), parse(country.polygons));
-    }
-  }
-  return mapping;
-};
-
-/**
- * Get polygons from common services.
- *
- * @param identifier admin 0 identifier
- * @returns mapping of polygons.
- */
-export const getPolygons = async (
-  identifier: AdminIdentifier = 'admin0.iso3code'
-) => {
-  if (identifier.startsWith('admin0.')) {
-    const countryPolygons = await getAdmin0Polygons(
-      identifier.replace('admin0.', '') as Admin0Identifier
-    );
-    return countryPolygons;
-  }
-  return {};
+  return admin0s;
 };
