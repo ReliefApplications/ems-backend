@@ -14,7 +14,6 @@ import {
   Channel,
   Application,
   PositionAttributeCategory,
-  PullJob,
 } from '@models';
 import mongoose from 'mongoose';
 import {
@@ -23,7 +22,6 @@ import {
   RoleType,
   AccessType,
   PositionAttributeCategoryType,
-  PullJobType,
   TemplateType,
   DistributionListType,
   encodeCursor,
@@ -448,17 +446,6 @@ export const ApplicationType = new GraphQLObjectType({
       },
     },
     subscriptions: { type: new GraphQLList(SubscriptionType) },
-    pullJobs: {
-      type: new GraphQLList(PullJobType),
-      async resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
-        const pullJobs = PullJob.find({
-          ...accessibleBy(ability, 'read').PullJob,
-          _id: { $in: parent.pullJobs },
-        });
-        return pullJobs;
-      },
-    },
     permissions: {
       type: AccessType,
       resolve(parent, args, context) {

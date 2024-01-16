@@ -27,7 +27,6 @@ import {
   User,
   Version,
   Workflow,
-  PullJob,
   ReferenceData,
   Group,
   Template,
@@ -59,7 +58,6 @@ type Models =
   | Notification
   | Page
   | Permission
-  | PullJob
   | Record
   | ReferenceData
   | Resource
@@ -318,12 +316,12 @@ export default function defineUserAbility(user: User | Client): AppAbility {
   });
 
   /* ===
-    Creation / Access / Edition / Deletion of API configurations, PullJobs and ReferenceData
+    Creation / Access / Edition / Deletion of API configurations and ReferenceData
   === */
   if (userGlobalPermissions.includes(permissions.canManageApiConfigurations)) {
     can(
       ['create', 'read', 'update', 'delete'],
-      ['ApiConfiguration', 'PullJob', 'ReferenceData']
+      ['ApiConfiguration', 'ReferenceData']
     );
   } else {
     // can('read', 'ApiConfiguration', filters('canSee', user));

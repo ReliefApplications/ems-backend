@@ -9,7 +9,6 @@ export * from './page.type';
 export * from './permission.type';
 export * from './positionAttribute.type';
 export * from './positionAttributeCategory.type';
-export * from './pullJob.type';
 export * from './record.type';
 export * from './referenceData.type';
 export * from './resource.type';
