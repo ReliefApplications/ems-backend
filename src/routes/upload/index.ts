@@ -218,22 +218,19 @@ router.post('/resource/records/:id', async (req: any, res) => {
  */
 router.post('/resource/insert', async (req: any, res) => {
   try {
-    const authToken = req.rawHeaders
-      .filter((elt) => elt.includes('Bearer'))[0]
-      .split(' ')[1];
+    const authToken = req.headers.authorization.split(' ')[1];
     const decodedToken = jwtDecode(authToken) as any;
+
     // Block if connected with user to Service
     if (!decodedToken.email && !decodedToken.name) {
-      // Insert records if authorized
       const insertRecordsMessage = await insertRecordsPulljob(
         req.body.records,
         req.body.parameters,
         true
       );
       return res.status(200).send(insertRecordsMessage);
-    } else {
-      return res.status(500).send(req.t('common.errors.internalServerError'));
     }
+    return res.status(400).send(req.t('common.errors.permissionNotGranted'));
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
     return res.status(500).send(req.t('common.errors.internalServerError'));
