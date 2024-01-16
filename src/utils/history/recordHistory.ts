@@ -596,7 +596,7 @@ export class RecordHistory {
               change.new = new Date(change.new).toLocaleDateString();
             break;
           case 'datetime':
-          case 'datetimelocal':
+          case 'datetime-local':
             if (change.old !== undefined)
               change.old = new Date(change.old).toLocaleString();
             if (change.new !== undefined)
