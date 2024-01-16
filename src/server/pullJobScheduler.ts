@@ -18,9 +18,6 @@ import { getNextId, transformRecord } from '@utils/form';
 import { logger } from '../services/logger.service';
 import { ownershipMappingJSON } from './EIOSOwnernshipMapping';
 
-/** A map with the task ids as keys and the scheduled tasks as values */
-const taskMap: Record<string, CronJob> = {};
-
 /** Record's default fields */
 const DEFAULT_FIELDS = ['createdBy'];
 
