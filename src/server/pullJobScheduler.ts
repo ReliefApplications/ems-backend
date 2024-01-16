@@ -450,11 +450,11 @@ export const insertRecords = async (
     }
     let insertReportMessage = '';
     try {
-      await RecordModel.insertMany(records);
+      const insertedRecords = await RecordModel.insertMany(records);
       if (fromRoute) {
-        insertReportMessage = `${records.length} new records of form "${form.name}" created from records insertion route`;
+        insertReportMessage = `${insertedRecords.length} new records of form "${form.name}" created from records insertion route`;
       } else {
-        insertReportMessage = `${records.length} new records of form "${form.name}" created from pulljob "${pullJob.name}"`;
+        insertReportMessage = `${insertedRecords.length} new records of form "${form.name}" created from pulljob "${pullJob.name}"`;
       }
       logger.info(insertReportMessage);
       if (pullJob.channel && records.length > 0) {
