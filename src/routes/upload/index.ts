@@ -17,6 +17,8 @@ import i18next from 'i18next';
 import get from 'lodash/get';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { insertRecords as insertRecordsPulljob } from '@server/pullJobScheduler';
+import jwtDecode from 'jwt-decode';
 
 /** File size limit, in bytes  */
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
@@ -205,6 +207,31 @@ router.post('/resource/records/:id', async (req: any, res) => {
 
     // Insert records if authorized
     return await insertRecords(res, file, form, resource.fields, req.context);
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    return res.status(500).send(req.t('common.errors.internalServerError'));
+  }
+});
+
+/**
+ * Upload a list of records for a resource in json format
+ */
+router.post('/resource/insert', async (req: any, res) => {
+  try {
+    const authToken = req.headers.authorization.split(' ')[1];
+    const decodedToken = jwtDecode(authToken) as any;
+
+    // Block if connected with user to Service
+    if (!decodedToken.email && !decodedToken.name) {
+      const insertRecordsMessage = await insertRecordsPulljob(
+        req.body.records,
+        req.body.parameters,
+        true,
+        true
+      );
+      return res.status(200).send(insertRecordsMessage);
+    }
+    return res.status(400).send(req.t('common.errors.permissionNotGranted'));
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
     return res.status(500).send(req.t('common.errors.internalServerError'));
