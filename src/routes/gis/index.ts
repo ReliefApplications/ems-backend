@@ -316,7 +316,7 @@ router.get('/feature', async (req, res) => {
     adminField,
   };
   try {
-    // todo(gis): also implement reference data
+    // Fetch resource to populate layer
     if (get(req, 'query.resource')) {
       let id: string;
       if (get(req, 'query.aggregation')) {
@@ -393,6 +393,7 @@ router.get('/feature', async (req, res) => {
         throw new Error(err);
       });
     } else if (get(req, 'query.refData')) {
+      // Else, fetch reference data to populate layer
       const referenceData = await ReferenceData.findById(
         new mongoose.Types.ObjectId(get(req, 'query.refData') as string)
       );
@@ -433,7 +434,6 @@ router.get('/feature', async (req, res) => {
             mapping
           );
         } else {
-          // todo: populate
           const apiConfiguration = await ApiConfiguration.findById(
             referenceData.apiConfiguration,
             'name endpoint graphQLEndpoint'
