@@ -7,9 +7,10 @@ import { logger } from '@services/logger.service';
 import config from 'config';
 import * as CryptoJS from 'crypto-js';
 import axios from 'axios';
-import { createClient, RedisClientType } from 'redis';
 import { authType } from '@const/enumTypes';
 import jwtDecode from 'jwt-decode';
+import redis from '../../server/redis';
+import { RedisClientType } from 'redis';
 
 /** Express router */
 const router = express.Router();
@@ -36,13 +37,8 @@ const proxyAPIRequest = async (
 ) => {
   try {
     let client: RedisClientType;
-    if (config.get('redis.url') && lowerCase(req.method) === 'get' && !ping) {
-      client = createClient({
-        url: config.get('redis.url'),
-        password: config.get('redis.password'),
-      });
-      client.on('error', (error) => logger.error(`REDIS: ${error}`));
-      await client.connect();
+    if (lowerCase(req.method) === 'get' && !ping) {
+      client = await redis();
     }
     // Generate a hash, taking into account the request body when storing data
     const bodyHash = CryptoJS.SHA256(JSON.stringify(req.body)).toString(
