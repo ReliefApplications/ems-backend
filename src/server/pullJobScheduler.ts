@@ -297,8 +297,8 @@ const getUserRoleFiltersFromApp = (appName: string): any => {
  *
  * @param data array of data fetched from API
  * @param pullJob pull job configuration
- * @param fromRoute tells if the insertion is done from pull-job or route
  * @param isEIOS is EIOS pulljob or not
+ * @param fromRoute tells if the insertion is done from pull-job or route
  */
 export const insertRecords = async (
   data: any[],
