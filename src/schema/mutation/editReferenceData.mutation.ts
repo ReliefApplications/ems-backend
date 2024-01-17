@@ -61,7 +61,7 @@ export default {
       type: new GraphQLInputObjectType({
         name: 'PageInfoInput',
         fields: {
-          totalCountField: { type: new GraphQLNonNull(GraphQLString) },
+          totalCountField: { type: GraphQLString },
           strategy: { type: new GraphQLNonNull(GraphQLString) },
           pageSizeVar: { type: GraphQLString },
           cursorVar: { type: GraphQLString },
