@@ -346,8 +346,10 @@ export default {
 
           // Add pages to the map
           baseApplication.pages.forEach((p, index) => {
-            idsToReplace[baseApplication.pages[index].toString()] =
-              application.pages[index].toString();
+            if (baseApplication.pages[index] && application.pages[index]) {
+              idsToReplace[baseApplication.pages[index].toString()] =
+                application.pages[index].toString();
+            }
           });
 
           // Populate pages to get the newly created dashboards

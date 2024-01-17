@@ -1,3 +1,17 @@
+# [2.5.0](https://github.com/ReliefApplications/ems-backend/compare/v2.4.4...v2.5.0) (2024-01-10)
+
+
+### Features
+
+* use cursor pagination for users ([#925](https://github.com/ReliefApplications/ems-backend/issues/925)) ([ac8b343](https://github.com/ReliefApplications/ems-backend/commit/ac8b34347a868c377fcaaec7172bde8a4f1f23ae))
+
+## [2.4.4](https://github.com/ReliefApplications/ems-backend/compare/v2.4.3...v2.4.4) (2024-01-09)
+
+
+### Bug Fixes
+
+* dashboard filter would not correctly save in some cases ([4f67ce2](https://github.com/ReliefApplications/ems-backend/commit/4f67ce29019b0dd862d27897ed16c0764aca171b))
+
 ## [2.4.3](https://github.com/ReliefApplications/ems-backend/compare/v2.4.2...v2.4.3) (2024-01-08)
 
 
