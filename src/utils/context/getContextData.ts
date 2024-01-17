@@ -1,9 +1,18 @@
 import { getAccessibleFields } from '@utils/form';
 import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
 import { Types } from 'mongoose';
-import { Record, Resource } from '@models';
+import {
+  ApiConfiguration,
+  Page,
+  Record,
+  ReferenceData,
+  Resource,
+} from '@models';
 import { accessibleBy } from '@casl/mongoose';
 import get from 'lodash/get';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
+import { Context } from '@server/apollo/context';
+import { CustomAPI } from '@server/apollo/dataSources';
 
 /** Maximum recursion depth for getting the context data */
 const MAX_DEPTH = 10;
@@ -17,7 +26,7 @@ const MAX_DEPTH = 10;
  * @param depth Current depth of the recursion
  * @returns Context data
  */
-export const getContextData = async (
+export const getContextDataForRecord = async (
   resourceID: Types.ObjectId | Resource,
   recordID: Types.ObjectId | Record,
   context: any,
@@ -51,7 +60,7 @@ export const getContextData = async (
       if (!refRecord) continue;
 
       // if related record is found, get its data
-      const refRecordData = await getContextData(
+      const refRecordData = await getContextDataForRecord(
         field.resource,
         refRecord,
         context,
@@ -108,4 +117,47 @@ export const getContextData = async (
   }
 
   return data;
+};
+
+/**
+ * Gets the context data for either a record or an element id
+ *
+ * @param recordId id of the record to get context from
+ * @param elementId id of the element to get context from
+ * @param page page relative to the dashboard
+ * @param context context for the user
+ * @returns context data
+ */
+export const getContextData = async (
+  recordId: Record | Types.ObjectId | null,
+  elementId: any,
+  page: Page,
+  context: Context
+) => {
+  const ctx = page.context;
+  if (recordId) {
+    const resource = 'resource' in ctx ? ctx.resource : null;
+    try {
+      context.user.ability = await extendAbilityForRecords(context.user);
+      const data = await getContextDataForRecord(resource, recordId, context);
+      return data;
+    } catch (err) {
+      return null;
+    }
+  } else if (elementId) {
+    const refData = 'refData' in ctx ? ctx.refData : null;
+    // get refData from page
+    const referenceData = await ReferenceData.findById(refData);
+    const apiConfiguration = await ApiConfiguration.findById(
+      referenceData.apiConfiguration
+    );
+    const items = apiConfiguration
+      ? await (
+          context.dataSources[apiConfiguration.name] as CustomAPI
+        ).getReferenceDataItems(referenceData, apiConfiguration)
+      : referenceData.data;
+    // Use '==' for number / string comparison
+    return items.find((x) => get(x, referenceData.valueField) == elementId);
+  }
+  return null;
 };
