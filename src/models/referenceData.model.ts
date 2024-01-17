@@ -76,7 +76,7 @@ interface ReferenceDataDocument extends Document {
   //  page: The client will send the page number
   pageInfo?: {
     // JSON path that when queried to the API response will return the total number of items
-    totalCountField: string;
+    totalCountField?: string;
     // Name of the query variable that corresponds to the page size
     pageSizeVar?: string;
   } & (
