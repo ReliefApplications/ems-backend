@@ -1,101 +1,15 @@
 import { GraphQLNonNull, GraphQLError, GraphQLID } from 'graphql';
-import {
-  ApiConfiguration,
-  Dashboard,
-  Page,
-  PageContextT,
-  Record,
-  ReferenceData,
-} from '@models';
+import { Dashboard, Page } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { DashboardType } from '../types';
 import { Types } from 'mongoose';
-import { CustomAPI } from '@server/apollo/dataSources';
 import GraphQLJSON from 'graphql-type-json';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
-import { get, isNil } from 'lodash';
-
-/**
- * Get the name of the new dashboard, based on the context.
- *
- * @param dashboard The dashboard being duplicated
- * @param context The context of the dashboard
- * @param id The id of the record or element
- * @param dataSources The data sources
- * @returns The name of the new dashboard
- */
-const getNewDashboardName = async (
-  dashboard: Dashboard,
-  context: Page['context'],
-  id: string | Types.ObjectId,
-  dataSources: any
-) => {
-  if ('refData' in context && context.refData) {
-    // Get items from reference data
-    const referenceData = await ReferenceData.findById(context.refData);
-    const apiConfiguration = await ApiConfiguration.findById(
-      referenceData.apiConfiguration
-    );
-    const data = apiConfiguration
-      ? await (
-          dataSources[apiConfiguration.name] as CustomAPI
-        ).getReferenceDataItems(referenceData, apiConfiguration)
-      : referenceData.data;
-
-    const item = data.find((x) => get(x, referenceData.valueField) == id);
-    return `${item?.[context.displayField]}`;
-  } else if ('resource' in context && context.resource) {
-    const record = await Record.findById(id);
-    return `${record.data[context.displayField]}`;
-  }
-
-  // Default return, should never happen
-  return dashboard.name;
-};
-
-/**
- * Check if context is duplicated in the page, to avoid creating multiple similar templates.
- *
- * @param context page context
- * @param contentWithContext list of contextual templates
- * @param entry new entry
- * @param entry.element new element ( if ref data )
- * @param entry.record new record ( if resource )
- * @returns is entry duplicated or not
- */
-const hasDuplicate = (
-  context: PageContextT,
-  contentWithContext: Page['contentWithContext'],
-  entry: {
-    element?: any;
-    record?: string | Types.ObjectId;
-  }
-) => {
-  const uniqueEntries = new Set();
-  if (!isNil(get(context, 'resource'))) {
-    for (const item of contentWithContext) {
-      if (get(item, 'record')) {
-        uniqueEntries.add((item as any).record.toString());
-      }
-    }
-    if (uniqueEntries.has(entry.record.toString())) {
-      return true;
-    }
-  } else {
-    for (const item of contentWithContext) {
-      if (get(item, 'element')) {
-        uniqueEntries.add((item as any).element.toString());
-      }
-    }
-    if (uniqueEntries.has(entry.element.toString())) {
-      return true;
-    }
-  }
-  return false;
-};
+import { hasDuplicate } from '@utils/dashboardWithContext/hasDuplicate';
+import { getNewDashboardName } from '@utils/dashboardWithContext/getNewDashboardName';
 
 /** Arguments for the addDashboardWithContext mutation */
 type AddDashboardWithContextArgs = {
