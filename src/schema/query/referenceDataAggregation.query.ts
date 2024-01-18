@@ -255,6 +255,7 @@ type ReferenceDataAggregationArgs = {
   sortField?: string;
   sortOrder?: string;
   contextFilters?: CompositeFilterDescriptor;
+  variables?: any;
 };
 
 /**
@@ -269,6 +270,7 @@ export default {
     pipeline: { type: GraphQLJSON },
     sourceFields: { type: GraphQLJSON },
     contextFilters: { type: GraphQLJSON },
+    variables: { type: GraphQLJSON },
     mapping: { type: GraphQLJSON },
     first: { type: GraphQLInt },
     skip: { type: GraphQLInt },
@@ -318,8 +320,10 @@ export default {
             rawItems =
               (await dataSource.getReferenceDataItems(
                 referenceData,
-                referenceData.apiConfiguration as any
+                referenceData.apiConfiguration as any,
+                args.variables
               )) || [];
+            console.log(rawItems);
           }
           const transformer = new DataTransformer(
             referenceData.fields,

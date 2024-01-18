@@ -19,6 +19,14 @@ const LAST_REQUEST_KEY = '_last_request';
 const LAST_UPDATE_CODE = '{{lastUpdate}}';
 
 /**
+ *  Interface for items stored in referenceData cache.
+ */
+interface CachedItems {
+  items: any[];
+  valueField: string;
+}
+
+/**
  * CustomAPI class to create a dataSource fetching from an APIConfiguration.
  * If nothing is passed in the constructor, it will only be a standard REST DataSource.
  * Data sources are invoked, for example, when using reference data in a context involving the display of data, such as in a grid, or when fetching or downloading historical record items.
@@ -129,18 +137,21 @@ export class CustomAPI extends RESTDataSource {
    *
    * @param referenceData ReferenceData to fetch
    * @param apiConfiguration ApiConfiguration to use
+   * @param variables Graphql variables ( optional )
    * @returns referenceData objects
    */
   async getReferenceDataItems(
     referenceData: ReferenceData,
-    apiConfiguration: ApiConfiguration
+    apiConfiguration: ApiConfiguration,
+    variables: any = {},
   ): Promise<any[]> {
     switch (referenceData.type) {
       case referenceDataType.graphql: {
         // Call memoized function to save external requests.
         return this.memoizedReferenceDataGraphQLItems(
           referenceData,
-          apiConfiguration
+          apiConfiguration,
+          variables
         );
       }
       case referenceDataType.rest: {
@@ -163,11 +174,13 @@ export class CustomAPI extends RESTDataSource {
    *
    * @param referenceData ReferenceData to fetch
    * @param apiConfiguration ApiConfiguration to use
+   * @param variables Graphql variables ( optional )
    * @returns referenceData objects
    */
   private async getReferenceDataGraphQLItems(
     referenceData: ReferenceData,
-    apiConfiguration: ApiConfiguration
+    apiConfiguration: ApiConfiguration,
+    variables: any = {}
   ) {
     // Initialization
     let items: any;
@@ -175,57 +188,109 @@ export class CustomAPI extends RESTDataSource {
     const url = `${apiConfiguration.endpoint.replace(/\$/, '')}/${
       apiConfiguration.graphQLEndpoint
     }`.replace(/([^:]\/)\/+/g, '$1');
-    const cacheKey = referenceData.id || '';
+    const cacheKey = `${referenceData.id || ''}-${JSON.stringify(variables)}`;
     const cacheTimestamp = referenceDataCache.get(cacheKey + LAST_MODIFIED_KEY);
     const modifiedAt = referenceData.modifiedAt || '';
-    // Check if same request
-    if (!cacheTimestamp || cacheTimestamp < modifiedAt) {
-      // Check if referenceData has changed. In this case, refresh choices instead of using cached ones.
-      const body = { query: this.processQuery(referenceData) };
-      let data = await this.post(url, { body });
-      if (typeof data === 'string') {
-        data = JSON.parse(data);
-      }
-      items = referenceData.path
-        ? jsonpath.query(data, referenceData.path)
-        : data;
-      referenceDataCache.set(cacheKey + LAST_MODIFIED_KEY, modifiedAt);
+    const valueField = referenceData.valueField || 'id';
+    
+    const isCached =
+      cacheTimestamp &&
+      cacheTimestamp >= modifiedAt &&
+      referenceDataCache.get(cacheKey)
+
+  // If it isn't cached, fetch items and cache them
+  if (!isCached) {
+    const body = { query: this.processQuery(referenceData), variables: variables };
+    let data = await this.post(url, { body });
+    if (typeof data === 'string') {
+      data = JSON.parse(data);
+    }
+    items = referenceData.path
+      ? jsonpath.query(data, referenceData.path)
+      : data;
+    referenceDataCache.set(cacheKey, {items, valueField});
+    referenceDataCache.set(cacheKey + LAST_MODIFIED_KEY, modifiedAt);
+
+  } else {
+    // If referenceData has not changed, use cached value and check for updates for graphQL.
+    if (referenceData.type === referenceDataType.graphql) {
+      // Cache items
+      const cache = (referenceDataCache.get(cacheKey) as CachedItems).items;
+      items = cache || [];
+
+      referenceDataCache.set(cacheKey, {items, valueField});
+      referenceDataCache.set(
+        cacheKey + LAST_REQUEST_KEY,
+        this.formatDateSQL(new Date())
+      );
     } else {
-      // If referenceData has not changed, use cached value and check for updates for graphQL.
-      const cache: any[] = referenceDataCache.get(cacheKey);
-      const isCached = cache !== undefined;
-      const valueField = referenceData.valueField || 'id';
-      const body = { query: this.processQuery(referenceData) };
-      let data = await this.post(url, { body });
-      if (typeof data === 'string') {
-        data = JSON.parse(data);
-      }
-      items = referenceData.path
-        ? jsonpath.query(data, referenceData.path)
-        : data;
-      // Cache new items
-      if (isCached) {
-        if (cache && items && items.length) {
-          for (const newItem of items) {
-            const cachedItemIndex = cache.findIndex(
-              (cachedItem) => cachedItem[valueField] === newItem[valueField]
-            );
-            if (cachedItemIndex !== -1) {
-              cache[cachedItemIndex] = newItem;
-            } else {
-              cache.push(newItem);
-            }
-          }
+      // If referenceData has not changed, use cached value for non graphQL.
+      items = (referenceDataCache.get(cacheKey) as CachedItems).items;
+      if (!items) {
+        const body = { query: this.processQuery(referenceData), variables: variables };
+        let data = await this.post(url, { body });
+        if (typeof data === 'string') {
+          data = JSON.parse(data);
         }
-        items = cache || [];
+        items = referenceData.path
+          ? jsonpath.query(data, referenceData.path)
+          : data;
+        // Cache items and timestamp
+        referenceDataCache.set(cacheKey, {items, valueField});
+        referenceDataCache.set(cacheKey + LAST_REQUEST_KEY, modifiedAt);
       }
     }
-    // Cache items and timestamp
-    referenceDataCache.set(cacheKey, items);
-    referenceDataCache.set(
-      cacheKey + LAST_REQUEST_KEY,
-      this.formatDateSQL(new Date())
-    );
+  }
+    
+    // // Check if same request
+    // if (!cacheTimestamp || cacheTimestamp < modifiedAt && false) {
+    //   // Check if referenceData has changed. In this case, refresh choices instead of using cached ones.
+    //   const body = { query: this.processQuery(referenceData), variables: variables };
+    //   let data = await this.post(url, { body });
+    //   if (typeof data === 'string') {
+    //     data = JSON.parse(data);
+    //   }
+    //   items = referenceData.path
+    //     ? jsonpath.query(data, referenceData.path)
+    //     : data;
+    //   referenceDataCache.set(cacheKey + LAST_MODIFIED_KEY, modifiedAt);
+    // } else {
+    //   // If referenceData has not changed, use cached value and check for updates for graphQL.
+    //   const cache: any[] = referenceDataCache.get(cacheKey);
+    //   const isCached = cache !== undefined;
+    //   const valueField = referenceData.valueField || 'id';
+    //   const body = { query: this.processQuery(referenceData), variables: variables };
+    //   let data = await this.post(url, { body });
+    //   if (typeof data === 'string') {
+    //     data = JSON.parse(data);
+    //   }
+    //   items = referenceData.path
+    //     ? jsonpath.query(data, referenceData.path)
+    //     : data;
+    //   // Cache new items
+    //   if (isCached) {
+    //     if (cache && items && items.length) {
+    //       for (const newItem of items) {
+    //         const cachedItemIndex = cache.findIndex(
+    //           (cachedItem) => cachedItem[valueField] === newItem[valueField]
+    //         );
+    //         if (cachedItemIndex !== -1) {
+    //           cache[cachedItemIndex] = newItem;
+    //         } else {
+    //           cache.push(newItem);
+    //         }
+    //       }
+    //     }
+    //     items = cache || [];
+    //   }
+    // }
+
+    // // Cache items and timestamp
+    // referenceDataCache.set(cacheKey, items);
+    // referenceDataCache.set(
+    //   cacheKey + LAST_REQUEST_KEY,
+    //   this.formatDateSQL(new Date())
+    // );
     return items;
   }
 
