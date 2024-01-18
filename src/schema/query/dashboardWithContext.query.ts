@@ -52,7 +52,7 @@ const getNewDashboardName = async (
       : referenceData.data;
 
     const item = data.find((x) => get(x, referenceData.valueField) == id);
-    return `${item?.[context.displayField]}`;
+    return item ? `${item?.[context.displayField]}` : undefined;
   } else if ('resource' in context && context.resource) {
     const record = await Record.findById(id);
     return `${record.data[context.displayField]}`;
@@ -184,17 +184,18 @@ export default {
 
       // Fetches the dashboard from the page
       const template = await Dashboard.findById(page.content);
-
+      const newName = await getNewDashboardName(
+        template,
+        page.context,
+        args.record || args.element,
+        context.dataSources
+      );
       // Duplicates the dashboard
       const newDashboard = await new Dashboard({
-        name: await getNewDashboardName(
-          template,
-          page.context,
-          args.record || args.element,
-          context.dataSources
-        ),
+        name: newName ?? template.name,
         // Copy structure from template dashboard
         structure: template.structure || [],
+        createdAt: template.createdAt,
       });
       newDashboard._id = template._id; // /!\ DO NOT SAVE IN DATABASE
 
