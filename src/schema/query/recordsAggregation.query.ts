@@ -103,9 +103,10 @@ const extractSourceFields = (
     if (
       typeof filter.field === 'string' &&
       !fields.includes(filter.field) &&
-      allFields.concat(DEFAULT_FIELDS).includes(filter.field)
-    )
-      fields.push(filter.field);
+      allFields.concat(DEFAULT_FIELDS).includes(filter.field.split('.')[0])
+    ) {
+      fields.push(filter.field.split('.')[0]);
+    }
   }
 };
 
