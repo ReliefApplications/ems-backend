@@ -21,6 +21,7 @@ export default async () => {
     });
     client.on('disconnect', (error) => {
       logger.info(`REDIS: ${error}`);
+      client = null;
     });
 
     await client.connect();
