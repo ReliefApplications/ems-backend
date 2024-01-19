@@ -36,7 +36,6 @@ import group from './group.query';
 import groups from './groups.query';
 import layers from './layers.query';
 import layer from './layer.query';
-import dashboardWithContext from './dashboardWithContext.query';
 import draftRecords from './draftRecords.query';
 import referenceDataAggregation from './referenceDataAggregation.query';
 import types from './types.query';
@@ -85,7 +84,6 @@ const Query = new GraphQLObjectType({
     layers,
     layer,
     draftRecords,
-    dashboardWithContext,
   },
 });
 
