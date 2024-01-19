@@ -61,6 +61,7 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
             endDate.setMilliseconds(-1);
             // you end up with a date range covering exactly the day selected
             value = dateForFilter.date;
+            break;
           case 'datetime':
           case 'datetime-local':
             dateForFilter = getDateForMongo(value);
@@ -98,13 +99,13 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
               return {
                 [fieldName]: {
                   $gte: startDate,
-                  $lt: endDate,
+                  $lte: endDate,
                   $eq: timeForFilter,
                 },
               };
             } else {
               if (DATE_TYPES.includes(field.type)) {
-                return { [fieldName]: { $gte: startDate, $lt: endDate } };
+                return { [fieldName]: { $gte: startDate, $lte: endDate } };
               }
               if (isNaN(intValue)) {
                 return { [fieldName]: { $eq: value } };
@@ -161,7 +162,9 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
             }
           }
           case 'lte': {
-            if (isNaN(intValue)) {
+            if (DATE_TYPES.includes(field.type)) {
+              return { [fieldName]: { $lte: endDate } };
+            } else if (isNaN(intValue)) {
               return { [fieldName]: { $lte: value } };
             } else {
               return {

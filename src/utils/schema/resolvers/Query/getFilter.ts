@@ -278,13 +278,13 @@ const buildMongoFilter = (
               return {
                 [fieldName]: {
                   $gte: startDate,
-                  $lt: endDate,
+                  $lte: endDate,
                   $eq: timeForFilter,
                 },
               };
             } else {
               if (DATE_TYPES.includes(type)) {
-                return { [fieldName]: { $gte: startDate, $lt: endDate } };
+                return { [fieldName]: { $gte: startDate, $lte: endDate } };
               }
               if (isNaN(intValue)) {
                 return { [fieldName]: { $eq: value } };
@@ -345,7 +345,9 @@ const buildMongoFilter = (
             }
           }
           case 'lte': {
-            if (isNaN(intValue)) {
+            if (DATE_TYPES.includes(type)) {
+              return { [fieldName]: { $lte: endDate } };
+            } else if (isNaN(intValue)) {
               return { [fieldName]: { $lte: value } };
             } else {
               return {
