@@ -1,7 +1,11 @@
 import mongoose from 'mongoose';
 import { getDateForMongo } from './getDateForMongo';
 import { getTimeForMongo } from './getTimeForMongo';
-import { MULTISELECT_TYPES, DATE_TYPES } from '@const/fieldTypes';
+import {
+  MULTISELECT_TYPES,
+  DATE_TYPES,
+  DATETIME_TYPES,
+} from '@const/fieldTypes';
 
 /**
  * Transforms query filter into mongo filter.
@@ -45,13 +49,29 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
         let startDate: Date;
         let endDate: Date;
         let dateForFilter: any;
+        let timeForFilter: any;
         switch (field.type) {
           case 'date':
+            dateForFilter = getDateForMongo(value);
+            // startDate represents the beginning of a day
+            startDate = new Date(value);
+            // endDate represents the last moment of the day after startDate
+            endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + 1);
+            endDate.setMilliseconds(-1);
+            // you end up with a date range covering exactly the day selected
+            value = dateForFilter.date;
           case 'datetime':
           case 'datetime-local':
             dateForFilter = getDateForMongo(value);
-            startDate = dateForFilter.startDate;
-            endDate = dateForFilter.endDate;
+            timeForFilter = getTimeForMongo(value);
+            // startDate represents the beginning of a day
+            startDate = new Date(value);
+            // endDate represents the last moment of the day after startDate
+            endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + 1);
+            endDate.setMilliseconds(-1);
+            // you end up with a date range covering exactly the day selected
             value = dateForFilter.date;
             break;
           case 'time': {
@@ -74,6 +94,14 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
           case 'eq': {
             if (MULTISELECT_TYPES.includes(field.type)) {
               return { [fieldName]: { $size: value.length, $all: value } };
+            } else if (DATETIME_TYPES.includes(field.type)) {
+              return {
+                [fieldName]: {
+                  $gte: startDate,
+                  $lt: endDate,
+                  $eq: timeForFilter,
+                },
+              };
             } else {
               if (DATE_TYPES.includes(field.type)) {
                 return { [fieldName]: { $gte: startDate, $lt: endDate } };

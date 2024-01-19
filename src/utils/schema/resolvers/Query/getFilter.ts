@@ -1,8 +1,13 @@
 import mongoose from 'mongoose';
 import { getDateForMongo } from '@utils/filter/getDateForMongo';
 import { getTimeForMongo } from '@utils/filter/getTimeForMongo';
-import { MULTISELECT_TYPES, DATE_TYPES } from '@const/fieldTypes';
+import {
+  MULTISELECT_TYPES,
+  DATE_TYPES,
+  DATETIME_TYPES,
+} from '@const/fieldTypes';
 import { isNumber } from 'lodash';
+import moment from 'moment-timezone';
 
 /** The default fields */
 const DEFAULT_FIELDS = [
@@ -206,10 +211,9 @@ const buildMongoFilter = (
         let startDate: Date;
         let endDate: Date;
         let dateForFilter: any;
+        let timeForFilter: any;
         switch (type) {
           case 'date':
-          case 'datetime':
-          case 'datetime-local':
             dateForFilter = getDateForMongo(value);
             // startDate represents the beginning of a day
             startDate = new Date(value);
@@ -220,8 +224,25 @@ const buildMongoFilter = (
             // you end up with a date range covering exactly the day selected
             value = dateForFilter.date;
             break;
+          case 'datetime':
+          case 'datetime-local':
+            dateForFilter = getDateForMongo(value);
+            timeForFilter = getTimeForMongo(value);
+            // startDate represents the beginning of a day
+            startDate = new Date(value);
+            // endDate represents the last moment of the day after startDate
+            endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + 1);
+            endDate.setMilliseconds(-1);
+            // you end up with a date range covering exactly the day selected
+            value = dateForFilter.date;
+            break;
           case 'time': {
-            value = getTimeForMongo(value);
+            value = getTimeForMongo(value, true);
+            // const momentValue = moment
+            //   .tz(value, context.timeZone)
+            //   .format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
+            // console.log('value', value, momentValue);
             break;
           }
           case 'users': {
@@ -252,6 +273,15 @@ const buildMongoFilter = (
               return { [fieldName]: attrValue };
             } else if (MULTISELECT_TYPES.includes(type)) {
               return { [fieldName]: { $size: value.length, $all: value } };
+            } else if (DATETIME_TYPES.includes(type)) {
+              // console.log('timeForFilter', timeForFilter, moment.tz(timeForFilter, context.timeZone));
+              return {
+                [fieldName]: {
+                  $gte: startDate,
+                  $lt: endDate,
+                  $eq: timeForFilter,
+                },
+              };
             } else {
               if (DATE_TYPES.includes(type)) {
                 return { [fieldName]: { $gte: startDate, $lt: endDate } };
@@ -270,6 +300,7 @@ const buildMongoFilter = (
             }
           }
           case 'neq': {
+            // TODO: update here for dates
             // user attributes
             if (isAttributeFilter) {
               return { [fieldName]: { $ne: attrValue } };
