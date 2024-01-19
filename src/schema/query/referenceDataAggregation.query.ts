@@ -255,6 +255,7 @@ type ReferenceDataAggregationArgs = {
   sortField?: string;
   sortOrder?: string;
   contextFilters?: CompositeFilterDescriptor;
+  graphQLVariables: any;
 };
 
 /**
@@ -269,6 +270,7 @@ export default {
     pipeline: { type: GraphQLJSON },
     sourceFields: { type: GraphQLJSON },
     contextFilters: { type: GraphQLJSON },
+    graphQLVariables: { type: GraphQLJSON },
     mapping: { type: GraphQLJSON },
     first: { type: GraphQLInt },
     skip: { type: GraphQLInt },
@@ -318,7 +320,8 @@ export default {
             rawItems =
               (await dataSource.getReferenceDataItems(
                 referenceData,
-                referenceData.apiConfiguration as any
+                referenceData.apiConfiguration as any,
+                args.graphQLVariables
               )) || [];
           }
           const transformer = new DataTransformer(
@@ -367,7 +370,8 @@ export default {
             });
           }
           return { items: items, totalCount: items.length };
-        } catch (error) {
+        } catch (err) {
+          logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             'Something went wrong with the pipelines, these aggregations may not be supported yet'
           );
