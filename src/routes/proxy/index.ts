@@ -69,7 +69,7 @@ const proxyAPIRequest = async (
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        maxRedirects: 5,
+        maxRedirects: 35,
         ...(!isEmpty(req.body) && {
           data: JSON.stringify(req.body),
         }),

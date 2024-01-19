@@ -183,6 +183,7 @@ export class CustomAPI extends RESTDataSource {
     const cacheKey =
       referenceData.id +
       (variables && !isEmpty(variables) ? JSON.stringify(variables) : '');
+    console.log(cacheKey);
     const cacheTimestamp = referenceDataCache.get(cacheKey + LAST_MODIFIED_KEY);
     const modifiedAt = referenceData.modifiedAt || '';
     // Check if same request
