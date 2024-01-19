@@ -69,7 +69,7 @@ const proxyAPIRequest = async (
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        maxRedirects: 5,
+        maxRedirects: 35,
         ...(!isEmpty(req.body) && {
           data: JSON.stringify(req.body),
         }),
@@ -104,9 +104,6 @@ const proxyAPIRequest = async (
           logger.error(err.message, { stack: err.stack });
           return res.status(503).send('Service currently unavailable');
         });
-    }
-    if (client) {
-      await client.disconnect();
     }
   } catch (err) {
     logger.error(err.message, { stack: err.stack });

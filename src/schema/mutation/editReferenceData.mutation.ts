@@ -3,6 +3,7 @@ import {
   GraphQLID,
   GraphQLError,
   GraphQLString,
+  GraphQLInputObjectType,
 } from 'graphql';
 import { Form, ReferenceData } from '@models';
 import { ReferenceDataType } from '../types';
@@ -56,6 +57,20 @@ export default {
     data: { type: GraphQLJSON },
     graphQLFilter: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
+    pageInfo: {
+      type: new GraphQLInputObjectType({
+        name: 'PageInfoInput',
+        fields: {
+          totalCountField: { type: GraphQLString },
+          strategy: { type: new GraphQLNonNull(GraphQLString) },
+          pageSizeVar: { type: GraphQLString },
+          cursorVar: { type: GraphQLString },
+          cursorField: { type: GraphQLString },
+          pageVar: { type: GraphQLString },
+          offsetVar: { type: GraphQLString },
+        },
+      }),
+    },
   },
   async resolve(parent, args: EditReferenceDataArgs, context: Context) {
     graphQLAuthCheck(context);

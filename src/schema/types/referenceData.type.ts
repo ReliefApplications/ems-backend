@@ -112,6 +112,20 @@ export const ReferenceDataType = new GraphQLObjectType({
         };
       },
     },
+    pageInfo: {
+      type: new GraphQLObjectType({
+        name: 'ReferenceDataPaginationDefinition',
+        fields: () => ({
+          strategy: { type: GraphQLString },
+          cursorField: { type: GraphQLString },
+          cursorVar: { type: GraphQLString },
+          offsetVar: { type: GraphQLString },
+          pageVar: { type: GraphQLString },
+          pageSizeVar: { type: GraphQLString },
+          totalCountField: { type: GraphQLString },
+        }),
+      }),
+    },
   }),
 });
 
