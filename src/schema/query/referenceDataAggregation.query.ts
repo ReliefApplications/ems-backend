@@ -370,7 +370,8 @@ export default {
             });
           }
           return { items: items, totalCount: items.length };
-        } catch (error) {
+        } catch (err) {
+          logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             'Something went wrong with the pipelines, these aggregations may not be supported yet'
           );
