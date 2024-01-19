@@ -129,18 +129,21 @@ export class CustomAPI extends RESTDataSource {
    *
    * @param referenceData ReferenceData to fetch
    * @param apiConfiguration ApiConfiguration to use
+   * @param variables supplementary graphQL variables
    * @returns referenceData objects
    */
   async getReferenceDataItems(
     referenceData: ReferenceData,
-    apiConfiguration: ApiConfiguration
+    apiConfiguration: ApiConfiguration,
+    variables?: any
   ): Promise<any[]> {
     switch (referenceData.type) {
       case referenceDataType.graphql: {
         // Call memoized function to save external requests.
         return this.memoizedReferenceDataGraphQLItems(
           referenceData,
-          apiConfiguration
+          apiConfiguration,
+          variables
         );
       }
       case referenceDataType.rest: {
@@ -163,11 +166,13 @@ export class CustomAPI extends RESTDataSource {
    *
    * @param referenceData ReferenceData to fetch
    * @param apiConfiguration ApiConfiguration to use
+   * @param variables supplementary graphQL variables
    * @returns referenceData objects
    */
   private async getReferenceDataGraphQLItems(
     referenceData: ReferenceData,
-    apiConfiguration: ApiConfiguration
+    apiConfiguration: ApiConfiguration,
+    variables?: any
   ) {
     // Initialization
     let items: any;
@@ -175,13 +180,13 @@ export class CustomAPI extends RESTDataSource {
     const url = `${apiConfiguration.endpoint.replace(/\$/, '')}/${
       apiConfiguration.graphQLEndpoint
     }`.replace(/([^:]\/)\/+/g, '$1');
-    const cacheKey = referenceData.id || '';
+    const cacheKey = referenceData.id + JSON.stringify(variables) || '';
     const cacheTimestamp = referenceDataCache.get(cacheKey + LAST_MODIFIED_KEY);
     const modifiedAt = referenceData.modifiedAt || '';
     // Check if same request
     if (!cacheTimestamp || cacheTimestamp < modifiedAt) {
       // Check if referenceData has changed. In this case, refresh choices instead of using cached ones.
-      const body = { query: this.processQuery(referenceData) };
+      const body = { query: this.processQuery(referenceData), variables };
       let data = await this.post(url, { body });
       if (typeof data === 'string') {
         data = JSON.parse(data);
