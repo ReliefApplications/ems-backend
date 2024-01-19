@@ -1,10 +1,8 @@
-import { authType } from '@const/enumTypes';
 import {
   BASE_PLACEHOLDER_REGEX,
   extractStringFromBrackets,
 } from '../const/placeholders';
 import {
-  ApiConfiguration,
   Form,
   Notification,
   PullJob,
@@ -13,19 +11,11 @@ import {
   Role,
 } from '@models';
 import pubsub from './pubsub';
-import { CronJob } from 'cron';
 // import * as CryptoJS from 'crypto-js';
 import mongoose from 'mongoose';
-import { getToken } from '@utils/proxy';
 import { getNextId, transformRecord } from '@utils/form';
 import { logger } from '../services/logger.service';
-import * as cronValidator from 'cron-validator';
-import get from 'lodash/get';
-import axios from 'axios';
 import { ownershipMappingJSON } from './EIOSOwnernshipMapping';
-
-/** A map with the task ids as keys and the scheduled tasks as values */
-const taskMap: Record<string, CronJob> = {};
 
 /** Record's default fields */
 const DEFAULT_FIELDS = ['createdBy'];
@@ -41,198 +31,6 @@ const EIOS_APP_NAMES: string[] = [
     }, [])
   ),
 ];
-
-/**
- * Global function called on server start to initialize all the pullJobs.
- */
-const pullJobScheduler = async () => {
-  const pullJobs = await PullJob.find({ status: 'active' }).populate({
-    path: 'apiConfiguration',
-    model: 'ApiConfiguration',
-  });
-
-  for (const pullJob of pullJobs) {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    scheduleJob(pullJob);
-  }
-};
-
-export default pullJobScheduler;
-
-/**
- * Schedule or re-schedule a pullJob.
- *
- * @param pullJob pull job to schedule
- */
-export const scheduleJob = (pullJob: PullJob) => {
-  try {
-    const task = taskMap[pullJob.id];
-    if (task) {
-      task.stop();
-    }
-    const schedule = get(pullJob, 'schedule', '');
-    if (cronValidator.isValidCron(schedule)) {
-      taskMap[pullJob.id] = new CronJob(
-        pullJob.schedule,
-        async () => {
-          logger.info('📥 Starting a pull from job ' + pullJob.name);
-          const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
-          try {
-            if (apiConfiguration.authType === authType.serviceToService) {
-              // Decrypt settings
-              // const settings: {
-              //   authTargetUrl: string;
-              //   apiClientID: string;
-              //   safeSecret: string;
-              //   scope: string;
-              // } = JSON.parse(
-              //   CryptoJS.AES.decrypt(
-              //     apiConfiguration.settings,
-              //     config.get('encryption.key')
-              //   ).toString(CryptoJS.enc.Utf8)
-              // );
-
-              // Get auth token and start pull Logic
-              const token: string = await getToken(apiConfiguration);
-              // eslint-disable-next-line @typescript-eslint/no-use-before-define
-              fetchRecordsServiceToService(pullJob, token);
-            }
-            if (apiConfiguration.authType === authType.public) {
-              // eslint-disable-next-line @typescript-eslint/no-use-before-define
-              fetchRecordsPublic(pullJob);
-            }
-            if (apiConfiguration.authType === authType.authorizationCode) {
-              throw new Error(
-                'Unsupported Api configuration with Authorization Code authentication.'
-              );
-            }
-          } catch (err) {
-            logger.error(err.message, { stack: err.stack });
-          }
-        },
-        null,
-        true
-      );
-      logger.info('📅 Scheduled job ' + pullJob.name);
-    } else {
-      throw new Error(`[${pullJob.name}] Invalid schedule: ${schedule}`);
-    }
-  } catch (err) {
-    logger.error(err.message);
-  }
-};
-
-/**
- * Unschedule an existing pullJob from its id.
- *
- * @param pullJob pull job to unschedule
- */
-export const unscheduleJob = (pullJob: PullJob): void => {
-  const task = taskMap[pullJob.id];
-  if (task) {
-    task.stop();
-    logger.info(
-      `📆 Unscheduled job ${pullJob.name ? pullJob.name : pullJob.id}`
-    );
-  }
-};
-
-/**
- * Fetch records using the hardcoded workflow for service-to-service API type (EIOS).
- *
- * @param pullJob pull job configuration to use
- * @param token authentication token
- */
-const fetchRecordsServiceToService = (
-  pullJob: PullJob,
-  token: string
-): void => {
-  const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
-  // Hard coded for EIOS due to specific behavior
-  const EIOS_ORIGIN = 'https://portal.who.int/eios/';
-  // === HARD CODED ENDPOINTS ===
-  const headers: any = {
-    Authorization: 'Bearer ' + token,
-  };
-  // Hardcoded specific behavior for EIOS
-  if (apiConfiguration.endpoint.startsWith(EIOS_ORIGIN)) {
-    // === HARD CODED ENDPOINTS ===
-    const boardsUrl = 'GetBoards?tags=signal+app';
-    const articlesUrl = 'GetPinnedArticles';
-    axios({
-      url: apiConfiguration.endpoint + boardsUrl,
-      method: 'get',
-      headers,
-    })
-      .then(({ data }) => {
-        if (data && data.result) {
-          const boardIds = data.result.map((x) => x.id);
-          axios({
-            url: `${apiConfiguration.endpoint}${articlesUrl}?boardIds=${boardIds}`,
-            method: 'get',
-            headers,
-          })
-            .then(({ data: data2 }) => {
-              if (data2 && data2.result) {
-                // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                insertRecords(data2.result, pullJob, true, false);
-              }
-            })
-            .catch((err) => {
-              logger.error(
-                `Job ${pullJob.name} : Failed to get pinned articles : ${err}`
-              );
-            });
-        }
-      })
-      .catch((err) => {
-        logger.error(
-          `Job ${pullJob.name} : Failed to get signal app boards : ${err}`
-        );
-      });
-  } else {
-    // Generic case
-    axios({
-      url: apiConfiguration.endpoint + pullJob.url,
-      method: 'get',
-      headers,
-    })
-      .then(({ data }) => {
-        const records = pullJob.path ? get(data, pullJob.path) : data;
-        if (records) {
-          // eslint-disable-next-line @typescript-eslint/no-use-before-define
-          insertRecords(records, pullJob, false, false);
-        }
-      })
-      .catch((err) => {
-        logger.error(`Job ${pullJob.name} : Failed to fetch data : ${err}`);
-      });
-  }
-};
-
-/**
- * Fetch records using the generic workflow for public endpoints.
- *
- * @param pullJob pull job to use
- */
-const fetchRecordsPublic = (pullJob: PullJob): void => {
-  const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
-  logger.info(`Execute pull job operation: ${pullJob.name}`);
-  axios({
-    url: apiConfiguration.endpoint + pullJob.url,
-    method: 'get',
-  })
-    .then(({ data }) => {
-      const records = pullJob.path ? get(data, pullJob.path) : data;
-      if (records) {
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        insertRecords(records, pullJob, false, false);
-      }
-    })
-    .catch((err) => {
-      logger.error(`Job ${pullJob.name} : Failed to fetch data : ${err}`);
-    });
-};
 
 /**
  * Access property of passed object including nested properties and map properties on array if needed.

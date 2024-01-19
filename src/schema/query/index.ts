@@ -27,7 +27,6 @@ import channels from './channels.query';
 import positionAttributes from './positionAttributes.query';
 import apiConfiguration from './apiConfiguration.query';
 import apiConfigurations from './apiConfigurations.query';
-import pullJobs from './pullJobs.query';
 import referenceData from './referenceData.query';
 import referenceDatas from './referenceDatas.query';
 import recordHistory from './recordHistory.query';
@@ -60,7 +59,6 @@ const Query = new GraphQLObjectType({
     page,
     pages,
     permissions,
-    pullJobs,
     record,
     records,
     recordsAggregation,

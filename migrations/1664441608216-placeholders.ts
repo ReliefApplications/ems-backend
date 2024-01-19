@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-loop-func */
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
-import { Dashboard, Resource, PullJob, ReferenceData } from '../src/models';
+import { Dashboard, Resource, ReferenceData } from '../src/models';
 import { Placeholder } from '../src/const/placeholders';
 import { logger } from '../src/services/logger.service';
 import get from 'lodash/get';
@@ -173,36 +173,6 @@ const migratePlaceholders = async () => {
     }
   }
   await Promise.all(layoutPromises);
-
-  // === PULLJOB ===
-  logger.info('Start pulljob update');
-  const pullJobs = await PullJob.find({});
-  const mappingPromises: Promise<any>[] = [];
-  for (const pullJob of pullJobs) {
-    let modified = false;
-    for (const key in pullJob.mapping) {
-      if (pullJob.mapping[key].startsWith('$$')) {
-        pullJob.mapping[key] = '{{' + pullJob.mapping[key].slice(2) + '}}';
-        modified = true;
-      }
-    }
-    if (modified) {
-      pullJob.markModified('mapping');
-      mappingPromises.push(
-        pullJob.save().then(
-          () => {
-            logger.info('Pulljob "' + pullJob.name + '" mapping updated.');
-          },
-          (err) => {
-            logger.info(
-              'Could not update pullJob "' + pullJob.name + '" mapping.\n' + err
-            );
-          }
-        )
-      );
-    }
-  }
-  await Promise.all(mappingPromises);
 
   // === REFERENCE DATA ===
   logger.info('Start reference data update');

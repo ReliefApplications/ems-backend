@@ -1,6 +1,5 @@
 import { SafeServer } from './server';
 import mongoose from 'mongoose';
-import pullJobScheduler from './server/pullJobScheduler';
 import customNotificationScheduler from './server/customNotificationScheduler';
 import { startDatabase } from './server/database';
 import config from 'config';
@@ -31,7 +30,6 @@ startDatabase();
 mongoose.connection.once('open', () => {
   logger.log({ level: 'info', message: '📶 Connected to database' });
   // subscriberSafe();
-  pullJobScheduler();
   customNotificationScheduler();
 });
 

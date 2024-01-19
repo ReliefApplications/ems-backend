@@ -52,9 +52,6 @@ import editUserProfile from './editUserProfile.mutation';
 import addApiConfiguration from './addApiConfiguration.mutation';
 import editApiConfiguration from './editApiConfiguration.mutation';
 import deleteApiConfiguration from './deleteApiConfiguration.mutation';
-import addPullJob from './addPullJob.mutation';
-import editPullJob from './editPullJob.mutation';
-import deletePullJob from './deletePullJob.mutation';
 import toggleApplicationLock from './toggleApplicationLock.mutation';
 import addUsers from './addUsers.mutation';
 import addLayout from './addLayout.mutation';
@@ -104,7 +101,6 @@ const Mutation = new GraphQLObjectType({
     addPage,
     addPositionAttribute,
     addPositionAttributeCategory,
-    addPullJob,
     addRecord,
     addReferenceData,
     addRole,
@@ -124,7 +120,6 @@ const Mutation = new GraphQLObjectType({
     deleteLayout,
     deletePage,
     deletePositionAttributeCategory,
-    deletePullJob,
     deleteRecord,
     deleteRecords,
     deleteReferenceData,
@@ -147,7 +142,6 @@ const Mutation = new GraphQLObjectType({
     editPage,
     editPageContext,
     editPositionAttributeCategory,
-    editPullJob,
     editRecord,
     editRecords,
     editReferenceData,
