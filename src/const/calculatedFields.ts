@@ -46,7 +46,8 @@ export type SingleOperatorOperationsTypes =
   | 'size'
   | 'toInt'
   | 'length'
-  | 'toLong';
+  | 'toLong'
+  | 'trim';
 /** Interface for an operation with a single operator */
 interface SingleOperatorOperation {
   operation: SingleOperatorOperationsTypes;
