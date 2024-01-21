@@ -1,4 +1,9 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLError,
+  GraphQLBoolean,
+} from 'graphql';
 import { DashboardType } from '../types';
 import { Dashboard, Page, Record } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
@@ -9,22 +14,30 @@ import { Types } from 'mongoose';
 import GraphQLJSON from 'graphql-type-json';
 import { accessibleBy } from '@casl/mongoose';
 import { getNewDashboardName } from '@utils/dashboardWithContext/getNewDashboardName';
+import { getContextData } from '@utils/context/getContextData';
 
 /** Arguments for the dashboard query */
 type DashboardArgs = {
   id: string | Types.ObjectId;
   contextEl: any;
+  createIfMissing: boolean;
 };
 
 /**
- * Return dashboard from id if available for the logged user.
  * Throw GraphQL error if not logged.
+ * Returns the dashboard by id if no contextEl is provided.
+ * If contextEl is provided and its template already exists, returns the template.
+ * If contextEl is provided and its template does not exist:
+ *   - if it's an invalid contextEl, throws an error
+ *   - if createIfMissing is false, returns the main dashboard with the relevant context
+ *   - if createIfMissing is true, creates a new template for the element and returns it (if user has permissions)
  */
 export default {
   type: DashboardType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     contextEl: { type: GraphQLJSON },
+    createIfMissing: { type: GraphQLBoolean },
   },
   async resolve(parent, args: DashboardArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -98,15 +111,6 @@ export default {
         return dashboard;
       }
 
-      // We check for user permissions
-      const canCreateDashboard = ability.can('create', 'Dashboard');
-      const canUpdatePage = ability.can('update', page);
-      if (!canCreateDashboard || !canUpdatePage) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
-      }
-
       // We check if it's a valid contextEl
       const type =
         'resource' in page.context && page.context.resource
@@ -125,6 +129,30 @@ export default {
           context.i18next.t(
             'mutations.dashboard.addWithContext.errors.invalidContextEl'
           )
+        );
+      }
+
+      // If we did not find a match, and the createIfMissing flag is not set
+      // we return the main dashboard with the relevant context
+      if (!args.createIfMissing) {
+        const contextData = getContextData(
+          type === 'record' ? args.contextEl : undefined,
+          type === 'element' ? args.contextEl : undefined,
+          page,
+          context
+        );
+
+        Object.assign(mainDashboard, { contextData });
+        return mainDashboard;
+      }
+      // Else, we create a new template for the element
+
+      // We check for user permissions
+      const canCreateDashboard = ability.can('create', 'Dashboard');
+      const canUpdatePage = ability.can('update', page);
+      if (!canCreateDashboard || !canUpdatePage) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
         );
       }
 

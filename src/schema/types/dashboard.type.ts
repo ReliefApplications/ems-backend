@@ -124,6 +124,11 @@ export const DashboardType = new GraphQLObjectType({
     contextData: {
       type: GraphQLJSON,
       async resolve(parent, args, context) {
+        // Check if the parent has context data already
+        if (parent.contextData) {
+          return parent.contextData;
+        }
+
         // Check if dashboard has context linked to it
         const page = await Page.findOne({
           contentWithContext: { $elemMatch: { content: parent.id } },
