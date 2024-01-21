@@ -5,7 +5,7 @@ import {
   GraphQLBoolean,
 } from 'graphql';
 import { DashboardType } from '../types';
-import { Dashboard, Page, Record } from '@models';
+import { Dashboard, Page } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
@@ -28,7 +28,6 @@ type DashboardArgs = {
  * Returns the dashboard by id if no contextEl is provided.
  * If contextEl is provided and its template already exists, returns the template.
  * If contextEl is provided and its template does not exist:
- *   - if it's an invalid contextEl, throws an error
  *   - if createIfMissing is false, returns the main dashboard with the relevant context
  *   - if createIfMissing is true, creates a new template for the element and returns it (if user has permissions)
  */
@@ -116,21 +115,6 @@ export default {
         'resource' in page.context && page.context.resource
           ? 'record'
           : 'element';
-
-      const validEl =
-        type === 'record'
-          ? // If it's a record, we check if it exists
-            await Record.exists({ _id: args.contextEl })
-          : // TODO: How to check if element exists for paginated refData?
-            true;
-
-      if (!validEl) {
-        throw new GraphQLError(
-          context.i18next.t(
-            'mutations.dashboard.addWithContext.errors.invalidContextEl'
-          )
-        );
-      }
 
       // If we did not find a match, and the createIfMissing flag is not set
       // we return the main dashboard with the relevant context
