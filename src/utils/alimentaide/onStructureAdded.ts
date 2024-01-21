@@ -73,26 +73,39 @@ const ROLE_ID_MAP = {
   userPlus: new Types.ObjectId('651157468e4cb3d8a3f22a7a'),
 };
 
-/**
- * Adds the context filter of the base app to the structure apps
- * @param structureApps The structure apps
- */
-const addContextFilterToStructureApps = async (structureApps) => {
-  // Filter out the base app from the structure apps
-  const appsWithoutBaseApp = structureApps.filter(
-    (a) => !a._id.equals(BASE_APP_ID)
-  );
-  // We fetch the base app
-  const baseApp = await Application.findById(BASE_APP_ID).populate({
-    path: 'pages',
-    model: 'Page',
+/** Adds the contextual filter of the base app to the structure apps */
+export const addContextualFilterToStructureApps = async () => {
+  // Gets all applications with a set description
+  const apps = await Application.find({
+    description: { $exists: true },
+  }).select('_id contextualFilter description');
+
+  const baseAppIdx = apps.findIndex((a) => a._id.equals(BASE_APP_ID));
+  if (baseAppIdx === -1) {
+    console.error('Could not find base app');
+    return;
+  }
+
+  const baseApp = apps.splice(baseAppIdx, 1)[0];
+
+  const recs = await Record.find({
+    form: STRUCTURE_FORM_ID,
+    _id: {
+      $in: apps.map((a) => new Types.ObjectId(a.description)),
+    },
   });
-  // Add context filter of the base app to the structure apps
-  appsWithoutBaseApp.forEach((app) => {
-    app.contextualFilter = baseApp.contextualFilter;
+
+  // One application for each corresponding structure
+  const structures = recs
+    .map((r) => apps.find((a) => a.description === r._id.toString()))
+    .filter((x) => !!x);
+
+  // For each structure, we add the contextual filter of the base app
+  structures.forEach((s) => {
+    s.contextualFilter = baseApp.contextualFilter;
   });
-  // Save the structure apps
-  await Application.bulkSave(appsWithoutBaseApp);
+
+  await Application.bulkSave(structures);
 };
 
 /**
@@ -138,9 +151,6 @@ export const linkStructureAppsToDemo = async (rerun = false) => {
   const structureAppRoles = await Role.find({
     application: { $in: structureApps.map((a) => a._id) },
   });
-
-  // Add the context filter from the base app to existing structure apps
-  addContextFilterToStructureApps(structureApps);
 
   const pagesToSave = [] as Page[];
   baseAppPages.forEach((page) => {
