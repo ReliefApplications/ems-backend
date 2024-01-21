@@ -99,7 +99,7 @@ export const updateIncrementalIds = async (
   let inc = 0;
   let lastRecordUpdated = { createdAt: null };
   // Updates the incremental ID of each record in batches
-  const BATCH_SIZE = 5;
+  const BATCH_SIZE = 5000;
   for (let i = 0; i < totalRecords; i += BATCH_SIZE) {
     logger.log({
       level: 'info',
