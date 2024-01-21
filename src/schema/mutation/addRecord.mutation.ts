@@ -71,13 +71,16 @@ export default {
           }
         }
       }
-
       // Create the record instance
       transformRecord(args.data, form.fields);
+
+      const { incrementalId, incID } = await getNextId(
+        String(form.resource ? form.resource : args.form)
+      );
+
       const record = new Record({
-        incrementalId: await getNextId(
-          String(form.resource ? form.resource : args.form)
-        ),
+        incrementalId,
+        incID,
         form: args.form,
         //createdAt: new Date(),
         //modifiedAt: new Date(),

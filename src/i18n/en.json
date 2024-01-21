@@ -346,7 +346,8 @@
 			},
 			"getNextId": {
 				"errors": {
-					"incrementalIdError": "Error with the incremental ID for records"
+					"incrementalIdError": "Error with the incremental ID for records",
+					"invalidShape": "Error creating new record, ID shape for form is invalid"
 				}
 			}
 		},

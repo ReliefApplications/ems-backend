@@ -346,7 +346,8 @@
 			},
 			"getNextId": {
 				"errors": {
-					"incrementalIdError": "******"
+					"incrementalIdError": "******",
+					"invalidShape": "******"
 				}
 			}
 		},

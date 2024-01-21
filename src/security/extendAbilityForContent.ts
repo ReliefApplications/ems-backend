@@ -48,11 +48,16 @@ export default async function extendAbilityForContent(
             $in: [
               content._id,
               {
-                $map: {
-                  input: '$contentWithContext',
-                  as: 'c',
-                  in: '$$c.content',
-                },
+                $ifNull: [
+                  {
+                    $map: {
+                      input: '$contentWithContext',
+                      as: 'c',
+                      in: '$$c.content',
+                    },
+                  },
+                  [],
+                ],
               },
             ],
           },

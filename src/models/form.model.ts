@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { addOnBeforeDeleteMany } from '@utils/models/deletion';
@@ -10,10 +11,28 @@ import { getGraphQLTypeName } from '@utils/validators';
 import { deleteFolder } from '@utils/files/deleteFolder';
 import { logger } from '@services/logger.service';
 
+/** The default shape of the incrementalId field */
+export const DEFAULT_INCREMENTAL_ID_SHAPE = {
+  shape: '{year}-{formInitial}{incremental}',
+  padding: 8,
+};
+
+/** Enum for the variables that can be used when defining the shape of the incremental ID */
+export enum ID_SHAPE_VARIABLES {
+  YEAR = 'year',
+  INCREMENTAL_NUM = 'incremental',
+  FORM_INITIAL = 'formInitial',
+  FORM_NAME = 'formName',
+}
+
 /** Form documents interface declaration */
 interface FormDocument extends Document {
   kind: 'Form';
   name?: string;
+  idShape?: {
+    shape: string;
+    padding: number;
+  };
   graphQLTypeName?: string;
   createdAt?: Date;
   modifiedAt?: Date;
@@ -50,6 +69,16 @@ export interface FormModel extends AccessibleRecordModel<Form> {
 const schema = new Schema<Form>(
   {
     name: String,
+    idShape: {
+      shape: {
+        type: String,
+        default: DEFAULT_INCREMENTAL_ID_SHAPE.shape,
+      },
+      padding: {
+        type: Number,
+        default: DEFAULT_INCREMENTAL_ID_SHAPE.padding,
+      },
+    },
     graphQLTypeName: String,
     structure: mongoose.Schema.Types.Mixed,
     core: Boolean,

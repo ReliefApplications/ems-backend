@@ -92,7 +92,6 @@ export const checkRecordValidation = (
     const errors = questions
       .filter((q) => q.hasErrors())
       .map((q) => {
-        console.log(q.name, q.value);
         return {
           question: q.title || q.name,
           errors: q.getAllErrors().map((err) => err.getText()),
