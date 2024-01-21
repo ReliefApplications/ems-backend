@@ -142,9 +142,15 @@ const resolveSingleOperator = (
     });
     return `$${auxPath.startsWith('aux.') ? '' : 'aux.'}${auxPath}`;
   };
-  const step = ['exists', 'size', 'date', 'toLong', 'toInt', 'length'].includes(
-    operation
-  )
+  const step = [
+    'exists',
+    'size',
+    'date',
+    'toLong',
+    'toInt',
+    'length',
+    'trim',
+  ].includes(operation)
     ? // Simple operations
       {
         $addFields: {
@@ -162,16 +168,6 @@ const resolveSingleOperator = (
                 },
                 else: getValueString(),
               },
-            },
-          },
-        },
-      }
-    : operation === 'trim'
-    ? {
-        $addFields: {
-          [path.startsWith('aux.') ? path : `data.${path}`]: {
-            $trim: {
-              input: getValueString(),
             },
           },
         },
