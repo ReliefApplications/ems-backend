@@ -1,6 +1,7 @@
 import mongoose, { Types } from 'mongoose';
 import { getDateForMongo } from '@utils/filter/getDateForMongo';
 import { getTimeForMongo } from '@utils/filter/getTimeForMongo';
+import { get } from 'config';
 
 /** The default fields */
 const DEFAULT_FIELDS = [
@@ -412,8 +413,14 @@ const buildMongoFilter = (
       case 'checkbox':
       case 'tagbox':
         return getFilterForArrays(value);
-      default:
+      case 'geospatial':
         return getSimpleFilter(value);
+      default:
+        if (Array.isArray(value)) {
+          return getFilterForArrays(value);
+        } else {
+          return getSimpleFilter(value);
+        }
     }
   }
 };
