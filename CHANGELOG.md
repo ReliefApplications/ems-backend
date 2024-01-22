@@ -1,3 +1,38 @@
+# [2.5.0](https://github.com/ReliefApplications/ems-backend/compare/v2.4.4...v2.5.0) (2024-01-10)
+
+
+### Features
+
+* use cursor pagination for users ([#925](https://github.com/ReliefApplications/ems-backend/issues/925)) ([ac8b343](https://github.com/ReliefApplications/ems-backend/commit/ac8b34347a868c377fcaaec7172bde8a4f1f23ae))
+
+## [2.4.4](https://github.com/ReliefApplications/ems-backend/compare/v2.4.3...v2.4.4) (2024-01-09)
+
+
+### Bug Fixes
+
+* dashboard filter would not correctly save in some cases ([4f67ce2](https://github.com/ReliefApplications/ems-backend/commit/4f67ce29019b0dd862d27897ed16c0764aca171b))
+
+## [2.4.3](https://github.com/ReliefApplications/ems-backend/compare/v2.4.2...v2.4.3) (2024-01-08)
+
+
+### Bug Fixes
+
+* check if permission exists when editing resources, during application duplication ([#914](https://github.com/ReliefApplications/ems-backend/issues/914)) ([838cc6c](https://github.com/ReliefApplications/ems-backend/commit/838cc6c36eb0d4a107e98663aa14c4f4e913bd00))
+* duplication of application would sometimes fail due to incorrect test on existence of pages ([51f417f](https://github.com/ReliefApplications/ems-backend/commit/51f417fa0bccbc41068c99a80da23410c3479cd1))
+
+
+### Performance Improvements
+
+* replace rabbitmq with redis ([#810](https://github.com/ReliefApplications/ems-backend/issues/810)) ([8d1e175](https://github.com/ReliefApplications/ems-backend/commit/8d1e175b1efb0a36f700335f324e048915800faf))
+
+## [2.4.2](https://github.com/ReliefApplications/ems-backend/compare/v2.4.1...v2.4.2) (2023-12-21)
+
+
+### Bug Fixes
+
+* add missing context filter in ref data layer ([e9ed89f](https://github.com/ReliefApplications/ems-backend/commit/e9ed89f34682ae710e67c4c18ba4cd286ca5895b))
+* aggregation on null question using choices from refData ([#905](https://github.com/ReliefApplications/ems-backend/issues/905)) ([fad6120](https://github.com/ReliefApplications/ems-backend/commit/fad6120954a2ed76e65785bf68afb30dcc49391e))
+
 ## [2.4.1](https://github.com/ReliefApplications/ems-backend/compare/v2.4.0...v2.4.1) (2023-12-20)
 
 
