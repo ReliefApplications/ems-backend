@@ -455,7 +455,6 @@ router.get('/feature', async (req, res) => {
             mapping
           );
         } else {
-
           const apiConfiguration = await ApiConfiguration.findById(
             referenceData.apiConfiguration,
             'name endpoint graphQLEndpoint'
