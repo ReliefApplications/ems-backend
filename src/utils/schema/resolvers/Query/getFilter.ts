@@ -1,7 +1,6 @@
 import mongoose, { Types } from 'mongoose';
 import { getDateForMongo } from '@utils/filter/getDateForMongo';
 import { getTimeForMongo } from '@utils/filter/getTimeForMongo';
-import { get } from 'config';
 
 /** The default fields */
 const DEFAULT_FIELDS = [
