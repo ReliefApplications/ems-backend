@@ -220,6 +220,40 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
               return { [fieldName]: { $exists: true, $ne: '' } };
             }
           }
+          case 'in': {
+            if (MULTISELECT_TYPES.includes(field.type)) {
+              const v = Array.isArray(value) ? value : [value];
+              return {
+                $or: [
+                  { [fieldName]: { $in: v } },
+                  {
+                    [fieldName]: {
+                      $in: v.map((x) => new mongoose.Types.ObjectId(x)),
+                    },
+                  },
+                ],
+              };
+            } else {
+              return { [fieldName]: value };
+            }
+          }
+          case 'notIn': {
+            if (MULTISELECT_TYPES.includes(field.type)) {
+              const v = Array.isArray(value) ? value : [value];
+              return {
+                $or: [
+                  { [fieldName]: { $nin: v } },
+                  {
+                    [fieldName]: {
+                      $nin: v.map((x) => new mongoose.Types.ObjectId(x)),
+                    },
+                  },
+                ],
+              };
+            } else {
+              return { [fieldName]: { $ne: value } };
+            }
+          }
           default: {
             return;
           }
