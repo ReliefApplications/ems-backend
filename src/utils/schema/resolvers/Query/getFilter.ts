@@ -16,11 +16,11 @@ const DEFAULT_FIELDS = [
   },
   {
     name: 'createdAt',
-    type: 'date',
+    type: 'datetime',
   },
   {
     name: 'modifiedAt',
-    type: 'date',
+    type: 'datetime',
   },
   {
     name: 'incrementalId',
