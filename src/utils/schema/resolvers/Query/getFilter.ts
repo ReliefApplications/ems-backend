@@ -380,36 +380,38 @@ const buildMongoFilter = (
           }
           case 'in': {
             if (MULTISELECT_TYPES.includes(type)) {
-              const v = Array.isArray(value) ? value : [value];
-              return {
-                $or: [
-                  { [fieldName]: { $in: v } },
-                  {
-                    [fieldName]: {
-                      $in: v.map((x) => new mongoose.Types.ObjectId(x)),
-                    },
-                  },
-                ],
-              };
+              return { [fieldName]: { $in: value } };
+            } else if (isNumber(value?.[0]?.value)) {
+              const eq = value.map((v) => {
+                return { [`data.${v.field}`]: { $eq: v.value } };
+              });
+              return { $or: eq };
+            } else if (
+              fieldName === 'data._globalSearch' &&
+              (type === 'text' || type === '')
+            ) {
+              return;
             } else {
-              return { [fieldName]: value };
+              return { [fieldName]: { $regex: value, $options: 'i' } };
             }
           }
-          case 'notIn': {
+          case 'notin': {
             if (MULTISELECT_TYPES.includes(type)) {
-              const v = Array.isArray(value) ? value : [value];
-              return {
-                $or: [
-                  { [fieldName]: { $nin: v } },
-                  {
-                    [fieldName]: {
-                      $nin: v.map((x) => new mongoose.Types.ObjectId(x)),
-                    },
-                  },
-                ],
-              };
+              return { [fieldName]: { $nin: value } };
+            } else if (isNumber(value?.[0]?.value)) {
+              const ne = value.map((v) => {
+                return { [`data.${v.field}`]: { $ne: v.value } };
+              });
+              return { $nor: ne };
+            } else if (
+              fieldName === 'data._globalSearch' &&
+              (type === 'text' || type === '')
+            ) {
+              return;
             } else {
-              return { [fieldName]: { $ne: value } };
+              return {
+                [fieldName]: { $not: { $regex: value, $options: 'i' } },
+              };
             }
           }
           case 'isempty': {
