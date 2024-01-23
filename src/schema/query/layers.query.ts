@@ -1,10 +1,4 @@
-import {
-  GraphQLError,
-  GraphQLList,
-  GraphQLString,
-  GraphQLID,
-  GraphQLNonNull
-} from 'graphql';
+import { GraphQLError, GraphQLList, GraphQLString, GraphQLID } from 'graphql';
 import { LayerType } from '../types';
 import { Layer } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
@@ -56,7 +50,7 @@ export default {
     filter: { type: GraphQLJSON },
     sortField: { type: GraphQLString },
     sortOrder: { type: GraphQLString },
-    ids: { type: (new GraphQLList(GraphQLID)) },
+    ids: { type: new GraphQLList(GraphQLID) },
   },
   async resolve(parent, args: LayerArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -81,11 +75,11 @@ export default {
       const sortField = SORT_FIELDS.find((x) => x.name === args.sortField);
       const sortOrder = args.sortOrder || 'asc';
 
-      let query = {
+      let query: any = {
         $and: [...filters],
       };
       if (args.ids) {
-        query['_id'] = { $in: args.ids };
+        query = { ...query, _id: { $in: args.ids } };
       }
 
       return await Layer.find(query)
