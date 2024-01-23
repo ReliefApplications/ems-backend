@@ -289,6 +289,9 @@ router.get('/feature', async (req, res) => {
   const contextFilters = JSON.parse(
     decodeURIComponent(get(req, 'query.contextFilters', null))
   );
+  const graphQLVariables = JSON.parse(
+    decodeURIComponent(get(req, 'query.graphQLVariables', null))
+  );
   const at = get(req, 'query.at') as string | undefined;
   // const tolerance = get(req, 'query.tolerance', 1);
   // const highQuality = get(req, 'query.highquality', true);
@@ -316,7 +319,7 @@ router.get('/feature', async (req, res) => {
     adminField,
   };
   try {
-    // todo(gis): also implement reference data
+    // Fetch resource to populate layer
     if (get(req, 'query.resource')) {
       let id: string;
       if (get(req, 'query.aggregation')) {
@@ -393,19 +396,35 @@ router.get('/feature', async (req, res) => {
         throw new Error(err);
       });
     } else if (get(req, 'query.refData')) {
+      // Else, fetch reference data to populate layer
       const referenceData = await ReferenceData.findById(
         new mongoose.Types.ObjectId(get(req, 'query.refData') as string)
       );
       if (referenceData) {
         if (get(req, 'query.aggregation')) {
           const aggregation = get(req, 'query.aggregation') as string;
-          const query = `query referenceDataAggregation($referenceData: ID!, $aggregation: ID!, $contextFilters: JSON, $first: Int, $at: Date) {
-              referenceDataAggregation(referenceData: $referenceData, aggregation: $aggregation, contextFilters: $contextFilters, first: $first, at: $at)
+          const query = `query referenceDataAggregation(
+            $referenceData: ID!
+            $aggregation: ID!
+            $contextFilters: JSON
+            $graphQLVariables: JSON
+            $first: Int
+            $at: Date
+          ) {
+              referenceDataAggregation(
+                referenceData: $referenceData
+                aggregation: $aggregation
+                contextFilters: $contextFilters
+                graphQLVariables: $graphQLVariables
+                first: $first
+                at: $at
+              )
             }`;
           const variables = {
             referenceData: referenceData._id,
             aggregation: aggregation,
             contextFilters,
+            graphQLVariables,
             first: 1000,
             at: at ? new Date(at) : undefined,
           };
@@ -433,7 +452,6 @@ router.get('/feature', async (req, res) => {
             mapping
           );
         } else {
-          // todo: populate
           const apiConfiguration = await ApiConfiguration.findById(
             referenceData.apiConfiguration,
             'name endpoint graphQLEndpoint'
@@ -450,7 +468,8 @@ router.get('/feature', async (req, res) => {
           let data: any =
             (await dataSource.getReferenceDataItems(
               referenceData,
-              apiConfiguration
+              apiConfiguration,
+              graphQLVariables
             )) || [];
           if (contextFilters) {
             data = data.filter((x) => filterReferenceData(x, contextFilters));
@@ -478,8 +497,15 @@ router.get('/feature', async (req, res) => {
 });
 
 router.get('/admin0', async (req, res) => {
-  const polygons = await getAdmin0Polygons();
-  return res.send(polygons);
+  try {
+    const polygons = await getAdmin0Polygons();
+    return res.send(polygons);
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    return res
+      .status(500)
+      .send(i18next.t('routes.gis.feature.errors.unexpected'));
+  }
 });
 
 export default router;

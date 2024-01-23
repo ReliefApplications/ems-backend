@@ -32,6 +32,7 @@ export const getToken = async () => {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Content-Length': `${body.length}`,
       },
+      maxRedirects: 35,
       data: body,
     })
   ).data.access_token;
@@ -50,7 +51,7 @@ export const getAdmin0Polygons = async () => {
   if (!cacheData) {
     const token = await getToken();
     admin0s = await axios({
-      url: 'https://ems-safe-dev.who.int/csapi/graphql',
+      url: 'https://ems-safe-dev.who.int/csapi/api/graphql/',
       method: 'post',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -77,14 +78,20 @@ export const getAdmin0Polygons = async () => {
         const mapping = [];
         for (const country of data.data.countrys) {
           if (country.polygons) {
-            mapping.push({
-              ...country,
-              polygons: simplify(parse(country.polygons), {
-                tolerance: 0.1,
-                highQuality: true,
-                mutate: true,
-              }),
-            });
+            try {
+              mapping.push({
+                ...country,
+                polygons: simplify(parse(country.polygons), {
+                  tolerance: 0.1,
+                  highQuality: true,
+                  mutate: true,
+                }),
+              });
+            } catch (err) {
+              logger.error(
+                `Failed to fetch admin0s for country ${country.iso3code}: ${err.message}`
+              );
+            }
           }
         }
         if (client) {
@@ -95,7 +102,7 @@ export const getAdmin0Polygons = async () => {
         return mapping;
       })
       .catch((err) => {
-        logger.error(err.message);
+        logger.error(`Failed to fetch admin0s: ${err.message}`);
         return [];
       });
   } else {
