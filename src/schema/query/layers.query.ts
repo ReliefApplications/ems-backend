@@ -1,4 +1,10 @@
-import { GraphQLError, GraphQLList, GraphQLString } from 'graphql';
+import {
+  GraphQLError,
+  GraphQLList,
+  GraphQLString,
+  GraphQLID,
+  GraphQLNonNull
+} from 'graphql';
 import { LayerType } from '../types';
 import { Layer } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
@@ -10,6 +16,7 @@ import { accessibleBy } from '@casl/mongoose';
 import { CompositeFilterDescriptor } from '@const/compositeFilter';
 import { GraphQLJSON } from 'graphql-type-json';
 import { Context } from '@server/apollo/context';
+import { Types } from 'mongoose';
 
 /** Default filter fields */
 const FILTER_FIELDS: { name: string; type: string }[] = [
@@ -36,6 +43,7 @@ type LayerArgs = {
   filter?: CompositeFilterDescriptor;
   sortField?: string;
   sortOrder?: string;
+  ids?: string[] | Types.ObjectId[];
 };
 
 /**
@@ -48,6 +56,7 @@ export default {
     filter: { type: GraphQLJSON },
     sortField: { type: GraphQLString },
     sortOrder: { type: GraphQLString },
+    ids: { type: (new GraphQLList(GraphQLID)) },
   },
   async resolve(parent, args: LayerArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -72,9 +81,14 @@ export default {
       const sortField = SORT_FIELDS.find((x) => x.name === args.sortField);
       const sortOrder = args.sortOrder || 'asc';
 
-      return await Layer.find({
+      let query = {
         $and: [...filters],
-      })
+      };
+      if (args.ids) {
+        query['_id'] = { $in: args.ids };
+      }
+
+      return await Layer.find(query)
         .collation({ locale: 'en' })
         .sort(sortField.sort(sortOrder));
     } catch (err) {
