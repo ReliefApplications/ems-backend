@@ -211,6 +211,7 @@ const procPipelineStep = (pipelineStep, data, sourceFields) => {
             data[key],
             operators.map((operator) => operator.operator)
           ),
+          ...pick(data[key].initialData[0], keysToGroupBy),
         });
       }
       return dataToKeep;
@@ -246,45 +247,63 @@ const procPipelineStep = (pipelineStep, data, sourceFields) => {
             break;
           case 'month':
             data.map((obj: any) => {
-              const month = new Date(obj[elt.expression.field]).getMonth() + 1;
-              const monthAsString = month < 10 ? '0' + month : month.toString();
-              const dateWithMonth =
-                new Date(obj[elt.expression.field]).getFullYear() +
-                '-' +
-                monthAsString;
-              obj[elt.name] = dateWithMonth;
+              try {
+                const month =
+                  new Date(obj[elt.expression.field]).getMonth() + 1;
+                const monthAsString =
+                  month < 10 ? '0' + month : month.toString();
+                const dateWithMonth =
+                  new Date(obj[elt.expression.field]).getFullYear() +
+                  '-' +
+                  monthAsString;
+                obj[elt.name] = dateWithMonth;
+              } catch {
+                obj[elt.name] = undefined;
+              }
             });
             break;
           case 'year':
             data.map((obj: any) => {
-              const year = new Date(obj[elt.expression.field]).getFullYear();
-              const yearAsString = year.toString();
-              obj[elt.name] = yearAsString;
+              try {
+                const year = new Date(obj[elt.expression.field]).getFullYear();
+                const yearAsString = year.toString();
+                obj[elt.name] = yearAsString;
+              } catch {
+                obj[elt.name] = undefined;
+              }
             });
             break;
           case 'day':
             data.map((obj: any) => {
-              const date = new Date(obj[elt.expression.field]);
-              const dayAsString =
-                date.getFullYear() +
-                '-' +
-                (date.getMonth() + 1).toString() +
-                '-' +
-                (date.getDate() + 1).toString();
-              obj[elt.name] = dayAsString;
+              try {
+                const date = new Date(obj[elt.expression.field]);
+                const dayAsString =
+                  date.getFullYear() +
+                  '-' +
+                  (date.getMonth() + 1).toString() +
+                  '-' +
+                  (date.getDate() + 1).toString();
+                obj[elt.name] = dayAsString;
+              } catch {
+                obj[elt.name] = undefined;
+              }
             });
             break;
           case 'week':
             data.map((obj: any) => {
-              const date = new Date(obj[elt.expression.field]);
-              const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
-              const pastDaysOfYear =
-                (date.valueOf() - firstDayOfYear.valueOf()) / 86400000;
-              const weekNo = Math.ceil(
-                (pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7
-              );
-              const dateWithWeek = date.getFullYear() + '-week' + weekNo;
-              obj[elt.name] = dateWithWeek;
+              try {
+                const date = new Date(obj[elt.expression.field]);
+                const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+                const pastDaysOfYear =
+                  (date.valueOf() - firstDayOfYear.valueOf()) / 86400000;
+                const weekNo = Math.ceil(
+                  (pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7
+                );
+                const dateWithWeek = date.getFullYear() + '-week' + weekNo;
+                obj[elt.name] = dateWithWeek;
+              } catch {
+                obj[elt.name] = undefined;
+              }
             });
             break;
           case 'multiply':
