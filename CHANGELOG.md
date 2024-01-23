@@ -1,3 +1,13 @@
+## [2.5.1](https://github.com/ReliefApplications/ems-backend/compare/v2.5.0...v2.5.1) (2024-01-23)
+
+
+### Bug Fixes
+
+* allow reference data aggregations to use series in mapping ([772e539](https://github.com/ReliefApplications/ems-backend/commit/772e539858b502703e57b10e5e1ffc2d34ff8804))
+* duplication of application would fail when pages would not exist ([#930](https://github.com/ReliefApplications/ems-backend/issues/930)) ([3629151](https://github.com/ReliefApplications/ems-backend/commit/3629151a4f852a1930479fdcea7186c02f992232))
+* empty filters array always returns false ([#936](https://github.com/ReliefApplications/ems-backend/issues/936)) ([94066d8](https://github.com/ReliefApplications/ems-backend/commit/94066d814251a99e162d7387af6401870e9f7e9f))
+* ownership could break pull job ([5707a66](https://github.com/ReliefApplications/ems-backend/commit/5707a66bf5ea03f3b244f7ac07ccf4d82f1ac313))
+
 # [2.5.0](https://github.com/ReliefApplications/ems-backend/compare/v2.4.4...v2.5.0) (2024-01-10)
 
 
