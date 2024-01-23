@@ -105,9 +105,6 @@ const proxyAPIRequest = async (
           return res.status(503).send('Service currently unavailable');
         });
     }
-    if (client) {
-      await client.disconnect();
-    }
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
     return res.status(500).send(req.t('common.errors.internalServerError'));
