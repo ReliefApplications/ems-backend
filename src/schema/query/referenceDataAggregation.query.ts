@@ -29,6 +29,7 @@ import {
   map,
   isArray,
   isEmpty,
+  isBoolean,
 } from 'lodash';
 import { graphQLAuthCheck } from '@schema/shared';
 import { CustomAPI } from '@server/apollo/dataSources';
@@ -65,10 +66,18 @@ const applyFilters = (data: any, filter: any): boolean => {
     } catch {}
     switch (filter.operator) {
       case 'eq':
-        return eq(value, String(filter.value)) || eq(value, intValue);
+        if (isBoolean(value)) {
+          return eq(value, filter.value);
+        } else {
+          return eq(value, String(filter.value)) || eq(value, intValue);
+        }
       case 'ne':
       case 'neq':
-        return !(eq(value, String(filter.value)) || eq(value, intValue));
+        if (isBoolean(value)) {
+          return !eq(value, filter.value);
+        } else {
+          return !(eq(value, String(filter.value)) || eq(value, intValue));
+        }
       case 'gt':
         return !isNil(value) && value > filter.value;
       case 'gte':
@@ -357,6 +366,7 @@ export default {
     at: { type: GraphQLDate },
   },
   async resolve(parent, args: ReferenceDataAggregationArgs, context) {
+    // Authentication check
     graphQLAuthCheck(context);
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
