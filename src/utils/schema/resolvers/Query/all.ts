@@ -23,6 +23,22 @@ import { graphQLAuthCheck } from '@schema/shared';
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
 
+/** form Cache */
+const formCache = new Map();
+
+/** ability Cache */
+const abilityCache = new Map();
+
+/** Clear Cache */
+const clearCache = () => {
+  console.log('Clearing cache...');
+  formCache.clear();
+  abilityCache.clear();
+};
+
+/** Clear Cache in every 10 min */
+setInterval(clearCache, 10 * 60 * 1000);
+
 // todo: improve by only keeping used fields in the $project stage
 /**
  * Project aggregation.
@@ -233,6 +249,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     checkPageSize(first);
     try {
       const user: User = context.user;
+      const userId = user._id.toString();
       // Id of the form / resource
       const id = idsByName[entityName];
       // List of form / resource fields
@@ -407,16 +424,31 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       };
 
       // Additional filter from the user permissions
-      const form = await Form.findOne({
-        $or: [{ _id: id }, { resource: id, core: true }],
-      })
-        .select('_id permissions fields')
-        .populate({ path: 'resource', model: 'Resource' });
-      const ability = await extendAbilityForRecords(user, form);
-      set(context, 'user.ability', ability);
-      const permissionFilters = Record.find(
-        accessibleBy(ability, 'read').Record
-      ).getFilter();
+
+      if (!formCache.get(userId)) {
+        const form = await Form.findOne({
+          $or: [{ _id: id }, { resource: id, core: true }],
+        })
+          .select('_id permissions fields')
+          .populate({ path: 'resource', model: 'Resource' });
+        formCache.set(userId, form);
+      }
+      let permissionFilters;
+      if (!abilityCache.get(userId)) {
+        const ability = await extendAbilityForRecords(
+          user,
+          formCache.get(userId)
+        );
+        set(context, 'user.ability', ability);
+        permissionFilters = Record.find(
+          accessibleBy(ability, 'read').Record
+        ).getFilter();
+        abilityCache.set(userId, ability);
+      } else {
+        permissionFilters = Record.find(
+          accessibleBy(abilityCache.get(userId), 'read').Record
+        ).getFilter();
+      }
 
       // Finally putting all filters together
       const filters = {
@@ -703,7 +735,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // === CONSTRUCT OUTPUT + RETURN ===
       const edges = items.map((r) => {
-        const record = getAccessibleFields(r, ability);
+        const record = getAccessibleFields(r, abilityCache.get(userId));
         Object.assign(record, { id: record._id });
 
         return {

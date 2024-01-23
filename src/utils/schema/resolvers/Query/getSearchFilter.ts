@@ -93,8 +93,6 @@ export const extractFilterFields = (filter: any): string[] => {
   return fields;
 };
 
-let searchStageUsed = false;
-
 /**
  * Transforms query filter into mongo filter.
  *
@@ -103,6 +101,20 @@ let searchStageUsed = false;
  * @param context request context
  * @param prefix prefix to access field
  * @returns Mongo filter.
+ */
+
+/**
+ * @param filter
+ * @param fields
+ * @param context
+ * @param prefix
+ */
+let searchStageUsed = false;
+/**
+ * @param filter
+ * @param fields
+ * @param context
+ * @param prefix
  */
 const buildMongoFilter = (
   filter: any,
@@ -268,6 +280,34 @@ const buildMongoFilter = (
                 return;
               }
             }
+          }
+          case 'startswith': {
+            if (fieldName.includes('id')) {
+              return;
+            }
+            searchStage.$search.compound.must.unshift({
+              wildcard: {
+                query: `${value}*`,
+                path: fieldName,
+                allowAnalyzedField: true,
+              },
+            });
+            searchStageUsed = true;
+            return;
+          }
+          case 'endswith': {
+            if (fieldName.includes('id')) {
+              return;
+            }
+            searchStage.$search.compound.must.unshift({
+              wildcard: {
+                query: `*${value}`,
+                path: fieldName,
+                allowAnalyzedField: true,
+              },
+            });
+            searchStageUsed = true;
+            return;
           }
           default: {
             return;
