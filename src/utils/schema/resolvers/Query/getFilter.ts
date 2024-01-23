@@ -379,16 +379,37 @@ const buildMongoFilter = (
             }
           }
           case 'in': {
-            if (isAttributeFilter)
+            if (MULTISELECT_TYPES.includes(type)) {
+              const v = Array.isArray(value) ? value : [value];
               return {
-                [fieldName]: { $regex: attrValue, $options: 'i' },
+                $or: [
+                  { [fieldName]: { $in: v } },
+                  {
+                    [fieldName]: {
+                      $in: v.map((x) => new mongoose.Types.ObjectId(x)),
+                    },
+                  },
+                ],
               };
+            } else {
+              return { [fieldName]: value };
+            }
           }
-          case 'notin': {
-            if (isAttributeFilter) {
+          case 'notIn': {
+            if (MULTISELECT_TYPES.includes(type)) {
+              const v = Array.isArray(value) ? value : [value];
               return {
-                [fieldName]: { $not: { $regex: attrValue, $options: 'i' } },
+                $or: [
+                  { [fieldName]: { $nin: v } },
+                  {
+                    [fieldName]: {
+                      $nin: v.map((x) => new mongoose.Types.ObjectId(x)),
+                    },
+                  },
+                ],
               };
+            } else {
+              return { [fieldName]: { $ne: value } };
             }
           }
           case 'isempty': {
