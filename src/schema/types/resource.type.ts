@@ -129,13 +129,26 @@ export const ResourceType = new GraphQLObjectType({
     },
     forms: {
       type: new GraphQLList(FormType),
+      args: {
+        id: { type: GraphQLID },
+        // To ignore all the forms data (to cases when the grid don't have a template and send this data is useless)
+        ignore: { type: GraphQLBoolean },
+      },
       async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        const forms = await Form.find({
-          resource: parent.id,
-          ...accessibleBy(ability, 'read').Form,
-        });
-        return forms;
+        if (args.id) {
+          const form = await Form.find({
+            _id: args.id,
+            ...accessibleBy(ability, 'read').Form,
+          });
+          return form;
+        } else if (!args.ignore) {
+          const forms = await Form.find({
+            resource: parent.id,
+            ...accessibleBy(ability, 'read').Form,
+          });
+          return forms;
+        }
       },
     },
     relatedForms: {
@@ -282,35 +295,41 @@ export const ResourceType = new GraphQLObjectType({
         first: { type: GraphQLInt },
         afterCursor: { type: GraphQLID },
         ids: { type: new GraphQLList(GraphQLID) },
+        // To ignore all the layouts data (to cases when the grid don't use a layout and send this data is useless)
+        ignore: { type: GraphQLBoolean },
       },
       resolve(parent, args) {
-        let start = 0;
-        const first = args.first || DEFAULT_FIRST;
-        let allEdges = parent.layouts.map((x) => ({
-          cursor: encodeCursor(x.id.toString()),
-          node: x,
-        }));
-        if (args.ids && args.ids.length > 0) {
-          allEdges = allEdges.filter((x) => args.ids.includes(x.node.id));
+        if (!args.ignore) {
+          let start = 0;
+          const first = args.first || DEFAULT_FIRST;
+          let allEdges = parent.layouts.map((x) => ({
+            cursor: encodeCursor(x.id.toString()),
+            node: x,
+          }));
+          if (args.ids && args.ids.length > 0) {
+            allEdges = allEdges.filter((x) => args.ids.includes(x.node.id));
+          }
+          const totalCount = allEdges.length;
+          if (args.afterCursor) {
+            start =
+              allEdges.findIndex((x) => x.cursor === args.afterCursor) + 1;
+          }
+          let edges = allEdges.slice(start, start + first + 1);
+          const hasNextPage = edges.length > first;
+          if (hasNextPage) {
+            edges = edges.slice(0, edges.length - 1);
+          }
+          return {
+            pageInfo: {
+              hasNextPage,
+              startCursor: edges.length > 0 ? edges[0].cursor : null,
+              endCursor:
+                edges.length > 0 ? edges[edges.length - 1].cursor : null,
+            },
+            edges,
+            totalCount,
+          };
         }
-        const totalCount = allEdges.length;
-        if (args.afterCursor) {
-          start = allEdges.findIndex((x) => x.cursor === args.afterCursor) + 1;
-        }
-        let edges = allEdges.slice(start, start + first + 1);
-        const hasNextPage = edges.length > first;
-        if (hasNextPage) {
-          edges = edges.slice(0, edges.length - 1);
-        }
-        return {
-          pageInfo: {
-            hasNextPage,
-            startCursor: edges.length > 0 ? edges[0].cursor : null,
-            endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
-          },
-          edges,
-          totalCount,
-        };
       },
     },
     aggregations: {
@@ -319,41 +338,54 @@ export const ResourceType = new GraphQLObjectType({
         first: { type: GraphQLInt },
         afterCursor: { type: GraphQLID },
         ids: { type: new GraphQLList(GraphQLID) },
+        // To ignore all the aggregations data (to cases when the grid don't use a aggregation and send this data is useless)
+        ignore: { type: GraphQLBoolean },
       },
       resolve(parent, args) {
-        let start = 0;
-        const first = args.first || DEFAULT_FIRST;
-        let allEdges = parent.aggregations.map((x) => ({
-          cursor: encodeCursor(x.id.toString()),
-          node: x,
-        }));
-        if (args.ids && args.ids.length > 0) {
-          allEdges = allEdges.filter((x) => args.ids.includes(x.node.id));
+        if (!args.ignore) {
+          let start = 0;
+          const first = args.first || DEFAULT_FIRST;
+          let allEdges = parent.aggregations.map((x) => ({
+            cursor: encodeCursor(x.id.toString()),
+            node: x,
+          }));
+          if (args.ids && args.ids.length > 0) {
+            allEdges = allEdges.filter((x) => args.ids.includes(x.node.id));
+          }
+          const totalCount = allEdges.length;
+          if (args.afterCursor) {
+            start =
+              allEdges.findIndex((x) => x.cursor === args.afterCursor) + 1;
+          }
+          let edges = allEdges.slice(start, start + first + 1);
+          const hasNextPage = edges.length > first;
+          if (hasNextPage) {
+            edges = edges.slice(0, edges.length - 1);
+          }
+          return {
+            pageInfo: {
+              hasNextPage,
+              startCursor: edges.length > 0 ? edges[0].cursor : null,
+              endCursor:
+                edges.length > 0 ? edges[edges.length - 1].cursor : null,
+            },
+            edges,
+            totalCount,
+          };
         }
-        const totalCount = allEdges.length;
-        if (args.afterCursor) {
-          start = allEdges.findIndex((x) => x.cursor === args.afterCursor) + 1;
-        }
-        let edges = allEdges.slice(start, start + first + 1);
-        const hasNextPage = edges.length > first;
-        if (hasNextPage) {
-          edges = edges.slice(0, edges.length - 1);
-        }
-        return {
-          pageInfo: {
-            hasNextPage,
-            startCursor: edges.length > 0 ? edges[0].cursor : null,
-            endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
-          },
-          edges,
-          totalCount,
-        };
       },
     },
     metadata: {
       type: new GraphQLList(FieldMetaDataType),
-      resolve(parent, _, context) {
-        return getMetaData(parent, context);
+      args: {
+        // To ignore all the metadata data (to cases when the summary card widget don't use a layout so don't need
+        // metadata info to build fields and send this data is useless)
+        ignore: { type: GraphQLBoolean },
+      },
+      resolve(parent, args, context) {
+        if (!args.ignore) {
+          return getMetaData(parent, context);
+        }
       },
     },
   }),
