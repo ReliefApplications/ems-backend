@@ -10,7 +10,6 @@ import { accessibleBy } from '@casl/mongoose';
 import { CompositeFilterDescriptor } from '@const/compositeFilter';
 import { GraphQLJSON } from 'graphql-type-json';
 import { Context } from '@server/apollo/context';
-import { Types } from 'mongoose';
 
 /** Default filter fields */
 const FILTER_FIELDS: { name: string; type: string }[] = [
@@ -18,6 +17,7 @@ const FILTER_FIELDS: { name: string; type: string }[] = [
     name: 'name',
     type: 'text',
   },
+  { name: 'ids', type: 'ObjectId' },
 ];
 
 /** Available sort fields */
@@ -37,7 +37,6 @@ type LayerArgs = {
   filter?: CompositeFilterDescriptor;
   sortField?: string;
   sortOrder?: string;
-  ids?: string[] | Types.ObjectId[];
 };
 
 /**
@@ -75,14 +74,9 @@ export default {
       const sortField = SORT_FIELDS.find((x) => x.name === args.sortField);
       const sortOrder = args.sortOrder || 'asc';
 
-      let query: any = {
+      return await Layer.find({
         $and: [...filters],
-      };
-      if (args.ids) {
-        query = { ...query, _id: { $in: args.ids } };
-      }
-
-      return await Layer.find(query)
+      })
         .collation({ locale: 'en' })
         .sort(sortField.sort(sortOrder));
     } catch (err) {
