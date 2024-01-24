@@ -1,4 +1,4 @@
-import { GraphQLError, GraphQLList, GraphQLString } from 'graphql';
+import { GraphQLError, GraphQLList, GraphQLString, GraphQLID } from 'graphql';
 import { LayerType } from '../types';
 import { Layer } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
@@ -17,6 +17,7 @@ const FILTER_FIELDS: { name: string; type: string }[] = [
     name: 'name',
     type: 'text',
   },
+  { name: 'ids', type: 'ObjectId' },
 ];
 
 /** Available sort fields */
@@ -48,6 +49,7 @@ export default {
     filter: { type: GraphQLJSON },
     sortField: { type: GraphQLString },
     sortOrder: { type: GraphQLString },
+    ids: { type: new GraphQLList(GraphQLID) },
   },
   async resolve(parent, args: LayerArgs, context: Context) {
     graphQLAuthCheck(context);
