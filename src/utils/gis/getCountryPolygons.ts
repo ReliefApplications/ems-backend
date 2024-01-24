@@ -32,6 +32,7 @@ export const getToken = async () => {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Content-Length': `${body.length}`,
       },
+      maxRedirects: 35,
       data: body,
     })
   ).data.access_token;
