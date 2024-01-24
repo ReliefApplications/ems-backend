@@ -286,20 +286,45 @@ export class CustomAPI extends RESTDataSource {
  * Creates a data source for each active apiConfiguration. Create also an additional one for classic REST requests.
  *
  * @param server Apollo server instance.
+ * @param apiConfigName API Configuration name to filter and get only one data source.
  * @returns Definitions of the data sources.
  */
-export default async (server?: ApolloServer<Context>) => {
-  const apiConfigurations = await ApiConfiguration.find({
-    status: status.active,
-  });
-  return () =>
-    ({
-      ...apiConfigurations.reduce((o, apiConfiguration) => {
-        return {
-          ...o,
+export default async (
+  server?: ApolloServer<Context>,
+  apiConfigName?: string
+) => {
+  if (apiConfigName) {
+    const apiConfiguration = await ApiConfiguration.findOne({
+      status: status.active,
+      name: apiConfigName,
+    });
+
+    if (!apiConfiguration) {
+      throw new Error(
+        `ApiConfiguration with name ${apiConfigName} not found or not active.`
+      );
+    }
+
+    return () =>
+      ({
+        ...{
           [apiConfiguration.name]: new CustomAPI(server, apiConfiguration),
-        };
-      }, {}),
-      _rest: new CustomAPI(server),
-    } as Record<string, CustomAPI> & { _rest: CustomAPI });
+        },
+        _rest: new CustomAPI(server),
+      } as Record<string, CustomAPI> & { _rest: CustomAPI });
+  } else {
+    const apiConfigurations = await ApiConfiguration.find({
+      status: status.active,
+    });
+    return () =>
+      ({
+        ...apiConfigurations.reduce((o, apiConfiguration) => {
+          return {
+            ...o,
+            [apiConfiguration.name]: new CustomAPI(server, apiConfiguration),
+          };
+        }, {}),
+        _rest: new CustomAPI(server),
+      } as Record<string, CustomAPI> & { _rest: CustomAPI });
+  }
 };

@@ -456,13 +456,16 @@ router.get('/feature', async (req, res) => {
             referenceData.apiConfiguration,
             'name endpoint graphQLEndpoint'
           );
-          const contextDataSources = (
-            await dataSources({
-              // Passing upstream request so accesstoken can be used for authentication
-              req: req,
-            } as any)
+          const contextDataSource = (
+            await dataSources(
+              {
+                // Passing upstream request so accesstoken can be used for authentication
+                req: req,
+              } as any,
+              apiConfiguration.name
+            )
           )();
-          const dataSource = contextDataSources[
+          const dataSource = contextDataSource[
             apiConfiguration.name
           ] as CustomAPI;
           let data: any =
