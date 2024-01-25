@@ -64,6 +64,7 @@
     "graphql-redis-subscriptions": "^2.6.0",
     "graphql-scalars": "^1.22.2",
     "graphql-subscriptions": "^2.0.0",
+    "graphql-tag": "^2.12.6",
     "graphql-type-json": "^0.3.2",
     "graphql-ws": "^5.14.0",
     "http": "0.0.1-security",
