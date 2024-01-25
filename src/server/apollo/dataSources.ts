@@ -2,12 +2,14 @@ import { AugmentedRequest, RESTDataSource } from '@apollo/datasource-rest';
 import { status, referenceDataType } from '@const/enumTypes';
 import { ApiConfiguration, ReferenceData } from '@models';
 import { getToken } from '@utils/proxy';
-import { get, isEmpty, memoize } from 'lodash';
+import { get, isEmpty, memoize, set } from 'lodash';
 import NodeCache from 'node-cache';
 import { logger } from '@services/logger.service';
 import jsonpath from 'jsonpath';
 import { ApolloServer } from '@apollo/server';
 import { Context } from './context';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import gql from 'graphql-tag';
 
 /** Local storage initialization */
 const referenceDataCache: NodeCache = new NodeCache();
@@ -17,6 +19,33 @@ const LAST_MODIFIED_KEY = '_last_modified';
 const LAST_REQUEST_KEY = '_last_request';
 /** Property for filtering in requests */
 const LAST_UPDATE_CODE = '{{lastUpdate}}';
+
+/**
+ * Transform reference data graphql variables, to make sure they have the correct format.
+ *
+ * @param query graphql query to send
+ * @param variables variables mapping
+ * @returns void
+ */
+const transformGraphQLVariables = (query: string, variables: any = {}) => {
+  const graphQLQuery = gql(query);
+  const definition = graphQLQuery.definitions?.[0];
+  if (definition?.kind !== 'OperationDefinition') {
+    return variables;
+  }
+  (definition.variableDefinitions ?? []).forEach((def) => {
+    if (
+      get(def, 'type.name.value') === 'JSON' &&
+      get(variables, def.variable.name.value)
+    ) {
+      set(
+        variables,
+        def.variable.name.value,
+        JSON.stringify(get(variables, def.variable.name.value))
+      );
+    }
+  });
+};
 
 /**
  * CustomAPI class to create a dataSource fetching from an APIConfiguration.
@@ -185,11 +214,15 @@ export class CustomAPI extends RESTDataSource {
       (variables && !isEmpty(variables) ? JSON.stringify(variables) : '');
     const cacheTimestamp = referenceDataCache.get(cacheKey + LAST_MODIFIED_KEY);
     const modifiedAt = referenceData.modifiedAt || '';
+    const query = this.processQuery(referenceData);
+    if (query) {
+      transformGraphQLVariables(query, variables);
+    }
     // Check if same request
     if (!cacheTimestamp || cacheTimestamp < modifiedAt) {
       // Check if referenceData has changed. In this case, refresh choices instead of using cached ones.
       const body = {
-        query: this.processQuery(referenceData),
+        query,
         variables: variables || {},
       };
       let data = await this.post(url, { body });
@@ -205,7 +238,10 @@ export class CustomAPI extends RESTDataSource {
       const cache: any[] = referenceDataCache.get(cacheKey);
       const isCached = cache !== undefined;
       const valueField = referenceData.valueField || 'id';
-      const body = { query: this.processQuery(referenceData) };
+      const body = {
+        query,
+        variables: variables || {},
+      };
       let data = await this.post(url, { body });
       if (typeof data === 'string') {
         data = JSON.parse(data);
