@@ -276,7 +276,6 @@ const gqlQuery = (
  * @returns GeoJSON feature collection mutations
  */
 router.get('/feature', async (req, res) => {
-  console.time('gis');
   const featureCollection = {
     type: 'FeatureCollection',
     features: [],
@@ -401,8 +400,6 @@ router.get('/feature', async (req, res) => {
       const referenceData = await ReferenceData.findById(
         new mongoose.Types.ObjectId(get(req, 'query.refData') as string)
       );
-      console.log('Ref data');
-      console.timeLog('gis');
       if (referenceData) {
         if (get(req, 'query.aggregation')) {
           const aggregation = get(req, 'query.aggregation') as string;
@@ -459,16 +456,12 @@ router.get('/feature', async (req, res) => {
             referenceData.apiConfiguration,
             'name endpoint graphQLEndpoint'
           );
-          console.log('API');
-          console.timeLog('gis');
           const contextDataSources = (
             await dataSources({
               // Passing upstream request so accesstoken can be used for authentication
               req: req,
             } as any)
           )();
-          console.log('Datasources');
-          console.timeLog('gis');
           const dataSource = contextDataSources[
             apiConfiguration.name
           ] as CustomAPI;
@@ -481,16 +474,12 @@ router.get('/feature', async (req, res) => {
           if (contextFilters) {
             data = data.filter((x) => filterReferenceData(x, contextFilters));
           }
-          console.log('Data');
-          console.timeLog('gis');
           await getFeatures(
             featureCollection.features,
             layerType,
             data,
             mapping
           );
-          console.log('Features');
-          console.timeLog('gis');
         }
       } else {
         return res.status(404).send(i18next.t('common.errors.dataNotFound'));
@@ -498,10 +487,8 @@ router.get('/feature', async (req, res) => {
     } else {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
-    console.timeEnd('gis');
     return res.send(featureCollection);
   } catch (err) {
-    console.timeEnd('gis');
     logger.error(err.message, { stack: err.stack });
     return res
       .status(500)
