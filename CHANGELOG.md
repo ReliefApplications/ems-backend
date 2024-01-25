@@ -1,3 +1,18 @@
+# [2.6.0](https://github.com/ReliefApplications/ems-backend/compare/v2.5.1...v2.6.0) (2024-01-25)
+
+
+### Bug Fixes
+
+* filtering using boolean on ref data would not work ([712fac7](https://github.com/ReliefApplications/ems-backend/commit/712fac7c91abe7d649147375d3abad1068df90a1))
+
+
+### Features
+
+* allow addFields stage for reference data aggregations ([#907](https://github.com/ReliefApplications/ems-backend/issues/907)) ([75e505c](https://github.com/ReliefApplications/ems-backend/commit/75e505c55a35001df80620c176916031b3583554))
+* allow graphql reference data to pass variables ([#932](https://github.com/ReliefApplications/ems-backend/issues/932)) ([d64910e](https://github.com/ReliefApplications/ems-backend/commit/d64910e25fb6aa02c1193e1be4cf2f21c955a32d))
+* reference data aggregation now supports graphql variables injection ([#947](https://github.com/ReliefApplications/ems-backend/issues/947)) ([d5a2085](https://github.com/ReliefApplications/ems-backend/commit/d5a208550ad85fb79e5618e5442721219b85c650))
+* use graphql reference data variables in layers ([#948](https://github.com/ReliefApplications/ems-backend/issues/948)) ([9cb70b8](https://github.com/ReliefApplications/ems-backend/commit/9cb70b86628cebfcc1aa66d7c238741783544d37))
+
 # [2.6.0](https://github.com/ReliefApplications/ems-backend/compare/v2.5.1...v2.6.0) (2024-01-23)
 
 
