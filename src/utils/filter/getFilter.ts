@@ -237,7 +237,7 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
               return { [fieldName]: value };
             }
           }
-          case 'notIn': {
+          case 'notin': {
             if (MULTISELECT_TYPES.includes(field.type)) {
               const v = Array.isArray(value) ? value : [value];
               return {
