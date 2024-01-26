@@ -1,5 +1,14 @@
 import { Types } from 'mongoose';
-import { Application, Page, Resource, Role, Record, Channel } from '@models';
+import {
+  Application,
+  Page,
+  Resource,
+  Role,
+  Record,
+  Channel,
+  Step,
+  Workflow,
+} from '@models';
 import { duplicatePage } from '@services/page.service';
 import { copyFolder } from '@utils/files/copyFolder';
 
@@ -73,6 +82,41 @@ const ROLE_ID_MAP = {
   userPlus: new Types.ObjectId('651157468e4cb3d8a3f22a7a'),
 };
 
+/** Adds the contextual filter of the base app to the structure apps */
+export const addContextualFilterToStructureApps = async () => {
+  // Gets all applications with a set description
+  const apps = await Application.find({
+    description: { $exists: true },
+  }).select('_id contextualFilter description');
+
+  const baseAppIdx = apps.findIndex((a) => a._id.equals(BASE_APP_ID));
+  if (baseAppIdx === -1) {
+    console.error('Could not find base app');
+    return;
+  }
+
+  const baseApp = apps.splice(baseAppIdx, 1)[0];
+
+  const recs = await Record.find({
+    form: STRUCTURE_FORM_ID,
+    _id: {
+      $in: apps.map((a) => new Types.ObjectId(a.description)),
+    },
+  });
+
+  // One application for each corresponding structure
+  const structures = recs
+    .map((r) => apps.find((a) => a.description === r._id.toString()))
+    .filter((x) => !!x);
+
+  // For each structure, we add the contextual filter of the base app
+  structures.forEach((s) => {
+    s.contextualFilter = baseApp.contextualFilter;
+  });
+
+  await Application.bulkSave(structures);
+};
+
 /**
  * Script that updated all the structure applications by copying the structure of each demo app page
  *
@@ -117,7 +161,21 @@ export const linkStructureAppsToDemo = async (rerun = false) => {
     application: { $in: structureApps.map((a) => a._id) },
   });
 
+  // Get all workflows that we might need to update
+  const workflows = await Workflow.find({
+    _id: {
+      $in: baseAppPages
+        .filter((p) => p.type === 'workflow')
+        .map((p) => p.content),
+    },
+  }).populate({
+    path: 'steps',
+    model: 'Step',
+    select: '_id content permissions',
+  });
+
   const pagesToSave = [] as Page[];
+  const stepsToSave = [] as Step[];
   baseAppPages.forEach((page) => {
     structureApps.forEach((app) => {
       const appPage = (app.pages as Page[]).find((p) => p.name === page.name);
@@ -164,6 +222,53 @@ export const linkStructureAppsToDemo = async (rerun = false) => {
 
         page.permissions.canSee.push(...permissions.map((r) => r._id));
         page.markModified('permissions');
+
+        // We also need to add permissions to the steps
+        const workflow = workflows.find((w) =>
+          w._id.equals(page.content as Types.ObjectId)
+        );
+
+        if (!workflow) {
+          return;
+        }
+
+        switch (pageAlias) {
+          case 'structure_wf':
+            workflow.steps.forEach((step) => {
+              step.permissions.canSee.push(
+                ...roles
+                  .filter(
+                    (r) => r.title === 'administrateur (chef de structure)'
+                  )
+                  .map((r) => r._id)
+              );
+              step.markModified('permissions');
+              // Check if already in the array
+              stepsToSave.push(step);
+            });
+            break;
+          case 'stats':
+            workflow.steps.forEach((step) => {
+              step.permissions.canSee.push(
+                ...roles
+                  .filter((r) => r.title !== 'utilisateur')
+                  .map((r) => r._id)
+              );
+              step.markModified('permissions');
+              stepsToSave.push(step);
+            });
+            break;
+          case 'library':
+          case 'family_wf':
+            workflow.steps.forEach((step) => {
+              step.permissions.canSee.push(...roles.map((r) => r._id));
+              step.markModified('permissions');
+              stepsToSave.push(step);
+            });
+            break;
+          default:
+            break;
+        }
       }
     });
   });
@@ -173,6 +278,16 @@ export const linkStructureAppsToDemo = async (rerun = false) => {
     await Page.bulkSave([...pagesToSave, ...baseAppPages]);
   } else {
     console.log('All structure apps are already linked to the DEMO app');
+  }
+
+  if (stepsToSave.length) {
+    // Remove duplicates
+    const uniqueSteps = stepsToSave.filter(
+      (step, index, self) =>
+        index === self.findIndex((s) => s._id.equals(step._id))
+    );
+    console.log(`Linking ${uniqueSteps.length} steps to the DEMO app...`);
+    await Step.bulkSave(uniqueSteps);
   }
 };
 
