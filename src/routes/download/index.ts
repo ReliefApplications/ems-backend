@@ -347,10 +347,11 @@ router.post('/records', async (req, res) => {
         },
       })
       .getFilter();
-    const resource = await Resource.findOne(filters);
+    const resource = await Resource.findOne(filters).select('fields');
     if (!resource) {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
+    console.log(resource._id);
 
     // Make distinction if we send the file by email or in the response
     if (!params.email) {
@@ -373,12 +374,12 @@ router.post('/records', async (req, res) => {
           );
         }
       }
-      await exportBatch(req, res, params);
+      await exportBatch(req, res, resource, params);
     } else {
       // Send response so the client is not frozen
       res.status(200).send('Export ongoing');
       // Build the file
-      const file = await exportBatch(req, res, params);
+      const file = await exportBatch(req, res, resource, params);
       // Pass it in attachment
       const attachments = [
         {

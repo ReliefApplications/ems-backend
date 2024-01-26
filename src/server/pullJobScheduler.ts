@@ -53,7 +53,7 @@ const pullJobScheduler = async () => {
 
   for (const pullJob of pullJobs) {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    scheduleJob(pullJob);
+    // scheduleJob(pullJob);
   }
 };
 

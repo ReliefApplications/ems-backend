@@ -282,6 +282,42 @@ const writeRowsXlsx = (
   });
 };
 
+const countPipeline = (
+  resource: Resource,
+  columns: any,
+  params: ExportBatchParams
+) => {
+  const pipeline: any = [
+    {
+      $match: {
+        $and: [
+          { resource: resource._id },
+          getFilter(params.filter, columns),
+          { archived: { $ne: true } },
+        ],
+      },
+    },
+    {
+      // todo: incorrect sorting, should respect the one from the query I think
+      $sort: {
+        [params.sortField]: params.sortOrder === 'asc' ? 1 : -1,
+      },
+    },
+  ];
+  columns
+    .filter((col) => col.meta?.field?.isCalculated)
+    .forEach((col) =>
+      pipeline.unshift(
+        ...(buildCalculatedFieldPipeline(
+          col.meta.field.expression,
+          col.meta.field.name,
+          params.timeZone
+        ) as any)
+      )
+    );
+  return pipeline;
+};
+
 /**
  * Builds the pipeline to fetch records
  *
@@ -293,9 +329,8 @@ const writeRowsXlsx = (
 const buildPipeline = (
   columns: any,
   params: ExportBatchParams,
-  idsList?: mongoose.Types.ObjectId[]
+  ids?: mongoose.Types.ObjectId[]
 ) => {
-  let pipeline: any;
   const projectStep = {
     $project: {
       ...columns.reduce((acc, col) => {
@@ -314,45 +349,24 @@ const buildPipeline = (
         }
         return acc;
       }, {}),
-      ...(idsList ? { resource: 1 } : {}), //add the resource for subcolumns
+      ...(ids ? { resource: 1 } : {}), //add the resource for subcolumns
     },
   };
-  if (!idsList) {
-    //idsList is used when getting subcolumns
-    pipeline = [
-      {
-        $match: {
-          $and: [
-            { resource: new mongoose.Types.ObjectId(params.resource) },
-            getFilter(params.filter, columns),
-            { archived: { $ne: true } },
-          ],
-        },
-      },
-      projectStep,
-      {
-        $sort: {
-          [params.sortField]: params.sortOrder === 'asc' ? 1 : -1,
-        },
-      },
-    ];
-  } else {
-    pipeline = [
-      {
-        $match: {
-          $and: [
-            {
-              _id: {
-                $in: idsList,
-              },
+  const pipeline: any = [
+    {
+      $match: {
+        $and: [
+          {
+            _id: {
+              $in: ids,
             },
-            { archived: { $ne: true } },
-          ],
-        },
+          },
+          { archived: { $ne: true } },
+        ],
       },
-      projectStep,
-    ];
-  }
+    },
+    projectStep,
+  ];
   columns
     .filter((col) => col.meta?.field?.isCalculated)
     .forEach((col) =>
@@ -419,7 +433,6 @@ const getReferenceData = async (
         )
       )
         .map((col) => {
-          console.log(col, records);
           const firstRecordWithResource = records.find(
             (record: any) =>
               record[col] &&
@@ -679,16 +692,52 @@ const addReverseResourcesField = async (columns: any, records: any) => {
  * @returns list of data
  */
 const getRecords = async (
+  resource: Resource,
   params: ExportBatchParams,
   columns: any[],
   req: any
 ) => {
-  console.log('starting');
-  console.time('export');
-  let records = await Record.aggregate<Record>(buildPipeline(columns, params));
+  const countAggregation = await Record.aggregate(
+    countPipeline(resource, columns, params)
+  ).facet({
+    items: [
+      {
+        $project: {
+          _id: 1,
+        },
+      },
+    ],
+    totalCount: [
+      {
+        $count: 'count',
+      },
+    ],
+  });
+  console.log('Count fetched');
+  console.timeLog('export');
+  // Get total count
+  const totalCount = countAggregation[0].totalCount[0].count;
+  // Create a list of all ids
+  const ids = countAggregation[0].items.map((x) => x._id);
+  let records = new Array(totalCount);
+  const pageSize = 100;
+  const recordsPromises: Promise<any>[] = [];
+  for (let i = 0; i < totalCount; i += pageSize) {
+    recordsPromises.push(
+      Record.aggregate(
+        buildPipeline(columns, params, ids.slice(i, i + pageSize))
+      ).then((items) => {
+        // console.log(items);
+        records.splice(i, items.length, ...items);
+      })
+    );
+  }
+  await Promise.all(recordsPromises);
+  console.log(records[0]);
+  console.log('Based records fetched');
+  console.timeLog('export');
   records = await addReverseResourcesField(columns, records);
-
-  console.log('Records fetched');
+  console.log('Reversed records fetched');
   console.timeLog('export');
 
   const resourceResourcesColumns = getResourceAndResourcesQuestions(columns);
@@ -730,12 +779,7 @@ const getRecords = async (
         );
       }
     }
-    promises.push(
-      Promise.all(relatedResourcePromises).then(() => {
-        console.log('Related resource fetched');
-        console.timeLog('export');
-      })
-    );
+    promises.push(Promise.all(relatedResourcePromises));
 
     choicesByUrlColumns = [
       ...choicesByUrlColumns,
@@ -753,28 +797,54 @@ const getRecords = async (
     ];
   }
   promises.push(
-    getChoicesByUrl(choicesByUrlColumns, req.headers.authorization).then(() => {
-      console.log('Choices by url fetched');
-      console.timeLog('export');
-    })
+    getChoicesByUrl(choicesByUrlColumns, req.headers.authorization)
   );
   await Promise.all(promises);
+  console.log('Related fields & resources fetched');
+  console.timeLog('export');
   await getReferenceData(referenceDataColumns, params.resource, req, records);
   return records;
 };
+
+// const getColumnsTest = (resource: Resource, params: ExportBatchParams) => {
+//   const columns = [];
+//   for (const field of params.fields) {
+//     const resourceField = resource.fields.find((x) => x.name === field.name);
+//     if (resourceField)) {
+//       columns.push({
+//         name: field.name,
+//         field: field.name,
+//         type: resourceField.type
+//       })
+//     }
+//   }
+// };
 
 /**
  * Write a buffer from request, to export records as xlsx or csv
  *
  * @param req user request
  * @param res server response
+ * @param resource resource to export
  * @param params export batch parameters
  * @returns xlsx or csv buffer
  */
-export default async (req: any, res: Response, params: ExportBatchParams) => {
+export default async (
+  req: any,
+  res: Response,
+  resource: Resource,
+  params: ExportBatchParams
+) => {
+  console.log('Export batch starting');
+  console.time('export');
   // Get total count and columns
+  // todo: replace with resource fields
   const columns = await getColumns(req, params);
-  const records: Record[] = await getRecords(params, columns, req);
+  console.log('Columns fetched');
+  console.timeLog('export');
+  const records: Record[] = await getRecords(resource, params, columns, req);
+  console.log('Records fetched');
+  console.timeLog('export');
   switch (params.format) {
     case 'xlsx': {
       let workbook: Workbook | stream.xlsx.WorkbookWriter;
