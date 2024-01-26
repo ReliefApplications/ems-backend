@@ -11,62 +11,16 @@ import i18next from 'i18next';
 import mongoose from 'mongoose';
 import { logger } from '@services/logger.service';
 import axios from 'axios';
-import { isEqual, isNil, get, omit } from 'lodash';
+import { isEqual, get, omit } from 'lodash';
 import turf, { Feature, booleanPointInPolygon } from '@turf/turf';
 import dataSources, { CustomAPI } from '@server/apollo/dataSources';
 import { getAdmin0Polygons } from '@utils/gis/getCountryPolygons';
 import filterReferenceData from '@utils/referenceData/referenceDataFilter.util';
 
 /**
- * Interface of feature query
- */
-interface IFeatureQuery {
-  geoField?: string;
-  longitudeField?: string;
-  latitudeField?: string;
-  minLat?: number;
-  maxLat?: number;
-  minLng?: number;
-  maxLng?: number;
-  type: GeometryType;
-}
-
-/**
  * Endpoint for custom feature layers
  */
 const router = express.Router();
-
-/**
- * Get filter polygon from bounds
- *
- * @param query query parameters
- * @returns filter polygon
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const getFilterPolygon = (query: IFeatureQuery) => {
-  if (
-    !isNil(query.minLat) &&
-    !isNil(query.maxLat) &&
-    !isNil(query.minLng) &&
-    !isNil(query.maxLng)
-  ) {
-    const polygon: turf.Polygon = {
-      type: 'Polygon',
-      coordinates: [
-        [
-          [Number(query.minLat), Number(query.minLng)],
-          [Number(query.maxLat), Number(query.minLng)],
-          [Number(query.maxLat), Number(query.maxLng)],
-          [Number(query.minLat), Number(query.maxLng)],
-          [Number(query.minLat), Number(query.minLng)],
-        ],
-      ],
-    };
-    return polygon;
-  } else {
-    return null;
-  }
-};
 
 /**
  * Check geoJSON feature, if it's MultiLine or MultiPolygon, parse it

@@ -133,6 +133,7 @@ class SafeServer {
     this.app = express();
 
     // === REQUEST SIZE ===
+    this.app.use('/upload/resource/insert', express.json({ limit: '100mb' }));
     this.app.use(express.json({ limit: '5mb' }));
     this.app.use(express.urlencoded({ limit: '5mb', extended: true }));
 
