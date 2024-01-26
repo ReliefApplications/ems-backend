@@ -175,7 +175,7 @@ const fetchRecordsServiceToService = (
             .then(({ data: data2 }) => {
               if (data2 && data2.result) {
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                insertRecords(data2.result, pullJob, true);
+                insertRecords(data2.result, pullJob, true, false);
               }
             })
             .catch((err) => {
@@ -201,7 +201,7 @@ const fetchRecordsServiceToService = (
         const records = pullJob.path ? get(data, pullJob.path) : data;
         if (records) {
           // eslint-disable-next-line @typescript-eslint/no-use-before-define
-          insertRecords(records, pullJob);
+          insertRecords(records, pullJob, false, false);
         }
       })
       .catch((err) => {
@@ -226,7 +226,7 @@ const fetchRecordsPublic = (pullJob: PullJob): void => {
       const records = pullJob.path ? get(data, pullJob.path) : data;
       if (records) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        insertRecords(records, pullJob);
+        insertRecords(records, pullJob, false, false);
       }
     })
     .catch((err) => {
@@ -298,12 +298,14 @@ const getUserRoleFiltersFromApp = (appName: string): any => {
  * @param data array of data fetched from API
  * @param pullJob pull job configuration
  * @param isEIOS is EIOS pulljob or not
+ * @param fromRoute tells if the insertion is done from pull-job or route
  */
 export const insertRecords = async (
   data: any[],
   pullJob: PullJob,
-  isEIOS = false
-): Promise<void> => {
+  isEIOS = false,
+  fromRoute?: boolean
+): Promise<string> => {
   const form = await Form.findById(pullJob.convertTo);
   if (form) {
     const records = [];
@@ -504,9 +506,12 @@ export const insertRecords = async (
 
       if (isEIOS) {
         // Assign correct ownership value based on mapping JSON and board name
-        const boardName = mappedElement.article_board_name;
+        let boardName = mappedElement.article_board_name;
+        if (!ownershipMappingWithIds[boardName]) {
+          boardName = 'default';
+        }
         mappedElement.ownership =
-          ownershipMappingWithIds[boardName].map(String);
+          ownershipMappingWithIds[boardName]?.map(String);
       }
       // If everything is fine, push it in the array for saving
       if (!isDuplicate) {
@@ -528,9 +533,14 @@ export const insertRecords = async (
         records.push(record);
       }
     }
-
-    RecordModel.insertMany(records).then(async () => {
-      const insertReportMessage = `${records.length} new records of form "${form.name}" created from pulljob "${pullJob.name}"`;
+    let insertReportMessage = '';
+    try {
+      const insertedRecords = await RecordModel.insertMany(records);
+      if (fromRoute) {
+        insertReportMessage = `${insertedRecords.length} new records of form "${form.name}" created from records insertion route`;
+      } else {
+        insertReportMessage = `${insertedRecords.length} new records of form "${form.name}" created from pulljob "${pullJob.name}"`;
+      }
       logger.info(insertReportMessage);
       if (pullJob.channel && records.length > 0) {
         const notification = new Notification({
@@ -544,7 +554,12 @@ export const insertRecords = async (
         const publisher = await pubsub();
         publisher.publish(pullJob.channel.toString(), { notification });
       }
-    });
+      return insertReportMessage;
+    } catch (err) {
+      return 'Record insertion failed';
+    }
+  } else {
+    return 'Cannot find form with id ' + pullJob.convertTo;
   }
 };
 

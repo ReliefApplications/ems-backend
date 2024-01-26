@@ -138,6 +138,7 @@ const LayerDataSourceInputType = new GraphQLInputObjectType({
   name: 'LayerDataSourceInputType',
   fields: () => ({
     refData: { type: GraphQLID },
+    referenceDataVariableMapping: { type: GraphQLString },
     resource: { type: GraphQLID },
     layout: { type: GraphQLID },
     aggregation: { type: GraphQLID },
