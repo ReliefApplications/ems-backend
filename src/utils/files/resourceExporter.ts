@@ -7,7 +7,7 @@ import { getColumnsFromMeta } from './getColumnsFromMeta';
 import axios from 'axios';
 import { logger } from '@services/logger.service';
 import { Parser } from 'json2csv';
-import { Record, ReferenceData, Resource } from '@models';
+import { DataTransformer, Record, Resource } from '@models';
 import mongoose from 'mongoose';
 import { defaultRecordFields } from '@const/defaultRecordFields';
 import getFilter from '@utils/schema/resolvers/Query/getFilter';
@@ -15,7 +15,7 @@ import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFiel
 import { getChoices } from '@utils/proxy';
 import { referenceDataType } from '@const/enumTypes';
 import jsonpath from 'jsonpath';
-import { each, isArray, omit, set } from 'lodash';
+import { cloneDeep, each, isArray, omit, set } from 'lodash';
 import { getRowsFromMeta } from './getRowsFromMeta';
 import { Response } from 'express';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
@@ -80,16 +80,10 @@ export default class Exporter {
    * @returns xlsx or csv buffer
    */
   public async export() {
-    console.log('Export batch starting');
-    console.time('export');
     // Get total count and columns
     // todo: replace with resource fields
     await this.getColumns();
-    console.log('Columns fetched');
-    console.timeLog('export');
     const records: Record[] = await this.getRecords();
-    console.log('Records fetched');
-    console.timeLog('export');
     switch (this.params.format) {
       case 'xlsx': {
         let workbook: Workbook | stream.xlsx.WorkbookWriter;
@@ -103,18 +97,13 @@ export default class Exporter {
           });
         }
         const worksheet = workbook.addWorksheet('records');
-        worksheet.properties.defaultColWidth = 15;
         // Set headers of the file
         this.setHeaders(worksheet);
-        console.log('Ready to write');
-        console.timeLog('export');
         try {
           this.writeRowsXlsx(worksheet, getRowsFromMeta(this.columns, records));
         } catch (err) {
           logger.error(err.message);
         }
-        console.log('Sending file');
-        console.timeEnd('export');
         // Close workbook
         if (workbook instanceof stream.xlsx.WorkbookWriter) {
           workbook.commit().then(() => {
@@ -125,8 +114,6 @@ export default class Exporter {
         }
       }
       case 'csv': {
-        console.log('Ready to write');
-        console.timeLog('export');
         // Create a string array with the columns' labels or names as fallback, then construct the parser from it
         const fields = this.columns.flatMap((x) => ({
           label: x.title,
@@ -152,8 +139,6 @@ export default class Exporter {
         }
         // Generate the file by parsing the data, set the response parameters and send it
         const csv = json2csv.parse(csvData);
-        console.log('Sending file');
-        console.timeEnd('export');
         return csv;
       }
     }
@@ -229,15 +214,12 @@ export default class Exporter {
   private getRecords = async () => {
     const ability = await extendAbilityForRecords(this.req.context.user);
     set(this.req.context.user, 'ability', ability);
-    console.log('Ability fetched');
-    console.timeLog('export');
     const sort = await getSortAggregation(
       this.params.sortField,
       this.params.sortOrder,
       this.resource.fields,
       this.req.context
     );
-    console.log(sort);
     const countAggregation = await Record.aggregate(
       await this.recordsPipeline()
     ).facet({
@@ -255,13 +237,10 @@ export default class Exporter {
         },
       ],
     });
-    console.log('Count fetched');
-    console.timeLog('export');
     // Get total count
     const totalCount = countAggregation[0].totalCount[0].count;
     // Create a list of all ids
     const ids = countAggregation[0].items.map((x) => x._id);
-    console.log(ids[0]);
     // Build an empty list of records
     const records = new Array(totalCount);
     const recordsPromises: Promise<any>[] = [];
@@ -278,8 +257,6 @@ export default class Exporter {
     }
     // Execute all promises
     await Promise.all(recordsPromises);
-    console.log('Based records fetched');
-    console.timeLog('export');
 
     // Find all resource & resources question
     const resourceResourcesColumns = this.getResourceAndResourcesQuestions();
@@ -297,7 +274,6 @@ export default class Exporter {
 
     // Build for each record aggregations to fetch related records
     for (const column of resourceResourcesColumns) {
-      console.log('Fetching column: ', column.field);
       const relatedResourcePromises: Promise<any>[] = [];
       for (const record of records) {
         // Reversed relationship, the resource is used in another resource's template
@@ -360,12 +336,8 @@ export default class Exporter {
     promises.push(this.getChoicesByUrl(choicesByUrlColumns));
     // Execute all promises ( except from reference data ones )
     await Promise.all(promises);
-    console.log('Related fields & resources fetched');
-    console.timeLog('export');
     // Execute reference data aggregations
     await this.getReferenceData(referenceDataColumns, records);
-    console.log('Reference data fetched');
-    console.timeLog('export');
     return records;
   };
 
@@ -402,7 +374,6 @@ export default class Exporter {
       ...(searchFilter ? [searchFilter] : []),
       { $match: filters },
     ];
-    console.log('will be ready');
     this.columns
       .filter((col) => col.meta?.field?.isCalculated)
       .forEach((col) =>
@@ -564,6 +535,7 @@ export default class Exporter {
     const columns = this.getFlatColumns();
     // Create header row, and style it
     const headerRow = worksheet.addRow(columns.map((x: any) => x.title));
+    worksheet.columns = columns.map(() => ({ width: 15 }));
     headerRow.font = {
       color: { argb: 'FFFFFFFF' },
     };
@@ -899,22 +871,21 @@ export default class Exporter {
               });
         await axiosQuery
           .then((response) => {
-            data = (
-              referenceData.path
-                ? jsonpath.query(response.data, referenceData.path)
-                : response.data
-            ).map((obj) => {
-              const newObj = {};
-              for (const key in obj) {
-                newObj[ReferenceData.getGraphQLFieldName(key)] = obj[key];
-              }
-              return newObj;
-            });
+            data = referenceData.path
+              ? jsonpath.query(response.data, referenceData.path)
+              : response.data;
           })
           .catch((error) => {
             logger.error(error);
           });
       }
+
+      /**
+       * Find reference data from record value
+       *
+       * @param recordValue record value
+       * @returns void
+       */
       const getReferenceDataValue = (recordValue) => {
         return isArray(recordValue)
           ? recordValue.reduce((acc, choice) => {
@@ -922,11 +893,16 @@ export default class Exporter {
                 (obj) => obj[referenceData.valueField] === choice
               );
               if (dataRow) {
-                Object.keys(dataRow).forEach((key) => {
+                const transformer = new DataTransformer(
+                  referenceData.fields,
+                  cloneDeep([dataRow])
+                );
+                const transformedObject = transformer.transformData()[0];
+                Object.keys(transformedObject).forEach((key) => {
                   if (!acc[key]) {
                     acc[key] = [];
                   }
-                  acc[key].push(dataRow[key]);
+                  acc[key].push(transformedObject[key]);
                 });
               }
               return acc;
