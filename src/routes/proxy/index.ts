@@ -63,6 +63,7 @@ const proxyAPIRequest = async (
       res.status(200).send(JSON.parse(cacheData));
     } else {
       const token = await getToken(api, req.headers.accesstoken, ping);
+      console.log(token);
       await axios({
         url,
         method: req.method,
@@ -80,25 +81,27 @@ const proxyAPIRequest = async (
           // We are only caching the results of requests that are not user-dependent.
           // Otherwise, unwanted users could access cached data of other users.
           // As an improvement, we could include a stringified unique property of the user to the cache-key to enable user-specific cache.
-          if (
-            client &&
-            [authType.serviceToService, authType.public].includes(
-              api.authType
-            ) &&
-            status === 200
-          ) {
-            await client
-              .set(cacheKey, JSON.stringify(data), {
-                EX: 60 * 60 * 24, // set a cache of one day
-              })
-              .then(() => logger.info(`REDIS: set key : ${cacheKey}`));
-          }
-          if (client && api.authType === authType.authorizationCode) {
-            await client
-              .set(cacheKey, JSON.stringify(data), {
-                EX: 60 * 60 * 24, // set a cache of one day
-              })
-              .then(() => logger.info(`REDIS: set key : ${cacheKey}`));
+          if (data.length > 0) {
+            if (
+              client &&
+              [authType.serviceToService, authType.public].includes(
+                api.authType
+              ) &&
+              status === 200
+            ) {
+              await client
+                .set(cacheKey, JSON.stringify(data), {
+                  EX: 60 * 60 * 24, // set a cache of one day
+                })
+                .then(() => logger.info(`REDIS: set key : ${cacheKey}`));
+            }
+            if (client && api.authType === authType.authorizationCode) {
+              await client
+                .set(cacheKey, JSON.stringify(data), {
+                  EX: 60 * 60 * 24, // set a cache of one day
+                })
+                .then(() => logger.info(`REDIS: set key : ${cacheKey}`));
+            }
           }
           res.status(200).send(data);
         })

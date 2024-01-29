@@ -352,6 +352,7 @@ export default async (server?: ApolloServer<Context>) => {
   const apiConfigurations = await ApiConfiguration.find({
     status: status.active,
   });
+  console.log(apiConfigurations.length);
   return () =>
     ({
       ...apiConfigurations.reduce((o, apiConfiguration) => {
