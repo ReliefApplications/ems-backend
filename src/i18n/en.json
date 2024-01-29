@@ -1,5 +1,8 @@
 {
 	"common": {
+		"copyright": {
+			"who": "Copyright © World Health Organization 2024."
+		},
 		"errors": {
 			"authenticationTokenNotFound": "Missing bearer token.",
 			"dataNotFound": "Data not found",

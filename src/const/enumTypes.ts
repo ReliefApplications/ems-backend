@@ -120,6 +120,15 @@ export const customNotificationLastExecutionStatus = {
 };
 
 /**
+ * Emun of notification types
+ */
+export const notificationsType = {
+  email: 'email',
+  alert: 'alert',
+  pushNotification: 'push notification',
+};
+
+/**
  * Enum of geospatial data type.
  */
 export const geospatialType = {

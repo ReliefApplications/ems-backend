@@ -210,11 +210,14 @@ const buildMongoFilter = (
           case 'date':
           case 'datetime':
           case 'datetime-local':
-            dateForFilter = getDateForMongo(value);
-            startDate = dateForFilter.startDate;
-            endDate = dateForFilter.endDate;
-            value = dateForFilter.date;
+            if (filter.operator !== 'inthelast') {
+              dateForFilter = getDateForMongo(value);
+              startDate = dateForFilter.startDate;
+              endDate = dateForFilter.endDate;
+              value = dateForFilter.date;
+            }
             break;
+
           case 'time': {
             value = getTimeForMongo(value);
             break;
@@ -409,6 +412,14 @@ const buildMongoFilter = (
               return { [fieldName]: { $exists: true, $ne: [] } };
             } else {
               return { [fieldName]: { $exists: true, $ne: '' } };
+            }
+          }
+          case 'inthelast': {
+            if (DATE_TYPES.includes(type)) {
+              const now = Date.now();
+              const withinTheLastMs = value * 60 * 1000;
+              const dateLowerLimit = new Date(now - withinTheLastMs);
+              return { [fieldName]: { $gte: dateLowerLimit } };
             }
           }
           case 'near': {
