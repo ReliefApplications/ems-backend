@@ -71,20 +71,24 @@ export const buildIncrementalId = (
  *
  * @param form Id or form object.
  * @param newShape New shape of the incremental ID.
+ * @param force Whether to force the update even if the shape is the same.
  */
 export const updateIncrementalIds = async (
   form: Form | string | Types.ObjectId,
-  newShape: Form['idShape']
+  newShape: Form['idShape'],
+  force = false
 ) => {
   // If form is a string, fetches the form object
   if (!(form instanceof Form)) {
-    form = await Form.findById(form);
+    form = await Form.findOne({
+      $or: [{ _id: form }, { resource: form }],
+    });
   }
 
   const { idShape: oldShape } = form as Form;
 
   // If the shape is the same, do nothing
-  if (isEqual(oldShape, newShape)) {
+  if (isEqual(oldShape, newShape) && !force) {
     return;
   }
 
@@ -159,7 +163,7 @@ export const updateIncrementalIds = async (
 export const getNextId = async (structureId: string) => {
   // Gets the form name and id shape
   const { name, idShape: formIDShape } = await Form.findOne({
-    $or: [{ _id: structureId }, { resource: structureId, core: true }],
+    $or: [{ _id: structureId }, { resource: structureId }],
   }).select('name idShape');
 
   const idShape = formIDShape || DEFAULT_INCREMENTAL_ID_SHAPE;
@@ -190,7 +194,7 @@ export const getNextId = async (structureId: string) => {
       // If the last record has no incID, it means it was created before the incID field was added
       // to the Record model. In this case, we need to update the incID of all records
       // to avoid duplicates.
-      await updateIncrementalIds(structureId, idShape);
+      await updateIncrementalIds(structureId, idShape, true);
 
       // Re-fetches the last record
       lastRecord = await Record.findOne(filters)
