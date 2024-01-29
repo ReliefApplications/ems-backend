@@ -215,10 +215,12 @@ export default class Exporter {
   private getRecords = async () => {
     const ability = await extendAbilityForRecords(this.req.context.user);
     set(this.req.context.user, 'ability', ability);
-    const contextDataSources = await dataSources({
-      // Passing upstream request so accesstoken can be used for authentication
-      req: this.req,
-    } as any);
+    const contextDataSources = (
+      await dataSources({
+        // Passing upstream request so accesstoken can be used for authentication
+        req: this.req,
+      } as any)
+    )();
     set(this.req.context, 'dataSources', contextDataSources);
     console.log(this.req.context.dataSources);
     const sort = await getSortAggregation(
