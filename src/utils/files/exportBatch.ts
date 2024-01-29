@@ -659,6 +659,7 @@ const getResourceAndResourcesQuestions = (columns: any) => {
  */
 const addReverseResourcesField = async (columns: any, records: any) => {
   const reverseColumns = columns.filter((col) => col.parent); //they also take the normal resources questions but that will cause no issue
+  console.log(reverseColumns);
   const parentResources = await Resource.find({
     name: {
       $regex: reverseColumns.map((col) => col.parent).join('|'),
@@ -911,6 +912,8 @@ export default async (
       }
     }
     case 'csv': {
+      console.log('Ready to write');
+      console.timeLog('export');
       // Create a string array with the columns' labels or names as fallback, then construct the parser from it
       const fields = columns.flatMap((x) => ({
         label: x.title,
@@ -936,6 +939,8 @@ export default async (
       }
       // Generate the file by parsing the data, set the response parameters and send it
       const csv = json2csv.parse(csvData);
+      console.log('Sending file');
+      console.timeEnd('export');
       return csv;
     }
   }

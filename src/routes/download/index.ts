@@ -365,6 +365,9 @@ router.post('/records', async (req, res) => {
             'Content-Disposition',
             'attachment; filename=records.xlsx'
           );
+          // Build the file
+          await exportBatch(req, res, resource, params);
+          break;
         }
         case 'csv': {
           res.header('Content-Type', 'text/csv');
@@ -372,9 +375,11 @@ router.post('/records', async (req, res) => {
             'Content-Disposition',
             'attachment; filename=records.csv'
           );
+          // Build the file
+          const file = await exportBatch(req, res, resource, params);
+          return res.send(file);
         }
       }
-      await exportBatch(req, res, resource, params);
     } else {
       // Send response so the client is not frozen
       res.status(200).send('Export ongoing');
