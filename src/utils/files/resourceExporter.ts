@@ -731,6 +731,7 @@ export default class Exporter {
    */
   private getChoicesByUrl = async (choicesByUrlColumns: any) => {
     for (const column of choicesByUrlColumns) {
+      console.log(column.meta.field);
       const choices = await getChoices(
         column.meta.field,
         this.req.headers.authorization
