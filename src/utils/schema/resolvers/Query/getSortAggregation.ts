@@ -29,6 +29,7 @@ const getSortAggregation = async (
   // If we need to populate choices to sort on the text value
   if (field && (field.choices || field.choicesByUrl)) {
     const choices = (await getFullChoices(field, context)) || [];
+    console.log('and choices areeee');
     console.log(choices.length);
     const choicesValue = choices.map((x) => x.value);
     // Create aggregation to have text instead of values

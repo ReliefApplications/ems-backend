@@ -63,7 +63,6 @@ const proxyAPIRequest = async (
       res.status(200).send(JSON.parse(cacheData));
     } else {
       const token = await getToken(api, req.headers.accesstoken, ping);
-      console.log(token);
       await axios({
         url,
         method: req.method,
@@ -77,6 +76,7 @@ const proxyAPIRequest = async (
         }),
       })
         .then(async ({ data, status }) => {
+          console.log('fetched');
           console.log(data.length);
           // We are only caching the results of requests that are not user-dependent.
           // Otherwise, unwanted users could access cached data of other users.
