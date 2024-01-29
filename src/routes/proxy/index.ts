@@ -76,6 +76,7 @@ const proxyAPIRequest = async (
         }),
       })
         .then(async ({ data, status }) => {
+          console.log(data.length);
           // We are only caching the results of requests that are not user-dependent.
           // Otherwise, unwanted users could access cached data of other users.
           // As an improvement, we could include a stringified unique property of the user to the cache-key to enable user-specific cache.
