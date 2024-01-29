@@ -57,6 +57,7 @@ const proxyAPIRequest = async (
       : `${jwtDecode<any>(req.headers.authorization).name}:${url}/${bodyHash}`;
     // Get data from the cache
     const cacheData = client ? await client.get(cacheKey) : null;
+    console.log('The key is :', cacheKey);
     if (cacheData) {
       logger.info(`REDIS: get key : ${url}`);
       console.log(JSON.parse(cacheData).length);
@@ -77,31 +78,28 @@ const proxyAPIRequest = async (
       })
         .then(async ({ data, status }) => {
           console.log('fetched');
-          console.log(data.length);
           // We are only caching the results of requests that are not user-dependent.
           // Otherwise, unwanted users could access cached data of other users.
           // As an improvement, we could include a stringified unique property of the user to the cache-key to enable user-specific cache.
-          if (data.length > 0) {
-            if (
-              client &&
-              [authType.serviceToService, authType.public].includes(
-                api.authType
-              ) &&
-              status === 200
-            ) {
-              await client
-                .set(cacheKey, JSON.stringify(data), {
-                  EX: 60 * 60 * 24, // set a cache of one day
-                })
-                .then(() => logger.info(`REDIS: set key : ${cacheKey}`));
-            }
-            if (client && api.authType === authType.authorizationCode) {
-              await client
-                .set(cacheKey, JSON.stringify(data), {
-                  EX: 60 * 60 * 24, // set a cache of one day
-                })
-                .then(() => logger.info(`REDIS: set key : ${cacheKey}`));
-            }
+          if (
+            client &&
+            [authType.serviceToService, authType.public].includes(
+              api.authType
+            ) &&
+            status === 200
+          ) {
+            await client
+              .set(cacheKey, JSON.stringify(data), {
+                EX: 60 * 60 * 24, // set a cache of one day
+              })
+              .then(() => logger.info(`REDIS: set key : ${cacheKey}`));
+          }
+          if (client && api.authType === authType.authorizationCode) {
+            await client
+              .set(cacheKey, JSON.stringify(data), {
+                EX: 60 * 60 * 24, // set a cache of one day
+              })
+              .then(() => logger.info(`REDIS: set key : ${cacheKey}`));
           }
           res.status(200).send(data);
         })
