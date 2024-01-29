@@ -45,6 +45,7 @@ export const getFullChoices = async (
     if (field.choicesByUrl) {
       const url: string = field.choicesByUrl.url;
       if (url.includes(config.get('server.url')) || url.includes('{API_URL}')) {
+        console.log('par ici');
         const ownUrl: string = url.includes(config.get('server.url'))
           ? config.get('server.url')
           : '{API_URL}';
@@ -65,6 +66,7 @@ export const getFullChoices = async (
           return res;
         }
       } else {
+        console.log('par là');
         const dataSource: CustomAPI = context.dataSources._rest;
         const res = await dataSource.getChoices(
           url,
