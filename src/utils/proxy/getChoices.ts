@@ -9,6 +9,7 @@ import get from 'lodash/get';
  * @returns the choices
  */
 export const getChoices = async (field: any, token: string): Promise<any[]> => {
+  console.log(token);
   const value = get(field, 'choicesByUrl.value', null);
   const text = get(field, 'choicesByUrl.text', null);
   try {

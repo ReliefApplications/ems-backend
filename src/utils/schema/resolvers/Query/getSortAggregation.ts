@@ -18,9 +18,7 @@ const getSortAggregation = async (
   fields: any[],
   context
 ): Promise<any[]> => {
-  console.log(sortField);
   const field: any = fields.find((x) => x && x.name === sortField);
-  console.log(field);
   const parentField: any =
     sortField && sortField.includes('.')
       ? fields.find((x) => x && x.name === sortField.split('.')[0])
@@ -29,8 +27,6 @@ const getSortAggregation = async (
   // If we need to populate choices to sort on the text value
   if (field && (field.choices || field.choicesByUrl)) {
     const choices = (await getFullChoices(field, context)) || [];
-    console.log('and choices areeee');
-    console.log(choices.length);
     const choicesValue = choices.map((x) => x.value);
     // Create aggregation to have text instead of values
     if (MULTISELECT_TYPES.includes(field.type)) {
