@@ -102,7 +102,7 @@ const extractSourceFields = (
   } else if (filter.field) {
     if (
       typeof filter.field === 'string' &&
-      !fields.includes(filter.field) &&
+      !fields.includes(filter.field.split('.')[0]) &&
       allFields.concat(DEFAULT_FIELDS).includes(filter.field.split('.')[0])
     ) {
       fields.push(filter.field.split('.')[0]);
