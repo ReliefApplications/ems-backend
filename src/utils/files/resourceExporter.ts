@@ -22,6 +22,7 @@ import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { accessibleBy } from '@casl/mongoose';
 import getSearchFilter from '@utils/schema/resolvers/Query/getSearchFilter';
 import getSortAggregation from '@utils/schema/resolvers/Query/getSortAggregation';
+import dataSources from '@server/apollo/dataSources';
 
 /**
  * Export batch parameters interface
@@ -214,6 +215,14 @@ export default class Exporter {
   private getRecords = async () => {
     const ability = await extendAbilityForRecords(this.req.context.user);
     set(this.req.context.user, 'ability', ability);
+    set(
+      this.req.context,
+      'dataSources',
+      await dataSources({
+        // Passing upstream request so accesstoken can be used for authentication
+        req: this.req,
+      } as any)
+    );
     const sort = await getSortAggregation(
       this.params.sortField,
       this.params.sortOrder,
