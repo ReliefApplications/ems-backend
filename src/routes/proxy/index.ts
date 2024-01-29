@@ -59,6 +59,7 @@ const proxyAPIRequest = async (
     const cacheData = client ? await client.get(cacheKey) : null;
     if (cacheData) {
       logger.info(`REDIS: get key : ${url}`);
+      console.log(JSON.parse(cacheData).length);
       res.status(200).send(JSON.parse(cacheData));
     } else {
       const token = await getToken(api, req.headers.accesstoken, ping);
