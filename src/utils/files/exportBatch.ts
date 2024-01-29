@@ -174,6 +174,7 @@ const getFlatColumns = (columns: any[]) => {
 /**
  * Get columns from parameters
  *
+ * @param resource currently exported resource
  * @param req current request
  * @param params export batch parameters
  * @returns columns as promise
@@ -297,6 +298,15 @@ const writeRowsXlsx = (
   });
 };
 
+/**
+ * Build records pipeline
+ *
+ * @param resource currently exported resource
+ * @param columns available columns
+ * @param params export params
+ * @param req current request
+ * @returns main records pipeline
+ */
 const recordsPipeline = async (
   resource: Resource,
   columns: any,
@@ -338,11 +348,83 @@ const recordsPipeline = async (
 };
 
 /**
+ * Build reversed records pipeline
+ *
+ * @param req current request
+ * @param column current column
+ * @param record current record
+ * @param params export params
+ * @returns reversed pipeline
+ */
+const buildReversedPipeline = (
+  req: any,
+  column: any,
+  record: any,
+  params: ExportBatchParams
+) => {
+  const relatedFieldName = column.parent.fields.find(
+    (field) => field.relatedName === column.field
+  )?.name;
+  const permissionFilters = Record.find(
+    accessibleBy(req.context.user.ability, 'read').Record
+  ).getFilter();
+  const projectStep = {
+    $project: {
+      ...column.subColumns.reduce((acc, col) => {
+        const field = defaultRecordFields.find(
+          (f) => f.field === col.field.split('.')[0]
+        );
+        if (field) {
+          if (field.project) {
+            acc[field.field] = field.project;
+          } else {
+            acc[field.field] = `$${field.field}`;
+          }
+        } else {
+          const parentName = col.field.split('.')[0]; //We get the parent name for the resource question
+          acc[parentName] = `$data.${parentName}`;
+        }
+        return acc;
+      }, {}),
+      resource: 1,
+    },
+  };
+  const pipeline: any = [
+    {
+      $match: {
+        $and: [
+          {
+            resource: column.parent._id,
+            [`data.${relatedFieldName}`]: record._id.toString(),
+            archived: { $not: { $eq: true } },
+          },
+          permissionFilters,
+        ],
+      },
+    },
+    projectStep,
+  ];
+  column.subColumns
+    .filter((col) => col.meta?.field?.isCalculated)
+    .forEach((col) =>
+      pipeline.unshift(
+        ...(buildCalculatedFieldPipeline(
+          col.meta.field.expression,
+          col.meta.field.name,
+          params.timeZone
+        ) as any)
+      )
+    );
+  return pipeline;
+};
+
+/**
  * Builds the pipeline to fetch records
  *
+ * @param req current request
  * @param columns Columns needed in the export
  * @param params export parameters
- * @param idsList list of ids, used in the case of subcolumns (resource and resources)
+ * @param ids list of ids, used in the case of subcolumns (resource and resources)
  * @returns a built pipeline
  */
 const buildPipeline = (
@@ -675,60 +757,9 @@ const getResourceAndResourcesQuestions = (columns: any) => {
 };
 
 /**
- * Add fields that are "reverse resources" to records
- *
- * @param columns Columns that need to be exported
- * @param records Records that are missing the "reverse resources" fields
- * @returns updated records
- */
-const addReverseResourcesField = async (
-  req: any,
-  columns: any,
-  records: any
-) => {
-  const permissionFilters = Record.find(
-    accessibleBy(req.context.user.ability, 'read').Record
-  ).getFilter();
-  console.log(permissionFilters);
-  const reverseColumns = columns.filter((col) => col.parent);
-  const promises: Promise<any>[] = [];
-  for (const col of reverseColumns) {
-    const relatedFieldName = col.parent.fields.find(
-      (field) => field.relatedName === col.field
-    )?.name;
-    for (const record of records) {
-      if (!Object.keys(record).includes(col.field)) {
-        promises.push(
-          Record.find({
-            $and: [
-              permissionFilters,
-              {
-                resource: col.parent._id,
-                ['data.' + relatedFieldName]: record._id.toString(),
-                archived: { $not: { $eq: true } },
-              },
-            ],
-            // permissionFilters,
-          })
-            .select('_id')
-            .then((relatedRecords) => {
-              if (relatedRecords.length > 0) {
-                record[col.field] = [
-                  ...relatedRecords.map((value) => value._id.toString()),
-                ];
-              }
-            })
-        );
-      }
-    }
-  }
-  await Promise.all(promises);
-  return records;
-};
-
-/**
  * Get records to put into the file
  *
+ * @param resource currently exported resource
  * @param params export batch parameters
  * @param columns columns to use
  * @param req original request
@@ -776,7 +807,7 @@ const getRecords = async (
   const ids = countAggregation[0].items.map((x) => x._id);
   console.log(ids[0]);
   // Build an empty list of records
-  let records = new Array(totalCount);
+  const records = new Array(totalCount);
   const recordsPromises: Promise<any>[] = [];
   // Use pagination to build efficient aggregations
   const pageSize = 100;
@@ -793,11 +824,8 @@ const getRecords = async (
   await Promise.all(recordsPromises);
   console.log('Based records fetched');
   console.timeLog('export');
-  // Add related resources, not part of resource templates ( other resources than use current one in their own definition )
-  records = await addReverseResourcesField(req, columns, records);
-  console.log('Reversed records fetched');
-  console.timeLog('export');
 
+  // Find all resource & resources question
   const resourceResourcesColumns = getResourceAndResourcesQuestions(columns);
 
   // Get choices by url columns
@@ -816,30 +844,44 @@ const getRecords = async (
     console.log('Fetching column: ', column.field);
     const relatedResourcePromises: Promise<any>[] = [];
     for (const record of records) {
-      const columnValue = get(record, column.field) || null;
-      if (columnValue) {
+      // Reversed relationship, the resource is used in another resource's template
+      if (column.parent) {
         relatedResourcePromises.push(
           Record.aggregate(
-            buildPipeline(
-              req,
-              column.subColumns,
-              params,
-              isArray(columnValue)
-                ? Array.from(new Set(columnValue)).map(
-                    (id: any) => new mongoose.Types.ObjectId(id)
-                  )
-                : [new mongoose.Types.ObjectId(columnValue)]
-            )
+            buildReversedPipeline(req, column, record, params)
           ).then((relatedRecords) => {
             if (relatedRecords.length > 0) {
-              if (isArray(columnValue)) {
-                set(record, column.field, relatedRecords);
-              } else {
-                set(record, column.field, relatedRecords[0]);
-              }
+              set(record, column.field, relatedRecords);
             }
           })
         );
+      } else {
+        // Link is defined in currently exported resource
+        const columnValue = get(record, column.field) || null;
+        if (columnValue) {
+          relatedResourcePromises.push(
+            Record.aggregate(
+              buildPipeline(
+                req,
+                column.subColumns,
+                params,
+                isArray(columnValue)
+                  ? Array.from(new Set(columnValue)).map(
+                      (id: any) => new mongoose.Types.ObjectId(id)
+                    )
+                  : [new mongoose.Types.ObjectId(columnValue)]
+              )
+            ).then((relatedRecords) => {
+              if (relatedRecords.length > 0) {
+                if (isArray(columnValue)) {
+                  set(record, column.field, relatedRecords);
+                } else {
+                  set(record, column.field, relatedRecords[0]);
+                }
+              }
+            })
+          );
+        }
       }
     }
     promises.push(Promise.all(relatedResourcePromises));
