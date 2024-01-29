@@ -18,6 +18,9 @@ import jsonpath from 'jsonpath';
 import { each, isArray, omit, set } from 'lodash';
 import { getRowsFromMeta } from './getRowsFromMeta';
 import { Response } from 'express';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
+import { accessibleBy } from '@casl/mongoose';
+import getSearchFilter from '@utils/schema/resolvers/Query/getSearchFilter';
 
 /**
  * Export batch parameters interface
@@ -282,21 +285,30 @@ const writeRowsXlsx = (
   });
 };
 
-const countPipeline = (
+const recordsPipeline = (
   resource: Resource,
   columns: any,
-  params: ExportBatchParams
+  params: ExportBatchParams,
+  req: any
 ) => {
+  const context = req.context;
+  // Add the basic records filter
+  const basicFilters = {
+    resource: resource._id,
+    archived: { $not: { $eq: true } },
+  };
+  const permissionFilters = Record.find(
+    accessibleBy(context.user.ability, 'read').Record
+  ).getFilter();
+  // Filter from the query definition
+  const mongooseFilter = getFilter(params.filter, resource.fields, context);
+  const filters = {
+    $and: [basicFilters, mongooseFilter, permissionFilters],
+  };
+  const searchFilter = getSearchFilter(params.filter, resource.fields, context);
   const pipeline: any = [
-    {
-      $match: {
-        $and: [
-          { resource: resource._id },
-          getFilter(params.filter, columns),
-          { archived: { $ne: true } },
-        ],
-      },
-    },
+    ...(searchFilter ? [searchFilter] : []),
+    { $match: filters },
     {
       // todo: incorrect sorting, should respect the one from the query I think
       $sort: {
@@ -697,8 +709,12 @@ const getRecords = async (
   columns: any[],
   req: any
 ) => {
+  const ability = await extendAbilityForRecords(req.context.user);
+  set(req.context.user, 'ability', ability);
+  console.log('Ability fetched');
+  console.timeLog('export');
   const countAggregation = await Record.aggregate(
-    countPipeline(resource, columns, params)
+    recordsPipeline(resource, columns, params, req)
   ).facet({
     items: [
       {
@@ -719,9 +735,11 @@ const getRecords = async (
   const totalCount = countAggregation[0].totalCount[0].count;
   // Create a list of all ids
   const ids = countAggregation[0].items.map((x) => x._id);
+  // Build an empty list of records
   let records = new Array(totalCount);
-  const pageSize = 100;
   const recordsPromises: Promise<any>[] = [];
+  // Use pagination to build efficient aggregations
+  const pageSize = 100;
   for (let i = 0; i < totalCount; i += pageSize) {
     recordsPromises.push(
       Record.aggregate(
@@ -732,24 +750,29 @@ const getRecords = async (
       })
     );
   }
+  // Execute all promises
   await Promise.all(recordsPromises);
-  console.log(records[0]);
   console.log('Based records fetched');
   console.timeLog('export');
+  // Add related resources, not part of resource templates ( other resources than use current one in their own definition )
   records = await addReverseResourcesField(columns, records);
   console.log('Reversed records fetched');
   console.timeLog('export');
 
   const resourceResourcesColumns = getResourceAndResourcesQuestions(columns);
+
+  // Get choices by url columns
   let choicesByUrlColumns = columns.filter(
     (col) => col.meta?.field?.choicesByUrl
   );
+  // Get reference data columns
   let referenceDataColumns = columns
     .filter((col) => col.meta?.field?.graphQLFieldName)
     .map((col) => col.field);
 
   const promises: Promise<any>[] = [];
 
+  // Build for each record aggregations to fetch related records
   for (const column of resourceResourcesColumns) {
     console.log('Fetching column: ', column.field);
     const relatedResourcePromises: Promise<any>[] = [];
@@ -781,6 +804,7 @@ const getRecords = async (
     }
     promises.push(Promise.all(relatedResourcePromises));
 
+    // Add choices by url columns of related resource to the list
     choicesByUrlColumns = [
       ...choicesByUrlColumns,
       ...column.subColumns
@@ -789,6 +813,7 @@ const getRecords = async (
           return { ...subCol, field: `${column.field}.${subCol.field}` };
         }),
     ];
+    // Add reference data columns of related resource to the list
     referenceDataColumns = [
       ...referenceDataColumns,
       ...column.subColumns
@@ -799,9 +824,11 @@ const getRecords = async (
   promises.push(
     getChoicesByUrl(choicesByUrlColumns, req.headers.authorization)
   );
+  // Execute all promises ( except from reference data ones )
   await Promise.all(promises);
   console.log('Related fields & resources fetched');
   console.timeLog('export');
+  // Execute reference data aggregations
   await getReferenceData(referenceDataColumns, params.resource, req, records);
   return records;
 };
