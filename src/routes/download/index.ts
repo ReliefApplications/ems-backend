@@ -29,9 +29,9 @@ import { logger } from '../../services/logger.service';
 import { getAccessibleFields } from '@utils/form';
 import { formatFilename } from '@utils/files/format.helper';
 import { sendEmail } from '@utils/email';
-import exportBatch from '@utils/files/exportBatch';
 import { accessibleBy } from '@casl/mongoose';
 import dataSources from '@server/apollo/dataSources';
+import Exporter from '@utils/files/resourceExporter';
 
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwise
@@ -365,7 +365,8 @@ router.post('/records', async (req, res) => {
             'attachment; filename=records.xlsx'
           );
           // Build the file
-          await exportBatch(req, res, resource, params);
+          const exporter = new Exporter(req, res, resource, params);
+          await exporter.export();
           break;
         }
         case 'csv': {
@@ -375,7 +376,8 @@ router.post('/records', async (req, res) => {
             'attachment; filename=records.csv'
           );
           // Build the file
-          const file = await exportBatch(req, res, resource, params);
+          const exporter = new Exporter(req, res, resource, params);
+          const file = await exporter.export();
           return res.send(file);
         }
       }
@@ -383,7 +385,8 @@ router.post('/records', async (req, res) => {
       // Send response so the client is not frozen
       res.status(200).send('Export ongoing');
       // Build the file
-      const file = await exportBatch(req, res, resource, params);
+      const exporter = new Exporter(req, res, resource, params);
+      const file = await exporter.export();
       // Pass it in attachment
       const attachments = [
         {
