@@ -55,9 +55,6 @@ export const getFullChoices = async (
         const endpoint: string = endpointArray.slice(2).join('/'); // second one should be api name so we start after
         const dataSource: CustomAPI = context.dataSources[apiName];
         if (dataSource) {
-          console.log('il y a une source');
-          console.log(dataSource);
-          console.log(endpoint);
           const res = await dataSource.getChoices(
             endpoint,
             field.choicesByUrl.path,
@@ -68,7 +65,6 @@ export const getFullChoices = async (
           return res;
         }
       } else {
-        console.log('par là');
         const dataSource: CustomAPI = context.dataSources._rest;
         const res = await dataSource.getChoices(
           url,

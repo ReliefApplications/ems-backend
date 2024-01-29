@@ -57,10 +57,8 @@ const proxyAPIRequest = async (
       : `${jwtDecode<any>(req.headers.authorization).name}:${url}/${bodyHash}`;
     // Get data from the cache
     const cacheData = client ? await client.get(cacheKey) : null;
-    console.log('The key is :', cacheKey);
     if (cacheData) {
       logger.info(`REDIS: get key : ${url}`);
-      console.log(JSON.parse(cacheData).length);
       res.status(200).send(JSON.parse(cacheData));
     } else {
       const token = await getToken(api, req.headers.accesstoken, ping);
@@ -77,7 +75,6 @@ const proxyAPIRequest = async (
         }),
       })
         .then(async ({ data, status }) => {
-          console.log('fetched');
           // We are only caching the results of requests that are not user-dependent.
           // Otherwise, unwanted users could access cached data of other users.
           // As an improvement, we could include a stringified unique property of the user to the cache-key to enable user-specific cache.

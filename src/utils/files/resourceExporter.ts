@@ -222,7 +222,6 @@ export default class Exporter {
       } as any)
     )();
     set(this.req.context, 'dataSources', contextDataSources);
-    console.log(this.req.context.dataSources);
     const sort = await getSortAggregation(
       this.params.sortField,
       this.params.sortOrder,
@@ -731,7 +730,6 @@ export default class Exporter {
    */
   private getChoicesByUrl = async (choicesByUrlColumns: any) => {
     for (const column of choicesByUrlColumns) {
-      console.log(column.meta.field);
       const choices = await getChoices(
         column.meta.field,
         this.req.headers.authorization
