@@ -351,7 +351,6 @@ router.post('/records', async (req, res) => {
     if (!resource) {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
-    console.log(resource._id);
 
     // Make distinction if we send the file by email or in the response
     if (!params.email) {

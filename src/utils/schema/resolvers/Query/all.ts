@@ -437,6 +437,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           fields,
           context
         );
+        console.log(sort);
         const pipeline = [
           ...(searchFilter ? [searchFilter] : []),
           ...calculatedFieldsAggregation,
@@ -460,6 +461,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           ],
         });
         items = aggregation[0].items;
+        console.log(items[0]._id);
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       } else {
         // If we're using cursors, get pagination filters  <---- DEPRECATED ??

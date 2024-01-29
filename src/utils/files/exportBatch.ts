@@ -21,6 +21,7 @@ import { Response } from 'express';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { accessibleBy } from '@casl/mongoose';
 import getSearchFilter from '@utils/schema/resolvers/Query/getSearchFilter';
+import getSortAggregation from '@utils/schema/resolvers/Query/getSortAggregation';
 
 /**
  * Export batch parameters interface
@@ -177,7 +178,11 @@ const getFlatColumns = (columns: any[]) => {
  * @param params export batch parameters
  * @returns columns as promise
  */
-const getColumns = (req: any, params: ExportBatchParams): Promise<any[]> => {
+const getColumns = (
+  resource: Resource,
+  req: any,
+  params: ExportBatchParams
+): Promise<any[]> => {
   const metaQuery = buildMetaQuery(params.query);
   return new Promise((resolve) => {
     axios({
@@ -187,7 +192,7 @@ const getColumns = (req: any, params: ExportBatchParams): Promise<any[]> => {
       data: {
         query: metaQuery,
       },
-    }).then(({ data }) => {
+    }).then(async ({ data }) => {
       for (const field in data.data) {
         if (Object.prototype.hasOwnProperty.call(data.data, field)) {
           const meta = data.data[field];
@@ -196,19 +201,26 @@ const getColumns = (req: any, params: ExportBatchParams): Promise<any[]> => {
             params.fields.find((f) => f.name === x.name)
           );
           // Edits the column to match with the fields
-          columns.forEach((column) => {
+          for (const column of columns) {
             const queryField = params.fields.find(
               (f) => f.name === column.name
             );
             column.title = queryField.title;
-            if (queryField.parent) {
-              column.parent = `[${queryField.parent
-                .charAt(0)
-                .toUpperCase()}${queryField.parent
-                .charAt(0)
-                .toLowerCase()}]${queryField.parent.slice(1)}`;
-            }
             if (column.subColumns) {
+              // Field does not exist in the template
+              if (!resource.fields.find((f) => f.name === column.name)) {
+                const relatedResource = await Resource.findOne({
+                  fields: {
+                    $elemMatch: {
+                      resource: resource._id.toString(),
+                      relatedName: column.name,
+                    },
+                  },
+                }).select('fields');
+                if (relatedResource) {
+                  column.parent = relatedResource;
+                }
+              }
               if ((queryField.subFields || []).length > 0) {
                 column.subColumns.forEach((subColumn) => {
                   const subQueryField = queryField.subFields.find(
@@ -218,7 +230,7 @@ const getColumns = (req: any, params: ExportBatchParams): Promise<any[]> => {
                 });
               }
             }
-          });
+          }
           resolve(columns);
         }
       }
@@ -285,7 +297,7 @@ const writeRowsXlsx = (
   });
 };
 
-const recordsPipeline = (
+const recordsPipeline = async (
   resource: Resource,
   columns: any,
   params: ExportBatchParams,
@@ -309,13 +321,8 @@ const recordsPipeline = (
   const pipeline: any = [
     ...(searchFilter ? [searchFilter] : []),
     { $match: filters },
-    {
-      // todo: incorrect sorting, should respect the one from the query I think
-      $sort: {
-        [params.sortField]: params.sortOrder === 'asc' ? 1 : -1,
-      },
-    },
   ];
+  console.log('will be ready');
   columns
     .filter((col) => col.meta?.field?.isCalculated)
     .forEach((col) =>
@@ -339,10 +346,14 @@ const recordsPipeline = (
  * @returns a built pipeline
  */
 const buildPipeline = (
+  req: any,
   columns: any,
   params: ExportBatchParams,
   ids?: mongoose.Types.ObjectId[]
 ) => {
+  const permissionFilters = Record.find(
+    accessibleBy(req.context.user.ability, 'read').Record
+  ).getFilter();
   const projectStep = {
     $project: {
       ...columns.reduce((acc, col) => {
@@ -374,10 +385,23 @@ const buildPipeline = (
             },
           },
           { archived: { $ne: true } },
+          permissionFilters,
         ],
       },
     },
     projectStep,
+    {
+      $addFields: {
+        __order: {
+          $indexOfArray: [ids, '$_id'],
+        },
+      },
+    },
+    {
+      $sort: {
+        __order: 1,
+      },
+    },
   ];
   columns
     .filter((col) => col.meta?.field?.isCalculated)
@@ -657,28 +681,34 @@ const getResourceAndResourcesQuestions = (columns: any) => {
  * @param records Records that are missing the "reverse resources" fields
  * @returns updated records
  */
-const addReverseResourcesField = async (columns: any, records: any) => {
-  const reverseColumns = columns.filter((col) => col.parent); //they also take the normal resources questions but that will cause no issue
-  console.log(reverseColumns);
-  const parentResources = await Resource.find({
-    name: {
-      $regex: reverseColumns.map((col) => col.parent).join('|'),
-    },
-  }).select('name fields');
+const addReverseResourcesField = async (
+  req: any,
+  columns: any,
+  records: any
+) => {
+  const permissionFilters = Record.find(
+    accessibleBy(req.context.user.ability, 'read').Record
+  ).getFilter();
+  console.log(permissionFilters);
+  const reverseColumns = columns.filter((col) => col.parent);
   const promises: Promise<any>[] = [];
   for (const col of reverseColumns) {
-    const parentResource = parentResources.find((resource) =>
-      new RegExp(col.parent).test(resource.name)
-    );
-    const relatedFieldName = parentResource.fields.find(
+    const relatedFieldName = col.parent.fields.find(
       (field) => field.relatedName === col.field
     )?.name;
     for (const record of records) {
       if (!Object.keys(record).includes(col.field)) {
         promises.push(
           Record.find({
-            resource: parentResource._id,
-            ['data.' + relatedFieldName]: record._id.toString(),
+            $and: [
+              permissionFilters,
+              {
+                resource: col.parent._id,
+                ['data.' + relatedFieldName]: record._id.toString(),
+                archived: { $not: { $eq: true } },
+              },
+            ],
+            // permissionFilters,
           })
             .select('_id')
             .then((relatedRecords) => {
@@ -714,10 +744,18 @@ const getRecords = async (
   set(req.context.user, 'ability', ability);
   console.log('Ability fetched');
   console.timeLog('export');
+  const sort = await getSortAggregation(
+    params.sortField,
+    params.sortOrder,
+    resource.fields,
+    req.context
+  );
+  console.log(sort);
   const countAggregation = await Record.aggregate(
-    recordsPipeline(resource, columns, params, req)
+    await recordsPipeline(resource, columns, params, req)
   ).facet({
     items: [
+      ...sort,
       {
         $project: {
           _id: 1,
@@ -736,6 +774,7 @@ const getRecords = async (
   const totalCount = countAggregation[0].totalCount[0].count;
   // Create a list of all ids
   const ids = countAggregation[0].items.map((x) => x._id);
+  console.log(ids[0]);
   // Build an empty list of records
   let records = new Array(totalCount);
   const recordsPromises: Promise<any>[] = [];
@@ -744,9 +783,8 @@ const getRecords = async (
   for (let i = 0; i < totalCount; i += pageSize) {
     recordsPromises.push(
       Record.aggregate(
-        buildPipeline(columns, params, ids.slice(i, i + pageSize))
+        buildPipeline(req, columns, params, ids.slice(i, i + pageSize))
       ).then((items) => {
-        // console.log(items);
         records.splice(i, items.length, ...items);
       })
     );
@@ -756,7 +794,7 @@ const getRecords = async (
   console.log('Based records fetched');
   console.timeLog('export');
   // Add related resources, not part of resource templates ( other resources than use current one in their own definition )
-  records = await addReverseResourcesField(columns, records);
+  records = await addReverseResourcesField(req, columns, records);
   console.log('Reversed records fetched');
   console.timeLog('export');
 
@@ -783,6 +821,7 @@ const getRecords = async (
         relatedResourcePromises.push(
           Record.aggregate(
             buildPipeline(
+              req,
               column.subColumns,
               params,
               isArray(columnValue)
@@ -831,22 +870,10 @@ const getRecords = async (
   console.timeLog('export');
   // Execute reference data aggregations
   await getReferenceData(referenceDataColumns, params.resource, req, records);
+  console.log('Reference data fetched');
+  console.timeLog('export');
   return records;
 };
-
-// const getColumnsTest = (resource: Resource, params: ExportBatchParams) => {
-//   const columns = [];
-//   for (const field of params.fields) {
-//     const resourceField = resource.fields.find((x) => x.name === field.name);
-//     if (resourceField)) {
-//       columns.push({
-//         name: field.name,
-//         field: field.name,
-//         type: resourceField.type
-//       })
-//     }
-//   }
-// };
 
 /**
  * Write a buffer from request, to export records as xlsx or csv
@@ -867,7 +894,7 @@ export default async (
   console.time('export');
   // Get total count and columns
   // todo: replace with resource fields
-  const columns = await getColumns(req, params);
+  const columns = await getColumns(resource, req, params);
   console.log('Columns fetched');
   console.timeLog('export');
   const records: Record[] = await getRecords(resource, params, columns, req);
