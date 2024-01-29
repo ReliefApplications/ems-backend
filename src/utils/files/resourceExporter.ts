@@ -223,6 +223,7 @@ export default class Exporter {
         req: this.req,
       } as any)
     );
+    console.log(this.req.context.dataSources);
     const sort = await getSortAggregation(
       this.params.sortField,
       this.params.sortOrder,
