@@ -329,7 +329,9 @@ const buildMongoFilter = (
             return { [fieldName]: { $exists: true, $ne: null } };
           }
           case 'lt': {
-            if (DATETIME_TYPES.includes(type)) {
+            if (DATE_TYPES.includes(type)) {
+              return { [fieldName]: { $lt: startDate } };
+            } else if (DATETIME_TYPES.includes(type)) {
               return { [fieldName]: { $lt: startDatetime } };
             } else if (isNaN(intValue)) {
               return { [fieldName]: { $lt: value } };
@@ -359,7 +361,9 @@ const buildMongoFilter = (
             }
           }
           case 'gt': {
-            if (DATETIME_TYPES.includes(type)) {
+            if (DATE_TYPES.includes(type)) {
+              return { [fieldName]: { $gt: endDate } };
+            } else if (DATETIME_TYPES.includes(type)) {
               return { [fieldName]: { $gt: endDatetime } };
             } else if (isNaN(intValue)) {
               return { [fieldName]: { $gt: value } };

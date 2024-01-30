@@ -152,7 +152,9 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
             return { [fieldName]: { $exists: true, $ne: null } };
           }
           case 'lt': {
-            if (DATETIME_TYPES.includes(field.type)) {
+            if (DATE_TYPES.includes(field.type)) {
+              return { [fieldName]: { $lt: startDate } };
+            } else if (DATETIME_TYPES.includes(field.type)) {
               return { [fieldName]: { $lt: datetimeForFilter } };
             } else if (isNaN(intValue)) {
               return { [fieldName]: { $lt: value } };
@@ -182,7 +184,9 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
             }
           }
           case 'gt': {
-            if (DATETIME_TYPES.includes(field.type)) {
+            if (DATE_TYPES.includes(field.type)) {
+              return { [fieldName]: { $gt: endDate } };
+            } else if (DATETIME_TYPES.includes(field.type)) {
               return { [fieldName]: { $gt: endDatetime } };
             } else if (isNaN(intValue)) {
               return { [fieldName]: { $gt: value } };
