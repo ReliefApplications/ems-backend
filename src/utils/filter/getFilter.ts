@@ -49,6 +49,8 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
         let startDate: Date;
         let endDate: Date;
         let dateForFilter: any;
+        let startDatetime: Date;
+        let endDatetime: Date;
         let datetimeForFilter: any;
         switch (field.type) {
           case 'date':
@@ -64,7 +66,12 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
             break;
           case 'datetime':
           case 'datetime-local':
-            datetimeForFilter = getTimeForMongo(value);
+            // startDatetime contains the beginning of the minute
+            startDatetime = getTimeForMongo(value);
+            // endDatetime contains the end of the minute (last second, last ms)
+            endDatetime = new Date(startDatetime.getTime() + 59999);
+            // we end up with a date range covering exactly the minute selected,
+            // regardless of the saved seconds and ms
             break;
           case 'time': {
             value = getTimeForMongo(value, true);
@@ -87,7 +94,9 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
             if (MULTISELECT_TYPES.includes(field.type)) {
               return { [fieldName]: { $size: value.length, $all: value } };
             } else if (DATETIME_TYPES.includes(field.type)) {
-              return { [fieldName]: { $eq: datetimeForFilter } };
+              return {
+                [fieldName]: { $gte: startDatetime, $lte: endDatetime },
+              };
             } else {
               if (DATE_TYPES.includes(field.type)) {
                 return { [fieldName]: { $gte: startDate, $lte: endDate } };
@@ -114,7 +123,9 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
               return { [fieldName]: { $ne: datetimeForFilter } };
             } else if (DATE_TYPES.includes(field.type)) {
               return {
-                [fieldName]: { $not: { $gte: startDate, $lte: endDate } },
+                [fieldName]: {
+                  $not: { $gte: startDatetime, $lte: endDatetime },
+                },
               };
             } else {
               if (isNaN(intValue)) {
@@ -158,7 +169,7 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
             if (DATE_TYPES.includes(field.type)) {
               return { [fieldName]: { $lte: endDate } };
             } else if (DATETIME_TYPES.includes(field.type)) {
-              return { [fieldName]: { $lte: datetimeForFilter } };
+              return { [fieldName]: { $lte: endDatetime } };
             } else if (isNaN(intValue)) {
               return { [fieldName]: { $lte: value } };
             } else {
@@ -172,7 +183,7 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
           }
           case 'gt': {
             if (DATETIME_TYPES.includes(field.type)) {
-              return { [fieldName]: { $gt: datetimeForFilter } };
+              return { [fieldName]: { $gt: endDatetime } };
             } else if (isNaN(intValue)) {
               return { [fieldName]: { $gt: value } };
             } else {
