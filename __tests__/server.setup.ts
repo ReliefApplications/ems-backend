@@ -213,6 +213,26 @@ class SafeTestServer {
   }
 
   /**
+   * Remove admin role from user to test.
+   *
+   */
+  public async removeAdminRoleToUserBeforeTest() {
+    await User.updateOne({ username: 'dummy@dummy.com' }, { roles: [] });
+  }
+
+  /**
+   * Restore admin role from user to test.
+   *
+   */
+  public async restoreAdminRoleToUserAfterTest() {
+    const admin = await Role.findOne({ title: 'admin' });
+    await User.updateOne(
+      { username: 'dummy@dummy.com' },
+      { roles: [admin._id] }
+    );
+  }
+
+  /**
    * Create user if necessary.
    */
   private async getUserTest() {
