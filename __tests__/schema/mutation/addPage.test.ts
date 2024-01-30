@@ -129,6 +129,8 @@ describe('Add page tests cases', () => {
     }
   });
   test('query without permission to add page', async () => {
+    // remove admin role
+    await User.updateOne({ username: 'dummy@dummy.com' }, { roles: [] });
     const nonAdminToken = `Bearer ${await acquireToken()}`;
     const variables = {
       type: contentType.form,
@@ -144,7 +146,13 @@ describe('Add page tests cases', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain('permission');
+    expect(response.body.errors[0].message).toContain('Permission not granted');
+    // restore admin role
+    const admin = await Role.findOne({ title: 'admin' });
+    await User.updateOne(
+      { username: 'dummy@dummy.com' },
+      { roles: [admin._id] }
+    );
   });
 
   test('test case add page with duplication', async () => {
@@ -176,6 +184,6 @@ describe('Add page tests cases', () => {
     expect(response.body).toHaveProperty('data');
     expect(response.body).not.toHaveProperty('errors');
     expect(response.body.data.addPage).toHaveProperty('id');
-    expect(response.body.data.addPage.name).toEqual(existingPage.name);
+    expect(response.body.data.addPage.name).toEqual(form.name);
   });
 });
