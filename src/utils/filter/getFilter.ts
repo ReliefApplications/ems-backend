@@ -132,7 +132,7 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
                 return { [fieldName]: { $ne: value } };
               } else {
                 return {
-                  $or: [
+                  $and: [
                     { [fieldName]: { $ne: String(value) } },
                     { [fieldName]: { $ne: intValue } },
                   ],
