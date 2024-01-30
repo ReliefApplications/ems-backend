@@ -162,8 +162,8 @@ describe('Add dashboard with context tests cases', () => {
   });
 
   test('test case with insufficient permissions and return error', async () => {
-    // remove admin role
-    await User.updateOne({ username: 'dummy@dummy.com' }, { roles: [] });
+    await server.removeAdminRoleToUserBeforeTest();
+
     const nonAdminToken = `Bearer ${await acquireToken()}`;
 
     // Create a page to use in the test
@@ -190,12 +190,8 @@ describe('Add dashboard with context tests cases', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
     expect(response.body.errors[0].message).toContain('Permission not granted');
-    // restore admin role
-    const admin = await Role.findOne({ title: 'admin' });
-    await User.updateOne(
-      { username: 'dummy@dummy.com' },
-      { roles: [admin._id] }
-    );
+
+    await server.restoreAdminRoleToUserAfterTest();
   });
 
   test('test case with invalid page ID and return error', async () => {

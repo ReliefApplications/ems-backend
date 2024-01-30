@@ -99,6 +99,8 @@ describe('Add Layer mutation tests', () => {
   });
 
   test('query without permission to create layers', async () => {
+    await server.removeAdminRoleToUserBeforeTest();
+
     const nonAdminToken = `Bearer ${await acquireToken()}`;
     const variables = {
       layer: {
@@ -115,6 +117,10 @@ describe('Add Layer mutation tests', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain('permission');
+    expect(response.body.errors[0].message).toContain(
+      'Permission not granted.'
+    );
+
+    await server.restoreAdminRoleToUserAfterTest();
   });
 });
