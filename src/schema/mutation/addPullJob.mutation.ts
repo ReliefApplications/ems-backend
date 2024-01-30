@@ -75,7 +75,9 @@ export default {
             );
         }
 
-        const apiConfiguration = await ApiConfiguration.findById(args.apiConfiguration);
+        const apiConfiguration = await ApiConfiguration.findById(
+          args.apiConfiguration
+        );
         if (!apiConfiguration) {
           throw new GraphQLError(
             context.i18next.t('common.errors.dataNotFound')

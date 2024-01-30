@@ -52,7 +52,7 @@ describe('Add pull job tests cases', () => {
       .send({ query, variables })
       .set('Authorization', token)
       .set('Accept', 'application/json');
-  
+
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body).not.toHaveProperty('errors');
@@ -71,7 +71,7 @@ describe('Add pull job tests cases', () => {
       .send({ query, variables })
       .set('Authorization', token)
       .set('Accept', 'application/json');
-    
+
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
     expect(response.body.errors[0].message).toContain('Data not found');
