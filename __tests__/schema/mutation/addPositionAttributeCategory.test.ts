@@ -5,6 +5,7 @@ import { faker } from '@faker-js/faker';
 import supertest from 'supertest';
 import { status } from '@const/enumTypes';
 import { acquireToken } from '../../authentication.setup';
+import { ObjectId } from 'bson';
 
 let server: SafeTestServer;
 let application;
@@ -100,7 +101,7 @@ describe('Add position attribute category mutation tests cases', () => {
   test('test case with non-existent application and return error', async () => {
     const variables = {
       title: faker.random.alpha(10),
-      application: 'non-existent-application-id',
+      application: new ObjectId().toString(),
     };
 
     const response = await request
@@ -111,10 +112,11 @@ describe('Add position attribute category mutation tests cases', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain('dataNotFound');
+    expect(response.body.errors[0].message).toContain('Data not found');
   });
 
   test('test case without permission to update application and return error', async () => {
+    await server.removeAdminRoleToUserBeforeTest();
     const nonAdminToken = `Bearer ${await acquireToken()}`;
     const variables = {
       title: faker.random.alpha(10),
@@ -129,6 +131,7 @@ describe('Add position attribute category mutation tests cases', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain('permissionNotGranted');
+    expect(response.body.errors[0].message).toContain('Permission not granted');
+    await server.restoreAdminRoleToUserAfterTest();
   });
 });
