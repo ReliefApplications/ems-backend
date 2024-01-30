@@ -228,7 +228,7 @@ class SafeTestServer {
       username: 'dummy@dummy.com',
       roles: admin._id,
       ability: SafeTestServer.defineUserAbilityMock(),
-      deleteAt: date
+      deleteAt: date,
     }).save();
     return newUser;
   }
