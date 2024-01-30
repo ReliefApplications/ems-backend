@@ -222,15 +222,14 @@ class SafeTestServer {
     if (user.length > 0) await User.deleteMany({ username: 'dummy@dummy.com' });
 
     const admin = await Role.findOne({ title: 'admin' });
-    const newUser = new User();
-    newUser.username = 'dummy@dummy.com';
-    newUser.roles = [admin];
-    newUser.ability = SafeTestServer.defineUserAbilityMock();
     const date = new Date();
     date.setDate(date.getDate() + 7);
-    newUser.deleteAt = date;
-    await newUser.save();
-
+    const newUser = await new User({
+      username: 'dummy@dummy.com',
+      roles: admin._id,
+      ability: SafeTestServer.defineUserAbilityMock(),
+      deleteAt: date
+    }).save();
     return newUser;
   }
 }
