@@ -162,7 +162,9 @@ describe('Add position attribute mutation tests cases', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain('Permission not granted.');
+    expect(response.body.errors[0].message).toContain(
+      'Permission not granted.'
+    );
     // restore admin role
     const admin = await Role.findOne({ title: 'admin' });
     await User.updateOne(
