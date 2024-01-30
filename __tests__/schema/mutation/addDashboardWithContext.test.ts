@@ -3,7 +3,7 @@ import { SafeTestServer } from '../../server.setup';
 import { faker } from '@faker-js/faker';
 import supertest from 'supertest';
 import { acquireToken } from '../../authentication.setup';
-import { Page, Dashboard, Record, Form, Resource, Role, User } from '@models';
+import { Page, Dashboard, Record, Form, Resource } from '@models';
 import { ObjectId } from 'bson';
 
 let server: SafeTestServer;
