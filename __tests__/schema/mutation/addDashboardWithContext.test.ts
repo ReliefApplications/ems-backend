@@ -46,17 +46,19 @@ describe('Add dashboard with context tests cases', () => {
     const resource = await new Resource({
       name: faker.random.alpha(10),
       permissions: defaultResourcePermissions,
-      fields: [{
-        type: "text",
-        name: "country",
-        isRequired: false,
-        readOnly: false,
-        isCore: true,
-        permissions: {
-          canSee: [],
-          canUpdate: []
-        }
-      }]
+      fields: [
+        {
+          type: 'text',
+          name: 'country',
+          isRequired: false,
+          readOnly: false,
+          isCore: true,
+          permissions: {
+            canSee: [],
+            canUpdate: [],
+          },
+        },
+      ],
     }).save();
 
     // create form
@@ -69,29 +71,29 @@ describe('Add dashboard with context tests cases', () => {
       core: true,
       permissions: defaultFormPermissions,
       structure: {
-        "pages": [
-         {
-          "name": "page1",
-          "elements": [
-           {
-            "type": "text",
-            "name": "country",
-            "title": "Country",
-            "valueName": "country"
-           }
-          ]
-         }
+        pages: [
+          {
+            name: 'page1',
+            elements: [
+              {
+                type: 'text',
+                name: 'country',
+                title: 'Country',
+                valueName: 'country',
+              },
+            ],
+          },
         ],
-        "showQuestionNumbers": "off"
-       }
+        showQuestionNumbers: 'off',
+      },
     }).save();
 
     // create record
     const record = await new Record({
-      incrementalId: "2024-C00000001",
+      incrementalId: '2024-C00000001',
       form: form._id,
       data: {
-        country: "Brazil"
+        country: 'Brazil',
       },
       _form: {
         _id: form._id,
@@ -112,8 +114,8 @@ describe('Add dashboard with context tests cases', () => {
       content: template._id,
       context: {
         resource: resource._id,
-         displayField: "country"
-      }
+        displayField: 'country',
+      },
     }).save();
 
     const variables = {
@@ -190,7 +192,10 @@ describe('Add dashboard with context tests cases', () => {
     expect(response.body.errors[0].message).toContain('Permission not granted');
     // restore admin role
     const admin = await Role.findOne({ title: 'admin' });
-    await User.updateOne({ username: 'dummy@dummy.com' }, { roles: [admin._id] });
+    await User.updateOne(
+      { username: 'dummy@dummy.com' },
+      { roles: [admin._id] }
+    );
   });
 
   test('test case with invalid page ID and return error', async () => {
@@ -214,7 +219,7 @@ describe('Add dashboard with context tests cases', () => {
 
   test('test case with invalid arguments and return error', async () => {
     const variables = {
-      page: new ObjectId().toString()
+      page: new ObjectId().toString(),
     };
 
     const response = await request
@@ -225,6 +230,8 @@ describe('Add dashboard with context tests cases', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain('You need to provide one, and only one, argument between a reference data element and a record.');
+    expect(response.body.errors[0].message).toContain(
+      'You need to provide one, and only one, argument between a reference data element and a record.'
+    );
   });
 });
