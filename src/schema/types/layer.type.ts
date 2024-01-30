@@ -183,7 +183,18 @@ export const LayerType = new GraphQLObjectType({
           title: { type: GraphQLString },
           description: { type: GraphQLString },
           popupElements: { type: new GraphQLList(LayerPopupElement) },
-          fieldsInfo: { type: new GraphQLList(LayerFieldElement) },
+          fieldsInfo: {
+            type: new GraphQLList(LayerFieldElement),
+            resolve(parent) {
+              // Only return fields used on popupElements
+              const fieldsInfo = parent.fieldsInfo.filter((filter) =>
+                parent.popupElements.some((popupElement) =>
+                  popupElement.fields.includes(filter.name)
+                )
+              );
+              return fieldsInfo ?? [];
+            },
+          },
         }),
       }),
     },
