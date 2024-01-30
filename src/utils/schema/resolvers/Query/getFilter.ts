@@ -412,8 +412,14 @@ const buildMongoFilter = (
       case 'checkbox':
       case 'tagbox':
         return getFilterForArrays(value);
-      default:
+      case 'geospatial':
         return getSimpleFilter(value);
+      default:
+        if (Array.isArray(value)) {
+          return getFilterForArrays(value);
+        } else {
+          return getSimpleFilter(value);
+        }
     }
   }
 };
