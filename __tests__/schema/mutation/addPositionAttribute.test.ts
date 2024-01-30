@@ -5,6 +5,7 @@ import supertest from 'supertest';
 import { acquireToken } from '../../authentication.setup';
 import { Application, PositionAttributeCategory, User, Role } from '@models';
 import { status } from '@const/enumTypes';
+import { ObjectId } from 'bson';
 
 let server: SafeTestServer;
 let positionAttributeCategory;
@@ -129,7 +130,7 @@ describe('Add position attribute mutation tests cases', () => {
       user: String(user._id),
       positionAttribute: {
         value: faker.random.alpha(10),
-        category: 'non-existent-category-id',
+        category: new ObjectId().toString(),
       },
     };
 
@@ -141,10 +142,12 @@ describe('Add position attribute mutation tests cases', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain('dataNotFound');
+    expect(response.body.errors[0].message).toContain('Data not found');
   });
 
   test('test case without permission to update category and return error', async () => {
+    // remove admin role
+    await User.updateOne({ username: 'dummy@dummy.com' }, { roles: [] });
     const nonAdminToken = `Bearer ${await acquireToken()}`;
     const variables = {
       user: String(user._id),
@@ -159,6 +162,14 @@ describe('Add position attribute mutation tests cases', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain('permissionNotGranted');
+    expect(response.body.errors[0].message).toContain(
+      'Permission not granted.'
+    );
+    // restore admin role
+    const admin = await Role.findOne({ title: 'admin' });
+    await User.updateOne(
+      { username: 'dummy@dummy.com' },
+      { roles: [admin._id] }
+    );
   });
 });
