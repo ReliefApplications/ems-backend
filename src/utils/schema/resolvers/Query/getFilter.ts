@@ -234,7 +234,7 @@ const buildMongoFilter = (
             // regardless of the saved seconds and ms
             break;
           case 'time': {
-            value = getTimeForMongo(value, true);
+            value = getTimeForMongo(value);
             break;
           }
           case 'users': {
