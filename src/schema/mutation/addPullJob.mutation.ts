@@ -7,7 +7,7 @@ import {
 } from 'graphql';
 import { PullJobType } from '../types';
 import { StatusType, status } from '@const/enumTypes';
-import { Channel, Form, PullJob } from '@models';
+import { ApiConfiguration, Channel, Form, PullJob } from '@models';
 import { StatusEnumType } from '@const/enumTypes';
 import GraphQLJSON from 'graphql-type-json';
 import { scheduleJob, unscheduleJob } from '../../server/pullJobScheduler';
@@ -73,6 +73,13 @@ export default {
             throw new GraphQLError(
               context.i18next.t('common.errors.dataNotFound')
             );
+        }
+
+        const apiConfiguration = await ApiConfiguration.findById(args.apiConfiguration);
+        if (!apiConfiguration) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
         }
 
         try {
