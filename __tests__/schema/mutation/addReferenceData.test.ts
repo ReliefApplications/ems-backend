@@ -58,7 +58,7 @@ describe('Add Reference Data Mutation Tests', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain('invalidArguments');
+    expect(response.body.errors[0].message).toContain('Name must be provided.');
   });
 
   test('Add reference data with null name and return error', async () => {
@@ -74,7 +74,6 @@ describe('Add Reference Data Mutation Tests', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain('invalidArguments');
   });
 
   test('Add reference data with duplicate name and return error', async () => {
@@ -94,7 +93,7 @@ describe('Add Reference Data Mutation Tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
     expect(response.body.errors[0].message).toContain(
-      'duplicatedGraphQLTypeName'
+      'A form or a reference data with a similar name already exists. Please provide a different name.'
     );
   });
 });

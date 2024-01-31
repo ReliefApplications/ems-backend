@@ -93,7 +93,7 @@ describe('Add dashboard with context tests cases', () => {
       incrementalId: '2024-C00000001',
       form: form._id,
       data: {
-        country: 'Brazil',
+        country: faker.address.country(),
       },
       _form: {
         _id: form._id,

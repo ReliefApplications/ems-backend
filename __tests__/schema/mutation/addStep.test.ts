@@ -3,11 +3,12 @@ import { SafeTestServer } from '../../server.setup';
 import { faker } from '@faker-js/faker';
 import supertest from 'supertest';
 import { acquireToken } from '../../authentication.setup';
-import { Role, User, Workflow, Form } from '@models';
+import { Role, User, Workflow, Form, Page, Application, Resource } from '@models';
 
 let server: SafeTestServer;
 let request: supertest.SuperTest<supertest.Test>;
 let token: string;
+let workflow: Workflow;
 
 beforeAll(async () => {
   const admin = await Role.findOne({ title: 'admin' });
@@ -17,6 +18,26 @@ beforeAll(async () => {
   await server.start(schema);
   request = supertest(server.app);
   token = `Bearer ${await acquireToken()}`;
+
+  workflow = new Workflow({
+    name: faker.random.words(),
+    steps: [],
+  });
+  await workflow.save();
+
+  // Create a page to use in the test
+  const page = await new Page({
+    name: faker.random.alpha(10),
+    type: 'dashboard',
+    content: workflow._id,
+  }).save();
+
+  // Create an application to use in the test
+  await new Application({
+    name: faker.random.alpha(10),
+    status: 'pending',
+    pages: [page._id]
+  }).save();
 });
 
 /**
@@ -30,21 +51,14 @@ describe('Add Step Mutation Tests', () => {
         type
         content
         permissions {
-          canSee
-          canUpdate
-          canDelete
+          canSee {
+            id
+          }
         }
       }
   }`;
 
   test('Add a new step of type Dashboard', async () => {
-    const workflow = new Workflow({
-      name: faker.random.words(),
-      steps: [],
-      //createdAt: new Date(),
-    });
-    await workflow.save();
-
     const variables = {
       type: 'dashboard',
       workflow: workflow._id,
@@ -66,38 +80,63 @@ describe('Add Step Mutation Tests', () => {
   });
 
   test('Add a new step of type Form', async () => {
-    const form = new Form({
-      name: faker.random.words(),
-      //createdAt: new Date(),
-    });
-    await form.save();
-
-    const workflow = new Workflow({
-      name: faker.random.words(),
-      steps: [
+    // define default permission lists
+    const defaultResourcePermissions = {
+      canSeeRecords: [],
+      canCreateRecords: [],
+      canUpdateRecords: [],
+      canDeleteRecords: [],
+    };
+    const defaultFormPermissions = {
+      canSeeRecords: [],
+      canCreateRecords: [],
+      canUpdateRecords: [],
+      canDeleteRecords: [],
+    };
+    // create resource
+    const resource = await new Resource({
+      name: faker.random.alpha(10),
+      permissions: defaultResourcePermissions,
+      fields: [
         {
-          name: 'Dashboard Step',
-          type: 'dashboard',
-          content: 'dashboardId',
+          type: 'text',
+          name: 'country',
+          isRequired: false,
+          readOnly: false,
+          isCore: true,
           permissions: {
-            canSee: ['admin'],
+            canSee: [],
             canUpdate: [],
-            canDelete: [],
-          },
-        },
-        {
-          name: 'Form Step',
-          type: 'form',
-          content: 'formId',
-          permissions: {
-            canSee: ['roleId3', 'roleId4'],
-            canUpdate: [],
-            canDelete: [],
           },
         },
       ],
-    });
-    await workflow.save();
+    }).save();
+    const formName = faker.random.words();
+    const graphQLTypeName = Form.getGraphQLTypeName(formName);
+    const form = await new Form({
+      name: faker.random.words(),
+      graphQLTypeName,
+      status: 'active',
+      resource,
+      core: true,
+      permissions: defaultFormPermissions,
+      structure: {
+        pages: [
+          {
+            name: 'page1',
+            elements: [
+              {
+                type: 'text',
+                name: 'country',
+                title: 'Country',
+                valueName: 'country',
+              },
+            ],
+          },
+        ],
+        showQuestionNumbers: 'off',
+      },
+    }).save();
 
     const variables = {
       type: 'form',
