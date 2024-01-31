@@ -2,7 +2,7 @@ import schema from '../../../src/schema';
 import { SafeTestServer } from '../../server.setup';
 import supertest from 'supertest';
 import { acquireToken } from '../../authentication.setup';
-import { Role, User, Application } from '@models';
+import { Role, Application } from '@models';
 import { faker } from '@faker-js/faker';
 
 let server: SafeTestServer;
@@ -18,7 +18,9 @@ beforeAll(async () => {
 
 describe('Add Users Mutation Tests', () => {
   test('should add new users with valid data', async () => {
-    const application = await Application.create({ name: faker.random.words() });
+    const application = await Application.create({
+      name: faker.random.words(),
+    });
 
     const variables = {
       users: [

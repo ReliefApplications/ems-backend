@@ -18,7 +18,9 @@ beforeAll(async () => {
 
 describe('Add Template Mutation Tests', () => {
   test('should add a new template with valid data', async () => {
-    const application = await Application.create({ name: faker.random.words() });
+    const application = await Application.create({
+      name: faker.random.words(),
+    });
 
     const variables = {
       application: application._id.toString(),
