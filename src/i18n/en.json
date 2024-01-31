@@ -114,6 +114,7 @@
 			"addWithContext": {
 				"errors": {
 					"invalidArguments": "You need to provide one, and only one, argument between a reference data element and a record.",
+					"invalidContextEl": "The context element does not exist",
 					"invalidElement": "Provided element must be a string or a number"
 				}
 			},

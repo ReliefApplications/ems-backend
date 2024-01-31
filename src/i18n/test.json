@@ -114,6 +114,7 @@
 			"addWithContext": {
 				"errors": {
 					"invalidArguments": "******",
+					"invalidContextEl": "******",
 					"invalidElement": "******"
 				}
 			},
