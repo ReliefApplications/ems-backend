@@ -241,19 +241,11 @@ router.get('/feature', async (req, res) => {
     const adminField = get(req, 'query.adminField');
     const layerType = (get(req, 'query.type') ||
       GeometryType.POINT) as GeometryType;
-    const contextFilters = JSON.parse(
-      decodeURIComponent(get(req, 'query.contextFilters', null))
-    );
+    const contextFilters = JSON.parse(get(req, 'query.contextFilters', null));
     const graphQLVariables = JSON.parse(
-      decodeURIComponent(get(req, 'query.graphQLVariables', null))
+      get(req, 'query.graphQLVariables', null)
     );
     const at = get(req, 'query.at') as string | undefined;
-    // const tolerance = get(req, 'query.tolerance', 1);
-    // const highQuality = get(req, 'query.highquality', true);
-    // turf.simplify(geoJsonData, {
-    //   tolerance: tolerance,
-    //   highQuality: highQuality,
-    // });
     if (!geoField && !(latitudeField && longitudeField)) {
       return res
         .status(400)
