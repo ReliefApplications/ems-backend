@@ -13,7 +13,7 @@ import { Context } from '@server/apollo/context';
 import { Types } from 'mongoose';
 import GraphQLJSON from 'graphql-type-json';
 import { accessibleBy } from '@casl/mongoose';
-import { getNewDashboardName } from '@utils/dashboardWithContext/getNewDashboardName';
+import { getNewDashboardName } from '@utils/context/getNewDashboardName';
 import { getContextData } from '@utils/context/getContextData';
 
 /** Arguments for the dashboard query */
@@ -39,6 +39,7 @@ export default {
     createIfMissing: { type: GraphQLBoolean },
   },
   async resolve(parent, args: DashboardArgs, context: Context) {
+    // Authentication check
     graphQLAuthCheck(context);
     try {
       const user = context.user;
@@ -108,121 +109,78 @@ export default {
       if (contentWithContext) {
         const dashboard = await Dashboard.findById(contentWithContext.content);
         return dashboard;
-      }
-
-      // We check if it's a valid contextEl
-      const type =
-        'resource' in page.context && page.context.resource
-          ? 'record'
-          : 'element';
-
-      // If we did not find a match, and the createIfMissing flag is not set
-      // we return the main dashboard with the relevant context
-      if (!args.createIfMissing) {
-        const contextData = getContextData(
-          type === 'record' ? args.contextEl : undefined,
-          type === 'element' ? args.contextEl : undefined,
-          page,
-          context
-        );
-
-        Object.assign(mainDashboard, { contextData });
-        return mainDashboard;
-      }
-      // Else, we create a new template for the element
-
-      // We check for user permissions
-      const canCreateDashboard = ability.can('create', 'Dashboard');
-      const canUpdatePage = ability.can('update', page);
-      if (!canCreateDashboard || !canUpdatePage) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
-      }
-
-      // If we did not find a match, we create a new dashboard
-      const newDashboard = new Dashboard({
-        name: await getNewDashboardName(
-          mainDashboard,
-          page.context,
-          args.contextEl,
-          context.dataSources
-        ),
-        // Copy structure from the main dashboard
-        structure: mainDashboard.structure || [],
-      });
-
-      await newDashboard.save();
-
-      const newContentWithContext = {
-        ['resource' in page.context && page.context.resource
-          ? 'record'
-          : 'element']: args.contextEl,
-        content: newDashboard._id,
-      } as Page['contentWithContext'][number];
-
-      // Adds the dashboard to the page
-      if (Array.isArray(page.contentWithContext)) {
-        page.contentWithContext.push(newContentWithContext);
       } else {
-        page.contentWithContext = [newContentWithContext];
+        // We check if it's a valid contextEl
+        const type =
+          'resource' in page.context && page.context.resource
+            ? 'record'
+            : 'element';
+
+        // If we did not find a match, and the createIfMissing flag is not set
+        // we return the main dashboard with the relevant context
+        if (!args.createIfMissing) {
+          const contextData = getContextData(
+            type === 'record' ? args.contextEl : undefined,
+            type === 'element' ? args.contextEl : undefined,
+            page,
+            context
+          );
+
+          Object.assign(mainDashboard, {
+            contextData,
+            name: await getNewDashboardName(
+              mainDashboard,
+              page.context,
+              args.contextEl,
+              context.dataSources
+            ),
+          });
+          return mainDashboard;
+        }
+        // Else, we create a new template for the element
+
+        // We check for user permissions
+        const canCreateDashboard = ability.can('create', 'Dashboard');
+        const canUpdatePage = ability.can('update', page);
+        if (!canCreateDashboard || !canUpdatePage) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.permissionNotGranted')
+          );
+        }
+
+        // If we did not find a match, we create a new dashboard
+        const newDashboard = new Dashboard({
+          name: await getNewDashboardName(
+            mainDashboard,
+            page.context,
+            args.contextEl,
+            context.dataSources
+          ),
+          // Copy structure from the main dashboard
+          structure: mainDashboard.structure || [],
+        });
+
+        await newDashboard.save();
+
+        const newContentWithContext = {
+          ['resource' in page.context && page.context.resource
+            ? 'record'
+            : 'element']: args.contextEl,
+          content: newDashboard._id,
+        } as Page['contentWithContext'][number];
+
+        // Adds the dashboard to the page
+        if (Array.isArray(page.contentWithContext)) {
+          page.contentWithContext.push(newContentWithContext);
+        } else {
+          page.contentWithContext = [newContentWithContext];
+        }
+
+        page.markModified('contentWithContext');
+        await page.save();
+
+        return newDashboard;
       }
-
-      page.markModified('contentWithContext');
-      await page.save();
-
-      // todo: reactivate if we want to inject context in dashboard
-      // Check if dashboard has context linked to it
-      // const page = await Page.findOne({
-      //   contentWithContext: { $elemMatch: { content: args.id } },
-      // });
-
-      // If a page was found, means the dashboard has context
-      // if (page && page.context) {
-      //   // get the id of the resource or refData
-      //   const contentWithContext = page.contentWithContext.find((c) =>
-      //     (c.content as Types.ObjectId).equals(args.id)
-      //   );
-      //   const id =
-      //     'element' in contentWithContext && contentWithContext.element
-      //       ? contentWithContext.element
-      //       : 'record' in contentWithContext && contentWithContext.record
-      //       ? contentWithContext.record
-      //       : null;
-
-      //   const ctx = page.context;
-      //   let data: any;
-
-      //   if ('resource' in ctx && ctx.resource) {
-      //     const record = await Record.findById(id);
-      //     data = record.data;
-      //   } else if ('refData' in ctx && ctx.refData) {
-      //     // get refData from page
-      //     const referenceData = await ReferenceData.findById(ctx.refData);
-      //     const apiConfiguration = await ApiConfiguration.findById(
-      //       referenceData.apiConfiguration
-      //     );
-      //     const items = apiConfiguration
-      //       ? await (
-      //           context.dataSources[apiConfiguration.name] as CustomAPI
-      //         ).getReferenceDataItems(referenceData, apiConfiguration)
-      //       : referenceData.data;
-      //     data = items.find((x) => x[referenceData.valueField] === id);
-      //   }
-
-      //   const stringifiedStructure = JSON.stringify(dashboard.structure);
-      //   const regex = /{{context\.(.*?)}}/g;
-
-      //   // replace all {{context.<field>}} with the value from the data
-      //   dashboard.structure = JSON.parse(
-      //     stringifiedStructure.replace(regex, (match) => {
-      //       const field = match.replace('{{context.', '').replace('}}', '');
-      //       return data[field] || match;
-      //     })
-      //   );
-      // }
-
-      return newDashboard;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {
@@ -234,3 +192,54 @@ export default {
     }
   },
 };
+
+// todo: reactivate if we want to inject context in dashboard
+// Check if dashboard has context linked to it
+// const page = await Page.findOne({
+//   contentWithContext: { $elemMatch: { content: args.id } },
+// });
+
+// If a page was found, means the dashboard has context
+// if (page && page.context) {
+//   // get the id of the resource or refData
+//   const contentWithContext = page.contentWithContext.find((c) =>
+//     (c.content as Types.ObjectId).equals(args.id)
+//   );
+//   const id =
+//     'element' in contentWithContext && contentWithContext.element
+//       ? contentWithContext.element
+//       : 'record' in contentWithContext && contentWithContext.record
+//       ? contentWithContext.record
+//       : null;
+
+//   const ctx = page.context;
+//   let data: any;
+
+//   if ('resource' in ctx && ctx.resource) {
+//     const record = await Record.findById(id);
+//     data = record.data;
+//   } else if ('refData' in ctx && ctx.refData) {
+//     // get refData from page
+//     const referenceData = await ReferenceData.findById(ctx.refData);
+//     const apiConfiguration = await ApiConfiguration.findById(
+//       referenceData.apiConfiguration
+//     );
+//     const items = apiConfiguration
+//       ? await (
+//           context.dataSources[apiConfiguration.name] as CustomAPI
+//         ).getReferenceDataItems(referenceData, apiConfiguration)
+//       : referenceData.data;
+//     data = items.find((x) => x[referenceData.valueField] === id);
+//   }
+
+//   const stringifiedStructure = JSON.stringify(dashboard.structure);
+//   const regex = /{{context\.(.*?)}}/g;
+
+//   // replace all {{context.<field>}} with the value from the data
+//   dashboard.structure = JSON.parse(
+//     stringifiedStructure.replace(regex, (match) => {
+//       const field = match.replace('{{context.', '').replace('}}', '');
+//       return data[field] || match;
+//     })
+//   );
+// }
