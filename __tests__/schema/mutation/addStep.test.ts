@@ -122,7 +122,7 @@ describe('Add Step Mutation Tests', () => {
     const formName = faker.random.words();
     const graphQLTypeName = Form.getGraphQLTypeName(formName);
     const form = await new Form({
-      name: faker.random.words(),
+      name: formName,
       graphQLTypeName,
       status: 'active',
       resource,
