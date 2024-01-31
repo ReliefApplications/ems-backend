@@ -20,18 +20,23 @@ beforeAll(async () => {
 });
 
 describe('Add Subscription Mutation Tests', () => {
-  test('should add a new subscription with valid data', async () => {  
-    const application = await new Application({ name: faker.random.words() }).save();
+  test('should add a new subscription with valid data', async () => {
+    const application = await new Application({
+      name: faker.random.words(),
+    }).save();
     const channel = await new Channel({
       title: faker.random.words(),
       application: application._id,
     }).save();
     const formName = faker.random.words();
     const graphQLTypeName = Form.getGraphQLTypeName(formName);
-    const form = await new Form({ name: formName, graphQLTypeName: graphQLTypeName }).save();
+    const form = await new Form({
+      name: formName,
+      graphQLTypeName: graphQLTypeName,
+    }).save();
 
     const routingKey = await Application.findOne({
-      'subscriptions.routingKey': { $exists: true, $ne: null }
+      'subscriptions.routingKey': { $exists: true, $ne: null },
     });
 
     const variables = {
