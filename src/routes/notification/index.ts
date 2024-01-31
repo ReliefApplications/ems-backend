@@ -132,13 +132,13 @@ const formatDates = (rowData: unknown): string => {
 const buildTable = (records, name, styles: TableStyle): string => {
   const tableStyle =
     styles?.tableStyle ||
-    `width: 100%; border-collapse: collapse; border: 1px solid gray; box-shadow: 0 0 #0000; overflow:auto;`;
+    'width: 100%; border-collapse: collapse; border: 1px solid gray; box-shadow: 0 0 #0000; overflow:auto;';
   const trStyle =
-    styles?.trStyle || `border-top: 1px solid gray; background-color: white;`;
+    styles?.trStyle || 'border-top: 1px solid gray; background-color: white;';
   const thStyle =
     styles?.thStyle ||
-    `text-align: left; padding: 2px; background-color: #00205C; color: white;`;
-  const tdStyle = styles?.tdStyle || `padding: 2px; text-align: left;`;
+    'text-align: left; padding: 2px; background-color: #00205C; color: white;';
+  const tdStyle = styles?.tdStyle || 'padding: 2px; text-align: left;';
 
   let table = `<table style="${tableStyle};">`;
   table += `<thead style="${styles.theadStyle}">`;
@@ -161,7 +161,9 @@ const buildTable = (records, name, styles: TableStyle): string => {
   table += '</table>';
   return `<div style="${styles?.tableDivStyle}">
     <label style="${styles?.labelStyle}">${name}</label>
-    ${table}
+    <div style="width: 100%; overflow-x: auto;">
+     ${table}
+    </div>
   </div>`;
 };
 
@@ -223,14 +225,45 @@ const replaceHeader = (header: {
     const matches = header.headerHtml.matchAll(inthelastMatcher);
     for (const match of matches) {
       const splitToken = match[1].split('.');
+      const currentDate = new Date();
+      // Current date offset by minutes param
+      const pastDate = new Date(
+        currentDate.getTime() - Number(splitToken[2]) * 60000
+      );
 
-      const now = Date.now();
-      const withinTheLastMs = Number(splitToken[2]) * 60 * 1000;
-      const dateLowerLimit = new Date(now - withinTheLastMs);
+      // Past Date to date (mm/dd/yyyy)
+      const formattedPastDate = pastDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: '2-digit',
+      });
 
-      const newHeader = `${splitToken[0]} records with ${replaceUnderscores(
-        splitToken[1]
-      )} from ${dateLowerLimit.toDateString()} as of ${new Date().toDateString()}`;
+      // Past Date to time (hh:mm)
+      const formattedPastTime = pastDate.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+
+      // Current Date to date (mm/dd/yyyy)
+      const formattedCurrentDate = currentDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: '2-digit',
+      });
+
+      // Current Date to time (hh:mm)
+      const formattedCurrentTime = currentDate.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+
+      let newHeader;
+      const minutesInAWeek = 7 * 24 * 60;
+      if (Number(splitToken[2]) > minutesInAWeek) {
+        newHeader = `From ${formattedPastDate} ${formattedCurrentTime} UTC as of ${formattedCurrentDate} ${formattedCurrentTime} UTC`;
+      } else {
+        newHeader = `From ${formattedPastDate} ${formattedPastTime} UTC as of ${formattedCurrentDate} ${formattedCurrentTime} UTC`;
+      }
       header.headerHtml = header.headerHtml.replace(
         inthelastMatcher,
         newHeader
@@ -264,7 +297,7 @@ const replaceHeader = (header: {
   }
 
   // Wraps the header elements in a div
-  const headerElement = parse(`<div id="header">`, {
+  const headerElement = parse('<div id="header">', {
     blockTextElements: {
       style: true,
     },
@@ -298,7 +331,7 @@ const replaceHeader = (header: {
     }
   }
 
-  headerElement.getElementById('header').appendChild(parse(`</div>`));
+  headerElement.getElementById('header').appendChild(parse('</div>'));
 
   headerElement
     .getElementById('header')
@@ -401,7 +434,7 @@ const replaceFooter = (footer: {
     );
   }
 
-  const footerElement = parse(`<div id="footer">`, {
+  const footerElement = parse('<div id="footer">', {
     blockTextElements: {
       style: true,
     },
@@ -433,7 +466,7 @@ const replaceFooter = (footer: {
     }
   }
 
-  footerElement.getElementById('footer').appendChild(parse(`</div>`));
+  footerElement.getElementById('footer').appendChild(parse('</div>'));
 
   if (footer.footerStyle) {
     footerElement

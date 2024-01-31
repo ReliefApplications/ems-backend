@@ -58,8 +58,29 @@ interface Recipients {
   Bcc: string[];
 }
 
+/** custom notification documents interface declaration */
+export interface EmailNotification extends Document {
+  kind: 'EmailNotification';
+  name: string;
+  description: string;
+  schedule: string;
+  applicationId: mongoose.Schema.Types.ObjectId;
+  createdBy: { name: string; email: string };
+  notificationType: string;
+  dataSets: DataSet[];
+  recipients: Recipients;
+  emailLayout: EmailLayout;
+  recipientsType: string;
+  status: string;
+  lastExecution?: Date;
+  lastExecutionStatus: string;
+  isDeleted: number;
+  createdAt?: Date;
+  modifiedAt?: Date;
+}
+
 /** Mongoose email notification schema declaration */
-export const emailNotificationSchema = new Schema(
+export const emailNotificationSchema = new Schema<EmailNotification>(
   {
     name: {
       type: String,
@@ -142,25 +163,6 @@ export const emailNotificationSchema = new Schema(
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
   }
 );
-
-/** custom notification documents interface declaration */
-export interface EmailNotification extends Document {
-  kind: 'EmailNotification';
-  name: string;
-  description: string;
-  schedule: string;
-  createdBy: { name: string; email: string };
-  notificationType: string;
-  dataSets: DataSet[];
-  recipients: Recipients;
-  emailLayout: EmailLayout;
-  recipientsType: string;
-  status: string;
-  lastExecution?: Date;
-  lastExecutionStatus: string;
-  createdAt?: Date;
-  modifiedAt?: Date;
-}
 
 /**
  *
