@@ -3,7 +3,15 @@ import { SafeTestServer } from '../../server.setup';
 import { faker } from '@faker-js/faker';
 import supertest from 'supertest';
 import { acquireToken } from '../../authentication.setup';
-import { Role, User, Workflow, Form, Page, Application, Resource } from '@models';
+import {
+  Role,
+  User,
+  Workflow,
+  Form,
+  Page,
+  Application,
+  Resource,
+} from '@models';
 
 let server: SafeTestServer;
 let request: supertest.SuperTest<supertest.Test>;
@@ -36,7 +44,7 @@ beforeAll(async () => {
   await new Application({
     name: faker.random.alpha(10),
     status: 'pending',
-    pages: [page._id]
+    pages: [page._id],
   }).save();
 });
 

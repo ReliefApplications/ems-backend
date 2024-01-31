@@ -51,7 +51,7 @@ describe('Add Role Mutation Tests', () => {
     const application = await Application.findOne();
     const variables = {
       title: faker.name.jobTitle(),
-      application: application._id
+      application: application._id,
     };
 
     const response = await request
@@ -64,9 +64,7 @@ describe('Add Role Mutation Tests', () => {
     expect(response.body).toHaveProperty('data');
     expect(response.body).not.toHaveProperty('errors');
     expect(response.body.data.addRole.title).toEqual(variables.title);
-    expect(response.body.data.addRole.application.id).toEqual(
-      application.id
-    );
+    expect(response.body.data.addRole.application.id).toEqual(application.id);
   });
 
   test('Attempt to add role with invalid application', async () => {
