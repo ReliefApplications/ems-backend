@@ -37,7 +37,7 @@ describe('Add Workflow Mutation Tests', () => {
               name: $name,
               page: $page
             ) {
-              _id
+              id
               name
             }
           }
@@ -51,7 +51,7 @@ describe('Add Workflow Mutation Tests', () => {
     expect(response.body).toHaveProperty('data');
     expect(response.body.data).toHaveProperty('addWorkflow');
     const addedWorkflow = response.body.data.addWorkflow;
-    expect(addedWorkflow).toHaveProperty('_id');
+    expect(addedWorkflow).toHaveProperty('id');
     expect(addedWorkflow).toHaveProperty('name', variables.name);
   });
 

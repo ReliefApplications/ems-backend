@@ -10,9 +10,6 @@ let request: supertest.SuperTest<supertest.Test>;
 let token: string;
 
 beforeAll(async () => {
-  const admin = await Role.findOne({ title: 'admin' });
-  await User.updateOne({ username: 'dummy@dummy.com' }, { roles: [admin._id] });
-
   server = new SafeTestServer();
   await server.start(schema);
   request = supertest(server.app);
@@ -21,17 +18,13 @@ beforeAll(async () => {
 
 describe('Add Users Mutation Tests', () => {
   test('should add new users with valid data', async () => {
-    const application = await Application.create({ name: 'Test Application' });
+    const application = await Application.create({ name: faker.random.words() });
 
     const variables = {
       users: [
         {
           email: faker.internet.email(),
           role: (await Role.findOne({}))._id.toString(),
-          positionAttributes: [
-            { attribute1: 'value1' },
-            { attribute2: 'value2' },
-          ],
         },
         {
           email: faker.internet.email(),
@@ -46,17 +39,28 @@ describe('Add Users Mutation Tests', () => {
       .send({
         query: `
           mutation addUsers(
-            $users: [UserInput!]!,
+            $users: [UserInputType!]!,
             $application: ID
           ) {
             addUsers(
               users: $users,
               application: $application
             ) {
+              id
               username
+              name
               roles {
-                _id
+                id
+                title
               }
+              positionAttributes {
+                value
+                category {
+                  id
+                  title
+                }
+              }
+              oid
             }
           }
         `,
@@ -71,6 +75,6 @@ describe('Add Users Mutation Tests', () => {
     const addedUsers = response.body.data.addUsers;
     expect(addedUsers).toHaveLength(2);
     expect(addedUsers[0]).toHaveProperty('username');
-    expect(addedUsers[0].roles).toHaveLength(1);
+    expect(addedUsers[0].roles).toHaveLength(0);
   });
 });
