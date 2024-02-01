@@ -235,6 +235,9 @@ const buildMongoFilter = (
             break;
           case 'time': {
             value = getTimeForMongo(value);
+            value = new Date(
+              Date.UTC(1970, 0, 1, value.getHours(), value.getMinutes())
+            );
             break;
           }
           case 'users': {
