@@ -9,7 +9,42 @@ let server: ApolloServer;
  * Test ApiConfigurations query.
  */
 describe('ApiConfigurations query tests', () => {
-  const query = '{ apiConfigurations { totalCount, edges { node { id } } } }';
+  const query = `apiConfigurations(first: $first, afterCursor: $afterCursor) {
+    edges {
+      node {
+        id
+        name
+        status
+        authType
+        endpoint
+        pingUrl
+        settings
+        permissions {
+          canSee {
+            id
+            title
+          }
+          canUpdate {
+            id
+            title
+          }
+          canDelete {
+            id
+            title
+          }
+        }
+        canSee
+        canUpdate
+        canDelete
+      }
+      cursor
+    }
+    totalCount
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }`;
   test('query with wrong user returns error', async () => {
     server = await SafeTestServer.createApolloTestServer(schema, {
       name: 'Wrong user',
@@ -37,6 +72,7 @@ describe('ApiConfigurations query tests', () => {
       roles: [admin],
     });
     const result = await server.executeOperation({ query });
+    console.log(result);
     //console.log(JSON.stringify(result, null, 2));
     if (result.body.kind === 'single') {
       expect(result.body.singleResult.errors).toBeUndefined();

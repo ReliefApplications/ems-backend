@@ -198,6 +198,7 @@ class SafeTestServer {
     can(
       ['read', 'create', 'update', 'delete', 'manage'],
       [
+        'Layer',
         'Application',
         'Dashboard',
         'Channel',

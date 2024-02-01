@@ -12,9 +12,6 @@ let request: supertest.SuperTest<supertest.Test>;
 let token: string;
 
 beforeAll(async () => {
-  const admin = await Role.findOne({ title: 'admin' });
-  await User.updateOne({ username: 'dummy@dummy.com' }, { roles: [admin._id] });
-
   server = new SafeTestServer();
   await server.start(schema);
   request = supertest(server.app);
@@ -24,6 +21,7 @@ beforeAll(async () => {
     layer: {
       name: faker.random.alpha(10),
       sublayers: [],
+      type: 'FeatureLayer'
     },
   }).save();
 
@@ -43,13 +41,12 @@ beforeAll(async () => {
  * Test Layer edit mutation.
  */
 describe('Edit Layer mutation tests', () => {
-  const query = `mutation editLayer($id: ID! $layer: LayerInputType!) {
-        editLayer(id: $id, layer: $layer) {
-          id
-          name
-          sublayers
-        }
-      }`;
+  const mutation = `mutation editLayer($id: ID!, $layer: LayerInputType!) {
+    editLayer(id: $id, layer: $layer) {
+      id
+      name
+    }
+  }`;
 
   test('query without user returns error', async () => {
     const variables = {
@@ -61,7 +58,7 @@ describe('Edit Layer mutation tests', () => {
     };
     const response = await request
       .post('/graphql')
-      .send({ query, variables })
+      .send({ query: mutation, variables })
       .set('Accept', 'application/json');
     if (!!response.body.errors && !!response.body.errors[0].message) {
       expect(
@@ -71,20 +68,23 @@ describe('Edit Layer mutation tests', () => {
   });
 
   test('query with admin user and without sublayer returns expected layer', async () => {
+
     const variables = {
-      id: layer._id,
+      id: layer._id.toString(),
       layer: {
         name: faker.random.alpha(10),
         sublayers: [],
+        type: 'FeatureLayer'
       },
     };
 
     const response = await request
       .post('/graphql')
-      .send({ query, variables })
+      .send({ query: mutation, variables })
       .set('Authorization', token)
       .set('Accept', 'application/json');
 
+    console.log(response.body);
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body).not.toHaveProperty('errors');
@@ -102,7 +102,7 @@ describe('Edit Layer mutation tests', () => {
     };
     const response = await request
       .post('/graphql')
-      .send({ query, variables })
+      .send({ query: mutation, variables })
       .set('Authorization', token)
       .set('Accept', 'application/json');
     expect(response.status).toBe(200);
@@ -124,7 +124,7 @@ describe('Edit Layer mutation tests', () => {
 
     const response = await request
       .post('/graphql')
-      .send({ query, variables })
+      .send({ query: mutation, variables })
       .set('Authorization', token)
       .set('Accept', 'application/json');
 
@@ -145,7 +145,7 @@ describe('Edit Layer mutation tests', () => {
 
     const response = await request
       .post('/graphql')
-      .send({ query, variables })
+      .send({ query: mutation, variables })
       .set('Authorization', nonAdminToken)
       .set('Accept', 'application/json');
 
@@ -166,7 +166,7 @@ describe('Edit Layer mutation tests', () => {
 
     const response = await request
       .post('/graphql')
-      .send({ query, variables })
+      .send({ query: mutation, variables })
       .set('Authorization', token)
       .set('Accept', 'application/json');
 

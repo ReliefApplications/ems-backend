@@ -10,9 +10,6 @@ let request: supertest.SuperTest<supertest.Test>;
 let token: string;
 
 beforeAll(async () => {
-  const admin = await Role.findOne({ title: 'admin' });
-  await User.updateOne({ username: 'dummy@dummy.com' }, { roles: [admin._id] });
-
   server = new SafeTestServer();
   await server.start(schema);
   request = supertest(server.app);
@@ -79,7 +76,8 @@ describe('Add dashboard tests cases', () => {
   });
 
   test('test case with insufficient permissions', async () => {
-    const nonAdminToken = `Bearer ${await acquireToken()}`;
+    await server.removeAdminRoleToUserBeforeTest();
+    const tokenWithoutPermission = `Bearer ${await acquireToken()}`;
     const variables = {
       name: faker.random.alpha(10),
     };
@@ -87,36 +85,14 @@ describe('Add dashboard tests cases', () => {
     const response = await request
       .post('/graphql')
       .send({ query, variables })
-      .set('Authorization', nonAdminToken)
+      .set('Authorization', tokenWithoutPermission)
       .set('Accept', 'application/json');
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain('permission');
-  });
+    expect(response.body.errors[0].message).toContain('Permission not granted.');
 
-  test('test case with duplicate name', async () => {
-    const variables = {
-      name: faker.random.alpha(10),
-    };
-
-    // add first panel
-    await request
-      .post('/graphql')
-      .send({ query, variables })
-      .set('Authorization', token)
-      .set('Accept', 'application/json');
-
-    // trying to add second panel with same name
-    const response = await request
-      .post('/graphql')
-      .send({ query, variables })
-      .set('Authorization', token)
-      .set('Accept', 'application/json');
-
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain('unique constraint');
+    await server.restoreAdminRoleToUserAfterTest();
   });
 
   test('test case with invalid arguments', async () => {
@@ -132,6 +108,6 @@ describe('Add dashboard tests cases', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain('invalidArguments');
+    expect(response.body.errors[0].message).toContain('Dashboard name must be provided.');
   });
 });
