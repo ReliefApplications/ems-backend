@@ -61,12 +61,16 @@ export const defaultRecordFields: {
   filterType: GraphQLType;
   selectable: boolean;
   args?: any;
+  project?: any;
 }[] = [
   {
     field: 'id',
     type: GraphQLID,
     filterType: GraphQLID,
     selectable: true,
+    project: {
+      $toString: '$_id',
+    },
   },
   {
     field: 'incrementalId',
@@ -91,6 +95,7 @@ export const defaultRecordFields: {
     args: {
       display: { type: GraphQLBoolean },
     },
+    project: '$_lastUpdateForm.name',
   },
   {
     field: 'createdAt',
@@ -109,12 +114,26 @@ export const defaultRecordFields: {
     type: UserType,
     filterType: GraphQLID,
     selectable: true,
+    project: {
+      id: {
+        $toString: '$_createdBy.user._id',
+      },
+      username: '$_createdBy.user.username',
+      name: '$_createdBy.user.name',
+    },
   },
   {
     field: 'lastUpdatedBy',
     type: UserType,
     filterType: GraphQLID,
     selectable: true,
+    project: {
+      id: {
+        $toString: '$_lastUpdatedBy.user._id',
+      },
+      username: '$_lastUpdatedBy.user.username',
+      name: '$_lastUpdatedBy.user.name',
+    },
   },
   {
     field: 'canUpdate',

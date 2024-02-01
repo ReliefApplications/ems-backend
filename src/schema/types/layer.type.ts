@@ -21,6 +21,7 @@ const LayerDatasource = new GraphQLObjectType({
   name: 'LayerDatasource',
   fields: () => ({
     refData: { type: GraphQLID },
+    referenceDataVariableMapping: { type: GraphQLString },
     resource: { type: GraphQLID },
     layout: { type: GraphQLID },
     aggregation: { type: GraphQLID },

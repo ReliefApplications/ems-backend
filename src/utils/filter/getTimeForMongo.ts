@@ -13,7 +13,7 @@ export const getTimeForMongo = (value: any): Date => {
         timeZone: 'Europe/Berlin',
       })
     );
-  } else if (value.match(/^\d\d:\d\d$/)) {
+  } else if (value?.match(/^\d\d:\d\d$/)) {
     const hours = value.slice(0, 2);
     const minutes = value.slice(3);
     return new Date(Date.UTC(1970, 0, 1, hours, minutes));

@@ -58,7 +58,6 @@ const generateEmail = async (req, res) => {
     const name = args.query.name.substring(3);
     fileName = name + ' ' + date;
     const file = await xlsBuilder(fileName, columns, rows);
-    // const file = await exportBatch(req, res, )
     attachments.push({
       filename: `${fileName}.xlsx`,
       content: file,

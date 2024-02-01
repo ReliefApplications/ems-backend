@@ -1,12 +1,10 @@
-import { GraphQLError, GraphQLList, GraphQLString } from 'graphql';
+import { GraphQLError, GraphQLList, GraphQLString, GraphQLID } from 'graphql';
 import { LayerType } from '../types';
 import { Layer } from '@models';
-import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import getFilter from '@utils/filter/getFilter';
 import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
-import { accessibleBy } from '@casl/mongoose';
 import { CompositeFilterDescriptor } from '@const/compositeFilter';
 import { GraphQLJSON } from 'graphql-type-json';
 import { Context } from '@server/apollo/context';
@@ -17,6 +15,7 @@ const FILTER_FIELDS: { name: string; type: string }[] = [
     name: 'name',
     type: 'text',
   },
+  { name: 'ids', type: 'ObjectId' },
 ];
 
 /** Available sort fields */
@@ -48,11 +47,11 @@ export default {
     filter: { type: GraphQLJSON },
     sortField: { type: GraphQLString },
     sortOrder: { type: GraphQLString },
+    ids: { type: new GraphQLList(GraphQLID) },
   },
   async resolve(parent, args: LayerArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
-      const user = context.user;
       // Inputs check
       if (args.sortField) {
         if (!SORT_FIELDS.map((x) => x.name).includes(args.sortField)) {
@@ -60,14 +59,8 @@ export default {
         }
       }
 
-      // create ability object for all layers
-      const ability: AppAbility = user.ability;
-
-      const abilityFilters = Layer.find(
-        accessibleBy(ability, 'read').Layer
-      ).getFilter();
       const queryFilters = getFilter(args.filter, FILTER_FIELDS);
-      const filters: any[] = [queryFilters, abilityFilters];
+      const filters: any[] = [queryFilters];
 
       const sortField = SORT_FIELDS.find((x) => x.name === args.sortField);
       const sortOrder = args.sortOrder || 'asc';
