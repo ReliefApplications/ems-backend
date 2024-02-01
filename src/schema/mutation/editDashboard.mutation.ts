@@ -9,7 +9,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { DashboardType } from '../types';
 import { Dashboard, Page, Step } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
-import { isEmpty } from 'lodash';
+import { clone, cloneDeep, isEmpty } from 'lodash';
 import { logger } from '@services/logger.service';
 import ButtonActionInputType from '@schema/inputs/button-action.input';
 import { graphQLAuthCheck } from '@schema/shared';
@@ -87,7 +87,13 @@ export default {
       } = {};
       Object.assign(
         updateDashboard,
-        args.structure && { structure: args.structure },
+        args.structure && {
+          structure: (args.structure || []).map((widget) => {
+            const copy = cloneDeep(widget);
+            delete copy.hidden;
+            return copy;
+          }),
+        },
         args.name && { name: args.name },
         args.filter && {
           filter: { ...dashboard.toObject().filter, ...args.filter },
