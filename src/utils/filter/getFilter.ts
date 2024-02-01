@@ -51,7 +51,6 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
         let dateForFilter: any;
         let startDatetime: Date;
         let endDatetime: Date;
-        let datetimeForFilter: any;
         switch (field.type) {
           case 'date':
             dateForFilter = getDateForMongo(value);
@@ -120,7 +119,11 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
                 [fieldName]: { $not: { $size: value.length, $all: value } },
               };
             } else if (DATETIME_TYPES.includes(field.type)) {
-              return { [fieldName]: { $ne: datetimeForFilter } };
+              return {
+                [fieldName]: {
+                  $not: { $gte: startDatetime, $lte: endDatetime },
+                },
+              };
             } else if (DATE_TYPES.includes(field.type)) {
               return {
                 [fieldName]: {
@@ -155,7 +158,7 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
             if (DATE_TYPES.includes(field.type)) {
               return { [fieldName]: { $lt: startDate } };
             } else if (DATETIME_TYPES.includes(field.type)) {
-              return { [fieldName]: { $lt: datetimeForFilter } };
+              return { [fieldName]: { $lt: startDatetime } };
             } else if (isNaN(intValue)) {
               return { [fieldName]: { $lt: value } };
             } else {
@@ -203,7 +206,7 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
             if (DATE_TYPES.includes(field.type)) {
               return { [fieldName]: { $gte: startDate } };
             } else if (DATETIME_TYPES.includes(field.type)) {
-              return { [fieldName]: { $gte: datetimeForFilter } };
+              return { [fieldName]: { $gte: startDatetime } };
             } else if (isNaN(intValue)) {
               return { [fieldName]: { $gte: value } };
             } else {
