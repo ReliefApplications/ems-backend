@@ -9,7 +9,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { DashboardType } from '../types';
 import { Dashboard, Page, Step } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
-import { clone, cloneDeep, isEmpty } from 'lodash';
+import { cloneDeep, isEmpty } from 'lodash';
 import { logger } from '@services/logger.service';
 import ButtonActionInputType from '@schema/inputs/button-action.input';
 import { graphQLAuthCheck } from '@schema/shared';

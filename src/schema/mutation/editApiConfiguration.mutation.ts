@@ -117,9 +117,12 @@ export default {
             ).toString(),
           });
         }
-        return await ApiConfiguration.findOneAndUpdate(filters, update, {
-          new: true,
-        });
+        const apiConfig = await ApiConfiguration.findOneAndUpdate(
+          filters,
+          update,
+          { new: true }
+        );
+        return apiConfig;
       } else {
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')
