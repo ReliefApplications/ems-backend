@@ -3,7 +3,7 @@ import { SafeTestServer } from '../../server.setup';
 import { faker } from '@faker-js/faker';
 import supertest from 'supertest';
 import { acquireToken } from '../../authentication.setup';
-import { Layer, Role, User } from '@models';
+import { Layer } from '@models';
 
 let server: SafeTestServer;
 let layer;
@@ -21,7 +21,7 @@ beforeAll(async () => {
     layer: {
       name: faker.random.alpha(10),
       sublayers: [],
-      type: 'FeatureLayer'
+      type: 'FeatureLayer',
     },
   }).save();
 
@@ -68,13 +68,12 @@ describe('Edit Layer mutation tests', () => {
   });
 
   test('query with admin user and without sublayer returns expected layer', async () => {
-
     const variables = {
       id: layer._id.toString(),
       layer: {
         name: faker.random.alpha(10),
         sublayers: [],
-        type: 'FeatureLayer'
+        type: 'FeatureLayer',
       },
     };
 

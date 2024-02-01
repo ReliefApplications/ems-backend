@@ -3,7 +3,6 @@ import { SafeTestServer } from '../../server.setup';
 import { faker } from '@faker-js/faker';
 import supertest from 'supertest';
 import { acquireToken } from '../../authentication.setup';
-import { Role, User } from '@models';
 
 let server: SafeTestServer;
 let request: supertest.SuperTest<supertest.Test>;
@@ -90,7 +89,9 @@ describe('Add dashboard tests cases', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain('Permission not granted.');
+    expect(response.body.errors[0].message).toContain(
+      'Permission not granted.'
+    );
 
     await server.restoreAdminRoleToUserAfterTest();
   });
@@ -108,6 +109,8 @@ describe('Add dashboard tests cases', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain('Dashboard name must be provided.');
+    expect(response.body.errors[0].message).toContain(
+      'Dashboard name must be provided.'
+    );
   });
 });

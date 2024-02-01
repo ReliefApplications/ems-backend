@@ -2,7 +2,7 @@ import schema from '../../../src/schema';
 import { SafeTestServer } from '../../server.setup';
 import supertest from 'supertest';
 import { acquireToken } from '../../authentication.setup';
-import { Role, User, Application } from '@models';
+import { Role, User } from '@models';
 import { faker } from '@faker-js/faker';
 
 let server: SafeTestServer;
@@ -33,14 +33,12 @@ describe('AddApplication mutation tests cases', () => {
   test('test case add application with correct data', async () => {
     const variables = {
       name: faker.random.words(),
-    }
+    };
     const response = await request
       .post('/graphql')
       .send({ query: mutation, variables })
       .set('Authorization', token)
       .set('Accept', 'application/json');
-    
-    console.log(response.body);
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
@@ -69,9 +67,7 @@ describe('AddApplication mutation tests cases', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain(
-      'You must be connected.'
-    );
+    expect(response.body.errors[0].message).toContain('You must be connected.');
   });
 
   test('test case with insufficient permissions and return error', async () => {
@@ -93,7 +89,6 @@ describe('AddApplication mutation tests cases', () => {
   });
 
   test('test case with a valid application name', async () => {
-
     const response = await request
       .post('/graphql')
       .send({ query: mutation })
