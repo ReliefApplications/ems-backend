@@ -24,7 +24,9 @@ describe('Delete ApiConfiguration Mutation Tests', () => {
   }`;
 
   test('should delete an apiConfiguration successfully', async () => {
-    const apiConfiguration = await new ApiConfiguration({ name: faker.lorem.word() }).save();
+    const apiConfiguration = await new ApiConfiguration({
+      name: faker.lorem.word(),
+    }).save();
 
     const variables = {
       id: apiConfiguration.id.toString(),
@@ -66,7 +68,7 @@ describe('Delete ApiConfiguration Mutation Tests', () => {
     const error = response.body.errors[0];
     expect(error).toHaveProperty('message');
     expect(error.message).toContain(
-      'Variable \"$id\" of required type \"ID!\" was not provided.'
+      'Variable "$id" of required type "ID!" was not provided.'
     );
   });
 });
