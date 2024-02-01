@@ -84,6 +84,7 @@ describe('Edit Layer mutation tests', () => {
       .send({ query, variables })
       .set('Authorization', token)
       .set('Accept', 'application/json');
+    
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body).not.toHaveProperty('errors');

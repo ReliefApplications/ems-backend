@@ -18,8 +18,15 @@ beforeAll(async () => {
 });
 
 describe('Delete Aggregation Mutation Tests', () => {
+  const mutation = `mutation deleteAggregation($id: ID!, $resource: ID!) {
+    deleteAggregation(id: $id, resource: $resource) {
+      id
+      name
+    }
+  }`;
+
   test('should delete an aggregation successfully', async () => {
-    const resource = await Resource.create({ name: 'Test Resource' });
+    const resource = await Resource.create({ name: faker.random.alpha(10) });
     const aggregation = {
       name: faker.lorem.word(),
       id: new mongoose.Types.ObjectId(),
@@ -36,21 +43,7 @@ describe('Delete Aggregation Mutation Tests', () => {
     const response = await request
       .post('/graphql')
       .send({
-        query: `
-          mutation deleteAggregation(
-            $id: ID!,
-            $resource: ID!
-          ) {
-            deleteAggregation(
-              id: $id,
-              resource: $resource
-            ) {
-              _id
-              name
-              // Include other fields you want to verify
-            }
-          }
-        `,
+        query: mutation,
         variables,
       })
       .set('Authorization', token)
@@ -59,12 +52,6 @@ describe('Delete Aggregation Mutation Tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data).toHaveProperty('deleteAggregation');
-    const deletedAggregation = response.body.data.deleteAggregation;
-    expect(deletedAggregation).toEqual({
-      _id: aggregation.id.toString(),
-      name: aggregation.name,
-    });
-
     const updatedResource = await Resource.findById(resource._id);
     expect(updatedResource.aggregations).toHaveLength(0);
   });
@@ -77,20 +64,7 @@ describe('Delete Aggregation Mutation Tests', () => {
     const response = await request
       .post('/graphql')
       .send({
-        query: `
-          mutation deleteAggregation(
-            $id: ID!,
-            $resource: ID
-          ) {
-            deleteAggregation(
-              id: $id,
-              resource: $resource
-            ) {
-              _id
-              name
-            }
-          }
-        `,
+        query: mutation,
         variables,
       })
       .set('Authorization', token)

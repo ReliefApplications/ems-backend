@@ -2,9 +2,8 @@ import schema from '../../../src/schema';
 import { SafeTestServer } from '../../server.setup';
 import supertest from 'supertest';
 import { acquireToken } from '../../authentication.setup';
-import { Resource } from '@models';
+import { ApiConfiguration } from '@models';
 import { faker } from '@faker-js/faker';
-import mongoose from 'mongoose';
 
 let server: SafeTestServer;
 let request: supertest.SuperTest<supertest.Test>;
@@ -17,40 +16,24 @@ beforeAll(async () => {
   token = `Bearer ${await acquireToken()}`;
 });
 
-describe('Delete Aggregation Mutation Tests', () => {
-  test('should delete an aggregation successfully', async () => {
-    const resource = await Resource.create({ name: 'Test Resource' });
-    const aggregation = {
-      name: faker.lorem.word(),
-      id: new mongoose.Types.ObjectId(),
-    };
+describe('Delete ApiConfiguration Mutation Tests', () => {
+  const mutation = `mutation deleteApiConfiguration($id: ID!) {
+    deleteApiConfiguration(id: $id) {
+      id
+    }
+  }`;
 
-    resource.aggregations.push(aggregation);
-    await resource.save();
+  test('should delete an apiConfiguration successfully', async () => {
+    const apiConfiguration = await new ApiConfiguration({ name: faker.lorem.word() }).save();
 
     const variables = {
-      id: aggregation.id.toString(),
-      resource: resource._id.toString(),
+      id: apiConfiguration.id.toString(),
     };
 
     const response = await request
       .post('/graphql')
       .send({
-        query: `
-          mutation deleteAggregation(
-            $id: ID!,
-            $resource: ID!
-          ) {
-            deleteAggregation(
-              id: $id,
-              resource: $resource
-            ) {
-              _id
-              name
-              // Include other fields you want to verify
-            }
-          }
-        `,
+        query: mutation,
         variables,
       })
       .set('Authorization', token)
@@ -58,39 +41,20 @@ describe('Delete Aggregation Mutation Tests', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
-    expect(response.body.data).toHaveProperty('deleteAggregation');
-    const deletedAggregation = response.body.data.deleteAggregation;
+    expect(response.body.data).toHaveProperty('deleteApiConfiguration');
+    const deletedAggregation = response.body.data.deleteApiConfiguration;
     expect(deletedAggregation).toEqual({
-      _id: aggregation.id.toString(),
-      name: aggregation.name,
+      id: apiConfiguration.id.toString(),
     });
-
-    const updatedResource = await Resource.findById(resource._id);
-    expect(updatedResource.aggregations).toHaveLength(0);
   });
 
-  test('should throw an error for missing resource ID', async () => {
-    const variables = {
-      id: 'invalidID',
-    };
+  test('should throw an error for missing apiConfiguration', async () => {
+    const variables = {};
 
     const response = await request
       .post('/graphql')
       .send({
-        query: `
-          mutation deleteAggregation(
-            $id: ID!,
-            $resource: ID
-          ) {
-            deleteAggregation(
-              id: $id,
-              resource: $resource
-            ) {
-              _id
-              name
-            }
-          }
-        `,
+        query: mutation,
         variables,
       })
       .set('Authorization', token)
@@ -102,7 +66,7 @@ describe('Delete Aggregation Mutation Tests', () => {
     const error = response.body.errors[0];
     expect(error).toHaveProperty('message');
     expect(error.message).toContain(
-      'Variable "$resource" of required type "ID!"'
+      'Variable \"$id\" of required type \"ID!\" was not provided.'
     );
   });
 });
