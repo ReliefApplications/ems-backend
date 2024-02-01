@@ -1,7 +1,6 @@
 import { GraphQLError, GraphQLNonNull, GraphQLID } from 'graphql';
 import { LayerType } from '../types';
 import { Layer } from '@models';
-import { AppAbility } from '@security/defineUserAbility';
 import { graphQLAuthCheck } from '@schema/shared';
 import { logger } from '@services/logger.service';
 
@@ -17,17 +16,7 @@ export default {
   async resolve(parent, args, context) {
     graphQLAuthCheck(context);
     try {
-      const user = context.user;
-
-      // create ability object for all layers
-      const ability: AppAbility = user.ability;
-      if (ability.can('read', 'Layer')) {
-        return await Layer.findById(args.id);
-      }
-
-      throw new GraphQLError(
-        context.i18next.t('common.errors.permissionNotGranted')
-      );
+      return await Layer.findById(args.id);
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {

@@ -11,62 +11,16 @@ import i18next from 'i18next';
 import mongoose from 'mongoose';
 import { logger } from '@services/logger.service';
 import axios from 'axios';
-import { isEqual, isNil, get, omit } from 'lodash';
+import { isEqual, get, omit } from 'lodash';
 import turf, { Feature, booleanPointInPolygon } from '@turf/turf';
 import dataSources, { CustomAPI } from '@server/apollo/dataSources';
 import { getAdmin0Polygons } from '@utils/gis/getCountryPolygons';
 import filterReferenceData from '@utils/referenceData/referenceDataFilter.util';
 
 /**
- * Interface of feature query
- */
-interface IFeatureQuery {
-  geoField?: string;
-  longitudeField?: string;
-  latitudeField?: string;
-  minLat?: number;
-  maxLat?: number;
-  minLng?: number;
-  maxLng?: number;
-  type: GeometryType;
-}
-
-/**
  * Endpoint for custom feature layers
  */
 const router = express.Router();
-
-/**
- * Get filter polygon from bounds
- *
- * @param query query parameters
- * @returns filter polygon
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const getFilterPolygon = (query: IFeatureQuery) => {
-  if (
-    !isNil(query.minLat) &&
-    !isNil(query.maxLat) &&
-    !isNil(query.minLng) &&
-    !isNil(query.maxLng)
-  ) {
-    const polygon: turf.Polygon = {
-      type: 'Polygon',
-      coordinates: [
-        [
-          [Number(query.minLat), Number(query.minLng)],
-          [Number(query.maxLat), Number(query.minLng)],
-          [Number(query.maxLat), Number(query.maxLng)],
-          [Number(query.minLat), Number(query.maxLng)],
-          [Number(query.minLat), Number(query.minLng)],
-        ],
-      ],
-    };
-    return polygon;
-  } else {
-    return null;
-  }
-};
 
 /**
  * Check geoJSON feature, if it's MultiLine or MultiPolygon, parse it
@@ -276,49 +230,41 @@ const gqlQuery = (
  * @returns GeoJSON feature collection mutations
  */
 router.get('/feature', async (req, res) => {
-  const featureCollection = {
-    type: 'FeatureCollection',
-    features: [],
-  };
-  const latitudeField = get(req, 'query.latitudeField');
-  const longitudeField = get(req, 'query.longitudeField');
-  const geoField = get(req, 'query.geoField');
-  const adminField = get(req, 'query.adminField');
-  const layerType = (get(req, 'query.type') ||
-    GeometryType.POINT) as GeometryType;
-  const contextFilters = JSON.parse(
-    decodeURIComponent(get(req, 'query.contextFilters', null))
-  );
-  const graphQLVariables = JSON.parse(
-    decodeURIComponent(get(req, 'query.graphQLVariables', null))
-  );
-  const at = get(req, 'query.at') as string | undefined;
-  // const tolerance = get(req, 'query.tolerance', 1);
-  // const highQuality = get(req, 'query.highquality', true);
-  // turf.simplify(geoJsonData, {
-  //   tolerance: tolerance,
-  //   highQuality: highQuality,
-  // });
-  if (!geoField && !(latitudeField && longitudeField)) {
-    return res
-      .status(400)
-      .send(i18next.t('routes.gis.feature.errors.invalidFields'));
-  }
-
-  // Polygons are only supported for geoField
-  if (layerType === GeometryType.POLYGON && !geoField) {
-    return res
-      .status(400)
-      .send(i18next.t('routes.gis.feature.errors.missingPolygonGeoField'));
-  }
-
-  const mapping = {
-    geoField,
-    longitudeField,
-    latitudeField,
-    adminField,
-  };
   try {
+    const featureCollection = {
+      type: 'FeatureCollection',
+      features: [],
+    };
+    const latitudeField = get(req, 'query.latitudeField');
+    const longitudeField = get(req, 'query.longitudeField');
+    const geoField = get(req, 'query.geoField');
+    const adminField = get(req, 'query.adminField');
+    const layerType = (get(req, 'query.type') ||
+      GeometryType.POINT) as GeometryType;
+    const contextFilters = JSON.parse(get(req, 'query.contextFilters', null));
+    const graphQLVariables = JSON.parse(
+      get(req, 'query.graphQLVariables', null)
+    );
+    const at = get(req, 'query.at') as string | undefined;
+    if (!geoField && !(latitudeField && longitudeField)) {
+      return res
+        .status(400)
+        .send(i18next.t('routes.gis.feature.errors.invalidFields'));
+    }
+
+    // Polygons are only supported for geoField
+    if (layerType === GeometryType.POLYGON && !geoField) {
+      return res
+        .status(400)
+        .send(i18next.t('routes.gis.feature.errors.missingPolygonGeoField'));
+    }
+
+    const mapping = {
+      geoField,
+      longitudeField,
+      latitudeField,
+      adminField,
+    };
     // Fetch resource to populate layer
     if (get(req, 'query.resource')) {
       let id: string;
