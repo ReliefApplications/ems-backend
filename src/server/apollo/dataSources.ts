@@ -48,11 +48,15 @@ const transformGraphQLVariables = (query: string, variables: any = {}) => {
       get(def, 'type.name.value') === 'JSON' &&
       get(variables, def.variable.name.value)
     ) {
-      set(
-        variables,
-        def.variable.name.value,
-        JSON.stringify(get(variables, def.variable.name.value))
-      );
+      let value = get(variables, def.variable.name.value);
+      if (value && typeof value === 'object') {
+        if (value.hasOwnProperty('AND') && value.AND !== null) {
+          value = { AND: Object.values(value.AND) };
+        } else if (value.hasOwnProperty('OR') && value.OR !== null) {
+          value = { OR: Object.values(value.OR) };
+        }
+      }
+      set(variables, def.variable.name.value, JSON.stringify(value, null, 2));
     }
   });
 };
