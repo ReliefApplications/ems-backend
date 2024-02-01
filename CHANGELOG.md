@@ -1,3 +1,12 @@
+## [2.6.1](https://github.com/ReliefApplications/ems-backend/compare/v2.6.0...v2.6.1) (2024-02-01)
+
+
+### Bug Fixes
+
+* date & datetime filters not working as expected ([#919](https://github.com/ReliefApplications/ems-backend/issues/919)) ([ab3d2f3](https://github.com/ReliefApplications/ems-backend/commit/ab3d2f37445001941fcc7f728489c97c02a3f28c))
+* decodeUriComponent in feature layer would cause some issues ([7389f07](https://github.com/ReliefApplications/ems-backend/commit/7389f072bc0bd5f6561c370c400353bf92984d35))
+* feature route would sometimes stop server on failure ([3f11952](https://github.com/ReliefApplications/ems-backend/commit/3f119525240eb522c1218bb1b4b630b0c8030b40))
+
 # [2.6.0](https://github.com/ReliefApplications/ems-backend/compare/v2.5.1...v2.6.0) (2024-01-25)
 
 
