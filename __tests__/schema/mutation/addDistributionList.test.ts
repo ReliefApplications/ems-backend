@@ -1,6 +1,6 @@
 import schema from '../../../src/schema';
 import { SafeTestServer } from '../../server.setup';
-import { Application, Role, User } from '@models';
+import { Application, Role } from '@models';
 import { faker } from '@faker-js/faker';
 import supertest from 'supertest';
 import { acquireToken } from '../../authentication.setup';
@@ -119,7 +119,9 @@ describe('Add distribution list tests cases', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain('Permission not granted.');
+    expect(response.body.errors[0].message).toContain(
+      'Permission not granted.'
+    );
     await server.restoreAdminRoleToUserAfterTest();
   });
 
@@ -140,6 +142,8 @@ describe('Add distribution list tests cases', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain('Wrong format detected. Please provide valid emails.');
+    expect(response.body.errors[0].message).toContain(
+      'Wrong format detected. Please provide valid emails.'
+    );
   });
 });

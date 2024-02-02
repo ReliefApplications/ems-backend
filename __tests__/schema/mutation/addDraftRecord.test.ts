@@ -3,7 +3,7 @@ import { SafeTestServer } from '../../server.setup';
 import { faker } from '@faker-js/faker';
 import supertest from 'supertest';
 import { acquireToken } from '../../authentication.setup';
-import { Role, User, Form, FormModel } from '@models';
+import { Role, User, Form } from '@models';
 import { ObjectId } from 'bson';
 
 let server: SafeTestServer;
@@ -78,9 +78,7 @@ describe('Add draft record tests cases', () => {
     expect(response.body).toHaveProperty('data');
     expect(response.body).not.toHaveProperty('errors');
     expect(response.body.data.addDraftRecord).toHaveProperty('id');
-    expect(response.body.data.addDraftRecord.form.id).toBe(
-      form._id.toString()
-    );
+    expect(response.body.data.addDraftRecord.form.id).toBe(form._id.toString());
   });
 
   test('test case add draft record with invalid form ID', async () => {
@@ -130,7 +128,9 @@ describe('Add draft record tests cases', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain('Permission not granted.');
+    expect(response.body.errors[0].message).toContain(
+      'Permission not granted.'
+    );
     await server.restoreAdminRoleToUserAfterTest();
   });
 });
