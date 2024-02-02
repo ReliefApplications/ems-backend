@@ -105,8 +105,6 @@ export default {
             resource: args.resource,
             core: true,
           });
-          console.log("resource = ", resource);
-          console.log("core = ", coreForm);
           // create the form following the template or the core form
           let fields = coreForm.fields;
           let structure = coreForm.structure;

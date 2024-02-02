@@ -97,7 +97,9 @@ describe('Add form tests cases', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain('Permission not granted.');
+    expect(response.body.errors[0].message).toContain(
+      'Permission not granted.'
+    );
     await server.restoreAdminRoleToUserAfterTest();
   });
 
@@ -123,7 +125,6 @@ describe('Add form tests cases', () => {
   test('test case create form with specific resource', async () => {
     const newResource = await new Resource({
       name: faker.random.alpha(10),
-      
     }).save();
 
     // create coreForm
@@ -133,7 +134,7 @@ describe('Add form tests cases', () => {
       name: faker.random.alpha(10),
       core: true,
       resource: newResource._id.toString(),
-      graphQLTypeName: graphQLTypeName
+      graphQLTypeName: graphQLTypeName,
     }).save();
 
     const variables = {
@@ -146,7 +147,7 @@ describe('Add form tests cases', () => {
       .send({ query, variables })
       .set('Authorization', token)
       .set('Accept', 'application/json');
-    
+
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body).not.toHaveProperty('errors');
