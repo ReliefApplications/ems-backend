@@ -12,9 +12,6 @@ let request: supertest.SuperTest<supertest.Test>;
 let token: string;
 
 beforeAll(async () => {
-  const admin = await Role.findOne({ title: 'admin' });
-  await User.updateOne({ username: 'dummy@dummy.com' }, { roles: [admin._id] });
-
   server = new SafeTestServer();
   await server.start(schema);
   request = supertest(server.app);
@@ -104,7 +101,8 @@ describe('Add distribution list tests cases', () => {
   });
 
   test('test case with insufficient permissions', async () => {
-    const nonAdminToken = `Bearer ${await acquireToken(/* criar usuário sem permissões de atualização de lista de distribuição */)}`;
+    await server.removeAdminRoleToUserBeforeTest();
+    const nonAdminToken = `Bearer ${await acquireToken()}`;
     const variables = {
       application: application._id,
       distributionList: {
@@ -121,7 +119,8 @@ describe('Add distribution list tests cases', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain('permission');
+    expect(response.body.errors[0].message).toContain('Permission not granted.');
+    await server.restoreAdminRoleToUserAfterTest();
   });
 
   test('test case with invalid emails', async () => {
@@ -141,6 +140,6 @@ describe('Add distribution list tests cases', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain('invalidEmailsInput');
+    expect(response.body.errors[0].message).toContain('Wrong format detected. Please provide valid emails.');
   });
 });

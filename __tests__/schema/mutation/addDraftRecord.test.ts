@@ -3,11 +3,13 @@ import { SafeTestServer } from '../../server.setup';
 import { faker } from '@faker-js/faker';
 import supertest from 'supertest';
 import { acquireToken } from '../../authentication.setup';
-import { Role, User, Form } from '@models';
+import { Role, User, Form, FormModel } from '@models';
+import { ObjectId } from 'bson';
 
 let server: SafeTestServer;
 let request: supertest.SuperTest<supertest.Test>;
 let token: string;
+let form;
 
 beforeAll(async () => {
   const admin = await Role.findOne({ title: 'admin' });
@@ -17,6 +19,15 @@ beforeAll(async () => {
   await server.start(schema);
   request = supertest(server.app);
   token = `Bearer ${await acquireToken()}`;
+
+  // Create a form to use in the test
+  const name = faker.random.alpha(10);
+  const graphQLTypeName = Form.getGraphQLTypeName(name);
+  form = await new Form({
+    name: name,
+    graphQLTypeName: graphQLTypeName,
+    fields: [],
+  }).save();
 });
 
 /**
@@ -25,44 +36,29 @@ beforeAll(async () => {
 describe('Add draft record tests cases', () => {
   const mutation = `mutation addDraftRecord($form: ID!, $data: JSON!) {
     addDraftRecord(form: $form, data: $data) {
-      _id
-      data
-      form {
-        _id
-        name
-      }
+      id
+      createdAt
+      modifiedAt
       createdBy {
-        user {
-          _id
-          name
-          username
-        }
-        roles {
-          _id
-        }
-        positionAttributes {
-          value
-          category {
-            _id
-          }
-        }
-      }
-      lastUpdateForm {
-        _id
         name
+      }
+      form {
+        id
+        uniqueRecord {
+          id
+          modifiedAt
+          createdBy {
+            name
+          }
+          data
+        }
       }
     }
   }`;
 
   test('test case add draft record tests with correct data', async () => {
-    // Create a form to use in the test
-    const form = await new Form({
-      name: faker.random.alpha(10),
-      fields: [],
-    }).save();
-
     const variables = {
-      form: form._id,
+      form: form._id.toString(),
       data: {
         firstName: faker.name.firstName(),
         lastName: faker.name.lastName(),
@@ -81,15 +77,15 @@ describe('Add draft record tests cases', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body).not.toHaveProperty('errors');
-    expect(response.body.data.addDraftRecord).toHaveProperty('_id');
-    expect(response.body.data.addDraftRecord.form._id).toBe(
+    expect(response.body.data.addDraftRecord).toHaveProperty('id');
+    expect(response.body.data.addDraftRecord.form.id).toBe(
       form._id.toString()
     );
   });
 
   test('test case add draft record with invalid form ID', async () => {
     const variables = {
-      form: 'invalid-form-id',
+      form: new ObjectId().toString(),
       data: {
         firstName: faker.name.firstName(),
         lastName: faker.name.lastName(),
@@ -107,16 +103,12 @@ describe('Add draft record tests cases', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain('dataNotFound');
+    expect(response.body.errors[0].message).toContain('Data not found');
   });
 
   test('test case add draft record with insufficient permissions', async () => {
-    const form = await new Form({
-      name: faker.random.alpha(10),
-      fields: [],
-    }).save();
-
     // Create a non-admin user without permissions
+    await server.removeAdminRoleToUserBeforeTest();
     const nonAdminToken = `Bearer ${await acquireToken()}`;
 
     const variables = {
@@ -138,6 +130,7 @@ describe('Add draft record tests cases', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain('permissionNotGranted');
+    expect(response.body.errors[0].message).toContain('Permission not granted.');
+    await server.restoreAdminRoleToUserAfterTest();
   });
 });
