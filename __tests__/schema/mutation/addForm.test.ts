@@ -28,6 +28,9 @@ describe('Add form tests cases', () => {
       id
       name
       status
+      resource {
+        id
+      }
     }
   }`;
 
@@ -80,7 +83,8 @@ describe('Add form tests cases', () => {
   });
 
   test('test case without permission to create forms', async () => {
-    const nonAdminToken = `Bearer ${await acquireToken(/* criar usuário sem permissões para criar formulários */)}`;
+    await server.removeAdminRoleToUserBeforeTest();
+    const nonAdminToken = `Bearer ${await acquireToken()}`;
     const variables = {
       name: faker.random.alpha(10),
     };
@@ -93,7 +97,8 @@ describe('Add form tests cases', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain('permission');
+    expect(response.body.errors[0].message).toContain('Permission not granted.');
+    await server.restoreAdminRoleToUserAfterTest();
   });
 
   test('test case with duplicated form name', async () => {
@@ -111,37 +116,29 @@ describe('Add form tests cases', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
     expect(response.body.errors[0].message).toContain(
-      'duplicatedGraphQLTypeName'
-    );
-  });
-
-  test('test case with duplicated form name', async () => {
-    const existingForm = await Form.findOne();
-    const variables = {
-      name: existingForm.name,
-    };
-
-    const response = await request
-      .post('/graphql')
-      .send({ query, variables })
-      .set('Authorization', token)
-      .set('Accept', 'application/json');
-
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors[0].message).toContain(
-      'duplicatedGraphQLTypeName'
+      'A form or a reference data with a similar name already exists. Please provide a different name.'
     );
   });
 
   test('test case create form with specific resource', async () => {
     const newResource = await new Resource({
       name: faker.random.alpha(10),
+      
+    }).save();
+
+    // create coreForm
+    const name = faker.random.alpha(10);
+    const graphQLTypeName = Form.getGraphQLTypeName(name);
+    await new Form({
+      name: faker.random.alpha(10),
+      core: true,
+      resource: newResource._id.toString(),
+      graphQLTypeName: graphQLTypeName
     }).save();
 
     const variables = {
       name: faker.random.alpha(10),
-      resource: newResource._id,
+      resource: newResource._id.toString(),
     };
 
     const response = await request
@@ -149,7 +146,7 @@ describe('Add form tests cases', () => {
       .send({ query, variables })
       .set('Authorization', token)
       .set('Accept', 'application/json');
-
+    
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body).not.toHaveProperty('errors');
