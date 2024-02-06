@@ -1,4 +1,5 @@
 import {
+  GraphQLBoolean,
   GraphQLError,
   GraphQLID,
   GraphQLInt,
@@ -63,6 +64,7 @@ type RecordsAggregationArgs = {
   sortField?: string;
   sortOrder?: string;
   contextFilters?: CompositeFilterDescriptor;
+  aggregationPreview?: boolean;
 };
 
 /**
@@ -160,6 +162,7 @@ export default {
     sortField: { type: GraphQLString },
     sortOrder: { type: GraphQLString },
     at: { type: GraphQLDate },
+    aggregationPreview: { type: GraphQLBoolean },
   },
   async resolve(parent, args: RecordsAggregationArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -209,7 +212,7 @@ export default {
 
       const mongooseFilter = {};
       // Check if resource exists and aggregation exists
-      if (resource && aggregation) {
+      if (resource && (aggregation || args.aggregationPreview)) {
         Object.assign(
           mongooseFilter,
           { resource: new mongoose.Types.ObjectId(args.resource) },
