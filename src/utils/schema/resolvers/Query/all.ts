@@ -469,23 +469,13 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           fields,
           context
         );
-        let pipeline = [];
-        if (searchFilter) {
-          pipeline = [
-            searchFilter,
-            ...calculatedFieldsAggregation,
-            ...defaultRecordAggregation,
-            { $match: filters },
-            ...(at ? getAtAggregation(new Date(at)) : []),
-          ];
-        } else {
-          pipeline = [
-            ...calculatedFieldsAggregation,
-            ...defaultRecordAggregation,
-            { $match: filters },
-            ...(at ? getAtAggregation(new Date(at)) : []),
-          ];
-        }
+        const pipeline = [
+          ...(searchFilter ? [searchFilter] : []),
+          ...calculatedFieldsAggregation,
+          ...defaultRecordAggregation,
+          { $match: filters },
+          ...(at ? getAtAggregation(new Date(at)) : []),
+        ];
         const aggregation = await Record.aggregate(pipeline).facet({
           items: [
             ...linkedRecordsAggregation,

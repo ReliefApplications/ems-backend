@@ -7,10 +7,6 @@ import {
 import { Application } from '@models';
 import { SubscriptionType } from '../types/subscription.type';
 import { AppAbility } from '@security/defineUserAbility';
-import {
-  createAndConsumeQueue,
-  deleteQueue,
-} from '../../server/subscriberSafe';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
@@ -77,8 +73,8 @@ export default {
         new: true,
       });
       if (args.routingKey !== args.previousSubscription) {
-        createAndConsumeQueue(args.routingKey);
-        deleteQueue(args.previousSubscription);
+        // createAndConsumeQueue(args.routingKey);
+        // deleteQueue(args.previousSubscription);
       }
       return subscription;
     } catch (err) {

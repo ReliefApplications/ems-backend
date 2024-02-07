@@ -92,6 +92,7 @@ export const getToken = async (
         'Content-Length': `${body.length}`,
       },
       data: body,
+      maxRedirects: 35,
     });
     cache.set(tokenID, res.data.access_token, res.data.expires_in - 30);
     return res.data.access_token;

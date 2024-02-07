@@ -29,6 +29,7 @@ import {
   map,
   isArray,
   isEmpty,
+  isBoolean,
 } from 'lodash';
 import { graphQLAuthCheck } from '@schema/shared';
 import { CustomAPI } from '@server/apollo/dataSources';
@@ -47,7 +48,9 @@ const applyFilters = (data: any, filter: any): boolean => {
   if (filter.logic) {
     switch (filter.logic) {
       case 'or':
-        return filter.filters.some((f: any) => applyFilters(data, f));
+        return filter.filters.length
+          ? filter.filters.some((f: any) => applyFilters(data, f))
+          : true;
       case 'and':
         return filter.filters.every((f: any) => applyFilters(data, f));
       default:
@@ -63,10 +66,18 @@ const applyFilters = (data: any, filter: any): boolean => {
     } catch {}
     switch (filter.operator) {
       case 'eq':
-        return eq(value, String(filter.value)) || eq(value, intValue);
+        if (isBoolean(value)) {
+          return eq(value, filter.value);
+        } else {
+          return eq(value, String(filter.value)) || eq(value, intValue);
+        }
       case 'ne':
       case 'neq':
-        return !(eq(value, String(filter.value)) || eq(value, intValue));
+        if (isBoolean(value)) {
+          return !eq(value, filter.value);
+        } else {
+          return !(eq(value, String(filter.value)) || eq(value, intValue));
+        }
       case 'gt':
         return !isNil(value) && value > filter.value;
       case 'gte':
@@ -84,9 +95,27 @@ const applyFilters = (data: any, filter: any): boolean => {
       case 'endswith':
         return !isNil(value) && value.endsWith(filter.value);
       case 'contains':
-        return !isNil(value) && value.includes(filter.value);
+        if (typeof filter.value === 'string') {
+          const regex = new RegExp(filter.value, 'i');
+          if (typeof value === 'string') {
+            return !isNil(value) && regex.test(value);
+          } else {
+            return !isNil(value) && value.includes(filter.value);
+          }
+        } else {
+          return !isNil(value) && value.includes(filter.value);
+        }
       case 'doesnotcontain':
-        return isNil(value) || !value.includes(filter.value);
+        if (typeof filter.value === 'string') {
+          const regex = new RegExp(filter.value, 'i');
+          if (typeof value === 'string') {
+            return isNil(value) || !regex.test(value);
+          } else {
+            return isNil(value) || !value.includes(filter.value);
+          }
+        } else {
+          return isNil(value) || !value.includes(filter.value);
+        }
       default:
         // For any unknown operator, we return false
         return false;
@@ -191,6 +220,7 @@ const procPipelineStep = (pipelineStep, data, sourceFields) => {
             data[key],
             operators.map((operator) => operator.operator)
           ),
+          ...pick(data[key].initialData[0], keysToGroupBy),
         });
       }
       return dataToKeep;
@@ -216,6 +246,83 @@ const procPipelineStep = (pipelineStep, data, sourceFields) => {
         }
         return item;
       });
+    case 'addFields':
+      pipelineStep.form?.map((elt) => {
+        switch (elt.expression.operator) {
+          case 'add':
+            data.map((obj: any) => {
+              obj[elt.name] = obj[elt.expression.field];
+            });
+            break;
+          case 'month':
+            data.map((obj: any) => {
+              try {
+                const month =
+                  new Date(obj[elt.expression.field]).getMonth() + 1;
+                const monthAsString =
+                  month < 10 ? '0' + month : month.toString();
+                const dateWithMonth =
+                  new Date(obj[elt.expression.field]).getFullYear() +
+                  '-' +
+                  monthAsString;
+                obj[elt.name] = dateWithMonth;
+              } catch {
+                obj[elt.name] = undefined;
+              }
+            });
+            break;
+          case 'year':
+            data.map((obj: any) => {
+              try {
+                const year = new Date(obj[elt.expression.field]).getFullYear();
+                const yearAsString = year.toString();
+                obj[elt.name] = yearAsString;
+              } catch {
+                obj[elt.name] = undefined;
+              }
+            });
+            break;
+          case 'day':
+            data.map((obj: any) => {
+              try {
+                const date = new Date(obj[elt.expression.field]);
+                const dayAsString =
+                  date.getFullYear() +
+                  '-' +
+                  (date.getMonth() + 1).toString() +
+                  '-' +
+                  (date.getDate() + 1).toString();
+                obj[elt.name] = dayAsString;
+              } catch {
+                obj[elt.name] = undefined;
+              }
+            });
+            break;
+          case 'week':
+            data.map((obj: any) => {
+              try {
+                const date = new Date(obj[elt.expression.field]);
+                const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+                const pastDaysOfYear =
+                  (date.valueOf() - firstDayOfYear.valueOf()) / 86400000;
+                const weekNo = Math.ceil(
+                  (pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7
+                );
+                const dateWithWeek = date.getFullYear() + '-week' + weekNo;
+                obj[elt.name] = dateWithWeek;
+              } catch {
+                obj[elt.name] = undefined;
+              }
+            });
+            break;
+          case 'multiply':
+            data.map((obj: any) => {
+              obj[elt.name] = obj[elt.expression.field];
+            });
+            break;
+        }
+      });
+      return data;
     default:
       logger.error('Aggregation not supported yet');
       return;
@@ -235,6 +342,7 @@ type ReferenceDataAggregationArgs = {
   sortField?: string;
   sortOrder?: string;
   contextFilters?: CompositeFilterDescriptor;
+  graphQLVariables: any;
 };
 
 /**
@@ -249,6 +357,7 @@ export default {
     pipeline: { type: GraphQLJSON },
     sourceFields: { type: GraphQLJSON },
     contextFilters: { type: GraphQLJSON },
+    graphQLVariables: { type: GraphQLJSON },
     mapping: { type: GraphQLJSON },
     first: { type: GraphQLInt },
     skip: { type: GraphQLInt },
@@ -257,6 +366,7 @@ export default {
     at: { type: GraphQLDate },
   },
   async resolve(parent, args: ReferenceDataAggregationArgs, context) {
+    // Authentication check
     graphQLAuthCheck(context);
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
@@ -298,7 +408,8 @@ export default {
             rawItems =
               (await dataSource.getReferenceDataItems(
                 referenceData,
-                referenceData.apiConfiguration as any
+                referenceData.apiConfiguration as any,
+                args.graphQLVariables
               )) || [];
           }
           const transformer = new DataTransformer(
@@ -338,13 +449,17 @@ export default {
           if (args.mapping) {
             return items.map((item) => {
               return {
-                category: item[args.mapping.category],
-                field: item[args.mapping.field],
+                category: get(item, args.mapping.category),
+                field: get(item, args.mapping.field),
+                ...(args.mapping.series && {
+                  series: get(item, args.mapping.series),
+                }),
               };
             });
           }
           return { items: items, totalCount: items.length };
-        } catch (error) {
+        } catch (err) {
+          logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             'Something went wrong with the pipelines, these aggregations may not be supported yet'
           );

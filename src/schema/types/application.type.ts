@@ -44,6 +44,7 @@ import {
 } from '@utils/user/getAutoAssignedRoles';
 import { uniqBy, get, isNil } from 'lodash';
 import { accessibleBy } from '@casl/mongoose';
+import getFilter from '@utils/filter/getFilter';
 
 /** GraphQL application type definition */
 export const ApplicationType = new GraphQLObjectType({
@@ -179,6 +180,7 @@ export const ApplicationType = new GraphQLObjectType({
         first: { type: GraphQLInt },
         afterCursor: { type: GraphQLID },
         automated: { type: GraphQLBoolean },
+        filter: { type: GraphQLJSON },
       },
       async resolve(parent, args) {
         /** Available sort fields */
@@ -201,6 +203,17 @@ export const ApplicationType = new GraphQLObjectType({
             },
           },
         ];
+
+        /** Default filter fields */
+        const FILTER_FIELDS: { name: string; type: string }[] = [
+          { name: 'id', type: 'ObjectId' },
+          { name: 'roles', type: 'users' },
+          { name: 'name', type: 'text' },
+          { name: 'username', type: 'text' },
+        ];
+
+        // Get filters for the searched value
+        const queryFilters = getFilter(args.filter, FILTER_FIELDS);
 
         const first = get(args, 'first', 10);
         const sortField = SORT_FIELDS.find((x) => x.name === '_id');
@@ -375,7 +388,10 @@ export const ApplicationType = new GraphQLObjectType({
           },
         });
 
-        const aggregation = await User.aggregate(pipelines);
+        const aggregation = await User.aggregate([
+          { $match: queryFilters },
+          ...pipelines,
+        ]);
 
         const totalCount: number = aggregation[0].totalCount[0]?.count || 0;
         const items: User[] = aggregation[0].users.map((u) => new User(u));

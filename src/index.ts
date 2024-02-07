@@ -1,6 +1,5 @@
 import { SafeServer } from './server';
 import mongoose from 'mongoose';
-import subscriberSafe from './server/subscriberSafe';
 import pullJobScheduler from './server/pullJobScheduler';
 import customNotificationScheduler from './server/customNotificationScheduler';
 import { startDatabase } from './server/database';
@@ -28,14 +27,6 @@ checkConfig();
 /** SafeServer server port */
 const PORT = config.get('server.port');
 
-startDatabase();
-mongoose.connection.once('open', () => {
-  logger.log({ level: 'info', message: '📶 Connected to database' });
-  subscriberSafe();
-  pullJobScheduler();
-  customNotificationScheduler();
-});
-
 /** Starts the server */
 const launchServer = async () => {
   const schema = await buildSchema();
@@ -53,4 +44,11 @@ const launchServer = async () => {
   });
 };
 
-launchServer();
+startDatabase();
+mongoose.connection.once('open', () => {
+  logger.log({ level: 'info', message: '📶 Connected to database' });
+  launchServer();
+  // subscriberSafe();
+  pullJobScheduler();
+  customNotificationScheduler();
+});

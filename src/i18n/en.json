@@ -114,6 +114,7 @@
 			"addWithContext": {
 				"errors": {
 					"invalidArguments": "You need to provide one, and only one, argument between a reference data element and a record.",
+					"invalidContextEl": "The context element does not exist",
 					"invalidElement": "Provided element must be a string or a number"
 				}
 			},
@@ -218,7 +219,7 @@
 			"edit": {
 				"errors": {
 					"formResDuplicated": "A form or a resource with that name already exists.",
-					"invalidArguments": "Either name, type, apiConfiguration, query, fields, valueField, path, data or permissions must be provided."
+					"invalidArguments": "Either name, type, pageInfo, apiConfiguration, query, fields, valueField, path, data or permissions must be provided."
 				}
 			}
 		},
