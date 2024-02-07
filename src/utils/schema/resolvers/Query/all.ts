@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { Form, Record, ReferenceData, User } from '@models';
+import { Record, ReferenceData, User } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { decodeCursor, encodeCursor } from '@schema/types';
 import getReversedFields from '../../introspection/getReversedFields';
@@ -19,25 +19,14 @@ import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { flatten, get, isArray, set } from 'lodash';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import NodeCache from 'node-cache';
+import { AppAbility } from '@security/defineUserAbility';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
 
-/** form Cache */
-const formCache = new Map();
-
-/** ability Cache */
-const abilityCache = new Map();
-
-/** Clear Cache */
-const clearCache = () => {
-  console.log('Clearing cache...');
-  formCache.clear();
-  abilityCache.clear();
-};
-
-/** Clear Cache in every 10 min */
-setInterval(clearCache, 10 * 60 * 1000);
+/** Ability Cache, based on user id, time to live: 5min */
+const abilityCache = new NodeCache({ stdTTL: 60 * 5, checkperiod: 60 });
 
 // todo: improve by only keeping used fields in the $project stage
 /**
@@ -424,29 +413,21 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       };
 
       // Additional filter from the user permissions
-
-      if (!formCache.get(userId)) {
-        const form = await Form.findOne({
-          $or: [{ _id: id }, { resource: id, core: true }],
-        })
-          .select('_id permissions fields')
-          .populate({ path: 'resource', model: 'Resource' });
-        formCache.set(userId, form);
-      }
       let permissionFilters;
-      if (!abilityCache.get(userId)) {
-        const ability = await extendAbilityForRecords(
-          user,
-          formCache.get(userId)
-        );
+      // Try to get ability from cache
+      let ability = abilityCache.get<AppAbility>(userId);
+      if (!ability) {
+        // If not available, build ability
+        ability = await extendAbilityForRecords(user);
         set(context, 'user.ability', ability);
         permissionFilters = Record.find(
           accessibleBy(ability, 'read').Record
         ).getFilter();
+        // And cache it
         abilityCache.set(userId, ability);
       } else {
         permissionFilters = Record.find(
-          accessibleBy(abilityCache.get(userId), 'read').Record
+          accessibleBy(ability, 'read').Record
         ).getFilter();
       }
 
@@ -725,7 +706,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // === CONSTRUCT OUTPUT + RETURN ===
       const edges = items.map((r) => {
-        const record = getAccessibleFields(r, abilityCache.get(userId));
+        const record = getAccessibleFields(r, ability);
         Object.assign(record, { id: record._id });
 
         return {

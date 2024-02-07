@@ -1,6 +1,4 @@
-// import { isNumber } from 'lodash';
 import mongoose from 'mongoose';
-// import { MULTISELECT_TYPES, DATE_TYPES } from '@const/fieldTypes';
 
 /** The default fields */
 const DEFAULT_FIELDS = [
@@ -31,7 +29,7 @@ const DEFAULT_FIELDS = [
 ];
 
 /**
- *
+ * Wild card search interface.
  */
 interface WildcardSearch {
   wildcard: {
@@ -46,7 +44,7 @@ interface WildcardSearch {
 }
 
 /**
- *
+ * Search stage interface.
  */
 interface SearchStage {
   $search: {
@@ -56,18 +54,6 @@ interface SearchStage {
     };
   };
 }
-
-/**
- *
- */
-let searchStage: SearchStage = {
-  $search: {
-    index: 'data_keyword_lowercase',
-    compound: {
-      must: [],
-    },
-  },
-};
 
 /** Names of the default fields */
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -100,31 +86,21 @@ export const extractFilterFields = (filter: any): string[] => {
  * @param fields list of structure fields
  * @param context request context
  * @param prefix prefix to access field
+ * @param searchStage Search stage being built
  * @returns Mongo filter.
- */
-
-/**
- * @param filter
- * @param fields
- * @param context
- * @param prefix
- */
-let searchStageUsed = false;
-/**
- * @param filter
- * @param fields
- * @param context
- * @param prefix
  */
 const buildMongoFilter = (
   filter: any,
   fields: any[],
   context: any,
-  prefix = ''
+  prefix = '',
+  searchStage
 ): any => {
   if (filter.filters) {
     const filters = filter.filters
-      .map((x: any) => buildMongoFilter(x, fields, context, prefix))
+      .map((x: any) =>
+        buildMongoFilter(x, fields, context, prefix, searchStage)
+      )
       .filter((x) => x);
     if (filters.length > 0) {
       switch (filter.logic) {
@@ -265,7 +241,6 @@ const buildMongoFilter = (
                       allowAnalyzedField: true,
                     },
                   });
-                  searchStageUsed = true;
                   return;
                 }
               } else {
@@ -276,7 +251,6 @@ const buildMongoFilter = (
                     allowAnalyzedField: true,
                   },
                 });
-                searchStageUsed = true;
                 return;
               }
             }
@@ -292,7 +266,6 @@ const buildMongoFilter = (
                 allowAnalyzedField: true,
               },
             });
-            searchStageUsed = true;
             return;
           }
           case 'endswith': {
@@ -306,7 +279,6 @@ const buildMongoFilter = (
                 allowAnalyzedField: true,
               },
             });
-            searchStageUsed = true;
             return;
           }
           default: {
@@ -335,8 +307,8 @@ export default (
   context?: any,
   prefix = 'data.'
 ) => {
-  searchStageUsed = false;
-  searchStage = {
+  // Default search stage
+  const searchStage: SearchStage = {
     $search: {
       index: 'keyword_lowercase',
       compound: {
@@ -345,9 +317,10 @@ export default (
     },
   };
   const expandedFields = fields.concat(DEFAULT_FIELDS);
-  buildMongoFilter(filter, expandedFields, context, prefix);
+  buildMongoFilter(filter, expandedFields, context, prefix, searchStage);
 
-  if (searchStageUsed) {
+  // If some rules are defined, return search stage, to be added to main pipeline
+  if (searchStage.$search.compound.must.length > 0) {
     return searchStage;
   }
   return;
