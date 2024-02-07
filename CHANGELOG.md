@@ -1,3 +1,10 @@
+## [2.6.2](https://github.com/ReliefApplications/ems-backend/compare/v2.6.1...v2.6.2) (2024-02-07)
+
+
+### Bug Fixes
+
+* reference data resolvers could break schema ([98d8fe7](https://github.com/ReliefApplications/ems-backend/commit/98d8fe7baf9a63b7540ef75542556cd2fb6ece79))
+
 ## [2.6.1](https://github.com/ReliefApplications/ems-backend/compare/v2.6.0...v2.6.1) (2024-02-01)
 
 
