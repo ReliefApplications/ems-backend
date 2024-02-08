@@ -10,6 +10,9 @@ import { Types } from 'mongoose';
 import { logger } from '@services/logger.service';
 import NodeCache from 'node-cache';
 
+/** Batch size for when updating all records */
+const BATCH_SIZE = 5000;
+
 /** Internal node cache object instance */
 const cache = new NodeCache();
 
@@ -100,10 +103,24 @@ export const updateIncrementalIds = async (
     form,
   });
 
+  // First, we set the incrementalId to be equal to the _id for all records
+  // to avoid having duplicate incrementalIds while updating the records in batches
+  for (let i = 0; i < totalRecords; i += BATCH_SIZE) {
+    const records = await Record.find({ form })
+      .skip(i)
+      .limit(BATCH_SIZE)
+      .select('_id incrementalId');
+
+    records.forEach((rec) => {
+      rec.incrementalId = rec._id;
+    });
+
+    await Record.bulkSave(records);
+  }
+
   let inc = 0;
   let lastRecordUpdated = { createdAt: null };
   // Updates the incremental ID of each record in batches
-  const BATCH_SIZE = 5000;
   for (let i = 0; i < totalRecords; i += BATCH_SIZE) {
     logger.log({
       level: 'info',
