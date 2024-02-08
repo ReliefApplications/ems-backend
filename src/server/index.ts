@@ -151,7 +151,7 @@ class SafeServer {
         fallbackLng: 'en',
         preload: ['en', 'test'],
       });
-    if (config.get('rateLimit.enable')) {
+    if (config.get('server.rateLimit.enable')) {
       router.use(rateLimitMiddleware);
     }
     this.app.use(corsMiddleware);

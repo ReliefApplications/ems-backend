@@ -16,7 +16,7 @@ import config from 'config';
 const router = express.Router();
 
 router.use(fileUpload());
-if (config.get('rateLimit.enable')) {
+if (config.get('server.rateLimit.enable')) {
   router.use(rateLimitMiddleware);
 }
 router.use(restMiddleware);
