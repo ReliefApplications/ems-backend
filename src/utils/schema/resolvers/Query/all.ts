@@ -426,6 +426,8 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         // And cache it
         abilityCache.set(userId, ability);
       } else {
+        // Update user ability
+        set(context, 'user.ability', ability);
         permissionFilters = Record.find(
           accessibleBy(ability, 'read').Record
         ).getFilter();
