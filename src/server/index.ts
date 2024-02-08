@@ -28,6 +28,7 @@ import {
   IntrospectionResult as IntrospectionQueryResult,
 } from './apollo/queries/introspection.query';
 import { pluralize } from 'inflection';
+import config from 'config';
 
 /** List of user fields */
 const USER_FIELDS = ['id', 'name', 'username'];
@@ -150,7 +151,9 @@ class SafeServer {
         fallbackLng: 'en',
         preload: ['en', 'test'],
       });
-    this.app.use(rateLimitMiddleware);
+    if (config.get('rateLimit.enable')) {
+      router.use(rateLimitMiddleware);
+    }
     this.app.use(corsMiddleware);
     this.app.use(authMiddleware);
     this.app.use('/graphql', graphqlMiddleware);
