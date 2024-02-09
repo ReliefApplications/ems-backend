@@ -2,7 +2,7 @@ import { AugmentedRequest, RESTDataSource } from '@apollo/datasource-rest';
 import { status, referenceDataType } from '@const/enumTypes';
 import { ApiConfiguration, ReferenceData } from '@models';
 import { getToken } from '@utils/proxy';
-import { get, isEmpty, memoize, set } from 'lodash';
+import { get, memoize, set } from 'lodash';
 import { logger } from '@services/logger.service';
 import jsonpath from 'jsonpath';
 import { ApolloServer } from '@apollo/server';
@@ -23,8 +23,6 @@ const referenceDataCache = new BaseRedisCache({
     maxRetriesPerRequest: 5,
   }),
 });
-/** Local storage key for last modified */
-const LAST_MODIFIED_KEY = '_last_modified';
 /** Local storage key for last request */
 const LAST_REQUEST_KEY = '_last_request';
 /** Property for filtering in requests */
@@ -213,89 +211,25 @@ export class CustomAPI extends RESTDataSource {
     apiConfiguration: ApiConfiguration,
     variables?: any
   ) {
-    // Initialization
-    let items: any;
     // Add / between endpoint and path, and ensure that double slash are removed
     const url = `${apiConfiguration.endpoint.replace(/\$/, '')}/${
       apiConfiguration.graphQLEndpoint
     }`.replace(/([^:]\/)\/+/g, '$1');
-    const cacheKey =
-      referenceData.id +
-      (variables && !isEmpty(variables) ? JSON.stringify(variables) : '');
-    const cacheTimestamp = await referenceDataCache.get(
-      cacheKey + LAST_MODIFIED_KEY
-    );
-    const modifiedAt = referenceData.modifiedAt || '';
     const query = await this.processQuery(referenceData);
     if (query) {
       transformGraphQLVariables(query, variables);
     }
-    // Check if same request
-    if (!cacheTimestamp || new Date(cacheTimestamp) < modifiedAt) {
-      // Check if referenceData has changed. In this case, refresh choices instead of using cached ones.
-      const body = {
-        query,
-        variables: variables || {},
-      };
-      let data = await this.post(url, { body });
-      if (typeof data === 'string') {
-        data = JSON.parse(data);
-      }
-      items = referenceData.path
-        ? jsonpath.query(data, referenceData.path)
-        : data;
-      await referenceDataCache.set(
-        cacheKey + LAST_MODIFIED_KEY,
-        JSON.stringify(modifiedAt)
-      );
-    } else {
-      // If referenceData has not changed, use cached value and check for updates for graphQL.
-      let cache: any;
-      const cacheValue = await referenceDataCache.get(cacheKey);
-      if (cacheValue) {
-        try {
-          cache = JSON.parse(cacheValue);
-        } catch {
-          // Remove the key, which is certainly incorrect
-          await referenceDataCache.delete(cacheKey);
-          logger.error('Failed to parse cached value.');
-        }
-      }
-      const valueField = referenceData.valueField || 'id';
-      const body = {
-        query,
-        variables: variables || {},
-      };
-      let data = await this.post(url, { body });
-      if (typeof data === 'string') {
-        data = JSON.parse(data);
-      }
-      items = referenceData.path
-        ? jsonpath.query(data, referenceData.path)
-        : data;
-      // Cache new items
-      if (cache) {
-        if (items && items.length) {
-          for (const newItem of items) {
-            const cachedItemIndex = cache.findIndex(
-              (cachedItem) => cachedItem[valueField] === newItem[valueField]
-            );
-            if (cachedItemIndex !== -1) {
-              cache[cachedItemIndex] = newItem;
-            } else {
-              cache.push(newItem);
-            }
-          }
-        }
-        items = cache || [];
-      }
+    const body = {
+      query,
+      variables: variables || {},
+    };
+    let data = await this.post(url, { body });
+    if (typeof data === 'string') {
+      data = JSON.parse(data);
     }
-    // Cache items and timestamp
-    referenceDataCache.set(cacheKey, JSON.stringify(items));
-    referenceDataCache.set(
-      cacheKey + LAST_REQUEST_KEY,
-      this.formatDateSQL(new Date())
-    );
+    const items = referenceData.path
+      ? jsonpath.query(data, referenceData.path)
+      : data;
     return items;
   }
 
