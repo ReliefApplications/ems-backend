@@ -16,18 +16,3 @@ ENV NODE_PATH=./build
 ENV NODE_CONFIG_DIR=/home/node/app/config
 
 RUN npm run build
-
-# Required for ssh in azure web app
-COPY sshd_config /etc/ssh/
-COPY entrypoint.sh ./
-
-# Start and enable SSH
-RUN apk add openssh \
-  && echo "root:Docker!" | chpasswd \
-  && chmod +x ./entrypoint.sh \
-  && cd /etc/ssh/ \
-  && ssh-keygen -A
-
-EXPOSE 2222
-
-CMD /usr/sbin/sshd &; npm run start
