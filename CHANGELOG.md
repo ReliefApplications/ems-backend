@@ -1,3 +1,10 @@
+## [2.6.4](https://github.com/ReliefApplications/ems-backend/compare/v2.6.3...v2.6.4) (2024-02-12)
+
+
+### Bug Fixes
+
+* choicesbyurl field with choices without text could break choices assignment ([1cb2cbb](https://github.com/ReliefApplications/ems-backend/commit/1cb2cbbfa3413591f365cb0af1b98db7bd708f0d))
+
 ## [2.6.3](https://github.com/ReliefApplications/ems-backend/compare/v2.6.2...v2.6.3) (2024-02-12)
 
 
