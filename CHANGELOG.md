@@ -1,3 +1,10 @@
+## [2.6.3](https://github.com/ReliefApplications/ems-backend/compare/v2.6.2...v2.6.3) (2024-02-12)
+
+
+### Bug Fixes
+
+* user ability would not be correctly set when cached ([648c5ce](https://github.com/ReliefApplications/ems-backend/commit/648c5ce20e3991011a41a04308abdbfd09719462))
+
 ## [2.6.2](https://github.com/ReliefApplications/ems-backend/compare/v2.6.1...v2.6.2) (2024-02-07)
 
 
