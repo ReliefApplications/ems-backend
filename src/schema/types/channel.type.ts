@@ -9,7 +9,6 @@ import { AppAbility } from '@security/defineUserAbility';
 import { ApplicationType } from './application.type';
 import { RoleType } from './role.type';
 import { FormType } from './form.type';
-import config from 'config';
 import { accessibleBy } from '@casl/mongoose';
 
 /** GraphQL channel type definition */
@@ -55,11 +54,9 @@ export const ChannelType = new GraphQLObjectType({
       type: GraphQLString,
       resolve(parent) {
         if (parent.application) {
-          return `${config.get('rabbitMQ.application')}.${parent.application}.${
-            parent.id
-          }`;
+          return `${parent.application}.${parent.id}`;
         } else {
-          return `${config.get('rabbitMQ.application')}.${parent.id}`;
+          return `${parent.id}`;
         }
       },
     },

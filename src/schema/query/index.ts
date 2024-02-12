@@ -38,6 +38,7 @@ import layers from './layers.query';
 import layer from './layer.query';
 import draftRecords from './draftRecords.query';
 import referenceDataAggregation from './referenceDataAggregation.query';
+import types from './types.query';
 
 /** GraphQL query type definition */
 const Query = new GraphQLObjectType({
@@ -73,6 +74,7 @@ const Query = new GraphQLObjectType({
     rolesFromApplications,
     step,
     steps,
+    types,
     user,
     users,
     workflow,

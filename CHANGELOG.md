@@ -1,3 +1,108 @@
+## [2.6.3](https://github.com/ReliefApplications/ems-backend/compare/v2.6.2...v2.6.3) (2024-02-12)
+
+
+### Bug Fixes
+
+* user ability would not be correctly set when cached ([648c5ce](https://github.com/ReliefApplications/ems-backend/commit/648c5ce20e3991011a41a04308abdbfd09719462))
+
+## [2.6.2](https://github.com/ReliefApplications/ems-backend/compare/v2.6.1...v2.6.2) (2024-02-07)
+
+
+### Bug Fixes
+
+* reference data resolvers could break schema ([98d8fe7](https://github.com/ReliefApplications/ems-backend/commit/98d8fe7baf9a63b7540ef75542556cd2fb6ece79))
+
+## [2.6.1](https://github.com/ReliefApplications/ems-backend/compare/v2.6.0...v2.6.1) (2024-02-01)
+
+
+### Bug Fixes
+
+* date & datetime filters not working as expected ([#919](https://github.com/ReliefApplications/ems-backend/issues/919)) ([ab3d2f3](https://github.com/ReliefApplications/ems-backend/commit/ab3d2f37445001941fcc7f728489c97c02a3f28c))
+* decodeUriComponent in feature layer would cause some issues ([7389f07](https://github.com/ReliefApplications/ems-backend/commit/7389f072bc0bd5f6561c370c400353bf92984d35))
+* feature route would sometimes stop server on failure ([3f11952](https://github.com/ReliefApplications/ems-backend/commit/3f119525240eb522c1218bb1b4b630b0c8030b40))
+
+# [2.6.0](https://github.com/ReliefApplications/ems-backend/compare/v2.5.1...v2.6.0) (2024-01-25)
+
+
+### Bug Fixes
+
+* filtering using boolean on ref data would not work ([712fac7](https://github.com/ReliefApplications/ems-backend/commit/712fac7c91abe7d649147375d3abad1068df90a1))
+
+
+### Features
+
+* allow addFields stage for reference data aggregations ([#907](https://github.com/ReliefApplications/ems-backend/issues/907)) ([75e505c](https://github.com/ReliefApplications/ems-backend/commit/75e505c55a35001df80620c176916031b3583554))
+* allow graphql reference data to pass variables ([#932](https://github.com/ReliefApplications/ems-backend/issues/932)) ([d64910e](https://github.com/ReliefApplications/ems-backend/commit/d64910e25fb6aa02c1193e1be4cf2f21c955a32d))
+* reference data aggregation now supports graphql variables injection ([#947](https://github.com/ReliefApplications/ems-backend/issues/947)) ([d5a2085](https://github.com/ReliefApplications/ems-backend/commit/d5a208550ad85fb79e5618e5442721219b85c650))
+* use graphql reference data variables in layers ([#948](https://github.com/ReliefApplications/ems-backend/issues/948)) ([9cb70b8](https://github.com/ReliefApplications/ems-backend/commit/9cb70b86628cebfcc1aa66d7c238741783544d37))
+
+# [2.6.0](https://github.com/ReliefApplications/ems-backend/compare/v2.5.1...v2.6.0) (2024-01-23)
+
+
+### Bug Fixes
+
+* filtering using boolean on ref data would not work ([712fac7](https://github.com/ReliefApplications/ems-backend/commit/712fac7c91abe7d649147375d3abad1068df90a1))
+
+
+### Features
+
+* allow addFields stage for reference data aggregations ([#907](https://github.com/ReliefApplications/ems-backend/issues/907)) ([75e505c](https://github.com/ReliefApplications/ems-backend/commit/75e505c55a35001df80620c176916031b3583554))
+* allow graphql reference data to pass variables ([#932](https://github.com/ReliefApplications/ems-backend/issues/932)) ([d64910e](https://github.com/ReliefApplications/ems-backend/commit/d64910e25fb6aa02c1193e1be4cf2f21c955a32d))
+* reference data aggregation now supports graphql variables injection ([#947](https://github.com/ReliefApplications/ems-backend/issues/947)) ([d5a2085](https://github.com/ReliefApplications/ems-backend/commit/d5a208550ad85fb79e5618e5442721219b85c650))
+* use graphql reference data variables in layers ([#948](https://github.com/ReliefApplications/ems-backend/issues/948)) ([9cb70b8](https://github.com/ReliefApplications/ems-backend/commit/9cb70b86628cebfcc1aa66d7c238741783544d37))
+
+## [2.5.1](https://github.com/ReliefApplications/ems-backend/compare/v2.5.0...v2.5.1) (2024-01-23)
+
+
+### Bug Fixes
+
+* allow reference data aggregations to use series in mapping ([772e539](https://github.com/ReliefApplications/ems-backend/commit/772e539858b502703e57b10e5e1ffc2d34ff8804))
+* duplication of application would fail when pages would not exist ([#930](https://github.com/ReliefApplications/ems-backend/issues/930)) ([3629151](https://github.com/ReliefApplications/ems-backend/commit/3629151a4f852a1930479fdcea7186c02f992232))
+* empty filters array always returns false ([#936](https://github.com/ReliefApplications/ems-backend/issues/936)) ([94066d8](https://github.com/ReliefApplications/ems-backend/commit/94066d814251a99e162d7387af6401870e9f7e9f))
+* ownership could break pull job ([5707a66](https://github.com/ReliefApplications/ems-backend/commit/5707a66bf5ea03f3b244f7ac07ccf4d82f1ac313))
+
+# [2.5.0](https://github.com/ReliefApplications/ems-backend/compare/v2.4.4...v2.5.0) (2024-01-10)
+
+
+### Features
+
+* use cursor pagination for users ([#925](https://github.com/ReliefApplications/ems-backend/issues/925)) ([ac8b343](https://github.com/ReliefApplications/ems-backend/commit/ac8b34347a868c377fcaaec7172bde8a4f1f23ae))
+
+## [2.4.4](https://github.com/ReliefApplications/ems-backend/compare/v2.4.3...v2.4.4) (2024-01-09)
+
+
+### Bug Fixes
+
+* dashboard filter would not correctly save in some cases ([4f67ce2](https://github.com/ReliefApplications/ems-backend/commit/4f67ce29019b0dd862d27897ed16c0764aca171b))
+
+## [2.4.3](https://github.com/ReliefApplications/ems-backend/compare/v2.4.2...v2.4.3) (2024-01-08)
+
+
+### Bug Fixes
+
+* check if permission exists when editing resources, during application duplication ([#914](https://github.com/ReliefApplications/ems-backend/issues/914)) ([838cc6c](https://github.com/ReliefApplications/ems-backend/commit/838cc6c36eb0d4a107e98663aa14c4f4e913bd00))
+* duplication of application would sometimes fail due to incorrect test on existence of pages ([51f417f](https://github.com/ReliefApplications/ems-backend/commit/51f417fa0bccbc41068c99a80da23410c3479cd1))
+
+
+### Performance Improvements
+
+* replace rabbitmq with redis ([#810](https://github.com/ReliefApplications/ems-backend/issues/810)) ([8d1e175](https://github.com/ReliefApplications/ems-backend/commit/8d1e175b1efb0a36f700335f324e048915800faf))
+
+## [2.4.2](https://github.com/ReliefApplications/ems-backend/compare/v2.4.1...v2.4.2) (2023-12-21)
+
+
+### Bug Fixes
+
+* add missing context filter in ref data layer ([e9ed89f](https://github.com/ReliefApplications/ems-backend/commit/e9ed89f34682ae710e67c4c18ba4cd286ca5895b))
+* aggregation on null question using choices from refData ([#905](https://github.com/ReliefApplications/ems-backend/issues/905)) ([fad6120](https://github.com/ReliefApplications/ems-backend/commit/fad6120954a2ed76e65785bf68afb30dcc49391e))
+
+## [2.4.1](https://github.com/ReliefApplications/ems-backend/compare/v2.4.0...v2.4.1) (2023-12-20)
+
+
+### Bug Fixes
+
+* changes on reference data would break the back ([73ca9de](https://github.com/ReliefApplications/ems-backend/commit/73ca9de0b05dc4cff44b0799d8f9a9ac10ed8162))
+
 # [2.4.0](https://github.com/ReliefApplications/ems-backend/compare/v2.3.1...v2.4.0) (2023-12-18)
 
 
