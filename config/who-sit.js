@@ -5,6 +5,7 @@
 module.exports = {
   server: {
     rateLimit: {
+      enable: false,
       max: 500,
     },
   },
