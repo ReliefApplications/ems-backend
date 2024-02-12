@@ -29,8 +29,9 @@ import { logger } from '../../services/logger.service';
 import { getAccessibleFields } from '@utils/form';
 import { formatFilename } from '@utils/files/format.helper';
 import { sendEmail } from '@utils/email';
-import exportBatch from '@utils/files/exportBatch';
 import { accessibleBy } from '@casl/mongoose';
+import dataSources from '@server/apollo/dataSources';
+import Exporter from '@utils/files/resourceExporter';
 
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwise
@@ -171,10 +172,10 @@ router.get('/form/records/:id/history', async (req, res) => {
       if (filters.toDate) filters.toDate.setDate(filters.toDate.getDate() + 1);
     }
 
-    const recordFilters = Record.find(accessibleBy(ability, 'read').Record)
-      .where({ _id: req.params.id, archived: { $ne: true } })
-      .getFilter();
-    const record: Record = await Record.findOne(recordFilters)
+    const record: Record = await Record.findOne({
+      _id: req.params.id,
+      archived: { $ne: true },
+    })
       .populate({
         path: 'versions',
         model: 'Version',
@@ -187,6 +188,9 @@ router.get('/form/records/:id/history', async (req, res) => {
         path: 'createdBy.user',
         model: 'User',
       });
+    if (!record) {
+      return res.status(404).send(req.t('common.errors.dataNotFound'));
+    }
     const formFilters = Form.find(accessibleBy(ability, 'read').Form)
       .where({ _id: record.form })
       .getFilter();
@@ -194,6 +198,9 @@ router.get('/form/records/:id/history', async (req, res) => {
       path: 'resource',
       model: 'Resource',
     });
+    if (!form) {
+      return res.status(404).send(req.t('common.errors.dataNotFound'));
+    }
     // If user is not back office admin (any role assigned to the user is
     // considered as back office admin), check if has form permissions
     if (ability.cannot('read', record)) {
@@ -223,6 +230,15 @@ router.get('/form/records/:id/history', async (req, res) => {
         {
           translate: req.t,
           ability,
+          context: {
+            // Need to use 'any' in order to use a class which is supposed to initialize with Apollo context
+            dataSources: (
+              await dataSources({
+                // Passing upstream request so accesstoken can be used for authentication
+                req: req,
+              } as any)
+            )(),
+          },
         }
       ).getHistory();
       const fields = filters.fields;
@@ -342,9 +358,19 @@ router.post('/records', async (req, res) => {
         .send(i18next.t('routes.download.errors.missingParameters'));
     }
 
-    // Initialization
-    // let columns: any[] = [];
-    // let rows: any[] = [];
+    /** check if user has access to resource before allowing him to download */
+    const ability: AppAbility = req.context.user.ability;
+    const filters = Resource.find(accessibleBy(ability, 'read').Resource)
+      .where({
+        _id: {
+          $eq: params.resource,
+        },
+      })
+      .getFilter();
+    const resource = await Resource.findOne(filters).select('fields');
+    if (!resource) {
+      return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    }
 
     // Make distinction if we send the file by email or in the response
     if (!params.email) {
@@ -358,6 +384,10 @@ router.post('/records', async (req, res) => {
             'Content-Disposition',
             'attachment; filename=records.xlsx'
           );
+          // Build the file
+          const exporter = new Exporter(req, res, resource, params);
+          await exporter.export();
+          break;
         }
         case 'csv': {
           res.header('Content-Type', 'text/csv');
@@ -365,15 +395,18 @@ router.post('/records', async (req, res) => {
             'Content-Disposition',
             'attachment; filename=records.csv'
           );
+          // Build the file
+          const exporter = new Exporter(req, res, resource, params);
+          const file = await exporter.export();
+          return res.send(file);
         }
       }
-      const buffer = await exportBatch(req, params);
-      return res.send(buffer);
     } else {
       // Send response so the client is not frozen
       res.status(200).send('Export ongoing');
       // Build the file
-      const file = await exportBatch(req, params);
+      const exporter = new Exporter(req, res, resource, params);
+      const file = await exporter.export();
       // Pass it in attachment
       const attachments = [
         {

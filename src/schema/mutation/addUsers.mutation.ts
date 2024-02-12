@@ -7,7 +7,6 @@ import { validateEmail } from '@utils/validators';
 import { sendAppInvitation, sendCreateAccountInvitation } from '@utils/user';
 import config from 'config';
 import { logger } from '@services/logger.service';
-import pubsub from '@server/pubsub';
 import { graphQLAuthCheck } from '@schema/shared';
 import { UserArgs, UserInputType } from '@schema/inputs/user.input';
 import { Types } from 'mongoose';

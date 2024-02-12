@@ -4,6 +4,7 @@ import * as CryptoJS from 'crypto-js';
 import NodeCache from 'node-cache';
 import config from 'config';
 import axios from 'axios';
+import { logger } from '@services/logger.service';
 
 /**
  * Create a cache instance to store authentication tokens for ApiConfigurations.
@@ -29,10 +30,14 @@ export const getTokenID = (
  * Get the token for an ApiConfiguration, check first if we have one in the cache, if not fetch it and store it in cache.
  *
  * @param apiConfiguration ApiConfiguration attached to token
+ * @param accessToken upstream accesstoken, is required when getToken is used for an API using authorization code authentication
+ * @param ping boolean: is it a ping request? If it is, settings are already decrypted
  * @returns The access token to authenticate to the ApiConfiguration
  */
 export const getToken = async (
-  apiConfiguration: ApiConfiguration
+  apiConfiguration: ApiConfiguration,
+  accessToken?: string | string[],
+  ping = false
 ): Promise<string> => {
   if (apiConfiguration.authType === authType.public) {
     return '';
@@ -52,12 +57,14 @@ export const getToken = async (
       apiClientID: string;
       safeSecret: string;
       scope: string;
-    } = JSON.parse(
-      CryptoJS.AES.decrypt(
-        apiConfiguration.settings,
-        config.get('encryption.key')
-      ).toString(CryptoJS.enc.Utf8)
-    );
+    } = ping
+      ? apiConfiguration.settings
+      : JSON.parse(
+          CryptoJS.AES.decrypt(
+            apiConfiguration.settings,
+            config.get('encryption.key')
+          ).toString(CryptoJS.enc.Utf8)
+        );
     const details: any = {
       grant_type: 'client_credentials',
       client_id: settings.apiClientID,
@@ -85,20 +92,30 @@ export const getToken = async (
         'Content-Length': `${body.length}`,
       },
       data: body,
+      maxRedirects: 35,
     });
     cache.set(tokenID, res.data.access_token, res.data.expires_in - 30);
     return res.data.access_token;
-  } else if (apiConfiguration.authType === authType.userToService) {
+  }
+  if (apiConfiguration.authType === authType.userToService) {
     // Retrieve access token from settings, store it and return it
-    const settings: { token: string } = JSON.parse(
-      CryptoJS.AES.decrypt(
-        apiConfiguration.settings,
-        config.get('encryption.key')
-      ).toString(CryptoJS.enc.Utf8)
-    );
+    const settings: { token: string } = ping
+      ? apiConfiguration.settings
+      : JSON.parse(
+          CryptoJS.AES.decrypt(
+            apiConfiguration.settings,
+            config.get('encryption.key')
+          ).toString(CryptoJS.enc.Utf8)
+        );
     cache.set(tokenID, settings.token, 3570);
     return settings.token;
   }
+  if (apiConfiguration.authType === authType.authorizationCode) {
+    // Making sure to return only string, as access token is typed string | string[]
+    return accessToken.toString();
+    // Token doesn't need to be cached since the frontend always keeps it up-to-date
+  }
+  logger.error(`API auth type ${apiConfiguration.authType} is not recognized`);
 };
 
 /**

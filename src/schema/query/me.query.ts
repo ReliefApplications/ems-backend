@@ -12,7 +12,6 @@ export default {
   type: UserType,
   resolve: async (parent, args, context: Context) => {
     graphQLAuthCheck(context);
-
     try {
       return context.user;
     } catch (err) {

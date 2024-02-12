@@ -26,10 +26,10 @@ function hasApplicationPermission(
   permissionType: ObjectPermissions
 ) {
   if (!application) return false;
-  const appRoles = application.permissions[permissionType].map(
-    (role: any) => role._id
+  const appRoles = application.permissions[permissionType].map((role: any) =>
+    role._id ? role._id.toString() : role.toString()
   );
-  const userRoles = user.roles?.map((role) => role._id);
+  const userRoles = user.roles?.map((role) => role._id.toString());
   return appRoles.some((role) => userRoles.includes(role));
 }
 
@@ -84,7 +84,7 @@ export async function extendAbilityForPageOnPage(
   // within the canDelete permissions of the application
   if (ability.cannot('delete', page)) {
     await requireApplication();
-    if (hasApplicationPermission(user, application, 'canDelete')) {
+    if (hasApplicationPermission(user, application, 'canUpdate')) {
       can('delete', 'Page', { _id: page._id });
     }
   }

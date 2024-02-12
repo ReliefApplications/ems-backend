@@ -20,6 +20,7 @@ export default {
     application: { type: GraphQLBoolean },
   },
   async resolve(parent, args: PermissionsArgs, context: Context) {
+    // Check that user is authenticated
     graphQLAuthCheck(context);
     try {
       if (args.application) {

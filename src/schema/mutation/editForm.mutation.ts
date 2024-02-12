@@ -33,7 +33,6 @@ import i18next from 'i18next';
 import { get, isArray } from 'lodash';
 import { logger } from '@services/logger.service';
 import checkDefaultFields from '@utils/form/checkDefaultFields';
-import { preserveChildProperties } from '@utils/form/preserveChildProperties';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 
@@ -336,14 +335,10 @@ export default {
                   if (storedFieldChanged) {
                     template.fields = template.fields.map((x) => {
                       // For each field of the childForm
-                      const preserveChild = preserveChildProperties(
-                        field,
-                        oldField,
-                        x
-                      );
                       return x.name === field.name // If the child field's name equals the parent field's name
-                        ? preserveChild.preserve // If the child possesses properties that must be preserved
-                          ? preserveChild.field // Replace child's field by parent's field with child's field value
+                        ? x.hasOwnProperty('defaultValue') &&
+                          !isEqual(x.defaultValue, oldField.defaultValue) // If the child possesses the "defaultValue" property
+                          ? { ...field, defaultValue: x.defaultValue } // Replace child's field by parent's field with child's field defaultValue's value
                           : field // Else replace child's field by parent's field
                         : x; // Else don't change the child's field
                     });

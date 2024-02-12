@@ -5,7 +5,6 @@ import { AppAbility } from '@security/defineUserAbility';
 import { UserType } from '../types';
 import { PositionAttributeInputType, PositionAttributeArgs } from '../inputs';
 import { logger } from '@services/logger.service';
-import pubsub from '@server/pubsub';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';

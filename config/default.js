@@ -8,6 +8,7 @@ module.exports = {
     allowedOrigins: [],
     url: '',
     rateLimit: {
+      enable: true,
       windowMs: 1 * 60 * 1000, // 1 minute
       max: 500,
     },
@@ -50,6 +51,7 @@ module.exports = {
     clientId: '',
     tenantId: '',
     allowedIssuers: [],
+    audience: '[]',
   },
   encryption: {
     key: '',

@@ -6,7 +6,7 @@ import {
   GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { cloneDeep, isArray, isEmpty, isNil, omit } from 'lodash';
+import { cloneDeep, isArray, isEmpty, omit, isNil } from 'lodash';
 import { contentType } from '@const/enumTypes';
 import { StepType } from '../types';
 import { Dashboard, Form, Step } from '@models';
@@ -54,8 +54,8 @@ export default {
     icon: { type: GraphQLString },
     type: { type: GraphQLString },
     content: { type: GraphQLID },
-    nextStepOnSave: { type: GraphQLBoolean },
     permissions: { type: GraphQLJSON },
+    nextStepOnSave: { type: GraphQLBoolean },
   },
   async resolve(parent, args: EditStepArgs, context: Context) {
     graphQLAuthCheck(context);

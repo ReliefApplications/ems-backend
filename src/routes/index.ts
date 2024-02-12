@@ -10,12 +10,15 @@ import permissions from './permissions';
 import roles from './roles';
 import gis from './gis';
 import style from './style';
+import config from 'config';
 
 /** Express router instance */
 const router = express.Router();
 
 router.use(fileUpload());
-router.use(rateLimitMiddleware);
+if (config.get('server.rateLimit.enable')) {
+  router.use(rateLimitMiddleware);
+}
 router.use(restMiddleware);
 router.use('/download', download);
 router.use('/proxy', proxy);

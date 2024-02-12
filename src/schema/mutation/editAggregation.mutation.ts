@@ -1,5 +1,5 @@
 import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
-import { Resource } from '@models';
+import { ReferenceData, Resource } from '@models';
 import { AggregationType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
@@ -17,6 +17,7 @@ type EditAggregationArgs = {
   id: string | Types.ObjectId;
   aggregation: AggregationArgs;
   resource?: string | Types.ObjectId;
+  referenceData?: string | Types.ObjectId;
 };
 
 /**
@@ -29,11 +30,12 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     aggregation: { type: new GraphQLNonNull(AggregationInputType) },
     resource: { type: GraphQLID },
+    referenceData: { type: GraphQLID },
   },
   async resolve(parent, args: EditAggregationArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
-      if (!args.resource || !args.aggregation) {
+      if ((!args.resource && !args.referenceData) || !args.aggregation) {
         throw new GraphQLError(
           context.i18next.t(
             'mutations.aggregation.edit.errors.invalidArguments'
@@ -62,6 +64,33 @@ export default {
 
         await resource.save();
         return resource.aggregations.id(args.id);
+      }
+      // Edition of a reference data
+      if (args.referenceData) {
+        const filters = ReferenceData.find(
+          accessibleBy(ability, 'update').ReferenceData
+        )
+          .where({ _id: args.referenceData })
+          .getFilter();
+        const referenceData: ReferenceData = await ReferenceData.findOne(
+          filters
+        );
+        if (!referenceData) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.permissionNotGranted')
+          );
+        }
+
+        referenceData.aggregations.id(args.id).sourceFields =
+          args.aggregation.sourceFields;
+        referenceData.aggregations.id(args.id).pipeline =
+          args.aggregation.pipeline;
+        referenceData.aggregations.id(args.id).mapping =
+          args.aggregation.mapping;
+        referenceData.aggregations.id(args.id).name = args.aggregation.name;
+
+        await referenceData.save();
+        return referenceData.aggregations.id(args.id);
       }
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
