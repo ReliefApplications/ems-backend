@@ -29,7 +29,11 @@ export const getChoices = async (field: any, token: string): Promise<any[]> => {
             text: text ? get(x, text) : value ? get(x, value) : x,
           }))
         : []
-    ).sort((a, b) => a.text.localeCompare(b.text));
+    ).sort((a, b) => {
+      const textA = a.text || '';
+      const textB = b.text || '';
+      return textA.localeCompare(textB);
+    });
   } catch {
     return [];
   }
