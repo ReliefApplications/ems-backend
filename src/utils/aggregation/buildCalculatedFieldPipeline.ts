@@ -149,7 +149,7 @@ const resolveSingleOperator = (
   switch (operation) {
     case 'exists':
     case 'length':
-    case 'trim': 
+    case 'trim':
     case 'toInt':
     case 'toLong': {
       // Simple operations
@@ -437,8 +437,6 @@ const buildPipeline = (op: Operation, path: string, timeZone: string) => {
     case 'eq':
     case 'ne':
     case 'datediff':
-    case 'length': 
-    case 'trim':
     case 'includes': {
       const { step, dependencies } = resolveDoubleOperator(
         op.operation,
@@ -468,6 +466,8 @@ const buildPipeline = (op: Operation, path: string, timeZone: string) => {
     case 'date':
     case 'exists':
     case 'size':
+    case 'length':
+    case 'trim':
     case 'toInt':
     case 'toLong': {
       const { step, dependencies } = resolveSingleOperator(

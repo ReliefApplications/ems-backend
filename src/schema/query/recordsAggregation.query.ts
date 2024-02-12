@@ -202,7 +202,6 @@ const extractFilters = (
   return extractedFilters;
 };
 
-
 /**
  * Take an aggregation configuration as parameter.
  * Return aggregated records data.
