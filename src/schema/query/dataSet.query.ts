@@ -86,7 +86,9 @@ export const emailAggregation = [
           as: 'field',
           cond: {
             $regexMatch: {
-              input: { $toString: '$$field.v' }, // Access the Value of the key-value pair
+              input: {
+                $convert: { input: '$$field.v', to: 'string', onError: '' },
+              }, // Access the Value of the key-value pair
               regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
               options: 'i',
             },

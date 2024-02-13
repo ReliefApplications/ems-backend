@@ -104,7 +104,6 @@ router.post('/create-data', async (req, res) => {
  * @returns A string where all non-alphanumeric and non-hyphen characters are replaced with a whitespace.
  */
 const replaceUnderscores = (userValue: string): string => {
-  //Written by Hasnat L, reused
   return userValue ? userValue.replace(/[^a-zA-Z0-9-]/g, ' ') : '';
 };
 
@@ -140,27 +139,42 @@ const buildTable = (records, name, styles: TableStyle): string => {
     'text-align: left; padding: 2px; background-color: #00205C; color: white;';
   const tdStyle = styles?.tdStyle || 'padding: 2px; text-align: left;';
 
-  let table = `<table style="${tableStyle};">`;
-  table += `<thead style="${styles.theadStyle}">`;
-  table += `<tr style=${trStyle}>`;
-  for (const key in records[0].data) {
-    table += `<th style="${thStyle}">${replaceUnderscores(key)}</th>`;
-  }
-  table += '</tr></thead>';
-  table += `<tbody style="${styles.tbodyStyle}"`;
-  // Iterate over each record
-  for (const record of records) {
-    table += '<tr>';
-    // Create a new cell for each field in the record
-    for (const key in record.data) {
-      table += `<td style="${tdStyle}">${formatDates(record.data[key])}</td>`;
+  let table = '';
+  //Checks if data is undefined
+  if (!records[0] || !records[0].data) {
+    table = `
+    <table style="${styles.tableStyle};">
+      <tbody style="${styles.tbodyStyle}">
+        <tr style="${trStyle}">
+          <td style="${tdStyle}">no data found</td>
+        <tr>
+      </tbody>
+    </table>`;
+  } else {
+    table = `<table style="${tableStyle};">`;
+    table += `<thead style="${styles.theadStyle}">`;
+    table += `<tr style="${trStyle}">`;
+    for (const key in records[0].data) {
+      table += `<th style="${thStyle}">${replaceUnderscores(key)}</th>`;
     }
-    table += '</tr>';
+    table += '</tr></thead>';
+    table += `<tbody style="${styles.tbodyStyle}"`;
+    // Iterate over each record
+    for (const record of records) {
+      table += '<tr>';
+      // Create a new cell for each field in the record
+      for (const key in record.data) {
+        table += `<td style="${tdStyle}">${formatDates(record.data[key])}</td>`;
+      }
+      table += '</tr>';
+    }
+    table += '</tbody>';
+    table += '</table>';
   }
-  table += '</tbody>';
-  table += '</table>';
   return `<div style="${styles?.tableDivStyle}">
+    <div style="width:  100%;">
     <label style="${styles?.labelStyle}">${name}</label>
+    </div>
     <div style="width: 100%; overflow-x: auto;">
      ${table}
     </div>
@@ -578,7 +592,7 @@ router.post('/send-email/:configId', async (req, res) => {
       emailHtml += `<img src="${config.emailLayout.banner.bannerImage.__zone_symbol__value}" style="${config.emailLayout.banner.bannerImageStyle}">`;
     }
 
-    if (config.emailLayout.header.headerHtml) {
+    if (config.emailLayout.header) {
       emailHtml += replaceHeader(config.emailLayout.header);
     }
 
@@ -588,7 +602,7 @@ router.post('/send-email/:configId', async (req, res) => {
     );
     emailHtml += datasetsHtml;
 
-    if (config.emailLayout.footer.footerHtml) {
+    if (config.emailLayout.footer) {
       emailHtml += replaceFooter(config.emailLayout.footer);
     }
 

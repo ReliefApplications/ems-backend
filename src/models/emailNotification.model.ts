@@ -35,6 +35,8 @@ interface DataSet {
     labelStyle: string;
     tableDivStyle: string;
   };
+  blockType: any;
+  textStyle: any;
 }
 
 /**
@@ -116,6 +118,8 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
         pageSize: { type: mongoose.Schema.Types.Number },
         fields: [{ type: mongoose.Schema.Types.Mixed }],
         tableStyle: { type: mongoose.Schema.Types.Mixed },
+        blockType: { type: mongoose.Schema.Types.Mixed },
+        textStyle: { type: mongoose.Schema.Types.Mixed },
       },
     ],
     recipients: {

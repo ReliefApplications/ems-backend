@@ -33,6 +33,8 @@ const DataSetType = new GraphQLObjectType({
     pageSize: { type: GraphQLString },
     fields: { type: new GraphQLList(GraphQLJSON) },
     tableStyle: { type: GraphQLJSON },
+    blockType: { type: GraphQLJSON },
+    textStyle: { type: GraphQLJSON },
   }),
 });
 
