@@ -11,6 +11,7 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { UserArgs, UserInputType } from '@schema/inputs/user.input';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
+import pubsub from '../../server/pubsub';
 
 /** Arguments for the addUsers mutation */
 type AddUsersArgs = {

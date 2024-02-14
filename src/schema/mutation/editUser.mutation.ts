@@ -8,6 +8,7 @@ import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
+import pubsub from '../../server/pubsub';
 
 /** Arguments for the editUser mutation */
 type EditUserArgs = {
@@ -163,6 +164,7 @@ export default {
             await Notification.insertMany(
               notifications.map((x) => x.notification)
             );
+
             const publisher = await pubsub();
             notifications.forEach((x) => {
               publisher.publish(x.channel.id, { notification: x.notification });
