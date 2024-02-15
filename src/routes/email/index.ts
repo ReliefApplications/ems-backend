@@ -194,26 +194,33 @@ router.post('/files', async (req: any, res) => {
     ) {
       return res
         .status(400)
-        .send(i18next.t('common.errors.fileSizeLimitReached'));
+        .send(i18next.t('common.errors.fileTotalSizeLimitReached'));
     }
 
     // Folder name where files will be stored
     const folderName = uuidv4();
 
-    // Loop on files, to upload them
-    for (const file of files) {
-      // Check file size
-      if (file.size > FILE_SIZE_LIMIT) {
-        return res
-          .status(400)
-          .send(i18next.t('common.errors.fileSizeLimitReached'));
-      } else {
-        await uploadFile('temp', folderName, file, {
-          filename: `${folderName}/${sanitize(file.name)}`,
-        }).then(() => {
-          logger.info(`Stored file ${file.name}`);
-        });
+    try {
+      // Loop on files, to upload them
+      for (const file of files) {
+        // Check file size
+        if (file.size > FILE_SIZE_LIMIT) {
+          return res
+            .status(400)
+            .send(i18next.t('common.errors.fileSizeLimitReached'));
+        } else {
+          await uploadFile('temp', folderName, file, {
+            filename: `${folderName}/${sanitize(file.name)}`,
+            skipExtension: true,
+          }).then(() => {
+            logger.info(`Stored file ${file.name}`);
+          });
+        }
       }
+    } catch (err) {
+      // Specific try / catch so we can know what the error is
+      logger.error(err.message, { stack: err.stack });
+      return res.status(500).send(err.message);
     }
 
     // Return id of folder
