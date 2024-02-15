@@ -2,7 +2,12 @@
 
 import express from 'express';
 import { Placeholder } from '@const/placeholders';
-import { extractGridData } from '@utils/files';
+import {
+  downloadFile,
+  extractGridData,
+  listFolderFiles,
+  uploadFile,
+} from '@utils/files';
 import { preprocess, sendEmail, senderAddress } from '@utils/email';
 import xlsBuilder from '@utils/files/xlsBuilder';
 import { v4 as uuidv4 } from 'uuid';
@@ -96,6 +101,12 @@ router.post('/', async (req, res) => {
     const email = await generateEmail(req, res);
 
     if (req.body.files) {
+      const blobs = await listFolderFiles('temp', sanitize(req.body.files));
+      const promises: Promise<any>[] = [];
+      for (const blob of blobs) {
+        promises.push(downloadFile('temp', blob.name, `files/${blob.name}`));
+      }
+      await Promise.all(promises);
       await new Promise((resolve, reject) => {
         fs.readdir(`files/${sanitize(req.body.files)}`, async (err, files) => {
           if (err) {
@@ -169,18 +180,6 @@ router.post('/files', async (req: any, res) => {
     if (!req.files || Object.keys(req.files.attachments).length === 0)
       return res.status(400).send(i18next.t('routes.email.errors.missingFile'));
 
-    // Create folder to store files in
-    const folderName = uuidv4();
-    await new Promise((resolve, reject) => {
-      fs.mkdir(`files/${folderName}`, { recursive: true }, (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(null);
-        }
-      });
-    });
-
     let files = req.files.attachments;
     // Transforms files into array if needed
     if (!Array.isArray(files)) {
@@ -198,28 +197,23 @@ router.post('/files', async (req: any, res) => {
         .send(i18next.t('common.errors.fileSizeLimitReached'));
     }
 
+    // Folder name where files will be stored
+    const folderName = uuidv4();
+
     // Loop on files, to upload them
     for (const file of files) {
       // Check file size
-      if (file.size > FILE_SIZE_LIMIT)
+      if (file.size > FILE_SIZE_LIMIT) {
         return res
           .status(400)
           .send(i18next.t('common.errors.fileSizeLimitReached'));
-      // eslint-disable-next-line @typescript-eslint/no-loop-func
-      await new Promise((resolve, reject) => {
-        fs.writeFile(
-          `files/${folderName}/${sanitize(file.name)}`,
-          file.data,
-          (err) => {
-            if (err) {
-              reject(err);
-            } else {
-              logger.info(`Stored file ${file.name}`);
-              resolve(null);
-            }
-          }
-        );
-      });
+      } else {
+        await uploadFile('temp', folderName, file, {
+          filename: `${folderName}/${sanitize(file.name)}`,
+        }).then(() => {
+          logger.info(`Stored file ${file.name}`);
+        });
+      }
     }
 
     // Return id of folder
