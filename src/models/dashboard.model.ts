@@ -10,6 +10,13 @@ interface Button {
   openInNewTab: boolean;
 }
 
+/** Mongoose state interface declaration */
+interface State {
+  name: string;
+  value: any;
+  id: string;
+}
+
 /** Dashboard documents interface declaration */
 export interface Dashboard extends Document {
   kind: 'Dashboard';
@@ -18,6 +25,7 @@ export interface Dashboard extends Document {
   modifiedAt?: Date;
   structure?: any;
   showFilter?: boolean;
+  states?: State[];
   buttons?: Button[];
   archived: boolean;
   archivedAt?: Date;
@@ -35,12 +43,23 @@ const buttonSchema = new Schema<Button>(
   { _id: false }
 );
 
+/** Mongoose state schema declaration */
+const stateSchema = new Schema<State>(
+  {
+    name: String,
+    value: mongoose.Schema.Types.Mixed,
+    id: String,
+  },
+  { _id: false }
+);
+
 /** Mongoose dashboard schema declaration */
 const dashboardSchema = new Schema<Dashboard>(
   {
     name: String,
     structure: mongoose.Schema.Types.Mixed,
     showFilter: Boolean,
+    states: [stateSchema],
     buttons: [buttonSchema],
     archived: {
       type: Boolean,

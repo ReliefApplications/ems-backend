@@ -13,6 +13,7 @@ import extendAbilityForContent from '@security/extendAbilityForContent';
 import { isEmpty, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
 import ButtonActionInputType from '@schema/inputs/button-action.input';
+import StateInputType from '@schema/inputs/state.input';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
@@ -50,7 +51,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     structure: { type: GraphQLJSON },
-    states: { type: GraphQLJSON },
+    states: { type: new GraphQLList(StateInputType) },
     name: { type: GraphQLString },
     showFilter: { type: GraphQLBoolean },
     buttons: { type: new GraphQLList(ButtonActionInputType) },
