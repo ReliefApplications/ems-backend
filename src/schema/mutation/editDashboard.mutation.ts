@@ -25,10 +25,17 @@ type DashboardButtonArgs = {
   openInNewTab: boolean;
 };
 
+type DashboardStatesArgs = {
+  name: string;
+  value: any;
+  id: string;
+};
+
 /** Arguments for the editDashboard mutation */
 type EditDashboardArgs = {
   id: string | Types.ObjectId;
   structure?: any;
+  states?: DashboardStatesArgs[];
   name?: string;
   showFilter?: boolean;
   buttons?: DashboardButtonArgs[];
@@ -43,6 +50,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     structure: { type: GraphQLJSON },
+    states: { type: GraphQLJSON },
     name: { type: GraphQLString },
     showFilter: { type: GraphQLBoolean },
     buttons: { type: new GraphQLList(ButtonActionInputType) },
@@ -76,6 +84,7 @@ export default {
       Object.assign(
         updateDashboard,
         args.structure && { structure: args.structure },
+        args.states && { states: args.states },
         args.name && { name: args.name },
         !isNil(args.showFilter) && { showFilter: args.showFilter },
         args.buttons && { buttons: args.buttons }
