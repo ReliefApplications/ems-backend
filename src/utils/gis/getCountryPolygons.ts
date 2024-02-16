@@ -71,7 +71,7 @@ export const getAdmin0Polygons = async (
   if (!cacheData) {
     const token = await getToken();
     admin0s = await axios({
-      url: config.get('commonServices.url'),
+      url: config.get('emsApi.url'),
       method: 'post',
       headers: {
         Authorization: `Bearer ${token}`,

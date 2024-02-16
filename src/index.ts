@@ -8,7 +8,7 @@ import config from 'config';
 import { logger } from './services/logger.service';
 import { checkConfig } from '@utils/server/checkConfig.util';
 import buildSchema from '@utils/schema/buildSchema';
-import { mergeWhoConfigs } from '@utils/server/mergeWhoConfigs';
+import { initWHOConfig } from '@utils/server/initWhoConfig';
 
 // Needed for survey.model, as xmlhttprequest is not defined in servers
 global.XMLHttpRequest = require('xhr2');
@@ -23,8 +23,7 @@ declare global {
   }
 }
 
-// Merge configs from who-XXX.js to who.js and override the default config with the result
-mergeWhoConfigs()
+initWHOConfig()
   .then(() => {
     // Ensure that all mandatory keys exist
     checkConfig();
