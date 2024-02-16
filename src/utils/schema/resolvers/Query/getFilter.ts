@@ -430,15 +430,38 @@ const buildMongoFilter = (
             }
           }
           case 'in': {
-            if (isAttributeFilter)
-              return {
-                [fieldName]: { $regex: attrValue, $options: 'i' },
-              };
+            if (MULTISELECT_TYPES.includes(type)) {
+              return { [fieldName]: { $in: value } };
+            } else if (isNumber(value?.[0]?.value)) {
+              const eq = value.map((v) => {
+                return { [`data.${v.field}`]: { $eq: v.value } };
+              });
+              return { $or: eq };
+            } else if (
+              fieldName === 'data._globalSearch' &&
+              (type === 'text' || type === '')
+            ) {
+              return;
+            } else {
+              return { [fieldName]: { $regex: value, $options: 'i' } };
+            }
           }
           case 'notin': {
-            if (isAttributeFilter) {
+            if (MULTISELECT_TYPES.includes(type)) {
+              return { [fieldName]: { $nin: value } };
+            } else if (isNumber(value?.[0]?.value)) {
+              const ne = value.map((v) => {
+                return { [`data.${v.field}`]: { $ne: v.value } };
+              });
+              return { $nor: ne };
+            } else if (
+              fieldName === 'data._globalSearch' &&
+              (type === 'text' || type === '')
+            ) {
+              return;
+            } else {
               return {
-                [fieldName]: { $not: { $regex: attrValue, $options: 'i' } },
+                [fieldName]: { $not: { $regex: value, $options: 'i' } },
               };
             }
           }
