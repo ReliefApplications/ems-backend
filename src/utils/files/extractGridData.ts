@@ -1,9 +1,5 @@
-import {
-  buildQuery,
-  buildMetaQuery,
-  buildTotalCountQuery,
-} from '../query/queryBuilder';
-import { getColumnsFromMeta, getRowsFromMeta } from '.';
+import { buildMetaQuery, buildTotalCountQuery } from '../query/queryBuilder';
+import { getColumnsFromMeta } from '.';
 import config from 'config';
 import axios from 'axios';
 import { logger } from '@services/logger.service';
@@ -13,7 +9,6 @@ import mongoose from 'mongoose';
 import { defaultRecordFields } from '@const/defaultRecordFields';
 import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
 import { accessibleBy } from '@casl/mongoose';
-import buildPipeline from '@utils/aggregation/buildPipeline';
 import { cloneDeep, each, get, isArray, omit, set } from 'lodash';
 import { getChoices } from '@utils/proxy';
 import jsonpath from 'jsonpath';
