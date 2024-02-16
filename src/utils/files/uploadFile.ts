@@ -1,7 +1,6 @@
 import { BlobServiceClient } from '@azure/storage-blob';
 import { v4 as uuidv4 } from 'uuid';
 import mime from 'mime-types';
-import { GraphQLError } from 'graphql';
 import i18next from 'i18next';
 import config from 'config';
 import get from 'lodash/get';
@@ -57,6 +56,7 @@ const ALLOWED_EXTENSIONS = [
  * @param options additional options
  * @param options.filename filename to use
  * @param options.allowedExtensions allowed extensions
+ * @param options.skipExtension not check file extension
  * @returns path to the blob.
  */
 export const uploadFile = async (
@@ -64,17 +64,21 @@ export const uploadFile = async (
   folder: string,
   file: any,
   options?: {
+    skipExtension?: boolean;
     filename?: string;
     allowedExtensions?: string[];
   }
 ): Promise<string> => {
-  const contentType = mime.lookup(file.filename || file.name) || '';
-  if (
-    !contentType ||
-    !ALLOWED_EXTENSIONS.includes(mime.extension(contentType) || '')
-  ) {
-    throw new GraphQLError(i18next.t('common.errors.fileExtensionNotAllowed'));
+  if (!options?.skipExtension) {
+    const contentType = mime.lookup(file.filename || file.name) || '';
+    if (
+      !contentType ||
+      !ALLOWED_EXTENSIONS.includes(mime.extension(contentType) || '')
+    ) {
+      throw new Error(i18next.t('common.errors.fileExtensionNotAllowed'));
+    }
   }
+
   try {
     const blobServiceClient = BlobServiceClient.fromConnectionString(
       AZURE_STORAGE_CONNECTION_STRING
@@ -91,7 +95,7 @@ export const uploadFile = async (
     return filename;
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    throw new GraphQLError(
+    throw new Error(
       i18next.t('utils.files.uploadFile.errors.fileCannotBeUploaded')
     );
   }

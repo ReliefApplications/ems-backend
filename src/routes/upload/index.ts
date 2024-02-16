@@ -19,6 +19,7 @@ import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { insertRecords as insertRecordsPulljob } from '@server/pullJobScheduler';
 import jwtDecode from 'jwt-decode';
+import { GraphQLError } from 'graphql';
 
 /** File size limit, in bytes  */
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
@@ -443,15 +444,15 @@ router.post('/style/:application', async (req, res) => {
         .status(403)
         .send(i18next.t('common.errors.permissionNotGranted'));
     }
-    const path = await uploadFile(
-      'applications',
-      req.params.application,
-      file,
-      {
+    let path = '';
+    try {
+      path = await uploadFile('applications', req.params.application, file, {
         filename: application.cssFilename,
         allowedExtensions: ['css', 'scss'],
-      }
-    );
+      });
+    } catch (err) {
+      throw new GraphQLError(err.message);
+    }
 
     await Application.updateOne(
       { _id: req.params.application },

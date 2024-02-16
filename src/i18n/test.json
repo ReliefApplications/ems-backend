@@ -6,6 +6,7 @@
 			"duplicatedGraphQLTypeName": "******",
 			"fileExtensionNotAllowed": "******",
 			"fileSizeLimitReached": "******",
+			"fileTotalSizeLimitReached": "******",
 			"internalServerError": "******",
 			"invalidAPI": "******",
 			"invalidEmailsInput": "******",
