@@ -1,4 +1,4 @@
-import { buildMetaQuery, buildTotalCountQuery } from '../query/queryBuilder';
+import { buildMetaQuery } from '../query/queryBuilder';
 import { getColumnsFromMeta } from '.';
 import config from 'config';
 import axios from 'axios';
