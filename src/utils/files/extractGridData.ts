@@ -651,7 +651,7 @@ const getRows = async (
   const recordsPromises: Promise<any>[] = [];
   // Use pagination to build efficient aggregations
   const pageSize = 100;
-  console.log(params.ids, "ids");
+  console.log(params.ids, 'ids');
   for (let i = 0; i < totalCount; i += pageSize) {
     const ids = resquestIds
       .slice(i, i + pageSize)
@@ -766,7 +766,7 @@ export const extractGridData = async (
   // Get total count and columns
   const columns = await getColumns(req, params);
   const { totalCount, ids } = await getTotalCountAndIds(req, params, columns);
-  console.log(totalCount, "total count");
+  console.log(totalCount, 'total count');
   const rows = await getRows(req, params, totalCount, columns, ids);
   return { columns, rows };
 };
