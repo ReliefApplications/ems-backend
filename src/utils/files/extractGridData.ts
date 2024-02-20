@@ -13,11 +13,6 @@ import { cloneDeep, each, get, isArray, omit, set } from 'lodash';
 import { getChoices } from '@utils/proxy';
 import jsonpath from 'jsonpath';
 import { referenceDataType } from '@const/enumTypes';
-import getSearchFilter from '@utils/schema/resolvers/Query/getSearchFilter';
-import getFilter from '@utils/schema/resolvers/Query/getFilter';
-import dataSources from '@server/apollo/dataSources';
-import getSortAggregation from '@utils/schema/resolvers/Query/getSortAggregation';
-import extendAbilityForRecords from '@security/extendAbilityForRecords';
 
 /**
  * Grid extraction parameters
