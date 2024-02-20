@@ -1,4 +1,4 @@
-import { buildMetaQuery } from '../query/queryBuilder';
+import { buildMetaQuery, buildTotalCountQuery } from '../query/queryBuilder';
 import { getColumnsFromMeta } from '.';
 import config from 'config';
 import axios from 'axios';
@@ -35,103 +35,45 @@ interface GridExtractParams {
 }
 
 /**
- * Build records pipeline
- *
- * @param req current request
- * @param params grid extraction parameters
- * @param columns list of available columns
- * @param resource current resource
- * @returns main records pipeline
- */
-const recordsPipeline = async (
-  req: any,
-  params: GridExtractParams,
-  columns: any[],
-  resource: Resource
-) => {
-  const context = req.context;
-  // Add the basic records filter
-  const basicFilters = {
-    resource: params.resource,
-    archived: { $not: { $eq: true } },
-  };
-  const permissionFilters = Record.find(
-    accessibleBy(context.user.ability, 'read').Record
-  ).getFilter();
-  // Filter from the query definition
-  const mongooseFilter = getFilter(params.filter, resource.fields, context);
-  const filters = {
-    $and: [basicFilters, mongooseFilter, permissionFilters],
-  };
-  const searchFilter = getSearchFilter(params.filter, resource.fields, context);
-  const pipeline: any = [
-    ...(searchFilter ? [searchFilter] : []),
-    { $match: filters },
-  ];
-  columns
-    .filter((col) => col.meta?.field?.isCalculated)
-    .forEach((col) =>
-      pipeline.unshift(
-        ...(buildCalculatedFieldPipeline(
-          col.meta.field.expression,
-          col.meta.field.name,
-          params.timeZone
-        ) as any)
-      )
-    );
-  return pipeline;
-};
-
-/**
  * Get total count and ids from request
  *
  * @param req current request
  * @param params grid extraction parameters
- * @param columns list of available columns
  * @returns total count as promise
  */
-const getTotalCountAndIds = async (
+const getTotalCount = (
   req: any,
-  params: GridExtractParams,
-  columns: any[]
-): Promise<{ totalCount: number; ids: string[] }> => {
-  const ability = await extendAbilityForRecords(req.context.user);
-  const resource = await Resource.findOne({ _id: params.resource });
-  set(req.context.user, 'ability', ability);
-  const contextDataSources = (
-    await dataSources({
-      // Passing upstream request so accesstoken can be used for authentication
-      req: req,
-    } as any)
-  )();
-  set(req.context, 'dataSources', contextDataSources);
-  const sort = await getSortAggregation(
-    params.sortField,
-    params.sortOrder,
-    resource.fields,
-    req.context
-  );
-  const pipelineRecords = await recordsPipeline(req, params, columns, resource);
-  console.log(JSON.stringify(pipelineRecords, null, 2), 'pipelineRecords');
-  const countAggregation = await Record.aggregate(pipelineRecords).facet({
-    items: [
-      ...sort,
-      {
-        $project: {
-          _id: 1,
+  params: GridExtractParams
+): Promise<number> => {
+  const totalCountQuery = buildTotalCountQuery(params.query);
+  return new Promise((resolve) => {
+    axios({
+      url: `${config.get('server.url')}/graphql`,
+      method: 'POST',
+      headers: {
+        Authorization: req.headers.authorization,
+        'Content-Type': 'application/json',
+        ...(req.headers.accesstoken && {
+          accesstoken: req.headers.accesstoken,
+        }),
+      },
+      data: {
+        query: totalCountQuery,
+        variables: {
+          filter: params.filter,
         },
       },
-    ],
-    totalCount: [
-      {
-        $count: 'count',
-      },
-    ],
+    }).then(({ data }) => {
+      if (data.errors) {
+        logger.error(data.errors[0].message);
+      }
+      for (const field in data.data) {
+        if (Object.prototype.hasOwnProperty.call(data.data, field)) {
+          resolve(data.data[field].totalCount);
+        }
+      }
+    });
   });
-  const totalCount = countAggregation[0].totalCount[0].count;
-  const ids = countAggregation[0].items.map((x) => x._id);
-
-  return { totalCount, ids };
 };
 
 /**
@@ -637,23 +579,21 @@ export const getReferenceData = async (
  * @param params grid extraction parameters
  * @param totalCount total count of records
  * @param columns columns to use
- * @param resquestIds list of ids
  * @returns rows from request
  */
 const getRows = async (
   req: any,
   params: GridExtractParams,
   totalCount: number,
-  columns: any[],
-  resquestIds: string[]
+  columns: any[]
 ) => {
   const records = new Array(totalCount);
   const recordsPromises: Promise<any>[] = [];
+  const idsParam = params.filter.filters[0].value;
   // Use pagination to build efficient aggregations
   const pageSize = 100;
-  console.log(params.ids, 'ids');
   for (let i = 0; i < totalCount; i += pageSize) {
-    const ids = resquestIds
+    const ids = idsParam
       .slice(i, i + pageSize)
       .map((id) => new mongoose.Types.ObjectId(id));
     recordsPromises.push(
@@ -764,9 +704,10 @@ export const extractGridData = async (
   params: GridExtractParams
 ): Promise<{ columns: any[]; rows: any[] }> => {
   // Get total count and columns
-  const columns = await getColumns(req, params);
-  const { totalCount, ids } = await getTotalCountAndIds(req, params, columns);
-  console.log(totalCount, 'total count');
-  const rows = await getRows(req, params, totalCount, columns, ids);
+  const [totalCount, columns] = await Promise.all([
+    getTotalCount(req, params),
+    getColumns(req, params),
+  ]);
+  const rows = await getRows(req, params, totalCount, columns);
   return { columns, rows };
 };
