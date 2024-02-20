@@ -43,6 +43,13 @@ export const downloadFile = async (
   return;
 };
 
+/**
+ * List files in a blob folder
+ *
+ * @param containerName container name
+ * @param folder folder name
+ * @returns list of blobs
+ */
 export const listFolderFiles = async (
   containerName: string,
   folder: string
