@@ -79,7 +79,7 @@ describe('Record models tests', () => {
       resource: resourceId,
       data: data,
     };
-    expect(async () => new Record(duplicateRecord).save()).rejects.toThrowError(
+    expect(async () => new Record(duplicateRecord).save()).rejects.toThrow(
       'E11000 duplicate key error collection: test.records index: incrementalId_1_resource_1 dup key'
     );
   });
@@ -149,7 +149,7 @@ describe('Record models tests', () => {
     }).save();
 
     const isDelete = await Record.deleteOne({ _id: record._id });
-    expect(isDelete.ok).toEqual(1);
+    expect(isDelete.acknowledged).toEqual(1);
     expect(isDelete.deletedCount).toEqual(1);
   });
 });

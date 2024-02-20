@@ -1,5 +1,5 @@
 import express from 'express';
-import { Workbook } from 'exceljs';
+import { CellHyperlinkValue, CellValue, Workbook } from 'exceljs';
 import {
   Form,
   PositionAttribute,
@@ -9,17 +9,20 @@ import {
   Resource,
   Version,
   Application,
+  DEFAULT_IMPORT_FIELD,
 } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { Types } from 'mongoose';
 import { getUploadColumns, loadRow, uploadFile } from '@utils/files';
-import { getNextId, getOwnership, transformRecord } from '@utils/form';
+import { getNextId, getOwnership } from '@utils/form';
 import i18next from 'i18next';
 import get from 'lodash/get';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { insertRecords as insertRecordsPulljob } from '@server/pullJobScheduler';
 import jwtDecode from 'jwt-decode';
+import { cloneDeep, has, isEqual } from 'lodash';
+import { Context } from '@server/apollo/context';
 
 /** File size limit, in bytes  */
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
@@ -49,7 +52,7 @@ async function insertRecords(
   file: any,
   form: Form,
   fields: any[],
-  context: any
+  context: Context
 ) {
   // Check if the user is authorized
   const ability: AppAbility = context.user.ability;
@@ -79,66 +82,58 @@ async function insertRecords(
   //     }
   // }
   if (canCreate && canUpdate) {
-    const newRecords: Record[] = [];
-    const promises = [];
     const workbook = new Workbook();
     await workbook.xlsx.load(file.data);
     const worksheet = workbook.getWorksheet(1);
-    let columns = [];
-    // To checks if should update old or add new records
-    const newRecordsData: DataSet[] = [];
-    const oldRecordsData: DataSet[] = [];
-    worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
-      const values = JSON.parse(JSON.stringify(row.values));
-      if (rowNumber === 1) {
-        columns = getUploadColumns(fields, values);
-      } else {
-        const loadedRow = loadRow(columns, values);
-        if (!loadedRow.id) newRecordsData.push(loadedRow);
-        else oldRecordsData.push(loadedRow);
-      }
+
+    // Preprocess the worksheet to remove hyperlinks
+    worksheet.eachRow((row) => {
+      row.eachCell((cell) => {
+        // check if cell is CellHyperlinkValue
+        if (has(cell.value, 'hyperlink')) {
+          cell.value = (cell.value as CellHyperlinkValue).hyperlink;
+        }
+      });
     });
 
-    // If has record to update
-    if (oldRecordsData.length) {
-      const oldRecordsIds: string[] = oldRecordsData.map(
-        (record: DataSet) => record.id
+    const headerRow = worksheet.getRow(1).values as CellValue[];
+    // Remove the first row (header) from the worksheet
+    worksheet.spliceRows(1, 1);
+    const columns = getUploadColumns(fields, headerRow);
+
+    // find the index of the import field
+    const importField = form.importField;
+    const importFieldIndex = headerRow.findIndex(
+      (cell) => cell === importField
+    );
+
+    // Get an array of ids to check if the record already exists
+    const existingRecords = worksheet
+      .getColumn(importFieldIndex)
+      ?.values.map((x) => x.valueOf())
+      .filter((x) => !!x);
+
+    const oldRecords = await Record.find({
+      form: form.id,
+      ...(importField === DEFAULT_IMPORT_FIELD.incID
+        ? { incrementalId: { $in: existingRecords } }
+        : { [`data.${importField}`]: { $in: existingRecords } }),
+    });
+
+    const versionsToCreate: Version[] = [];
+    const recordsToCreate: Record[] = [];
+    const recordToUpdate: Record[] = [];
+    worksheet.eachRow({ includeEmpty: false }, function (row) {
+      const { data, positionAttributes } = loadRow(columns, row.values);
+      const oldRecord = oldRecords.find((rec) =>
+        importField === DEFAULT_IMPORT_FIELD.incID
+          ? rec.incrementalId === row.getCell(importFieldIndex).value
+          : rec.data[importField] === row.getCell(importFieldIndex).value
       );
-      const oldRecords = await Record.find({
-        incrementalId: { $in: oldRecordsIds },
-        form: form.id,
-        archived: { $ne: true },
-      });
-      // If record Id don't exist, put not found record in the newRecordsData array to create record
-      if (oldRecords.length !== oldRecordsIds.length) {
-        oldRecordsIds.forEach((id: string) => {
-          const existRecord = oldRecords.find(
-            (record) => record.incrementalId === id
-          );
-          if (!existRecord) {
-            newRecordsData.push(
-              ...oldRecordsData.splice(
-                oldRecordsData.findIndex((record) => record.id === id),
-                1
-              )
-            );
-          }
-        });
-      }
-      // Init array to bulkWrite update operation
-      const bulkUpdate = [];
-      // Get template fields
-      let template: Form | Resource;
-      if (form.resource) {
-        template = await Resource.findById(form.resource, 'fields');
-      } else {
-        template = form;
-      }
-      // update records that were uploaded with a valid ID
-      for (const updatedRecordData of oldRecordsData) {
-        const oldRecord = oldRecords.find(
-          (rec) => rec.incrementalId === updatedRecordData.id
-        );
+
+      // If the record already exists, update it and create a new version
+      if (oldRecord) {
+        const updatedRecord = cloneDeep(oldRecord);
         const version = new Version({
           createdAt: oldRecord.modifiedAt
             ? oldRecord.modifiedAt
@@ -146,75 +141,72 @@ async function insertRecords(
           data: oldRecord.data,
           createdBy: context.user.id,
         });
-        await transformRecord(updatedRecordData.data, template.fields);
-        const update: any = {
-          data: { ...oldRecord.data, ...updatedRecordData.data },
-          modifiedAt: new Date(),
-          $push: { versions: version._id },
+        versionsToCreate.push(version);
+        updatedRecord.versions.push(version);
+        updatedRecord.markModified('versions');
+
+        const ownership = getOwnership(fields, data);
+        updatedRecord._createdBy = {
+          ...updatedRecord._createdBy,
+          ...ownership,
         };
-        const ownership = getOwnership(template.fields, updatedRecordData.data);
-        Object.assign(
-          update,
-          ownership && { createdBy: { ...oldRecord.createdBy, ...ownership } }
-        );
-        bulkUpdate.push({
-          updateOne: {
-            filter: { _id: new Types.ObjectId(oldRecord.id) },
-            update,
-          },
-        });
-        promises.push(version.save());
-      }
-      // Sends multiple `updateOne` operations to the MongoDB in one command (this is faster than sending multiple independent operations)
-      Record.bulkWrite(bulkUpdate);
-    }
-    // Create records one by one so the incrementalId works correctly
-    for (const dataSet of newRecordsData) {
-      const { incrementalId, incID } = await getNextId(
-        String(form.resource ? form.resource : form.id)
-      );
-      newRecords.push(
-        new Record({
-          incrementalId,
-          incID,
-          form: form.id,
-          // createdAt: new Date(),
-          // modifiedAt: new Date(),
-          data: dataSet.data,
-          resource: form.resource ? form.resource : null,
-          createdBy: {
-            positionAttributes: dataSet.positionAttributes,
-            user: context.user._id,
-          },
-          lastUpdateForm: form.id,
-          _createdBy: {
-            user: {
-              _id: context.user._id,
-              name: context.user.name,
-              username: context.user.username,
+        updatedRecord.modifiedAt = new Date();
+        updatedRecord.data = { ...updatedRecord.data, ...data };
+
+        if (!isEqual(oldRecord.data, updatedRecord.data)) {
+          recordToUpdate.push(updatedRecord);
+        }
+      } else {
+        recordsToCreate.push(
+          new Record({
+            form: form.id,
+            data: data,
+            resource: form.resource ? form.resource : null,
+            createdBy: {
+              positionAttributes: positionAttributes,
+              user: context.user._id,
             },
-          },
-          _form: {
-            _id: form._id,
-            name: form.name,
-          },
-          _lastUpdateForm: {
-            _id: form._id,
-            name: form.name,
-          },
-        })
-      );
+            lastUpdateForm: form.id,
+            _createdBy: {
+              user: {
+                _id: context.user._id,
+                name: context.user.name,
+                username: context.user.username,
+              },
+            },
+            _form: {
+              _id: form._id,
+              name: form.name,
+            },
+            _lastUpdateForm: {
+              _id: form._id,
+              name: form.name,
+            },
+          })
+        );
+      }
+    });
+
+    // Set the incrementalIDs of new records
+    for (let i = 0; i < recordsToCreate.length; i += 1) {
+      // It's ok to use await here because it'll be cached
+      // from the second iteration onwards
+      const { incrementalId, incID } = await getNextId(form);
+      recordsToCreate[i].incrementalId = incrementalId;
+      recordsToCreate[i].incID = incID;
     }
-    if (newRecords.length > 0) {
-      promises.push(Record.insertMany(newRecords));
-    }
+
+    const recordsToSave = [...recordsToCreate, ...recordToUpdate];
+
     // If no new data, return
-    if (newRecords.length + oldRecordsData.length === 0) {
+    if (recordsToSave.length === 0) {
       return res.status(200).send({ status: 'No record added.' });
     }
-    // Resolve all promises and return
+
     try {
-      await Promise.all(promises);
+      // Save all changes
+      await Version.bulkSave(versionsToCreate);
+      await Record.bulkSave(recordsToSave);
       return res.status(200).send({ status: 'OK' });
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
@@ -223,7 +215,9 @@ async function insertRecords(
         .send(i18next.t('common.errors.internalServerError'));
     }
   } else {
-    return res.status(403).send(i18next.t('common.errors.dataNotFound'));
+    return res
+      .status(403)
+      .send(i18next.t('common.errors.permissionNotGranted'));
   }
 }
 

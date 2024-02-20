@@ -146,7 +146,7 @@ describe('Resource models tests', () => {
     const inputData = {
       name: resource.name,
     };
-    expect(async () => new Resource(inputData).save()).rejects.toThrowError(
+    expect(async () => new Resource(inputData).save()).rejects.toThrow(
       'E11000 duplicate key error collection: test.resources index: name_1 dup key'
     );
   });
@@ -176,7 +176,7 @@ describe('Resource models tests', () => {
     }).save();
 
     const isDelete = await Resource.deleteOne({ _id: resourceData._id });
-    expect(isDelete.ok).toEqual(1);
+    expect(isDelete.acknowledged).toEqual(1);
     expect(isDelete.deletedCount).toEqual(1);
   });
 });

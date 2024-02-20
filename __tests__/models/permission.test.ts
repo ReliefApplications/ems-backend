@@ -33,7 +33,7 @@ describe('Permission models tests', () => {
     };
     expect(async () =>
       new Permission(duplicatePermission).save()
-    ).rejects.toThrowError(
+    ).rejects.toThrow(
       'E11000 duplicate key error collection: test.permissions index: type_1_global_1 dup key'
     );
   });

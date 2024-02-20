@@ -46,7 +46,7 @@ describe('PositionAttributeCategory models tests', () => {
     };
     expect(async () =>
       new PositionAttributeCategory(duplicateAttributeCatg).save()
-    ).rejects.toThrowError(
+    ).rejects.toThrow(
       'E11000 duplicate key error collection: test.positionattributecategories index: title_1_application_1 dup key'
     );
   });

@@ -46,9 +46,7 @@ describe('PullJob models tests', () => {
     const duplicatePullJob = {
       name: pullJob.name,
     };
-    expect(async () =>
-      new PullJob(duplicatePullJob).save()
-    ).rejects.toThrowError(
+    expect(async () => new PullJob(duplicatePullJob).save()).rejects.toThrow(
       'E11000 duplicate key error collection: test.pulljobs index: name_1 dup key'
     );
   });

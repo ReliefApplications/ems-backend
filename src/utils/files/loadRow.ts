@@ -13,13 +13,13 @@ export const loadRow = (
   columns: any[],
   row: any
 ): {
-  id: string | null;
   data: any;
   positionAttributes: PositionAttribute[];
 } => {
   const data = {};
   const positionAttributes = [];
   for (const column of columns) {
+    // console.log('column', column);
     const value = row[column.index];
     if (!isNil(value)) {
       switch (column.type) {
@@ -39,6 +39,7 @@ export const loadRow = (
           } else {
             data[column.field] = false;
           }
+          break;
         }
         case 'checkbox':
         case 'tagbox': {
@@ -85,5 +86,5 @@ export const loadRow = (
       }
     }
   }
-  return { data, positionAttributes, id: row[1] };
+  return { data, positionAttributes };
 };

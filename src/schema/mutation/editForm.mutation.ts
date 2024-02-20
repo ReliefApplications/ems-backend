@@ -12,6 +12,7 @@ import {
   Channel,
   ReferenceData,
   DEFAULT_INCREMENTAL_ID_SHAPE,
+  DEFAULT_IMPORT_FIELD,
 } from '@models';
 import {
   removeField,
@@ -231,6 +232,10 @@ export default {
             : {}),
         };
         update.idShape = idShape;
+        // Save the importField
+        update.importField =
+          structure.importField || DEFAULT_IMPORT_FIELD.incID;
+
         const fields = [];
         for (const page of structure.pages) {
           await extractFields(page, fields, form.core);

@@ -107,14 +107,12 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
       default: {
         const name = `${field.name}`;
         const index = headers.indexOf(name);
-        if (index > 0) {
-          columns.push({
-            name,
-            index,
-            field: field.name,
-            type: field.type,
-          });
-        }
+        columns.push({
+          name,
+          index,
+          field: field.name,
+          type: field.type,
+        });
         break;
       }
     }

@@ -95,7 +95,7 @@ describe('ReferenceData models tests', () => {
     };
     expect(async () =>
       new ReferenceData(duplicateReferenceData).save()
-    ).rejects.toThrowError(
+    ).rejects.toThrow(
       'E11000 duplicate key error collection: test.referencedatas index: name_1 dup key'
     );
   });

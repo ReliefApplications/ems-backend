@@ -93,9 +93,7 @@ describe('Aggregation models tests', () => {
     const duplicateResource = {
       name: resource.name,
     };
-    expect(async () =>
-      new Resource(duplicateResource).save()
-    ).rejects.toThrowError(
+    expect(async () => new Resource(duplicateResource).save()).rejects.toThrow(
       'E11000 duplicate key error collection: test.resources index: name_1 dup key'
     );
   });
