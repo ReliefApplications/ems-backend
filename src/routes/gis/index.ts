@@ -110,9 +110,8 @@ const getFeatureFromItem = (
       }
     }
   } else {
-    // Lowercase is needed as quick solution for solving ref data layers
-    const latitude = get(item, mapping.latitudeField.toLowerCase());
-    const longitude = get(item, mapping.longitudeField.toLowerCase());
+    const latitude = get(item, mapping.latitudeField);
+    const longitude = get(item, mapping.longitudeField);
     if (latitude && longitude) {
       const geo = {
         type: 'Feature',
@@ -420,6 +419,7 @@ router.get('/feature', async (req, res) => {
           if (contextFilters) {
             data = data.filter((x) => filterReferenceData(x, contextFilters));
           }
+          console.log(data, 'data', mapping);
           await getFeatures(
             featureCollection.features,
             layerType,
