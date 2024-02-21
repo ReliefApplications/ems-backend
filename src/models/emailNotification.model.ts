@@ -37,6 +37,8 @@ interface DataSet {
   };
   blockType: any;
   textStyle: any;
+  sendAsAttachment: boolean;
+  individualEmail: boolean;
 }
 
 /**
@@ -120,6 +122,8 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
         tableStyle: { type: mongoose.Schema.Types.Mixed },
         blockType: { type: mongoose.Schema.Types.Mixed },
         textStyle: { type: mongoose.Schema.Types.Mixed },
+        sendAsAttachment: { type: Boolean, default: false },
+        individualEmail: { type: Boolean, default: false },
       },
     ],
     recipients: {

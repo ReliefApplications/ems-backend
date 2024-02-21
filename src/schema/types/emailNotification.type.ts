@@ -4,6 +4,7 @@ import {
   GraphQLString,
   GraphQLList,
   GraphQLInt,
+  GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Connection } from './pagination.type';
@@ -35,6 +36,8 @@ const DataSetType = new GraphQLObjectType({
     tableStyle: { type: GraphQLJSON },
     blockType: { type: GraphQLJSON },
     textStyle: { type: GraphQLJSON },
+    sendAsAttachment: { type: GraphQLBoolean },
+    individualEmail: { type: GraphQLBoolean },
   }),
 });
 
