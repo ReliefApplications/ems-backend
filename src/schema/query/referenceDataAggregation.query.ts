@@ -30,6 +30,7 @@ import {
   isArray,
   isEmpty,
   isBoolean,
+  isString,
 } from 'lodash';
 import { graphQLAuthCheck } from '@schema/shared';
 import { CustomAPI } from '@server/apollo/dataSources';
@@ -60,10 +61,12 @@ const applyFilters = (data: any, filter: any): boolean => {
 
   if (filter.field && filter.operator) {
     const value = get(data, filter.field);
-    let intValue: number;
+    let intValue: number | null;
     try {
       intValue = Number(filter.value);
-    } catch {}
+    } catch {
+      intValue = null;
+    }
     switch (filter.operator) {
       case 'eq':
         if (isBoolean(value)) {
@@ -95,9 +98,9 @@ const applyFilters = (data: any, filter: any): boolean => {
       case 'endswith':
         return !isNil(value) && value.endsWith(filter.value);
       case 'contains':
-        if (typeof filter.value === 'string') {
+        if (isString(filter.value)) {
           const regex = new RegExp(filter.value, 'i');
-          if (typeof value === 'string') {
+          if (isString(value)) {
             return !isNil(value) && regex.test(value);
           } else {
             return !isNil(value) && value.includes(filter.value);
@@ -106,15 +109,37 @@ const applyFilters = (data: any, filter: any): boolean => {
           return !isNil(value) && value.includes(filter.value);
         }
       case 'doesnotcontain':
-        if (typeof filter.value === 'string') {
+        if (isString(filter.value)) {
           const regex = new RegExp(filter.value, 'i');
-          if (typeof value === 'string') {
+          if (isString(value)) {
             return isNil(value) || !regex.test(value);
           } else {
             return isNil(value) || !value.includes(filter.value);
           }
         } else {
           return isNil(value) || !value.includes(filter.value);
+        }
+      case 'in':
+        if (isString(value)) {
+          if (isArray(filter.value)) {
+            return !isNil(filter.value) && filter.value.includes(value);
+          } else {
+            const regex = new RegExp(value, 'i');
+            return !isNil(filter.value) && regex.test(filter.value);
+          }
+        } else {
+          return !isNil(filter.value) && filter.value.includes(value);
+        }
+      case 'notint':
+        if (isString(value)) {
+          if (isArray(filter.value)) {
+            return isNil(filter.value) || !filter.value.includes(value);
+          } else {
+            const regex = new RegExp(value, 'i');
+            return isNil(filter.value) || !regex.test(filter.value);
+          }
+        } else {
+          return isNil(filter.value) || !filter.value.includes(value);
         }
       default:
         // For any unknown operator, we return false
