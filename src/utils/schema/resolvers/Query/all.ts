@@ -226,6 +226,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       skip = 0,
       afterCursor,
       filter = {},
+      contextFilters = {},
       display = false,
       styles = [],
       at,
@@ -249,6 +250,10 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         context.display = true;
       }
 
+      filter = {
+        logic: 'and',
+        filters: [filter, contextFilters],
+      } as any;
       // === FILTERING ===
       const usedFields = extractFilterFields(filter);
       if (sortField) {
@@ -372,10 +377,14 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         };
 
         // Check if the field is used in the filter
-        if (isUsedInFilter(filter)) return true;
+        if (isUsedInFilter(filter)) {
+          return true;
+        }
 
         // Check if the field is used in any styles' filters
-        if (styles?.some((s) => isUsedInFilter(s.filter))) return true;
+        if (styles?.some((s) => isUsedInFilter(s.filter))) {
+          return true;
+        }
 
         // If not used in any of the above, don't add it to the pipeline
         return false;

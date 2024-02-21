@@ -119,7 +119,7 @@ export default {
         // If we did not find a match, and the createIfMissing flag is not set
         // we return the main dashboard with the relevant context
         if (!args.createIfMissing) {
-          const contextData = getContextData(
+          const contextData = await getContextData(
             type === 'record' ? args.contextEl : undefined,
             type === 'element' ? args.contextEl : undefined,
             page,
@@ -127,7 +127,10 @@ export default {
           );
 
           Object.assign(mainDashboard, {
-            contextData,
+            contextData: {
+              id: args.contextEl,
+              ...contextData,
+            },
             name: await getNewDashboardName(
               mainDashboard,
               page.context,

@@ -19,7 +19,6 @@ export const loadRow = (
   const data = {};
   const positionAttributes = [];
   for (const column of columns) {
-    // console.log('column', column);
     const value = row[column.index];
     if (!isNil(value)) {
       switch (column.type) {

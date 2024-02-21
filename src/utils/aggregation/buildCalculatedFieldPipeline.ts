@@ -15,11 +15,12 @@ type Dependency = {
   path: string;
 };
 
-/** Special date operators enum */
+/** Special operators enum */
 enum infoOperators {
   UPDATED_AT = 'updatedAt',
   CREATED_AT = 'createdAt',
-  ID = 'incrementalId',
+  incID = 'incrementalId',
+  id = 'id',
 }
 
 /** Maps each operation to its corresponding pipeline command name */
@@ -69,7 +70,8 @@ const getSimpleOperatorValue = (operator: Operator) => {
   if (operator.type === 'info') {
     if (operator.value === infoOperators.CREATED_AT) return '$createdAt';
     if (operator.value === infoOperators.UPDATED_AT) return '$modifiedAt';
-    if (operator.value === infoOperators.ID) return '$incrementalId';
+    if (operator.value === infoOperators.incID) return '$incrementalId';
+    if (operator.value === infoOperators.id) return '$_id';
   }
   return null;
 };
