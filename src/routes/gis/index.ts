@@ -419,7 +419,6 @@ router.get('/feature', async (req, res) => {
           if (contextFilters) {
             data = data.filter((x) => filterReferenceData(x, contextFilters));
           }
-          console.log(data, 'data', mapping);
           await getFeatures(
             featureCollection.features,
             layerType,
