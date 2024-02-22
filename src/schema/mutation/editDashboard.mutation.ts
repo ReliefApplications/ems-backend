@@ -28,7 +28,6 @@ type DashboardButtonArgs = {
 
 type DashboardStatesArgs = {
   name: string;
-  value: any;
   id: string;
 };
 

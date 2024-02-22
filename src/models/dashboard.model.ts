@@ -13,7 +13,6 @@ interface Button {
 /** Mongoose state interface declaration */
 interface State {
   name: string;
-  value: any;
   id: string;
 }
 
@@ -47,7 +46,6 @@ const buttonSchema = new Schema<Button>(
 const stateSchema = new Schema<State>(
   {
     name: String,
-    value: mongoose.Schema.Types.Mixed,
     id: String,
   },
   { _id: false }
