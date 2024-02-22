@@ -72,7 +72,11 @@ export const RecordType = new GraphQLObjectType({
                   }
                 }
                 // Get the text instead of the value for choices, fetch it if needed.
-                if (field.choices || field.choicesByUrl) {
+                if (
+                  field.choices ||
+                  field.choicesByUrl ||
+                  field.choicesByGraphQL
+                ) {
                   res[name] = await getDisplayText(
                     field,
                     parent.data[name],
