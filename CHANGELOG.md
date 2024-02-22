@@ -1,3 +1,10 @@
+## [2.6.5](https://github.com/ReliefApplications/ems-backend/compare/v2.6.4...v2.6.5) (2024-02-15)
+
+
+### Bug Fixes
+
+* due to multi instance setup, uploading files for email sending could fail ([c8e1a59](https://github.com/ReliefApplications/ems-backend/commit/c8e1a599426dcd0845412c2b9c6f88ca0996feed))
+
 ## [2.6.4](https://github.com/ReliefApplications/ems-backend/compare/v2.6.3...v2.6.4) (2024-02-12)
 
 
