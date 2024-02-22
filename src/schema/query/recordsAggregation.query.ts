@@ -223,7 +223,10 @@ export default {
     graphQLAuthCheck(context);
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
-    checkPageSize(first);
+    // If first equal to -1, no need for page size check, that means we want to fetch all records
+    if (first > 0) {
+      checkPageSize(first);
+    }
     try {
       const user = context.user;
       // global variables
@@ -655,7 +658,11 @@ export default {
         }
         pipeline.push({
           $facet: {
-            items: [{ $skip: skip }, { $limit: first }],
+            items:
+              // If first is negative number, that means we want the whole record list for the preview
+              first > 0
+                ? [{ $skip: skip }, { $limit: first }]
+                : [{ $skip: skip }],
             totalCount: [
               {
                 $count: 'count',

@@ -32,13 +32,13 @@ export default {
         .where({ _id: args.id })
         .getFilter();
       const pullJob = await PullJob.findOneAndDelete(filters);
-      if (!pullJob)
+      if (!pullJob.ok)
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
 
-      unscheduleJob(pullJob);
-      return pullJob;
+      unscheduleJob(pullJob.value);
+      return pullJob.value;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {

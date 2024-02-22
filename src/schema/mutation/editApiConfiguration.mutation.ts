@@ -117,7 +117,6 @@ export default {
             ).toString(),
           });
         }
-
         return await ApiConfiguration.findOneAndUpdate(filters, update, {
           new: true,
         });

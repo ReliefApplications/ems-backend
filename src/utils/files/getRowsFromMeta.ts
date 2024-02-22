@@ -15,17 +15,9 @@ const setMultiselectRow = (column: any, data: any, row: any) => {
     const value = data[column.field]?.includes(column.value) ? 1 : 0;
     set(row, column.name, value);
   } else {
-    let value: any;
+    let value = get(data, column.field);
     // If it's a referenceData field, extract value differently.
-    if (column.name.includes('.') && column.meta.field.generated) {
-      const path = column.name.split('.')[0];
-      const attribute = column.name.split('.')[1];
-      const values = get(data, path);
-      if (Array.isArray(values)) {
-        value = values.map((x) => x[attribute]);
-      }
-    } else {
-      value = get(data, column.field);
+    if (!column.meta.field.graphQLFieldName) {
       const choices = column.meta.field.choices || [];
       if (choices.length > 0) {
         if (Array.isArray(value)) {
@@ -49,12 +41,12 @@ const setMultiselectRow = (column: any, data: any, row: any) => {
  */
 export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
   const rows = [];
-  for (const data of records) {
+  for (const record of records) {
     const row = {};
     for (const column of columns) {
       switch (column.type) {
         case 'owner': {
-          let value: any = get(data, column.field);
+          let value: any = get(record, column.field);
           const choices = column.meta.field.choices || [];
           if (choices.length > 0) {
             if (Array.isArray(value)) {
@@ -67,7 +59,7 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
           break;
         }
         case 'users': {
-          let value: any = get(data, column.field);
+          let value: any = get(record, column.field);
           const choices = column.meta.field.choices || [];
           if (choices.length > 0) {
             if (Array.isArray(value)) {
@@ -79,44 +71,44 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
           set(row, column.name, Array.isArray(value) ? value.join(',') : value);
           break;
         }
-        case 'checkbox': {
-          setMultiselectRow(column, data, row);
-          break;
-        }
+        case 'checkbox':
         case 'tagbox': {
-          setMultiselectRow(column, data, row);
+          setMultiselectRow(column, record, row);
           break;
         }
         case 'dropdown': {
-          let value: any = get(data, column.field);
-          const choices = column.meta.field.choices || [];
-          if (choices.length > 0) {
-            if (Array.isArray(value)) {
-              value = value.map((x) => getText(choices, x));
-            } else {
-              value = getText(choices, value);
+          let value: any = get(record, column.field);
+          // Only enter if not reference data
+          if (!column.meta.field.graphQLFieldName) {
+            const choices = column.meta.field.choices || [];
+            if (choices.length > 0) {
+              if (Array.isArray(value)) {
+                value = value.map((x) => getText(choices, x));
+              } else {
+                value = getText(choices, value);
+              }
             }
           }
           set(row, column.name, Array.isArray(value) ? value.join(',') : value);
           break;
         }
         case 'multipletext': {
-          const value = get(data, column.name);
+          const value = get(record, column.name);
           set(row, column.name, value);
           break;
         }
         case 'matrix': {
-          const value = get(data, column.name);
+          const value = get(record, column.name);
           set(row, column.name, value);
           break;
         }
         case 'matrixdropdown': {
-          const value = get(data, column.name);
+          const value = get(record, column.name);
           set(row, column.name, value);
           break;
         }
         case 'resources': {
-          const value = get(data, column.field) || [];
+          const value = get(record, column.field) || [];
           if ((column.subColumns || []).length > 0) {
             if (value && isArray(value)) {
               const subRows = getRowsFromMeta(column.subColumns, value);
@@ -132,7 +124,7 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
           break;
         }
         case 'date': {
-          const value = get(data, column.field);
+          const value = get(record, column.field);
           if (value) {
             const date = new Date(value);
             set(row, column.name, date.toISOString().split('T')[0]);
@@ -143,7 +135,7 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
         }
         case 'datetime':
         case 'datetime-local': {
-          const value = get(data, column.field);
+          const value = get(record, column.field);
           if (value) {
             const date = new Date(value);
             set(
@@ -160,7 +152,7 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
           break;
         }
         case 'time': {
-          const value = get(data, column.field);
+          const value = get(record, column.field);
           if (value) {
             const date = new Date(value);
             set(row, column.name, date.toISOString().split('T')[1].slice(0, 5));
@@ -169,8 +161,13 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
           }
           break;
         }
+        case 'file': {
+          const value = get(record, `${column.field}.[0].name`);
+          set(row, column.name, value);
+          break;
+        }
         default: {
-          const value = get(data, column.field);
+          const value = get(record, column.field);
           if (column.subColumns) {
             if (value && isArray(value)) {
               const subRows = getRowsFromMeta(column.subColumns, value);

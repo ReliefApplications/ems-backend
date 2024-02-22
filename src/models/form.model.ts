@@ -25,6 +25,12 @@ export enum ID_SHAPE_VARIABLES {
   FORM_NAME = 'formName',
 }
 
+/** Enum for the default import fields */
+export enum DEFAULT_IMPORT_FIELD {
+  incID = 'incrementalId',
+  // id = 'id',
+}
+
 /** Form documents interface declaration */
 interface FormDocument extends Document {
   kind: 'Form';
@@ -33,6 +39,7 @@ interface FormDocument extends Document {
     shape: string;
     padding: number;
   };
+  importField: string;
   graphQLTypeName?: string;
   createdAt?: Date;
   modifiedAt?: Date;
@@ -78,6 +85,10 @@ const schema = new Schema<Form>(
         type: Number,
         default: DEFAULT_INCREMENTAL_ID_SHAPE.padding,
       },
+    },
+    importField: {
+      type: String,
+      default: DEFAULT_IMPORT_FIELD.incID,
     },
     graphQLTypeName: String,
     structure: mongoose.Schema.Types.Mixed,
@@ -215,6 +226,8 @@ schema.index(
   { unique: true, partialFilterExpression: { core: true } }
 );
 schema.index({ graphQLTypeName: 1 }, { unique: true });
+schema.index({ createdAt: 1 });
+
 schema.plugin(accessibleRecordsPlugin);
 
 /** Mongoose form model definition */

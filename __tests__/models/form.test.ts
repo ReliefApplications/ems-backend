@@ -117,7 +117,7 @@ describe('Form models tests', () => {
       status: status.pending,
       resource: form.resource,
     };
-    expect(async () => new Form(duplicateForm).save()).rejects.toThrowError(
+    expect(async () => new Form(duplicateForm).save()).rejects.toThrow(
       'E11000 duplicate key error collection: test.forms index: graphQLTypeName_1 dup key'
     );
   });
@@ -186,7 +186,7 @@ describe('Form models tests', () => {
     }
 
     const isDelete = await Form.deleteOne({ _id: formData._id });
-    expect(isDelete.ok).toEqual(1);
+    expect(isDelete.acknowledged).toEqual(1);
     expect(isDelete.deletedCount).toEqual(1);
   });
 });

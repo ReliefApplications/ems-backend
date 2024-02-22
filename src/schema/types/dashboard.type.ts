@@ -10,6 +10,8 @@ import { Page, Step } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import extendAbilityForStep from '@security/extendAbilityForStep';
+import { Types } from 'mongoose';
+import { getContextData } from '@utils/context/getContextData';
 
 /** GraphQL dashboard type definition */
 export const DashboardType = new GraphQLObjectType({
@@ -19,9 +21,33 @@ export const DashboardType = new GraphQLObjectType({
     name: { type: GraphQLString },
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
-    structure: { type: GraphQLJSON },
+    structure: {
+      type: GraphQLJSON,
+      resolve(parent) {
+        if (Array.isArray(parent.structure)) {
+          return parent.structure;
+        } else {
+          return [];
+        }
+      },
+    },
     states: { type: GraphQLJSON },
     buttons: { type: GraphQLJSON },
+    gridOptions: {
+      type: GraphQLJSON,
+      resolve(parent) {
+        if (parent.gridOptions) {
+          return parent.gridOptions;
+        } else {
+          return {
+            minCols: 8,
+            maxCols: 8,
+            fixedRowHeight: 200,
+            margin: 10,
+          };
+        }
+      },
+    },
     permissions: {
       type: AccessType,
       async resolve(parent, args, context) {
@@ -96,6 +122,36 @@ export const DashboardType = new GraphQLObjectType({
         return ability.can('delete', parent);
       },
     },
-    showFilter: { type: GraphQLBoolean },
+    contextData: {
+      type: GraphQLJSON,
+      async resolve(parent, args, context) {
+        // Check if the parent has context data already
+        if (parent.contextData) {
+          return parent.contextData;
+        }
+
+        // Check if dashboard has context linked to it
+        const page = await Page.findOne({
+          contentWithContext: { $elemMatch: { content: parent.id } },
+        });
+
+        // If no page was found, means the dashboard has no context, return null
+        if (!page || !page.context) return null;
+
+        // get the id of the resource or refData
+        const contentWithContext = page.contentWithContext.find((c) =>
+          (c.content as Types.ObjectId).equals(parent.id)
+        );
+
+        // get the id of the resource or refData linked to the dashboard
+        const recordId =
+          'record' in contentWithContext ? contentWithContext.record : null;
+        const elementId =
+          'element' in contentWithContext ? contentWithContext.element : null;
+
+        return getContextData(recordId, elementId, page, context);
+      },
+    },
+    filter: { type: GraphQLJSON },
   }),
 });

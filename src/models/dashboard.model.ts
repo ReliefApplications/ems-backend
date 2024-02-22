@@ -10,6 +10,15 @@ interface Button {
   openInNewTab: boolean;
 }
 
+/** Dashboard filter interface declaration */
+interface Filter {
+  variant?: string;
+  show?: boolean;
+  closable?: boolean;
+  structure?: any;
+  position?: string;
+}
+
 /** Mongoose state interface declaration */
 interface State {
   name: string;
@@ -28,6 +37,8 @@ export interface Dashboard extends Document {
   buttons?: Button[];
   archived: boolean;
   archivedAt?: Date;
+  gridOptions?: any;
+  filter?: Filter;
 }
 
 /** Mongoose button schema declaration */
@@ -38,6 +49,18 @@ const buttonSchema = new Schema<Button>(
     variant: String,
     category: String,
     openInNewTab: Boolean,
+  },
+  { _id: false }
+);
+
+/** Mongoose filter schema declaration */
+const filterSchema = new Schema<Filter>(
+  {
+    variant: String,
+    show: Boolean,
+    closable: Boolean,
+    structure: mongoose.Schema.Types.Mixed,
+    position: String,
   },
   { _id: false }
 );
@@ -67,6 +90,8 @@ const dashboardSchema = new Schema<Dashboard>(
       type: Date,
       expires: 2592000,
     },
+    gridOptions: mongoose.Schema.Types.Mixed,
+    filter: filterSchema,
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },

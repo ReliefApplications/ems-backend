@@ -32,8 +32,8 @@ export interface Record extends AccessibleFieldsDocument {
     canDelete?: any[];
   };
   createdBy?: any;
-  _createdBy?: User;
-  _lastUpdatedBy?: User;
+  _createdBy?: { user: User };
+  _lastUpdatedBy?: { user: User };
   lastUpdateForm?: any;
   _lastUpdateForm?: Form;
 }
@@ -116,7 +116,14 @@ recordSchema.index(
   { incrementalId: 1, resource: 1 },
   { unique: true, partialFilterExpression: { resource: { $exists: true } } }
 );
-recordSchema.index({ resource: 1 });
+
+recordSchema.index({ '$**': 'text' });
+recordSchema.index({ 'data.$**': 1 });
+
+recordSchema.index({ archived: 1, form: 1, resource: 1, createdAt: 1 });
+recordSchema.index({ resource: 1, archived: 1 });
+recordSchema.index({ createdAt: 1 });
+recordSchema.index({ form: 1 });
 
 // handle cascading deletion
 addOnBeforeDeleteMany(recordSchema, async (records) => {

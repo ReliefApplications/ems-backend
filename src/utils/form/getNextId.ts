@@ -177,11 +177,14 @@ export const updateIncrementalIds = async (
  * @param structureId Id of the form / resource.
  * @returns New id for the record.
  */
-export const getNextId = async (structureId: string) => {
+export const getNextId = async (structureId: string | Form) => {
   // Gets the form name and id shape
-  const { name, idShape: formIDShape } = await Form.findOne({
-    $or: [{ _id: structureId }, { resource: structureId }],
-  }).select('name idShape');
+  const { name, idShape: formIDShape } =
+    typeof structureId === 'string'
+      ? await Form.findOne({
+          $or: [{ _id: structureId }, { resource: structureId }],
+        }).select('name idShape')
+      : structureId;
 
   const idShape = formIDShape || DEFAULT_INCREMENTAL_ID_SHAPE;
 

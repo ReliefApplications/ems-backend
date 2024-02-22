@@ -8,17 +8,19 @@ import {
   SingleOperatorOperationsTypes,
 } from '../../const/calculatedFields';
 import { getExpressionFromString } from './expressionFromString';
+import { PipelineStage } from 'mongoose';
 
 type Dependency = {
   operation: Operation;
   path: string;
 };
 
-/** Special date operators enum */
+/** Special operators enum */
 enum infoOperators {
   UPDATED_AT = 'updatedAt',
   CREATED_AT = 'createdAt',
-  ID = 'incrementalId',
+  incID = 'incrementalId',
+  id = 'id',
 }
 
 /** Maps each operation to its corresponding pipeline command name */
@@ -50,10 +52,10 @@ const operationMap: {
   if: '$cond',
   substr: '$substr',
   toInt: '$toInt',
-  length: '$size',
   toLong: '$toLong',
-  trim: '$trim',
   includes: '$in',
+  length: '$size',
+  trim: '$trim',
 };
 
 /**
@@ -68,7 +70,8 @@ const getSimpleOperatorValue = (operator: Operator) => {
   if (operator.type === 'info') {
     if (operator.value === infoOperators.CREATED_AT) return '$createdAt';
     if (operator.value === infoOperators.UPDATED_AT) return '$modifiedAt';
-    if (operator.value === infoOperators.ID) return '$incrementalId';
+    if (operator.value === infoOperators.incID) return '$incrementalId';
+    if (operator.value === infoOperators.id) return '$_id';
   }
   return null;
 };
@@ -98,7 +101,7 @@ const resolveTodayOperator = (operator: Operator | null, path: string) => {
     return `$${auxPath.startsWith('aux.') ? '' : 'aux.'}${auxPath}`;
   };
 
-  const step = {
+  const step: PipelineStage = {
     $addFields: {
       [path.startsWith('aux.') ? path : `data.${path}`]: operator
         ? {
@@ -142,38 +145,69 @@ const resolveSingleOperator = (
     });
     return `$${auxPath.startsWith('aux.') ? '' : 'aux.'}${auxPath}`;
   };
-  const step = [
-    'exists',
-    'size',
-    'date',
-    'toLong',
-    'toInt',
-    'length',
-    'trim',
-  ].includes(operation)
-    ? // Simple operations
-      {
+
+  let step: PipelineStage = null;
+
+  switch (operation) {
+    case 'exists':
+    case 'length':
+    case 'trim':
+    case 'toInt':
+    case 'toLong': {
+      // Simple operations
+      step = {
+        $addFields: {
+          [path.startsWith('aux.') ? path : `data.${path}`]: {
+            [operationMap[operation]]: getValueString(),
+          },
+        },
+      };
+      break;
+    }
+    case 'size': {
+      // Size operation
+      step = {
         $addFields: {
           [path.startsWith('aux.') ? path : `data.${path}`]: {
             [operationMap[operation]]: {
               $cond: {
-                if: { $eq: [operation, 'date'] },
-                then: {
-                  $convert: {
-                    input: getValueString(),
-                    to: 'date',
-                    onError: null,
-                    onNull: null,
-                  },
-                },
-                else: getValueString(),
+                if: { $isArray: getValueString() },
+                then: getValueString(),
+                else: [],
               },
             },
           },
         },
-      }
-    : // Date operations
-      {
+      };
+      break;
+    }
+    case 'date': {
+      // To date operation
+      step = {
+        $addFields: {
+          [path.startsWith('aux.') ? path : `data.${path}`]: {
+            [operationMap[operation]]: {
+              $convert: {
+                input: getValueString(),
+                to: 'date',
+                onError: null,
+                onNull: null,
+              },
+            },
+          },
+        },
+      };
+      break;
+    }
+    case 'year':
+    case 'month':
+    case 'day':
+    case 'hour':
+    case 'minute':
+    case 'second':
+    case 'millisecond': {
+      // Date operations
+      step = {
         $addFields: {
           [path.startsWith('aux.') ? path : `data.${path}`]: {
             $getField: {
@@ -190,6 +224,12 @@ const resolveSingleOperator = (
           },
         },
       };
+      break;
+    }
+    default: {
+      throw new Error(`Invalid operation: ${operation}`);
+    }
+  }
 
   return { step, dependencies };
 };
@@ -227,7 +267,7 @@ const resolveDoubleOperator = (
     return `$${auxPath.startsWith('aux.') ? '' : 'aux.'}${auxPath}`;
   };
 
-  let step: any = null;
+  let step: PipelineStage = null;
 
   switch (operation) {
     case 'datediff':
@@ -291,7 +331,7 @@ const resolveMultipleOperators = (
 ) => {
   const dependencies: Dependency[] = [];
 
-  const step = {
+  const step: PipelineStage = {
     $addFields: {
       [path.startsWith('aux.') ? path : `data.${path}`]: {
         [operationMap[operation]]: operators.map((operator, index) => {
@@ -363,12 +403,8 @@ const resolveMultipleOperators = (
  * @param timeZone the current timezone of the user
  * @returns The pipeline for the calculated field
  */
-const buildPipeline = (
-  op: Operation,
-  path: string,
-  timeZone: string
-): any[] => {
-  const pipeline: any[] = [];
+const buildPipeline = (op: Operation, path: string, timeZone: string) => {
+  const pipeline: PipelineStage.AddFields[] = [];
   switch (op.operation) {
     case 'add':
     case 'mul':
@@ -433,8 +469,8 @@ const buildPipeline = (
     case 'exists':
     case 'size':
     case 'length':
-    case 'toInt':
     case 'trim':
+    case 'toInt':
     case 'toLong': {
       const { step, dependencies } = resolveSingleOperator(
         op.operation,
@@ -484,24 +520,10 @@ const buildCalculatedFieldPipeline = (
   expression: string,
   name: string,
   timeZone: string
-): any[] => {
+) => {
   const operation = getExpressionFromString(expression);
   const pipeline = buildPipeline(operation, name, timeZone);
-  return [
-    {
-      $facet: {
-        calcFieldFacet: pipeline,
-      },
-    },
-    {
-      $unwind: '$calcFieldFacet',
-    },
-    {
-      $replaceRoot: {
-        newRoot: '$calcFieldFacet',
-      },
-    },
-  ];
+  return pipeline;
 };
 
 export default buildCalculatedFieldPipeline;

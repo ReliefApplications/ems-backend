@@ -141,6 +141,7 @@ export const getSchema = (
             sortField: { type: GraphQLString },
             sortOrder: { type: GraphQLString },
             filter: { type: GraphQLJSON },
+            contextFilters: { type: GraphQLJSON },
             display: { type: GraphQLBoolean },
             styles: { type: GraphQLJSON },
             at: { type: GraphQLDate },

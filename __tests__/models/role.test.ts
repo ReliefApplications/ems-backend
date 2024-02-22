@@ -47,7 +47,7 @@ describe('Role models tests', () => {
       title: role.title,
       application: role.application,
     };
-    expect(async () => new Role(inputData).save()).rejects.toThrowError(
+    expect(async () => new Role(inputData).save()).rejects.toThrow(
       'E11000 duplicate key error collection: test.roles index: title_1_application_1 dup key'
     );
   });

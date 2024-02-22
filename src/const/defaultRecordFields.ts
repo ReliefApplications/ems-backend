@@ -10,29 +10,27 @@ import GraphQLJSON from 'graphql-type-json';
 import { UserType } from '../schema/types';
 
 /**
- * Gets GraphQL custom meta type
+ * Resolver for user meta graphql type.
  *
- * @param type Field type
- * @param name Field name
- * @returns custom meta type
+ * @param info graphql info. Used to get fields.
+ * @returns Json with queried properties metadata.
  */
-const customMeta = (type: string, name: string) => {
-  return {
-    type: GraphQLJSON,
-    resolve(parent) {
-      return parent
-        ? {
-            type,
-            name,
-            readOnly: true,
-            permissions: {
-              canSee: true,
-              canUpdate: false,
-            },
-          }
-        : {};
-    },
-  };
+export const userMetaResolver = (info: any) => {
+  const fields = (info.fieldNodes[0]?.selectionSet?.selections || []).map(
+    (x) => x.name.value
+  );
+  return fields.reduce((acc, field) => {
+    acc[field] = {
+      type: 'text',
+      name: field,
+      readOnly: true,
+      permissions: {
+        canSee: true,
+        canUpdate: false,
+      },
+    };
+    return acc;
+  }, {});
 };
 
 /**
@@ -41,9 +39,15 @@ const customMeta = (type: string, name: string) => {
 export const UserMetaType = new GraphQLObjectType({
   name: 'UserMeta',
   fields: () => ({
-    id: customMeta('text', 'id'),
-    username: customMeta('text', 'username'),
-    name: customMeta('text', 'name'),
+    id: {
+      type: GraphQLJSON,
+    },
+    username: {
+      type: GraphQLJSON,
+    },
+    name: {
+      type: GraphQLJSON,
+    },
   }),
 });
 
@@ -57,12 +61,16 @@ export const defaultRecordFields: {
   filterType: GraphQLType;
   selectable: boolean;
   args?: any;
+  project?: any;
 }[] = [
   {
     field: 'id',
     type: GraphQLID,
     filterType: GraphQLID,
     selectable: true,
+    project: {
+      $toString: '$_id',
+    },
   },
   {
     field: 'incrementalId',
@@ -87,6 +95,7 @@ export const defaultRecordFields: {
     args: {
       display: { type: GraphQLBoolean },
     },
+    project: '$_lastUpdateForm.name',
   },
   {
     field: 'createdAt',
@@ -105,12 +114,26 @@ export const defaultRecordFields: {
     type: UserType,
     filterType: GraphQLID,
     selectable: true,
+    project: {
+      id: {
+        $toString: '$_createdBy.user._id',
+      },
+      username: '$_createdBy.user.username',
+      name: '$_createdBy.user.name',
+    },
   },
   {
     field: 'lastUpdatedBy',
     type: UserType,
     filterType: GraphQLID,
     selectable: true,
+    project: {
+      id: {
+        $toString: '$_lastUpdatedBy.user._id',
+      },
+      username: '$_lastUpdatedBy.user.username',
+      name: '$_lastUpdatedBy.user.name',
+    },
   },
   {
     field: 'canUpdate',

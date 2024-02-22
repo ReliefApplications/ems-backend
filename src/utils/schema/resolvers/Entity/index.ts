@@ -305,6 +305,8 @@ export const getEntityResolver = (
         return Object.assign(resolvers, {
           [field.name]: getReferenceDataResolver(field, referenceData),
         });
+      } else {
+        return resolvers;
       }
     }, {});
 
