@@ -103,6 +103,9 @@ export const getFullChoices = async (
             text: get(x, textField),
           }));
       });
+      if (field.choicesByGraphQL.hasOther) {
+        choices.push({ [valueField]: 'other', [textField]: 'Other' });
+      }
       return choices;
     } else {
       return field.choices;

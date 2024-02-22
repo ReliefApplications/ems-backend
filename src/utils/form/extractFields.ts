@@ -169,8 +169,8 @@ export const extractFields = async (object, fields, core): Promise<void> => {
                 variableMapping: element.gqlVariableMapping
                   ? element.gqlVariableMapping
                   : null,
-                // hasOther: element.hasOther,
-                // otherText: element.otherText ? element.otherText : 'Other',
+                hasOther: element.hasOther,
+                otherText: element.otherText ? element.otherText : 'Other',
               },
             });
           } else if (element.referenceData) {
