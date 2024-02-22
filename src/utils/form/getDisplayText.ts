@@ -84,7 +84,7 @@ export const getFullChoices = async (
       const url: string = field.choicesByGraphQL.url;
       let choices: any[] = [];
       const valueField = get(field, 'choicesByGraphQL.value', null);
-      const textField = get(field, 'choicesByGraphQL.name', null);
+      const textField = get(field, 'choicesByGraphQL.text', null);
       await axios({
         url,
         method: 'post',
