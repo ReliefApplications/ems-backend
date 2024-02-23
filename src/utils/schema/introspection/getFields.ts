@@ -58,7 +58,7 @@ export const getFields = (fields: any) => {
         getFieldName(x),
         {
           type: getTypeFromField(x, true),
-          ...((x.choices || x.choicesByUrl) && {
+          ...((x.choices || x.choicesByUrl || x.choicesByGraphQL) && {
             args: { display: { type: GraphQLBoolean } },
           }),
         },

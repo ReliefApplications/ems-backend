@@ -153,7 +153,12 @@ export const getEntityResolver = (
               (args.display === undefined || args.display)
             ) {
               const formField = data[name].find((x) => x.name === fieldName);
-              if (formField && (formField.choices || formField.choicesByUrl)) {
+              if (
+                formField &&
+                (formField.choices ||
+                  formField.choicesByUrl ||
+                  formField.choicesByGraphQL)
+              ) {
                 return getDisplayText(formField, value, context);
               }
             }

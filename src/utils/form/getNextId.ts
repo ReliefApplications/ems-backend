@@ -1,10 +1,19 @@
 import { Record, Form } from '@models';
-import NodeCache from 'node-cache';
 import mongoose from 'mongoose';
 import i18next from 'i18next';
+import { BaseRedisCache } from 'apollo-server-cache-redis';
+import Redis from 'ioredis';
+import config from 'config';
 
-/** Internal node cache object instance */
-const cache = new NodeCache();
+/** Redis caching initialization */
+const nextIdCache = new BaseRedisCache({
+  client: new Redis(config.get('redis.url'), {
+    password: config.get('redis.password'),
+    showFriendlyErrorStack: true,
+    lazyConnect: true,
+    maxRetriesPerRequest: 5,
+  }),
+});
 
 /** Default start padding size for the IDs */
 const PADDING_MAX_LENGTH = 8;
@@ -17,8 +26,8 @@ const PADDING_MAX_LENGTH = 8;
  * @returns New id for the record.
  */
 export const getNextId = async (structureId: string): Promise<string> => {
-  // Get previous ID from cache
-  let previousId: string = cache.get(structureId);
+  // Get previous ID from Redis cache
+  let previousId: string = await nextIdCache.get(structureId);
   let nextId: string;
   const currentYear = String(new Date().getFullYear());
   // If not cached, get it from the DB
@@ -78,7 +87,7 @@ export const getNextId = async (structureId: string): Promise<string> => {
         '0'
       )}`;
     }
-    cache.set(structureId, nextId);
+    await nextIdCache.set(structureId, nextId);
   } else {
     throw new Error(
       i18next.t('utils.form.getNextId.errors.incrementalIdError')

@@ -156,6 +156,23 @@ export const extractFields = async (object, fields, core): Promise<void> => {
                 otherText: element.otherText ? element.otherText : 'Other',
               },
             });
+          } else if (element.gqlUrl) {
+            Object.assign(field, {
+              choicesByGraphQL: {
+                url: element.gqlUrl,
+                ...(element.gqlPath && {
+                  path: element.gqlPath,
+                }),
+                value: element.gqlValueName ? element.gqlValueName : 'value',
+                text: element.gqlTitleName ? element.gqlTitleName : 'name',
+                query: element.gqlQuery ? element.gqlQuery : null,
+                variableMapping: element.gqlVariableMapping
+                  ? element.gqlVariableMapping
+                  : null,
+                hasOther: element.hasOther,
+                otherText: element.otherText ? element.otherText : 'Other',
+              },
+            });
           } else if (element.referenceData) {
             Object.assign(field, {
               referenceData: {
@@ -164,7 +181,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
               },
             });
           } else {
-            const choices = element.choices.map((x) => {
+            const choices = (element.choices || []).map((x) => {
               return {
                 value: x.value || x,
                 text: x.text || x,
