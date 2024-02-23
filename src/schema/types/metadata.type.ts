@@ -69,7 +69,7 @@ export const FieldMetaDataType = new GraphQLObjectType({
         if (
           ['radiogroup', 'dropdown', 'checkbox', 'tagbox'].includes(parent.type)
         ) {
-          if (parent._field?.choicesByUrl) {
+          if (parent._field?.choicesByUrl || parent._field?.choicesByGraphQL) {
             return getFullChoices(parent._field, context);
           } else if (parent._referenceData) {
             // For ReferenceData children use object stored in field to create choices.

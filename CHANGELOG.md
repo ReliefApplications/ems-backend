@@ -1,3 +1,31 @@
+## [2.6.5](https://github.com/ReliefApplications/ems-backend/compare/v2.6.4...v2.6.5) (2024-02-15)
+
+
+### Bug Fixes
+
+* due to multi instance setup, uploading files for email sending could fail ([c8e1a59](https://github.com/ReliefApplications/ems-backend/commit/c8e1a599426dcd0845412c2b9c6f88ca0996feed))
+
+## [2.6.4](https://github.com/ReliefApplications/ems-backend/compare/v2.6.3...v2.6.4) (2024-02-12)
+
+
+### Bug Fixes
+
+* choicesbyurl field with choices without text could break choices assignment ([1cb2cbb](https://github.com/ReliefApplications/ems-backend/commit/1cb2cbbfa3413591f365cb0af1b98db7bd708f0d))
+
+## [2.6.3](https://github.com/ReliefApplications/ems-backend/compare/v2.6.2...v2.6.3) (2024-02-12)
+
+
+### Bug Fixes
+
+* user ability would not be correctly set when cached ([648c5ce](https://github.com/ReliefApplications/ems-backend/commit/648c5ce20e3991011a41a04308abdbfd09719462))
+
+## [2.6.2](https://github.com/ReliefApplications/ems-backend/compare/v2.6.1...v2.6.2) (2024-02-07)
+
+
+### Bug Fixes
+
+* reference data resolvers could break schema ([98d8fe7](https://github.com/ReliefApplications/ems-backend/commit/98d8fe7baf9a63b7540ef75542556cd2fb6ece79))
+
 ## [2.6.1](https://github.com/ReliefApplications/ems-backend/compare/v2.6.0...v2.6.1) (2024-02-01)
 
 
