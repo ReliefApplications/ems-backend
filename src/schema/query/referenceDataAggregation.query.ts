@@ -1,4 +1,5 @@
 import {
+  GraphQLBoolean,
   GraphQLError,
   GraphQLID,
   GraphQLInt,
@@ -368,6 +369,7 @@ type ReferenceDataAggregationArgs = {
   sortOrder?: string;
   contextFilters?: CompositeFilterDescriptor;
   graphQLVariables: any;
+  aggregationPreview?: boolean;
 };
 
 /**
@@ -389,6 +391,7 @@ export default {
     sortOrder: { type: GraphQLString },
     sortField: { type: GraphQLString },
     at: { type: GraphQLDate },
+    aggregationPreview: { type: GraphQLBoolean },
   },
   async resolve(parent, args: ReferenceDataAggregationArgs, context) {
     // Authentication check
@@ -413,7 +416,13 @@ export default {
       );
 
       // Check if resource exists and aggregation exists
-      if (!(referenceData && aggregation && referenceData.data)) {
+      if (
+        !(
+          referenceData &&
+          (aggregation || args.aggregationPreview) &&
+          referenceData.data
+        )
+      ) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       // sourceFields and pipeline from args have priority over current aggregation ones
