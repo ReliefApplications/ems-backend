@@ -84,7 +84,10 @@ export default class Exporter {
     // Get total count and columns
     // todo: replace with resource fields
     await this.getColumns();
-    const records: Record[] = await this.getRecords();
+    const records: Record[] = getRowsFromMeta(
+      this.columns,
+      await this.getRecords()
+    );
     switch (this.params.format) {
       case 'xlsx': {
         let workbook: Workbook | stream.xlsx.WorkbookWriter;
@@ -101,7 +104,7 @@ export default class Exporter {
         // Set headers of the file
         this.setHeaders(worksheet);
         try {
-          this.writeRowsXlsx(worksheet, getRowsFromMeta(this.columns, records));
+          this.writeRowsXlsx(worksheet, records);
         } catch (err) {
           logger.error(err.message);
         }
