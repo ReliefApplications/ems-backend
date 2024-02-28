@@ -118,7 +118,10 @@ const buildMongoFilter = (
         (x) => x.name === filter.field.split('.')[0]
       );
 
-      if (resourceField?.resource) {
+      if (filter.field.split('.')[1] === 'id') {
+        // The id, unlike the _id, is a string
+        type = 'text';
+      } else if (resourceField?.resource) {
         // find the nested field
         const nestedField = context.resourceFieldsById[
           resourceField.resource

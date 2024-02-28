@@ -482,18 +482,19 @@ export default {
               pipeline.push({
                 $unwind: `$data.${fieldName}`,
               });
-              pipeline.push({
-                $addFields: {
-                  [`data.${fieldName}.data._id`]: {
-                    $toString: `$data.${fieldName}._id`,
-                  },
-                },
-              });
             }
             pipeline.push({
               $addFields: selectableDefaultRecordFieldsFlat.reduce(
                 (fields, selectableField) => {
-                  if (!selectableField.includes('By')) {
+                  if (selectableField === 'id') {
+                    // Special case for id
+                    return Object.assign(fields, {
+                      [`data.${fieldName}.data.id`]: {
+                        $toString: `$data.${fieldName}._id`,
+                      },
+                      [`data.${fieldName}.data._id`]: `$data.${fieldName}._id`,
+                    });
+                  } else if (!selectableField.includes('By')) {
                     return Object.assign(fields, {
                       [`data.${fieldName}.data.${selectableField}`]: `$data.${fieldName}.${selectableField}`,
                     });
