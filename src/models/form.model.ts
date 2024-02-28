@@ -39,7 +39,8 @@ interface FormDocument extends Document {
     shape: string;
     padding: number;
   };
-  importField: string;
+  importField?: string;
+  allowUploadRecords?: boolean;
   graphQLTypeName?: string;
   createdAt?: Date;
   modifiedAt?: Date;
@@ -85,6 +86,10 @@ const schema = new Schema<Form>(
         type: Number,
         default: DEFAULT_INCREMENTAL_ID_SHAPE.padding,
       },
+    },
+    allowUploadRecords: {
+      type: Boolean,
+      default: false,
     },
     importField: {
       type: String,

@@ -232,9 +232,13 @@ export default {
             : {}),
         };
         update.idShape = idShape;
+
         // Save the importField
         update.importField =
           structure.importField || DEFAULT_IMPORT_FIELD.incID;
+
+        // Save the allowUploadRecords
+        update.allowUploadRecords = structure.allowUploadRecords ?? false;
 
         const fields = [];
         for (const page of structure.pages) {
