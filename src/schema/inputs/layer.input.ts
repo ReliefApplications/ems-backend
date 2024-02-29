@@ -26,6 +26,7 @@ const LayerSymbolInputType = new GraphQLInputObjectType({
   fields: () => ({
     color: { type: new GraphQLNonNull(GraphQLString) },
     size: { type: new GraphQLNonNull(GraphQLFloat) },
+    fieldForSize: { type: GraphQLString },
     style: { type: new GraphQLNonNull(GraphQLString) },
     outline: { type: LayerSymbolOutlineInputType },
   }),
