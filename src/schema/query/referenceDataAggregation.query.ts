@@ -179,21 +179,21 @@ const procOperator = (data: any, operator) => {
   switch (operator.operator) {
     case 'sum':
       return {
-        sum: sum(data.map((element) => Number(element[operator.field]))),
+        sum: sum(data.map((element) => Number(get(element, operator.field)))),
       };
     case 'avg':
       return {
-        avg: mean(data.map((element) => Number(element[operator.field]))),
+        avg: mean(data.map((element) => Number(get(element, operator.field)))),
       };
     case 'count':
       return { count: size(data) };
     case 'max':
       return {
-        max: max(data.map((element) => Number(element[operator.field]))),
+        max: max(data.map((element) => Number(get(element, operator.field)))),
       };
     case 'min':
       return {
-        min: min(data.map((element) => Number(element[operator.field]))),
+        min: min(data.map((element) => Number(get(element, operator.field)))),
       };
     case 'last':
       return {
@@ -223,8 +223,8 @@ const procPipelineStep = (pipelineStep, data, sourceFields) => {
         (operator) => operator.expression
       );
       const keysToGroupBy = pipelineStep.form.groupBy.map((key) => key.field);
-      data = groupBy(data, (dataKey) =>
-        keysToGroupBy.map((key) => dataKey[key])
+      data = groupBy(data, (item) =>
+        keysToGroupBy.map((key) => get(item, key))
       );
       for (const key in data) {
         let supplementaryFields: any;
@@ -276,18 +276,18 @@ const procPipelineStep = (pipelineStep, data, sourceFields) => {
         switch (elt.expression.operator) {
           case 'add':
             data.map((obj: any) => {
-              obj[elt.name] = obj[elt.expression.field];
+              obj[elt.name] = get(obj, elt.expression.field);
             });
             break;
           case 'month':
             data.map((obj: any) => {
               try {
                 const month =
-                  new Date(obj[elt.expression.field]).getMonth() + 1;
+                  new Date(get(obj, elt.expression.field)).getMonth() + 1;
                 const monthAsString =
                   month < 10 ? '0' + month : month.toString();
                 const dateWithMonth =
-                  new Date(obj[elt.expression.field]).getFullYear() +
+                  new Date(get(obj, elt.expression.field)).getFullYear() +
                   '-' +
                   monthAsString;
                 obj[elt.name] = dateWithMonth;
@@ -299,7 +299,9 @@ const procPipelineStep = (pipelineStep, data, sourceFields) => {
           case 'year':
             data.map((obj: any) => {
               try {
-                const year = new Date(obj[elt.expression.field]).getFullYear();
+                const year = new Date(
+                  get(obj, elt.expression.field)
+                ).getFullYear();
                 const yearAsString = year.toString();
                 obj[elt.name] = yearAsString;
               } catch {
@@ -310,7 +312,7 @@ const procPipelineStep = (pipelineStep, data, sourceFields) => {
           case 'day':
             data.map((obj: any) => {
               try {
-                const date = new Date(obj[elt.expression.field]);
+                const date = new Date(get(obj, elt.expression.field));
                 const dayAsString =
                   date.getFullYear() +
                   '-' +
@@ -326,7 +328,7 @@ const procPipelineStep = (pipelineStep, data, sourceFields) => {
           case 'week':
             data.map((obj: any) => {
               try {
-                const date = new Date(obj[elt.expression.field]);
+                const date = new Date(get(obj, elt.expression.field));
                 const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
                 const pastDaysOfYear =
                   (date.valueOf() - firstDayOfYear.valueOf()) / 86400000;
@@ -342,7 +344,7 @@ const procPipelineStep = (pipelineStep, data, sourceFields) => {
             break;
           case 'multiply':
             data.map((obj: any) => {
-              obj[elt.name] = obj[elt.expression.field];
+              obj[elt.name] = get(obj, elt.expression.field);
             });
             break;
         }
