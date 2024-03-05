@@ -172,6 +172,17 @@ const LayerInputType = new GraphQLInputObjectType({
         }),
       }),
     },
+    timelineInfo: {
+      type: new GraphQLInputObjectType({
+        name: 'timelineInfoInputType',
+        fields: () => ({
+          enabled: { type: GraphQLBoolean },
+          startTimeField: { type: GraphQLString },
+          endTimeField: { type: GraphQLString },
+          dateFormat: { type: GraphQLString },
+        }),
+      }),
+    },
     datasource: { type: LayerDataSourceInputType },
     contextFilters: { type: GraphQLString },
     at: { type: GraphQLString },

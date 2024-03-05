@@ -107,6 +107,14 @@ export enum GeometryType {
   POLYGON = 'Polygon',
 }
 
+/** Model for the timeline configuration of a layer */
+export type TimelineInfo = {
+  enabled: boolean;
+  startTimeField: string;
+  endTimeField: string;
+  dateFormat: string;
+};
+
 /**
  * Layer Datasource interface
  */
@@ -136,6 +144,7 @@ export interface Layer extends Document {
   opacity: number;
   layerDefinition?: LayerDefinition;
   popupInfo?: PopupElement[];
+  timelineInfo?: TimelineInfo;
   contextFilters: string;
   at: string;
 }
@@ -164,6 +173,12 @@ const layerSchema = new Schema(
       description: String,
       popupElements: [mongoose.Schema.Types.Mixed],
       fieldsInfo: [mongoose.Schema.Types.Mixed],
+    },
+    timelineInfo: {
+      enabled: Boolean,
+      startTimeField: String,
+      endTimeField: String,
+      dateFormat: String,
     },
     datasource: {
       resource: {

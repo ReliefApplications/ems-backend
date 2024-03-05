@@ -188,6 +188,17 @@ export const LayerType = new GraphQLObjectType({
         }),
       }),
     },
+    timelineInfo: {
+      type: new GraphQLObjectType({
+        name: 'timelineInfoData',
+        fields: () => ({
+          enabled: { type: GraphQLBoolean },
+          startTimeField: { type: GraphQLString },
+          endTimeField: { type: GraphQLString },
+          dateFormat: { type: GraphQLString },
+        }),
+      }),
+    },
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     layerType: { type: LayerTypeEnum },
