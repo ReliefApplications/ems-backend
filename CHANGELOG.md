@@ -1,3 +1,10 @@
+## [2.7.1](https://github.com/ReliefApplications/ems-backend/compare/v2.7.0...v2.7.1) (2024-03-04)
+
+
+### Bug Fixes
+
+* now working nested fields in reference data aggregation ([#993](https://github.com/ReliefApplications/ems-backend/issues/993)) ([0603afc](https://github.com/ReliefApplications/ems-backend/commit/0603afcf16f370fc29405622afbf1bd081aee10d))
+
 # [2.7.0](https://github.com/ReliefApplications/ems-backend/compare/v2.6.5...v2.7.0) (2024-02-23)
 
 
