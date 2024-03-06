@@ -169,6 +169,16 @@ const LayerInputType = new GraphQLInputObjectType({
           description: { type: GraphQLString },
           popupElements: { type: new GraphQLList(LayerPopupElementInputType) },
           fieldsInfo: { type: new GraphQLList(FieldElementInputType) },
+          navigateToPage: { type: GraphQLBoolean },
+          navigateSettings: {
+            type: new GraphQLInputObjectType({
+              name: 'navigateSettingsDataInputType',
+              fields: () => ({
+                pageUrl: { type: GraphQLString },
+                field: { type: GraphQLString },
+              }),
+            }),
+          },
         }),
       }),
     },
