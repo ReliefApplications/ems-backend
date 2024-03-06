@@ -311,7 +311,9 @@
 		"upload": {
 			"errors": {
 				"invalidUserUpload": "Please provide email and role for each user.",
-				"missingFile": "No file detected."
+				"missingFile": "No file detected.",
+				"requiredField": "Required question missing: {{field}}",
+				"resourceNotFound": "Record for resource not found on question: {{field}}"
 			}
 		}
 	},

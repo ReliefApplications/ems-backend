@@ -123,70 +123,93 @@ async function insertRecords(
     const versionsToCreate: Version[] = [];
     const recordsToCreate: Record[] = [];
     const recordToUpdate: Record[] = [];
-    worksheet.eachRow({ includeEmpty: false }, function (row) {
-      const { data, positionAttributes } = loadRow(columns, row.values);
-      const oldRecord = oldRecords.find((rec) =>
-        importField === DEFAULT_IMPORT_FIELD.incID
-          ? rec.incrementalId === row.getCell(importFieldIndex).value
-          : rec.data[importField] === row.getCell(importFieldIndex).value
-      );
+    let errorOnRow = null;
+    await new Promise<void>((resolve) => {
+      worksheet.eachRow(
+        { includeEmpty: false },
+        async function (row, rowNumber) {
+          const { data, positionAttributes, error } = await loadRow(
+            columns,
+            row.values
+          );
+          if (error) {
+            errorOnRow = error;
+            resolve();
+          }
+          const oldRecord = oldRecords.find((rec) =>
+            importField === DEFAULT_IMPORT_FIELD.incID
+              ? rec.incrementalId === row.getCell(importFieldIndex).value
+              : rec.data[importField] === row.getCell(importFieldIndex).value
+          );
 
-      // If the record already exists, update it and create a new version
-      if (oldRecord) {
-        const updatedRecord = cloneDeep(oldRecord);
-        const version = new Version({
-          createdAt: oldRecord.modifiedAt
-            ? oldRecord.modifiedAt
-            : oldRecord.createdAt,
-          data: oldRecord.data,
-          createdBy: context.user.id,
-        });
-        versionsToCreate.push(version);
-        updatedRecord.versions.push(version);
-        updatedRecord.markModified('versions');
+          // If the record already exists, update it and create a new version
+          if (oldRecord) {
+            const updatedRecord = cloneDeep(oldRecord);
+            const version = new Version({
+              createdAt: oldRecord.modifiedAt
+                ? oldRecord.modifiedAt
+                : oldRecord.createdAt,
+              data: oldRecord.data,
+              createdBy: context.user.id,
+            });
+            versionsToCreate.push(version);
+            updatedRecord.versions.push(version);
+            updatedRecord.markModified('versions');
 
-        const ownership = getOwnership(fields, data);
-        updatedRecord._createdBy = {
-          ...updatedRecord._createdBy,
-          ...ownership,
-        };
-        updatedRecord.modifiedAt = new Date();
-        updatedRecord.data = { ...updatedRecord.data, ...data };
+            const ownership = getOwnership(fields, data);
+            updatedRecord._createdBy = {
+              ...updatedRecord._createdBy,
+              ...ownership,
+            };
+            updatedRecord.modifiedAt = new Date();
+            updatedRecord.data = { ...updatedRecord.data, ...data };
 
-        if (!isEqual(oldRecord.data, updatedRecord.data)) {
-          recordToUpdate.push(updatedRecord);
+            if (!isEqual(oldRecord.data, updatedRecord.data)) {
+              recordToUpdate.push(updatedRecord);
+            }
+          } else {
+            recordsToCreate.push(
+              new Record({
+                form: form.id,
+                data: data,
+                resource: form.resource ? form.resource : null,
+                createdBy: {
+                  positionAttributes: positionAttributes,
+                  user: context.user._id,
+                },
+                lastUpdateForm: form.id,
+                _createdBy: {
+                  user: {
+                    _id: context.user._id,
+                    name: context.user.name,
+                    username: context.user.username,
+                  },
+                },
+                _form: {
+                  _id: form._id,
+                  name: form.name,
+                },
+                _lastUpdateForm: {
+                  _id: form._id,
+                  name: form.name,
+                },
+              })
+            );
+          }
+          if (rowNumber === worksheet.rowCount) {
+            resolve();
+          }
         }
-      } else {
-        recordsToCreate.push(
-          new Record({
-            form: form.id,
-            data: data,
-            resource: form.resource ? form.resource : null,
-            createdBy: {
-              positionAttributes: positionAttributes,
-              user: context.user._id,
-            },
-            lastUpdateForm: form.id,
-            _createdBy: {
-              user: {
-                _id: context.user._id,
-                name: context.user.name,
-                username: context.user.username,
-              },
-            },
-            _form: {
-              _id: form._id,
-              name: form.name,
-            },
-            _lastUpdateForm: {
-              _id: form._id,
-              name: form.name,
-            },
-          })
-        );
-      }
+      );
     });
 
+    if (errorOnRow) {
+      return res.status(400).send({
+        status: i18next.t(errorOnRow.name, {
+          field: errorOnRow.field,
+        }),
+      });
+    }
     // Set the incrementalIDs of new records
     for (let i = 0; i < recordsToCreate.length; i += 1) {
       // It's ok to use await here because it'll be cached

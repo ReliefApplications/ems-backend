@@ -311,7 +311,9 @@
 		"upload": {
 			"errors": {
 				"invalidUserUpload": "******",
-				"missingFile": "******"
+				"missingFile": "******",
+				"requiredField": "****** {{field}}",
+				"resourceNotFound": "****** {{field}}"
 			}
 		}
 	},
