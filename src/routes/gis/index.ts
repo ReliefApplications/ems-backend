@@ -421,7 +421,7 @@ router.get('/feature', async (req, res) => {
               apiConfiguration,
               graphQLVariables
             )) || [];
-          if (contextFilters) {
+          if (contextFilters && !(Object.keys(contextFilters).length === 0)) {
             data = data.filter((x) => filterReferenceData(x, contextFilters));
           }
           await getFeatures(
