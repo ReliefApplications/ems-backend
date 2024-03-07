@@ -16,6 +16,7 @@ import turf, { Feature, booleanPointInPolygon } from '@turf/turf';
 import dataSources, { CustomAPI } from '@server/apollo/dataSources';
 import { getAdmin0Polygons } from '@utils/gis/getCountryPolygons';
 import filterReferenceData from '@utils/referenceData/referenceDataFilter.util';
+import { getReferenceDataName } from '@utils/referenceData/getReferenceDataName.util';
 
 /**
  * Endpoint for custom feature layers
@@ -200,10 +201,12 @@ const gqlQuery = (
       logger.error(data.errors[0].message);
     }
     try {
+      console.log('yeah', JSON.stringify(data));
       for (const field in data.data) {
         if (Object.prototype.hasOwnProperty.call(data.data, field)) {
           if (data.data[field].items?.length > 0) {
             // Aggregation
+            console.log('chien', JSON.stringify(data.data));
             await getFeatures(
               featureCollection.features,
               layerType,
@@ -263,14 +266,14 @@ router.get('/feature', async (req, res) => {
         .send(i18next.t('routes.gis.feature.errors.missingPolygonGeoField'));
     }
 
-    const mapping = {
-      geoField,
-      longitudeField,
-      latitudeField,
-      adminField,
-    };
     // Fetch resource to populate layer
     if (get(req, 'query.resource')) {
+      const mapping = {
+        geoField,
+        longitudeField,
+        latitudeField,
+        adminField,
+      };
       let id: string;
       if (get(req, 'query.aggregation')) {
         id = get(req, 'query.aggregation') as string;
@@ -350,6 +353,19 @@ router.get('/feature', async (req, res) => {
       const referenceData = await ReferenceData.findById(
         new mongoose.Types.ObjectId(get(req, 'query.refData') as string)
       );
+      const mapping = {
+        geoField: getReferenceDataName(geoField as string, referenceData),
+        longitudeField: getReferenceDataName(
+          longitudeField as string,
+          referenceData
+        ),
+        latitudeField: getReferenceDataName(
+          latitudeField as string,
+          referenceData
+        ),
+        adminField,
+      };
+      console.log(mapping, 'mapping');
       if (referenceData) {
         if (get(req, 'query.aggregation')) {
           const aggregation = get(req, 'query.aggregation') as string;

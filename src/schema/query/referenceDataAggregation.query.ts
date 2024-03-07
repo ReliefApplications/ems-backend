@@ -6,7 +6,7 @@ import {
   GraphQLString,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { DataTransformer, ReferenceData } from '@models';
+import { ReferenceData } from '@models';
 import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import {
@@ -31,12 +31,15 @@ import {
   isEmpty,
   isBoolean,
   isString,
+  isPlainObject,
+  forEach,
 } from 'lodash';
 import { graphQLAuthCheck } from '@schema/shared';
 import { CustomAPI } from '@server/apollo/dataSources';
 import { GraphQLDate } from 'graphql-scalars';
 import mongoose from 'mongoose';
 import { CompositeFilterDescriptor } from '@const/compositeFilter';
+import { getReferenceDataName } from '@utils/referenceData/getReferenceDataName.util';
 
 /**
  * Apply the filter provided to the specified field
@@ -420,30 +423,27 @@ export default {
       }
       // sourceFields and pipeline from args have priority over current aggregation ones
       // for the aggregation preview feature on aggregation builder
-      const sourceFields = args.sourceFields ?? aggregation.sourceFields;
+      const sourceFields = (args.sourceFields ?? aggregation.sourceFields).map(
+        (sourceField) => getReferenceDataName(sourceField, referenceData)
+      );
       const pipeline = args.pipeline ?? aggregation.pipeline ?? [];
       // Build the source fields step
       if (sourceFields && sourceFields.length && pipeline) {
         try {
-          let rawItems = [];
+          let items = [];
           if (referenceData.type === 'static') {
-            rawItems = referenceData.data || [];
+            items = referenceData.data || [];
           } else {
             const dataSource = context.dataSources[
               (referenceData.apiConfiguration as any).name
             ] as CustomAPI;
-            rawItems =
+            items =
               (await dataSource.getReferenceDataItems(
                 referenceData,
                 referenceData.apiConfiguration as any,
                 args.graphQLVariables
               )) || [];
           }
-          const transformer = new DataTransformer(
-            referenceData.fields,
-            cloneDeep(rawItems)
-          );
-          let items = transformer.transformData();
           for (const item of items) {
             //we remove white spaces as they end up being a mess, but probably a temp fix as I think we should remove white spaces straight when saving ref data in mongo
             for (const key in item) {
@@ -470,14 +470,35 @@ export default {
             });
           }
 
+          const replaceFieldNames = (obj: any) => {
+            if (isPlainObject(obj)) {
+              forEach(obj, (value, k) => {
+                if (k === 'field') {
+                  obj[k] = getReferenceDataName(value, referenceData);
+                } else if (isPlainObject(value) || isArray(value)) {
+                  replaceFieldNames(value);
+                }
+              });
+            } else if (isArray(obj)) {
+              forEach(obj, (item) => {
+                replaceFieldNames(item);
+              });
+            }
+          };
+          replaceFieldNames(pipeline); //Replace every 'field' by its real name
+          console.log(items.length);
           pipeline.forEach((step: any) => {
             items = procPipelineStep(step, items, sourceFields);
+            console.log(step, items.length);
           });
           if (args.mapping) {
             return items.map((item) => {
               return {
                 category: get(item, args.mapping.category),
-                field: get(item, args.mapping.field),
+                field: get(
+                  item,
+                  getReferenceDataName(args.mapping.field, referenceData)
+                ),
                 ...(args.mapping.series && {
                   series: get(item, args.mapping.series),
                 }),
