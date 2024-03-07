@@ -486,10 +486,8 @@ export default {
             }
           };
           replaceFieldNames(pipeline); //Replace every 'field' by its real name
-          console.log(items.length);
           pipeline.forEach((step: any) => {
             items = procPipelineStep(step, items, sourceFields);
-            console.log(step, items.length);
           });
           if (args.mapping) {
             return items.map((item) => {

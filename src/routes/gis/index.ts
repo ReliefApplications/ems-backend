@@ -201,12 +201,10 @@ const gqlQuery = (
       logger.error(data.errors[0].message);
     }
     try {
-      console.log('yeah', JSON.stringify(data));
       for (const field in data.data) {
         if (Object.prototype.hasOwnProperty.call(data.data, field)) {
           if (data.data[field].items?.length > 0) {
             // Aggregation
-            console.log('chien', JSON.stringify(data.data));
             await getFeatures(
               featureCollection.features,
               layerType,
@@ -365,7 +363,6 @@ router.get('/feature', async (req, res) => {
         ),
         adminField,
       };
-      console.log(mapping, 'mapping');
       if (referenceData) {
         if (get(req, 'query.aggregation')) {
           const aggregation = get(req, 'query.aggregation') as string;
