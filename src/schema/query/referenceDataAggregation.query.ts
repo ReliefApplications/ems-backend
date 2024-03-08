@@ -359,6 +359,28 @@ const procPipelineStep = (pipelineStep, data, sourceFields) => {
   }
 };
 
+/**
+ * Replace every 'field' property in a JSON object by the corresponding field from reference data
+ *
+ * @param obj JSON object
+ * @param referenceData reference data to get fields from
+ */
+const replaceFieldNames = (obj, referenceData: ReferenceData) => {
+  if (isPlainObject(obj)) {
+    forEach(obj, (value, key) => {
+      if (key === 'field') {
+        obj[key] = getReferenceDataName(value, referenceData);
+      } else {
+        replaceFieldNames(value, referenceData);
+      }
+    });
+  } else if (isArray(obj)) {
+    forEach(obj, (item) => {
+      replaceFieldNames(item, referenceData);
+    });
+  }
+};
+
 /** Arguments for the recordsAggregation query */
 type ReferenceDataAggregationArgs = {
   referenceData: string | mongoose.Types.ObjectId;
@@ -470,22 +492,7 @@ export default {
             });
           }
 
-          const replaceFieldNames = (obj: any) => {
-            if (isPlainObject(obj)) {
-              forEach(obj, (value, k) => {
-                if (k === 'field') {
-                  obj[k] = getReferenceDataName(value, referenceData);
-                } else if (isPlainObject(value) || isArray(value)) {
-                  replaceFieldNames(value);
-                }
-              });
-            } else if (isArray(obj)) {
-              forEach(obj, (item) => {
-                replaceFieldNames(item);
-              });
-            }
-          };
-          replaceFieldNames(pipeline); //Replace every 'field' by its real name
+          replaceFieldNames(pipeline, referenceData);
           pipeline.forEach((step: any) => {
             items = procPipelineStep(step, items, sourceFields);
           });
