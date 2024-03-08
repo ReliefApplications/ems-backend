@@ -11,7 +11,7 @@ import i18next from 'i18next';
 import mongoose from 'mongoose';
 import { logger } from '@services/logger.service';
 import axios from 'axios';
-import { isEqual, get, omit } from 'lodash';
+import { isEqual, get, omit, isEmpty } from 'lodash';
 import turf, { Feature, booleanPointInPolygon } from '@turf/turf';
 import dataSources, { CustomAPI } from '@server/apollo/dataSources';
 import { getAdmin0Polygons } from '@utils/gis/getCountryPolygons';
@@ -405,7 +405,7 @@ router.get('/feature', async (req, res) => {
           });
         } else if (referenceData.type === 'static') {
           let data = referenceData.data || [];
-          if (contextFilters) {
+          if (contextFilters && !isEmpty(contextFilters)) {
             data = data.filter((x) => filterReferenceData(x, contextFilters));
           }
           await getFeatures(
@@ -434,7 +434,7 @@ router.get('/feature', async (req, res) => {
               apiConfiguration,
               graphQLVariables
             )) || [];
-          if (contextFilters && !(Object.keys(contextFilters).length === 0)) {
+          if (contextFilters && !isEmpty(contextFilters)) {
             data = data.filter((x) => filterReferenceData(x, contextFilters));
           }
           await getFeatures(
