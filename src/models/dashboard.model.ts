@@ -26,6 +26,10 @@ export interface Dashboard extends Document {
   createdAt?: Date;
   modifiedAt?: Date;
   structure?: any;
+  // Contains the list of widget ids that have been deleted from the dashboard
+  // We store this to prevent updates on main dashboards to recreate widgets
+  // that have been deleted from the templates
+  deletedWidgets?: string[];
   showFilter?: boolean;
   buttons?: Button[];
   archived: boolean;
@@ -63,6 +67,7 @@ const dashboardSchema = new Schema<Dashboard>(
   {
     name: String,
     structure: mongoose.Schema.Types.Mixed,
+    deletedWidgets: [String],
     showFilter: Boolean,
     buttons: [buttonSchema],
     archived: {
