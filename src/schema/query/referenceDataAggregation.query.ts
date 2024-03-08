@@ -492,13 +492,19 @@ export default {
           if (args.mapping) {
             return items.map((item) => {
               return {
-                category: get(item, args.mapping.category),
+                category: get(
+                  item,
+                  getReferenceDataName(args.mapping.category, referenceData)
+                ),
                 field: get(
                   item,
                   getReferenceDataName(args.mapping.field, referenceData)
                 ),
                 ...(args.mapping.series && {
-                  series: get(item, args.mapping.series),
+                  series: get(
+                    item,
+                    getReferenceDataName(args.mapping.series, referenceData)
+                  ),
                 }),
               };
             });
