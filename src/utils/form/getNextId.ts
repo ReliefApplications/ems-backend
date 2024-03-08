@@ -3,6 +3,7 @@ import {
   Form,
   DEFAULT_INCREMENTAL_ID_SHAPE,
   ID_SHAPE_VARIABLES,
+  Resource,
 } from '@models';
 import i18next from 'i18next';
 import { isEqual } from 'lodash';
@@ -90,6 +91,8 @@ export const updateIncrementalIds = async (
 
   const { idShape: oldShape } = form as Form;
 
+  const resource = await Resource.findById((form as Form).resource);
+
   // If the shape is the same, do nothing
   if (isEqual(oldShape, newShape) && !force) {
     return;
@@ -100,13 +103,13 @@ export const updateIncrementalIds = async (
 
   // Gets the total number of records
   const totalRecords = await Record.countDocuments({
-    form,
+    resource,
   });
 
   // First, we set the incrementalId to be equal to the _id for all records
   // to avoid having duplicate incrementalIds while updating the records in batches
   for (let i = 0; i < totalRecords; i += BATCH_SIZE) {
-    const records = await Record.find({ form })
+    const records = await Record.find({ resource })
       .skip(i)
       .limit(BATCH_SIZE)
       .select('_id incrementalId');
@@ -129,7 +132,7 @@ export const updateIncrementalIds = async (
       }": [${i}/${totalRecords}]...`,
     });
 
-    const records = await Record.find({ form })
+    const records = await Record.find({ resource })
       .skip(i)
       .limit(BATCH_SIZE)
       .select('incID createdAt');
