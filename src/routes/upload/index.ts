@@ -163,6 +163,11 @@ async function insertRecords(
           : rec.data[importField] === row.getCell(importFieldIndex).value
       );
 
+      // If row is empty, skip it
+      if (Array.isArray(row.values) && row.values.length === 0 && !oldRecord) {
+        continue;
+      }
+
       // Change the import field value to the object ID if the record exists
       await Promise.all(
         linkedResourceQuestion.map(async (field) => {
