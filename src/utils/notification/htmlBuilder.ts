@@ -309,18 +309,20 @@ export const replaceFooter = (footer: {
   };
   footerLogoStyle: string;
 }): string => {
-  let footerString = `<tr bgcolor="#fff" align="center">
-        <td height="20"></td>
-    </tr>`;
+  let footerString = `<table border="0" cellpadding="0" cellspacing="0">
+    <tbody>
+    <tr>`;
+
+  //footerString += `<table><tbody><tr>`;
 
   if (footer.footerLogo) {
-    footerString += `<tr bgcolor="#fff">
-    <td>
-        <a href="" style="display: block; border-style: none !important; border: 0 !important;">
-            <img width="10%" data-imagetype="DataUri"  src="cid:headerImage" >
-        </a>
-    </td>
-    </tr>`;
+    footerString += `
+      <td style="padding: 10px;">
+          <a href="" style="display: block; border-style: none !important; text-align: center; border: 0 !important;">
+              <img width="120" data-imagetype="DataUri"  src="cid:footerImage" style="padding: 10px; background-color: white;">
+          </a>
+      </td>
+      `;
   }
 
   if (footer.footerHtml) {
@@ -350,19 +352,15 @@ export const replaceFooter = (footer: {
     }
     const footerPTags = footer.footerHtml.split('\n');
     let footerText: string | string[] = footerPTags.map((ptag) => {
-      return /*html*/ `<tr bgcolor="#00205c" align="center">
-          <td mc:edit="title1" vertical-align="middle"  align="center" style="color: #fff; font-size: 16px; font-weight: normal; font-family: 'Roboto', Arial, sans-serif;"> ${ptag} </td>
-      </tr>`;
+      return /*html*/ `
+            <td style="font-size: 14px; font-family: 'Roboto', Arial, sans-serif; line-height: 20px;"> ${ptag} </td>
+        `;
     });
     footerText = footerText.join(' ');
 
-    footerString += `<tr bgcolor="#00205c" align="center">
-            <td height="20"></td>
-        </tr>
-        ${footerText}
-        <tr bgcolor="#00205c" align="center">
-            <td height="20"></td>
-        </tr>`;
+    footerString += `
+          ${footerText}
+          </tr></tbody></table>`;
   }
   return footerString;
 };

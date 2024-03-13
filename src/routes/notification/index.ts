@@ -202,6 +202,12 @@ router.post('/send-email/:configId', async (req, res) => {
       mainTableElement.appendChild(headerElement);
     }
 
+    mainTableElement.appendChild(
+      parse(`<tr>
+                <td height="25"></td>
+            </tr>`)
+    );
+
     const datasetsHtml = await replaceDatasets(
       config.emailLayout.body.bodyHtml,
       processedRecords
@@ -210,7 +216,11 @@ router.post('/send-email/:configId', async (req, res) => {
 
     if (config.emailLayout.footer) {
       const footerElement = replaceFooter(config.emailLayout.footer);
-      mainTableElement.appendChild(parse(footerElement));
+      mainTableElement.appendChild(
+        parse(
+          `<tr><td style="font-size: 13px; font-family: Helvetica, Arial, sans-serif;">${footerElement}</td></tr>`
+        )
+      );
     }
 
     mainTableElement.appendChild(
