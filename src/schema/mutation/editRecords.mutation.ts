@@ -11,7 +11,7 @@ import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import {
   transformRecord,
   getOwnership,
-  checkRecordValidation,
+  // checkRecordValidation,
 } from '@utils/form';
 import { RecordType } from '../types';
 import { hasInaccessibleFields } from './editRecord.mutation';
@@ -72,75 +72,69 @@ export default {
           ability.can('update', record) &&
           !hasInaccessibleFields(record, args.data, ability)
         ) {
-          const validationErrors = checkRecordValidation(
-            record,
-            args.data,
-            record.form,
-            context,
-            args.lang
+          // const validationErrors = checkRecordValidation(
+          //   record,
+          //   args.data,
+          //   record.form,
+          //   context,
+          //   args.lang
+          // );
+          // if (validationErrors.length) {
+          //   records.push(
+          //     Object.assign(record, { validationErrors: validationErrors })
+          //   );
+          // } else {
+          const data = { ...args.data };
+          let fields = record.form.fields;
+
+          const template = await Form.findById(
+            args.template,
+            'fields resource _id name'
           );
-          if (validationErrors.length) {
-            records.push(
-              Object.assign(record, { validationErrors: validationErrors })
-            );
-          } else {
-            const data = { ...args.data };
-            let fields = record.form.fields;
 
-            const template = await Form.findById(
-              args.template,
-              'fields resource _id name'
-            );
-
-            if (args.template && record.form.resource) {
-              if (!template.resource.equals(record.form.resource)) {
-                throw new GraphQLError(
-                  context.i18next.t(
-                    'mutations.record.edit.errors.wrongTemplateProvided'
-                  )
-                );
-              }
-              fields = template.fields;
+          if (args.template && record.form.resource) {
+            if (!template.resource.equals(record.form.resource)) {
+              throw new GraphQLError(
+                context.i18next.t(
+                  'mutations.record.edit.errors.wrongTemplateProvided'
+                )
+              );
             }
-            transformRecord(data, fields);
-            const version = new Version({
-              createdAt: record.modifiedAt
-                ? record.modifiedAt
-                : record.createdAt,
-              data: record.data,
-              createdBy: user._id,
-            });
-            const update: any = {
-              data: { ...record.data, ...data },
-              lastUpdateForm: args.template,
-              _lastUpdateForm: {
-                _id: template._id,
-                name: template.name,
-              },
-              _lastUpdatedBy: {
-                user: {
-                  _id: user._id,
-                  name: user.name,
-                  username: user.username,
-                },
-              },
-              $push: { versions: version._id },
-            };
-            const ownership = getOwnership(record.form.fields, args.data); // Update with template during merge
-            Object.assign(
-              update,
-              ownership && { createdBy: { ...record.createdBy, ...ownership } }
-            );
-            const newRecord = await Record.findByIdAndUpdate(
-              record.id,
-              update,
-              {
-                new: true,
-              }
-            );
-            await version.save();
-            records.push(newRecord);
+            fields = template.fields;
           }
+          transformRecord(data, fields);
+          const version = new Version({
+            createdAt: record.modifiedAt ? record.modifiedAt : record.createdAt,
+            data: record.data,
+            createdBy: user._id,
+          });
+          const update: any = {
+            data: { ...record.data, ...data },
+            lastUpdateForm: args.template,
+            _lastUpdateForm: {
+              _id: template._id,
+              name: template.name,
+            },
+            _lastUpdatedBy: {
+              user: {
+                _id: user._id,
+                name: user.name,
+                username: user.username,
+              },
+            },
+            $push: { versions: version._id },
+          };
+          const ownership = getOwnership(record.form.fields, args.data); // Update with template during merge
+          Object.assign(
+            update,
+            ownership && { createdBy: { ...record.createdBy, ...ownership } }
+          );
+          const newRecord = await Record.findByIdAndUpdate(record.id, update, {
+            new: true,
+          });
+          await version.save();
+          records.push(newRecord);
+          // }
         }
       }
       return records;
