@@ -705,15 +705,22 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           styleRules.push({ items: itemsToStyle, style: style });
         }
       }
-
       // === CONSTRUCT OUTPUT + RETURN ===
+      const referenceDataFields = fields.filter((field) => field.referenceData);
       const edges = items.map((r) => {
         const record = getAccessibleFields(r, ability);
         Object.assign(record, { id: record._id });
+        const node = display ? { ...record, display, fields } : record;
+        referenceDataFields.forEach((field) => {
+          const { value } = node.data[field.name] || {};
+          if (value?.id) {
+            node.data[field.name] = value.id;
+          }
+        });
 
         return {
           cursor: encodeCursor(record.id.toString()),
-          node: display ? Object.assign(record, { display, fields }) : record,
+          node: node,
           meta: {
             style: getStyle(r, styleRules),
             raw: record.data,
