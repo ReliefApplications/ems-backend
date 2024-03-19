@@ -698,6 +698,17 @@ export default {
               obj.remove.role,
               permission
             );
+
+            // If we remove the canSee of a field, we should remove the canUpdate as well
+            if (permission === 'canSee') {
+              removeFieldPermission(
+                update,
+                allResourceFields,
+                obj.remove.field,
+                obj.remove.role,
+                'canUpdate'
+              );
+            }
           }
         }
       }
