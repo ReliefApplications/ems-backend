@@ -116,6 +116,7 @@ export const updateIncrementalIds = async (
 
     records.forEach((rec) => {
       rec.incrementalId = rec._id;
+      rec.markModified('incrementalId');
     });
 
     await Record.bulkSave(records);
@@ -135,7 +136,8 @@ export const updateIncrementalIds = async (
     const records = await Record.find({ resource })
       .skip(i)
       .limit(BATCH_SIZE)
-      .select('incID createdAt');
+      .select('incID incrementalId createdAt')
+      .sort({ createdAt: -1 });
 
     for (let r = 0; r < records.length; r++) {
       const { createdAt } = records[r];
