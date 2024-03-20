@@ -5,6 +5,15 @@ import { Application, Page, Role, Step, Workflow } from '@models';
 import { duplicatePage } from '../../services/page.service';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the duplicatePage mutation */
+type DuplicatePageArgs = {
+  page?: string | Types.ObjectId;
+  step?: string | Types.ObjectId;
+  application: string | Types.ObjectId;
+};
 
 /**
  * Duplicate existing page in a new application.
@@ -18,7 +27,7 @@ export default {
     step: { type: GraphQLID },
     application: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: DuplicatePageArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       // Check ability
@@ -44,7 +53,7 @@ export default {
       if (!application)
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       // Check access to the application
-      if (ability.can('update', application)) {
+      if (ability.can('read', application)) {
         if (args.page) {
           // If page
           const page = await Page.findById(args.page);

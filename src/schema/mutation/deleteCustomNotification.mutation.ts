@@ -6,6 +6,14 @@ import extendAbilityForApplications from '@security/extendAbilityForApplication'
 import { unscheduleCustomNotificationJob } from '../../server/customNotificationScheduler';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the deleteCustomNotification mutation */
+type DeleteCustomNotificationArgs = {
+  application: string;
+  id: string | Types.ObjectId;
+};
 
 /**
  * Mutation to delete custom notification.
@@ -16,7 +24,7 @@ export default {
     application: { type: new GraphQLNonNull(GraphQLID) },
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(_, args, context) {
+  async resolve(_, args: DeleteCustomNotificationArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

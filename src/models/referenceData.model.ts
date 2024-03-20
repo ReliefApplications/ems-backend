@@ -2,6 +2,65 @@ import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { getGraphQLTypeName } from '@utils/validators';
 import { referenceDataType } from '@const/enumTypes';
+import { get, isArray, map, set, snakeCase } from 'lodash';
+import { aggregationSchema } from './aggregation.model';
+
+/**
+ * Reference data transformer.
+ * Convert data from reference data into graphQL data.
+ */
+export class DataTransformer {
+  /** Reference data fields */
+  fields: any[];
+
+  /** Reference data raw data */
+  data: any[];
+
+  /**
+   * Reference data transformer.
+   * Convert data from reference data into graphQL data.
+   *
+   * @param fields Reference data fields
+   * @param data Reference data raw data
+   */
+  constructor(fields, data) {
+    this.fields = fields;
+    this.data = data;
+  }
+
+  /**
+   * Transform raw data into graphQL data
+   *
+   * @returns graphQL data
+   */
+  transformData() {
+    const getNestedValues = (obj, path) => {
+      if (path.includes('.')) {
+        const splitPath = path.split('.');
+        const parent = splitPath.shift();
+        return isArray(get(obj, parent))
+          ? map(get(obj, parent), (item) =>
+              getNestedValues(item, splitPath.join('.'))
+            )
+          : getNestedValues(get(obj, parent), splitPath.join('.'));
+      } else {
+        return get(obj, path);
+      }
+    };
+
+    return this.data.map((item) => {
+      const transformedItem = {};
+
+      this.fields.forEach((field) => {
+        const { name, graphQLFieldName } = field;
+        const value = getNestedValues(item, name);
+        set(transformedItem, graphQLFieldName, value);
+      });
+
+      return transformedItem;
+    });
+  }
+}
 
 /** Reference data document interface. */
 interface ReferenceDataDocument extends Document {
@@ -22,6 +81,36 @@ interface ReferenceDataDocument extends Document {
     canUpdate?: any[];
     canDelete?: any[];
   };
+  aggregations: any;
+
+  // Pagination strategies
+  //  offset: The client will send the offset (how many items to skip)
+  //  cursor: The client will send the cursor of the last item
+  //  page: The client will send the page number
+  pageInfo?: {
+    // JSON path that when queried to the API response will return the total number of items
+    totalCountField?: string;
+    // Name of the query variable that corresponds to the page size
+    pageSizeVar?: string;
+  } & (
+    | {
+        strategy: 'offset';
+        // Name of the query variable to be used for determining the offset
+        offsetVar: string;
+      }
+    | {
+        strategy: 'cursor';
+        // JSON path that when queried to the API response will return the cursor
+        cursorField: string;
+        // Name of the query variable to be used for determining the cursor
+        cursorVar: string;
+      }
+    | {
+        strategy: 'page';
+        // Name of the query variable that corresponds to the page number
+        pageVar: string;
+      }
+  );
 }
 
 /** Interface of Reference Data */
@@ -80,6 +169,19 @@ const schema = new Schema<ReferenceData>(
         },
       ],
     },
+    aggregations: [aggregationSchema],
+    pageInfo: {
+      strategy: {
+        type: String,
+        enum: ['offset', 'cursor', 'page'],
+      },
+      cursorField: String,
+      cursorVar: String,
+      offsetVar: String,
+      pageVar: String,
+      pageSizeVar: String,
+      totalCountField: String,
+    },
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
@@ -92,7 +194,7 @@ schema.statics.getGraphQLTypeName = function (name: string): string {
 };
 
 schema.statics.getGraphQLFieldName = function (name: string): string {
-  return getGraphQLTypeName(name);
+  return snakeCase(name);
 };
 
 // Search for duplicate, using graphQL type name

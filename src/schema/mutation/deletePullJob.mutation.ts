@@ -6,6 +6,13 @@ import { unscheduleJob } from '../../server/pullJobScheduler';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the deletePullJob mutation */
+type DeletePullJobArgs = {
+  id: string | Types.ObjectId;
+};
 
 /**
  * Delete a pullJob
@@ -15,7 +22,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: DeletePullJobArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

@@ -7,11 +7,20 @@ import {
 import mongoose from 'mongoose';
 import { Application, Channel, Form } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
-import { createAndConsumeQueue } from '../../server/subscriberSafe';
 import { SubscriptionType } from '../types/subscription.type';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the addSubscription mutation */
+type AddSubscriptionArgs = {
+  application: string | mongoose.Types.ObjectId;
+  routingKey: string;
+  title: string;
+  convertTo?: string | mongoose.Types.ObjectId;
+  channel?: string | mongoose.Types.ObjectId;
+};
 
 /**
  * Creates a new subscription
@@ -26,7 +35,7 @@ export default {
     convertTo: { type: GraphQLID },
     channel: { type: GraphQLID },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: AddSubscriptionArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;
@@ -76,7 +85,7 @@ export default {
         .where({ _id: args.application })
         .getFilter();
       await Application.findOneAndUpdate(filters, update);
-      createAndConsumeQueue(args.routingKey);
+      // createAndConsumeQueue(args.routingKey);
       return subscription;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

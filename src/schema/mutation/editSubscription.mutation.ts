@@ -7,13 +7,21 @@ import {
 import { Application } from '@models';
 import { SubscriptionType } from '../types/subscription.type';
 import { AppAbility } from '@security/defineUserAbility';
-import {
-  createAndConsumeQueue,
-  deleteQueue,
-} from '../../server/subscriberSafe';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the editSubscription mutation */
+type EditSubscriptionArgs = {
+  applicationId: string | Types.ObjectId;
+  routingKey: string;
+  title: string;
+  convertTo: string;
+  channel: string;
+  previousSubscription: string;
+};
 
 /**
  * Edit a subscription.
@@ -29,7 +37,7 @@ export default {
     channel: { type: new GraphQLNonNull(GraphQLString) },
     previousSubscription: { type: new GraphQLNonNull(GraphQLString) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditSubscriptionArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const ability: AppAbility = context.user.ability;
@@ -65,8 +73,8 @@ export default {
         new: true,
       });
       if (args.routingKey !== args.previousSubscription) {
-        createAndConsumeQueue(args.routingKey);
-        deleteQueue(args.previousSubscription);
+        // createAndConsumeQueue(args.routingKey);
+        // deleteQueue(args.previousSubscription);
       }
       return subscription;
     } catch (err) {

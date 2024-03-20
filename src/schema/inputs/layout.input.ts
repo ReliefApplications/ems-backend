@@ -8,6 +8,18 @@ import {
   GraphQLInt,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
+import { Types } from 'mongoose';
+
+/** LayoutQuery type for queries/mutations argument */
+type LayoutQueryArgs = {
+  name: string;
+  template?: string | Types.ObjectId;
+  filter?: any;
+  pageSize: number;
+  fields: any;
+  sort?: any;
+  style?: any;
+};
 
 /** GraphQL layout query input type definition */
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -24,6 +36,14 @@ const LayoutQueryInputType = new GraphQLInputObjectType({
   }),
 });
 
+/** LayoutDisplay type for queries/mutations argument */
+type LayoutDisplayArgs = {
+  filter?: any;
+  fields?: any;
+  sort?: any;
+  showFilter?: boolean;
+};
+
 /** GraphQL layout display inpupt type definition */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const LayoutDisplayInputType = new GraphQLInputObjectType({
@@ -36,8 +56,15 @@ const LayoutDisplayInputType = new GraphQLInputObjectType({
   }),
 });
 
+/** LayoutDisplay type for queries/mutations argument */
+export type LayoutArgs = {
+  name: string;
+  query: LayoutQueryArgs;
+  display: LayoutDisplayArgs;
+};
+
 /** GraphQL Input Type of Layout */
-const LayoutInputType = new GraphQLInputObjectType({
+export const LayoutInputType = new GraphQLInputObjectType({
   name: 'LayoutInputType',
   fields: () => ({
     name: { type: new GraphQLNonNull(GraphQLString) },
@@ -45,5 +72,3 @@ const LayoutInputType = new GraphQLInputObjectType({
     display: { type: new GraphQLNonNull(LayoutDisplayInputType) },
   }),
 });
-
-export default LayoutInputType;

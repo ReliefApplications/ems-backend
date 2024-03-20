@@ -2,10 +2,19 @@ import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
 import { Application } from '@models';
 import { TemplateType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
-import TemplateInputType from '../inputs/template.input';
+import { TemplateInputType, TemplateArgs } from '../inputs/template.input';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the editTemplate mutation */
+type EditTemplateArgs = {
+  id: string | Types.ObjectId;
+  application: string;
+  template: TemplateArgs;
+};
 
 /**
  * Mutation to edit template.
@@ -17,7 +26,7 @@ export default {
     application: { type: new GraphQLNonNull(GraphQLID) },
     template: { type: new GraphQLNonNull(TemplateInputType) },
   },
-  async resolve(_, args, context) {
+  async resolve(_, args: EditTemplateArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

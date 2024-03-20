@@ -213,7 +213,10 @@ export const ResourceType = new GraphQLObjectType({
         }
         const edges = items.map((r) => ({
           cursor: encodeCursor(r.id.toString()),
-          node: getAccessibleFields(r, ability),
+          node: Object.assign(
+            getAccessibleFields(r, ability).toObject({ minimize: false }),
+            { id: r._id }
+          ),
         }));
         return {
           pageInfo: {

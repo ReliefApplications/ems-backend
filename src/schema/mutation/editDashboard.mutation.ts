@@ -3,17 +3,45 @@ import {
   GraphQLID,
   GraphQLString,
   GraphQLError,
-  GraphQLBoolean,
   GraphQLList,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { DashboardType } from '../types';
 import { Dashboard, Page, Step } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
-import { isEmpty, isNil } from 'lodash';
+import { isEmpty } from 'lodash';
 import { logger } from '@services/logger.service';
 import ButtonActionInputType from '@schema/inputs/button-action.input';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+import { DashboardFilterInputType } from '@schema/inputs/dashboard-filter.input';
+
+type DashboardButtonArgs = {
+  text: string;
+  href: string;
+  variant: string;
+  category: string;
+  openInNewTab: boolean;
+};
+
+type DashboardFilterArgs = {
+  variant?: string;
+  show?: boolean;
+  closable?: boolean;
+  structure?: any;
+  position?: string;
+};
+
+/** Arguments for the editDashboard mutation */
+type EditDashboardArgs = {
+  id: string | Types.ObjectId;
+  structure?: any;
+  name?: string;
+  buttons?: DashboardButtonArgs[];
+  gridOptions?: any;
+  filter?: DashboardFilterArgs;
+};
 
 /**
  * Find dashboard from its id and update it, if user is authorized.
@@ -25,10 +53,11 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     structure: { type: GraphQLJSON },
     name: { type: GraphQLString },
-    showFilter: { type: GraphQLBoolean },
     buttons: { type: new GraphQLList(ButtonActionInputType) },
+    gridOptions: { type: GraphQLJSON },
+    filter: { type: DashboardFilterInputType },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditDashboardArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;
@@ -52,14 +81,19 @@ export default {
         //modifiedAt?: Date;
         structure?: any;
         name?: string;
-        showFilter?: boolean;
+        filter?: any;
+        buttons?: any;
+        gridOptions?: any;
       } = {};
       Object.assign(
         updateDashboard,
         args.structure && { structure: args.structure },
         args.name && { name: args.name },
-        !isNil(args.showFilter) && { showFilter: args.showFilter },
-        args.buttons && { buttons: args.buttons }
+        args.filter && {
+          filter: { ...dashboard.toObject().filter, ...args.filter },
+        },
+        args.buttons && { buttons: args.buttons },
+        args.gridOptions && { gridOptions: args.gridOptions }
       );
       dashboard = await Dashboard.findByIdAndUpdate(args.id, updateDashboard, {
         new: true,
@@ -68,6 +102,7 @@ export default {
       const update = {
         modifiedAt: dashboard.modifiedAt,
         name: dashboard.name,
+        gridOptions: dashboard.gridOptions,
       };
       await Page.findOneAndUpdate({ content: dashboard.id }, update);
       await Step.findOneAndUpdate({ content: dashboard.id }, update);

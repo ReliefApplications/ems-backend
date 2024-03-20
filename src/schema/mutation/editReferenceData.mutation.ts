@@ -3,12 +3,16 @@ import {
   GraphQLID,
   GraphQLError,
   GraphQLString,
+  GraphQLInputObjectType,
 } from 'graphql';
 import { Form, ReferenceData } from '@models';
 import { ReferenceDataType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
-import { ReferenceDataTypeEnumType } from '@const/enumTypes';
+import {
+  ReferenceDataTypeEnumType,
+  ReferenceDataArgsType,
+} from '@const/enumTypes';
 import {
   validateGraphQLFieldName,
   validateGraphQLTypeName,
@@ -16,6 +20,24 @@ import {
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the editReferenceData mutation */
+type EditReferenceDataArgs = {
+  id: string;
+  name?: string;
+  type?: ReferenceDataArgsType;
+  apiConfiguration: string | Types.ObjectId;
+  query: string;
+  fields?: any;
+  valueField?: string;
+  path?: string;
+  data?: any;
+  graphQLFilter?: string;
+  permissions?: any;
+  graphQLTypeName?: string;
+};
 
 /**
  * Edit the passed referenceData if authorized.
@@ -35,8 +57,22 @@ export default {
     data: { type: GraphQLJSON },
     graphQLFilter: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
+    pageInfo: {
+      type: new GraphQLInputObjectType({
+        name: 'PageInfoInput',
+        fields: {
+          totalCountField: { type: GraphQLString },
+          strategy: { type: new GraphQLNonNull(GraphQLString) },
+          pageSizeVar: { type: GraphQLString },
+          cursorVar: { type: GraphQLString },
+          cursorField: { type: GraphQLString },
+          pageVar: { type: GraphQLString },
+          offsetVar: { type: GraphQLString },
+        },
+      }),
+    },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditReferenceDataArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

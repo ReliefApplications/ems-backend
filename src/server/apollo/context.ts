@@ -9,6 +9,8 @@ export interface Context {
   user: UserWithAbility;
   dataSources?: ReturnType<Awaited<ReturnType<typeof dataSources>>>;
   token?: string;
+  i18next: any;
+  timeZone: string;
 }
 
 /** User interface with specified AppAbility */
@@ -25,6 +27,9 @@ interface UserWithAbility extends User {
 export default (server: ApolloServer<Context>) =>
   async ({ req }): Promise<Context> => {
     if (req) {
+      // Attaching the request object to server since it needs to be used by datasources
+      // eslint-disable-next-line @typescript-eslint/dot-notation
+      server['req'] = req;
       return {
         // Makes the translation library accessible in the context object.
         // https://github.com/i18next/i18next-http-middleware

@@ -20,6 +20,7 @@ import { AppAbility } from 'security/defineUserAbility';
 import { filter, isEqual, keys, union, has, get } from 'lodash';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
 
 /**
  * Checks if the user has the permission to update all the fields they're trying to update
@@ -35,16 +36,16 @@ export const hasInaccessibleFields = (
   ability: AppAbility
 ) => {
   const oldData = record.data || {};
-  const k = union(keys(oldData), keys(newData));
-  const updatedKeys = filter(k, (key) => {
-    let oldD = get(oldData, key);
-    let newD = get(newData, key);
+  const allKeys = union(keys(oldData), keys(newData));
+  const updatedKeys = filter(allKeys, (key) => {
+    let previous = get(oldData, key);
+    let next = get(newData, key);
 
     // check for date objects and convert them to strings
-    if (oldD instanceof Date) oldD = oldD.toISOString();
-    if (newD instanceof Date) newD = newD.toISOString();
+    if (previous instanceof Date) previous = previous.toISOString();
+    if (next instanceof Date) next = next.toISOString();
 
-    return !isEqual(get(oldD, key), get(newD, key));
+    return !isEqual(previous, next);
   });
 
   return updatedKeys.some(
@@ -52,6 +53,16 @@ export const hasInaccessibleFields = (
       ability.cannot('update', record, `data.${question}`) &&
       has(newData, question)
   );
+};
+
+/** Arguments for the editRecord mutation */
+type EditRecordArgs = {
+  id: string | Types.ObjectId;
+  data?: any;
+  version?: string | Types.ObjectId;
+  template?: string | Types.ObjectId;
+  lang?: string;
+  draft?: boolean;
 };
 
 /**
@@ -68,9 +79,11 @@ export default {
     lang: { type: GraphQLString },
     draft: { type: GraphQLBoolean },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditRecordArgs, context: Context) {
+    // Authentication check
     graphQLAuthCheck(context);
     try {
+      //
       if (!args.data && !args.version) {
         throw new GraphQLError(
           context.i18next.t('mutations.record.edit.errors.invalidArguments')
@@ -128,6 +141,7 @@ export default {
       if (validationErrors && validationErrors.length) {
         return Object.assign(oldRecord, { validationErrors });
       }
+      // Generate new version, from current data
       const version = new Version({
         createdAt: oldRecord.modifiedAt
           ? oldRecord.modifiedAt
@@ -136,28 +150,40 @@ export default {
         createdBy: user._id,
       });
       let template: Form | Resource;
-      if (!args.version) {
-        if (args.template && parentForm.resource) {
-          template = await Form.findById(args.template, 'name fields resource');
-          if (!(template as Form).resource.equals(parentForm.resource)) {
-            throw new GraphQLError(
-              context.i18next.t(
-                'mutations.record.edit.errors.wrongTemplateProvided'
-              )
-            );
-          }
-        } else {
-          if (parentForm.resource) {
-            template = await Resource.findById(parentForm.resource, 'fields');
-          } else {
-            template = parentForm;
-          }
+      let fields: any[] = [];
+      if (args.template && parentForm.resource) {
+        template = await Form.findById(args.template, 'name fields resource');
+        fields = template.fields;
+        if (!(template as Form).resource.equals(parentForm.resource)) {
+          throw new GraphQLError(
+            context.i18next.t(
+              'mutations.record.edit.errors.wrongTemplateProvided'
+            )
+          );
         }
-        transformRecord(args.data, template.fields);
+      } else {
+        if (parentForm.resource) {
+          template = await Form.findOne({
+            resource: parentForm.resource,
+            core: true,
+          });
+          fields = (await Resource.findById(parentForm.resource, 'fields'))
+            .fields;
+        } else {
+          template = parentForm;
+          fields = parentForm.fields;
+        }
+      }
+      // Template doesn't exist
+      if (!template) {
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
+      // Classic edition
+      if (!args.version) {
+        transformRecord(args.data, fields);
         const update: any = {
           data: { ...oldRecord.data, ...args.data },
           lastUpdateForm: args.template,
-          //modifiedAt: new Date(),
           $push: { versions: version._id },
           _lastUpdateForm: {
             _id: template._id,
@@ -171,7 +197,7 @@ export default {
             },
           },
         };
-        const ownership = getOwnership(template.fields, args.data); // Update with template during merge
+        const ownership = getOwnership(fields, args.data); // Update with template during merge
         Object.assign(
           update,
           ownership && { createdBy: { ...oldRecord.createdBy, ...ownership } }
@@ -180,6 +206,7 @@ export default {
         await version.save();
         return await record;
       } else {
+        // Revert an old version
         const oldVersion = await Version.findOne({
           $and: [
             {

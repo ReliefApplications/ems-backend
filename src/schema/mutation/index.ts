@@ -83,8 +83,10 @@ import addLayer from './addLayer.mutation';
 import editLayer from './editLayer.mutation';
 import deleteLayer from './deleteLayer.mutation';
 import editPageContext from './editPageContext.mutation';
-import addDashboardWithContext from './addDashboardWithContext.mutation';
 import restorePage from './restorePage.mutation';
+import addDraftRecord from './addDraftRecord.mutation';
+import deleteDraftRecord from './deleteDraftRecord.mutation';
+import editDraftRecord from './editDraftRecord.mutation';
 
 /** GraphQL mutation definition */
 const Mutation = new GraphQLObjectType({
@@ -94,7 +96,6 @@ const Mutation = new GraphQLObjectType({
     addApplication,
     addChannel,
     addDashboard,
-    addDashboardWithContext,
     addForm,
     addGroup,
     addLayout,
@@ -176,6 +177,9 @@ const Mutation = new GraphQLObjectType({
     editLayer,
     deleteLayer,
     restorePage,
+    addDraftRecord,
+    deleteDraftRecord,
+    editDraftRecord,
   },
 });
 

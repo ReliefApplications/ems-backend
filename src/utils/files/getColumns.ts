@@ -38,7 +38,7 @@ export const getColumns = async (
             });
           }
         } else {
-          if (field.choicesByUrl) {
+          if (field.choicesByUrl || field.choicesByGraphQL) {
             const choices = await getChoices(field, token);
             columns.push({
               name: field.name,
@@ -141,7 +141,7 @@ export const getColumns = async (
             ...(field.label && { label: field.label }),
           });
         } else {
-          if (field.choicesByUrl) {
+          if (field.choicesByUrl || field.choicesByGraphQL) {
             const choices = await getChoices(field, token);
             columns.push({
               name: field.name,

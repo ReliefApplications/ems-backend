@@ -2,10 +2,19 @@ import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
 import { Resource, Form } from '@models';
 import { LayoutType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
-import LayoutInputType from '../../schema/inputs/layout.input';
+import { LayoutInputType, LayoutArgs } from '../../schema/inputs/layout.input';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the addLayout mutation */
+type AddLayoutArgs = {
+  layout: LayoutArgs;
+  resource?: string | Types.ObjectId;
+  form?: string | Types.ObjectId;
+};
 
 /**
  * Add new grid layout.
@@ -18,7 +27,7 @@ export default {
     resource: { type: GraphQLID },
     form: { type: GraphQLID },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: AddLayoutArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       if (args.form && args.resource) {

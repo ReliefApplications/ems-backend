@@ -8,9 +8,17 @@ import {
 import { HistoryVersionType } from '../types';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { RecordHistory } from '@utils/history';
-import { Record } from '@models';
+import { Form, Record } from '@models';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the recordHistory query */
+type RecordHistoryArgs = {
+  id: string | Types.ObjectId;
+  lang?: string;
+};
 
 /**
  * Gets the record history for a record.
@@ -22,7 +30,7 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     lang: { type: GraphQLString },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: RecordHistoryArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       // Setting language, if provided
@@ -42,30 +50,31 @@ export default {
           },
         })
         .populate({
-          path: 'createdBy.user',
-          model: 'User',
-        })
-        .populate({
-          path: 'form',
-          model: 'Form',
-          populate: {
-            path: 'resource',
-            model: 'Resource',
-          },
+          path: 'resource',
+          model: 'Resource',
         });
+      if (!record) {
+        throw new GraphQLError(
+          context.i18next.i18n.t('common.errors.permissionNotGranted')
+        );
+      }
+      const form = await Form.findById(record.form);
+      if (!form) {
+        throw new GraphQLError(
+          context.i18next.i18n.t('common.errors.permissionNotGranted')
+        );
+      }
 
       // Check ability
-      const ability = await extendAbilityForRecords(user, record.form);
-      if (
-        ability.cannot('read', record) ||
-        ability.cannot('read', record.form)
-      ) {
+      const ability = await extendAbilityForRecords(user);
+      if (ability.cannot('read', record) || ability.cannot('read', form)) {
         throw new GraphQLError(
           context.i18next.i18n.t('common.errors.permissionNotGranted')
         );
       }
 
       // Create the history and return it
+      record.form = form;
       const history = await new RecordHistory(record, {
         translate: context.i18next.i18n.t,
         ability,

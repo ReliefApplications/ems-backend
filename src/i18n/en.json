@@ -5,7 +5,8 @@
 			"dataNotFound": "Data not found",
 			"duplicatedGraphQLTypeName": "A form or a reference data with a similar name already exists. Please provide a different name.",
 			"fileExtensionNotAllowed": "File extension not allowed",
-			"fileSizeLimitReached": "File size exceed 5MB",
+			"fileSizeLimitReached": "File size exceed 7MB",
+			"fileTotalSizeLimitReached": "Total File size exceed 7MB",
 			"internalServerError": "Internal Server Error",
 			"invalidAPI": "API cannot be reached.",
 			"invalidEmailsInput": "Wrong format detected. Please provide valid emails.",
@@ -45,17 +46,17 @@
 		"aggregation": {
 			"add": {
 				"errors": {
-					"invalidArguments": "Resource and aggregation must be provided when you are added new Aggregation"
+					"invalidArguments": "Resource or reference data and aggregation must be provided when adding a new aggregation"
 				}
 			},
 			"delete": {
 				"errors": {
-					"invalidArguments": "Resource and aggregation id must be provided when you are delete Aggregation"
+					"invalidArguments": "Resource or reference data and aggregation id must be provided when deleting an aggregation"
 				}
 			},
 			"edit": {
 				"errors": {
-					"invalidArguments": "Resource and aggregation and aggregation id must be provided when you are update Aggregation"
+					"invalidArguments": "Resource or reference data and aggregation and aggregation id must be provided when editing an aggregation"
 				}
 			}
 		},
@@ -82,7 +83,8 @@
 			},
 			"duplicate": {
 				"errors": {
-					"invalidArguments": "Application name must be provided."
+					"invalidArguments": "Application name must be provided.",
+					"namedDuplicated": "Application with name {{name}} already exists. This name cannot be used. Please provide a different name."
 				}
 			},
 			"edit": {
@@ -113,6 +115,7 @@
 			"addWithContext": {
 				"errors": {
 					"invalidArguments": "You need to provide one, and only one, argument between a reference data element and a record.",
+					"invalidContextEl": "The context element does not exist",
 					"invalidElement": "Provided element must be a string or a number"
 				}
 			},
@@ -144,6 +147,7 @@
 			},
 			"fetch": {
 				"errors": {
+					"fetchRequestFailed": "Failed to fetch groups.",
 					"groupsFromServiceDisabled": "Fetching groups from service not available."
 				}
 			}
@@ -202,6 +206,7 @@
 			},
 			"edit": {
 				"errors": {
+					"invalidArguments": "Either data or version must be provided.",
 					"wrongTemplateProvided": "Template must sharing the same resource as the parent form of the edited record."
 				}
 			}
@@ -215,7 +220,7 @@
 			"edit": {
 				"errors": {
 					"formResDuplicated": "A form or a resource with that name already exists.",
-					"invalidArguments": "Either name, type, apiConfiguration, query, fields, valueField, path, data or permissions must be provided."
+					"invalidArguments": "Either name, type, pageInfo, apiConfiguration, query, fields, valueField, path, data or permissions must be provided."
 				}
 			}
 		},
@@ -299,6 +304,9 @@
 			}
 		},
 		"style": {
+			"errors": {
+				"notFound": "Unable to load application's style"
+			},
 			"noStyle": "This application don't have a custom style file."
 		},
 		"upload": {

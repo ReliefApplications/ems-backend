@@ -10,6 +10,7 @@ import {
   PullJob,
   Record as RecordModel,
   User,
+  Role,
 } from '@models';
 import pubsub from './pubsub';
 import { CronJob } from 'cron';
@@ -21,12 +22,25 @@ import { logger } from '../services/logger.service';
 import * as cronValidator from 'cron-validator';
 import get from 'lodash/get';
 import axios from 'axios';
+import { ownershipMappingJSON } from './EIOSOwnernshipMapping';
 
 /** A map with the task ids as keys and the scheduled tasks as values */
 const taskMap: Record<string, CronJob> = {};
 
 /** Record's default fields */
 const DEFAULT_FIELDS = ['createdBy'];
+
+/**
+ * Dynamically building the list of Signal Apps names for EIOS
+ */
+const EIOS_APP_NAMES: string[] = [
+  ...new Set( // Remove duplicate values
+    Object.values(ownershipMappingJSON).reduce((prev, curr) => {
+      prev.push(...curr); // Push all the Apps names into an array
+      return prev;
+    }, [])
+  ),
+];
 
 /**
  * Global function called on server start to initialize all the pullJobs.
@@ -86,6 +100,11 @@ export const scheduleJob = (pullJob: PullJob) => {
             if (apiConfiguration.authType === authType.public) {
               // eslint-disable-next-line @typescript-eslint/no-use-before-define
               fetchRecordsPublic(pullJob);
+            }
+            if (apiConfiguration.authType === authType.authorizationCode) {
+              throw new Error(
+                'Unsupported Api configuration with Authorization Code authentication.'
+              );
             }
           } catch (err) {
             logger.error(err.message, { stack: err.stack });
@@ -156,7 +175,7 @@ const fetchRecordsServiceToService = (
             .then(({ data: data2 }) => {
               if (data2 && data2.result) {
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                insertRecords(data2.result, pullJob);
+                insertRecords(data2.result, pullJob, true, false);
               }
             })
             .catch((err) => {
@@ -182,7 +201,7 @@ const fetchRecordsServiceToService = (
         const records = pullJob.path ? get(data, pullJob.path) : data;
         if (records) {
           // eslint-disable-next-line @typescript-eslint/no-use-before-define
-          insertRecords(records, pullJob);
+          insertRecords(records, pullJob, false, false);
         }
       })
       .catch((err) => {
@@ -207,7 +226,7 @@ const fetchRecordsPublic = (pullJob: PullJob): void => {
       const records = pullJob.path ? get(data, pullJob.path) : data;
       if (records) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        insertRecords(records, pullJob);
+        insertRecords(records, pullJob, false, false);
       }
     })
     .catch((err) => {
@@ -247,218 +266,290 @@ const accessFieldIncludingNested = (data: any, identifier: string): any => {
 };
 
 /**
+ * Get Mongo Filters to get user role for a specific application
+ *
+ * @param appName Name of the application
+ * @returns List of Mongo filters
+ */
+const getUserRoleFiltersFromApp = (appName: string): any => {
+  return [
+    {
+      $lookup: {
+        from: 'applications',
+        localField: 'application',
+        foreignField: '_id',
+        as: '_application',
+      },
+    },
+    {
+      $match: {
+        $and: [
+          { title: 'User' },
+          { _application: { $elemMatch: { name: appName } } },
+        ],
+      },
+    },
+  ];
+};
+
+/**
  *  Use the fetched data to insert records into the dB if needed.
  *
  * @param data array of data fetched from API
  * @param pullJob pull job configuration
+ * @param isEIOS is EIOS pulljob or not
+ * @param fromRoute tells if the insertion is done from pull-job or route
  */
 export const insertRecords = async (
   data: any[],
-  pullJob: PullJob
-): Promise<void> => {
+  pullJob: PullJob,
+  isEIOS = false,
+  fromRoute?: boolean
+): Promise<string> => {
   const form = await Form.findById(pullJob.convertTo);
-  if (form) {
-    const records = [];
-    const unicityConditions = pullJob.uniqueIdentifiers;
-    // Map unicity conditions to check if we already have some corresponding records in the DB
-    const mappedUnicityConditions = unicityConditions.map((x) =>
-      Object.keys(pullJob.mapping).find((key) => pullJob.mapping[key] === x)
-    );
-    // Initialize the array of linked fields in the case we have an array unique identifier with linked fields
-    const linkedFieldsArray = new Array<Array<string>>(
-      unicityConditions.length
-    );
-    const filters = [];
-    for (let elementIndex = 0; elementIndex < data.length; elementIndex++) {
-      const element = data[elementIndex];
-      const filter = {};
-      for (
-        let unicityIndex = 0;
-        unicityIndex < unicityConditions.length;
-        unicityIndex++
-      ) {
-        const identifier = unicityConditions[unicityIndex];
-        const mappedIdentifier = mappedUnicityConditions[unicityIndex];
-        // Check if it's an automatically generated element which already have some part of the identifiers set up
-        const value =
-          element[`__${identifier}`] === undefined
-            ? accessFieldIncludingNested(element, identifier)
-            : element[`__${identifier}`];
-        // Prevent adding new records with identifier null, or type object or array with any at least one null value in it.
-        if (
-          !value ||
-          (typeof value === 'object' &&
-            ((Array.isArray(value) &&
-              value.some((x) => x === null || x === undefined)) ||
-              !Array.isArray(value)))
-        ) {
-          element.__notValid = true;
-          // If a uniqueIdentifier value is an array, duplicate the element and add filter for the first one since the other will be handled in subsequent steps
-        } else if (Array.isArray(value)) {
-          // Get related fields from the mapping to duplicate use different values for these ones instead of concatenate everything
-          let linkedFields = linkedFieldsArray[unicityIndex];
-          if (!linkedFields) {
-            // eslint-disable-next-line @typescript-eslint/no-use-before-define
-            linkedFields = getLinkedFields(
-              identifier,
-              pullJob.mapping,
-              element
-            );
-            linkedFieldsArray[unicityIndex] = linkedFields;
-          }
-          const linkedValues = new Array(linkedFields.length);
-          for (
-            let linkedIndex = 0;
-            linkedIndex < linkedFields.length;
-            linkedIndex++
-          ) {
-            // eslint-disable-next-line @typescript-eslint/no-use-before-define
-            linkedValues[linkedIndex] = accessFieldIncludingNested(
-              element,
-              linkedFields[linkedIndex]
-            );
-          }
-          for (let valueIndex = 0; valueIndex < value.length; valueIndex++) {
-            // Push new element if not the first one while setting identifier field and linked fields
-            if (valueIndex === 0) {
-              element[`__${identifier}`] = value[valueIndex];
-              Object.assign(filter, {
-                $or: [
-                  { [`data.${mappedIdentifier}`]: value[valueIndex] },
-                  {
-                    [`data.${mappedIdentifier}`]: value[valueIndex].toString(),
-                  },
-                ],
-              });
-              for (
-                let linkedIndex = 0;
-                linkedIndex < linkedFields.length;
-                linkedIndex++
-              ) {
-                element[`__${linkedFields[linkedIndex]}`] =
-                  linkedValues[linkedIndex][0];
-              }
-            } else {
-              const newElement = Object.assign({}, element);
-              newElement[`__${identifier}`] = value[valueIndex];
-              for (
-                let linkedIndex = 0;
-                linkedIndex < linkedFields.length;
-                linkedIndex++
-              ) {
-                newElement[`__${linkedFields[linkedIndex]}`] =
-                  linkedValues[linkedIndex][valueIndex];
-              }
-              data.splice(elementIndex + 1, 0, newElement);
-            }
-          }
-        } else {
-          element[`__${identifier}`] = value;
-          Object.assign(filter, {
-            $or: [
-              { [`data.${mappedIdentifier}`]: value },
-              { [`data.${mappedIdentifier}`]: value.toString() },
-            ],
-          });
-        }
-      }
-      filters.push(filter);
-    }
-    // Find records already existing if any
-    const selectedFields = mappedUnicityConditions.map((x) => `data.${x}`);
-    const duplicateRecords = await RecordModel.find({
-      form: pullJob.convertTo,
-      $or: filters,
-    }).select(selectedFields);
-    for (const element of data) {
-      // eslint-disable-next-line @typescript-eslint/no-use-before-define
-      const mappedElement = mapData(
-        pullJob.mapping,
-        element,
-        unicityConditions.concat(linkedFieldsArray.flat())
-      );
-      // Adapt identifiers after mapping so if arrays are involved, it will correspond to each element of the array
-      for (
-        let unicityIndex = 0;
-        unicityIndex < unicityConditions.length;
-        unicityIndex++
-      ) {
-        const identifier = unicityConditions[unicityIndex];
-        const mappedIdentifier = mappedUnicityConditions[unicityIndex];
-        mappedElement[mappedIdentifier] = element[`__${identifier}`];
-        // Adapt also linkedFields if any
-        const linkedFields = linkedFieldsArray[unicityIndex];
-        if (linkedFields) {
-          // Storing already assigned fields in the case we have different fields mapped to the same path
-          const alreadyAssignedFields = [];
-          for (const linkedField of linkedFields) {
-            const mappedField = Object.keys(pullJob.mapping).find(
-              (key) =>
-                pullJob.mapping[key] === linkedField &&
-                !alreadyAssignedFields.includes(key)
-            );
-            alreadyAssignedFields.push(mappedField);
-            mappedElement[mappedField] = element[`__${linkedField}`];
-          }
-        }
-      }
-      // Check if element is already stored in the DB and if it has unique identifiers correctly set up
-      const isDuplicate = element.__notValid
-        ? true
-        : duplicateRecords.some((record) => {
-            for (
-              let unicityIndex = 0;
-              unicityIndex < unicityConditions.length;
-              unicityIndex++
-            ) {
-              const identifier = unicityConditions[unicityIndex];
-              const mappedIdentifier = mappedUnicityConditions[unicityIndex];
-              const recordValue = record.data[mappedIdentifier] || '';
-              const elementValue = element[`__${identifier}`] || '';
-              if (recordValue.toString() !== elementValue.toString()) {
-                return false;
-              }
-            }
-            return true;
-          });
-      // If everything is fine, push it in the array for saving
-      if (!isDuplicate) {
-        transformRecord(mappedElement, form.fields);
-        let record = new RecordModel({
-          incrementalId: await getNextId(
-            String(form.resource ? form.resource : pullJob.convertTo)
-          ),
-          form: pullJob.convertTo,
-          data: mappedElement,
-          resource: form.resource ? form.resource : null,
-          _form: {
-            _id: form._id,
-            name: form.name,
-          },
-        }) as RecordModel;
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        record = await setSpecialFields(record);
-        records.push(record);
-      }
-    }
-
-    RecordModel.insertMany(records).then(async () => {
-      const insertReportMessage = `${records.length} new records of form "${form.name}" created from pulljob "${pullJob.name}"`;
-      logger.info(insertReportMessage);
-      if (pullJob.channel && records.length > 0) {
-        const notification = new Notification({
-          action: insertReportMessage,
-          content: '',
-          createdAt: new Date(),
-          channel: pullJob.channel.toString(),
-          seenBy: [],
-        });
-        await notification.save();
-        const publisher = await pubsub();
-        publisher.publish(pullJob.channel.toString(), { notification });
-      }
-    });
+  if (!form) {
+    throw new Error(`Cannot find form with id ${pullJob.convertTo}`);
   }
+
+  const records = [];
+  const unicityConditions = pullJob.uniqueIdentifiers;
+  // Map unicity conditions to check if we already have some corresponding records in the DB
+  const mappedUnicityConditions = unicityConditions.map((x) =>
+    Object.keys(pullJob.mapping).find((key) => pullJob.mapping[key] === x)
+  );
+  // Initialize the array of linked fields in the case we have an array unique identifier with linked fields
+  const linkedFieldsArray = new Array<Array<string>>(unicityConditions.length);
+  const filters = [];
+  for (let elementIndex = 0; elementIndex < data.length; elementIndex++) {
+    const element = data[elementIndex];
+    const filter = {};
+    for (
+      let unicityIndex = 0;
+      unicityIndex < unicityConditions.length;
+      unicityIndex++
+    ) {
+      const identifier = unicityConditions[unicityIndex];
+      const mappedIdentifier = mappedUnicityConditions[unicityIndex];
+      // Check if it's an automatically generated element which already have some part of the identifiers set up
+      const value =
+        element[`__${identifier}`] === undefined
+          ? accessFieldIncludingNested(element, identifier)
+          : element[`__${identifier}`];
+      // Prevent adding new records with identifier null, or type object or array with any at least one null value in it.
+      if (
+        !value ||
+        (typeof value === 'object' &&
+          ((Array.isArray(value) &&
+            value.some((x) => x === null || x === undefined)) ||
+            !Array.isArray(value)))
+      ) {
+        element.__notValid = true;
+        // If a uniqueIdentifier value is an array, duplicate the element and add filter for the first one since the other will be handled in subsequent steps
+      } else if (Array.isArray(value)) {
+        // Get related fields from the mapping to duplicate use different values for these ones instead of concatenate everything
+        let linkedFields = linkedFieldsArray[unicityIndex];
+        if (!linkedFields) {
+          // eslint-disable-next-line @typescript-eslint/no-use-before-define
+          linkedFields = getLinkedFields(identifier, pullJob.mapping, element);
+          linkedFieldsArray[unicityIndex] = linkedFields;
+        }
+        const linkedValues = new Array(linkedFields.length);
+        for (
+          let linkedIndex = 0;
+          linkedIndex < linkedFields.length;
+          linkedIndex++
+        ) {
+          // eslint-disable-next-line @typescript-eslint/no-use-before-define
+          linkedValues[linkedIndex] = accessFieldIncludingNested(
+            element,
+            linkedFields[linkedIndex]
+          );
+        }
+        for (let valueIndex = 0; valueIndex < value.length; valueIndex++) {
+          // Push new element if not the first one while setting identifier field and linked fields
+          if (valueIndex === 0) {
+            element[`__${identifier}`] = value[valueIndex];
+            Object.assign(filter, {
+              $or: [
+                { [`data.${mappedIdentifier}`]: value[valueIndex] },
+                {
+                  [`data.${mappedIdentifier}`]: value[valueIndex].toString(),
+                },
+              ],
+            });
+            for (
+              let linkedIndex = 0;
+              linkedIndex < linkedFields.length;
+              linkedIndex++
+            ) {
+              element[`__${linkedFields[linkedIndex]}`] =
+                linkedValues[linkedIndex][0];
+            }
+          } else {
+            const newElement = Object.assign({}, element);
+            newElement[`__${identifier}`] = value[valueIndex];
+            for (
+              let linkedIndex = 0;
+              linkedIndex < linkedFields.length;
+              linkedIndex++
+            ) {
+              newElement[`__${linkedFields[linkedIndex]}`] =
+                linkedValues[linkedIndex][valueIndex];
+            }
+            data.splice(elementIndex + 1, 0, newElement);
+          }
+        }
+      } else {
+        element[`__${identifier}`] = value;
+        Object.assign(filter, {
+          $or: [
+            { [`data.${mappedIdentifier}`]: value },
+            { [`data.${mappedIdentifier}`]: value.toString() },
+          ],
+        });
+      }
+    }
+    filters.push(filter);
+  }
+  // Find records already existing if any
+  const selectedFields = mappedUnicityConditions.map((x) => `data.${x}`);
+  const duplicateRecords = await RecordModel.find({
+    form: pullJob.convertTo,
+    $or: filters,
+  }).select(selectedFields);
+
+  // If EIOS pullJob, build a mapping JSON to assign ownership (role ids)
+  const ownershipMappingWithIds: any = {};
+  if (isEIOS) {
+    // Create a dictionary of user roles ids
+    const appRolesWithIds = {};
+    const promisesStack = [];
+    EIOS_APP_NAMES.forEach((appName) => {
+      promisesStack.push(
+        Role.aggregate(getUserRoleFiltersFromApp(appName)).then(
+          (appUserRole) => {
+            if (appUserRole[0]) {
+              appRolesWithIds[appName] = appUserRole[0]._id;
+            }
+          }
+        )
+      );
+    });
+    await Promise.allSettled(promisesStack);
+
+    for (const [key, value] of Object.entries(ownershipMappingJSON)) {
+      ownershipMappingWithIds[key] = [];
+      if (value.length > 0) {
+        value.forEach((elt) => {
+          if (appRolesWithIds[elt]) {
+            ownershipMappingWithIds[key].push(appRolesWithIds[elt]);
+          }
+        });
+      }
+    }
+  }
+
+  for (const element of data) {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    const mappedElement = mapData(
+      pullJob.mapping,
+      element,
+      unicityConditions.concat(linkedFieldsArray.flat())
+    );
+    // Adapt identifiers after mapping so if arrays are involved, it will correspond to each element of the array
+    for (
+      let unicityIndex = 0;
+      unicityIndex < unicityConditions.length;
+      unicityIndex++
+    ) {
+      const identifier = unicityConditions[unicityIndex];
+      const mappedIdentifier = mappedUnicityConditions[unicityIndex];
+      mappedElement[mappedIdentifier] = element[`__${identifier}`];
+      // Adapt also linkedFields if any
+      const linkedFields = linkedFieldsArray[unicityIndex];
+      if (linkedFields) {
+        // Storing already assigned fields in the case we have different fields mapped to the same path
+        const alreadyAssignedFields = [];
+        for (const linkedField of linkedFields) {
+          const mappedField = Object.keys(pullJob.mapping).find(
+            (key) =>
+              pullJob.mapping[key] === linkedField &&
+              !alreadyAssignedFields.includes(key)
+          );
+          alreadyAssignedFields.push(mappedField);
+          mappedElement[mappedField] = element[`__${linkedField}`];
+        }
+      }
+    }
+    // Check if element is already stored in the DB and if it has unique identifiers correctly set up
+    const isDuplicate = element.__notValid
+      ? true
+      : duplicateRecords.some((record) => {
+          for (
+            let unicityIndex = 0;
+            unicityIndex < unicityConditions.length;
+            unicityIndex++
+          ) {
+            const identifier = unicityConditions[unicityIndex];
+            const mappedIdentifier = mappedUnicityConditions[unicityIndex];
+            const recordValue = record.data[mappedIdentifier] || '';
+            const elementValue = element[`__${identifier}`] || '';
+            if (recordValue.toString() !== elementValue.toString()) {
+              return false;
+            }
+          }
+          return true;
+        });
+
+    if (isEIOS) {
+      // Assign correct ownership value based on mapping JSON and board name
+      let boardName = mappedElement.article_board_name;
+      if (!ownershipMappingWithIds[boardName]) {
+        boardName = 'default';
+      }
+      mappedElement.ownership = ownershipMappingWithIds[boardName]?.map(String);
+    }
+    // If everything is fine, push it in the array for saving
+    if (!isDuplicate) {
+      transformRecord(mappedElement, form.fields);
+      let record = new RecordModel({
+        incrementalId: await getNextId(
+          String(form.resource ? form.resource : pullJob.convertTo)
+        ),
+        form: pullJob.convertTo,
+        data: mappedElement,
+        resource: form.resource ? form.resource : null,
+        _form: {
+          _id: form._id,
+          name: form.name,
+        },
+      }) as RecordModel;
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      record = await setSpecialFields(record);
+      records.push(record);
+    }
+  }
+  let insertReportMessage = '';
+  const insertedRecords = await RecordModel.insertMany(records);
+  if (fromRoute) {
+    insertReportMessage = `${insertedRecords.length} new records of form "${form.name}" created from records insertion route`;
+  } else {
+    insertReportMessage = `${insertedRecords.length} new records of form "${form.name}" created from pulljob "${pullJob.name}"`;
+  }
+  logger.info(insertReportMessage);
+  if (pullJob.channel && records.length > 0) {
+    const notification = new Notification({
+      action: insertReportMessage,
+      content: '',
+      createdAt: new Date(),
+      channel: pullJob.channel.toString(),
+      seenBy: [],
+    });
+    await notification.save();
+    const publisher = await pubsub();
+    publisher.publish(pullJob.channel.toString(), { notification });
+  }
+  return insertReportMessage;
 };
 
 /**

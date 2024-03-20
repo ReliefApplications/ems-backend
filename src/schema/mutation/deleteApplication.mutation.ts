@@ -7,6 +7,13 @@ import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the deleteApplication mutation */
+type DeleteApplicationArgs = {
+  id: string | Types.ObjectId;
+};
 
 /**
  * Deletes an application from its id.
@@ -18,7 +25,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: DeleteApplicationArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       // Delete the application

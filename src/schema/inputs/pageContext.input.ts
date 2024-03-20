@@ -4,6 +4,14 @@ import {
   GraphQLString,
   GraphQLID,
 } from 'graphql';
+import { Types } from 'mongoose';
+
+/** Aggregation type for queries/mutations argument */
+export type PageContextArgs = {
+  refData?: string | Types.ObjectId;
+  resource: Types.ObjectId;
+  displayField: string;
+};
 
 /** GraphQL Input Type for the page context */
 export const PageContextInputType = new GraphQLInputObjectType({

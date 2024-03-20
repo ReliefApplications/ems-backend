@@ -11,11 +11,26 @@ import pubsub from '../../server/pubsub';
 import { ApplicationType } from '../types';
 import { Application } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
-import { StatusEnumType } from '@const/enumTypes';
+import { StatusEnumType, StatusType } from '@const/enumTypes';
 import { isEmpty, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the editApplication mutation */
+type EditApplicationArgs = {
+  id: string | Types.ObjectId;
+  description?: string;
+  sideMenu?: boolean;
+  hideMenu?: boolean;
+  name?: string;
+  status?: StatusType;
+  pages?: string[] | Types.ObjectId[];
+  settings?: any;
+  permissions?: any;
+};
 
 /**
  * Find application from its id and update it, if user is authorized.
@@ -27,15 +42,14 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     description: { type: GraphQLString },
     sideMenu: { type: GraphQLBoolean },
+    hideMenu: { type: GraphQLBoolean },
     name: { type: GraphQLString },
     status: { type: StatusEnumType },
     pages: { type: new GraphQLList(GraphQLID) },
     settings: { type: GraphQLJSON },
     permissions: { type: GraphQLJSON },
-    contextualFilter: { type: GraphQLJSON },
-    contextualFilterPosition: { type: GraphQLString },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditApplicationArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;
@@ -76,11 +90,8 @@ export default {
         args.pages && { pages: args.pages },
         args.settings && { settings: args.settings },
         args.permissions && { permissions: args.permissions },
-        args.contextualFilter && { contextualFilter: args.contextualFilter },
-        args.contextualFilterPosition && {
-          contextualFilterPosition: args.contextualFilterPosition,
-        },
-        !isNil(args.sideMenu) && { sideMenu: args.sideMenu }
+        !isNil(args.sideMenu) && { sideMenu: args.sideMenu },
+        !isNil(args.hideMenu) && { hideMenu: args.hideMenu }
       );
       application = await Application.findOneAndUpdate(filters, update, {
         new: true,

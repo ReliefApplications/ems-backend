@@ -6,9 +6,16 @@ import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
+
+/** Arguments for the pullJobs query */
+type PullJobsArgs = {
+  first?: number;
+  afterCursor?: string;
+};
 
 /**
  * Return all pull jobs available for the logged user.
@@ -20,7 +27,7 @@ export default {
     first: { type: GraphQLInt },
     afterCursor: { type: GraphQLID },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: PullJobsArgs, context: Context) {
     graphQLAuthCheck(context);
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
@@ -43,7 +50,9 @@ export default {
 
       let items: any[] = await PullJob.find({
         $and: [cursorFilters, ...filters],
-      }).limit(first + 1);
+      })
+        .sort({ _id: 1 })
+        .limit(first + 1);
 
       const hasNextPage = items.length > first;
       if (hasNextPage) {

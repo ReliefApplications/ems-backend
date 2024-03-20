@@ -11,6 +11,14 @@ import pubsubSafe from '../../server/pubsubSafe';
 import config from 'config';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the publish mutation */
+type PublishArgs = {
+  ids: string[] | Types.ObjectId[];
+  channel: string | Types.ObjectId;
+};
 
 /**
  * Publish records in a notification.
@@ -21,7 +29,7 @@ export default {
     ids: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
     channel: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: PublishArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const ability: AppAbility = context.user.ability;

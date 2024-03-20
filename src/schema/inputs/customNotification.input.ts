@@ -4,10 +4,26 @@ import {
   GraphQLString,
   GraphQLID,
 } from 'graphql';
+import { Types } from 'mongoose';
+
+/** Custom Notification type for queries/mutations argument */
+export type CustomNotificationArgs = {
+  name: string;
+  description?: string;
+  schedule: string;
+  notificationType: string;
+  resource: string | Types.ObjectId;
+  layout: string | Types.ObjectId;
+  template: string | Types.ObjectId;
+  recipients: string;
+  recipientsType: string;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  notification_status?: string;
+};
 
 /** GraphQL custom notification query input type definition */
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const CustomNotificationInputType = new GraphQLInputObjectType({
+export const CustomNotificationInputType = new GraphQLInputObjectType({
   name: 'CustomNotificationInputType',
   fields: () => ({
     name: { type: new GraphQLNonNull(GraphQLString) },
@@ -22,5 +38,3 @@ const CustomNotificationInputType = new GraphQLInputObjectType({
     // notification_status: { type: new GraphQLNonNull(GraphQLString) },
   }),
 });
-
-export default CustomNotificationInputType;

@@ -9,6 +9,14 @@ import { AppAbility } from '@security/defineUserAbility';
 import { RoleType } from '../types';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the addRole mutation */
+type AddRoleArgs = {
+  title: string;
+  application?: string | Types.ObjectId;
+};
 
 /**
  * Create a new role.
@@ -20,7 +28,7 @@ export default {
     title: { type: new GraphQLNonNull(GraphQLString) },
     application: { type: GraphQLID },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: AddRoleArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

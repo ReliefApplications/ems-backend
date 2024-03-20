@@ -6,6 +6,7 @@ import extendAbilityForPage from '@security/extendAbilityForPage';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
 
 /**
  * List all pages available for the logged user.
@@ -13,7 +14,7 @@ import { graphQLAuthCheck } from '@schema/shared';
  */
 export default {
   type: new GraphQLList(PageType),
-  async resolve(parent, args, context) {
+  async resolve(parent, args, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

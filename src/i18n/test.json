@@ -6,6 +6,7 @@
 			"duplicatedGraphQLTypeName": "******",
 			"fileExtensionNotAllowed": "******",
 			"fileSizeLimitReached": "******",
+			"fileTotalSizeLimitReached": "******",
 			"internalServerError": "******",
 			"invalidAPI": "******",
 			"invalidEmailsInput": "******",
@@ -82,7 +83,8 @@
 			},
 			"duplicate": {
 				"errors": {
-					"invalidArguments": "******"
+					"invalidArguments": "******",
+					"namedDuplicated": "****** {{name}} ******"
 				}
 			},
 			"edit": {
@@ -113,6 +115,7 @@
 			"addWithContext": {
 				"errors": {
 					"invalidArguments": "******",
+					"invalidContextEl": "******",
 					"invalidElement": "******"
 				}
 			},
@@ -144,6 +147,7 @@
 			},
 			"fetch": {
 				"errors": {
+					"fetchRequestFailed": "******",
 					"groupsFromServiceDisabled": "******"
 				}
 			}
@@ -202,6 +206,7 @@
 			},
 			"edit": {
 				"errors": {
+					"invalidArguments": "******",
 					"wrongTemplateProvided": "******"
 				}
 			}
@@ -299,6 +304,9 @@
 			}
 		},
 		"style": {
+			"errors": {
+				"notFound": "******"
+			},
 			"noStyle": "******"
 		},
 		"upload": {

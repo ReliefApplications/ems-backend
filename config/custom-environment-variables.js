@@ -3,6 +3,7 @@
  */
 module.exports = {
   server: {
+    port: 'SERVER_PORT',
     url: 'SERVER_URL',
     allowedOrigins: 'SERVER_ALLOWED_ORIGINS',
   },
@@ -38,6 +39,7 @@ module.exports = {
     clientId: 'AUTH_CLIENT_ID',
     tenantId: 'AUTH_TENANT_ID',
     allowedIssuers: 'AUTH_ALLOWED_ISSUERS',
+    audience: 'AUTH_AUDIENCE',
   },
   encryption: {
     key: 'ENCRYPTION_KEY',

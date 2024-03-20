@@ -1,7 +1,12 @@
 import mongoose from 'mongoose';
 import { getDateForMongo } from '@utils/filter/getDateForMongo';
 import { getTimeForMongo } from '@utils/filter/getTimeForMongo';
-import { MULTISELECT_TYPES, DATE_TYPES } from '@const/fieldTypes';
+import {
+  MULTISELECT_TYPES,
+  DATE_TYPES,
+  DATETIME_TYPES,
+} from '@const/fieldTypes';
+import { isNumber } from 'lodash';
 
 /** The default fields */
 const DEFAULT_FIELDS = [
@@ -11,11 +16,11 @@ const DEFAULT_FIELDS = [
   },
   {
     name: 'createdAt',
-    type: 'date',
+    type: 'datetime',
   },
   {
     name: 'modifiedAt',
-    type: 'date',
+    type: 'datetime',
   },
   {
     name: 'incrementalId',
@@ -188,24 +193,51 @@ const buildMongoFilter = (
           }
         }
 
+        // In case type is multi-select and value is not an array, we treat as scalar
+        // As it was probably unwinded in the aggregation
+        if (
+          MULTISELECT_TYPES.includes(type) &&
+          filter.value &&
+          !Array.isArray(filter.value)
+        ) {
+          type = 'text';
+        }
+
         // const fieldName = FLAT_DEFAULT_FIELDS.includes(filter.field) ? filter.field : `data.${filter.field}`;
         // const field = fields.find(x => x.name === filter.field);
         let value = filter.value;
         let intValue: number;
         let startDate: Date;
         let endDate: Date;
+        let startDatetime: Date;
+        let endDatetime: Date;
         let dateForFilter: any;
         switch (type) {
           case 'date':
+            dateForFilter = getDateForMongo(value);
+            // startDate represents the beginning of a day
+            startDate = new Date(value);
+            // endDate represents the last moment of the day after startDate
+            endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + 1);
+            endDate.setMilliseconds(-1);
+            // you end up with a date range covering exactly the day selected
+            value = dateForFilter.date;
+            break;
           case 'datetime':
           case 'datetime-local':
-            dateForFilter = getDateForMongo(value);
-            startDate = dateForFilter.startDate;
-            endDate = dateForFilter.endDate;
-            value = dateForFilter.date;
+            // startDatetime contains the beginning of the minute
+            startDatetime = getTimeForMongo(value);
+            // endDatetime contains the end of the minute (last second, last ms)
+            endDatetime = new Date(startDatetime.getTime() + 59999);
+            // we end up with a date range covering exactly the minute selected,
+            // regardless of the saved seconds and ms
             break;
           case 'time': {
             value = getTimeForMongo(value);
+            value = new Date(
+              Date.UTC(1970, 0, 1, value.getHours(), value.getMinutes())
+            );
             break;
           }
           case 'users': {
@@ -215,6 +247,10 @@ const buildMongoFilter = (
                 x === 'me' ? context.user._id.toString() : x
               );
             }
+            break;
+          }
+          case 'boolean': {
+            // Avoid the int value to be set
             break;
           }
           default:
@@ -232,16 +268,21 @@ const buildMongoFilter = (
               return { [fieldName]: attrValue };
             } else if (MULTISELECT_TYPES.includes(type)) {
               return { [fieldName]: { $size: value.length, $all: value } };
+            } else if (DATETIME_TYPES.includes(type)) {
+              return {
+                [fieldName]: { $gte: startDatetime, $lte: endDatetime },
+              };
             } else {
               if (DATE_TYPES.includes(type)) {
-                return { [fieldName]: { $gte: startDate, $lt: endDate } };
+                return { [fieldName]: { $gte: startDate, $lte: endDate } };
               }
               if (isNaN(intValue)) {
                 return { [fieldName]: { $eq: value } };
               } else {
                 return {
                   $or: [
-                    { [fieldName]: { $eq: value } },
+                    // Make sure that we compare both strings & numbers
+                    { [fieldName]: { $eq: String(value) } },
                     { [fieldName]: { $eq: intValue } },
                   ],
                 };
@@ -256,13 +297,23 @@ const buildMongoFilter = (
               return {
                 [fieldName]: { $not: { $size: value.length, $all: value } },
               };
+            } else if (DATETIME_TYPES.includes(type)) {
+              return {
+                [fieldName]: {
+                  $not: { $gte: startDatetime, $lte: endDatetime },
+                },
+              };
+            } else if (DATE_TYPES.includes(type)) {
+              return {
+                [fieldName]: { $not: { $gte: startDate, $lte: endDate } },
+              };
             } else {
               if (isNaN(intValue)) {
                 return { [fieldName]: { $ne: value } };
               } else {
                 return {
                   $and: [
-                    { [fieldName]: { $ne: value } },
+                    { [fieldName]: { $ne: String(value) } },
                     { [fieldName]: { $ne: intValue } },
                   ],
                 };
@@ -281,48 +332,64 @@ const buildMongoFilter = (
             return { [fieldName]: { $exists: true, $ne: null } };
           }
           case 'lt': {
-            if (isNaN(intValue)) {
+            if (DATE_TYPES.includes(type)) {
+              return { [fieldName]: { $lt: startDate } };
+            } else if (DATETIME_TYPES.includes(type)) {
+              return { [fieldName]: { $lt: startDatetime } };
+            } else if (isNaN(intValue)) {
               return { [fieldName]: { $lt: value } };
             } else {
               return {
                 $or: [
-                  { [fieldName]: { $lt: value } },
+                  { [fieldName]: { $lt: String(value) } },
                   { [fieldName]: { $lt: intValue } },
                 ],
               };
             }
           }
           case 'lte': {
-            if (isNaN(intValue)) {
+            if (DATE_TYPES.includes(type)) {
+              return { [fieldName]: { $lte: endDate } };
+            } else if (DATETIME_TYPES.includes(type)) {
+              return { [fieldName]: { $lte: endDatetime } };
+            } else if (isNaN(intValue)) {
               return { [fieldName]: { $lte: value } };
             } else {
               return {
                 $or: [
-                  { [fieldName]: { $lte: value } },
+                  { [fieldName]: { $lte: String(value) } },
                   { [fieldName]: { $lte: intValue } },
                 ],
               };
             }
           }
           case 'gt': {
-            if (isNaN(intValue)) {
+            if (DATE_TYPES.includes(type)) {
+              return { [fieldName]: { $gt: endDate } };
+            } else if (DATETIME_TYPES.includes(type)) {
+              return { [fieldName]: { $gt: endDatetime } };
+            } else if (isNaN(intValue)) {
               return { [fieldName]: { $gt: value } };
             } else {
               return {
                 $or: [
-                  { [fieldName]: { $gt: value } },
+                  { [fieldName]: { $gt: String(value) } },
                   { [fieldName]: { $gt: intValue } },
                 ],
               };
             }
           }
           case 'gte': {
-            if (isNaN(intValue)) {
+            if (DATE_TYPES.includes(type)) {
+              return { [fieldName]: { $gte: startDate } };
+            } else if (DATETIME_TYPES.includes(type)) {
+              return { [fieldName]: { $gte: startDatetime } };
+            } else if (isNaN(intValue)) {
               return { [fieldName]: { $gte: value } };
             } else {
               return {
                 $or: [
-                  { [fieldName]: { $gte: value } },
+                  { [fieldName]: { $gte: String(value) } },
                   { [fieldName]: { $gte: intValue } },
                 ],
               };
@@ -336,11 +403,19 @@ const buildMongoFilter = (
           }
           case 'contains': {
             if (MULTISELECT_TYPES.includes(type)) {
-              if (Array.isArray(value)) {
-                return { [fieldName]: { $all: value } };
-              } else {
-                return { [fieldName]: { $all: [value] } };
-              }
+              return { [fieldName]: { $all: value } };
+              // Check if a number has been searched globally
+              //  If so, perform an 'eq' search
+            } else if (isNumber(value?.[0]?.value)) {
+              const eq = value.map((v) => {
+                return { [`data.${v.field}`]: { $eq: v.value } };
+              });
+              return { $or: eq };
+            } else if (
+              fieldName === 'data._globalSearch' &&
+              (type === 'text' || type === '')
+            ) {
+              return;
             } else {
               return { [fieldName]: { $regex: value, $options: 'i' } };
             }
@@ -468,5 +543,6 @@ export default (
   const expandedFields = fields.concat(DEFAULT_FIELDS);
   const mongooseFilter =
     buildMongoFilter(filter, expandedFields, context, prefix) || {};
+
   return mongooseFilter;
 };

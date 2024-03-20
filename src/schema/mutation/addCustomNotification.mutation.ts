@@ -2,12 +2,22 @@ import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
 import { Application } from '@models';
 import { CustomNotificationType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
-import CustomNotificationInputType from '../inputs/customNotification.input';
+import {
+  CustomNotificationInputType,
+  CustomNotificationArgs,
+} from '../inputs/customNotification.input';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { scheduleCustomNotificationJob } from '../../server/customNotificationScheduler';
 import { customNotificationStatus } from '@const/enumTypes';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the addCustomNotification mutation */
+type AddCustomNotificationArgs = {
+  application: string;
+  notification: CustomNotificationArgs;
+};
 
 /**
  * Mutation to add a new custom notification.
@@ -18,7 +28,7 @@ export default {
     application: { type: new GraphQLNonNull(GraphQLID) },
     notification: { type: new GraphQLNonNull(CustomNotificationInputType) },
   },
-  async resolve(_, args, context) {
+  async resolve(_, args: AddCustomNotificationArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;
@@ -56,6 +66,7 @@ export default {
             template: args.notification.template,
             recipients: args.notification.recipients,
             status: args.notification.notification_status,
+            recipientsType: args.notification.recipientsType,
           },
         },
       };

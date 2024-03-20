@@ -5,6 +5,13 @@ import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the deleteReferenceData mutation */
+type DeleteReferenceDataArgs = {
+  id: string | Types.ObjectId;
+};
 
 /**
  * Delete the passed referenceData if authorized.
@@ -15,7 +22,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: DeleteReferenceDataArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

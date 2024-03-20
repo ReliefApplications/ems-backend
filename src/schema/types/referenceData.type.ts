@@ -3,6 +3,8 @@ import {
   GraphQLID,
   GraphQLString,
   GraphQLBoolean,
+  GraphQLInt,
+  GraphQLList,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { ReferenceDataTypeEnumType } from '@const/enumTypes';
@@ -10,8 +12,12 @@ import { ReferenceData, ApiConfiguration } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { ApiConfigurationType } from './apiConfiguration.type';
 import { AccessType } from './access.type';
-import { Connection } from './pagination.type';
+import { Connection, encodeCursor } from './pagination.type';
 import { accessibleBy } from '@casl/mongoose';
+import { AggregationConnectionType } from './aggregation.type';
+
+/** Default page size */
+const DEFAULT_FIRST = 10;
 
 /**
  * GraphQL type of Reference Data.
@@ -34,6 +40,7 @@ export const ReferenceDataType = new GraphQLObjectType({
         return apiConfig;
       },
     },
+    graphQLTypeName: { type: GraphQLString },
     query: { type: GraphQLString },
     fields: { type: GraphQLJSON },
     valueField: { type: GraphQLString },
@@ -67,6 +74,57 @@ export const ReferenceDataType = new GraphQLObjectType({
         const ability: AppAbility = context.user.ability;
         return ability.can('delete', new ReferenceData(parent));
       },
+    },
+    aggregations: {
+      type: AggregationConnectionType,
+      args: {
+        first: { type: GraphQLInt },
+        afterCursor: { type: GraphQLID },
+        ids: { type: new GraphQLList(GraphQLID) },
+      },
+      resolve(parent, args) {
+        let start = 0;
+        const first = args.first || DEFAULT_FIRST;
+        let allEdges = parent.aggregations.map((x) => ({
+          cursor: encodeCursor(x.id.toString()),
+          node: x,
+        }));
+        if (args.ids && args.ids.length > 0) {
+          allEdges = allEdges.filter((x) => args.ids.includes(x.node.id));
+        }
+        const totalCount = allEdges.length;
+        if (args.afterCursor) {
+          start = allEdges.findIndex((x) => x.cursor === args.afterCursor) + 1;
+        }
+        let edges = allEdges.slice(start, start + first + 1);
+        const hasNextPage = edges.length > first;
+        if (hasNextPage) {
+          edges = edges.slice(0, edges.length - 1);
+        }
+        return {
+          pageInfo: {
+            hasNextPage,
+            startCursor: edges.length > 0 ? edges[0].cursor : null,
+            endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+          },
+          edges,
+          totalCount,
+        };
+      },
+    },
+    pageInfo: {
+      type: new GraphQLObjectType({
+        name: 'ReferenceDataPaginationDefinition',
+        fields: () => ({
+          strategy: { type: GraphQLString },
+          cursorField: { type: GraphQLString },
+          cursorVar: { type: GraphQLString },
+          offsetVar: { type: GraphQLString },
+          pageVar: { type: GraphQLString },
+          pageSizeVar: { type: GraphQLString },
+          totalCountField: { type: GraphQLString },
+        }),
+      }),
     },
   }),
 });

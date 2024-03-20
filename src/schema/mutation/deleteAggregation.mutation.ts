@@ -1,10 +1,19 @@
 import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
-import { Resource } from '@models';
+import { ReferenceData, Resource } from '@models';
 import { AggregationType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the deleteAggregation mutation */
+type DeleteAggregationArgs = {
+  id: string | Types.ObjectId;
+  resource?: string | Types.ObjectId;
+  referenceData?: string | Types.ObjectId;
+};
 
 /**
  * Delete existing aggregation.
@@ -15,11 +24,12 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     resource: { type: GraphQLID },
+    referenceData: { type: GraphQLID },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: DeleteAggregationArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
-      if (!args.resource) {
+      if (!args.resource && !args.referenceData) {
         throw new GraphQLError(
           context.i18next.t(
             'mutations.aggregation.delete.errors.invalidArguments'
@@ -42,6 +52,26 @@ export default {
 
         const aggregation = resource.aggregations.id(args.id).deleteOne();
         await resource.save();
+        return aggregation;
+      }
+      // Edition of a reference data
+      if (args.referenceData) {
+        const filters = ReferenceData.find(
+          accessibleBy(ability, 'update').ReferenceData
+        )
+          .where({ _id: args.referenceData })
+          .getFilter();
+        const referenceData: ReferenceData = await ReferenceData.findOne(
+          filters
+        );
+        if (!referenceData) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.permissionNotGranted')
+          );
+        }
+
+        const aggregation = referenceData.aggregations.id(args.id).deleteOne();
+        await referenceData.save();
         return aggregation;
       }
     } catch (err) {
