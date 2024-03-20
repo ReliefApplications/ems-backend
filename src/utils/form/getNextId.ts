@@ -137,7 +137,7 @@ export const updateIncrementalIds = async (
       .skip(i)
       .limit(BATCH_SIZE)
       .select('incID incrementalId createdAt')
-      .sort({ createdAt: -1 });
+      .sort({ _id: -1 });
 
     for (let r = 0; r < records.length; r++) {
       const { createdAt } = records[r];
