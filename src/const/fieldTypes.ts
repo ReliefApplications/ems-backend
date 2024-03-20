@@ -5,6 +5,7 @@ export const MULTISELECT_TYPES: string[] = [
   'tagbox',
   'owner',
   'users',
+  'people',
 ];
 
 /** List of date field types */
