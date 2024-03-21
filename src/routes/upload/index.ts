@@ -14,7 +14,7 @@ import {
 import { AppAbility } from '@security/defineUserAbility';
 import { Types } from 'mongoose';
 import { getUploadColumns, loadRow, uploadFile } from '@utils/files';
-import { getNextId, getOwnership } from '@utils/form';
+import { buildIncrementalId, getNextId, getOwnership } from '@utils/form';
 import i18next from 'i18next';
 import { get, isString } from 'lodash';
 import { logger } from '@services/logger.service';
@@ -237,14 +237,22 @@ async function insertRecords(
         );
       }
     }
-
+    const resource = await Resource.findOne({ _id: form.resource });
+    let { incID: nextId } = await getNextId(form);
     // Set the incrementalIDs of new records
     for (let i = 0; i < recordsToCreate.length; i += 1) {
       // It's ok to use await here because it'll be cached
       // from the second iteration onwards
-      const { incrementalId, incID } = await getNextId(form);
+      const incrementalId = buildIncrementalId(resource.idShape, {
+        incremental: nextId.toString(),
+        year: new Date().getFullYear().toString(),
+        resourceInitial: resource.name.charAt(0).toUpperCase(),
+        resourceName: resource.name.toUpperCase(),
+      });
+
       recordsToCreate[i].incrementalId = incrementalId;
-      recordsToCreate[i].incID = incID;
+      recordsToCreate[i].incID = nextId;
+      nextId += 1;
     }
 
     const recordsToSave = [...recordsToCreate, ...recordToUpdate];
