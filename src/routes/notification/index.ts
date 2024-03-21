@@ -198,8 +198,12 @@ router.post('/send-email/:configId', async (req, res) => {
     }
 
     if (config.emailLayout.header) {
-      const headerElement = parse(replaceHeader(config.emailLayout.header));
-      mainTableElement.appendChild(headerElement);
+      const headerElement = replaceHeader(config.emailLayout.header);
+      mainTableElement.appendChild(
+        parse(
+          `<tr bgcolor="#00205c"><td style="font-size: 13px; font-family: Helvetica, Arial, sans-serif;">${headerElement}</td></tr>`
+        )
+      );
     }
 
     mainTableElement.appendChild(
@@ -302,35 +306,8 @@ router.post('/send-individual-email/:configId', async (req, res) => {
   try {
     const config = await EmailNotification.findById(req.params.configId);
     const datasets = config.get('dataSets');
-    let emailElement = parse(`<!DOCTYPE HTML>
-    <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
-    
-    <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;">
-        <title>EMSPOC - Email Alert</title>
-    </head>
-    
-    <body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" style="width: 100%; background-color: #ffffff; margin: 0; padding: 0; -webkit-font-smoothing: antialiased;">
-        <table border="0" width="100%" cellpadding="0" cellspacing="0">
-            <tr>
-                <td height="30"></td>
-            </tr>
-            <tr bgcolor="#4c4e4e">
-                <td width="100%" align="center" valign="top" bgcolor="#ffffff">
-                    <!----------   main content----------->
-                    <table id="mainTable" width="800" style="border: 3px solid #00205c; margin: 0 auto;" cellpadding="0" cellspacing="0" bgcolor="#fff">
-                        
-                    </table>
-                    <!----------   end main content----------->
-                </td>
-            </tr>
-        </table>
-    </body>
-    
-    </html>`);
+    let emailHtml = '';
 
-    const mainTableElement = emailElement.getElementById('mainTable');
     const processedRecords: ProcessedIndividualDataset[] = [];
 
     const processedBlockRecords: ProcessedDataset[] = [];
@@ -446,48 +423,41 @@ router.post('/send-individual-email/:configId', async (req, res) => {
       })
     );
 
-    if (config.emailLayout.banner.bannerImage) {
-      const bannerElement = parse(
-        `<tr bgcolor="#fff" align="center">
-            <td>
-              <a href="#" style="display: block; border-style: none !important; border: 0 !important;">
-                  <img width="100%" data-imagetype="DataUri" src="cid:bannerImage" alt="logo">
-              </a>
-            </td>
-         </tr>`
-      );
-      mainTableElement.appendChild(bannerElement);
-    }
+    // Create container div
+    const containerDiv = parse(
+      `<div id="container" style="${config.emailLayout.banner.containerStyle}"></div>`
+    );
 
-    if (config.emailLayout.header) {
-      const headerElement = parse(replaceHeader(config.emailLayout.header));
-      mainTableElement.appendChild(headerElement);
+    // Add header if available
+    if (config.emailLayout.header.headerHtml) {
+      const header = parse(replaceHeader(config.emailLayout.header));
+      containerDiv.appendChild(header);
     }
 
     // Add body div
     const bodyDiv = parse('<div id="body"></div>');
-    mainTableElement.appendChild(bodyDiv);
+    containerDiv.appendChild(bodyDiv);
+
     let bodyString = await replaceDatasets(
       config.emailLayout.body.bodyHtml,
       processedBlockRecords
     );
-    mainTableElement.appendChild(parse(`<tr><td>${bodyString}</td></tr>`));
 
     // containerDiv.appendChild(datasetsHtml);
 
-    if (config.emailLayout.footer) {
-      const footerElement = replaceFooter(config.emailLayout.footer);
-      mainTableElement.appendChild(parse(footerElement));
+    // Add footer if available
+    if (config.emailLayout.footer.footerHtml) {
+      const footer = parse(replaceFooter(config.emailLayout.footer));
+      containerDiv.appendChild(footer);
     }
 
-    mainTableElement.appendChild(
-      parse(/*html*/ `
-      <tr bgcolor="#00205c">
-        <td mc:edit="footer1" style="font-size: 12px; color: #fff; font-family: 'Roboto', Arial, sans-serif; text-align: center; padding: 0 10px;">
-          ${i18next.t('common.copyright.who')}
-        </td>
-      </tr>`)
-    );
+    // Add copyright
+    const copyrightDiv = parse(`<div style="${
+      config.emailLayout.banner.copyrightStyle
+    }">
+                    ${i18next.t('common.copyright.who')}
+                  </div>`);
+    containerDiv.appendChild(copyrightDiv);
 
     //TODO: Phase 2 - allow records from any table not just first
     const subjectRecords = processedRecords.find(
@@ -498,7 +468,7 @@ router.post('/send-individual-email/:configId', async (req, res) => {
       subjectRecords,
     ]);
 
-    const bodyElement = mainTableElement.getElementById('body');
+    const bodyElement = containerDiv.getElementById('body');
 
     const cc = config.get('recipients').Cc;
     const bcc = config.get('recipients').Bcc;
@@ -537,14 +507,14 @@ router.post('/send-individual-email/:configId', async (req, res) => {
       const bodyBlock = parse(bodyString);
 
       bodyElement.appendChild(bodyBlock);
-      emailElement = mainTableElement;
+      emailHtml = containerDiv.toString();
       const emailParams = {
         message: {
           to: [block.record.emails], // Recipient's email address
           cc: cc,
           bcc: bcc,
-          subject: emailSubject.toString(),
-          html: emailElement.toString(),
+          subject: emailSubject,
+          html: emailHtml,
           attachments: attachments,
         },
       };

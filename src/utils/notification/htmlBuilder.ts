@@ -73,18 +73,17 @@ export const replaceHeader = (header: {
   };
   headerLogoStyle: string;
 }): string => {
-  let headerString = `<tr bgcolor="#fff" align="center">
-        <td height="20"></td>
-    </tr>`;
+  let headerString = `<table border="0" cellpadding="0" cellspacing="0" width="760px">
+  <tbody>
+  <tr>`;
 
   if (header.headerLogo) {
-    headerString += `<tr bgcolor="#fff">
-        <td>
-            <a href="" style="display: block; border-style: none !important; border: 0 !important;">
-                <img width="10%" data-imagetype="DataUri"  src="cid:headerImage" >
-            </a>
-        </td>
-        </tr>`;
+    headerString += `<td style="padding: 10px;">
+          <a href="" style="display: block; border-style: none !important; text-align: center; border: 0 !important;">
+              <img width="120" data-imagetype="DataUri"  src="cid:headerImage" style="padding: 10px;">
+          </a>
+      </td>
+    `;
   }
 
   if (header.headerHtml) {
@@ -167,19 +166,15 @@ export const replaceHeader = (header: {
 
     const headerPTags = header.headerHtml.split('\n');
     let headerText: string | string[] = headerPTags.map((ptag) => {
-      return /*html*/ `<tr bgcolor="#00205c" align="center">
-        <td mc:edit="title1" vertical-align="middle"  align="center" style="color: #fff; font-size: 16px; font-weight: normal; font-family: 'Roboto', Arial, sans-serif;"> ${ptag} </td>
-    </tr>`;
+      return /*html*/ `
+        <td style="color: #fff; font-size: 16px; font-family: 'Roboto', Arial, sans-serif; line-height: 20px;"> ${ptag} </td>
+        `;
     });
     headerText = headerText.join(' ');
 
-    headerString += `<tr bgcolor="#00205c" align="center">
-            <td height="20"></td>
-        </tr>
+    headerString += `
         ${headerText}
-        <tr bgcolor="#00205c" align="center">
-            <td height="20"></td>
-        </tr>`;
+        </tr></tbody></table>`;
   }
   return headerString;
 };
