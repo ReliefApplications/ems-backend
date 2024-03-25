@@ -27,6 +27,7 @@ export interface ProcessedDataset {
   records: any[];
   emails: string[];
   tableStyle: TableStyle;
+  fields: string[];
 }
 
 /**
@@ -39,6 +40,7 @@ export interface ProcessedIndividualDataset {
     emails: string;
   };
   tableStyle: TableStyle;
+  fields: string[];
 }
 
 /**
@@ -101,7 +103,8 @@ router.post('/send-email/:configId', async (req, res) => {
         const filterLogic = dataset?.filter ?? {};
         const limit = 50;
         const fieldsList = getFields(dataset?.fields ?? [])?.fields;
-        // const nestedFields = getFields(dataset?.fields ?? [])?.nestedField;
+        //const nestedFields = getFields(dataset?.fields ?? [])?.nestedField;
+
         const resource = await Resource.findOne({
           _id: dataset.resource.id,
         });
@@ -180,6 +183,7 @@ router.post('/send-email/:configId', async (req, res) => {
           records: tempRecords,
           emails: emailList,
           tableStyle: dataset.tableStyle,
+          fields: fieldsList,
         });
       })
     );
@@ -199,9 +203,11 @@ router.post('/send-email/:configId', async (req, res) => {
 
     if (config.emailLayout.header) {
       const headerElement = replaceHeader(config.emailLayout.header);
+      const backgroundColor =
+        config.emailLayout.header.headerBackgroundColor || '#00205c';
       mainTableElement.appendChild(
         parse(
-          `<tr bgcolor="#00205c"><td style="font-size: 13px; font-family: Helvetica, Arial, sans-serif;">${headerElement}</td></tr>`
+          `<tr bgcolor = ${backgroundColor}><td style="font-size: 13px; font-family: Helvetica, Arial, sans-serif;">${headerElement}</td></tr>`
         )
       );
     }
@@ -211,12 +217,13 @@ router.post('/send-email/:configId', async (req, res) => {
                 <td height="25"></td>
             </tr>`)
     );
-
-    const datasetsHtml = await replaceDatasets(
-      config.emailLayout.body.bodyHtml,
-      processedRecords
-    );
-    mainTableElement.appendChild(parse(`<tr><td>${datasetsHtml}</td></tr>`));
+    if (config.emailLayout.body) {
+      const datasetsHtml = await replaceDatasets(
+        config.emailLayout.body.bodyHtml,
+        processedRecords
+      );
+      mainTableElement.appendChild(parse(`<tr><td>${datasetsHtml}</td></tr>`));
+    }
 
     if (config.emailLayout.footer) {
       const footerElement = replaceFooter(config.emailLayout.footer);
@@ -393,6 +400,7 @@ router.post('/send-individual-email/:configId', async (req, res) => {
                   name: dataset.name,
                   record: { data: data, emails: obj.v },
                   tableStyle: dataset.tableStyle,
+                  fields: fieldsList,
                 });
               });
             }
@@ -418,6 +426,7 @@ router.post('/send-individual-email/:configId', async (req, res) => {
             records: tempRecords,
             emails: emailList,
             tableStyle: dataset.tableStyle,
+            fields: fieldsList,
           });
         }
       })
@@ -500,7 +509,12 @@ router.post('/send-individual-email/:configId', async (req, res) => {
       if (bodyString.includes(`{{${block.name}}}`)) {
         bodyString = bodyString.replace(
           `{{${block.name}}}`,
-          buildTable([block.record.data], block.name, block.tableStyle)
+          buildTable(
+            [block.record.data],
+            block.name,
+            block.tableStyle,
+            block.fields
+          )
         );
       }
 

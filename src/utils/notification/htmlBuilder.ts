@@ -187,7 +187,12 @@ export const replaceHeader = (header: {
  * @param styles tableStyles loaded from DB
  * @returns html table
  */
-export const buildTable = (records, name, styles: TableStyle): string => {
+export const buildTable = (
+  records,
+  name,
+  styles: TableStyle,
+  fieldList: string[]
+): string => {
   const tableStyle =
     styles?.tableStyle ||
     'width: 100%; border-collapse: collapse; border: 1px solid gray; box-shadow: 0 0 #0000; overflow:auto;';
@@ -230,20 +235,36 @@ export const buildTable = (records, name, styles: TableStyle): string => {
     table += `<table border="0" width="760" align="center" cellpadding="0" cellspacing="0" style="margin: 0 auto;">`;
     table += `<thead>`;
     table += `<tr bgcolor="#00205c">`;
-    for (const key in records[0].data) {
+    fieldList.forEach((field) => {
       table += `<th align="left" style="color: #fff; font-size: 14px; font-family: 'Roboto', Arial, sans-serif; padding-left: 10px">${replaceUnderscores(
-        key
+        field
       )}</th>`;
-    }
+    });
+
     table += '</tr></thead>';
     table += `<tbody>`;
     // Iterate over each record
     for (const record of records) {
       table += '<tr>';
       // Create a new cell for each field in the record
-      for (const key in record.data) {
+      // eslint-disable-next-line @typescript-eslint/no-loop-func
+      fieldList.forEach((field) => {
+        if (field !== 'id' && field !== 'form') {
+          table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px;">
+          ${formatDates(record.data[field])}</td>`;
+        }
+      });
+      // for (const key in fieldList) {
+      //   table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px;">
+      //   ${formatDates(record.data[key])}</td>`;
+      // }
+      if (fieldList.includes('id')) {
         table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px;">
-        ${formatDates(record.data[key])}</td>`;
+        ${formatDates(record.id)}</td>`;
+      }
+      if (fieldList.includes('form')) {
+        table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px;">
+        ${formatDates(record.form)}</td>`;
       }
       table += '</tr>';
     }
@@ -273,7 +294,8 @@ export const replaceDatasets = async (
           buildTable(
             processedDataSet.records,
             processedDataSet.name,
-            processedDataSet.tableStyle
+            processedDataSet.tableStyle,
+            processedDataSet.fields
           )
         );
       }
