@@ -112,6 +112,7 @@ export enum GeometryType {
 export interface LayerDatasource {
   resource?: mongoose.Types.ObjectId;
   refData?: mongoose.Types.ObjectId;
+  referenceDataVariableMapping?: string;
   layout?: mongoose.Types.ObjectId;
   aggregation?: mongoose.Types.ObjectId;
   geoField?: string;
@@ -172,6 +173,7 @@ const layerSchema = new Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: 'ReferenceData',
       },
+      referenceDataVariableMapping: String,
       layout: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Layout',

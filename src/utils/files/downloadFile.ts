@@ -1,4 +1,4 @@
-import { BlobServiceClient } from '@azure/storage-blob';
+import { BlobItem, BlobServiceClient } from '@azure/storage-blob';
 import { logger } from '@services/logger.service';
 import config from 'config';
 import fs from 'fs';
@@ -41,4 +41,27 @@ export const downloadFile = async (
     throw new Error(err.message);
   }
   return;
+};
+
+/**
+ * List files in a blob folder
+ *
+ * @param containerName container name
+ * @param folder folder name
+ * @returns list of blobs
+ */
+export const listFolderFiles = async (
+  containerName: string,
+  folder: string
+) => {
+  const blobs: BlobItem[] = [];
+  // Azure Blob Storage API : Create the blob client
+  const blobServiceClient = BlobServiceClient.fromConnectionString(
+    AZURE_STORAGE_CONNECTION_STRING
+  );
+  const containerClient = blobServiceClient.getContainerClient(containerName);
+  for await (const blob of containerClient.listBlobsFlat({ prefix: folder })) {
+    blobs.push(blob);
+  }
+  return blobs;
 };

@@ -2,21 +2,58 @@ import { AugmentedRequest, RESTDataSource } from '@apollo/datasource-rest';
 import { status, referenceDataType } from '@const/enumTypes';
 import { ApiConfiguration, ReferenceData } from '@models';
 import { getToken } from '@utils/proxy';
-import { get, memoize } from 'lodash';
-import NodeCache from 'node-cache';
+import { get, memoize, set } from 'lodash';
 import { logger } from '@services/logger.service';
 import jsonpath from 'jsonpath';
 import { ApolloServer } from '@apollo/server';
 import { Context } from './context';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import gql from 'graphql-tag';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { BaseRedisCache } from 'apollo-server-cache-redis';
+import Redis from 'ioredis';
+import config from 'config';
 
 /** Local storage initialization */
-const referenceDataCache: NodeCache = new NodeCache();
-/** Local storage key for last modified */
-const LAST_MODIFIED_KEY = '_last_modified';
+const referenceDataCache = new BaseRedisCache({
+  client: new Redis(config.get('redis.url'), {
+    password: config.get('redis.password'),
+    showFriendlyErrorStack: true,
+    lazyConnect: true,
+    maxRetriesPerRequest: 5,
+  }),
+});
 /** Local storage key for last request */
 const LAST_REQUEST_KEY = '_last_request';
 /** Property for filtering in requests */
 const LAST_UPDATE_CODE = '{{lastUpdate}}';
+
+/**
+ * Transform reference data graphql variables, to make sure they have the correct format.
+ *
+ * @param query graphql query to send
+ * @param variables variables mapping
+ * @returns void
+ */
+const transformGraphQLVariables = (query: string, variables: any = {}) => {
+  const graphQLQuery = gql(query);
+  const definition = graphQLQuery.definitions?.[0];
+  if (definition?.kind !== 'OperationDefinition') {
+    return variables;
+  }
+  (definition.variableDefinitions ?? []).forEach((def) => {
+    if (
+      get(def, 'type.name.value') === 'JSON' &&
+      get(variables, def.variable.name.value)
+    ) {
+      set(
+        variables,
+        def.variable.name.value,
+        JSON.stringify(get(variables, def.variable.name.value))
+      );
+    }
+  });
+};
 
 /**
  * CustomAPI class to create a dataSource fetching from an APIConfiguration.
@@ -129,18 +166,21 @@ export class CustomAPI extends RESTDataSource {
    *
    * @param referenceData ReferenceData to fetch
    * @param apiConfiguration ApiConfiguration to use
+   * @param variables supplementary graphQL variables
    * @returns referenceData objects
    */
   async getReferenceDataItems(
     referenceData: ReferenceData,
-    apiConfiguration: ApiConfiguration
+    apiConfiguration: ApiConfiguration,
+    variables?: any
   ): Promise<any[]> {
     switch (referenceData.type) {
       case referenceDataType.graphql: {
         // Call memoized function to save external requests.
         return this.memoizedReferenceDataGraphQLItems(
           referenceData,
-          apiConfiguration
+          apiConfiguration,
+          variables
         );
       }
       case referenceDataType.rest: {
@@ -163,69 +203,33 @@ export class CustomAPI extends RESTDataSource {
    *
    * @param referenceData ReferenceData to fetch
    * @param apiConfiguration ApiConfiguration to use
+   * @param variables supplementary graphQL variables
    * @returns referenceData objects
    */
   private async getReferenceDataGraphQLItems(
     referenceData: ReferenceData,
-    apiConfiguration: ApiConfiguration
+    apiConfiguration: ApiConfiguration,
+    variables?: any
   ) {
-    // Initialization
-    let items: any;
     // Add / between endpoint and path, and ensure that double slash are removed
     const url = `${apiConfiguration.endpoint.replace(/\$/, '')}/${
       apiConfiguration.graphQLEndpoint
     }`.replace(/([^:]\/)\/+/g, '$1');
-    const cacheKey = referenceData.id || '';
-    const cacheTimestamp = referenceDataCache.get(cacheKey + LAST_MODIFIED_KEY);
-    const modifiedAt = referenceData.modifiedAt || '';
-    // Check if same request
-    if (!cacheTimestamp || cacheTimestamp < modifiedAt) {
-      // Check if referenceData has changed. In this case, refresh choices instead of using cached ones.
-      const body = { query: this.processQuery(referenceData) };
-      let data = await this.post(url, { body });
-      if (typeof data === 'string') {
-        data = JSON.parse(data);
-      }
-      items = referenceData.path
-        ? jsonpath.query(data, referenceData.path)
-        : data;
-      referenceDataCache.set(cacheKey + LAST_MODIFIED_KEY, modifiedAt);
-    } else {
-      // If referenceData has not changed, use cached value and check for updates for graphQL.
-      const cache: any[] = referenceDataCache.get(cacheKey);
-      const isCached = cache !== undefined;
-      const valueField = referenceData.valueField || 'id';
-      const body = { query: this.processQuery(referenceData) };
-      let data = await this.post(url, { body });
-      if (typeof data === 'string') {
-        data = JSON.parse(data);
-      }
-      items = referenceData.path
-        ? jsonpath.query(data, referenceData.path)
-        : data;
-      // Cache new items
-      if (isCached) {
-        if (cache && items && items.length) {
-          for (const newItem of items) {
-            const cachedItemIndex = cache.findIndex(
-              (cachedItem) => cachedItem[valueField] === newItem[valueField]
-            );
-            if (cachedItemIndex !== -1) {
-              cache[cachedItemIndex] = newItem;
-            } else {
-              cache.push(newItem);
-            }
-          }
-        }
-        items = cache || [];
-      }
+    const query = await this.processQuery(referenceData);
+    if (query) {
+      transformGraphQLVariables(query, variables);
     }
-    // Cache items and timestamp
-    referenceDataCache.set(cacheKey, items);
-    referenceDataCache.set(
-      cacheKey + LAST_REQUEST_KEY,
-      this.formatDateSQL(new Date())
-    );
+    const body = {
+      query,
+      variables: variables || {},
+    };
+    let data = await this.post(url, { body });
+    if (typeof data === 'string') {
+      data = JSON.parse(data);
+    }
+    const items = referenceData.path
+      ? jsonpath.query(data, referenceData.path)
+      : data;
     return items;
   }
 
@@ -235,7 +239,7 @@ export class CustomAPI extends RESTDataSource {
    * @param refData Reference data to process
    * @returns Processed query
    */
-  private processQuery(refData: ReferenceData) {
+  private async processQuery(refData: ReferenceData) {
     const { query, id } = refData;
     if (!query || !id) return query;
 
@@ -245,7 +249,7 @@ export class CustomAPI extends RESTDataSource {
       switch (variable) {
         case LAST_UPDATE_CODE:
           const lastUpdate =
-            referenceDataCache.get<string>(id + LAST_REQUEST_KEY) ||
+            (await referenceDataCache.get(id + LAST_REQUEST_KEY)) ||
             this.formatDateSQL(new Date(0));
           processedQuery = processedQuery
             .split(LAST_UPDATE_CODE)
