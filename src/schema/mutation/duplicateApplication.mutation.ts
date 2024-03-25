@@ -216,9 +216,11 @@ export default {
                 }
 
                 // Add the new permissions to the field
-                field.permissions[permType].push(...newPermissions);
-                added = true;
-                resource.markModified('fields');
+                if (field.permissions[permType]) {
+                  field.permissions[permType].push(...newPermissions);
+                  added = true;
+                  resource.markModified('fields');
+                }
               });
             });
             if (added) {
@@ -344,8 +346,10 @@ export default {
 
           // Add pages to the map
           baseApplication.pages.forEach((p, index) => {
-            idsToReplace[baseApplication.pages[index].toString()] =
-              application.pages[index].toString();
+            if (baseApplication.pages[index] && application.pages[index]) {
+              idsToReplace[baseApplication.pages[index].toString()] =
+                application.pages[index].toString();
+            }
           });
 
           // Populate pages to get the newly created dashboards

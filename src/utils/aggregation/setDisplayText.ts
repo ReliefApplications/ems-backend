@@ -36,7 +36,10 @@ const setDisplayText = async (
     }
     // then, search for related field
     const formField = lookAt.find((field: any) => {
-      return lookFor === field.name && (field.choices || field.choicesByUrl);
+      return (
+        lookFor === field.name &&
+        (field.choices || field.choicesByUrl || field.choicesByGraphQL)
+      );
     });
     if (formField) {
       return { ...(await acc), [x.key]: formField };

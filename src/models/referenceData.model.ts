@@ -2,7 +2,7 @@ import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { getGraphQLTypeName } from '@utils/validators';
 import { referenceDataType } from '@const/enumTypes';
-import { get, set, snakeCase } from 'lodash';
+import { get, isArray, map, set, snakeCase } from 'lodash';
 import { aggregationSchema } from './aggregation.model';
 
 /**
@@ -34,13 +34,26 @@ export class DataTransformer {
    * @returns graphQL data
    */
   transformData() {
+    const getNestedValues = (obj, path) => {
+      if (path.includes('.')) {
+        const splitPath = path.split('.');
+        const parent = splitPath.shift();
+        return isArray(get(obj, parent))
+          ? map(get(obj, parent), (item) =>
+              getNestedValues(item, splitPath.join('.'))
+            )
+          : getNestedValues(get(obj, parent), splitPath.join('.'));
+      } else {
+        return get(obj, path);
+      }
+    };
+
     return this.data.map((item) => {
       const transformedItem = {};
 
       this.fields.forEach((field) => {
         const { name, graphQLFieldName } = field;
-        const value = get(item, name);
-
+        const value = getNestedValues(item, name);
         set(transformedItem, graphQLFieldName, value);
       });
 
@@ -69,6 +82,35 @@ interface ReferenceDataDocument extends Document {
     canDelete?: any[];
   };
   aggregations: any;
+
+  // Pagination strategies
+  //  offset: The client will send the offset (how many items to skip)
+  //  cursor: The client will send the cursor of the last item
+  //  page: The client will send the page number
+  pageInfo?: {
+    // JSON path that when queried to the API response will return the total number of items
+    totalCountField?: string;
+    // Name of the query variable that corresponds to the page size
+    pageSizeVar?: string;
+  } & (
+    | {
+        strategy: 'offset';
+        // Name of the query variable to be used for determining the offset
+        offsetVar: string;
+      }
+    | {
+        strategy: 'cursor';
+        // JSON path that when queried to the API response will return the cursor
+        cursorField: string;
+        // Name of the query variable to be used for determining the cursor
+        cursorVar: string;
+      }
+    | {
+        strategy: 'page';
+        // Name of the query variable that corresponds to the page number
+        pageVar: string;
+      }
+  );
 }
 
 /** Interface of Reference Data */
@@ -128,6 +170,18 @@ const schema = new Schema<ReferenceData>(
       ],
     },
     aggregations: [aggregationSchema],
+    pageInfo: {
+      strategy: {
+        type: String,
+        enum: ['offset', 'cursor', 'page'],
+      },
+      cursorField: String,
+      cursorVar: String,
+      offsetVar: String,
+      pageVar: String,
+      pageSizeVar: String,
+      totalCountField: String,
+    },
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },

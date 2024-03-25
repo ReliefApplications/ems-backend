@@ -3,6 +3,7 @@
  * JSON used to map ownership for EIOS Pulljob
  */
 export const ownershipMappingJSON = {
+  'default': ['Signal HQ PHI'],
   '0_COVID Countries': ['Signal HQ PHI','Signal HQ AEE'],
   'AEE_Monkeypox_Expanded': ['Signal HQ PHI','Signal HQ AEE'],
   'AFRO Media Monitoring w/o COVID-19': ['Signal HQ PHI','Signal AFRO'],
