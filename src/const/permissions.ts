@@ -7,6 +7,7 @@ const permissions = {
   canSeeGroups: 'can_see_groups',
   canSeeApplications: 'can_see_applications',
   canCreateApplications: 'can_create_applications',
+  canDeleteApplications: 'can_delete_applications',
   canCreateForms: 'can_create_forms',
   canCreateResources: 'can_create_resources',
   canManageApiConfigurations: 'can_manage_api_configurations',

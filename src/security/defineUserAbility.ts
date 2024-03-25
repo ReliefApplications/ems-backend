@@ -162,6 +162,13 @@ export default function defineUserAbility(user: User | Client): AppAbility {
   }
 
   /* ===
+    Deletion of applications
+  === */
+  if (userGlobalPermissions.includes(permissions.canDeleteApplications)) {
+    can('delete', 'Application');
+  }
+
+  /* ===
     Creation / Access / Edition / Deletion of applications
   === */
   if (userGlobalPermissions.includes(permissions.canManageApplications)) {
@@ -181,7 +188,7 @@ export default function defineUserAbility(user: User | Client): AppAbility {
     );
   } else {
     can('update', ['Application', 'Page', 'Step'], filters('canUpdate', user));
-    can('delete', ['Application', 'Page', 'Step'], filters('canDelete', user));
+    can('delete', ['Page', 'Step'], filters('canDelete', user));
   }
 
   /* ===
