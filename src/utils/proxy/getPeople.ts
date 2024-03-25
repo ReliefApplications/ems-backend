@@ -4,6 +4,7 @@ import axios from 'axios';
  * Fetches the people
  *
  * @param token The authorization token
+ * @param filter The filter used for fetching the distant users
  * @returns the choices
  */
 export const getPeople = async (token: string, filter: any): Promise<any[]> => {

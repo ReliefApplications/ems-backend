@@ -11,7 +11,7 @@ type PeopleArgs = {
 };
 
 /**
- * Get people.
+ * Return distant users from common services
  */
 export default {
   type: new GraphQLList(PersonType),
@@ -19,16 +19,26 @@ export default {
     filter: { type: GraphQLJSON },
   },
   async resolve(parent, args: PeopleArgs, context: Context) {
+    if (!args.filter) return [];
     try {
-      const myFilter = `{
-        OR: [
-          { firstname_like: "%${args.filter.value}%" }
-          { lastname_like: "%${args.filter.value}%" }
-          { emailaddress_like: "%${args.filter.value}%" }
-        ]
-      }`;
-
-      const people = await getPeople(context.token, myFilter);
+      // Formatted filter used by the API
+      const getFormattedFilter = (filter: any) => {
+        const formattedFilter = `{${filter.logic.toUpperCase()}:[
+            ${filter.filters.map((el: any) => {
+              if (el.operator === 'like') {
+                el.value = `"%${el.value}%"`;
+              } else if (el.operator === 'in') {
+                el.value = el.value.map((e) => `"${e}"`);
+                el.value = `[${el.value}]`;
+              }
+              return `{ ${el.field}_${el.operator}: ${el.value} }`;
+            })}
+          ]
+        }`;
+        return formattedFilter.replace(/\s/g, '');
+      };
+      const filter = getFormattedFilter(args.filter);
+      const people = await getPeople(context.token, filter);
       if (people) {
         return people.map((person) => {
           const updatedPerson = { ...person };
@@ -37,6 +47,7 @@ export default {
           return updatedPerson;
         });
       }
+      return [];
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(

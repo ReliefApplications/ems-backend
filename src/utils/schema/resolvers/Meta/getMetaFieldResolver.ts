@@ -4,6 +4,7 @@ import getMetaOwnerResolver from './getMetaOwnerResolver';
 import getMetaUsersResolver from './getMetaUsersResolver';
 import getMetaRadioResolver from './getMetaRadiogroupResolver';
 import getMetaTagboxResolver from './getMetaTagboxResolver';
+import getMetaPeopleResolver from './getMetaPeopleResolver';
 
 /**
  * Return GraphQL resolver of the field, based on its type.
@@ -27,6 +28,9 @@ const getMetaFieldResolver = (field: any) => {
     }
     case 'users': {
       return getMetaUsersResolver(field);
+    }
+    case 'people': {
+      return getMetaPeopleResolver(field);
     }
     case 'owner': {
       return getMetaOwnerResolver(field);

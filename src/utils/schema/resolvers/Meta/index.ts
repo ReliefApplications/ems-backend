@@ -170,6 +170,9 @@ export const getMetaResolver = (
                   )
                 ]
               : parent[fieldName];
+            if (field.type === 'people') {
+              field.resource = id;
+            }
             return getMetaFieldResolver(field);
           },
         }),
