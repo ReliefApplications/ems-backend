@@ -12,12 +12,21 @@ const getMetaPeopleResolver = async (field: any) => {
   const peopleIds = [];
   records.forEach((record) => {
     const propertyValue = record.data[field.name];
-    peopleIds.push(...propertyValue.flat());
+    propertyValue.flat().forEach((id: string) => {
+      if (!peopleIds.includes(id)) {
+        peopleIds.push(id);
+      }
+    });
   });
   const getFilter = (people: any) => {
-    const formattedFilter = `{OR:[
-        userid_eq:
-        [${people.map((el: any) => `"${el}"`)}]`;
+    const formattedFilter = `{
+      OR: [
+        {
+          userid_eq:
+          [${people.map((el: any) => `"${el}"`)}]
+        }
+      ]
+    }`;
     return formattedFilter.replace(/\s/g, '');
   };
   const filter = getFilter(peopleIds);
