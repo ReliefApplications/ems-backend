@@ -31,7 +31,20 @@ export const DashboardType = new GraphQLObjectType({
         }
       },
     },
-    buttons: { type: GraphQLJSON },
+    buttons: {
+      type: GraphQLJSON,
+      resolve(parent, args, context) {
+        if (!parent.canUpdate)
+          return parent.buttons.filter((button) =>
+            context.user.roles?.some((role) =>
+              button.visibleToRoles?.includes(role.id || '')
+            )
+          );
+        else {
+          return parent.buttons;
+        }
+      },
+    },
     gridOptions: {
       type: GraphQLJSON,
       resolve(parent) {

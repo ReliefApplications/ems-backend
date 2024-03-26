@@ -2,9 +2,10 @@ import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
 /** Mongoose button interface declaration */
-interface Button {
+export interface Button {
   text: string;
   href: string;
+  visibleToRoles: string[];
   variant: string;
   category: string;
   openInNewTab: boolean;
