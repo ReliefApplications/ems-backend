@@ -206,7 +206,6 @@ router.post('/send-email/:configId', async (req, res) => {
       config.emailLayout.body.bodyHtml,
       processedRecords
     );
-    console.log(datasetsHtml);
     mainTableElement.appendChild(parse(`<tr><td>${datasetsHtml}</td></tr>`));
 
     if (config.emailLayout.footer) {
@@ -528,7 +527,6 @@ router.post('/send-individual-email/:configId', async (req, res) => {
       const bodyBlock = parse(bodyString);
 
       bodyElement.appendChild(bodyBlock);
-      console.log(parse(bodyString).toString());
       emailElement = mainTableElement;
       const emailParams = {
         message: {

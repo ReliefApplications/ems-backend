@@ -479,7 +479,6 @@ router.post('/distributionList', async (req: any, res) => {
     await workbook.xlsx.load(req.files.file.data).then(() => {
       const distributionList = workbook.getWorksheet('distributionList');
       distributionList.eachRow({ includeEmpty: false }, (row, rowCount) => {
-        console.log(row.values);
         const toAddress = row?.values[1];
         const ccAddress = row?.values[2];
         const bccAddress = row?.values[3];

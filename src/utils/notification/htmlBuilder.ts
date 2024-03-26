@@ -172,8 +172,6 @@ export const replaceHeader = (header: {
     </tr>`;
     });
     headerText = headerText.join(' ');
-    // console.log(headerText);
-    // console.log(headerPTags);
 
     headerString += `<tr bgcolor="#00205c" align="center">
             <td height="20"></td>

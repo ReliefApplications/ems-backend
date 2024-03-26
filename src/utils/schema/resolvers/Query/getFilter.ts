@@ -466,11 +466,13 @@ const buildMongoFilter = (
             }
           }
           case 'inthelast': {
-            if (DATE_TYPES.includes(type)) {
+            if ([...DATE_TYPES, ...DATETIME_TYPES].includes(type)) {
               const now = Date.now();
               const withinTheLastMs = value * 60 * 1000;
               const dateLowerLimit = new Date(now - withinTheLastMs);
               return { [fieldName]: { $gte: dateLowerLimit } };
+            } else {
+              return;
             }
           }
           case 'near': {

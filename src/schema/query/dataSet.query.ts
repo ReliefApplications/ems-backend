@@ -317,7 +317,7 @@ export default {
         tabIndex: tabIndex,
       };
     } catch (error) {
-      logger.error('DataSets Resolver', error.message, {
+      logger.error('Failed to resolve dataset', error.message, {
         stack: error.stack,
       });
       if (error instanceof GraphQLError) {
