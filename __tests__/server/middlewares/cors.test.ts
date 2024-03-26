@@ -31,6 +31,7 @@ const mockConfig = {
     realm: 'mock',
     provider: 'mock',
     allowedIssuers: [],
+    audience: '[]',
   },
 };
 
