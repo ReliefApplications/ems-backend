@@ -51,8 +51,8 @@ describe('Channels query tests', () => {
     expect(response.body).not.toHaveProperty('errors');
     expect(response.body).toHaveProperty('data');
     expect(response.body).toHaveProperty(['data', 'channels']);
-    expect(response.body.data?.channels.length).toEqual(count);
-    response.body.data?.channels.forEach((prop) => {
+    expect(response.body.data.channels.length).toEqual(count);
+    response.body.data.channels.forEach((prop) => {
       expect(prop).toHaveProperty('title');
     });
   });

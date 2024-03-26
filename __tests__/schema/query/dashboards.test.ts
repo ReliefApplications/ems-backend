@@ -51,8 +51,8 @@ describe('Dashboards query tests', () => {
     expect(response.body).not.toHaveProperty('errors');
     expect(response.body).toHaveProperty('data');
     expect(response.body).toHaveProperty(['data', 'dashboards']);
-    expect(response.body.data?.dashboards.length).toEqual(count);
-    response.body.data?.dashboards.forEach((prop) => {
+    expect(response.body.data.dashboards.length).toEqual(count);
+    response.body.data.dashboards.forEach((prop) => {
       expect(prop).toHaveProperty('name');
     });
   });
