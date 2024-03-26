@@ -12,7 +12,7 @@ const createUser = async () => {
   });
   if (user.length > 0) await User.deleteMany({ username: 'dummy@dummy.com' });
 
-  const admin = await Role.findOne({ title: 'admin' });
+  const admin = await new Role({ title: 'admin' }).save();
   const date = new Date();
   date.setDate(date.getDate() + 7);
   const newUser = await new User({
