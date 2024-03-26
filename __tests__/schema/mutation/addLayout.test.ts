@@ -121,8 +121,6 @@ describe('Add layout tests cases', () => {
       },
     };
 
-    console.log(token);
-
     const response = await request
       .post('/graphql')
       .send({ query, variables })

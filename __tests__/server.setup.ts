@@ -88,7 +88,6 @@ class SafeTestServer {
       },
       wsServer
     );
-    this.getUserTest();
 
     // === APOLLO ===
     this.apolloServer = new ApolloServer<Context>({
@@ -231,27 +230,6 @@ class SafeTestServer {
       { username: 'dummy@dummy.com' },
       { roles: [admin._id] }
     );
-  }
-
-  /**
-   * Create user if necessary.
-   */
-  private async getUserTest() {
-    const user = await User.find({
-      username: { $in: 'dummy@dummy.com' },
-    });
-    if (user.length > 0) await User.deleteMany({ username: 'dummy@dummy.com' });
-
-    const admin = await Role.findOne({ title: 'admin' });
-    const date = new Date();
-    date.setDate(date.getDate() + 7);
-    const newUser = await new User({
-      username: 'dummy@dummy.com',
-      roles: admin._id,
-      ability: SafeTestServer.defineUserAbilityMock(),
-      deleteAt: date,
-    }).save();
-    return newUser;
   }
 }
 
