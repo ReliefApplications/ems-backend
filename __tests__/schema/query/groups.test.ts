@@ -31,7 +31,7 @@ describe('Groups query tests', () => {
       .set('Accept', 'application/json');
 
     expect(response.body).toHaveProperty(['data', 'groups']);
-    expect(response.body.data?.groups).toEqual(null);
+    expect(response.body.data?.groups).toEqual([]);
   });
 
   test('query with admin user returns expected number of groups', async () => {

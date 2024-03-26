@@ -32,7 +32,7 @@ describe('Records query tests', () => {
     expect(response.status).toBe(200);
 
     expect(response.body).toHaveProperty(['data', 'records']);
-    expect(response.body.data?.records).toEqual(null);
+    expect(response.body.data?.records).toEqual([]);
   });
 
   test('query with admin user returns expected number of records', async () => {

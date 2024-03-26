@@ -20,7 +20,7 @@ beforeAll(async () => {
  * Test Users query.
  */
 describe('Users query tests', () => {
-  const query = '{ users { id, username } }';
+  const query = '{ users { totalCount, edges { node { username }} } }';
 
   test('query with admin user returns expected number of users', async () => {
     const count = await User.countDocuments();
@@ -36,10 +36,10 @@ describe('Users query tests', () => {
       .set('Accept', 'application/json');
 
     expect(response.body.errors).toBeUndefined();
-    expect(response.body).toHaveProperty(['data', 'users']);
-    expect(response.body.data?.users.length).toEqual(count);
-    response.body.data?.users.forEach((prop) => {
-      expect(prop).toHaveProperty('username');
+    expect(response.body).toHaveProperty(['data', 'users', 'totalCount']);
+    expect(response.body.data.users.totalCount).toEqual(count);
+    response.body.data.users.edges.forEach((prop) => {
+      expect(prop.node).toHaveProperty('username');
     });
   });
 });
