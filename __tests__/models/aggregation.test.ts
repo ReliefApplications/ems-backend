@@ -95,9 +95,9 @@ describe('Aggregation models tests', () => {
     };
     expect(async () =>
       new Resource(duplicateResource).save()
-    ).rejects.toThrowError(
-      'E11000 duplicate key error collection: test.resources index: name_1 dup key'
-    );
+    ).rejects.toMatchObject({
+      code: 11000,
+    });
   });
 
   test('test with incorrect resource name field', async () => {
