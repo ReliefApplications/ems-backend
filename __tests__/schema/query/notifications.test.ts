@@ -1,11 +1,22 @@
-import { ApolloServer } from 'apollo-server-express';
-import schema from '../../../src/schema';
-import { SafeTestServer } from '../../server.setup';
 import { Notification, Role, User } from '@models';
 import defineUserAbility from '@security/defineUserAbility';
 import { accessibleBy } from '@casl/mongoose';
 
-let server: ApolloServer;
+import supertest from 'supertest';
+import schema from '../../../src/schema';
+import { SafeTestServer } from '../../server.setup';
+import { acquireToken } from '../../authentication.setup';
+
+let server: SafeTestServer;
+let request: supertest.SuperTest<supertest.Test>;
+let token: string;
+
+beforeAll(async () => {
+  server = new SafeTestServer();
+  await server.start(schema);
+  request = supertest(server.app);
+  token = `Bearer ${await acquireToken()}`;
+});
 
 /**
  * Test Notifications query.
@@ -14,36 +25,29 @@ describe('Notifications query tests', () => {
   const query = '{ notifications { totalCount, edges { node { id } } } }';
 
   test('query with wrong user returns error', async () => {
-    server = await SafeTestServer.createApolloTestServer(schema, {
-      name: 'Wrong user',
-      roles: [],
-    });
-    const result = await server.executeOperation({ query });
-    expect(result.errors).toBeUndefined();
-    expect(result).toHaveProperty(['data', 'notifications', 'totalCount']);
-    expect(result.data?.notifications.edges).toEqual([]);
-    expect(result.data?.notifications.totalCount).toEqual(0);
+    await User.updateOne({ username: 'dummy@dummy.com' }, { roles: [] });
+    const response = await request
+      .post('/graphql')
+      .send({ query })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    expect(response.body.errors).toBeUndefined();
+    expect(response.body).toHaveProperty([
+      'data',
+      'notifications',
+      'totalCount',
+    ]);
+    expect(response.body.data?.notifications.edges).toEqual([]);
+    expect(response.body.data?.notifications.totalCount).toEqual(0);
   });
 
   test('query with admin user returns expected number of notifications', async () => {
-    const role = await Role.findOne(
-      { title: 'admin' },
-      'id permissions'
-    ).populate({
-      path: 'permissions',
-      model: 'Permission',
-    });
-    let user = await User.findOne({ username: 'dummy@dummy.com' });
-    if (!user) {
-      user = await new User({
-        firstName: 'dummy',
-        lastName: 'dummy',
-        username: 'dummy1@dummy.com',
-        role: [role._id],
-      }).save();
-    }
-
-    user.roles = [role];
+    const admin = await Role.findOne({ title: 'admin' });
+    await User.updateOne(
+      { username: 'dummy@dummy.com' },
+      { roles: [admin._id] }
+    );
+    const user = await User.findOne({ username: 'dummy@dummy.com' });
     const ability = defineUserAbility(user);
 
     const abilityFilters = Notification.find(
@@ -57,22 +61,18 @@ describe('Notifications query tests', () => {
       $and: [cursorFilters, ...filters],
     });
 
-    const admin = await Role.findOne(
-      { title: 'admin' },
-      'id permissions'
-    ).populate({
-      path: 'permissions',
-      model: 'Permission',
-    });
+    const response = await request
+      .post('/graphql')
+      .send({ query })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
 
-    server = await SafeTestServer.createApolloTestServer(schema, {
-      name: 'Admin user',
-      roles: [admin],
-    });
-    const result = await server.executeOperation({ query });
-
-    expect(result.errors).toBeUndefined();
-    expect(result).toHaveProperty(['data', 'notifications', 'totalCount']);
-    expect(result.data?.notifications.totalCount).toEqual(count);
+    expect(response.body.errors).toBeUndefined();
+    expect(response.body).toHaveProperty([
+      'data',
+      'notifications',
+      'totalCount',
+    ]);
+    expect(response.body.data?.notifications.totalCount).toEqual(count);
   });
 });
