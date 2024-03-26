@@ -172,8 +172,7 @@ export const replaceHeader = (header: {
     });
     headerText = headerText.join(' ');
 
-    headerString += `
-        ${headerText}
+    headerString += `${headerText}
         </tr></tbody></table>`;
   }
   return headerString;
@@ -249,23 +248,9 @@ export const buildTable = (
       // Create a new cell for each field in the record
       // eslint-disable-next-line @typescript-eslint/no-loop-func
       fieldList.forEach((field) => {
-        if (field !== 'id' && field !== 'form') {
-          table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px;">
+        table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px;">
           ${formatDates(record.data[field])}</td>`;
-        }
       });
-      // for (const key in fieldList) {
-      //   table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px;">
-      //   ${formatDates(record.data[key])}</td>`;
-      // }
-      if (fieldList.includes('id')) {
-        table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px;">
-        ${formatDates(record.id)}</td>`;
-      }
-      if (fieldList.includes('form')) {
-        table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px;">
-        ${formatDates(record.form)}</td>`;
-      }
       table += '</tr>';
     }
     table += '</tbody>';

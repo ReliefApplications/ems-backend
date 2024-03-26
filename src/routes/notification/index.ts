@@ -118,7 +118,9 @@ router.post('/send-email/:configId', async (req, res) => {
         fieldsList.forEach((fieldData) => {
           if (
             fieldData.includes('createdAt') ||
-            fieldData.includes('modifiedAt')
+            fieldData.includes('modifiedAt') ||
+            fieldData.includes('id') ||
+            fieldData.includes('form')
           ) {
             projectFields[fieldData] = `$${fieldData}`;
           } else if (
