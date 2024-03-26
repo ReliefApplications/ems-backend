@@ -29,10 +29,32 @@ In order to execute tests locally, you can execute the command:
 docker-compose -f docker-compose.test.yml run test-server npm run test
 ```
 
+Or this command:
+```
+npm run test
+```
+
 It is also possible to run tests on a single file, by passing it as a parameter:
 ```
 docker-compose -f docker-compose.test.yml run test-server npm run test -- <path_to_file>
 ```
+
+Or with this command:
+```
+npm run test -- <path_to_file>
+```
+
+You can also limit the tests to one specific folder. For example:
+```
+npm run test -- --testPathPattern=models
+```
+
+Note: If you're running the tests on Windows, make sure the test command in your `package.json` file is set up correctly. Here's the command that should be in the `scripts` section of your `package.json` file:
+
+```json
+"test": "node --max-old-space-size=8192 ./node_modules/jest/bin/jest.js --logHeapUsage --forceExit"
+```
+Will only run tests in the **models** folder.
 
 # RabbitMQ
 
