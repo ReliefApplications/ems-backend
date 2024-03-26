@@ -224,14 +224,20 @@ router.post('/send-email/:configId', async (req, res) => {
         config.emailLayout.body.bodyHtml,
         processedRecords
       );
-      mainTableElement.appendChild(parse(`<tr><td>${datasetsHtml}</td></tr>`));
+      const backgroundColor =
+        config.emailLayout.body.bodyBackgroundColor || '#ffffff';
+      mainTableElement.appendChild(
+        parse(`<tr bgcolor = ${backgroundColor}><td>${datasetsHtml}</td></tr>`)
+      );
     }
 
     if (config.emailLayout.footer) {
       const footerElement = replaceFooter(config.emailLayout.footer);
+      const backgroundColor =
+        config.emailLayout.footer.footerBackgroundColor || '#ffffff';
       mainTableElement.appendChild(
         parse(
-          `<tr><td style="font-size: 13px; font-family: Helvetica, Arial, sans-serif;">${footerElement}</td></tr>`
+          `<tr bgcolor= ${backgroundColor}><td style="font-size: 13px; font-family: Helvetica, Arial, sans-serif;">${footerElement}</td></tr>`
         )
       );
     }

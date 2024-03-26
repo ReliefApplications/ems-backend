@@ -73,7 +73,7 @@ export const replaceHeader = (header: {
   };
   headerLogoStyle: string;
 }): string => {
-  let headerString = `<table border="0" cellpadding="0" cellspacing="0" width="760px">
+  let headerString = `<table border="0" cellpadding="0" cellspacing="0" width="760px" style="padding: 10px;">
   <tbody>
   <tr>`;
 
@@ -164,17 +164,30 @@ export const replaceHeader = (header: {
       );
     }
 
-    const headerPTags = header.headerHtml.split('\n');
-    let headerText: string | string[] = headerPTags.map((ptag) => {
-      return /*html*/ `
-        <td style="color: #fff; font-size: 16px; font-family: 'Roboto', Arial, sans-serif; line-height: 20px;"> ${ptag} </td>
-        `;
-    });
-    headerText = headerText.join(' ');
+    const headerPTags = header.headerHtml.split('<p>').filter(Boolean);
+    const headerText = headerPTags
+      .map((ptag) => {
+        // Remove </p> tag from the end of the string
+        const text = ptag.replace('</p>', '').trim();
+        return /*html*/ `
+        <td style="color: #fff; font-size: 16px; font-family: 'Roboto', Arial, sans-serif; line-height: 20px; text-align: center;">${text}</td>
+      `;
+      })
+      .join('</tr><tr>'); // Join each table cell and add a table row between them
 
-    headerString += `${headerText}
-        </tr></tbody></table>`;
+    headerString += `<td>
+      <table border="0" cellpadding="0" cellspacing="0" width="760">
+        <tbody>
+          <tr>
+            ${headerText}
+          </tr>
+        </tbody>
+      </table>
+    </td>`;
   }
+
+  headerString += `</tr></tbody></table>`;
+
   return headerString;
 };
 
@@ -357,17 +370,28 @@ export const replaceFooter = (footer: {
         todayToString
       );
     }
-    const footerPTags = footer.footerHtml.split('\n');
-    let footerText: string | string[] = footerPTags.map((ptag) => {
-      return /*html*/ `
-            <td style="font-size: 14px; font-family: 'Roboto', Arial, sans-serif; line-height: 20px;"> ${ptag} </td>
+    const footerPTags = footer.footerHtml.split('<p>').filter(Boolean);
+    const footerText = footerPTags
+      .map((ptag) => {
+        const text = ptag.replace('</p>', '').trim();
+        return /*html*/ `
+            <td style="font-size: 14px; font-family: 'Roboto', Arial, sans-serif; line-height: 20px;"> ${text} </td>
         `;
-    });
-    footerText = footerText.join(' ');
+      })
+      .join('</tr><tr>');
 
-    footerString += `
+    footerString += `<td>
+    <table>
+      <tbody>
+        <tr>
           ${footerText}
-          </tr></tbody></table>`;
+        </tr>
+      </tbody>
+    </table>
+  </td>`;
   }
+
+  footerString += `</tr></tbody></table>`;
+
   return footerString;
 };
