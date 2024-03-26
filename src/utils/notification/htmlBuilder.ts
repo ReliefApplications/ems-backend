@@ -192,19 +192,20 @@ export const buildTable = (
   styles: TableStyle,
   fieldList: string[]
 ): string => {
-  const tableStyle =
-    styles?.tableStyle ||
-    'width: 100%; border-collapse: collapse; border: 1px solid gray; box-shadow: 0 0 #0000; overflow:auto;';
-  //const theadStyle = styles?.theadStyle || '';
-  const tbodyStyle = styles?.tbodyStyle || '';
-  const trStyle =
-    styles?.trStyle || 'border-top: 1px solid gray; background-color: white;';
-  //const thStyle =
-  //  styles?.thStyle ||
-  //  'text-align: left; padding: 2px; background-color: #00205C; color: white;';
-  const tdStyle = styles?.tdStyle || 'padding: 2px; text-align: left;';
-  //const labelStyle = 'background-color: #00205C; color: white;';
-  //const tableDivStyle = styles?.tableDivStyle || '';
+  // Styles to be used later on
+  // const tableStyle =
+  //   styles?.tableStyle ||
+  //   'width: 100%; border-collapse: collapse; border: 1px solid gray; box-shadow: 0 0 #0000; overflow:auto;';
+  // //const theadStyle = styles?.theadStyle || '';
+  // const tbodyStyle = styles?.tbodyStyle || '';
+  // const trStyle =
+  //   styles?.trStyle || 'border-top: 1px solid gray; background-color: white;';
+  // //const thStyle =
+  // //  styles?.thStyle ||
+  // //  'text-align: left; padding: 2px; background-color: #00205C; color: white;';
+  // const tdStyle = styles?.tdStyle || 'padding: 2px; text-align: left;';
+  // //const labelStyle = 'background-color: #00205C; color: white;';
+  // //const tableDivStyle = styles?.tableDivStyle || '';
 
   // THE FOLLOWING CSS SELECTORS ARE BANNED:
   // overflow, justify, display
@@ -213,11 +214,15 @@ export const buildTable = (
   //Checks if data is undefined
   if (!records[0] || !records[0].data) {
     table = `
-    <table style="${tableStyle};">
-      <tbody style="${tbodyStyle}">
-        <tr style="${trStyle}">
-          <td style="${tdStyle}">no data found</td>
+    <table  border="0" width="760" align="center" cellpadding="0" cellspacing="0" >
+      <tbody>
+        <tr bgcolor="#00205c">
+            <td mc:edit="title1" height="40" style="color: #fff; font-size: 15px; font-weight: 700; font-family: 'Roboto', Arial, sans-serif; padding-left: 10px;">
+            ${name}</td>
+        </tr>
         <tr>
+          <td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px;">No data found</td>
+        </tr>
       </tbody>
     </table>`;
   } else {
