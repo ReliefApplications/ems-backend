@@ -36,6 +36,8 @@ const getMetaPeopleResolver = async (field: any, context: Context) => {
     return [];
   }
 
+  delete field.resource;
+
   return Object.assign(field, {
     choices: people.map((x: any) => {
       const fullname =
