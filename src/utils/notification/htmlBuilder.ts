@@ -227,7 +227,7 @@ export const buildTable = (
   //Checks if data is undefined
   if (!records[0] || !records[0].data) {
     table = `
-    <table  border="0" width="760" align="center" cellpadding="0" cellspacing="0" >
+    <table  border="0" width="760" align="center" cellpadding="0" cellspacing="0" bgcolor="ffffff" >
       <tbody>
         <tr bgcolor="#00205c">
             <td mc:edit="title1" height="40" style="color: #fff; font-size: 15px; font-weight: 700; font-family: 'Roboto', Arial, sans-serif; padding-left: 10px;">
@@ -239,7 +239,7 @@ export const buildTable = (
       </tbody>
     </table>`;
   } else {
-    table += `<table border="0" width="760" align="center" cellpadding="0" cellspacing="0" >
+    table += `<table border="0" width="760" align="center" cellpadding="0" cellspacing="0"  >
                 <tbody><tr bgcolor="#00205c">
                     <td mc:edit="title1" height="40" style="color: #fff; font-size: 15px; font-weight: 700; font-family: 'Roboto', Arial, sans-serif; padding-left: 10px;">
                     ${name}</td>
@@ -249,7 +249,7 @@ export const buildTable = (
             </tr>
             </tbody>
             </table>`;
-    table += `<table border="0" width="760" align="center" cellpadding="0" cellspacing="0" style="margin: 0 auto;">`;
+    table += `<table bgcolor="ffffff" border="0" width="760" align="center" cellpadding="0" cellspacing="0" style="margin: 0 auto;">`;
     table += `<thead>`;
     table += `<tr bgcolor="#00205c">`;
     fieldList.forEach((field) => {
