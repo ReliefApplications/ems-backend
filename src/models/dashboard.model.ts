@@ -40,6 +40,7 @@ const buttonSchema = new Schema<Button>(
   {
     text: String,
     href: String,
+    visibleToRoles: Array<string>,
     variant: String,
     category: String,
     openInNewTab: Boolean,

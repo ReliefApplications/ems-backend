@@ -87,7 +87,6 @@ export default {
         args.buttons && { buttons: args.buttons },
         args.gridOptions && { gridOptions: args.gridOptions }
       );
-      console.log(updateDashboard);
       dashboard = await Dashboard.findByIdAndUpdate(args.id, updateDashboard, {
         new: true,
       });

@@ -33,15 +33,16 @@ export const DashboardType = new GraphQLObjectType({
     },
     buttons: {
       type: GraphQLJSON,
-      resolve(parent, args, context) {
-        if (!parent.canUpdate)
+      async resolve(parent, args, context) {
+        const ability = await extendAbilityForContent(context.user, parent);
+        if (ability.can('update', parent)) {
+          return parent.buttons;
+        } else {
           return parent.buttons.filter((button) =>
             context.user.roles?.some((role) =>
-              button.visibleToRoles?.includes(role.id || '')
+              button.visibleToRoles?.includes(role._id || '')
             )
           );
-        else {
-          return parent.buttons;
         }
       },
     },
