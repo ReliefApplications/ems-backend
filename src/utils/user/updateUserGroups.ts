@@ -1,5 +1,4 @@
 import jsonpath from 'jsonpath';
-import fetch from 'node-fetch';
 import config from 'config';
 import i18next from 'i18next';
 import { logger } from '../../services/logger.service';
@@ -8,6 +7,7 @@ import { ApiConfiguration, Group, User } from '@models';
 import { getDelegatedToken } from '../proxy';
 import { isEmpty } from 'lodash';
 import { GroupSettings } from './userManagement';
+import axios from 'axios';
 
 /**
  * Check if we need to update user groups and perform it when needed.
@@ -62,22 +62,17 @@ export const updateUserGroups = async (
         : {};
       // Fetch new attributes
       let res;
+      let data;
       try {
-        res = await fetch(apiConfiguration.endpoint + settings.endpoint, {
+        res = await axios({
+          url: apiConfiguration.endpoint + settings.endpoint,
           method: 'get',
           headers,
         });
+        data = res.data;
       } catch (err) {
+        console.log(err.message);
         logger.error(i18next.t('common.errors.invalidAPI'), {
-          stack: err.stack,
-        });
-        return false;
-      }
-      let data: any;
-      try {
-        data = await res.json();
-      } catch (err) {
-        logger.error(i18next.t('common.errors.authenticationTokenNotFound'), {
           stack: err.stack,
         });
         return false;
