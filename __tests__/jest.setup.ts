@@ -3,7 +3,7 @@
 // Mocking for this module must be done before any other imports
 jest.mock('@utils/files/deleteFolder');
 
-import { startDatabase } from '../src/server/database';
+import { startDatabase, stopDatabase } from '../src/server/database';
 
 // Execute before each file.
 beforeAll(async () => {
@@ -11,8 +11,7 @@ beforeAll(async () => {
 }, 20000);
 
 afterAll(async () => {
-  console.log('after');
-  console.log(global.gc);
+  await stopDatabase();
   // Avoid memory issue
   if (global.gc) global.gc();
 });
