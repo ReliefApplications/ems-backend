@@ -10,7 +10,10 @@ import { getPeople } from '@utils/proxy';
  * @returns People resolver.
  */
 const getMetaPeopleResolver = async (field: any, context: Context) => {
-  const records = await Record.find({ resource: field.resource });
+  const records = await Record.find({
+    resource: field.resource,
+    archived: false,
+  });
   const peopleIds = [];
   records.forEach((record) => {
     const propertyValue = record.data[field.name];
