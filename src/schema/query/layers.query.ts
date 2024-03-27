@@ -50,7 +50,6 @@ export default {
     ids: { type: new GraphQLList(GraphQLID) },
   },
   async resolve(parent, args: LayerArgs, context: Context) {
-    console.log('par ici');
     graphQLAuthCheck(context);
     try {
       // Inputs check
@@ -63,7 +62,9 @@ export default {
       const queryFilters = getFilter(args.filter, FILTER_FIELDS);
       const filters: any[] = [queryFilters];
 
-      const sortField = SORT_FIELDS.find((x) => x.name === args.sortField);
+      const sortField = args.sortField
+        ? SORT_FIELDS.find((x) => x.name === args.sortField)
+        : SORT_FIELDS.find((x) => x.name === 'name');
       const sortOrder = args.sortOrder || 'asc';
 
       return await Layer.find({
@@ -72,7 +73,6 @@ export default {
         .collation({ locale: 'en' })
         .sort(sortField.sort(sortOrder));
     } catch (err) {
-      console.log(err.message);
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
