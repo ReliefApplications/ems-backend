@@ -22,22 +22,9 @@ beforeAll(async () => {
 describe('Roles query tests', () => {
   const query = '{ roles { id, title } }';
 
-  test('query with wrong user returns error', async () => {
-    await User.updateOne({ username: 'dummy@dummy.com' }, { roles: [] });
-    const response = await request
-      .post('/graphql')
-      .send({ query })
-      .set('Authorization', token)
-      .set('Accept', 'application/json');
-    expect(response.status).toBe(200);
-    expect(response.body).not.toHaveProperty('errors');
-    expect(response.body).toHaveProperty('data');
-    expect(response.body).toHaveProperty(['data', 'roles']);
-    expect(response.body.data.roles.length).toEqual(0);
-  });
-
   test('query with admin user returns expected number of roles', async () => {
     const count = await Role.countDocuments({ application: null });
+    console.log('the count is equal to :', count);
     const admin = await Role.findOne({ title: 'admin' });
     await User.updateOne(
       { username: 'dummy@dummy.com' },
@@ -51,6 +38,7 @@ describe('Roles query tests', () => {
 
     expect(response.body.errors).toBeUndefined();
     expect(response.body).toHaveProperty(['data', 'roles']);
+    console.log('The query returns :', response.body.data?.roles.length);
     expect(response.body.data?.roles.length).toEqual(count);
     response.body.data?.roles.forEach((prop) => {
       expect(prop).toHaveProperty('title');

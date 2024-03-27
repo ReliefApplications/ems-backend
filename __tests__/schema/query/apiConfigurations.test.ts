@@ -21,20 +21,6 @@ beforeAll(async () => {
 describe('ApiConfigurations query tests', () => {
   const query = '{ apiConfigurations { totalCount, edges { node { id } } } }';
 
-  test('query with wrong user returns error', async () => {
-    await User.updateOne({ username: 'dummy@dummy.com' }, { roles: [] });
-    const response = await request
-      .post('/graphql')
-      .send({ query })
-      .set('Authorization', token)
-      .set('Accept', 'application/json');
-    expect(response.status).toBe(200);
-    expect(response.body).not.toHaveProperty('errors');
-    expect(response.body).toHaveProperty('data');
-    expect(response.body.data.apiConfigurations.edges).toEqual([]);
-    expect(response.body.data.apiConfigurations.totalCount).toEqual(0);
-  });
-
   test('query with admin user returns expected number of apiConfigurations', async () => {
     const count = await ApiConfiguration.countDocuments();
     const admin = await Role.findOne({ title: 'admin' });

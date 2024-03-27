@@ -50,6 +50,7 @@ export default {
     ids: { type: new GraphQLList(GraphQLID) },
   },
   async resolve(parent, args: LayerArgs, context: Context) {
+    console.log('par ici');
     graphQLAuthCheck(context);
     try {
       // Inputs check
@@ -71,6 +72,7 @@ export default {
         .collation({ locale: 'en' })
         .sort(sortField.sort(sortOrder));
     } catch (err) {
+      console.log(err.message);
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);

@@ -47,7 +47,15 @@ describe('Notifications query tests', () => {
       { username: 'dummy@dummy.com' },
       { roles: [admin._id] }
     );
-    const user = await User.findOne({ username: 'dummy@dummy.com' });
+    const user = await User.findOne({ username: 'dummy@dummy.com' }).populate({
+      // Add to the user context all roles / permissions it has
+      path: 'roles',
+      model: 'Role',
+      populate: {
+        path: 'permissions',
+        model: 'Permission',
+      },
+    });
     const ability = defineUserAbility(user);
 
     const abilityFilters = Notification.find(
