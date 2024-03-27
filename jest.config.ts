@@ -28,7 +28,7 @@ const jestConfig: JestConfigWithTsJest = {
   // cacheDirectory: "/private/var/folders/ly/twr74pdx4dlfdwtrtt3203fm0000gn/T/jest_dx",
 
   // Automatically clear mock calls and instances between every test
-  // clearMocks: false,
+  clearMocks: true,
 
   // Indicates whether the coverage information should be collected while executing the test
   collectCoverage: true,
