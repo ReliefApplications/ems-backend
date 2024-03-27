@@ -17,7 +17,7 @@ const getMetaPeopleResolver = async (field: any, context: Context) => {
   const peopleIds = [];
   records.forEach((record) => {
     const propertyValue = record.data[field.name];
-    propertyValue.flat().forEach((id: string) => {
+    propertyValue?.flat().forEach((id: string) => {
       if (!peopleIds.includes(id)) {
         peopleIds.push(id);
       }
