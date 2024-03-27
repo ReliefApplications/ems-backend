@@ -249,7 +249,7 @@ export const buildTable = (
             </tr>
             </tbody>
             </table>`;
-    table += `<table bgcolor="ffffff" border="0" width="760" align="center" cellpadding="0" cellspacing="0" style="margin: 0 auto;">`;
+    table += `<table bgcolor="ffffff" border="0" width="760" align="center" cellpadding="0" cellspacing="0" style="margin: 0 auto; border: 1px solid black;">`;
     table += `<thead>`;
     table += `<tr bgcolor="#00205c">`;
     fieldList.forEach((field) => {
@@ -266,7 +266,7 @@ export const buildTable = (
       // Create a new cell for each field in the record
       // eslint-disable-next-line @typescript-eslint/no-loop-func
       fieldList.forEach((field) => {
-        table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px;">
+        table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
           ${formatDates(record.data[field])}</td>`;
       });
       table += '</tr>';
