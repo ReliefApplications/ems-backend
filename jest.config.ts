@@ -28,7 +28,7 @@ const jestConfig: JestConfigWithTsJest = {
   // cacheDirectory: "/private/var/folders/ly/twr74pdx4dlfdwtrtt3203fm0000gn/T/jest_dx",
 
   // Automatically clear mock calls and instances between every test
-  // clearMocks: false,
+  clearMocks: true,
 
   // Indicates whether the coverage information should be collected while executing the test
   collectCoverage: true,
@@ -75,7 +75,7 @@ const jestConfig: JestConfigWithTsJest = {
   // globals: {},
 
   // The maximum amount of workers used to run your tests. Can be specified as % or a number. E.g. maxWorkers: 10% will use 10% of your CPU amount + 1 as the maximum worker number. maxWorkers: 2 will use a maximum of 2 workers.
-  // maxWorkers: '75%',
+  maxWorkers: '75%',
 
   // An array of directory names to be searched recursively up from the requiring module's location
   // moduleDirectories: [

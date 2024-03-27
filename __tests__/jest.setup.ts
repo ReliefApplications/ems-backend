@@ -11,6 +11,8 @@ beforeAll(async () => {
 }, 20000);
 
 afterAll(async () => {
+  console.log('after');
+  console.log(global.gc);
   // Avoid memory issue
   if (global.gc) global.gc();
 });
