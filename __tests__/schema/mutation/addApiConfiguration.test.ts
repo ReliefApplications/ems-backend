@@ -28,7 +28,6 @@ describe('Add api configuration mutation tests cases', () => {
         id
         name
         status
-        authType
       }
   }`;
 

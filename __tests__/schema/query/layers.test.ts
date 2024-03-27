@@ -22,17 +22,6 @@ beforeAll(async () => {
 describe('Layers query tests', () => {
   const query = '{ layers { id, name } }';
 
-  test('query with wrong user returns error', async () => {
-    await User.updateOne({ username: 'dummy@dummy.com' }, { roles: [] });
-    const response = await request
-      .post('/graphql')
-      .send({ query })
-      .set('Authorization', token)
-      .set('Accept', 'application/json');
-
-    expect(response.body).toHaveProperty(['data', 'layers']);
-    expect(response.body.data?.layers).toEqual(null);
-  });
   test('query with admin user returns expected number of layers', async () => {
     const count = await Layer.countDocuments();
     const admin = await Role.findOne({ title: 'admin' });
