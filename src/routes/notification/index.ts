@@ -321,7 +321,35 @@ router.post('/send-individual-email/:configId', async (req, res) => {
   try {
     const config = await EmailNotification.findById(req.params.configId);
     const datasets = config.get('dataSets');
-    let emailHtml = '';
+    let emailElement = parse(`<!DOCTYPE HTML>
+    <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+    
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;">
+        <title>EMSPOC - Email Alert</title>
+    </head>
+    
+    <body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" style="width: 100%; background-color: #ffffff; margin: 0; padding: 0; -webkit-font-smoothing: antialiased;">
+        <table border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+                <td height="30"></td>
+            </tr>
+            <tr bgcolor="#4c4e4e">
+                <td width="100%" align="center" valign="top" bgcolor="#ffffff">
+                    <!----------   main content----------->
+                    <table id="mainTable" width="800" style="border: 3px solid #00205c; margin: 0 auto;" cellpadding="0" cellspacing="0" bgcolor="#fff">
+                        
+                    </table>
+                    <!----------   end main content----------->
+                </td>
+            </tr>
+        </table>
+    </body>
+    
+    </html>`);
+
+    const mainTableElement = emailElement.getElementById('mainTable');
 
     const processedRecords: ProcessedIndividualDataset[] = [];
 
@@ -440,20 +468,42 @@ router.post('/send-individual-email/:configId', async (req, res) => {
       })
     );
 
-    // Create container div
-    const containerDiv = parse(
-      `<div id="container" style="${config.emailLayout.banner.containerStyle}"></div>`
-    );
-
-    // Add header if available
-    if (config.emailLayout.header.headerHtml) {
-      const header = parse(replaceHeader(config.emailLayout.header));
-      containerDiv.appendChild(header);
+    if (config.emailLayout.banner.bannerImage) {
+      const bannerElement = parse(
+        `<tr bgcolor="#fff" align="center">
+            <td>
+              <a href="#" style="display: block; border-style: none !important; border: 0 !important;">
+                  <img width="100%" data-imagetype="DataUri" src="cid:bannerImage" alt="logo">
+              </a>
+            </td>
+         </tr>`
+      );
+      mainTableElement.appendChild(bannerElement);
     }
 
+    // Add header if available
+    if (config.emailLayout.header) {
+      const headerElement = replaceHeader(config.emailLayout.header);
+      const backgroundColor =
+        config.emailLayout.header.headerBackgroundColor || '#00205c';
+      mainTableElement.appendChild(
+        parse(
+          `<tr bgcolor = ${backgroundColor}><td style="font-size: 13px; font-family: Helvetica, Arial, sans-serif;">${headerElement}</td></tr>`
+        )
+      );
+    }
+
+    mainTableElement.appendChild(
+      parse(`<tr>
+                <td height="25"></td>
+            </tr>`)
+    );
+
     // Add body div
-    const bodyDiv = parse('<div id="body"></div>');
-    containerDiv.appendChild(bodyDiv);
+    const bodyDiv = parse(
+      '<tr id ="body" bgcolor = ${backgroundColor}><td></td></tr>'
+    );
+    mainTableElement.appendChild(bodyDiv);
 
     let bodyString = await replaceDatasets(
       config.emailLayout.body.bodyHtml,
@@ -463,29 +513,46 @@ router.post('/send-individual-email/:configId', async (req, res) => {
     // containerDiv.appendChild(datasetsHtml);
 
     // Add footer if available
-    if (config.emailLayout.footer.footerHtml) {
-      const footer = parse(replaceFooter(config.emailLayout.footer));
-      containerDiv.appendChild(footer);
+    if (config.emailLayout.footer) {
+      const footerElement = replaceFooter(config.emailLayout.footer);
+      const backgroundColor =
+        config.emailLayout.footer.footerBackgroundColor || '#ffffff';
+      mainTableElement.appendChild(
+        parse(
+          `<tr bgcolor= ${backgroundColor}><td style="font-size: 13px; font-family: Helvetica, Arial, sans-serif;">${footerElement}</td></tr>`
+        )
+      );
     }
 
     // Add copyright
-    const copyrightDiv = parse(`<div style="${
-      config.emailLayout.banner.copyrightStyle
-    }">
-                    ${i18next.t('common.copyright.who')}
-                  </div>`);
-    containerDiv.appendChild(copyrightDiv);
+    mainTableElement.appendChild(
+      parse(/*html*/ `
+      <tr bgcolor="#00205c">
+        <td mc:edit="footer1" style="font-size: 12px; color: #fff; font-family: 'Roboto', Arial, sans-serif; text-align: center; padding: 0 10px;">
+          ${i18next.t('common.copyright.who')}
+        </td>
+      </tr>`)
+    );
+
+    let subjectRecords = {};
 
     //TODO: Phase 2 - allow records from any table not just first
-    const subjectRecords = processedRecords.find(
-      (dataset) => dataset.name === config.dataSets[0].name
-    ).record;
+    if (!processedBlockRecords) {
+      subjectRecords = processedRecords.find(
+        (dataset) => dataset.name === config.dataSets[0].name
+      ).record;
+    }
+    // else {
+    //   subjectRecords = processedBlockRecords.find(
+    //     (dataset) => dataset.name === config.dataSets[0].name
+    //   ).records;
+    // }
 
     const emailSubject = replaceSubject(config.get('emailLayout').subject, [
       subjectRecords,
     ]);
 
-    const bodyElement = containerDiv.getElementById('body');
+    const bodyElement = mainTableElement.getElementById('body');
 
     const cc = config.get('recipients').Cc;
     const bcc = config.get('recipients').Bcc;
@@ -526,17 +593,17 @@ router.post('/send-individual-email/:configId', async (req, res) => {
         );
       }
 
-      const bodyBlock = parse(bodyString);
+      const bodyBlock = parse(`<tr><td>${bodyString}</td></tr>`);
 
       bodyElement.appendChild(bodyBlock);
-      emailHtml = containerDiv.toString();
+      emailElement = mainTableElement;
       const emailParams = {
         message: {
           to: [block.record.emails], // Recipient's email address
           cc: cc,
           bcc: bcc,
           subject: emailSubject,
-          html: emailHtml,
+          html: emailElement.toString(),
           attachments: attachments,
         },
       };
