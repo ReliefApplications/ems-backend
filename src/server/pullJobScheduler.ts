@@ -43,6 +43,19 @@ const EIOS_APP_NAMES: string[] = [
 ];
 
 /**
+ * Static mapping between EIOS Regions codes and CommonServices Regions IDs
+ */
+const REGION_CODE_TO_REGION_ID_MAPPING = {
+  AFR: 1, // African Regional Office
+  AMR: 2, // Pan American Regional Office
+  EMR: 3, // Eastern Mediterranean Regional Office
+  EUR: 4, // European Regional Office
+  SEAR: 5, // South-East Asian Regional Office
+  WPR: 6, // Western Pacific Regional Office
+  HQ: 7, // Headquarters
+};
+
+/**
  * Global function called on server start to initialize all the pullJobs.
  */
 const pullJobScheduler = async () => {
@@ -508,6 +521,10 @@ export const insertRecords = async (
         boardName = 'default';
       }
       mappedElement.ownership = ownershipMappingWithIds[boardName]?.map(String);
+      // Assign correct regions IDs instead of the regions codes
+      mappedElement.region = mappedElement.region.map(
+        (regionCode) => REGION_CODE_TO_REGION_ID_MAPPING[regionCode]
+      );
     }
     // If everything is fine, push it in the array for saving
     if (!isDuplicate) {
