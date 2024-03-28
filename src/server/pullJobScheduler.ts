@@ -522,9 +522,14 @@ export const insertRecords = async (
       }
       mappedElement.ownership = ownershipMappingWithIds[boardName]?.map(String);
       // Assign correct regions IDs instead of the regions codes
-      mappedElement.region = mappedElement.region.map(
-        (regionCode) => REGION_CODE_TO_REGION_ID_MAPPING[regionCode]
-      );
+      if (Array.isArray(mappedElement.region)) {
+        mappedElement.region = mappedElement.region.map(
+          (regionCode) => REGION_CODE_TO_REGION_ID_MAPPING[regionCode]
+        );
+      } else {
+        mappedElement.region =
+          REGION_CODE_TO_REGION_ID_MAPPING[mappedElement.region];
+      }
     }
     // If everything is fine, push it in the array for saving
     if (!isDuplicate) {
