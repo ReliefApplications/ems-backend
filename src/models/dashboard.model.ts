@@ -5,7 +5,8 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface Button {
   text: string;
   href: string;
-  visibleToRoles: string[];
+  hasRoleRestriction: boolean;
+  roles: string[];
   variant: string;
   category: string;
   openInNewTab: boolean;
@@ -40,7 +41,8 @@ const buttonSchema = new Schema<Button>(
   {
     text: String,
     href: String,
-    visibleToRoles: Array<string>,
+    hasRoleRestriction: Boolean,
+    roles: Array<string>,
     variant: String,
     category: String,
     openInNewTab: Boolean,

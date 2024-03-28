@@ -12,8 +12,9 @@ const ButtonActionInputType = new GraphQLInputObjectType({
   fields: () => ({
     text: { type: new GraphQLNonNull(GraphQLString) },
     href: { type: new GraphQLNonNull(GraphQLString) },
-    visibleToRoles: {
-      type: new GraphQLNonNull(new GraphQLList(GraphQLString)),
+    hasRoleRestriction: { type: new GraphQLNonNull(GraphQLBoolean) },
+    roles: {
+      type: new GraphQLList(GraphQLString),
     },
     variant: { type: new GraphQLNonNull(GraphQLString) },
     category: { type: new GraphQLNonNull(GraphQLString) },

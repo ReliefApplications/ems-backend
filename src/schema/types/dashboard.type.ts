@@ -38,11 +38,15 @@ export const DashboardType = new GraphQLObjectType({
         if (ability.can('update', parent)) {
           return parent.buttons;
         } else {
-          return parent.buttons.filter((button) =>
-            context.user.roles?.some((role) =>
-              button.visibleToRoles?.includes(role._id || '')
-            )
-          );
+          return parent.buttons.filter((button) => {
+            if (button.hasRoleRestriction) {
+              return context.user.roles?.some((role) =>
+                button.roles?.includes(role._id || '')
+              );
+            } else {
+              return true;
+            }
+          });
         }
       },
     },
