@@ -49,11 +49,13 @@ const setDisplayText = async (
   };
   const fieldWithChoices = await mappedFields.reduce(reducer, {});
   for (const [key, field] of Object.entries(fieldWithChoices)) {
+    // Fetch choices from source ( static / rest / graphql )
     const choices = await getFullChoices(field, context);
-    if (choices?.length) {
-      for (const item of items) {
-        const fieldValue = get(item, key, null);
-        if (fieldValue) {
+    for (const item of items) {
+      const fieldValue = get(item, key, null);
+      if (fieldValue) {
+        if (choices.length) {
+          // Replace value by text, from list of choices
           set(
             item,
             key,
@@ -61,10 +63,10 @@ const setDisplayText = async (
               ? fieldValue.map((x) => getText(choices, x))
               : getText(choices, fieldValue)
           );
-        } else {
-          if (key === 'field' && fieldValue) {
-            set(item, key, Number(fieldValue));
-          }
+        }
+      } else {
+        if (key === 'field' && fieldValue) {
+          set(item, key, Number(fieldValue));
         }
       }
     }
