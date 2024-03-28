@@ -1,6 +1,6 @@
 import { Resource } from '@models';
-import getDisplayText from '@utils/form/getDisplayText';
-import { get, set } from 'lodash';
+import { getFullChoices, getText } from '@utils/form/getDisplayText';
+import { get, isArray, set } from 'lodash';
 
 /**
  * Take mappedFields and items and replace value by display text in items where it's needed.
@@ -49,16 +49,22 @@ const setDisplayText = async (
   };
   const fieldWithChoices = await mappedFields.reduce(reducer, {});
   for (const [key, field] of Object.entries(fieldWithChoices)) {
-    for (const item of items) {
-      const fieldValue = get(item, key, null);
-      if (fieldValue) {
-        const displayText = await getDisplayText(field, fieldValue, context);
-        if (displayText) {
-          set(item, key, displayText);
-        }
-      } else {
-        if (key === 'field' && fieldValue) {
-          set(item, key, Number(fieldValue));
+    const choices = await getFullChoices(field, context);
+    if (choices?.length) {
+      for (const item of items) {
+        const fieldValue = get(item, key, null);
+        if (fieldValue) {
+          set(
+            item,
+            key,
+            isArray(fieldValue)
+              ? fieldValue.map((x) => getText(choices, x))
+              : getText(choices, fieldValue)
+          );
+        } else {
+          if (key === 'field' && fieldValue) {
+            set(item, key, Number(fieldValue));
+          }
         }
       }
     }
