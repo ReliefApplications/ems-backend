@@ -226,13 +226,16 @@ const buildMongoFilter = (
             break;
           case 'datetime':
           case 'datetime-local':
-            // startDatetime contains the beginning of the minute
-            startDatetime = getTimeForMongo(value);
-            // endDatetime contains the end of the minute (last second, last ms)
-            endDatetime = new Date(startDatetime.getTime() + 59999);
-            // we end up with a date range covering exactly the minute selected,
-            // regardless of the saved seconds and ms
+            if (filter.operator !== 'inthelast') {
+              // startDatetime contains the beginning of the minute
+              startDatetime = getTimeForMongo(value);
+              // endDatetime contains the end of the minute (last second, last ms)
+              endDatetime = new Date(startDatetime.getTime() + 59999);
+              // we end up with a date range covering exactly the minute selected,
+              // regardless of the saved seconds and ms
+            }
             break;
+
           case 'time': {
             value = getTimeForMongo(value);
             value = new Date(
@@ -460,6 +463,16 @@ const buildMongoFilter = (
               return { [fieldName]: { $exists: true, $ne: [] } };
             } else {
               return { [fieldName]: { $exists: true, $ne: '' } };
+            }
+          }
+          case 'inthelast': {
+            if ([...DATE_TYPES, ...DATETIME_TYPES].includes(type)) {
+              const now = Date.now();
+              const withinTheLastMs = value * 60 * 1000;
+              const dateLowerLimit = new Date(now - withinTheLastMs);
+              return { [fieldName]: { $gte: dateLowerLimit } };
+            } else {
+              return;
             }
           }
           case 'near': {

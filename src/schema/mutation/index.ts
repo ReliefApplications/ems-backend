@@ -87,6 +87,8 @@ import restorePage from './restorePage.mutation';
 import addDraftRecord from './addDraftRecord.mutation';
 import deleteDraftRecord from './deleteDraftRecord.mutation';
 import editDraftRecord from './editDraftRecord.mutation';
+import addEmailNotification from './addEmailNotification.mutation';
+import editAndGetEmailNotification from './editAndGetEmailNotification.mutation';
 
 /** GraphQL mutation definition */
 const Mutation = new GraphQLObjectType({
@@ -106,6 +108,7 @@ const Mutation = new GraphQLObjectType({
     addRecord,
     addReferenceData,
     addRole,
+    addEmailNotification,
     addRoleToUsers,
     addStep,
     addSubscription,
@@ -145,6 +148,7 @@ const Mutation = new GraphQLObjectType({
     editPage,
     editPageContext,
     editPositionAttributeCategory,
+    editAndGetEmailNotification,
     editPullJob,
     editRecord,
     editRecords,
