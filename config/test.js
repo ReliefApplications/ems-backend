@@ -7,7 +7,7 @@ module.exports = {
   database: {
     provider: 'docker',
     prefix: 'mongodb',
-    host: 'localhost',
+    host: 'mongodb_test',
     port: '27017',
     name: 'test',
     user: 'root',

@@ -7,7 +7,6 @@ import { camelCase, toUpper } from 'lodash';
  * Test ReferenceData Model.
  */
 describe('ReferenceData models tests', () => {
-  let name = '';
   test('test ReferenceData model with correct data also with graphql type', async () => {
     for (let i = 0; i < 1; i++) {
       const referenceData = [];
@@ -17,7 +16,7 @@ describe('ReferenceData models tests', () => {
           value: faker.address.countryCode(),
         });
       }
-      name = faker.random.alpha(10);
+      const name = faker.random.alpha(10);
       const inputData = {
         name: name,
         graphQLTypeName: name,
@@ -88,18 +87,6 @@ describe('ReferenceData models tests', () => {
     );
   });
 
-  test('test ReferenceData with duplicate name', async () => {
-    const duplicateReferenceData = {
-      name: name,
-      graphQLTypeName: ReferenceData.getGraphQLTypeName(name),
-    };
-    expect(async () =>
-      new ReferenceData(duplicateReferenceData).save()
-    ).rejects.toThrowError(
-      'E11000 duplicate key error collection: test.referencedatas index: name_1 dup key'
-    );
-  });
-
   test('test ReferenceData model with wrong type', async () => {
     for (let i = 0; i < 1; i++) {
       const inputData = {
@@ -109,9 +96,63 @@ describe('ReferenceData models tests', () => {
         type: faker.random.alpha(10),
         fields: [faker.word.adjective(), faker.word.adjective()],
       };
-      expect(async () => new ReferenceData(inputData).save()).rejects.toThrow(
-        Error
-      );
+      expect(async () => new ReferenceData(inputData).save()).rejects.toThrow();
     }
+  });
+
+  test('should check for duplicate by name', async () => {
+    const name = faker.random.alpha(10);
+    // Create a ReferenceData document with a specific name
+    const referenceData = new ReferenceData({
+      name, // Provide a name that doesn't exist in the collection
+      graphQLTypeName: name,
+      // ... other fields ...
+    });
+
+    // Save the initial document to the collection
+    await referenceData.save();
+
+    // Attempt to create a new ReferenceData document with the same name
+    const duplicateReferenceData = new ReferenceData({
+      name, // Provide the same name to check for duplication
+      graphQLTypeName: name,
+      // ... other fields ...
+    });
+
+    // Expect the save operation to be rejected with a duplicate key error
+    await expect(duplicateReferenceData.save()).rejects.toMatchObject({
+      code: 11000,
+    });
+  });
+
+  test('should check for duplicate by graphQLTypeName', async () => {
+    const graphQLTypeName = faker.random.alpha(10);
+    // Create a ReferenceData with a specific graphQLTypeName
+    const referenceData1 = await new ReferenceData({
+      name: faker.random.alpha(10),
+      graphQLTypeName,
+      type: referenceDataType.graphql,
+    }).save();
+
+    // Try to create a new ReferenceData with the same graphQLTypeName
+    await expect(
+      new ReferenceData({
+        name: faker.random.alpha(10),
+        graphQLTypeName,
+        type: referenceDataType.graphql,
+      }).save()
+    ).rejects.toThrowError(/duplicate key error/);
+
+    // Try to create a new ReferenceData with a different graphQLTypeName
+    await expect(
+      new ReferenceData({
+        name: faker.random.alpha(10),
+        graphQLTypeName: faker.random.alpha(10),
+        type: referenceDataType.graphql,
+      }).save()
+    ).resolves.toBeTruthy();
+
+    // Cleanup after tests
+    await ReferenceData.deleteOne({ _id: referenceData1._id });
   });
 });
