@@ -1,7 +1,7 @@
 import schema from '../../../src/schema';
 import { SafeTestServer } from '../../server.setup';
 import { acquireToken } from '../../authentication.setup';
-import { Application, Channel, Role } from '@models';
+import { Application, Channel, Role, User } from '@models';
 import { faker } from '@faker-js/faker';
 import supertest from 'supertest';
 import { status } from '@const/enumTypes';
@@ -68,6 +68,11 @@ describe('Role query tests', () => {
   });
 
   test('query with admin user returns expected role', async () => {
+    const admin = await Role.findOne({ title: 'admin' });
+    await User.updateOne(
+      { username: 'dummy@dummy.com' },
+      { roles: [admin._id] }
+    );
     const variables = {
       id: role._id,
     };

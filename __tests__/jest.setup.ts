@@ -11,5 +11,7 @@ beforeAll(async () => {
 }, 20000);
 
 afterAll(async () => {
-  //await stopDatabase();
+  // await stopDatabase();
+  // Avoid memory issue
+  if (global.gc) global.gc();
 });

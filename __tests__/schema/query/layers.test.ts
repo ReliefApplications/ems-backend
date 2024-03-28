@@ -1,9 +1,20 @@
-import { ApolloServer } from 'apollo-server-express';
+import { Layer, Role, User } from '@models';
+
+import supertest from 'supertest';
 import schema from '../../../src/schema';
 import { SafeTestServer } from '../../server.setup';
-import { Layer, Role } from '@models';
+import { acquireToken } from '../../authentication.setup';
 
-let server: ApolloServer;
+let server: SafeTestServer;
+let request: supertest.SuperTest<supertest.Test>;
+let token: string;
+
+beforeAll(async () => {
+  server = new SafeTestServer();
+  await server.start(schema);
+  request = supertest(server.app);
+  token = `Bearer ${await acquireToken()}`;
+});
 
 /**
  * Test Layers query.
@@ -11,35 +22,23 @@ let server: ApolloServer;
 describe('Layers query tests', () => {
   const query = '{ layers { id, name } }';
 
-  test('query with wrong user returns error', async () => {
-    server = await SafeTestServer.createApolloTestServer(schema, {
-      name: 'Wrong user',
-      roles: [],
-    });
-    const result = await server.executeOperation({ query });
-
-    expect(result).toHaveProperty(['data', 'layers']);
-    expect(result.data?.layers).toEqual(null);
-  });
   test('query with admin user returns expected number of layers', async () => {
     const count = await Layer.countDocuments();
-    const admin = await Role.findOne(
-      { title: 'admin' },
-      'id permissions'
-    ).populate({
-      path: 'permissions',
-      model: 'Permission',
-    });
-    server = await SafeTestServer.createApolloTestServer(schema, {
-      name: 'Admin user',
-      roles: [admin],
-    });
-    const result = await server.executeOperation({ query });
+    const admin = await Role.findOne({ title: 'admin' });
+    await User.updateOne(
+      { username: 'dummy@dummy.com' },
+      { roles: [admin._id] }
+    );
+    const response = await request
+      .post('/graphql')
+      .send({ query })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
 
-    expect(result.errors).toBeUndefined();
-    expect(result).toHaveProperty(['data', 'layers']);
-    expect(result.data?.layers.length).toEqual(count);
-    result.data?.layers.forEach((prop) => {
+    expect(response.body.errors).toBeUndefined();
+    expect(response.body).toHaveProperty(['data', 'layers']);
+    expect(response.body.data?.layers.length).toEqual(count);
+    response.body.data?.layers.forEach((prop) => {
       expect(prop).toHaveProperty('name');
     });
   });

@@ -64,7 +64,7 @@ jobs:
       #     path: .env
       - name: Test
         #run: npm run test
-        run: docker-compose -f docker-compose.test.yml run test-server npm run test -- --testPathPattern=models
+        run: docker-compose -f docker-compose.test.yml run test-server npm run test -- --runInBand --ci
 
       - name: Archive code coverage result
         if: success()

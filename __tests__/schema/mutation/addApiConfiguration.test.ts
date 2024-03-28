@@ -26,15 +26,14 @@ describe('Add api configuration mutation tests cases', () => {
   const query = `mutation addApiConfiguration($name: String!) {
       addApiConfiguration(name: $name){
         id
-        name,
-        status,
-        authType
+        name
+        status
       }
   }`;
 
   test('test case add api configuration tests with correct data', async () => {
     const variables = {
-      name: faker.random.alpha(10),
+      name: 'Test_' + faker.random.alpha({ count: 10, casing: 'upper' }),
     };
 
     const response = await request
@@ -73,10 +72,56 @@ describe('Add api configuration mutation tests cases', () => {
       .send({ query, variables })
       .set('Authorization', token)
       .set('Accept', 'application/json');
-    if (!!response.body.errors && !!response.body.errors[0].message) {
-      expect(
-        Promise.reject(new Error(response.body.errors[0].message))
-      ).rejects.toThrow(response.body.errors[0].message);
-    }
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('errors');
+    expect(response.body.errors[0].message).toBeTruthy();
+  });
+
+  test('test case with empty name and return error', async () => {
+    const variables = {
+      name: '',
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('errors');
+    expect(response.body.errors[0].message).toBeTruthy();
+  });
+
+  test('test case with null name and return error', async () => {
+    const variables = {
+      name: null,
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('errors');
+    expect(response.body.errors[0].message).toBeTruthy();
+  });
+
+  test('test case with invalid API name and return error', async () => {
+    const variables = {
+      name: '123InvalidName',
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('errors');
+    expect(response.body.errors[0].message).toBeTruthy();
   });
 });
