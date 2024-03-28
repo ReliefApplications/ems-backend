@@ -171,6 +171,33 @@ router.post('/ping/**', async (req: Request, res: Response) => {
   }
 });
 
+router.all('/common-services/**', async (req, res) => {
+  const commonServiceConfig = {
+    name: 'common-services',
+    status: 'active',
+    authType: 'service-to-service',
+    endpoint: config.get<string>('commonServices.url'),
+    settings: CryptoJS.AES.encrypt(
+      JSON.stringify({
+        authTargetUrl: config.get<string>('commonServices.authUrl'),
+        apiClientID: config.get<string>('commonServices.clientId'),
+        scope: config.get<string>('commonServices.scope'),
+        safeSecret: config.get<string>('commonServices.clientSecret'),
+      }),
+      config.get('encryption.key')
+    ).toString(),
+  };
+
+  try {
+    const api = new ApiConfiguration(commonServiceConfig);
+    const path = req.originalUrl.split('common-services').pop().substring(1);
+    await proxyAPIRequest(req, res, api, path);
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    return res.status(500).send(req.t('common.errors.internalServerError'));
+  }
+});
+
 /**
  * Forward requests to actual API using the API Configuration
  */
