@@ -1,3 +1,11 @@
+## [2.7.2](https://github.com/ReliefApplications/ems-backend/compare/v2.7.1...v2.7.2) (2024-03-25)
+
+
+### Bug Fixes
+
+* add check for empty context filter ([#995](https://github.com/ReliefApplications/ems-backend/issues/995)) ([31a8544](https://github.com/ReliefApplications/ems-backend/commit/31a85447f4a418000d763049d1f0d38261d82f66))
+* now working nested fields in reference data aggregation ([ed564b3](https://github.com/ReliefApplications/ems-backend/commit/ed564b3f9eef48f06674144ac94d153c5e494d91))
+
 ## [2.7.1](https://github.com/ReliefApplications/ems-backend/compare/v2.7.0...v2.7.1) (2024-03-04)
 
 

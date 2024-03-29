@@ -45,6 +45,7 @@ beforeAll(async () => {
       '-D0000000' +
       faker.datatype.number({ min: 1000000 }),
     form: form._id,
+    _form: form.toObject(),
     resource: resource._id,
     archived: 'false',
     data: records,

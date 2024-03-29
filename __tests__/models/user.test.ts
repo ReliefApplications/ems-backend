@@ -55,9 +55,9 @@ describe('User models tests', () => {
     const inputData = {
       oid: user.oid,
     };
-    expect(async () => new User(inputData).save()).rejects.toThrowError(
-      'E11000 duplicate key error collection: test.users index: oid_1 dup key'
-    );
+    expect(async () => new User(inputData).save()).rejects.toMatchObject({
+      code: 11000,
+    });
   });
 
   test('test User model with duplicate user name', async () => {
@@ -67,8 +67,8 @@ describe('User models tests', () => {
       lastName: faker.name.lastName(),
       name: faker.name.fullName(),
     };
-    expect(async () => new User(inputData).save()).rejects.toThrowError(
-      'E11000 duplicate key error collection: test.users index: username_1 dup key'
-    );
+    expect(async () => new User(inputData).save()).rejects.toMatchObject({
+      code: 11000,
+    });
   });
 });

@@ -3,7 +3,7 @@
 const { server, email } = require('./who');
 
 /**
- * Configuration of back-office
+ * Configuration for PROD.
  * Use https://www.npmjs.com/package/config package.
  */
 module.exports = {
@@ -13,7 +13,7 @@ module.exports = {
     groups: {
       local: false,
       list: {
-        apiConfiguration: '62cc2355d3d00f628c6d3574',
+        apiConfiguration: '613b5af515e8c265c982081c',
         endpoint: '/referenceData/items/SystemPosition',
         path: '$.value[?(@.ApplicationId==1)]',
         id: 'Id',
@@ -21,7 +21,7 @@ module.exports = {
         description: 'Description',
       },
       user: {
-        apiConfiguration: '62cc2355d3d00f628c6d3574',
+        apiConfiguration: '613b5af515e8c265c982081c',
         endpoint: '/users/permissions',
         path: '$.systemRules.Permissions[?(@.Application=="EMS")].ApplicationPositions.*',
         id: 'ApplicationPositionId',
@@ -43,7 +43,7 @@ module.exports = {
           text: 'Location',
         },
       ],
-      apiConfiguration: '62cc2355d3d00f628c6d3574',
+      apiConfiguration: '613b5af515e8c265c982081c',
       endpoint: '/users/permissions',
       mapping: [
         {

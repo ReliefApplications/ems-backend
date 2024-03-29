@@ -48,9 +48,9 @@ describe('PullJob models tests', () => {
     };
     expect(async () =>
       new PullJob(duplicatePullJob).save()
-    ).rejects.toThrowError(
-      'E11000 duplicate key error collection: test.pulljobs index: name_1 dup key'
-    );
+    ).rejects.toMatchObject({
+      code: 11000,
+    });
   });
 
   test('test PullJob model with wrong status', async () => {

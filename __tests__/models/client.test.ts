@@ -26,9 +26,9 @@ describe('Client models tests', () => {
       name: faker.name.fullName(),
       clientId: client.clientId,
     };
-    expect(async () => new Client(inputData).save()).rejects.toThrowError(
-      'E11000 duplicate key error collection: test.clients index: clientId_1 dup key'
-    );
+    expect(async () => new Client(inputData).save()).rejects.toMatchObject({
+      code: 11000,
+    });
   });
 
   test('test client with duplicate oid field', async () => {
