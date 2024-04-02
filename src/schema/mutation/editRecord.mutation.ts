@@ -1,5 +1,4 @@
 import {
-  GraphQLNonNull,
   GraphQLID,
   GraphQLError,
   GraphQLString,
@@ -57,7 +56,9 @@ export const hasInaccessibleFields = (
 
 /** Arguments for the editRecord mutation */
 type EditRecordArgs = {
-  id: string | Types.ObjectId;
+  id?: string | Types.ObjectId;
+  uniqueField?: string;
+  uniqueValue?: string;
   data?: any;
   version?: string | Types.ObjectId;
   template?: string | Types.ObjectId;
@@ -72,7 +73,9 @@ type EditRecordArgs = {
 export default {
   type: RecordType,
   args: {
-    id: { type: new GraphQLNonNull(GraphQLID) },
+    id: { type: GraphQLID },
+    uniqueField: { type: GraphQLString },
+    uniqueValue: { type: GraphQLString },
     data: { type: GraphQLJSON },
     version: { type: GraphQLID },
     template: { type: GraphQLID },
@@ -90,10 +93,27 @@ export default {
         );
       }
 
-      const user = context.user;
+      if (!(args.uniqueField && args.uniqueValue) && !args.id) {
+        throw new GraphQLError(
+          context.i18next.t('mutations.record.errors.missingParameters')
+        );
+      }
 
-      // Get record and form
-      const oldRecord: Record = await Record.findById(args.id);
+      const user = context.user;
+      // Get record
+      let oldRecord: Record;
+      if (args.id) {
+        oldRecord = await Record.findById(args.id);
+      } else if (args.uniqueField && args.uniqueValue) {
+        const query = {};
+        query[`data.${args.uniqueField}`] = args.uniqueValue;
+        oldRecord = await Record.findOne(query);
+      }
+      if (!oldRecord) {
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
+      const oldRecordId = oldRecord.id;
+      // Get form
       const parentForm: Form = await Form.findById(
         oldRecord.form,
         'fields permissions resource structure'
@@ -203,7 +223,9 @@ export default {
           update,
           ownership && { createdBy: { ...oldRecord.createdBy, ...ownership } }
         );
-        const record = Record.findByIdAndUpdate(args.id, update, { new: true });
+        const record = Record.findByIdAndUpdate(oldRecordId, update, {
+          new: true,
+        });
         await version.save();
         return await record;
       } else {
@@ -234,7 +256,9 @@ export default {
           },
           $push: { versions: version._id },
         };
-        const record = Record.findByIdAndUpdate(args.id, update, { new: true });
+        const record = Record.findByIdAndUpdate(oldRecordId, update, {
+          new: true,
+        });
         await version.save();
         return await record;
       }

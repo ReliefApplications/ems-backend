@@ -208,6 +208,9 @@
 					"invalidArguments": "Either data or version must be provided.",
 					"wrongTemplateProvided": "Template must sharing the same resource as the parent form of the edited record."
 				}
+			},
+			"errors": {
+				"missingParameters": "Missing query parameters: record id or uniqueField and uniqueValue"
 			}
 		},
 		"reference": {
