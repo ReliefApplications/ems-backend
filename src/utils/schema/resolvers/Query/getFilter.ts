@@ -28,6 +28,10 @@ const DEFAULT_FIELDS = [
     name: 'lastUpdateForm',
     type: 'text',
   },
+  {
+    name: 'archived',
+    type: 'boolean',
+  },
 ];
 
 /** Maps oort simple operators to their mongo counterparts */

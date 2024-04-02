@@ -306,6 +306,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               [`_${resource}.id`]: { $toString: `$_${resource}._id` },
               [`_${resource}.data.id`]: { $toString: `$_${resource}._id` },
               [`_${resource}.data._id`]: { $toString: `$_${resource}._id` },
+              [`_${resource}.data.archived`]: `$_${resource}.archived`,
             },
           },
         ]);

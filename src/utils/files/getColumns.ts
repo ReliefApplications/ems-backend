@@ -18,6 +18,10 @@ export const getColumns = async (
 ): Promise<any[]> => {
   const columns = [];
   for (const field of fields) {
+    // Skip fields that should be omitted on the xlsx template.
+    if (field.showOnXlsxTemplate === false) {
+      continue;
+    }
     switch (field.type) {
       case 'checkbox':
       case 'tagbox': {

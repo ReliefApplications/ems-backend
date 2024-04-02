@@ -2,9 +2,10 @@ import { Schema, Types } from 'mongoose';
 import config from 'config';
 import { Form, Record } from '@models';
 import { getNextId } from '@utils/form';
+import { cloneDeep } from 'lodash';
 
 /** Whether or not the current environment is PCI */
-const IS_PCI = config.get('server.url') === 'https://pci.oortcloud.tech/api';
+const IS_PCI = config.get('server.url') === 'https://ltkmp.oortcloud.tech/api';
 
 /** Location form id */
 const LOCATION_FORM_ID = new Types.ObjectId('65d61bfbccb8d36936d10cb6');
@@ -49,6 +50,10 @@ const createTensionIndicatorEntry = async (record: Record) => {
       label: 'High tension',
     },
   };
+  const skip = !!record.data?.__automated;
+  if (skip) {
+    return;
+  }
   const status = record.data?.status;
 
   const entryForm = await Form.findById(INDICATOR_ENTRY_FORM_ID);
@@ -70,6 +75,7 @@ const createTensionIndicatorEntry = async (record: Record) => {
       qualitative_value: statusMap[status].label,
       unit: 'Scale (1-3)',
       location: record._id.toString(),
+      __automated: true,
     },
     _form: {
       _id: entryForm._id,
@@ -98,6 +104,50 @@ export const setupCustomPCIListeners = <DocType>(schema: Schema<DocType>) => {
     const rec = doc as Record;
     if (LOCATION_FORM_ID.equals(rec.form)) {
       await createTensionIndicatorEntry(rec);
+    } else if (INDICATOR_ENTRY_FORM_ID.equals(rec.form)) {
+      // we should update the location status from the indicator entry
+      const { location: locationID, indicator, date } = rec.data;
+
+      const newStatus =
+        rec.data.value === 1
+          ? 'low'
+          : rec.data.value === 2
+          ? 'moderate'
+          : 'high';
+
+      // we now check if there is a newer entry for the same location and indicator
+      const moreRecentEntry = await Record.exists({
+        form: INDICATOR_ENTRY_FORM_ID,
+        'data.location': locationID,
+        'data.indicator': indicator,
+        'data.date': { $gte: date },
+        archived: false,
+      }).sort({ createdAt: -1 });
+
+      const ind = await Record.findById(indicator);
+      const correctUnit = await Record.findById(ind.data.unit);
+
+      // If the unit is incorrect, we update it
+      if (correctUnit.data?.unit !== rec.data.unit) {
+        rec.data.unit = correctUnit.data?.unit;
+        rec.markModified('data');
+        await rec.save();
+      }
+
+      // If adding an older entry, we should not update the location status
+      // as that displays the most recent status
+      if (moreRecentEntry && !moreRecentEntry._id.equals(rec._id)) {
+        return;
+      }
+
+      // we update the location status
+      const location = await Record.findOne({
+        _id: locationID,
+      });
+      const newData = cloneDeep(location.data) || {};
+      Object.assign(newData, { status: newStatus, __automated: true });
+      location.data = newData;
+      await location.save();
     }
   });
 

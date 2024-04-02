@@ -45,6 +45,7 @@ const DEFAULT_FIELDS = [
   'lastUpdateForm',
   'createdAt',
   'createdBy',
+  'archived',
   'modifiedAt',
   'id',
   'incrementalId',
