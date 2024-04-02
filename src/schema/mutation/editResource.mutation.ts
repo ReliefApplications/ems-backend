@@ -2,17 +2,18 @@ import mongoose from 'mongoose';
 import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { ResourceType } from '../types';
-import { findDuplicateFields } from '@utils/form';
+import { findDuplicateFields, updateIncrementalIds } from '@utils/form';
 import {
   getExpressionFromString,
   OperationTypeMap,
 } from '@utils/aggregation/expressionFromString';
-import { Resource } from '@models';
+import { DefaultIncrementalIdShapeT, Resource } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { get, has, isArray, isEqual, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
+import { IdShapeType } from '@schema/inputs/id-shape.input';
 
 /** Simple resource permission change type */
 type SimplePermissionChange =
@@ -559,6 +560,7 @@ type EditResourceArgs = {
   permissions?: any;
   fieldsPermissions?: any;
   calculatedField?: any;
+  idShape?: DefaultIncrementalIdShapeT;
 };
 
 /**
@@ -573,6 +575,7 @@ export default {
     permissions: { type: GraphQLJSON },
     fieldsPermissions: { type: GraphQLJSON },
     calculatedField: { type: GraphQLJSON },
+    idShape: { type: IdShapeType },
   },
   async resolve(parent, args: EditResourceArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -583,7 +586,8 @@ export default {
         (!args.fields &&
           !args.permissions &&
           !args.calculatedField &&
-          !args.fieldsPermissions)
+          !args.fieldsPermissions &&
+          !args.idShape)
       ) {
         throw new GraphQLError(
           context.i18next.t('mutations.resource.edit.errors.invalidArguments')
@@ -604,6 +608,7 @@ export default {
         modifiedAt: new Date(),
       };
       Object.assign(update, args.fields && { fields: args.fields });
+      Object.assign(update, args.idShape && { idShape: args.idShape });
 
       const allResourceFields = resource.fields;
 
@@ -781,6 +786,14 @@ export default {
         }
       }
 
+      if (args.idShape) {
+        if (update.$set) {
+          Object.assign(update.$set, { ['idShape']: args.idShape });
+        } else {
+          Object.assign(update, { $set: { ['idShape']: args.idShape } });
+        }
+      }
+
       // Split the request in three parts, to avoid conflict
       if (!!update.$set) {
         await Resource.findByIdAndUpdate(args.id, { $set: update.$set });
@@ -789,6 +802,11 @@ export default {
       if (!!update.$pull) {
         await Resource.findByIdAndUpdate(args.id, { $pull: update.$pull });
       }
+
+      if (args.idShape) {
+        await updateIncrementalIds(resource, args.idShape);
+      }
+
       return await Resource.findByIdAndUpdate(
         args.id,
         update.$addToSet ? { $addToSet: update.$addToSet } : {},

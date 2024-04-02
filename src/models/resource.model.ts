@@ -8,10 +8,36 @@ import { Record } from './record.model';
 import { deleteFolder } from '@utils/files/deleteFolder';
 import { logger } from '@services/logger.service';
 
+/** The type of the shape of the incrementalId field */
+export type DefaultIncrementalIdShapeT = {
+  shape: string;
+  padding: number;
+};
+
+/** Enum for the variables that can be used when defining the shape of the incremental ID */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export enum ID_SHAPE_VARIABLES {
+  YEAR = 'year',
+  INCREMENTAL_NUM = 'incremental',
+  RESOURCE_INITIAL = 'resourceInitial',
+  RESOURCE_NAME = 'resourceName',
+}
+
+/** The default shape of the incrementalId field */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const DEFAULT_INCREMENTAL_ID_SHAPE: DefaultIncrementalIdShapeT = {
+  shape: '{year}-{resourceInitial}{incremental}',
+  padding: 8,
+};
+
 /** Resource documents interface definition */
 export interface Resource extends Document {
   kind: 'Resource';
   name: string;
+  idShape?: {
+    shape: string;
+    padding: number;
+  };
   createdAt: Date;
   permissions: {
     canSee?: any[];
@@ -40,6 +66,16 @@ const resourceSchema = new Schema<Resource>(
       type: String,
       required: true,
       unique: true,
+    },
+    idShape: {
+      shape: {
+        type: String,
+        default: DEFAULT_INCREMENTAL_ID_SHAPE.shape,
+      },
+      padding: {
+        type: Number,
+        default: DEFAULT_INCREMENTAL_ID_SHAPE.padding,
+      },
     },
     permissions: {
       canSee: [

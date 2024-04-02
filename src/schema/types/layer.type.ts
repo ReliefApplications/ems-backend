@@ -185,6 +185,16 @@ export const LayerType = new GraphQLObjectType({
           description: { type: GraphQLString },
           popupElements: { type: new GraphQLList(LayerPopupElement) },
           fieldsInfo: { type: new GraphQLList(LayerFieldElement) },
+          navigateToPage: { type: GraphQLBoolean },
+          navigateSettings: {
+            type: new GraphQLObjectType({
+              name: 'navigateSettingsData',
+              fields: () => ({
+                pageUrl: { type: GraphQLString },
+                field: { type: GraphQLString },
+              }),
+            }),
+          },
         }),
       }),
     },

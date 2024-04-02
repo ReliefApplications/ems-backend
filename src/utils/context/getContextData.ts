@@ -135,29 +135,29 @@ export const getContextData = async (
   context: Context
 ) => {
   const ctx = page.context;
-  if (recordId) {
-    const resource = 'resource' in ctx ? ctx.resource : null;
-    try {
+  try {
+    if (recordId) {
+      const resource = 'resource' in ctx ? ctx.resource : null;
       context.user.ability = await extendAbilityForRecords(context.user);
       const data = await getContextDataForRecord(resource, recordId, context);
       return data;
-    } catch (err) {
-      return null;
+    } else if (elementId) {
+      const refData = 'refData' in ctx ? ctx.refData : null;
+      // get refData from page
+      const referenceData = await ReferenceData.findById(refData);
+      const apiConfiguration = await ApiConfiguration.findById(
+        referenceData.apiConfiguration
+      );
+      const items = apiConfiguration
+        ? await (
+            context.dataSources[apiConfiguration.name] as CustomAPI
+          ).getReferenceDataItems(referenceData, apiConfiguration)
+        : referenceData.data;
+      // Use '==' for number / string comparison
+      return items.find((x) => get(x, referenceData.valueField) == elementId);
     }
-  } else if (elementId) {
-    const refData = 'refData' in ctx ? ctx.refData : null;
-    // get refData from page
-    const referenceData = await ReferenceData.findById(refData);
-    const apiConfiguration = await ApiConfiguration.findById(
-      referenceData.apiConfiguration
-    );
-    const items = apiConfiguration
-      ? await (
-          context.dataSources[apiConfiguration.name] as CustomAPI
-        ).getReferenceDataItems(referenceData, apiConfiguration)
-      : referenceData.data;
-    // Use '==' for number / string comparison
-    return items.find((x) => get(x, referenceData.valueField) == elementId);
+    return null;
+  } catch (err) {
+    return null;
   }
-  return null;
 };
