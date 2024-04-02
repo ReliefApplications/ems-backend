@@ -208,6 +208,9 @@
 					"invalidArguments": "******",
 					"wrongTemplateProvided": "******"
 				}
+			},
+			"errors": {
+				"missingParameters": "******"
 			}
 		},
 		"reference": {
