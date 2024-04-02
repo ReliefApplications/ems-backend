@@ -102,7 +102,7 @@ async function insertRecords(
     const columns = getUploadColumns(fields, headerRow);
 
     // find the index of the import field
-    const importField = form.importField;
+    const importField = get(form, 'resource.importField');
     const importFieldIndex = headerRow.findIndex(
       (cell) => cell === importField
     );
