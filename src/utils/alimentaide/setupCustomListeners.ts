@@ -25,7 +25,9 @@ const FAMILY_FORM_ID = new Types.ObjectId('64de75fd3fb2a109ff8dddb4');
  *
  * @param schema Record schema
  */
-export const setupCustomListeners = <DocType>(schema: Schema<DocType>) => {
+export const setupCustomAlimentaideListeners = <DocType>(
+  schema: Schema<DocType>
+) => {
   // If not in the Alimentaide server, do nothing
   if (!IS_ALIMENTAIDE && config.util.getEnv('NODE_ENV') === 'production') {
     return;

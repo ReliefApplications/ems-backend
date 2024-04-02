@@ -10,7 +10,8 @@ import { addOnBeforeDeleteMany } from '@utils/models/deletion';
 import { Version } from './version.model';
 import { Form } from './form.model';
 import { User } from './user.model';
-import { setupCustomListeners } from '@utils/alimentaide/setupCustomListeners';
+import { setupCustomAlimentaideListeners } from '@utils/alimentaide/setupCustomListeners';
+import { setupCustomPCIListeners } from '@utils/pci/setupCustomListeners';
 
 /** Record documents interface declaration */
 // eslint-disable-next-line deprecation/deprecation
@@ -135,8 +136,9 @@ recordSchema.index({ incrementalId: 1, form: 1 });
 recordSchema.plugin(accessibleRecordsPlugin);
 recordSchema.plugin(accessibleFieldsPlugin);
 
-// Custom logic for Alimentaide, to be replace with plugin in the future
-setupCustomListeners(recordSchema);
+// Custom logic, to be replace with plugin in the future
+setupCustomAlimentaideListeners(recordSchema);
+setupCustomPCIListeners(recordSchema);
 
 /** Mongoose record model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare

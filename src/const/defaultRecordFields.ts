@@ -73,6 +73,12 @@ export const defaultRecordFields: {
     },
   },
   {
+    field: 'archived',
+    type: GraphQLBoolean,
+    filterType: GraphQLBoolean,
+    selectable: true,
+  },
+  {
     field: 'incrementalId',
     type: GraphQLID,
     filterType: GraphQLID,

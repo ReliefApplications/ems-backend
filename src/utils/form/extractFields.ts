@@ -14,7 +14,9 @@ import { validateGraphQLFieldName } from '@utils/validators';
 export const extractFields = async (object, fields, core): Promise<void> => {
   if (object.elements) {
     for (const element of object.elements) {
-      if (element.omitField) continue;
+      if (element.omitField) {
+        continue;
+      }
       if (element.type === 'panel') {
         await extractFields(element, fields, core);
       } else {
@@ -29,12 +31,14 @@ export const extractFields = async (object, fields, core): Promise<void> => {
           type,
           name: element.valueName,
           isRequired: element.isRequired ? element.isRequired : false,
+          showOnXlsxTemplate: !element.omitOnXlsxTemplate,
           readOnly: element.readOnly ? element.readOnly : false,
           isCore: core,
           ...(element.hasOwnProperty('defaultValue')
             ? { defaultValue: element.defaultValue }
             : {}),
         };
+        console.log(field.name, field);
         // ** Resource **
         if (element.type === 'resource' || element.type === 'resources') {
           if (element.relatedName) {

@@ -9,19 +9,12 @@ import i18next from 'i18next';
 import { isEqual } from 'lodash';
 import { Types } from 'mongoose';
 import { logger } from '@services/logger.service';
-import NodeCache from 'node-cache';
-
-/** Batch size for when updating all records */
-const BATCH_SIZE = 5000;
-
-/** Internal node cache object instance */
-const cache = new NodeCache();
 
 /** Maps each available variable to its template */
 const TEMPLATES = {
   YEAR: '{year}',
-  FORM_INITIAL: '{formInitial}',
-  FORM_NAME: '{formName}',
+  RESOURCE_INITIAL: '{resourceInitial}',
+  RESOURCE_NAME: '{resourceName}',
   INCREMENTAL_NUM: '{incremental}',
 } as const;
 
@@ -33,7 +26,7 @@ const TEMPLATES = {
  * @returns The incremental ID.
  */
 export const buildIncrementalId = (
-  idShape: Form['idShape'],
+  idShape: Resource['idShape'],
   variables: { [key in ID_SHAPE_VARIABLES]: string }
 ) => {
   const { shape, padding } = idShape;
@@ -52,18 +45,18 @@ export const buildIncrementalId = (
   if (shape.includes(TEMPLATES.YEAR) && variables.year) {
     newID = newID.replace(new RegExp(TEMPLATES.YEAR, 'g'), variables.year);
   }
-  // {formInitial} variable is optional
-  if (shape.includes(TEMPLATES.FORM_INITIAL) && variables.formInitial) {
+  // {resourceInitial} variable is optional
+  if (shape.includes(TEMPLATES.RESOURCE_INITIAL) && variables.resourceInitial) {
     newID = newID.replace(
-      new RegExp(TEMPLATES.FORM_INITIAL, 'g'),
-      variables.formInitial
+      new RegExp(TEMPLATES.RESOURCE_INITIAL, 'g'),
+      variables.resourceInitial
     );
   }
-  // {formName} variable is optional
-  if (shape.includes(TEMPLATES.FORM_NAME) && variables.formName) {
+  // {resourceName} variable is optional
+  if (shape.includes(TEMPLATES.RESOURCE_NAME) && variables.resourceName) {
     newID = newID.replace(
-      new RegExp(TEMPLATES.FORM_NAME, 'g'),
-      variables.formName
+      new RegExp(TEMPLATES.RESOURCE_NAME, 'g'),
+      variables.resourceName
     );
   }
 
@@ -73,104 +66,72 @@ export const buildIncrementalId = (
 /**
  * Updates all incremental IDs of a form
  *
- * @param form Id or form object.
+ * @param resource Id or resource object.
  * @param newShape New shape of the incremental ID.
  * @param force Whether to force the update even if the shape is the same.
  */
 export const updateIncrementalIds = async (
-  form: Form | string | Types.ObjectId,
-  newShape: Form['idShape'],
+  resource: Resource | string | Types.ObjectId,
+  newShape: Resource['idShape'],
   force = false
 ) => {
   // If form is a string, fetches the form object
-  if (!(form instanceof Form)) {
-    form = await Form.findOne({
-      $or: [{ _id: form }, { resource: form }],
+  if (!(resource instanceof Resource)) {
+    resource = await Resource.findOne({
+      _id: resource,
     });
   }
 
-  const { idShape: oldShape } = form as Form;
+  resource = resource as Resource;
 
-  const resource = await Resource.findById((form as Form).resource);
+  const { idShape: oldShape } = resource;
 
   // If the shape is the same, do nothing
   if (isEqual(oldShape, newShape) && !force) {
     return;
   }
 
-  // Whether the new shape uses the year variable
-  const usesYear = newShape.shape.includes(TEMPLATES.YEAR);
-
-  // Gets the total number of records
-  const totalRecords = await Record.countDocuments({
-    resource,
+  logger.log({
+    level: 'info',
+    message: `Updating incremental ids record from resource "${resource.name}"... (${oldShape.shape} -> ${newShape.shape})`,
   });
 
-  // First, we set the incrementalId to be equal to the _id for all records
-  // to avoid having duplicate incrementalIds while updating the records in batches
-  for (let i = 0; i < totalRecords; i += BATCH_SIZE) {
-    const records = await Record.find({ resource })
-      .skip(i)
-      .limit(BATCH_SIZE)
-      .select('_id incrementalId');
-
-    records.forEach((rec) => {
-      rec.incrementalId = rec._id;
-    });
-
-    await Record.bulkSave(records);
-  }
-
+  const records = await Record.find({ resource }).select(
+    'incID createdAt _form'
+  );
+  // Whether the new shape uses the year variable
+  const usesYear = newShape.shape.includes(TEMPLATES.YEAR);
   let inc = 0;
-  let lastRecordUpdated = { createdAt: null };
-  // Updates the incremental ID of each record in batches
-  for (let i = 0; i < totalRecords; i += BATCH_SIZE) {
-    logger.log({
-      level: 'info',
-      message: `Updating incremental ids record from form "${
-        (form as Form).name
-      }": [${i}/${totalRecords}]...`,
-    });
+  for (let r = 0; r < records.length; r++) {
+    const { createdAt } = records[r];
+    const { createdAt: prevCreatedAt } = records[r - 1] ?? { createdAt: null };
 
-    const records = await Record.find({ resource })
-      .skip(i)
-      .limit(BATCH_SIZE)
-      .select('incID createdAt');
-
-    for (let r = 0; r < records.length; r++) {
-      const { createdAt } = records[r];
-      const { createdAt: prevCreatedAt } = records[r - 1] || lastRecordUpdated;
-
-      if (
-        // If {year} is used in the shape
-        usesYear &&
-        // Checks if the previous record exists and that the year is different
-        createdAt.getFullYear() !== prevCreatedAt?.getFullYear()
-      ) {
-        // Resets the counter
-        inc = 0;
-      }
-
-      // Increments the counter
-      inc += 1;
-
-      const newIncrementalId = buildIncrementalId(newShape, {
-        incremental: inc.toString(),
-        year: createdAt.getFullYear().toString(),
-        formInitial: (form as Form).name?.charAt(0).toUpperCase() || '',
-        formName: (form as Form).name?.toUpperCase() || '',
-      });
-
-      records[r].incrementalId = newIncrementalId;
-      records[r].incID = inc;
+    if (
+      // If {year} is used in the shape
+      usesYear &&
+      // Checks if the previous record exists and that the year is different
+      createdAt.getFullYear() !== prevCreatedAt?.getFullYear()
+    ) {
+      // Resets the counter
+      inc = 0;
     }
 
-    // Save the changes
-    await Record.bulkSave(records);
+    // Increments the counter
+    inc += 1;
 
-    // Updates the last record updated
-    lastRecordUpdated = records[records.length - 1];
+    const newIncrementalId = buildIncrementalId(newShape, {
+      incremental: inc.toString(),
+      year: createdAt.getFullYear().toString(),
+      resourceInitial: resource.name?.charAt(0).toUpperCase() || '',
+      resourceName: resource.name?.toUpperCase() || '',
+    });
+
+    records[r].incrementalId = newIncrementalId;
+    records[r].incID = inc;
   }
+
+  // Save the changes
+  await Record.bulkSave(records);
 };
 
 /**
@@ -182,14 +143,16 @@ export const updateIncrementalIds = async (
  */
 export const getNextId = async (structureId: string | Form) => {
   // Gets the form name and id shape
-  const { name, idShape: formIDShape } =
-    typeof structureId === 'string'
-      ? await Form.findOne({
-          $or: [{ _id: structureId }, { resource: structureId }],
-        }).select('name idShape')
-      : structureId;
+  let resource: Resource = null;
+  if (typeof structureId === 'string') {
+    structureId = (await Form.findOne({
+      $or: [{ _id: structureId }, { resource: structureId }],
+    }).select('name resource')) as Form;
+  }
 
-  const idShape = formIDShape || DEFAULT_INCREMENTAL_ID_SHAPE;
+  resource = await Resource.findOne({ _id: (structureId as Form).resource });
+  const idShape = resource.idShape ?? DEFAULT_INCREMENTAL_ID_SHAPE;
+  const name = resource.name;
 
   /** Gets the last id added to the form */
   const getLastID = async () => {
@@ -217,7 +180,7 @@ export const getNextId = async (structureId: string | Form) => {
       // If the last record has no incID, it means it was created before the incID field was added
       // to the Record model. In this case, we need to update the incID of all records
       // to avoid duplicates.
-      await updateIncrementalIds(structureId, idShape, true);
+      await updateIncrementalIds(resource, idShape, true);
 
       // Re-fetches the last record
       lastRecord = await Record.findOne(filters)
@@ -228,20 +191,14 @@ export const getNextId = async (structureId: string | Form) => {
     return lastRecord?.incID ?? null;
   };
 
-  // Tries to get the next id from cache
-  const cachedID = cache.get<number>(
-    `${structureId}-${new Date().getFullYear()}`
-  );
-
-  const incID = (cachedID ?? (await getLastID()) ?? 0) + 1;
+  const incID = ((await getLastID()) ?? 0) + 1;
 
   const incrementalId = buildIncrementalId(idShape, {
     incremental: incID.toString(),
     year: new Date().getFullYear().toString(),
-    formInitial: name?.charAt(0).toUpperCase() || '',
-    formName: name?.toUpperCase() || '',
+    resourceInitial: name?.charAt(0).toUpperCase() || '',
+    resourceName: name?.toUpperCase() || '',
   });
 
-  cache.set(`${structureId}-${new Date().getFullYear()}`, incID);
   return { incID, incrementalId };
 };

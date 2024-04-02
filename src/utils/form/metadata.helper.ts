@@ -234,6 +234,15 @@ export const getMetaData = async (
       editor: 'datetime',
       canUpdate: false,
     });
+
+    // Archived
+    metaData.push({
+      automated: true,
+      name: 'archived',
+      type: 'boolean',
+      editor: 'boolean',
+      canUpdate: false,
+    });
   }
 
   /**

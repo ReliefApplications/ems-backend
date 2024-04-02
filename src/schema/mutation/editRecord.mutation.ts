@@ -10,7 +10,7 @@ import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import {
   transformRecord,
   getOwnership,
-  checkRecordValidation,
+  // checkRecordValidation,
   checkRecordTriggers,
 } from '@utils/form';
 import { RecordType } from '../types';
@@ -146,21 +146,22 @@ export default {
 
       // Update record
       // Put a try catch for record validation + check the structure of this form
-      let validationErrors;
-      try {
-        validationErrors = checkRecordValidation(
-          oldRecord,
-          args.data,
-          parentForm,
-          context,
-          args.lang
-        );
-      } catch (err) {
-        logger.error(err.message, { stack: err.stack });
-      }
-      if (validationErrors && validationErrors.length) {
-        return Object.assign(oldRecord, { validationErrors });
-      }
+      // let validationErrors;
+      // try {
+      //   validationErrors = checkRecordValidation(
+      //     oldRecord,
+      //     args.data,
+      //     parentForm,
+      //     context,
+      //     args.lang
+      //   );
+      // } catch (err) {
+      //   logger.error(err.message, { stack: err.stack });
+      // }
+      // if (validationErrors && validationErrors.length) {
+      //   return Object.assign(oldRecord, { validationErrors });
+      // }
+
       // Generate new version, from current data
       const version = new Version({
         createdAt: oldRecord.modifiedAt
