@@ -5,14 +5,7 @@ import {
   GraphQLError,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import {
-  Form,
-  Resource,
-  Version,
-  Channel,
-  ReferenceData,
-  DEFAULT_IMPORT_FIELD,
-} from '@models';
+import { Form, Resource, Version, Channel, ReferenceData } from '@models';
 import {
   removeField,
   addField,
@@ -219,10 +212,6 @@ export default {
       if (args.structure && !isEqual(form.structure, args.structure)) {
         update.structure = args.structure;
         const structure = JSON.parse(args.structure);
-
-        // Save the importField
-        update.importField =
-          structure.importField || DEFAULT_IMPORT_FIELD.incID;
 
         // Save the allowUploadRecords
         update.allowUploadRecords = structure.allowUploadRecords ?? false;

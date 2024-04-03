@@ -1,3 +1,4 @@
+import { Resource } from '@models';
 import { getChoices } from '../proxy/getChoices';
 
 /** Default record fields */
@@ -171,6 +172,19 @@ export const getColumns = async (
             });
           }
         }
+        break;
+      }
+      case 'resource': {
+        const name = `${field.name}`;
+        const resource = await Resource.findById(field.resource, 'importField');
+        columns.push({
+          name: name,
+          label: field.label || name,
+          field: field.name,
+          importField: resource.importField,
+          type: field.type,
+          default: DEFAULT_FIELDS.includes(field.name),
+        });
         break;
       }
       default: {

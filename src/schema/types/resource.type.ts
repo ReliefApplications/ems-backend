@@ -84,6 +84,7 @@ export const ResourceType = new GraphQLObjectType({
     id: { type: GraphQLID },
     name: { type: GraphQLString },
     idShape: { type: idShapeType },
+    importField: { type: GraphQLString },
     singleQueryName: {
       type: GraphQLString,
       resolve(parent) {

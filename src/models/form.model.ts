@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { addOnBeforeDeleteMany } from '@utils/models/deletion';
@@ -10,12 +9,7 @@ import { Record } from './record.model';
 import { getGraphQLTypeName } from '@utils/validators';
 import { deleteFolder } from '@utils/files/deleteFolder';
 import { logger } from '@services/logger.service';
-
-/** Enum for the default import fields */
-export enum DEFAULT_IMPORT_FIELD {
-  incID = 'incrementalId',
-  // id = 'id',
-}
+import { DEFAULT_IMPORT_FIELD } from './resource.model';
 
 /** Form documents interface declaration */
 interface FormDocument extends Document {

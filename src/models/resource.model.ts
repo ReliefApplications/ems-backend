@@ -23,6 +23,13 @@ export enum ID_SHAPE_VARIABLES {
   RESOURCE_NAME = 'resourceName',
 }
 
+/** Enum for the default import fields */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export enum DEFAULT_IMPORT_FIELD {
+  incID = 'incrementalId',
+  // id = 'id',
+}
+
 /** The default shape of the incrementalId field */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const DEFAULT_INCREMENTAL_ID_SHAPE: DefaultIncrementalIdShapeT = {
@@ -57,6 +64,7 @@ export interface Resource extends Document {
   }[];
   layouts: any;
   aggregations: any;
+  importField?: string;
 }
 
 /** Mongoose resource schema definition */
@@ -144,6 +152,10 @@ const resourceSchema = new Schema<Resource>(
     },
     layouts: [layoutSchema],
     aggregations: [aggregationSchema],
+    importField: {
+      type: String,
+      default: DEFAULT_IMPORT_FIELD.incID,
+    },
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
