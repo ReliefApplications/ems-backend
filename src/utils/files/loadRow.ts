@@ -1,6 +1,6 @@
 import { isArray, isNil } from 'lodash';
 import set from 'lodash/set';
-import { PositionAttribute, Record } from '@models';
+import { PositionAttribute } from '@models';
 
 /**
  * Transforms uploaded row into record data, using fields definition.
