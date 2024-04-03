@@ -1,5 +1,11 @@
 import mongoose from 'mongoose';
-import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLList,
+  GraphQLError,
+  GraphQLString,
+} from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { ResourceType } from '../types';
 import { findDuplicateFields, updateIncrementalIds } from '@utils/form';
@@ -561,6 +567,7 @@ type EditResourceArgs = {
   fieldsPermissions?: any;
   calculatedField?: any;
   idShape?: DefaultIncrementalIdShapeT;
+  importField?: string;
 };
 
 /**
@@ -576,6 +583,7 @@ export default {
     fieldsPermissions: { type: GraphQLJSON },
     calculatedField: { type: GraphQLJSON },
     idShape: { type: IdShapeType },
+    importField: { type: GraphQLString },
   },
   async resolve(parent, args: EditResourceArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -587,7 +595,8 @@ export default {
           !args.permissions &&
           !args.calculatedField &&
           !args.fieldsPermissions &&
-          !args.idShape)
+          !args.idShape &&
+          !args.importField)
       ) {
         throw new GraphQLError(
           context.i18next.t('mutations.resource.edit.errors.invalidArguments')
@@ -609,6 +618,10 @@ export default {
       };
       Object.assign(update, args.fields && { fields: args.fields });
       Object.assign(update, args.idShape && { idShape: args.idShape });
+      Object.assign(
+        update,
+        args.importField && { importField: args.importField }
+      );
 
       const allResourceFields = resource.fields;
 
@@ -791,6 +804,16 @@ export default {
           Object.assign(update.$set, { ['idShape']: args.idShape });
         } else {
           Object.assign(update, { $set: { ['idShape']: args.idShape } });
+        }
+      }
+
+      if (args.importField) {
+        if (update.$set) {
+          Object.assign(update.$set, { ['importField']: args.importField });
+        } else {
+          Object.assign(update, {
+            $set: { ['importField']: args.importField },
+          });
         }
       }
 

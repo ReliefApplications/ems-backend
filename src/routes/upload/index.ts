@@ -14,9 +14,9 @@ import {
 import { AppAbility } from '@security/defineUserAbility';
 import { Types } from 'mongoose';
 import { getUploadColumns, loadRow, uploadFile } from '@utils/files';
-import { buildIncrementalId, getNextId, getOwnership } from '@utils/form';
+import { getNextId, getOwnership } from '@utils/form';
 import i18next from 'i18next';
-import { get, isString } from 'lodash';
+import get from 'lodash/get';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { insertRecords as insertRecordsPulljob } from '@server/pullJobScheduler';
@@ -102,7 +102,10 @@ async function insertRecords(
     const columns = getUploadColumns(fields, headerRow);
 
     // find the index of the import field
-    const importField = form.importField;
+    const importField =
+      get(form, 'resource.importField') ??
+      (await Resource.findById(form.resource)).importField;
+
     const importFieldIndex = headerRow.findIndex(
       (cell) => cell === importField
     );
@@ -124,64 +127,103 @@ async function insertRecords(
     const recordsToCreate: Record[] = [];
     const recordToUpdate: Record[] = [];
 
-    // Get resource questions that are linked to a unique field
-    const linkedResourceQuestion = (
-      await Promise.all(
-        columns.map(async (question, index) => {
-          // Extract all the question info from the form structure
-          const fullQuestion = form.fields.find(
-            (field) => field.name === question.name
-          );
+    const resourceQuestionsMap = new Map<
+      string,
+      { ids: unknown[]; fields: any[] }
+    >();
+    const resourcePerColumn = columns.map((column, idx) => {
+      // Extract all the question info from the form structure
+      const question = form.fields.find((field) => field.name === column.name);
 
-          if (fullQuestion && fullQuestion.type === 'resource') {
-            // Verify if the question field is equal to any form import field of the resource
-            const forms = await Form.find({ resource: fullQuestion.resource });
-            for (const resForm of forms) {
-              if (resForm.importField === fullQuestion.displayField) {
-                // Saving the associated import field name and the column index to retrieve the corresponding data
-                question.importField = resForm.importField;
-                question.excelColumnIndex = index;
-                // Get the question type to avoid formatting issues with numeric values
-                const resQuestion = resForm.fields.find(
-                  (field) => field.name === fullQuestion.displayField
-                );
-                question.type = resQuestion?.type;
-                return question;
-              }
-            }
-          }
-        })
-      )
-    ).filter(Boolean); // Remove undefined values
+      if (question && question.type === 'resource') {
+        // Existing array of questions for this resource
+        const oldObj = resourceQuestionsMap.get(question.resource) ?? {
+          ids: [],
+          fields: [],
+        };
 
-    for (let i = 1; i <= worksheet.rowCount; i++) {
-      const row = worksheet.getRow(i);
-      const { data, positionAttributes } = loadRow(columns, row.values);
-      const oldRecord = oldRecords.find((rec) =>
-        importField === DEFAULT_IMPORT_FIELD.incID
-          ? rec.incrementalId === row.getCell(importFieldIndex).value
-          : rec.data[importField] === row.getCell(importFieldIndex).value
-      );
+        // The ids are the values on the rows of the column that corresponds to resource questions
+        const ids = worksheet
+          .getColumn(idx + 1)
+          ?.values.map((x) => x.valueOf());
 
-      // If row is empty, skip it
-      if (Array.isArray(row.values) && row.values.length === 0 && !oldRecord) {
-        continue;
+        oldObj.fields.push(question);
+        oldObj.ids.push(...ids);
+        resourceQuestionsMap.set(question.resource, oldObj);
+        return question.resource;
+      }
+      return null;
+    });
+
+    const linkedResources = await Resource.find({
+      _id: {
+        $in: Array.from(resourceQuestionsMap.keys()).map(
+          (x) => new Types.ObjectId(x)
+        ),
+      },
+    });
+
+    const idsMap = new Map<string, string>();
+    const recordsPromises: any[] = [];
+    linkedResources.forEach((resource) => {
+      const colImportField = resource.importField;
+      if (!colImportField) {
+        return;
       }
 
-      // Change the import field value to the object ID if the record exists
-      await Promise.all(
-        linkedResourceQuestion.map(async (field) => {
-          if (!isString(data[field.name]) && field.type !== 'numeric') {
-            data[field.name] = JSON.stringify(data[field.name]);
-          }
-          const record = await Record.findOne({
-            [`data.${field.importField}`]: data[field.name],
-          });
-          if (record) {
-            data[field.name] = record._id.toString();
-          }
-        })
+      // If using an import field, we map the ids to the new ids, which are the objectIds
+      const { ids } = resourceQuestionsMap.get(resource._id.toString());
+      const recordsFromIds = Record.find({
+        resource: resource._id,
+        [`data.${colImportField}`]: { $in: ids.filter(Boolean) },
+      }).then((records) => {
+        records.forEach((record) => {
+          idsMap.set(
+            `${resource._id.toString()}:${record.data[colImportField]}`,
+            record._id.toString()
+          );
+        });
+        return records;
+      });
+
+      recordsPromises.push(recordsFromIds);
+    });
+
+    // Await all the promises to get the ids
+    await Promise.all(recordsPromises);
+
+    const loadRowPromises: ReturnType<typeof loadRow>[] = [];
+    // Iterate over the rows of the worksheet and
+    worksheet.eachRow({ includeEmpty: false }, function (row) {
+      (row.values as CellValue[]).forEach((value, idx) => {
+        const linkedResource = resourcePerColumn[idx - 1];
+        if (!linkedResource) {
+          return;
+        }
+        const newID = idsMap.get(`${linkedResource}:${value}`);
+        // update the value of the cell with the new ID
+        row.getCell(idx).value = newID;
+      });
+      loadRowPromises.push(loadRow(columns, row.values));
+    });
+
+    // Load the rows in parallel
+    const loadedRows = await Promise.all(loadRowPromises);
+    loadedRows.forEach(({ data, positionAttributes, error }) => {
+      if (error) {
+        return res.status(400).send({
+          status: i18next.t(error.name, {
+            field: error.field,
+          }),
+        });
+      }
+
+      const oldRecord = oldRecords.find((rec) =>
+        importField === DEFAULT_IMPORT_FIELD.incID
+          ? rec.incrementalId === data[importField]
+          : rec.data[importField] === data[importField]
       );
+
       // If the record already exists, update it and create a new version
       if (oldRecord) {
         const updatedRecord = cloneDeep(oldRecord);
@@ -236,23 +278,15 @@ async function insertRecords(
           })
         );
       }
-    }
-    const resource = await Resource.findOne({ _id: form.resource });
-    let { incID: nextId } = await getNextId(form);
+    });
+
     // Set the incrementalIDs of new records
     for (let i = 0; i < recordsToCreate.length; i += 1) {
       // It's ok to use await here because it'll be cached
       // from the second iteration onwards
-      const incrementalId = buildIncrementalId(resource.idShape, {
-        incremental: nextId.toString(),
-        year: new Date().getFullYear().toString(),
-        resourceInitial: resource.name.charAt(0).toUpperCase(),
-        resourceName: resource.name.toUpperCase(),
-      });
-
+      const { incrementalId, incID } = await getNextId(form);
       recordsToCreate[i].incrementalId = incrementalId;
-      recordsToCreate[i].incID = nextId;
-      nextId += 1;
+      recordsToCreate[i].incID = incID;
     }
 
     const recordsToSave = [...recordsToCreate, ...recordToUpdate];

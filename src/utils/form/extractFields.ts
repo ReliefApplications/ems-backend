@@ -30,15 +30,15 @@ export const extractFields = async (object, fields, core): Promise<void> => {
         const field = {
           type,
           name: element.valueName,
-          isRequired: element.isRequired ? element.isRequired : false,
+          unique: !!element.unique,
+          isRequired: !!element.isRequired,
           showOnXlsxTemplate: !element.omitOnXlsxTemplate,
-          readOnly: element.readOnly ? element.readOnly : false,
+          readOnly: !!element.readOnly,
           isCore: core,
           ...(element.hasOwnProperty('defaultValue')
             ? { defaultValue: element.defaultValue }
             : {}),
         };
-        console.log(field.name, field);
         // ** Resource **
         if (element.type === 'resource' || element.type === 'resources') {
           if (element.relatedName) {
