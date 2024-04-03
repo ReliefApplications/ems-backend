@@ -204,7 +204,6 @@ async function insertRecords(
         const newID = idsMap.get(`${linkedResource}:${value}`);
         if (newID) {
           row.getCell(idx).value = newID;
-          loadRowPromises.push(loadRow(columns, row.values));
         } else if (value && !err) {
           // Throw error, user is trying to create record that has a resource question
           // and the value for the record does not exist (is present but there is no match)
@@ -214,10 +213,9 @@ async function insertRecords(
               line: row.number,
             }),
           };
-        } else {
-          loadRowPromises.push(loadRow(columns, row.values));
         }
       });
+      loadRowPromises.push(loadRow(columns, row.values));
     });
 
     if (err) {

@@ -108,6 +108,10 @@ export const setupCustomPCIListeners = <DocType>(schema: Schema<DocType>) => {
       // we should update the location status from the indicator entry
       const { location: locationID, indicator, date } = rec.data;
 
+      if (indicator !== TENSION_INDICATOR_ID) {
+        return;
+      }
+
       const newStatus =
         rec.data.value === 1
           ? 'low'
