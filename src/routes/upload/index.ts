@@ -194,6 +194,7 @@ async function insertRecords(
 
     const loadRowPromises: ReturnType<typeof loadRow>[] = [];
     // Iterate over the rows of the worksheet and
+    let err = null;
     worksheet.eachRow({ includeEmpty: false }, function (row) {
       (row.values as CellValue[]).forEach((value, idx) => {
         const linkedResource = resourcePerColumn[idx - 1];
@@ -201,11 +202,27 @@ async function insertRecords(
           return;
         }
         const newID = idsMap.get(`${linkedResource}:${value}`);
-        // update the value of the cell with the new ID
-        row.getCell(idx).value = newID;
+        if (newID) {
+          row.getCell(idx).value = newID;
+          loadRowPromises.push(loadRow(columns, row.values));
+        } else if (value && !err) {
+          // Throw error, user is trying to create record that has a resource question
+          // and the value for the record does not exist (is present but there is no match)
+          err = {
+            status: i18next.t('routes.upload.errors.resourceNotFound', {
+              field: columns[idx - 1].name,
+              line: row.number,
+            }),
+          };
+        } else {
+          loadRowPromises.push(loadRow(columns, row.values));
+        }
       });
-      loadRowPromises.push(loadRow(columns, row.values));
     });
+
+    if (err) {
+      return res.status(400).send(err);
+    }
 
     // Load the rows in parallel
     const loadedRows = await Promise.all(loadRowPromises);
@@ -301,8 +318,8 @@ async function insertRecords(
       await Version.bulkSave(versionsToCreate);
       await Record.bulkSave(recordsToSave);
       return res.status(200).send({ status: 'OK' });
-    } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+    } catch (err2) {
+      logger.error(err2.message, { stack: err2.stack });
       return res
         .status(500)
         .send(i18next.t('common.errors.internalServerError'));

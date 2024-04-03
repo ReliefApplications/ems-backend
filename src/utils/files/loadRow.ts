@@ -80,20 +80,7 @@ export const loadRow = async (
           data[column.field] = JSON.parse(value);
           break;
         }
-        case 'resource': {
-          const record = await Record.findOne({
-            _id: value,
-            resource: column.resource,
-          });
-          if (!record) {
-            error = {
-              name: 'routes.upload.errors.resourceNotFound',
-              field: column.field,
-            };
-            break;
-          }
-          data[column.field] = value;
-        }
+
         default: {
           data[column.field] = value;
           break;
