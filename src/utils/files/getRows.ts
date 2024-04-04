@@ -78,6 +78,11 @@ export const getRows = async (
             recordId,
             'data incrementalId'
           );
+
+          if (!resourceRecord) {
+            set(row, column.name, '');
+            break;
+          }
           const value =
             column.importField === DEFAULT_IMPORT_FIELD.incID
               ? resourceRecord.incrementalId
