@@ -5,7 +5,7 @@ import { getNextId } from '@utils/form';
 import { cloneDeep } from 'lodash';
 
 /** Whether or not the current environment is PCI */
-const IS_PCI = config.get('server.url') === 'https://ltkmp.oortcloud.tech/api';
+const IS_PCI = config.get('server.url') === 'https://libyatt.ly/api';
 
 /** Location form id */
 const LOCATION_FORM_ID = new Types.ObjectId('65d61bfbccb8d36936d10cb6');
