@@ -158,7 +158,7 @@ export const getNextId = async (structureId: string | Form) => {
   const getLastID = async () => {
     const filters = {
       $and: [
-        { $or: [{ resource: structureId }, { form: structureId }] },
+        { resource: (structureId as Form).resource },
         // Only add the year filter if the id shape includes the year variable
         idShape.shape.includes(ID_SHAPE_VARIABLES.YEAR)
           ? {
