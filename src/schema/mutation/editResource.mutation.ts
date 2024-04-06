@@ -20,6 +20,7 @@ import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 import { IdShapeType } from '@schema/inputs/id-shape.input';
+import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
 
 /** Simple resource permission change type */
 type SimplePermissionChange =
@@ -723,6 +724,27 @@ export default {
       // Update calculated fields
       if (args.calculatedField) {
         const calculatedField: CalculatedFieldChange = args.calculatedField;
+
+        // Check if calculated field expression is too long
+        if (calculatedField.add || calculatedField.update) {
+          const expression =
+            calculatedField.add?.expression ??
+            calculatedField.update?.expression;
+
+          const pipeline = buildCalculatedFieldPipeline(
+            expression,
+            '',
+            context.timeZone
+          );
+
+          if (pipeline[0].$facet.calcFieldFacet.length > 50) {
+            throw new GraphQLError(
+              context.i18next.t(
+                'mutations.resource.edit.errors.calculatedFieldTooLong'
+              )
+            );
+          }
+        }
 
         // Add new calculated field
         if (calculatedField.add) {
