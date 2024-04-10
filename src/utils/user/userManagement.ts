@@ -46,7 +46,7 @@ export interface AttributeSettings {
     value: string;
     text: string;
   }[];
-  apiConfiguration?: string;
+  referenceData?: string;
   endpoint?: string;
   mapping?: {
     field: string;

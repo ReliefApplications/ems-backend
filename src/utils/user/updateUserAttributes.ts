@@ -2,12 +2,10 @@ import config from 'config';
 import i18next from 'i18next';
 import jsonpath from 'jsonpath';
 import { isEmpty, set } from 'lodash';
-import { authType } from '@const/enumTypes';
-import { ApiConfiguration, User } from '@models';
+import { ReferenceData, User } from '@models';
 import { logger } from '@services/logger.service';
-import { getDelegatedToken } from '../proxy';
 import { AttributeSettings } from './userManagement';
-import axios from 'axios';
+import dataSources, { CustomAPI } from '@server/apollo/dataSources';
 
 /**
  * Check if we need to update user attributes and perform it when needed.
@@ -26,7 +24,7 @@ export const updateUserAttributes = async (
     // Check if we have correct settings to update user attributes from external system
     if (settings.local) return false;
     if (
-      !settings.apiConfiguration ||
+      !settings.referenceData ||
       !settings.endpoint ||
       !settings.mapping ||
       isEmpty(settings.mapping)
@@ -41,45 +39,34 @@ export const updateUserAttributes = async (
       );
       return false;
     }
-    // Get delegated token
-    const upstreamToken = req.headers.authorization.split(' ')[1];
-    let token: string;
-    const apiConfiguration = await ApiConfiguration.findById(
-      settings.apiConfiguration
-    );
-    if (apiConfiguration) {
-      if (apiConfiguration.authType === authType.serviceToService) {
-        token = await getDelegatedToken(
-          apiConfiguration,
-          user._id,
-          upstreamToken
-        );
-      }
-      // Pass it in headers
-      const headers: any = token
-        ? {
-            Authorization: 'Bearer ' + token,
-          }
-        : {};
-      // Fetch new attributes
-      let res;
-      let data;
-      try {
-        res = await axios({
-          url: apiConfiguration.endpoint + settings.endpoint,
-          method: 'get',
-          headers,
-        });
-        data = res.data;
-      } catch (err) {
-        logger.error(i18next.t('common.errors.invalidAPI'), {
-          stack: err.stack,
-        });
-        return false;
-      }
-      // Map them to user attributes
+
+    const referenceData = await ReferenceData.findById(
+      settings.referenceData
+    ).populate({
+      path: 'apiConfiguration',
+      model: 'ApiConfiguration',
+    });
+
+    if (referenceData) {
+      const contextDataSources = (
+        await dataSources({
+          // Passing upstream request so accesstoken can be used for authentication
+          req: req,
+        } as any)
+      )();
+      const dataSource = contextDataSources[
+        (referenceData.apiConfiguration as any).name
+      ] as CustomAPI;
+
+      const items =
+        (await dataSource.getReferenceDataItems(
+          referenceData,
+          referenceData.apiConfiguration as any,
+          { emailaddress: user.username }
+        )) || [];
+
       for (const mapping of settings.mapping) {
-        const value = jsonpath.value(data, mapping.value);
+        const value = jsonpath.value(items[0], mapping.value);
         set(user, mapping.field, value);
       }
       user.markModified('attributes');

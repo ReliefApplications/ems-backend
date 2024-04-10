@@ -39,24 +39,24 @@ module.exports = {
           text: 'Region',
         },
         {
-          value: 'location',
-          text: 'Location',
+          value: 'orgpath',
+          text: 'Organization Path',
         },
       ],
-      apiConfiguration: '62cc2355d3d00f628c6d3574',
+      referenceData: '66167eefb3bb60fba65342b8',
       endpoint: '/users/permissions',
       mapping: [
         {
           field: 'attributes.region',
-          value: '$.user.userBaseLocation.region.name',
+          value: '$.region.name',
         },
         {
           field: 'attributes.country',
-          value: '$.user.userBaseLocation.country.name',
+          value: '$.country.name',
         },
         {
-          field: 'attributes.location',
-          value: '$.user.userBaseLocation.locationType.name',
+          field: 'attributes.orgpath',
+          value: '$.orgpath',
         },
       ],
     },
