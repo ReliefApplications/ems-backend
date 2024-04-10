@@ -2,6 +2,7 @@ import get from 'lodash/get';
 import set from 'lodash/set';
 import { getText } from '../form/getDisplayText';
 import { DEFAULT_IMPORT_FIELD, Record } from '@models';
+import { Types } from 'mongoose';
 
 /**
  * Transforms records into export rows, using fields definition.
@@ -74,10 +75,15 @@ export const getRows = async (
         }
         case 'resource': {
           const recordId = get(data, column.field);
-          const resourceRecord = await Record.findById(
-            recordId,
-            'data incrementalId'
-          );
+          const isOID = Types.ObjectId.isValid(recordId);
+          const importField = column.importField || DEFAULT_IMPORT_FIELD.incID;
+
+          const resourceRecord = isOID
+            ? await Record.findById(recordId, 'data incrementalId')
+            : await Record.findOne(
+                { [`data.${importField}`]: recordId },
+                'data incrementalId'
+              );
 
           if (!resourceRecord) {
             set(row, column.name, '');
