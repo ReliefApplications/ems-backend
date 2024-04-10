@@ -111,8 +111,12 @@ const getFeatureFromItem = (
     }
   } else {
     // Lowercase is needed as quick solution for solving ref data layers
-    const latitude = get(item, mapping.latitudeField.toLowerCase());
-    const longitude = get(item, mapping.longitudeField.toLowerCase());
+    const latitude =
+      get(item, mapping.latitudeField.toLowerCase()) ??
+      get(item, mapping.latitudeField);
+    const longitude =
+      get(item, mapping.longitudeField.toLowerCase()) ??
+      get(item, mapping.longitudeField);
     if (latitude && longitude) {
       const geo = {
         type: 'Feature',
