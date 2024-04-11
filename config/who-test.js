@@ -44,6 +44,7 @@ module.exports = {
         },
       ],
       referenceData: '66167eefb3bb60fba65342b8',
+      apiConfiguration: '613b5af515e8c265c982081c',
       endpoint: '/users/permissions',
       mapping: [
         {

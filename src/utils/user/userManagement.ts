@@ -47,6 +47,7 @@ export interface AttributeSettings {
     text: string;
   }[];
   referenceData?: string;
+  apiConfiguration?: string;
   endpoint?: string;
   mapping?: {
     field: string;
@@ -79,7 +80,7 @@ const userNeedsUpdate = (
   const lastUpdate: number = cache.get(user._id.toString());
   const currentTime: number = new Date().getTime();
   if (lastUpdate) {
-    if (currentTime < lastUpdate + offset * 60000) return false;
+    if (currentTime < lastUpdate + offset * 6000) return false;
   }
   cache.set(user._id.toString(), currentTime);
   return true;
