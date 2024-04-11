@@ -22,7 +22,7 @@
   "createAccount.platform": "",
   "createAccount.accessInfo": "{{senderName}} vous a invité à rejoindre Oort, une plateforme de gestion de données.\nVous pouvez désormais créer votre compte en cliquant sur le bouton ci-dessous :",
   "createAccount.websiteAccess": "Accéder au site Internet",
-  "createAccount.registerAndValidate": "et cliquez sur le bouton S'inscrire pour créer votre compte. Attention à utiliser la même adresse email que celle-ci !",
+  "createAccount.registerAndValidate": "Validez votre compte et profitez de toutes les fonctionnalités d'Oort!",
   "createAccount.noteTitle": "Note: ",
   "createAccount.noteContent": "Vous ne pouvez créer votre compte que pendant les 7 jours suivant la réception de cet email. Si l'invitation a expiré, veuillez demander au propriétaire de l'application de vous envoyer une autre invitation.",
   "createAccount.accessDirectly": "Vous pouvez également accéder directement à la page de l’application sur ",
