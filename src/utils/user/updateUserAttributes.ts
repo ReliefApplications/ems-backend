@@ -1,11 +1,11 @@
 import config from 'config';
 import i18next from 'i18next';
-import jsonpath from 'jsonpath';
-import { isEmpty, set } from 'lodash';
-import { ReferenceData, User } from '@models';
+//import jsonpath from 'jsonpath';
+import { isEmpty } from 'lodash';
+import { User } from '@models';
 import { logger } from '@services/logger.service';
 import { AttributeSettings } from './userManagement';
-import dataSources, { CustomAPI } from '@server/apollo/dataSources';
+//import dataSources, { CustomAPI } from '@server/apollo/dataSources';
 import axios from 'axios';
 
 /**
