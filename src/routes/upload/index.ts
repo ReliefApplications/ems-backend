@@ -211,7 +211,7 @@ async function insertRecords(
             error: true,
             message: i18next.t('routes.upload.errors.resourceNotFound', {
               field: columns[idx - 1].name,
-              line: row.number,
+              line: row.number + 1,
             }),
           };
         }
