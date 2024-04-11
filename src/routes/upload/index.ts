@@ -208,9 +208,10 @@ async function insertRecords(
           // Throw error, user is trying to create record that has a resource question
           // and the value for the record does not exist (is present but there is no match)
           err = {
-            status: i18next.t('routes.upload.errors.resourceNotFound', {
+            error: true,
+            message: i18next.t('routes.upload.errors.resourceNotFound', {
               field: columns[idx - 1].name,
-              line: row.number,
+              line: row.number + 1,
             }),
           };
         }
@@ -219,15 +220,18 @@ async function insertRecords(
     });
 
     if (err) {
-      return res.status(400).send(err);
+      // Let frontend manually handle file these errors because the 400 code don't let frontend access the error message
+      return res.status(200).send(err);
     }
 
     // Load the rows in parallel
     const loadedRows = await Promise.all(loadRowPromises);
     loadedRows.forEach(({ data, positionAttributes, error }) => {
       if (error) {
-        return res.status(400).send({
-          status: i18next.t(error.name, {
+        // Let frontend manually handle file these errors because the 400 code don't let frontend access the error message
+        return res.status(200).send({
+          error: true,
+          message: i18next.t(error.name, {
             field: error.field,
           }),
         });
