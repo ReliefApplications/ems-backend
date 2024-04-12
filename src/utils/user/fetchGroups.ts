@@ -2,10 +2,10 @@ import { authType } from '@const/enumTypes';
 import { ApiConfiguration, Group } from '@models';
 import { getToken } from '../proxy';
 import jsonpath from 'jsonpath';
-import fetch from 'node-fetch';
 import config from 'config';
 import { GroupListSettings } from './userManagement';
 import { logger } from '@services/logger.service';
+import axios from 'axios';
 
 /**
  * Fetches groups from external API and returns them.
@@ -34,16 +34,18 @@ export const fetchGroups = async () => {
     const headers: any = {
       Authorization: 'Bearer ' + token,
     };
-    const res = await fetch(apiConfiguration.endpoint + endpoint, {
+    const res = await axios({
+      url: apiConfiguration.endpoint + endpoint,
       method: 'get',
       headers,
     });
-    data = await res.json();
+    data = res.data;
   } else if (apiConfiguration.authType === authType.public) {
-    const res = await fetch(apiConfiguration.endpoint + endpoint, {
+    const res = await axios({
+      url: apiConfiguration.endpoint + endpoint,
       method: 'get',
     });
-    data = await res.json();
+    data = res.data;
   } else {
     logger.error(
       'Failure when fetching groups because of an unsupported API configuration type.'

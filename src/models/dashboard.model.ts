@@ -2,9 +2,11 @@ import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
 /** Mongoose button interface declaration */
-interface Button {
+export interface Button {
   text: string;
   href: string;
+  hasRoleRestriction: boolean;
+  roles: string[];
   variant: string;
   category: string;
   openInNewTab: boolean;
@@ -39,6 +41,8 @@ const buttonSchema = new Schema<Button>(
   {
     text: String,
     href: String,
+    hasRoleRestriction: Boolean,
+    roles: Array<string>,
     variant: String,
     category: String,
     openInNewTab: Boolean,
