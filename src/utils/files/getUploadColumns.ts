@@ -8,6 +8,10 @@
 export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
   const columns = [];
   for (const field of fields) {
+    // Skip fields that should be omitted on the xlsx template.
+    if (field.showOnXlsxTemplate === false) {
+      continue;
+    }
     switch (field.type) {
       case 'checkbox':
       case 'tagbox': {
@@ -23,6 +27,7 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
                 field: field.name,
                 value: item.value,
                 type: field.type,
+                isRequired: field.isRequired,
               });
             }
           }
@@ -35,6 +40,7 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
               index,
               field: field.name,
               type: field.type,
+              isRequired: field.isRequired,
             });
           }
         }
@@ -51,6 +57,7 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
               field: field.name,
               item: item.name,
               type: field.type,
+              isRequired: field.isRequired,
             });
           }
         }
@@ -67,6 +74,7 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
               field: field.name,
               row: row.name,
               type: field.type,
+              isRequired: field.isRequired,
             });
           }
         }
@@ -85,6 +93,7 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
                 row: row.name,
                 column: column.name,
                 type: field.type,
+                isRequired: field.isRequired,
               });
             }
           }
@@ -99,9 +108,23 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
             columns.push({
               name,
               index,
+              isRequired: field.isRequired,
             });
           }
         }
+        break;
+      }
+      case 'resource': {
+        const name = `${field.name}`;
+        const index = headers.indexOf(name);
+        columns.push({
+          name,
+          index,
+          field: field.name,
+          type: field.type,
+          isRequired: field.isRequired,
+          resource: field.resource,
+        });
         break;
       }
       default: {
@@ -112,6 +135,7 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
           index,
           field: field.name,
           type: field.type,
+          isRequired: field.isRequired,
         });
         break;
       }

@@ -85,6 +85,8 @@ export const getFieldType = async (question: {
       return 'owner';
     case 'geospatial':
       return 'geospatial';
+    case 'expression':
+      return 'expression';
     default:
       return 'text';
   }

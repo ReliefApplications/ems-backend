@@ -5,22 +5,13 @@ import {
   GraphQLError,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import {
-  Form,
-  Resource,
-  Version,
-  Channel,
-  ReferenceData,
-  DEFAULT_INCREMENTAL_ID_SHAPE,
-  DEFAULT_IMPORT_FIELD,
-} from '@models';
+import { Form, Resource, Version, Channel, ReferenceData } from '@models';
 import {
   removeField,
   addField,
   replaceField,
   findDuplicateFields,
   extractFields,
-  updateIncrementalIds,
 } from '@utils/form';
 import { FormType } from '../types';
 import { validateGraphQLTypeName } from '@utils/validators';
@@ -221,20 +212,9 @@ export default {
       if (args.structure && !isEqual(form.structure, args.structure)) {
         update.structure = args.structure;
         const structure = JSON.parse(args.structure);
-        // Extract the incremental id shape and padding
-        const idShape = {
-          ...DEFAULT_INCREMENTAL_ID_SHAPE,
-          ...(structure.incrementalIdShape
-            ? { shape: structure.incrementalIdShape }
-            : {}),
-          ...(structure.incrementalIdPadding
-            ? { padding: structure.incrementalIdPadding }
-            : {}),
-        };
-        update.idShape = idShape;
-        // Save the importField
-        update.importField =
-          structure.importField || DEFAULT_IMPORT_FIELD.incID;
+
+        // Save the allowUploadRecords
+        update.allowUploadRecords = structure.allowUploadRecords ?? false;
 
         const fields = [];
         for (const page of structure.pages) {
@@ -548,10 +528,6 @@ export default {
       const resForm = await Form.findByIdAndUpdate(args.id, update, {
         new: true,
       });
-
-      if (update.idShape) {
-        await updateIncrementalIds(form, update.idShape);
-      }
 
       // Return updated form
       return resForm;

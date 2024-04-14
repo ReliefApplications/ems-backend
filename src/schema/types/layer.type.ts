@@ -55,6 +55,7 @@ const LayerSymbol = new GraphQLObjectType({
   fields: () => ({
     color: { type: new GraphQLNonNull(GraphQLString) },
     size: { type: new GraphQLNonNull(GraphQLFloat) },
+    fieldForSize: { type: GraphQLString },
     style: { type: new GraphQLNonNull(GraphQLString) },
     outline: { type: LayerSymbolOutline },
   }),
@@ -184,6 +185,27 @@ export const LayerType = new GraphQLObjectType({
           description: { type: GraphQLString },
           popupElements: { type: new GraphQLList(LayerPopupElement) },
           fieldsInfo: { type: new GraphQLList(LayerFieldElement) },
+          navigateToPage: { type: GraphQLBoolean },
+          navigateSettings: {
+            type: new GraphQLObjectType({
+              name: 'navigateSettingsData',
+              fields: () => ({
+                pageUrl: { type: GraphQLString },
+                field: { type: GraphQLString },
+              }),
+            }),
+          },
+        }),
+      }),
+    },
+    timelineInfo: {
+      type: new GraphQLObjectType({
+        name: 'timelineInfoData',
+        fields: () => ({
+          enabled: { type: GraphQLBoolean },
+          startTimeField: { type: GraphQLString },
+          endTimeField: { type: GraphQLString },
+          dateFormat: { type: GraphQLString },
         }),
       }),
     },

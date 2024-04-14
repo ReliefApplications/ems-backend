@@ -26,6 +26,7 @@ const LayerSymbolInputType = new GraphQLInputObjectType({
   fields: () => ({
     color: { type: new GraphQLNonNull(GraphQLString) },
     size: { type: new GraphQLNonNull(GraphQLFloat) },
+    fieldForSize: { type: GraphQLString },
     style: { type: new GraphQLNonNull(GraphQLString) },
     outline: { type: LayerSymbolOutlineInputType },
   }),
@@ -168,6 +169,27 @@ const LayerInputType = new GraphQLInputObjectType({
           description: { type: GraphQLString },
           popupElements: { type: new GraphQLList(LayerPopupElementInputType) },
           fieldsInfo: { type: new GraphQLList(FieldElementInputType) },
+          navigateToPage: { type: GraphQLBoolean },
+          navigateSettings: {
+            type: new GraphQLInputObjectType({
+              name: 'navigateSettingsDataInputType',
+              fields: () => ({
+                pageUrl: { type: GraphQLString },
+                field: { type: GraphQLString },
+              }),
+            }),
+          },
+        }),
+      }),
+    },
+    timelineInfo: {
+      type: new GraphQLInputObjectType({
+        name: 'timelineInfoInputType',
+        fields: () => ({
+          enabled: { type: GraphQLBoolean },
+          startTimeField: { type: GraphQLString },
+          endTimeField: { type: GraphQLString },
+          dateFormat: { type: GraphQLString },
         }),
       }),
     },

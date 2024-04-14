@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { Record, ReferenceData, User } from '@models';
+import { Form, Record, ReferenceData, User } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { decodeCursor, encodeCursor } from '@schema/types';
 import getReversedFields from '../../introspection/getReversedFields';
@@ -7,7 +7,6 @@ import getFilter, {
   FLAT_DEFAULT_FIELDS,
   extractFilterFields,
 } from './getFilter';
-import getSearchFilter from './getSearchFilter';
 import getStyle from './getStyle';
 import getSortAggregation from './getSortAggregation';
 import mongoose from 'mongoose';
@@ -19,14 +18,9 @@ import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { flatten, get, isArray, set } from 'lodash';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
-import NodeCache from 'node-cache';
-import { AppAbility } from '@security/defineUserAbility';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
-
-/** Ability Cache, based on user id, time to live: 5min */
-const abilityCache = new NodeCache({ stdTTL: 60 * 5, checkperiod: 60 });
 
 // todo: improve by only keeping used fields in the $project stage
 /**
@@ -67,6 +61,21 @@ const projectAggregation = [
         },
       },
       data: 1,
+    },
+  },
+];
+
+/** Default aggregation common to all records to make lookups for default fields. */
+const defaultRecordAggregation = [
+  { $addFields: { id: { $toString: '$_id' } } },
+  {
+    $addFields: {
+      '_createdBy.user.id': { $toString: '$_createdBy.user._id' },
+    },
+  },
+  {
+    $addFields: {
+      '_lastUpdatedBy.user.id': { $toString: '$_lastUpdatedBy.user._id' },
     },
   },
 ];
@@ -130,23 +139,6 @@ const getAtAggregation = (at: Date) => {
     },
   ];
 };
-
-/**
- *
- */
-const defaultRecordAggregation = [
-  { $addFields: { id: { $toString: '$_id' } } },
-  {
-    $addFields: {
-      '_createdBy.user.id': { $toString: '$_createdBy.user._id' },
-    },
-  },
-  {
-    $addFields: {
-      '_lastUpdatedBy.user.id': { $toString: '$_lastUpdatedBy.user._id' },
-    },
-  },
-];
 
 /**
  * Get queried fields from query definition
@@ -239,7 +231,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     checkPageSize(first);
     try {
       const user: User = context.user;
-      const userId = user._id.toString();
       // Id of the form / resource
       const id = idsByName[entityName];
       // List of form / resource fields
@@ -315,6 +306,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               [`_${resource}.id`]: { $toString: `$_${resource}._id` },
               [`_${resource}.data.id`]: { $toString: `$_${resource}._id` },
               [`_${resource}.data._id`]: { $toString: `$_${resource}._id` },
+              [`_${resource}.data.archived`]: `$_${resource}.archived`,
             },
           },
         ]);
@@ -365,11 +357,14 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       // in order to decrease the pipeline size
       const shouldAddCalculatedFieldToPipeline = (field: any) => {
         // If field is requested in the query
-        if (queryFields.findIndex((x) => x.name === field.name) > -1)
+        if (queryFields.findIndex((x) => x.name === field.name) > -1) {
           return true;
+        }
 
         // If sort field is a calculated field
-        if (sortField === field.name) return true;
+        if (sortField === field.name) {
+          return true;
+        }
 
         const isUsedInFilter = (qFilter: any) => {
           if (qFilter.field) return qFilter.field === field.name;
@@ -424,32 +419,21 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       };
 
       // Additional filter from the user permissions
-      let permissionFilters;
-      // Try to get ability from cache
-      let ability = abilityCache.get<AppAbility>(userId);
-      if (!ability) {
-        // If not available, build ability
-        ability = await extendAbilityForRecords(user);
-        set(context, 'user.ability', ability);
-        permissionFilters = Record.find(
-          accessibleBy(ability, 'read').Record
-        ).getFilter();
-        // And cache it
-        abilityCache.set(userId, ability);
-      } else {
-        // Update user ability
-        set(context, 'user.ability', ability);
-        permissionFilters = Record.find(
-          accessibleBy(ability, 'read').Record
-        ).getFilter();
-      }
+      const form = await Form.findOne({
+        $or: [{ _id: id }, { resource: id, core: true }],
+      })
+        .select('_id permissions fields')
+        .populate({ path: 'resource', model: 'Resource' });
+      const ability = await extendAbilityForRecords(user, form);
+      set(context, 'user.ability', ability);
+      const permissionFilters = Record.find(
+        accessibleBy(ability, 'read').Record
+      ).getFilter();
 
       // Finally putting all filters together
       const filters = {
-        $and: [basicFilters, mongooseFilter, permissionFilters],
+        $and: [mongooseFilter, permissionFilters],
       };
-
-      const searchFilter = getSearchFilter(filter, fields, context);
 
       // === RUN AGGREGATION TO FETCH ITEMS ===
       let items: Record[] = [];
@@ -457,34 +441,29 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // If we're using skip parameter, include them into the aggregation
       if (skip || skip === 0) {
-        const sort = await getSortAggregation(
-          sortField,
-          sortOrder,
-          fields,
-          context
-        );
         const pipeline = [
-          ...(searchFilter ? [searchFilter] : []),
-          ...calculatedFieldsAggregation,
-          ...defaultRecordAggregation,
-          { $match: filters },
+          { $match: basicFilters },
           ...(at ? getAtAggregation(new Date(at)) : []),
-        ];
-        const aggregation = await Record.aggregate(pipeline).facet({
-          items: [
-            ...linkedRecordsAggregation,
-            ...linkedReferenceDataAggregation,
-            ...sort,
-            ...projectAggregation,
-            { $skip: skip },
-            { $limit: first + 1 },
-          ],
-          totalCount: [
-            {
-              $count: 'count',
+          ...linkedRecordsAggregation,
+          ...linkedReferenceDataAggregation,
+          ...defaultRecordAggregation,
+          ...calculatedFieldsAggregation,
+          { $match: filters },
+          ...projectAggregation,
+          ...(await getSortAggregation(sortField, sortOrder, fields, context)),
+          {
+            $facet: {
+              items: [{ $skip: skip }, { $limit: first + 1 }],
+              totalCount: [
+                {
+                  $count: 'count',
+                },
+              ],
             },
-          ],
-        });
+          },
+        ];
+        const aggregation = await Record.aggregate(pipeline);
+
         items = aggregation[0].items;
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       } else {
@@ -496,22 +475,16 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               },
             }
           : {};
-        const pipeline = [
+        const aggregation = await Record.aggregate([
           { $match: basicFilters },
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
+          ...defaultRecordAggregation,
+          ...(await getSortAggregation(sortField, sortOrder, fields, context)),
           { $match: { $and: [filters, cursorFilters] } },
           {
             $facet: {
-              results: [
-                ...(await getSortAggregation(
-                  sortField,
-                  sortOrder,
-                  fields,
-                  context
-                )),
-                { $limit: first + 1 },
-              ],
+              results: [{ $limit: first + 1 }],
               totalCount: [
                 {
                   $count: 'count',
@@ -519,8 +492,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               ],
             },
           },
-        ];
-        const aggregation = await Record.aggregate(pipeline);
+        ]);
         items = aggregation[0].items;
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       }

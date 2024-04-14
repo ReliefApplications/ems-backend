@@ -48,6 +48,7 @@ export const FormType = new GraphQLObjectType({
     modifiedAt: { type: GraphQLString },
     structure: { type: GraphQLJSON },
     status: { type: StatusEnumType },
+    allowUploadRecords: { type: GraphQLBoolean },
     permissions: {
       type: AccessType,
       async resolve(parent, args, context) {

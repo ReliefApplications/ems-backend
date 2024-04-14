@@ -208,6 +208,9 @@
 					"invalidArguments": "******",
 					"wrongTemplateProvided": "******"
 				}
+			},
+			"errors": {
+				"missingParameters": "******"
 			}
 		},
 		"reference": {
@@ -311,7 +314,9 @@
 		"upload": {
 			"errors": {
 				"invalidUserUpload": "******",
-				"missingFile": "******"
+				"missingFile": "******",
+				"requiredField": "****** {{field}}",
+				"resourceNotFound": "****** {{line}} ****** {{field}} ******"
 			}
 		}
 	},

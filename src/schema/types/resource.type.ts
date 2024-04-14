@@ -66,12 +66,25 @@ const rolePermissionResolver = (
 /** Default page size */
 const DEFAULT_FIRST = 10;
 
+/**
+ * GraphQL IdShape type.
+ */
+const idShapeType = new GraphQLObjectType({
+  name: 'IdShape',
+  fields: () => ({
+    shape: { type: new GraphQLNonNull(GraphQLString) },
+    padding: { type: new GraphQLNonNull(GraphQLInt) },
+  }),
+});
+
 /** GraphQL Resource type definition */
 export const ResourceType = new GraphQLObjectType({
   name: 'Resource',
   fields: () => ({
     id: { type: GraphQLID },
     name: { type: GraphQLString },
+    idShape: { type: idShapeType },
+    importField: { type: GraphQLString },
     singleQueryName: {
       type: GraphQLString,
       resolve(parent) {

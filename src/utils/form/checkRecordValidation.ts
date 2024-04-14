@@ -24,7 +24,7 @@ import * as Survey from 'survey-knockout';
  *
  * @param record The record to check
  * @param newData The proposed update
- * @param form The formulaire object linked to the record
+ * @param form The form object linked to the record
  * @param context graphQL context
  * @param lang The current language of the form
  * @returns The list of errors (empty if no errors)

@@ -102,7 +102,10 @@ async function insertRecords(
     const columns = getUploadColumns(fields, headerRow);
 
     // find the index of the import field
-    const importField = form.importField;
+    const importField =
+      get(form, 'resource.importField') ??
+      (await Resource.findById(form.resource)).importField;
+
     const importFieldIndex = headerRow.findIndex(
       (cell) => cell === importField
     );
@@ -123,12 +126,121 @@ async function insertRecords(
     const versionsToCreate: Version[] = [];
     const recordsToCreate: Record[] = [];
     const recordToUpdate: Record[] = [];
+
+    const resourceQuestionsMap = new Map<
+      string,
+      { ids: unknown[]; fields: any[] }
+    >();
+    const resourcePerColumn = columns.map((column, idx) => {
+      // Extract all the question info from the form structure
+      const question = form.fields.find((field) => field.name === column.name);
+
+      if (question && question.type === 'resource') {
+        // Existing array of questions for this resource
+        const oldObj = resourceQuestionsMap.get(question.resource) ?? {
+          ids: [],
+          fields: [],
+        };
+
+        // The ids are the values on the rows of the column that corresponds to resource questions
+        const ids = worksheet
+          .getColumn(idx + 1)
+          ?.values.map((x) => x.valueOf());
+
+        oldObj.fields.push(question);
+        oldObj.ids.push(...ids);
+        resourceQuestionsMap.set(question.resource, oldObj);
+        return question.resource;
+      }
+      return null;
+    });
+
+    const linkedResources = await Resource.find({
+      _id: {
+        $in: Array.from(resourceQuestionsMap.keys()).map(
+          (x) => new Types.ObjectId(x)
+        ),
+      },
+    });
+
+    const idsMap = new Map<string, string>();
+    const recordsPromises: any[] = [];
+    linkedResources.forEach((resource) => {
+      const colImportField = resource.importField;
+      if (!colImportField) {
+        return;
+      }
+
+      // If using an import field, we map the ids to the new ids, which are the objectIds
+      const { ids } = resourceQuestionsMap.get(resource._id.toString());
+      const recordsFromIds = Record.find({
+        resource: resource._id,
+        [`data.${colImportField}`]: { $in: ids.filter(Boolean) },
+      }).then((records) => {
+        records.forEach((record) => {
+          idsMap.set(
+            `${resource._id.toString()}:${record.data[colImportField]}`,
+            record._id.toString()
+          );
+        });
+        return records;
+      });
+
+      recordsPromises.push(recordsFromIds);
+    });
+
+    // Await all the promises to get the ids
+    await Promise.all(recordsPromises);
+
+    const loadRowPromises: ReturnType<typeof loadRow>[] = [];
+    // Iterate over the rows of the worksheet and
+    let err = null;
     worksheet.eachRow({ includeEmpty: false }, function (row) {
-      const { data, positionAttributes } = loadRow(columns, row.values);
+      (row.values as CellValue[]).forEach((value, idx) => {
+        const linkedResource = resourcePerColumn[idx - 1];
+        if (!linkedResource) {
+          return;
+        }
+        const newID = idsMap.get(`${linkedResource}:${value}`);
+        if (newID) {
+          row.getCell(idx).value = newID;
+        } else if (value && !err) {
+          // Throw error, user is trying to create record that has a resource question
+          // and the value for the record does not exist (is present but there is no match)
+          err = {
+            error: true,
+            message: i18next.t('routes.upload.errors.resourceNotFound', {
+              field: columns[idx - 1].name,
+              line: row.number + 1,
+            }),
+          };
+        }
+      });
+      loadRowPromises.push(loadRow(columns, row.values));
+    });
+
+    if (err) {
+      // Let frontend manually handle file these errors because the 400 code don't let frontend access the error message
+      return res.status(200).send(err);
+    }
+
+    // Load the rows in parallel
+    const loadedRows = await Promise.all(loadRowPromises);
+    loadedRows.forEach(({ data, positionAttributes, error }) => {
+      if (error) {
+        // Let frontend manually handle file these errors because the 400 code don't let frontend access the error message
+        return res.status(200).send({
+          error: true,
+          message: i18next.t(error.name, {
+            field: error.field,
+          }),
+        });
+      }
+
       const oldRecord = oldRecords.find((rec) =>
         importField === DEFAULT_IMPORT_FIELD.incID
-          ? rec.incrementalId === row.getCell(importFieldIndex).value
-          : rec.data[importField] === row.getCell(importFieldIndex).value
+          ? rec.incrementalId === data[importField]
+          : rec.data[importField] === data[importField]
       );
 
       // If the record already exists, update it and create a new version
@@ -208,8 +320,8 @@ async function insertRecords(
       await Version.bulkSave(versionsToCreate);
       await Record.bulkSave(recordsToSave);
       return res.status(200).send({ status: 'OK' });
-    } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+    } catch (err2) {
+      logger.error(err2.message, { stack: err2.stack });
       return res
         .status(500)
         .send(i18next.t('common.errors.internalServerError'));

@@ -1,18 +1,26 @@
 import mongoose from 'mongoose';
-import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLList,
+  GraphQLError,
+  GraphQLString,
+} from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { ResourceType } from '../types';
-import { findDuplicateFields } from '@utils/form';
+import { findDuplicateFields, updateIncrementalIds } from '@utils/form';
 import {
   getExpressionFromString,
   OperationTypeMap,
 } from '@utils/aggregation/expressionFromString';
-import { Resource } from '@models';
+import { DefaultIncrementalIdShapeT, Resource } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { get, has, isArray, isEqual, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
+import { IdShapeType } from '@schema/inputs/id-shape.input';
+import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
 
 /** Simple resource permission change type */
 type SimplePermissionChange =
@@ -559,6 +567,8 @@ type EditResourceArgs = {
   permissions?: any;
   fieldsPermissions?: any;
   calculatedField?: any;
+  idShape?: DefaultIncrementalIdShapeT;
+  importField?: string;
 };
 
 /**
@@ -573,6 +583,8 @@ export default {
     permissions: { type: GraphQLJSON },
     fieldsPermissions: { type: GraphQLJSON },
     calculatedField: { type: GraphQLJSON },
+    idShape: { type: IdShapeType },
+    importField: { type: GraphQLString },
   },
   async resolve(parent, args: EditResourceArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -583,7 +595,9 @@ export default {
         (!args.fields &&
           !args.permissions &&
           !args.calculatedField &&
-          !args.fieldsPermissions)
+          !args.fieldsPermissions &&
+          !args.idShape &&
+          !args.importField)
       ) {
         throw new GraphQLError(
           context.i18next.t('mutations.resource.edit.errors.invalidArguments')
@@ -604,6 +618,11 @@ export default {
         modifiedAt: new Date(),
       };
       Object.assign(update, args.fields && { fields: args.fields });
+      Object.assign(update, args.idShape && { idShape: args.idShape });
+      Object.assign(
+        update,
+        args.importField && { importField: args.importField }
+      );
 
       const allResourceFields = resource.fields;
 
@@ -706,6 +725,27 @@ export default {
       if (args.calculatedField) {
         const calculatedField: CalculatedFieldChange = args.calculatedField;
 
+        // Check if calculated field expression is too long
+        if (calculatedField.add || calculatedField.update) {
+          const expression =
+            calculatedField.add?.expression ??
+            calculatedField.update?.expression;
+
+          const pipeline = buildCalculatedFieldPipeline(
+            expression,
+            '',
+            context.timeZone
+          );
+
+          if (pipeline[0].$facet.calcFieldFacet.length > 50) {
+            throw new GraphQLError(
+              context.i18next.t(
+                'mutations.resource.edit.errors.calculatedFieldTooLong'
+              )
+            );
+          }
+        }
+
         // Add new calculated field
         if (calculatedField.add) {
           const expression = getExpressionFromString(
@@ -781,6 +821,24 @@ export default {
         }
       }
 
+      if (args.idShape) {
+        if (update.$set) {
+          Object.assign(update.$set, { ['idShape']: args.idShape });
+        } else {
+          Object.assign(update, { $set: { ['idShape']: args.idShape } });
+        }
+      }
+
+      if (args.importField) {
+        if (update.$set) {
+          Object.assign(update.$set, { ['importField']: args.importField });
+        } else {
+          Object.assign(update, {
+            $set: { ['importField']: args.importField },
+          });
+        }
+      }
+
       // Split the request in three parts, to avoid conflict
       if (!!update.$set) {
         await Resource.findByIdAndUpdate(args.id, { $set: update.$set });
@@ -789,6 +847,11 @@ export default {
       if (!!update.$pull) {
         await Resource.findByIdAndUpdate(args.id, { $pull: update.$pull });
       }
+
+      if (args.idShape) {
+        await updateIncrementalIds(resource, args.idShape);
+      }
+
       return await Resource.findByIdAndUpdate(
         args.id,
         update.$addToSet ? { $addToSet: update.$addToSet } : {},

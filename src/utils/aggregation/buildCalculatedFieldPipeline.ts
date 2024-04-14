@@ -523,7 +523,22 @@ const buildCalculatedFieldPipeline = (
 ) => {
   const operation = getExpressionFromString(expression);
   const pipeline = buildPipeline(operation, name, timeZone);
-  return pipeline;
+
+  return [
+    {
+      $facet: {
+        calcFieldFacet: pipeline,
+      },
+    },
+    {
+      $unwind: '$calcFieldFacet',
+    },
+    {
+      $replaceRoot: {
+        newRoot: '$calcFieldFacet',
+      },
+    },
+  ];
 };
 
 export default buildCalculatedFieldPipeline;

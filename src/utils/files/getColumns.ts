@@ -1,3 +1,4 @@
+import { Resource } from '@models';
 import { getChoices } from '../proxy/getChoices';
 
 /** Default record fields */
@@ -18,6 +19,10 @@ export const getColumns = async (
 ): Promise<any[]> => {
   const columns = [];
   for (const field of fields) {
+    // Skip fields that should be omitted on the xlsx template.
+    if (field.showOnXlsxTemplate === false) {
+      continue;
+    }
     switch (field.type) {
       case 'checkbox':
       case 'tagbox': {
@@ -167,6 +172,19 @@ export const getColumns = async (
             });
           }
         }
+        break;
+      }
+      case 'resource': {
+        const name = `${field.name}`;
+        const resource = await Resource.findById(field.resource, 'importField');
+        columns.push({
+          name: name,
+          label: field.label || name,
+          field: field.name,
+          importField: resource.importField,
+          type: field.type,
+          default: DEFAULT_FIELDS.includes(field.name),
+        });
         break;
       }
       default: {
