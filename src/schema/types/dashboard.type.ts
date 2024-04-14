@@ -31,6 +31,7 @@ export const DashboardType = new GraphQLObjectType({
         }
       },
     },
+    states: { type: GraphQLJSON },
     buttons: { type: GraphQLJSON },
     gridOptions: {
       type: GraphQLJSON,
