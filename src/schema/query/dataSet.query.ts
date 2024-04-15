@@ -109,9 +109,9 @@ export const getFields = (fieldSet: any) => {
   const fields: string[] = [];
   const nestedField: any = {};
   fieldSet.forEach((obj: any) => {
-    if (obj.type === 'resource') {
-      fields.push(obj.name.split('.')[0]);
-      const [mainField, subField] = obj.name.split('.');
+    if (obj.parentName) {
+      fields.push(obj.parentName);
+      const [mainField, subField] = [obj.parentName, obj.childName];
       if (!nestedField[mainField]) {
         nestedField[mainField] = [];
       }
@@ -287,6 +287,7 @@ export default {
             },
         limit && { $limit: limit },
       ].filter(Boolean);
+
       const records = await Record.aggregate(aggregations);
       if (!records) {
         throw new GraphQLError(

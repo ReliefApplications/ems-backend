@@ -1,6 +1,6 @@
 import { ProcessedDataset, TableStyle } from '@routes/notification';
 import { formatDates, replaceUnderscores } from '@utils/notification/util';
-
+import _ from 'lodash';
 /**
  * Replaces macros in subject with values
  *
@@ -186,7 +186,7 @@ export const replaceHeader = (header: {
     </td>`;
   }
 
-  headerString += `</tr></tbody></table>`;
+  headerString += '</tr></tbody></table>';
 
   return headerString;
 };
@@ -197,13 +197,16 @@ export const replaceHeader = (header: {
  * @param records dataset records
  * @param name dataset block name
  * @param styles tableStyles loaded from DB
+ * @param fieldList
+ * @param fieldSet
  * @returns html table
  */
 export const buildTable = (
   records,
   name,
   styles: TableStyle,
-  fieldList: string[]
+  fieldList: string[],
+  fieldSet?: any[]
 ): string => {
   // Styles to be used later on
   // const tableStyle =
@@ -249,25 +252,66 @@ export const buildTable = (
             </tr>
             </tbody>
             </table>`;
-    table += `<table bgcolor="ffffff" border="0" width="760" align="center" cellpadding="0" cellspacing="0" style="margin: 0 auto; border: 1px solid black;">`;
-    table += `<thead>`;
-    table += `<tr bgcolor="#00205c">`;
-    fieldList.forEach((field) => {
+    table +=
+      '<table bgcolor="ffffff" border="0" width="760" align="center" cellpadding="0" cellspacing="0" style="margin: 0 auto; border: 1px solid black;">';
+    table += '<thead>';
+    table += '<tr bgcolor="#00205c">';
+    // fieldList.forEach((field) => {
+    //   table += `<th align="left" style="color: #fff; font-size: 14px; font-family: 'Roboto', Arial, sans-serif; padding-left: 10px">${replaceUnderscores(
+    //     field
+    //   )}</th>`;
+    // });
+    fieldSet.forEach((field) => {
       table += `<th align="left" style="color: #fff; font-size: 14px; font-family: 'Roboto', Arial, sans-serif; padding-left: 10px">${replaceUnderscores(
-        field
+        `${field.name}`
       )}</th>`;
     });
 
     table += '</tr></thead>';
-    table += `<tbody>`;
+    table += '<tbody>';
     // Iterate over each record
     for (const record of records) {
       table += '<tr>';
       // Create a new cell for each field in the record
       // eslint-disable-next-line @typescript-eslint/no-loop-func
-      fieldList.forEach((field) => {
-        table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
-          ${formatDates(record.data[field])}</td>`;
+      // fieldList.forEach((field) => {
+      //   table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
+      //     ${formatDates(record.data[field])}</td>`;
+      // });
+      // eslint-disable-next-line @typescript-eslint/no-loop-func
+      fieldSet.forEach((field) => {
+        if (field.parentName) {
+          if (field.childName === 'incrementalId') {
+            table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
+          ${formatDates(
+            _.get(record.data[`${field.parentName}`], field.childName)
+          )}</td>`;
+          } else {
+            table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
+            ${formatDates(
+              record.data[field.parentName].data[field.childName]
+            )}</td>`;
+          }
+        } else if (field.type === 'resources') {
+          table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
+          ${record.data[field.name].length} items</td>`;
+        } else if (
+          field.name.split('.')[0] === '_createdBy' ||
+          field.name.split('.')[0] === '_lastUpdatedBy'
+        ) {
+          table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
+          ${formatDates(_.get(record.data, field.name))}</td>`;
+        } else if (
+          field.name === 'incrementalId' ||
+          field.name === 'id' ||
+          field.name === 'form'
+        ) {
+          table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
+          ${formatDates(_.get(record, field.name))}</td>`;
+        } else {
+          table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
+          ${formatDates(record.data[field.name])}</td>`;
+        }
       });
       table += '</tr>';
     }
@@ -298,7 +342,8 @@ export const replaceDatasets = async (
             processedDataSet.records,
             processedDataSet.name,
             processedDataSet.tableStyle,
-            processedDataSet.fields
+            processedDataSet.fields,
+            processedDataSet.fieldSet
           )
         );
       }
@@ -391,7 +436,7 @@ export const replaceFooter = (footer: {
   </td>`;
   }
 
-  footerString += `</tr></tbody></table>`;
+  footerString += '</tr></tbody></table>';
 
   return footerString;
 };

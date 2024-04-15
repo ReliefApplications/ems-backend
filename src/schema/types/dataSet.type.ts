@@ -10,7 +10,7 @@ import { logger } from '@services/logger.service';
  * @param arrayOfObjects
  * @returns project
  */
-const mergeArrayOfObjects = (
+export const mergeArrayOfObjects = (
   arrayOfObjects: { [key: string]: number }[]
 ): any => {
   if (!arrayOfObjects) {
@@ -54,6 +54,8 @@ export const DataSetType = new GraphQLObjectType({
               delete obj.data;
             }
           }
+          // console.log('type resolver');
+          // console.log(parent.records);
           return parent.records;
         } catch (error) {
           logger.error('Failed to resolved dataset', error.message, {

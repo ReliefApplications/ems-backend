@@ -3,7 +3,9 @@ import { parse } from 'node-html-parser';
 import { sendEmail } from '@utils/email';
 import { logger } from '@services/logger.service';
 import { EmailNotification, Record, Resource } from '@models';
-import getFilter from '../../utils/schema/resolvers/Query/getFilter';
+import getFilter, {
+  extractFilterFields,
+} from '../../utils/schema/resolvers/Query/getFilter';
 import {
   defaultRecordAggregation,
   emailAggregation,
@@ -18,6 +20,8 @@ import {
   replaceHeader,
   replaceSubject,
 } from '@utils/notification/htmlBuilder';
+import mongoose from 'mongoose';
+import { mergeArrayOfObjects } from '@schema/types/dataSet.type';
 
 /**
  *
@@ -28,6 +32,7 @@ export interface ProcessedDataset {
   emails: string[];
   tableStyle: TableStyle;
   fields: string[];
+  fieldSet?: any[];
 }
 
 /**
@@ -103,32 +108,90 @@ router.post('/send-email/:configId', async (req, res) => {
         const filterLogic = dataset?.filter ?? {};
         const limit = 50;
         const fieldsList = getFields(dataset?.fields ?? [])?.fields;
-        //const nestedFields = getFields(dataset?.fields ?? [])?.nestedField;
-
+        const nestedFields = getFields(dataset?.fields ?? [])?.nestedField;
         const resource = await Resource.findOne({
           _id: dataset.resource.id,
         });
-
         if (!resource) {
           return res.status(404).send(req.t('common.errors.dataNotFound'));
         }
+        const fields = resource?.fields;
         const filters = getFilter(filterLogic, resource.fields);
+        const usedFields = extractFilterFields(filterLogic);
 
+        // Get list of needed resources for the aggregation
+
+        const resourcesToQuery = [
+          ...new Set(usedFields.map((x) => x.split('.')[0])),
+        ].filter((x) =>
+          fields.find((f) => f.name === x && f.type === 'resource')
+        );
+        let linkedRecordsAggregation = [];
+        for (const result of resourcesToQuery) {
+          linkedRecordsAggregation = linkedRecordsAggregation.concat([
+            {
+              $addFields: {
+                [`data.${result}_id`]: {
+                  $convert: {
+                    input: `$data.${result}`,
+                    to: 'objectId',
+                    onError: null,
+                  },
+                },
+              },
+            },
+            {
+              $lookup: {
+                from: 'records',
+                localField: `data.${result}_id`,
+                foreignField: '_id',
+                as: `_${result}`,
+              },
+            },
+            {
+              $unwind: {
+                path: `$_${result}`,
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $addFields: {
+                [`_${result}.id`]: { $toString: `$_${result}._id` },
+              },
+            },
+          ]);
+
+          // Build linked records filter
+          const resourceId = fields.find((f) => f.name === result).resource;
+          const resourceQuery = await Resource.findOne({
+            _id: resourceId,
+          });
+          const resourceFields = resourceQuery.fields;
+          const usedResourceFields = usedFields
+            .filter((x) => x.startsWith(`${result}.`))
+            .map((x) => x.split('.')[1]);
+          resourceFields
+            .filter((x) => usedResourceFields.includes(x.name))
+            .map((x) =>
+              fields.push({
+                ...x,
+                ...{ name: `${result}.${x.name}` },
+              })
+            );
+        }
         const projectFields: { [key: string]: number | string } = {};
         fieldsList.forEach((fieldData) => {
           if (
             fieldData.includes('createdAt') ||
-            fieldData.includes('modifiedAt') ||
-            fieldData.includes('id') ||
-            fieldData.includes('form')
+            fieldData.includes('modifiedAt')
           ) {
             projectFields[fieldData] = `$${fieldData}`;
           } else if (
             fieldData.includes('createdBy') ||
             fieldData.includes('lastUpdatedBy')
           ) {
-            const fieldName = fieldData.replaceAll('.', '_');
-            projectFields[fieldName] = `$${fieldData}`;
+            // const fieldName = fieldData.replaceAll('.', '_');
+            projectFields[fieldData] = `$${fieldData}`;
           } else {
             projectFields[fieldData] = 1;
           }
@@ -136,6 +199,7 @@ router.post('/send-email/:configId', async (req, res) => {
 
         const aggregations: any[] = [
           ...defaultRecordAggregation,
+          ...linkedRecordsAggregation,
           {
             $match: {
               $and: [filters, { resource: resource._id }],
@@ -159,8 +223,9 @@ router.post('/send-email/:configId', async (req, res) => {
               },
           limit && { $limit: limit },
         ].filter(Boolean);
+
         const tempRecords = await Record.aggregate(aggregations);
-        //console.dir(tempRecords, { depth: null });
+        // console.dir(tempRecords, { depth: null });
         if (!tempRecords) {
           return res
             .status(403)
@@ -180,12 +245,27 @@ router.post('/send-email/:configId', async (req, res) => {
           delete data.emailFields;
           dataList.push(data);
         }
+
+        for (const obj of tempRecords) {
+          const data = obj?.data;
+          for (const [key, value] of Object.entries(data)) {
+            if (mongoose.isValidObjectId(value) && typeof value === 'string') {
+              const project = mergeArrayOfObjects(nestedFields[key]) ?? {};
+              Object.assign(project, { _id: 0 });
+              const record = await Record.findById(value, project);
+              data[key] = record;
+            }
+          }
+          Object.assign(obj, data);
+        }
+
         processedRecords.push({
           name: dataset.name,
           records: tempRecords,
           emails: emailList,
           tableStyle: dataset.tableStyle,
           fields: fieldsList,
+          fieldSet: dataset.fields,
         });
       })
     );
@@ -414,9 +494,7 @@ router.post('/send-individual-email/:configId', async (req, res) => {
           limit && { $limit: limit },
         ].filter(Boolean);
 
-        // console.dir(aggregations, { depth: null });
         const tempRecords = await Record.aggregate(aggregations);
-        //console.dir(tempRecords, { depth: null });
         if (!tempRecords) {
           return res
             .status(403)
