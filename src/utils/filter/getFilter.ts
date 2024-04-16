@@ -46,17 +46,16 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
         const field = fields.find((x) => x.name === filter.field);
         let value = filter.value;
         let intValue: number;
-        let startDate: Date;
         let endDate: Date;
         let startDatetime: Date;
         let endDatetime: Date;
         switch (field.type) {
           case 'date':
             // startDate represents the beginning of a day
-            startDate = getDateForMongo(value);
+            value = getDateForMongo(value);
             // endDate represents the last moment of the day after startDate
-            endDate = new Date(startDate);
-            endDate.setDate(startDate.getDate() + 1);
+            endDate = new Date(value);
+            endDate.setDate(value.getDate() + 1);
             endDate.setMilliseconds(-1);
             // you end up with a date range covering exactly the day selected
             break;
@@ -95,7 +94,7 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
               };
             } else {
               if (DATE_TYPES.includes(field.type)) {
-                return { [fieldName]: { $gte: startDate, $lte: endDate } };
+                return { [fieldName]: { $gte: value, $lte: endDate } };
               }
               if (isNaN(intValue)) {
                 return { [fieldName]: { $eq: value } };
@@ -153,7 +152,7 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
           }
           case 'lt': {
             if (DATE_TYPES.includes(field.type)) {
-              return { [fieldName]: { $lt: startDate } };
+              return { [fieldName]: { $lt: value } };
             } else if (DATETIME_TYPES.includes(field.type)) {
               return { [fieldName]: { $lt: startDatetime } };
             } else if (isNaN(intValue)) {
@@ -201,7 +200,7 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
           }
           case 'gte': {
             if (DATE_TYPES.includes(field.type)) {
-              return { [fieldName]: { $gte: startDate } };
+              return { [fieldName]: { $gte: value } };
             } else if (DATETIME_TYPES.includes(field.type)) {
               return { [fieldName]: { $gte: startDatetime } };
             } else if (isNaN(intValue)) {
