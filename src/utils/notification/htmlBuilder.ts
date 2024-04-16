@@ -1,6 +1,21 @@
 import { ProcessedDataset, TableStyle } from '@routes/notification';
 import { formatDates, replaceUnderscores } from '@utils/notification/util';
 import _ from 'lodash';
+
+/**
+ * Fieldset object
+ */
+interface FieldStore {
+  name: string;
+  type: string;
+  fields?: string[] | null;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  __typename: string;
+  parentName?: string | null;
+  childName?: string | null;
+  childType?: string | null;
+}
+
 /**
  * Replaces macros in subject with values
  *
@@ -206,7 +221,7 @@ export const buildTable = (
   name,
   styles: TableStyle,
   fieldList: string[],
-  fieldSet?: any[]
+  fieldSet?: FieldStore[]
 ): string => {
   // Styles to be used later on
   // const tableStyle =
@@ -256,11 +271,6 @@ export const buildTable = (
       '<table bgcolor="ffffff" border="0" width="760" align="center" cellpadding="0" cellspacing="0" style="margin: 0 auto; border: 1px solid black;">';
     table += '<thead>';
     table += '<tr bgcolor="#00205c">';
-    // fieldList.forEach((field) => {
-    //   table += `<th align="left" style="color: #fff; font-size: 14px; font-family: 'Roboto', Arial, sans-serif; padding-left: 10px">${replaceUnderscores(
-    //     field
-    //   )}</th>`;
-    // });
     fieldSet.forEach((field) => {
       table += `<th align="left" style="color: #fff; font-size: 14px; font-family: 'Roboto', Arial, sans-serif; padding-left: 10px">${replaceUnderscores(
         `${field.name}`
@@ -274,22 +284,33 @@ export const buildTable = (
       table += '<tr>';
       // Create a new cell for each field in the record
       // eslint-disable-next-line @typescript-eslint/no-loop-func
-      // fieldList.forEach((field) => {
-      //   table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
-      //     ${formatDates(record.data[field])}</td>`;
-      // });
-      // eslint-disable-next-line @typescript-eslint/no-loop-func
       fieldSet.forEach((field) => {
         if (field.parentName) {
-          if (field.childName === 'incrementalId') {
+          if (
+            field.childName === 'incrementalId' ||
+            field.childName === 'form' ||
+            field.childName === 'id' ||
+            field.childName === 'lastUpdateForm'
+          ) {
             table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
           ${formatDates(
             _.get(record.data[`${field.parentName}`], field.childName)
           )}</td>`;
+          } else if (
+            field.name.split('.')[0] === '_createdBy' ||
+            field.name.split('.')[0] === '_lastUpdatedBy'
+          ) {
+            table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
+            ${formatDates(
+              _.get(
+                record.data[`${field.parentName}`],
+                _.get(record.data, field.name)
+              )
+            )}</td>`;
           } else {
             table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
             ${formatDates(
-              record.data[field.parentName].data[field.childName]
+              record.data[field.parentName]?.data[field.childName]
             )}</td>`;
           }
         } else if (field.type === 'resources') {
@@ -304,7 +325,8 @@ export const buildTable = (
         } else if (
           field.name === 'incrementalId' ||
           field.name === 'id' ||
-          field.name === 'form'
+          field.name === 'form' ||
+          field.name === 'lastUpdateForm'
         ) {
           table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
           ${formatDates(_.get(record, field.name))}</td>`;
