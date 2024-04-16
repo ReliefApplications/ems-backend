@@ -1,31 +1,26 @@
-import { difference, get, isEqual } from 'lodash';
+import { difference, eq, get, isEqual } from 'lodash';
 import { Role, User } from '@models';
 import config from 'config';
 
 /**
  * Check if assignment rule works with user parameters
  *
+ * @param user User to check
  * @param filter assignment rule filter
- * @param groupIds list of group ids
- * @param userAttr object of user attributes
  * @returns true if filter matches
  */
-export const checkIfRoleIsAssigned = (
-  filter: any,
-  groupIds: string[],
-  userAttr: { [key: string]: string }
-): boolean => {
+export const checkIfRoleIsAssigned = (user: User, filter: any): boolean => {
+  const groupIds: string[] = get(user, 'groups', []);
+  const userAttr: { [key: string]: string } = user.attributes ?? {};
   if (filter.logic) {
     // Composite filter descriptor
     switch (filter.logic) {
       case 'or': {
-        return filter.filters.some((x) =>
-          checkIfRoleIsAssigned(x, groupIds, userAttr)
-        );
+        return filter.filters.some((x) => checkIfRoleIsAssigned(user, x));
       }
       case 'and': {
         return filter.filters
-          .map((x) => checkIfRoleIsAssigned(x, groupIds, userAttr))
+          .map((x) => checkIfRoleIsAssigned(user, x))
           .every((x) => x === true);
       }
       default: {
@@ -58,6 +53,39 @@ export const checkIfRoleIsAssigned = (
       }
     }
   }
+
+  if (filter.field === '{{email}}') {
+    const value = user.username || '';
+    if (value) {
+      switch (filter.operator) {
+        case 'eq': {
+          return eq(value, String(filter.value));
+        }
+        case 'neq': {
+          return !eq(value, String(filter.value));
+        }
+        case 'contains': {
+          const regex = new RegExp(filter.value, 'i');
+          return regex.test(value);
+        }
+        case 'doesnotcontain': {
+          const regex = new RegExp(filter.value, 'i');
+          return !regex.test(value);
+        }
+        case 'startswith': {
+          return value.startsWith(filter.value);
+        }
+        case 'endswith': {
+          return value.endsWith(filter.value);
+        }
+        default:
+          return false;
+      }
+    } else {
+      return false;
+    }
+  }
+
   const attrs =
     (config.get('user.attributes.list') as {
       value: string;
@@ -98,11 +126,7 @@ export const getAutoAssignedRoles = async (user: User): Promise<Role[]> => {
     model: 'Permission',
   });
   return roles.reduce((arr, role) => {
-    if (
-      role.autoAssignment.some((x) =>
-        checkIfRoleIsAssigned(x, get(user, 'groups', []), user.attributes ?? {})
-      )
-    ) {
+    if (role.autoAssignment.some((x) => checkIfRoleIsAssigned(user, x))) {
       arr.push(role);
     }
     return arr;
@@ -120,7 +144,5 @@ export const checkIfRoleIsAssignedToUser = (
   user: User,
   role: Role
 ): boolean => {
-  return role.autoAssignment.some((x) =>
-    checkIfRoleIsAssigned(x, get(user, 'groups', []), user.attributes ?? {})
-  );
+  return role.autoAssignment.some((x) => checkIfRoleIsAssigned(user, x));
 };
