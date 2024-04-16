@@ -212,8 +212,8 @@ export const replaceHeader = (header: {
  * @param records dataset records
  * @param name dataset block name
  * @param styles tableStyles loaded from DB
- * @param fieldList
- * @param fieldSet
+ * @param fieldList fieldList loaded from DB
+ * @param fieldSet fieldSet loaded from graphql call
  * @returns html table
  */
 export const buildTable = (

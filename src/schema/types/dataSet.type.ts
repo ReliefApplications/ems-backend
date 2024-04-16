@@ -7,7 +7,7 @@ import { logger } from '@services/logger.service';
 /**
  * GraphQL DataSet type definition
  *
- * @param arrayOfObjects
+ * @param arrayOfObjects object array
  * @returns project
  */
 export const mergeArrayOfObjects = (

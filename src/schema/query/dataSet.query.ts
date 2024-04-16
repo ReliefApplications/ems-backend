@@ -102,7 +102,7 @@ export const emailAggregation = [
 /**
  * getting field name from field Set
  *
- * @param fieldSet
+ * @param fieldSet list of fields for dataset
  * @returns fields name
  */
 export const getFields = (fieldSet: any) => {
