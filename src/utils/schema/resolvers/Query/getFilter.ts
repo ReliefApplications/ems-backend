@@ -211,18 +211,15 @@ const buildMongoFilter = (
         let endDate: Date;
         let startDatetime: Date;
         let endDatetime: Date;
-        let dateForFilter: any;
         switch (type) {
           case 'date':
-            dateForFilter = getDateForMongo(value);
             // startDate represents the beginning of a day
-            startDate = new Date(value);
+            startDate = getDateForMongo(value);
             // endDate represents the last moment of the day after startDate
             endDate = new Date(startDate);
             endDate.setDate(startDate.getDate() + 1);
             endDate.setMilliseconds(-1);
             // you end up with a date range covering exactly the day selected
-            value = dateForFilter.date;
             break;
           case 'datetime':
           case 'datetime-local':
