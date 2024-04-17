@@ -343,8 +343,7 @@ router.get('/resource/records/:id', async (req, res) => {
  *    fileName: string                    // Name for the file
  *    email: boolean                      // Send the file by email
  *    query: any                          // Query parameters to build it
- *    sortField?: string
- *    sortOrder?: 'asc' | 'desc'
+ *    sort?: any[]                        // If using sort, list of the sort fields and the order we want to apply
  * }
  */
 router.post('/records', async (req, res) => {
