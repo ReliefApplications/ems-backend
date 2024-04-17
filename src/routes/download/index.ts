@@ -69,7 +69,10 @@ const buildUserExport = (req, res, users) => {
 };
 
 /**
+ * Template for distribution list.
+ *
  * @param res response object
+ * @returns distribution list template.
  */
 const templateExport = (res) => {
   const columns = [

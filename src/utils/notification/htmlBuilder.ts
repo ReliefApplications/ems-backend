@@ -1,5 +1,20 @@
 import { ProcessedDataset, TableStyle } from '@routes/notification';
 import { formatDates, replaceUnderscores } from '@utils/notification/util';
+import _ from 'lodash';
+
+/**
+ * Fieldset object
+ */
+interface FieldStore {
+  name: string;
+  type: string;
+  fields?: string[] | null;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  __typename: string;
+  parentName?: string | null;
+  childName?: string | null;
+  childType?: string | null;
+}
 
 /**
  * Replaces macros in subject with values
@@ -73,18 +88,17 @@ export const replaceHeader = (header: {
   };
   headerLogoStyle: string;
 }): string => {
-  let headerString = `<tr bgcolor="#fff" align="center">
-        <td height="20"></td>
-    </tr>`;
+  let headerString = `<table border="0" cellpadding="0" cellspacing="0" width="760px" style="padding: 10px;">
+  <tbody>
+  <tr>`;
 
   if (header.headerLogo) {
-    headerString += `<tr bgcolor="#fff">
-        <td>
-            <a href="" style="display: block; border-style: none !important; border: 0 !important;">
-                <img width="10%" data-imagetype="DataUri"  src="cid:headerImage" >
-            </a>
-        </td>
-        </tr>`;
+    headerString += `<td style="padding: 10px;">
+          <a href="" style="display: block; border-style: none !important; text-align: center; border: 0 !important;">
+              <img width="120" data-imagetype="DataUri"  src="cid:headerImage" style="padding: 10px;">
+          </a>
+      </td>
+    `;
   }
 
   if (header.headerHtml) {
@@ -165,22 +179,30 @@ export const replaceHeader = (header: {
       );
     }
 
-    const headerPTags = header.headerHtml.split('\n');
-    let headerText: string | string[] = headerPTags.map((ptag) => {
-      return /*html*/ `<tr bgcolor="#00205c" align="center">
-        <td mc:edit="title1" vertical-align="middle"  align="center" style="color: #fff; font-size: 16px; font-weight: normal; font-family: 'Roboto', Arial, sans-serif;"> ${ptag} </td>
-    </tr>`;
-    });
-    headerText = headerText.join(' ');
+    const headerPTags = header.headerHtml.split('<p>').filter(Boolean);
+    const headerText = headerPTags
+      .map((ptag) => {
+        // Remove </p> tag from the end of the string
+        const text = ptag.replace('</p>', '').trim();
+        return /*html*/ `
+        <td style="color: #fff; font-size: 16px; font-family: 'Roboto', Arial, sans-serif; line-height: 20px; text-align: center;">${text}</td>
+      `;
+      })
+      .join('</tr><tr>'); // Join each table cell and add a table row between them
 
-    headerString += `<tr bgcolor="#00205c" align="center">
-            <td height="20"></td>
-        </tr>
-        ${headerText}
-        <tr bgcolor="#00205c" align="center">
-            <td height="20"></td>
-        </tr>`;
+    headerString += `<td>
+      <table border="0" cellpadding="0" cellspacing="0" width="760">
+        <tbody>
+          <tr>
+            ${headerText}
+          </tr>
+        </tbody>
+      </table>
+    </td>`;
   }
+
+  headerString += '</tr></tbody></table>';
+
   return headerString;
 };
 
@@ -190,22 +212,31 @@ export const replaceHeader = (header: {
  * @param records dataset records
  * @param name dataset block name
  * @param styles tableStyles loaded from DB
+ * @param fieldList fieldList loaded from DB
+ * @param fieldSet fieldSet loaded from graphql call
  * @returns html table
  */
-export const buildTable = (records, name, styles: TableStyle): string => {
-  const tableStyle =
-    styles?.tableStyle ||
-    'width: 100%; border-collapse: collapse; border: 1px solid gray; box-shadow: 0 0 #0000; overflow:auto;';
-  //const theadStyle = styles?.theadStyle || '';
-  const tbodyStyle = styles?.tbodyStyle || '';
-  const trStyle =
-    styles?.trStyle || 'border-top: 1px solid gray; background-color: white;';
-  //const thStyle =
-  //  styles?.thStyle ||
-  //  'text-align: left; padding: 2px; background-color: #00205C; color: white;';
-  const tdStyle = styles?.tdStyle || 'padding: 2px; text-align: left;';
-  //const labelStyle = 'background-color: #00205C; color: white;';
-  //const tableDivStyle = styles?.tableDivStyle || '';
+export const buildTable = (
+  records,
+  name,
+  styles: TableStyle,
+  fieldList: string[],
+  fieldSet?: FieldStore[]
+): string => {
+  // Styles to be used later on
+  // const tableStyle =
+  //   styles?.tableStyle ||
+  //   'width: 100%; border-collapse: collapse; border: 1px solid gray; box-shadow: 0 0 #0000; overflow:auto;';
+  // //const theadStyle = styles?.theadStyle || '';
+  // const tbodyStyle = styles?.tbodyStyle || '';
+  // const trStyle =
+  //   styles?.trStyle || 'border-top: 1px solid gray; background-color: white;';
+  // //const thStyle =
+  // //  styles?.thStyle ||
+  // //  'text-align: left; padding: 2px; background-color: #00205C; color: white;';
+  // const tdStyle = styles?.tdStyle || 'padding: 2px; text-align: left;';
+  // //const labelStyle = 'background-color: #00205C; color: white;';
+  // //const tableDivStyle = styles?.tableDivStyle || '';
 
   // THE FOLLOWING CSS SELECTORS ARE BANNED:
   // overflow, justify, display
@@ -214,15 +245,19 @@ export const buildTable = (records, name, styles: TableStyle): string => {
   //Checks if data is undefined
   if (!records[0] || !records[0].data) {
     table = `
-    <table style="${tableStyle};">
-      <tbody style="${tbodyStyle}">
-        <tr style="${trStyle}">
-          <td style="${tdStyle}">no data found</td>
+    <table  border="0" width="760" align="center" cellpadding="0" cellspacing="0" bgcolor="ffffff" >
+      <tbody>
+        <tr bgcolor="#00205c">
+            <td mc:edit="title1" height="40" style="color: #fff; font-size: 15px; font-weight: 700; font-family: 'Roboto', Arial, sans-serif; padding-left: 10px;">
+            ${name}</td>
+        </tr>
         <tr>
+          <td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px;">No data found</td>
+        </tr>
       </tbody>
     </table>`;
   } else {
-    table += `<table border="0" width="760" align="center" cellpadding="0" cellspacing="0" >
+    table += `<table border="0" width="760" align="center" cellpadding="0" cellspacing="0"  >
                 <tbody><tr bgcolor="#00205c">
                     <td mc:edit="title1" height="40" style="color: #fff; font-size: 15px; font-weight: 700; font-family: 'Roboto', Arial, sans-serif; padding-left: 10px;">
                     ${name}</td>
@@ -232,24 +267,73 @@ export const buildTable = (records, name, styles: TableStyle): string => {
             </tr>
             </tbody>
             </table>`;
-    table += `<table border="0" width="760" align="center" cellpadding="0" cellspacing="0" style="margin: 0 auto;">`;
-    table += `<thead>`;
-    table += `<tr bgcolor="#00205c">`;
-    for (const key in records[0].data) {
+    table +=
+      '<table bgcolor="ffffff" border="0" width="760" align="center" cellpadding="0" cellspacing="0" style="margin: 0 auto; border: 1px solid black;">';
+    table += '<thead>';
+    table += '<tr bgcolor="#00205c">';
+    fieldSet.forEach((field) => {
       table += `<th align="left" style="color: #fff; font-size: 14px; font-family: 'Roboto', Arial, sans-serif; padding-left: 10px">${replaceUnderscores(
-        key
+        `${field.name}`
       )}</th>`;
-    }
+    });
+
     table += '</tr></thead>';
-    table += `<tbody>`;
+    table += '<tbody>';
     // Iterate over each record
     for (const record of records) {
       table += '<tr>';
       // Create a new cell for each field in the record
-      for (const key in record.data) {
-        table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px;">
-        ${formatDates(record.data[key])}</td>`;
-      }
+      // eslint-disable-next-line @typescript-eslint/no-loop-func
+      fieldSet.forEach((field) => {
+        if (field.parentName) {
+          if (
+            field.childName === 'incrementalId' ||
+            field.childName === 'form' ||
+            field.childName === 'id' ||
+            field.childName === 'lastUpdateForm' ||
+            field.childName === 'createdAt' ||
+            field.childName === 'modifiedAt'
+          ) {
+            table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
+          ${formatDates(
+            _.get(record.data[`${field.parentName}`], field.childName)
+          )}</td>`;
+          } else if (
+            field.childName.split('.')[0] === '_createdBy' ||
+            field.childName.split('.')[0] === '_lastUpdatedBy'
+          ) {
+            table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
+            ${formatDates(
+              _.get(record.data[`${field.parentName}`], field.childName)
+            )}</td>`;
+          } else {
+            table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
+            ${formatDates(
+              record.data[field.parentName]?.data[field.childName]
+            )}</td>`;
+          }
+        } else if (field.type === 'resources') {
+          table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
+          ${record.data[field.name]?.length} items</td>`;
+        } else if (
+          field.name.split('.')[0] === '_createdBy' ||
+          field.name.split('.')[0] === '_lastUpdatedBy'
+        ) {
+          table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
+          ${formatDates(_.get(record.data, field.name))}</td>`;
+        } else if (
+          field.name === 'incrementalId' ||
+          field.name === 'id' ||
+          field.name === 'form' ||
+          field.name === 'lastUpdateForm'
+        ) {
+          table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
+          ${formatDates(_.get(record, field.name))}</td>`;
+        } else {
+          table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
+          ${formatDates(record.data[field.name])}</td>`;
+        }
+      });
       table += '</tr>';
     }
     table += '</tbody>';
@@ -278,7 +362,9 @@ export const replaceDatasets = async (
           buildTable(
             processedDataSet.records,
             processedDataSet.name,
-            processedDataSet.tableStyle
+            processedDataSet.tableStyle,
+            processedDataSet.fields,
+            processedDataSet.fieldSet
           )
         );
       }
@@ -309,18 +395,20 @@ export const replaceFooter = (footer: {
   };
   footerLogoStyle: string;
 }): string => {
-  let footerString = `<tr bgcolor="#fff" align="center">
-        <td height="20"></td>
-    </tr>`;
+  let footerString = `<table border="0" cellpadding="0" cellspacing="0">
+    <tbody>
+    <tr>`;
+
+  //footerString += `<table><tbody><tr>`;
 
   if (footer.footerLogo) {
-    footerString += `<tr bgcolor="#fff">
-    <td>
-        <a href="" style="display: block; border-style: none !important; border: 0 !important;">
-            <img width="10%" data-imagetype="DataUri"  src="cid:headerImage" >
-        </a>
-    </td>
-    </tr>`;
+    footerString += `
+      <td style="padding: 10px;">
+          <a href="" style="display: block; border-style: none !important; text-align: center; border: 0 !important;">
+              <img width="120" data-imagetype="DataUri"  src="cid:footerImage" style="padding: 10px; background-color: white;">
+          </a>
+      </td>
+      `;
   }
 
   if (footer.footerHtml) {
@@ -348,21 +436,28 @@ export const replaceFooter = (footer: {
         todayToString
       );
     }
-    const footerPTags = footer.footerHtml.split('\n');
-    let footerText: string | string[] = footerPTags.map((ptag) => {
-      return /*html*/ `<tr bgcolor="#00205c" align="center">
-          <td mc:edit="title1" vertical-align="middle"  align="center" style="color: #fff; font-size: 16px; font-weight: normal; font-family: 'Roboto', Arial, sans-serif;"> ${ptag} </td>
-      </tr>`;
-    });
-    footerText = footerText.join(' ');
+    const footerPTags = footer.footerHtml.split('<p>').filter(Boolean);
+    const footerText = footerPTags
+      .map((ptag) => {
+        const text = ptag.replace('</p>', '').trim();
+        return /*html*/ `
+            <td style="font-size: 14px; font-family: 'Roboto', Arial, sans-serif; line-height: 20px;"> ${text} </td>
+        `;
+      })
+      .join('</tr><tr>');
 
-    footerString += `<tr bgcolor="#00205c" align="center">
-            <td height="20"></td>
+    footerString += `<td>
+    <table>
+      <tbody>
+        <tr>
+          ${footerText}
         </tr>
-        ${footerText}
-        <tr bgcolor="#00205c" align="center">
-            <td height="20"></td>
-        </tr>`;
+      </tbody>
+    </table>
+  </td>`;
   }
+
+  footerString += '</tr></tbody></table>';
+
   return footerString;
 };

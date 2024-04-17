@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import mongoose, { Schema, Document } from 'mongoose';
 import {
   customNotificationStatus,
