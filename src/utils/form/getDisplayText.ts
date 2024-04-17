@@ -2,6 +2,9 @@ import { Context } from '../../server/apollo/context';
 import { CustomAPI } from '../../server/apollo/dataSources';
 import config from 'config';
 import { logger } from '@services/logger.service';
+import axios from 'axios';
+import get from 'lodash/get';
+import jsonpath from 'jsonpath';
 
 /**
  * Gets display text from choice value.
@@ -77,6 +80,33 @@ export const getFullChoices = async (
           return res;
         }
       }
+    } else if (field.choicesByGraphQL) {
+      const url: string = field.choicesByGraphQL.url;
+      let choices: any[] = [];
+      const valueField = get(field, 'choicesByGraphQL.value', null);
+      const textField = get(field, 'choicesByGraphQL.text', null);
+      await axios({
+        url,
+        method: 'post',
+        headers: {
+          Authorization: context.token,
+          'Content-Type': 'application/json',
+        },
+        data: {
+          query: field.choicesByGraphQL.query,
+        },
+      }).then(({ data }) => {
+        choices = jsonpath
+          .query(data, get(field, 'choicesByGraphQL.path'))
+          .map((x) => ({
+            value: get(x, valueField),
+            text: get(x, textField),
+          }));
+      });
+      if (field.choicesByGraphQL.hasOther) {
+        choices.push({ [valueField]: 'other', [textField]: 'Other' });
+      }
+      return choices;
     } else {
       return field.choices;
     }

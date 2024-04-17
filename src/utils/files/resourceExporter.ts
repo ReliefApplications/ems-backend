@@ -273,8 +273,9 @@ export default class Exporter {
     const resourceResourcesColumns = this.getResourceAndResourcesQuestions();
 
     // Get choices by url columns
-    let choicesByUrlColumns = this.columns.filter(
-      (col) => col.meta?.field?.choicesByUrl
+    let choicesByGraphQLColumns = this.columns.filter(
+      (col) =>
+        col.meta?.field?.choicesByUrl || col.meta?.field?.choicesByGraphQL
     );
     // Get reference data columns
     let referenceDataColumns = this.columns
@@ -327,11 +328,15 @@ export default class Exporter {
       }
       promises.push(Promise.all(relatedResourcePromises));
 
-      // Add choices by url columns of related resource to the list
-      choicesByUrlColumns = [
-        ...choicesByUrlColumns,
+      // Add choices by url / graphql columns of related resource to the list
+      choicesByGraphQLColumns = [
+        ...choicesByGraphQLColumns,
         ...column.subColumns
-          .filter((subCol) => subCol.meta?.field?.choicesByUrl)
+          .filter(
+            (subCol) =>
+              subCol.meta?.field?.choicesByUrl ||
+              subCol.meta?.field?.choicesByGraphQL
+          )
           .map((subCol) => {
             return { ...subCol, field: `${column.field}.${subCol.field}` };
           }),
@@ -344,7 +349,7 @@ export default class Exporter {
           .map((subCol) => `${column.field}.${subCol.field}`),
       ];
     }
-    promises.push(this.getChoicesByUrl(choicesByUrlColumns));
+    promises.push(this.getChoicesByAPI(choicesByGraphQLColumns));
     // Execute all promises ( except from reference data ones )
     await Promise.all(promises);
     // Execute reference data aggregations
@@ -727,12 +732,12 @@ export default class Exporter {
   };
 
   /**
-   * Gets right value for choices by url questions
+   * Gets right value for choices by url / graphql questions
    *
-   * @param choicesByUrlColumns columns with choices by url
+   * @param choicesByAPIColumns columns with choices by url / graphql
    */
-  private getChoicesByUrl = async (choicesByUrlColumns: any) => {
-    for (const column of choicesByUrlColumns) {
+  private getChoicesByAPI = async (choicesByAPIColumns: any) => {
+    for (const column of choicesByAPIColumns) {
       const choices = await getChoices(
         column.meta.field,
         this.req.headers.authorization

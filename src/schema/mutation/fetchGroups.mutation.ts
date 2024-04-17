@@ -41,23 +41,25 @@ export default {
         );
       }
       const bulkOps: any[] = [];
-      groups.forEach((group) => {
-        const upsertGroup = {
-          updateOne: {
-            filter: { oid: group.oid },
-            update: {
-              $set: {
-                oid: group.oid,
-                title: group.title,
-                description: group.description,
+      if (groups.length > 0) {
+        groups.forEach((group) => {
+          const upsertGroup = {
+            updateOne: {
+              filter: { oid: group.oid },
+              update: {
+                $set: {
+                  oid: group.oid,
+                  title: group.title,
+                  description: group.description,
+                },
               },
+              upsert: true,
             },
-            upsert: true,
-          },
-        };
-        bulkOps.push(upsertGroup);
-      });
-      await Group.collection.bulkWrite(bulkOps);
+          };
+          bulkOps.push(upsertGroup);
+        });
+        await Group.collection.bulkWrite(bulkOps);
+      }
 
       const filter = Group.find(
         accessibleBy(ability, 'read').Group

@@ -1,3 +1,33 @@
+## [2.7.2](https://github.com/ReliefApplications/ems-backend/compare/v2.7.1...v2.7.2) (2024-03-25)
+
+
+### Bug Fixes
+
+* add check for empty context filter ([#995](https://github.com/ReliefApplications/ems-backend/issues/995)) ([31a8544](https://github.com/ReliefApplications/ems-backend/commit/31a85447f4a418000d763049d1f0d38261d82f66))
+* now working nested fields in reference data aggregation ([ed564b3](https://github.com/ReliefApplications/ems-backend/commit/ed564b3f9eef48f06674144ac94d153c5e494d91))
+
+## [2.7.1](https://github.com/ReliefApplications/ems-backend/compare/v2.7.0...v2.7.1) (2024-03-04)
+
+
+### Bug Fixes
+
+* now working nested fields in reference data aggregation ([#993](https://github.com/ReliefApplications/ems-backend/issues/993)) ([0603afc](https://github.com/ReliefApplications/ems-backend/commit/0603afcf16f370fc29405622afbf1bd081aee10d))
+
+# [2.7.0](https://github.com/ReliefApplications/ems-backend/compare/v2.6.5...v2.7.0) (2024-02-23)
+
+
+### Bug Fixes
+
+* extractFields would fail if no choice ([ecd2f86](https://github.com/ReliefApplications/ems-backend/commit/ecd2f86ebee218bee9123b2dff60699db87e7b6c))
+* in operator would not work for layers using aggregation on ref data ([8dceae5](https://github.com/ReliefApplications/ems-backend/commit/8dceae5058c6bff31a9cc2419838c29cc37f202d))
+* replace NodeCache with RedisCache for multi-instances, to prevent using decoupled cache instances ([#990](https://github.com/ReliefApplications/ems-backend/issues/990)) ([8d71e3c](https://github.com/ReliefApplications/ems-backend/commit/8d71e3c3c0d12b53b921cfd452d24b1b4d5bb55a))
+* some layers could not correctly use latitude / longitude due to lowecase ([b85c074](https://github.com/ReliefApplications/ems-backend/commit/b85c0744aa930600b9c201a61af6ef6b4812598b))
+
+
+### Features
+
+* implementation of choicesByGraphQL questions ([#987](https://github.com/ReliefApplications/ems-backend/issues/987)) ([578be53](https://github.com/ReliefApplications/ems-backend/commit/578be5379377b2fdde91cc9cee0f592a8d23545c))
+
 ## [2.6.5](https://github.com/ReliefApplications/ems-backend/compare/v2.6.4...v2.6.5) (2024-02-15)
 
 

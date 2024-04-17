@@ -11,7 +11,7 @@ import i18next from 'i18next';
 import mongoose from 'mongoose';
 import { logger } from '@services/logger.service';
 import axios from 'axios';
-import { isEqual, get, omit } from 'lodash';
+import { isEqual, get, omit, isEmpty } from 'lodash';
 import turf, { Feature, booleanPointInPolygon } from '@turf/turf';
 import dataSources, { CustomAPI } from '@server/apollo/dataSources';
 import { getAdmin0Polygons } from '@utils/gis/getCountryPolygons';
@@ -111,8 +111,12 @@ const getFeatureFromItem = (
     }
   } else {
     // Lowercase is needed as quick solution for solving ref data layers
-    const latitude = get(item, mapping.latitudeField.toLowerCase());
-    const longitude = get(item, mapping.longitudeField.toLowerCase());
+    const latitude =
+      get(item, mapping.latitudeField.toLowerCase()) ||
+      get(item, mapping.latitudeField);
+    const longitude =
+      get(item, mapping.longitudeField.toLowerCase()) ||
+      get(item, mapping.longitudeField);
     if (latitude && longitude) {
       const geo = {
         type: 'Feature',
@@ -388,7 +392,7 @@ router.get('/feature', async (req, res) => {
           });
         } else if (referenceData.type === 'static') {
           let data = referenceData.data || [];
-          if (contextFilters) {
+          if (contextFilters && !isEmpty(contextFilters)) {
             data = data.filter((x) => filterReferenceData(x, contextFilters));
           }
           await getFeatures(
@@ -417,7 +421,7 @@ router.get('/feature', async (req, res) => {
               apiConfiguration,
               graphQLVariables
             )) || [];
-          if (contextFilters) {
+          if (contextFilters && !isEmpty(contextFilters)) {
             data = data.filter((x) => filterReferenceData(x, contextFilters));
           }
           await getFeatures(

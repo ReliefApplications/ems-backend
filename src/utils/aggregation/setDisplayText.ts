@@ -1,6 +1,6 @@
 import { Resource } from '@models';
-import getDisplayText from '@utils/form/getDisplayText';
-import { get, set } from 'lodash';
+import { getFullChoices, getText } from '@utils/form/getDisplayText';
+import { get, isArray, set } from 'lodash';
 
 /**
  * Take mappedFields and items and replace value by display text in items where it's needed.
@@ -36,7 +36,10 @@ const setDisplayText = async (
     }
     // then, search for related field
     const formField = lookAt.find((field: any) => {
-      return lookFor === field.name && (field.choices || field.choicesByUrl);
+      return (
+        lookFor === field.name &&
+        (field.choices || field.choicesByUrl || field.choicesByGraphQL)
+      );
     });
     if (formField) {
       return { ...(await acc), [x.key]: formField };
@@ -46,12 +49,20 @@ const setDisplayText = async (
   };
   const fieldWithChoices = await mappedFields.reduce(reducer, {});
   for (const [key, field] of Object.entries(fieldWithChoices)) {
+    // Fetch choices from source ( static / rest / graphql )
+    const choices = await getFullChoices(field, context);
     for (const item of items) {
       const fieldValue = get(item, key, null);
       if (fieldValue) {
-        const displayText = await getDisplayText(field, fieldValue, context);
-        if (displayText) {
-          set(item, key, displayText);
+        if (choices.length) {
+          // Replace value by text, from list of choices
+          set(
+            item,
+            key,
+            isArray(fieldValue)
+              ? fieldValue.map((x) => getText(choices, x))
+              : getText(choices, fieldValue)
+          );
         }
       } else {
         if (key === 'field' && fieldValue) {

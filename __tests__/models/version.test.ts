@@ -6,13 +6,18 @@ import { Version, Form, Record } from '@models';
 describe('Version models tests', () => {
   test('test Version model with correct data with form structure', async () => {
     const forms = await Form.find();
-    for (let i = 0; i < forms.length; i++) {
-      const version = await new Version({
-        data: forms[i].structure,
+    const promises = forms.map((form) => {
+      return new Version({
+        data: form.structure,
       }).save();
+    });
+
+    const versions = await Promise.all(promises);
+
+    versions.forEach((version) => {
       expect(version._id).toBeDefined();
       expect(version).toHaveProperty('createdAt');
-    }
+    });
   });
 
   test('test Version model with correct data with record data', async () => {
