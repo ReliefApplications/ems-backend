@@ -1,18 +1,15 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
-/** Mongoose button interface declaration */
-type ButtonActionTypesT = 'link' | 'recordEdition' | 'emailNotification';
-
 export interface Button {
   text: string;
-  href: string;
+  href?: string;
   hasRoleRestriction: boolean;
   roles: string[];
   variant: string;
   category: string;
-  openInNewTab: boolean;
-  type: ButtonActionTypesT;
+  openInNewTab?: boolean;
+  type: string;
 }
 
 /** Dashboard filter interface declaration */
@@ -49,6 +46,7 @@ const buttonSchema = new Schema<Button>(
     variant: String,
     category: String,
     openInNewTab: Boolean,
+    type: String
   },
   { _id: false }
 );
