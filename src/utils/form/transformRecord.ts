@@ -16,7 +16,7 @@ export const formatValue = (field: any, value: any): any => {
     case 'datetime':
     case 'datetime-local':
       if (!isNil(value)) {
-        return getDateForMongo(value);
+        return getDateForMongo(value).startDate;
       }
       break;
     case 'text':

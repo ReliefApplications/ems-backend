@@ -11,26 +11,31 @@ import {
  * @param value input date value
  * @returns calculated day, beginning of day, and ending of day
  */
-export const getDateForMongo = (value: any): Date => {
+export const getDateForMongo = (
+  value: any
+): { startDate: Date; endDate: Date } => {
   // today's date
-  let date: Date;
+  let startDate: Date;
   if (value === Placeholder.TODAY) {
-    date = new Date();
+    startDate = new Date();
     // today + number of days
   } else if (REGEX_TODAY_PLUS.test(value)) {
     const difference = parseInt(extractStringFromBrackets(value).split('+')[1]);
-    date = new Date();
-    date.setDate(date.getDate() + difference);
+    startDate = new Date();
+    startDate.setDate(startDate.getDate() + difference);
     // today - number of days
   } else if (REGEX_TODAY_MINUS.test(value)) {
     const difference = -parseInt(
       extractStringFromBrackets(value).split('-')[1]
     );
-    date = new Date();
-    date.setDate(date.getDate() + difference);
+    startDate = new Date();
+    startDate.setDate(startDate.getDate() + difference);
     // classic date
   } else {
-    date = new Date(value);
+    startDate = new Date(value);
   }
-  return date;
+  const endDate = new Date(startDate);
+  endDate.setDate(startDate.getDate() + 1);
+  endDate.setMilliseconds(-1);
+  return { startDate, endDate };
 };

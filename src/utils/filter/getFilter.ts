@@ -6,6 +6,7 @@ import {
   DATE_TYPES,
   DATETIME_TYPES,
 } from '@const/fieldTypes';
+import { usesTodayOperator } from '@const/placeholders';
 
 /**
  * Transforms query filter into mongo filter.
@@ -52,21 +53,23 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
         switch (field.type) {
           case 'date':
             // startDate represents the beginning of a day
-            value = getDateForMongo(value);
-            // endDate represents the last moment of the day after startDate
-            endDate = new Date(value);
-            endDate.setDate(value.getDate() + 1);
-            endDate.setMilliseconds(-1);
-            // you end up with a date range covering exactly the day selected
+            ({ startDate: value, endDate } = getDateForMongo(value));
             break;
           case 'datetime':
           case 'datetime-local':
-            // startDatetime contains the beginning of the minute
-            startDatetime = getTimeForMongo(value);
-            // endDatetime contains the end of the minute (last second, last ms)
-            endDatetime = new Date(startDatetime.getTime() + 59999);
-            // we end up with a date range covering exactly the minute selected,
-            // regardless of the saved seconds and ms
+            //if we are using the {{today}} operator
+            if (usesTodayOperator(value)) {
+              ({ startDate: startDatetime, endDate: endDatetime } =
+                getDateForMongo(value));
+            } else {
+              // startDatetime contains the beginning of the minute
+              startDatetime = getTimeForMongo(value);
+              // endDatetime contains the end of the minute (last second, last ms)
+              endDatetime = new Date(startDatetime.getTime() + 59999);
+              // we end up with a date range covering exactly the minute selected,
+              // regardless of the saved seconds and ms
+            }
+            break;
             break;
           case 'time': {
             value = getTimeForMongo(value);

@@ -7,11 +7,7 @@ import {
   DATETIME_TYPES,
 } from '@const/fieldTypes';
 import { isNumber } from 'lodash';
-import {
-  Placeholder,
-  REGEX_TODAY_MINUS,
-  REGEX_TODAY_PLUS,
-} from '@const/placeholders';
+import { usesTodayOperator } from '@const/placeholders';
 
 /** The default fields */
 const DEFAULT_FIELDS = [
@@ -218,25 +214,14 @@ const buildMongoFilter = (
         switch (type) {
           case 'date':
             // startDate represents the beginning of a day
-            value = getDateForMongo(value);
-            // endDate represents the last moment of the day after startDate
-            endDate = new Date(value);
-            endDate.setDate(value.getDate() + 1);
-            endDate.setMilliseconds(-1);
-            // you end up with a date range covering exactly the day selected
+            ({ startDate: value, endDate } = getDateForMongo(value));
             break;
           case 'datetime':
           case 'datetime-local':
             //if we are using the {{today}} operator
-            if (
-              value === Placeholder.TODAY ||
-              REGEX_TODAY_MINUS.test(value) ||
-              REGEX_TODAY_PLUS.test(value)
-            ) {
-              startDatetime = getDateForMongo(value);
-              endDatetime = new Date(startDatetime);
-              endDatetime.setDate(startDatetime.getDate() + 1);
-              endDatetime.setMilliseconds(-1);
+            if (usesTodayOperator(value)) {
+              ({ startDate: startDatetime, endDate: endDatetime } =
+                getDateForMongo(value));
             } else {
               // startDatetime contains the beginning of the minute
               startDatetime = getTimeForMongo(value);
