@@ -1,6 +1,7 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
+/** Action button interface */
 export interface Button {
   text: string;
   href?: string;
@@ -46,7 +47,7 @@ const buttonSchema = new Schema<Button>(
     variant: String,
     category: String,
     openInNewTab: Boolean,
-    type: String
+    type: String,
   },
   { _id: false }
 );
