@@ -2,6 +2,8 @@ import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
 /** Mongoose button interface declaration */
+type ButtonActionTypesT = 'link' | 'recordEdition' | 'emailNotification';
+
 export interface Button {
   text: string;
   href: string;
@@ -10,6 +12,7 @@ export interface Button {
   variant: string;
   category: string;
   openInNewTab: boolean;
+  type: ButtonActionTypesT;
 }
 
 /** Dashboard filter interface declaration */
