@@ -70,7 +70,6 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
               // regardless of the saved seconds and ms
             }
             break;
-            break;
           case 'time': {
             value = getTimeForMongo(value);
             break;
