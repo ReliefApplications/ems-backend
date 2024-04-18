@@ -1,6 +1,73 @@
 import { difference, eq, get, isEqual } from 'lodash';
-import { Role, User } from '@models';
+import { Role, User, userMicrosoftGraph } from '@models';
 import config from 'config';
+import axios from 'axios';
+import { logger } from '@services/logger.service';
+
+/**
+ * Generate a new access token for Microsoft graph, on behalf of the user.
+ *
+ * @param token access token
+ */
+const getGraphAccessToken = async (token: string) => {
+  const url =
+    'https://login.microsoftonline.com/f610c0b7-bd24-4b39-810b-3dc280afb590/oauth2/v2.0/token';
+  const form = new FormData();
+  const formAsJson = {
+    grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+    assertion: token,
+    client_id: '',
+    requested_token_use: 'on_behalf_of',
+    client_secret: '',
+    scope: 'user.read',
+  };
+  Object.entries(formAsJson).forEach(([key, value]) => {
+    form.append(key, value);
+  });
+
+  return axios({
+    url,
+    method: 'post',
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+    data: form,
+  })
+    .then(({ data }) => {
+      return data.access_token as string;
+    })
+    .catch((err) => {
+      logger.error(err.message, { stack: err.stack });
+    });
+};
+
+/**
+ * Get user graph info from token
+ *
+ * @param token access token
+ */
+const getUserGraphInfo = async (token: string) => {
+  console.timeLog('user');
+  const graphToken = await getGraphAccessToken(token);
+  console.timeLog('user');
+  if (graphToken) {
+    // Select url to fetch specific user info
+    const url = 'https://graph.microsoft.com/v1.0/me?$select=userType';
+    return axios({
+      url,
+      method: 'get',
+      headers: {
+        Authorization: `Bearer ${graphToken}`,
+      },
+    })
+      .then(({ data }) => {
+        return data as userMicrosoftGraph;
+      })
+      .catch((err) => {
+        logger.error(err.message, { stack: err.stack });
+      });
+  }
+};
 
 /**
  * Check if assignment rule works with user parameters
@@ -29,87 +96,88 @@ export const checkIfRoleIsAssigned = (user: User, filter: any): boolean => {
     }
   }
 
-  // filter descriptor
-  if (filter.field === '{{groups}}') {
-    // todo: check other versions of the code
-    const value = (filter.value || []).filter((x) => x !== null);
-    switch (filter.operator) {
-      case 'eq': {
-        return isEqual(
-          groupIds.map((x) => x.toString()),
-          value.map((x) => x.toString())
-        );
+  switch (filter.field) {
+    case '{{groups}}': {
+      // todo: check other versions of the code
+      const value = (filter.value || []).filter((x) => x !== null);
+      switch (filter.operator) {
+        case 'eq': {
+          return isEqual(
+            groupIds.map((x) => x.toString()),
+            value.map((x) => x.toString())
+          );
+        }
+        case 'contains': {
+          return (
+            difference(
+              value.map((x) => x.toString()),
+              groupIds.map((x) => x.toString())
+            ).length === 0
+          );
+        }
+        default: {
+          return false;
+        }
       }
-      case 'contains': {
-        return (
-          difference(
-            value.map((x) => x.toString()),
-            groupIds.map((x) => x.toString())
-          ).length === 0
-        );
-      }
-      default: {
+    }
+    case '{{email}}': {
+      const value = user.username || '';
+      if (value) {
+        switch (filter.operator) {
+          case 'eq': {
+            return eq(value, String(filter.value));
+          }
+          case 'neq': {
+            return !eq(value, String(filter.value));
+          }
+          case 'contains': {
+            const regex = new RegExp(filter.value, 'i');
+            return regex.test(value);
+          }
+          case 'doesnotcontain': {
+            const regex = new RegExp(filter.value, 'i');
+            return !regex.test(value);
+          }
+          case 'startswith': {
+            return value.startsWith(filter.value);
+          }
+          case 'endswith': {
+            return value.endsWith(filter.value);
+          }
+          default:
+            return false;
+        }
+      } else {
         return false;
       }
     }
-  }
+    default: {
+      const attrs =
+        (config.get('user.attributes.list') as {
+          value: string;
+          text: string;
+        }[]) || [];
 
-  if (filter.field === '{{email}}') {
-    const value = user.username || '';
-    if (value) {
-      switch (filter.operator) {
-        case 'eq': {
-          return eq(value, String(filter.value));
+      const attributes = attrs.map((x) => ({
+        ...x,
+        field: `{{attributes.${x.value}}}`,
+      }));
+
+      const attribute = attributes.find((x) => x.field === filter.field);
+      if (attribute) {
+        switch (filter.operator) {
+          case 'eq': {
+            return isEqual(userAttr[attribute.value], filter.value);
+          }
+          default: {
+            return false;
+          }
         }
-        case 'neq': {
-          return !eq(value, String(filter.value));
-        }
-        case 'contains': {
-          const regex = new RegExp(filter.value, 'i');
-          return regex.test(value);
-        }
-        case 'doesnotcontain': {
-          const regex = new RegExp(filter.value, 'i');
-          return !regex.test(value);
-        }
-        case 'startswith': {
-          return value.startsWith(filter.value);
-        }
-        case 'endswith': {
-          return value.endsWith(filter.value);
-        }
-        default:
-          return false;
       }
-    } else {
+
       return false;
     }
   }
-
-  const attrs =
-    (config.get('user.attributes.list') as {
-      value: string;
-      text: string;
-    }[]) || [];
-
-  const attributes = attrs.map((x) => ({
-    ...x,
-    field: `{{attributes.${x.value}}}`,
-  }));
-
-  const attribute = attributes.find((x) => x.field === filter.field);
-  if (attribute) {
-    switch (filter.operator) {
-      case 'eq': {
-        return isEqual(userAttr[attribute.value], filter.value);
-      }
-      default: {
-        return false;
-      }
-    }
-  }
-
-  return false;
 };
 
 /**
@@ -119,6 +187,16 @@ export const checkIfRoleIsAssigned = (user: User, filter: any): boolean => {
  * @returns list of auto assigned roles
  */
 export const getAutoAssignedRoles = async (user: User): Promise<Role[]> => {
+  // First, try to get user info from Microsoft graph
+  if (user.accessToken) {
+    console.time('user');
+    const graphData = await getUserGraphInfo(user.accessToken);
+    if (graphData) {
+      user.graphData = graphData;
+    }
+    console.timeEnd('user');
+  }
+  // Check all roles with auto assignment rules set
   const roles = await Role.find({
     autoAssignment: { $exists: true, $ne: [] },
   }).populate({

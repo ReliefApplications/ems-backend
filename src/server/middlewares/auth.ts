@@ -32,7 +32,7 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
     url: config.get('auth.url') as string,
   };
   passport.use(
-    new KeycloackBearerStrategy(credentials, (token, done) => {
+    new KeycloackBearerStrategy(credentials, (req, token, done) => {
       // === USER ===
       if (token.name) {
         // Checks if user already exists in the DB
@@ -68,10 +68,10 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                 user
                   .save()
                   .then(() => {
-                    userAuthCallback(null, done, token, user);
+                    userAuthCallback(req, null, done, token, user);
                   })
                   .catch((err2) => {
-                    userAuthCallback(err2, done, token, user);
+                    userAuthCallback(req, err2, done, token, user);
                   });
               } else {
                 if (!user.firstName || !user.lastName) {
@@ -84,13 +84,13 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                   user
                     .save()
                     .then(() => {
-                      userAuthCallback(null, done, token, user);
+                      userAuthCallback(req, null, done, token, user);
                     })
                     .catch((err2) => {
-                      userAuthCallback(err2, done, token, user);
+                      userAuthCallback(req, err2, done, token, user);
                     });
                 } else {
-                  userAuthCallback(null, done, token, user);
+                  userAuthCallback(req, null, done, token, user);
                 }
               }
             } else {
@@ -107,10 +107,10 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
               user
                 .save()
                 .then(() => {
-                  userAuthCallback(null, done, token, user);
+                  userAuthCallback(req, null, done, token, user);
                 })
                 .catch((err2) => {
-                  userAuthCallback(err2, done, token, user);
+                  userAuthCallback(req, err2, done, token, user);
                 });
             }
           })
@@ -183,10 +183,10 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                   user
                     .save()
                     .then(() => {
-                      userAuthCallback(null, done, token, user);
+                      userAuthCallback(req, null, done, token, user);
                     })
                     .catch((err2) => {
-                      userAuthCallback(err2, done, token, user);
+                      userAuthCallback(req, err2, done, token, user);
                     });
                 });
               } else {
@@ -201,13 +201,13 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                     user
                       .save()
                       .then(() => {
-                        userAuthCallback(null, done, token, user);
+                        userAuthCallback(req, null, done, token, user);
                       })
                       .catch((err2) => {
-                        userAuthCallback(err2, done, token, user);
+                        userAuthCallback(req, err2, done, token, user);
                       });
                   } else {
-                    userAuthCallback(null, done, token, user);
+                    userAuthCallback(req, null, done, token, user);
                   }
                 });
               }
@@ -226,10 +226,10 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                 user
                   .save()
                   .then(() => {
-                    userAuthCallback(null, done, token, user);
+                    userAuthCallback(req, null, done, token, user);
                   })
                   .catch((err2) => {
-                    userAuthCallback(err2, done, token, user);
+                    userAuthCallback(req, err2, done, token, user);
                   });
               });
             }
