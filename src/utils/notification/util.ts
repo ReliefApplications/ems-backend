@@ -9,6 +9,20 @@ export const replaceUnderscores = (userValue: string): string => {
 };
 
 /**
+ * Converts String to Title Case
+ *
+ * @param str Input string to be converted
+ * @returns Titlecase string
+ */
+export const titleCase = (str: string): string => {
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+/**
  * Replaces dates of type Date with pretty string representation
  *
  * @param rowData data going into table, from DB
@@ -16,7 +30,17 @@ export const replaceUnderscores = (userValue: string): string => {
  */
 export const formatDates = (rowData: unknown): string => {
   if (rowData instanceof Date) {
-    return rowData.toDateString();
+    // Format the date as MM/DD/YY, hh:mm AM/PM
+    return rowData.toLocaleString('en-US', {
+      month: 'numeric',
+      day: 'numeric',
+      year: '2-digit',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'UTC',
+      timeZoneName: 'short',
+    });
   }
   if (!rowData) {
     return '';

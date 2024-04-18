@@ -1,5 +1,9 @@
 import { ProcessedDataset, TableStyle } from '@routes/notification';
-import { formatDates, replaceUnderscores } from '@utils/notification/util';
+import {
+  formatDates,
+  titleCase,
+  replaceUnderscores,
+} from '@utils/notification/util';
 import _ from 'lodash';
 
 /**
@@ -272,8 +276,8 @@ export const buildTable = (
     table += '<thead>';
     table += '<tr bgcolor="#00205c">';
     fieldSet.forEach((field) => {
-      table += `<th align="left" style="color: #fff; font-size: 14px; font-family: 'Roboto', Arial, sans-serif; padding-left: 10px">${replaceUnderscores(
-        `${field.name}`
+      table += `<th align="left" style="color: #fff; font-size: 14px; font-family: 'Roboto', Arial, sans-serif; padding-left: 10px">${titleCase(
+        replaceUnderscores(`${field.name}`)
       )}</th>`;
     });
 
