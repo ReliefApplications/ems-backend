@@ -59,8 +59,18 @@ module.exports = {
     password: 'REDIS_PASS',
   },
   commonServices: {
+    tokenEndpoint: 'COMMON_SERVICES_TOKEN_ENDPOINT',
     clientId: 'COMMON_SERVICES_CLIENT_ID',
     clientSecret: 'COMMON_SERVICES_CLIENT_SECRET',
     scope: 'COMMON_SERVICES_SCOPE',
+    api: {
+      clientId: 'COMMON_SERVICES_API_CLIENT_ID',
+      clientSecret: 'COMMON_SERVICES_API_CLIENT_SECRET',
+    },
+  },
+  microsoftGraph: {
+    tokenEndpoint: 'MICROSOFT_GRAPH_TOKEN_ENDPOINT',
+    clientId: 'MICROSOFT_GRAPH_CLIENT_ID',
+    clientSecret: 'MICROSOFT_GRAPH_CLIENT_SECRET',
   },
 };

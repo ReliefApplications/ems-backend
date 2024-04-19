@@ -26,7 +26,7 @@ export const getToken = async () => {
   const body = formBody.join('&');
   return (
     await axios({
-      url: 'https://login.microsoftonline.com/f610c0b7-bd24-4b39-810b-3dc280afb590/oauth2/v2.0/token',
+      url: config.get('commonServices.tokenEndpoint'),
       method: 'post',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -51,7 +51,7 @@ export const getAdmin0Polygons = async () => {
   if (!cacheData) {
     const token = await getToken();
     admin0s = await axios({
-      url: 'https://ems-safe-dev.who.int/csapi/api/graphql/',
+      url: 'https://ems-safe-dev.who.int/csapi/api/graphql/', //todo: remove hardcoded url
       method: 'post',
       headers: {
         Authorization: `Bearer ${token}`,
