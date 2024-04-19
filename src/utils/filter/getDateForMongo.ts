@@ -1,8 +1,8 @@
 import {
-  Placeholder,
   extractStringFromBrackets,
   REGEX_TODAY_PLUS,
   REGEX_TODAY_MINUS,
+  isUsingTodayPlaceholder,
 } from '../../const/placeholders';
 
 /**
@@ -13,38 +13,31 @@ import {
  */
 export const getDateForMongo = (
   value: any
-): { date: Date; startDate: Date; endDate: Date } => {
+): { startDate: Date; endDate: Date } => {
   // today's date
-  let date: Date;
   let startDate: Date;
-  let endDate: Date;
-  if (value === Placeholder.TODAY) {
-    date = new Date();
-    startDate = new Date(date);
-    endDate = new Date(date);
+  if (isUsingTodayPlaceholder(value)) {
+    startDate = new Date();
+    startDate.setHours(0, 0, 0, 0);
     // today + number of days
-  } else if (REGEX_TODAY_PLUS.test(value)) {
-    const difference = parseInt(extractStringFromBrackets(value).split('+')[1]);
-    date = new Date();
-    date.setDate(date.getDate() + difference);
-    // today - number of days
-  } else if (REGEX_TODAY_MINUS.test(value)) {
-    const difference = -parseInt(
-      extractStringFromBrackets(value).split('-')[1]
-    );
-    date = new Date();
-    date.setDate(date.getDate() + difference);
-    // classic date
+    if (REGEX_TODAY_PLUS.test(value)) {
+      const difference = parseInt(
+        extractStringFromBrackets(value).split('+')[1]
+      );
+      startDate.setDate(startDate.getDate() + difference);
+      // today - number of days
+    } else if (REGEX_TODAY_MINUS.test(value)) {
+      const difference = -parseInt(
+        extractStringFromBrackets(value).split('-')[1]
+      );
+      startDate.setDate(startDate.getDate() + difference);
+    } // classic date
   } else {
-    date = new Date(value);
+    startDate = new Date(value);
   }
-  startDate = new Date(date);
-  endDate = new Date(date);
-  startDate.setHours(0, 0, 0, 0);
-  endDate.setHours(23, 59, 59, 999);
-  return {
-    date,
-    startDate,
-    endDate,
-  };
+  const endDate = new Date(startDate);
+  // Should set endDate to the same day than startDate, at 23:59:59:999
+  endDate.setDate(startDate.getDate() + 1);
+  endDate.setMilliseconds(-1);
+  return { startDate, endDate };
 };
