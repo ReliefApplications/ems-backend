@@ -109,7 +109,7 @@ const buildMongoFilter = (
         )?.type || '';
 
       // If type is resource and refers to a nested field, get the type of the nested field
-      if (type === 'resource' && context.resourceFieldsById) {
+      if (type === 'resource' && context?.resourceFieldsById) {
         const resourceField = fields.find(
           (x) => x.name === filter.field.split('.')[0]
         );
