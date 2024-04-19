@@ -7,7 +7,7 @@ import {
   DATETIME_TYPES,
 } from '@const/fieldTypes';
 import { isNumber } from 'lodash';
-import { usesTodayOperator } from '@const/placeholders';
+import { isUsingTodayPlaceholder } from '@const/placeholders';
 
 /** The default fields */
 const DEFAULT_FIELDS = [
@@ -219,7 +219,7 @@ const buildMongoFilter = (
           case 'datetime':
           case 'datetime-local':
             //if we are using the {{today}} operator
-            if (usesTodayOperator(value)) {
+            if (isUsingTodayPlaceholder(value)) {
               ({ startDate: startDatetime, endDate: endDatetime } =
                 getDateForMongo(value));
             } else {

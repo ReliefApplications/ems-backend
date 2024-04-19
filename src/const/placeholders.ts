@@ -17,12 +17,12 @@ export const REGEX_TODAY_PLUS = new RegExp('{{today ?\\+ ?\\d+}}');
 export const REGEX_TODAY_MINUS = new RegExp('{{today ?\\- ?\\d+}}');
 
 /**
- * Tests whether value is using the today operator
+ * Tests whether value is using the {{today +-int}} placeholder
  *
  * @param value value to test
  * @returns true if using {{today}}
  */
-export const usesTodayOperator = (value: any) => {
+export const isUsingTodayPlaceholder = (value: any) => {
   return (
     value === Placeholder.TODAY ||
     REGEX_TODAY_MINUS.test(value) ||

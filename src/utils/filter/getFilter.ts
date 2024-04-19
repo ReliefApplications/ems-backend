@@ -6,7 +6,7 @@ import {
   DATE_TYPES,
   DATETIME_TYPES,
 } from '@const/fieldTypes';
-import { usesTodayOperator } from '@const/placeholders';
+import { isUsingTodayPlaceholder } from '@const/placeholders';
 
 /**
  * Transforms query filter into mongo filter.
@@ -58,7 +58,7 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
           case 'datetime':
           case 'datetime-local':
             //if we are using the {{today}} operator
-            if (usesTodayOperator(value)) {
+            if (isUsingTodayPlaceholder(value)) {
               ({ startDate: startDatetime, endDate: endDatetime } =
                 getDateForMongo(value));
             } else {

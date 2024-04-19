@@ -2,7 +2,7 @@ import {
   extractStringFromBrackets,
   REGEX_TODAY_PLUS,
   REGEX_TODAY_MINUS,
-  usesTodayOperator,
+  isUsingTodayPlaceholder,
 } from '../../const/placeholders';
 
 /**
@@ -16,7 +16,7 @@ export const getDateForMongo = (
 ): { startDate: Date; endDate: Date } => {
   // today's date
   let startDate: Date;
-  if (usesTodayOperator(value)) {
+  if (isUsingTodayPlaceholder(value)) {
     startDate = new Date();
     startDate.setHours(0, 0, 0, 0);
     // today + number of days
@@ -36,6 +36,7 @@ export const getDateForMongo = (
     startDate = new Date(value);
   }
   const endDate = new Date(startDate);
+  // Should set endDate to the same day than startDate, at 23:59:59:999
   endDate.setDate(startDate.getDate() + 1);
   endDate.setMilliseconds(-1);
   return { startDate, endDate };
