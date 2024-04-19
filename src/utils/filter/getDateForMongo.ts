@@ -1,8 +1,8 @@
 import {
-  Placeholder,
   extractStringFromBrackets,
   REGEX_TODAY_PLUS,
   REGEX_TODAY_MINUS,
+  usesTodayOperator,
 } from '../../const/placeholders';
 
 /**
@@ -16,21 +16,22 @@ export const getDateForMongo = (
 ): { startDate: Date; endDate: Date } => {
   // today's date
   let startDate: Date;
-  if (value === Placeholder.TODAY) {
+  if (usesTodayOperator(value)) {
     startDate = new Date();
+    startDate.setHours(0, 0, 0, 0);
     // today + number of days
-  } else if (REGEX_TODAY_PLUS.test(value)) {
-    const difference = parseInt(extractStringFromBrackets(value).split('+')[1]);
-    startDate = new Date();
-    startDate.setDate(startDate.getDate() + difference);
-    // today - number of days
-  } else if (REGEX_TODAY_MINUS.test(value)) {
-    const difference = -parseInt(
-      extractStringFromBrackets(value).split('-')[1]
-    );
-    startDate = new Date();
-    startDate.setDate(startDate.getDate() + difference);
-    // classic date
+    if (REGEX_TODAY_PLUS.test(value)) {
+      const difference = parseInt(
+        extractStringFromBrackets(value).split('+')[1]
+      );
+      startDate.setDate(startDate.getDate() + difference);
+      // today - number of days
+    } else if (REGEX_TODAY_MINUS.test(value)) {
+      const difference = -parseInt(
+        extractStringFromBrackets(value).split('-')[1]
+      );
+      startDate.setDate(startDate.getDate() + difference);
+    } // classic date
   } else {
     startDate = new Date(value);
   }
