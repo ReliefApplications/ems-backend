@@ -63,10 +63,6 @@ module.exports = {
     clientId: 'COMMON_SERVICES_CLIENT_ID',
     clientSecret: 'COMMON_SERVICES_CLIENT_SECRET',
     scope: 'COMMON_SERVICES_SCOPE',
-    api: {
-      clientId: 'COMMON_SERVICES_API_CLIENT_ID',
-      clientSecret: 'COMMON_SERVICES_API_CLIENT_SECRET',
-    },
   },
   microsoftGraph: {
     tokenEndpoint: 'MICROSOFT_GRAPH_TOKEN_ENDPOINT',
