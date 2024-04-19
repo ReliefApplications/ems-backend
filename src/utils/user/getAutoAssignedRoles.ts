@@ -1,32 +1,26 @@
 import { difference, eq, get, isEqual } from 'lodash';
-import { Role, User, userMicrosoftGraph } from '@models';
+import { Role, User, IUserMicrosoftGraph } from '@models';
 import config from 'config';
 import axios from 'axios';
 import { logger } from '@services/logger.service';
 
 /**
  * Generate a new access token for Microsoft graph, on behalf of the user.
- *
- * @param token access token
  */
-const getGraphAccessToken = async (token: string) => {
-  const url =
-    'https://login.microsoftonline.com/f610c0b7-bd24-4b39-810b-3dc280afb590/oauth2/v2.0/token';
+const getGraphAccessToken = async () => {
   const form = new FormData();
   const formAsJson = {
-    grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-    assertion: token,
-    client_id: '',
-    requested_token_use: 'on_behalf_of',
-    client_secret: '',
-    scope: 'user.read',
+    grant_type: 'client_credentials',
+    client_id: config.get<string>('microsoftGraph.clientId') || '',
+    client_secret: config.get<string>('microsoftGraph.clientSecret') || '',
+    scope: 'https://graph.microsoft.com/.default',
   };
   Object.entries(formAsJson).forEach(([key, value]) => {
     form.append(key, value);
   });
 
   return axios({
-    url,
+    url: config.get('microsoftGraph.tokenEndpoint'),
     method: 'post',
     headers: {
       'Content-Type': 'multipart/form-data',
@@ -44,15 +38,14 @@ const getGraphAccessToken = async (token: string) => {
 /**
  * Get user graph info from token
  *
- * @param token access token
+ * @param user current user
  */
-const getUserGraphInfo = async (token: string) => {
-  console.timeLog('user');
-  const graphToken = await getGraphAccessToken(token);
-  console.timeLog('user');
-  if (graphToken) {
+const getUserGraphInfo = async (user: User) => {
+  const graphToken = await getGraphAccessToken();
+  const oid = user.oid;
+  if (graphToken && oid) {
     // Select url to fetch specific user info
-    const url = 'https://graph.microsoft.com/v1.0/me?$select=userType';
+    const url = `https://graph.microsoft.com/v1.0/users/${oid}?$select=userType`;
     return axios({
       url,
       method: 'get',
@@ -61,7 +54,7 @@ const getUserGraphInfo = async (token: string) => {
       },
     })
       .then(({ data }) => {
-        return data as userMicrosoftGraph;
+        return data as IUserMicrosoftGraph;
       })
       .catch((err) => {
         logger.error(err.message, { stack: err.stack });
@@ -151,6 +144,21 @@ export const checkIfRoleIsAssigned = (user: User, filter: any): boolean => {
         return false;
       }
     }
+    case '{{userType}}': {
+      const value = get(user, 'graphData.userType') || '';
+      if (value) {
+        switch (filter.operator) {
+          case 'eq': {
+            return eq(value, String(filter.value));
+          }
+          case 'neq': {
+            return !eq(value, String(filter.value));
+          }
+        }
+      } else {
+        return false;
+      }
+    }
     default: {
       const attrs =
         (config.get('user.attributes.list') as {
@@ -188,13 +196,11 @@ export const checkIfRoleIsAssigned = (user: User, filter: any): boolean => {
  */
 export const getAutoAssignedRoles = async (user: User): Promise<Role[]> => {
   // First, try to get user info from Microsoft graph
-  if (user.accessToken) {
-    console.time('user');
-    const graphData = await getUserGraphInfo(user.accessToken);
+  if (user.oid && config.get('user.useMicrosoftGraph')) {
+    const graphData = await getUserGraphInfo(user);
     if (graphData) {
       user.graphData = graphData;
     }
-    console.timeEnd('user');
   }
   // Check all roles with auto assignment rules set
   const roles = await Role.find({

@@ -109,7 +109,6 @@ export const updateUser = async (user: User, req: any): Promise<boolean> => {
  * Callback executed after authentication of user.
  * Auto-assigned roles are added at this stage.
  *
- * @param req express request
  * @param error process error
  * @param done done callback of authentication process
  * @param token current token
@@ -117,7 +116,6 @@ export const updateUser = async (user: User, req: any): Promise<boolean> => {
  * @returns authentication process callback
  */
 export const userAuthCallback = async (
-  req: any, //todo: find better type
   error: any,
   done: any,
   token: any,
@@ -144,11 +142,6 @@ export const userAuthCallback = async (
       token
     );
   } else {
-    // Get access token from headers ( not always set )
-    const accessToken = req.headers.accesstoken;
-    if (accessToken) {
-      user.accessToken = accessToken;
-    }
     const autoAssignedRoles = await getAutoAssignedRoles(user);
     cache.set(
       cacheKey,

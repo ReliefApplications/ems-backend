@@ -169,6 +169,8 @@ module.exports = {
        */
       list: [],
     },
+    // Should use or not microsoft graph
+    useMicrosoftGraph: false,
   },
   logger: {
     keep: true,

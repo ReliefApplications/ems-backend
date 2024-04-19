@@ -43,7 +43,7 @@ const userSchema = new Schema(
 /**
  * Interface of user data provided by Microsoft Graph API
  */
-export interface userMicrosoftGraph {
+export interface IUserMicrosoftGraph {
   userType: 'Guest' | 'Member';
 }
 
@@ -64,7 +64,7 @@ export interface User extends Document {
   modifiedAt?: Date;
   deleteAt?: Date;
   // For internal logic only
-  graphData?: userMicrosoftGraph;
+  graphData?: IUserMicrosoftGraph;
   accessToken?: string;
 }
 
