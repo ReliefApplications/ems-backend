@@ -30,8 +30,7 @@ router.get('/application/:id', async (req, res) => {
       const blobName = application.cssFilename;
       const path = `files/${sanitize(blobName)}`;
       await downloadFile('applications', blobName, path);
-      res.set('Content-Type', 'text/plain');
-      res.sendFile(path, { root: '.' }, () => {
+      res.download(path, () => {
         fs.unlink(path, () => {
           logger.info('file deleted');
         });
