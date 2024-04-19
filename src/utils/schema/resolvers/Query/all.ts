@@ -222,7 +222,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
   async (
     parent,
     {
-      sort,
+      sort = [],
       first = DEFAULT_FIRST,
       skip = 0,
       afterCursor,
