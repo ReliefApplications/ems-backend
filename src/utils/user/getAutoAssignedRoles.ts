@@ -197,8 +197,10 @@ export const checkIfRoleIsAssigned = (user: User, filter: any): boolean => {
 export const getAutoAssignedRoles = async (user: User): Promise<Role[]> => {
   // First, try to get user info from Microsoft graph
   if (user.oid && config.get('user.useMicrosoftGraph')) {
+    console.log('is using mg');
     const graphData = await getUserGraphInfo(user);
     if (graphData) {
+      console.log('it worked');
       user.graphData = graphData;
     }
   }
@@ -212,6 +214,7 @@ export const getAutoAssignedRoles = async (user: User): Promise<Role[]> => {
   return roles.reduce((arr, role) => {
     if (role.autoAssignment.some((x) => checkIfRoleIsAssigned(user, x))) {
       arr.push(role);
+      console.log(role);
     }
     return arr;
   }, []);
