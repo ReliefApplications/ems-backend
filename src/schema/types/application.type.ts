@@ -27,7 +27,7 @@ import {
   TemplateType,
   DistributionListType,
   encodeCursor,
-  CustomNotificationConnectionType,
+  CustomNotificationConnectionConnectionType,
   UserConnectionType,
 } from '.';
 import { ChannelType } from './channel.type';
@@ -510,7 +510,7 @@ export const ApplicationType = new GraphQLObjectType({
       type: new GraphQLList(DistributionListType),
     },
     customNotifications: {
-      type: CustomNotificationConnectionType,
+      type: CustomNotificationConnectionConnectionType,
       args: {
         first: { type: GraphQLInt },
         afterCursor: { type: GraphQLID },
