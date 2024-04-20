@@ -17,6 +17,10 @@ export const customTemplateSchema = new Schema(
       type: Number,
       default: 0,
     },
+    createdBy: {
+      name: String,
+      email: String,
+    },
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
@@ -26,7 +30,7 @@ export const customTemplateSchema = new Schema(
 /**
  *
  */
-interface CustomTemplate extends Document {
+interface ICustomTemplate extends Document {
   kind: 'customTemplate';
   subject: string;
   header?: any;
@@ -41,6 +45,6 @@ interface CustomTemplate extends Document {
  */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CustomTemplate = mongoose.model<
-  CustomTemplate,
-  AccessibleRecordModel<CustomTemplate>
+  ICustomTemplate,
+  AccessibleRecordModel<ICustomTemplate>
 >('customTemplate', customTemplateSchema);
