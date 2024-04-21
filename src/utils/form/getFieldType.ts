@@ -18,6 +18,7 @@ export const getFieldType = async (question: {
         case 'text':
           return 'text';
         case 'number':
+        case 'rating':
           return 'numeric';
         case 'color':
           return 'color';
@@ -51,6 +52,7 @@ export const getFieldType = async (question: {
         case 'percent':
           return 'decimal';
         case 'number':
+        case 'rating':
           return 'numeric';
         default:
           return 'text';
