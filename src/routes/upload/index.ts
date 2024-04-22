@@ -131,7 +131,9 @@ async function insertRecords(
       string,
       { ids: unknown[]; fields: any[] }
     >();
-    const resourcePerColumn = columns.map((column, idx) => {
+    // sort columns by index
+    const sortedColumns = columns.sort((a, b) => a.index - b.index);
+    const resourcePerColumn = sortedColumns.map((column) => {
       // Extract all the question info from the form structure
       const question = form.fields.find((field) => field.name === column.name);
 
@@ -144,7 +146,7 @@ async function insertRecords(
 
         // The ids are the values on the rows of the column that corresponds to resource questions
         const ids = worksheet
-          .getColumn(idx + 1)
+          .getColumn(column.index)
           ?.values.map((x) => x.valueOf());
 
         oldObj.fields.push(question);
@@ -165,7 +167,10 @@ async function insertRecords(
 
     const idsMap = new Map<string, string>();
     const recordsPromises: any[] = [];
-    linkedResources.forEach((resource) => {
+    const resourcesIds = linkedResources.map((lr: any) => {
+      return lr._id;
+    });
+    linkedResources.forEach((resource) => { 
       const colImportField = resource.importField;
       if (!colImportField) {
         return;
@@ -174,7 +179,7 @@ async function insertRecords(
       // If using an import field, we map the ids to the new ids, which are the objectIds
       const { ids } = resourceQuestionsMap.get(resource._id.toString());
       const recordsFromIds = Record.find({
-        resource: resource._id,
+        resource: { $in: resourcesIds },
         [`data.${colImportField}`]: { $in: ids.filter(Boolean) },
       }).then((records) => {
         records.forEach((record) => {
