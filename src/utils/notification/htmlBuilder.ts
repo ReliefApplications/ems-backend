@@ -289,6 +289,8 @@ export const buildTable = (
       // Create a new cell for each field in the record
       // eslint-disable-next-line @typescript-eslint/no-loop-func
       fieldSet.forEach((field) => {
+        console.log('RECORD');
+        console.log(record);
         if (field.parentName) {
           if (
             field.childName === 'incrementalId' ||
@@ -333,9 +335,18 @@ export const buildTable = (
         ) {
           table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
           ${formatDates(_.get(record, field.name))}</td>`;
+        } else if (field.type === 'geospatial') {
+          table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
+          ${formatDates(
+            record.data[field.name].properties.countryName
+          )} (${formatDates(
+            record.data[field.name].properties.coordinates.lat
+          )}, ${formatDates(
+            record.data[field.name].properties.coordinates.lng
+          )}</td>`;
         } else {
           table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
-          ${formatDates(record.data[field.name])}</td>`;
+          ${formatDates(record.data[field.name])})</td>`;
         }
       });
       table += '</tr>';
