@@ -79,6 +79,7 @@ export const extractFilterFields = (filter: any): string[] => {
   return fields;
 };
 
+let searchStageUsed = false;
 /**
  * Transforms query filter into mongo filter.
  *

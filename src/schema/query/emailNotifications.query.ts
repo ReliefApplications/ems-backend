@@ -34,6 +34,9 @@ const SORT_FIELDS = [
   },
 ];
 
+/**
+ * Resolves the email notifications flow.
+ */
 export default {
   type: EmailNotificationConnectionType,
   args: {
