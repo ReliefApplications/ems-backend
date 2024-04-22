@@ -226,6 +226,33 @@ const procPipelineStep = (pipelineStep, data, sourceFields) => {
       data = groupBy(data, (item) =>
         keysToGroupBy.map((key) => get(item, key))
       );
+      // Mapping between new group keys and data path
+      const mapping: Record<string, string> = {};
+      for (const key of keysToGroupBy) {
+        // Check if the key contains a '.'
+        if (key.includes('.')) {
+          // Split the key by '.' and extract the last part
+          const newKey = key.split('.').pop();
+          mapping[newKey] = key;
+        } else {
+          mapping[key] = key;
+        }
+      }
+
+      /**
+       * Transform object, using mapping object
+       *
+       * @param obj Object to transform
+       * @returns Transformed object
+       */
+      const transformObject = (obj: Record<string, any>) => {
+        const newObj: Record<string, any> = {};
+        for (const [key, path] of Object.entries(mapping)) {
+          newObj[key] = get(obj, path);
+        }
+        return newObj;
+      };
+
       for (const key in data) {
         let supplementaryFields: any;
         for (const operator of operators) {
@@ -245,7 +272,7 @@ const procPipelineStep = (pipelineStep, data, sourceFields) => {
             data[key],
             operators.map((operator) => operator.operator)
           ),
-          ...pick(data[key].initialData[0], keysToGroupBy),
+          ...transformObject(data[key].initialData[0]),
         });
       }
       return dataToKeep;
