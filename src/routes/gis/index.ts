@@ -16,7 +16,6 @@ import turf, { Feature, booleanPointInPolygon } from '@turf/turf';
 import dataSources, { CustomAPI } from '@server/apollo/dataSources';
 import { getAdmin0Polygons } from '@utils/gis/getCountryPolygons';
 import filterReferenceData from '@utils/referenceData/referenceDataFilter.util';
-import { getReferenceDataName } from '@utils/referenceData/getReferenceDataName.util';
 
 /**
  * Endpoint for custom feature layers
@@ -264,14 +263,15 @@ router.post('/feature', async (req, res) => {
         .send(i18next.t('routes.gis.feature.errors.missingPolygonGeoField'));
     }
 
+    const mapping = {
+      geoField,
+      longitudeField,
+      latitudeField,
+      adminField,
+    };
+
     // Fetch resource to populate layer
     if (get(req, 'body.resource')) {
-      const mapping = {
-        geoField,
-        longitudeField,
-        latitudeField,
-        adminField,
-      };
       let id: string;
       if (get(req, 'body.aggregation')) {
         id = get(req, 'body.aggregation') as string;
@@ -351,18 +351,6 @@ router.post('/feature', async (req, res) => {
       const referenceData = await ReferenceData.findById(
         new mongoose.Types.ObjectId(get(req, 'body.refData') as string)
       );
-      const mapping = {
-        geoField: getReferenceDataName(geoField as string, referenceData),
-        longitudeField: getReferenceDataName(
-          longitudeField as string,
-          referenceData
-        ),
-        latitudeField: getReferenceDataName(
-          latitudeField as string,
-          referenceData
-        ),
-        adminField,
-      };
       if (referenceData) {
         if (get(req, 'body.aggregation')) {
           const aggregation = get(req, 'body.aggregation') as string;
