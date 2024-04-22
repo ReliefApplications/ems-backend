@@ -170,7 +170,7 @@ async function insertRecords(
     const resourcesIds = linkedResources.map((lr: any) => {
       return lr._id;
     });
-    linkedResources.forEach((resource) => { 
+    linkedResources.forEach((resource) => {
       const colImportField = resource.importField;
       if (!colImportField) {
         return;
