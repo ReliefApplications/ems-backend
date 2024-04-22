@@ -29,8 +29,24 @@ export const titleCase = (str: string): string => {
  * @returns mutated date
  */
 export const formatDates = (rowData: unknown): string => {
-  if (rowData instanceof Date) {
-    // Format the date as MM/DD/YY, hh:mm AM/PM
+  if (typeof rowData === 'string') {
+    // Create the string in date format
+    const date = new Date(rowData);
+    if (!isNaN(date.getTime())) {
+      // Format the date as MM/DD/YY, hh:mm AM/PM UTC
+      return date.toLocaleString('en-US', {
+        month: 'numeric',
+        day: 'numeric',
+        year: '2-digit',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: 'UTC',
+        timeZoneName: 'short',
+      });
+    }
+  } else if (rowData instanceof Date) {
+    // Format the date as MM/DD/YY, hh:mm AM/PM UTC
     return rowData.toLocaleString('en-US', {
       month: 'numeric',
       day: 'numeric',
