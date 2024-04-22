@@ -234,23 +234,23 @@ const gqlQuery = (
  * @param res http response
  * @returns GeoJSON feature collection mutations
  */
-router.post('/feature', async (req, res) => {
+router.get('/feature', async (req, res) => {
   try {
     const featureCollection = {
       type: 'FeatureCollection',
       features: [],
     };
-    const latitudeField = get(req, 'body.latitudeField');
-    const longitudeField = get(req, 'body.longitudeField');
-    const geoField = get(req, 'body.geoField');
-    const adminField = get(req, 'body.adminField');
-    const layerType = (get(req, 'body.type') ||
+    const latitudeField = get(req, 'query.latitudeField');
+    const longitudeField = get(req, 'query.longitudeField');
+    const geoField = get(req, 'query.geoField');
+    const adminField = get(req, 'query.adminField');
+    const layerType = (get(req, 'query.type') ||
       GeometryType.POINT) as GeometryType;
-    const contextFilters = JSON.parse(get(req, 'body.contextFilters', null));
+    const contextFilters = JSON.parse(get(req, 'query.contextFilters', null));
     const graphQLVariables = JSON.parse(
-      get(req, 'body.graphQLVariables', null)
+      get(req, 'query.graphQLVariables', null)
     );
-    const at = get(req, 'body.at') as string | undefined;
+    const at = get(req, 'query.at') as string | undefined;
     if (!geoField && !(latitudeField && longitudeField)) {
       return res
         .status(400)
@@ -265,7 +265,7 @@ router.post('/feature', async (req, res) => {
     }
 
     // Fetch resource to populate layer
-    if (get(req, 'body.resource')) {
+    if (get(req, 'query.resource')) {
       const mapping = {
         geoField,
         longitudeField,
@@ -273,10 +273,10 @@ router.post('/feature', async (req, res) => {
         adminField,
       };
       let id: string;
-      if (get(req, 'body.aggregation')) {
-        id = get(req, 'body.aggregation') as string;
-      } else if (get(req, 'body.layout')) {
-        id = get(req, 'body.layout') as string;
+      if (get(req, 'query.aggregation')) {
+        id = get(req, 'query.aggregation') as string;
+      } else if (get(req, 'query.layout')) {
+        id = get(req, 'query.layout') as string;
       } else {
         return res.status(404).send(i18next.t('common.errors.dataNotFound'));
       }
@@ -346,10 +346,10 @@ router.post('/feature', async (req, res) => {
       ]).catch((err) => {
         throw new Error(err);
       });
-    } else if (get(req, 'body.refData')) {
+    } else if (get(req, 'query.refData')) {
       // Else, fetch reference data to populate layer
       const referenceData = await ReferenceData.findById(
-        new mongoose.Types.ObjectId(get(req, 'body.refData') as string)
+        new mongoose.Types.ObjectId(get(req, 'query.refData') as string)
       );
       const mapping = {
         geoField: getReferenceDataName(geoField as string, referenceData),
@@ -364,8 +364,8 @@ router.post('/feature', async (req, res) => {
         adminField,
       };
       if (referenceData) {
-        if (get(req, 'body.aggregation')) {
-          const aggregation = get(req, 'body.aggregation') as string;
+        if (get(req, 'query.aggregation')) {
+          const aggregation = get(req, 'query.aggregation') as string;
           const query = `query referenceDataAggregation(
             $referenceData: ID!
             $aggregation: ID!
