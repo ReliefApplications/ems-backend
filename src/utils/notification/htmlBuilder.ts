@@ -289,8 +289,6 @@ export const buildTable = (
       // Create a new cell for each field in the record
       // eslint-disable-next-line @typescript-eslint/no-loop-func
       fieldSet.forEach((field) => {
-        console.log('RECORD');
-        console.log(record);
         if (field.parentName) {
           if (
             field.childName === 'incrementalId' ||
