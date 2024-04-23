@@ -189,7 +189,7 @@ export const replaceHeader = (header: {
         // Remove </p> tag from the end of the string
         const text = ptag.replace('</p>', '').trim();
         return /*html*/ `
-        <td style="color: #fff; font-size: 16px; font-family: 'Roboto', Arial, sans-serif; line-height: 20px; text-align: center;">${text}</td>
+        <td style="font-size: 16px; font-family: 'Roboto', Arial, sans-serif; line-height: 20px; text-align: center;">${text}</td>
       `;
       })
       .join('</tr><tr>'); // Join each table cell and add a table row between them

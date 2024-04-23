@@ -287,9 +287,10 @@ router.post('/send-email/:configId', async (req, res) => {
       const headerElement = replaceHeader(config.emailLayout.header);
       const backgroundColor =
         config.emailLayout.header.headerBackgroundColor || '#00205c';
+      const textColor = config.emailLayout.header.headerTextColor || '#ffffff';
       mainTableElement.appendChild(
         parse(
-          `<tr bgcolor = ${backgroundColor}><td style="font-size: 13px; font-family: Helvetica, Arial, sans-serif;">${headerElement}</td></tr>`
+          `<tr bgcolor = ${backgroundColor} color = ${textColor}><td style="font-size: 13px; font-family: Helvetica, Arial, sans-serif; color: ${textColor};">${headerElement}</td></tr>`
         )
       );
     }
@@ -306,8 +307,11 @@ router.post('/send-email/:configId', async (req, res) => {
       );
       const backgroundColor =
         config.emailLayout.body.bodyBackgroundColor || '#ffffff';
+      const textColor = config.emailLayout.body.bodyTextColor || '#000000';
       mainTableElement.appendChild(
-        parse(`<tr bgcolor = ${backgroundColor}><td>${datasetsHtml}</td></tr>`)
+        parse(
+          `<tr bgcolor = ${backgroundColor} color = ${textColor}><td style="color:${textColor}">${datasetsHtml}</td></tr>`
+        )
       );
     }
 
@@ -315,9 +319,10 @@ router.post('/send-email/:configId', async (req, res) => {
       const footerElement = replaceFooter(config.emailLayout.footer);
       const backgroundColor =
         config.emailLayout.footer.footerBackgroundColor || '#ffffff';
+      const textColor = config.emailLayout.footer.footerTextColor || '#000000';
       mainTableElement.appendChild(
         parse(
-          `<tr bgcolor= ${backgroundColor}><td style="font-size: 13px; font-family: Helvetica, Arial, sans-serif;">${footerElement}</td></tr>`
+          `<tr bgcolor= ${backgroundColor}><td style="font-size: 13px; font-family: Helvetica, Arial, sans-serif; color: ${textColor};">${footerElement}</td></tr>`
         )
       );
     }
