@@ -7,6 +7,7 @@ import {
   DATETIME_TYPES,
 } from '@const/fieldTypes';
 import { isNumber } from 'lodash';
+import { isUsingTodayPlaceholder } from '@const/placeholders';
 
 /** The default fields */
 const DEFAULT_FIELDS = [
@@ -207,32 +208,29 @@ const buildMongoFilter = (
         // const field = fields.find(x => x.name === filter.field);
         let value = filter.value;
         let intValue: number;
-        let startDate: Date;
         let endDate: Date;
         let startDatetime: Date;
         let endDatetime: Date;
-        let dateForFilter: any;
         switch (type) {
           case 'date':
-            dateForFilter = getDateForMongo(value);
             // startDate represents the beginning of a day
-            startDate = new Date(value);
-            // endDate represents the last moment of the day after startDate
-            endDate = new Date(startDate);
-            endDate.setDate(startDate.getDate() + 1);
-            endDate.setMilliseconds(-1);
-            // you end up with a date range covering exactly the day selected
-            value = dateForFilter.date;
+            ({ startDate: value, endDate } = getDateForMongo(value));
             break;
           case 'datetime':
           case 'datetime-local':
             if (filter.operator !== 'inthelast') {
-              // startDatetime contains the beginning of the minute
-              startDatetime = getTimeForMongo(value);
-              // endDatetime contains the end of the minute (last second, last ms)
-              endDatetime = new Date(startDatetime.getTime() + 59999);
-              // we end up with a date range covering exactly the minute selected,
-              // regardless of the saved seconds and ms
+              //if we are using the {{today}} operator
+              if (isUsingTodayPlaceholder(value)) {
+                ({ startDate: startDatetime, endDate: endDatetime } =
+                  getDateForMongo(value));
+              } else {
+                // startDatetime contains the beginning of the minute
+                startDatetime = getTimeForMongo(value);
+                // endDatetime contains the end of the minute (last second, last ms)
+                endDatetime = new Date(startDatetime.getTime() + 59999);
+                // we end up with a date range covering exactly the minute selected,
+                // regardless of the saved seconds and ms
+              }
             }
             break;
 
@@ -277,7 +275,7 @@ const buildMongoFilter = (
               };
             } else {
               if (DATE_TYPES.includes(type)) {
-                return { [fieldName]: { $gte: startDate, $lte: endDate } };
+                return { [fieldName]: { $gte: value, $lte: endDate } };
               }
               if (isNaN(intValue)) {
                 return { [fieldName]: { $eq: value } };
@@ -308,7 +306,7 @@ const buildMongoFilter = (
               };
             } else if (DATE_TYPES.includes(type)) {
               return {
-                [fieldName]: { $not: { $gte: startDate, $lte: endDate } },
+                [fieldName]: { $not: { $gte: value, $lte: endDate } },
               };
             } else {
               if (isNaN(intValue)) {
@@ -336,7 +334,7 @@ const buildMongoFilter = (
           }
           case 'lt': {
             if (DATE_TYPES.includes(type)) {
-              return { [fieldName]: { $lt: startDate } };
+              return { [fieldName]: { $lt: value } };
             } else if (DATETIME_TYPES.includes(type)) {
               return { [fieldName]: { $lt: startDatetime } };
             } else if (isNaN(intValue)) {
@@ -384,7 +382,7 @@ const buildMongoFilter = (
           }
           case 'gte': {
             if (DATE_TYPES.includes(type)) {
-              return { [fieldName]: { $gte: startDate } };
+              return { [fieldName]: { $gte: value } };
             } else if (DATETIME_TYPES.includes(type)) {
               return { [fieldName]: { $gte: startDatetime } };
             } else if (isNaN(intValue)) {

@@ -19,5 +19,6 @@ module.exports = {
     attributes: {
       local: true,
     },
+    useMicrosoftGraph: true,
   },
 };

@@ -1,6 +1,6 @@
 /* eslint-disable jsdoc/require-jsdoc */
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { server, email } = require('./who');
+const { server, email, user } = require('./who');
 
 /**
  * Configuration for UAT.
@@ -60,5 +60,6 @@ module.exports = {
         },
       ],
     },
+    useMicrosoftGraph: user.useMicrosoftGraph,
   },
 };
