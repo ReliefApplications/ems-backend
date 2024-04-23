@@ -3,6 +3,7 @@ import {
   formatDates,
   titleCase,
   replaceUnderscores,
+  replaceDateMacro,
 } from '@utils/notification/util';
 import _ from 'lodash';
 
@@ -37,35 +38,23 @@ export const replaceSubject = (subject: string, records: any[]): string => {
 
     for (const match of matches) {
       if (records[0].data[match[1]]) {
-        subject = subject.replace(match[0], records[0].data[match[1]]);
+        subject = subject.replace(
+          match[0],
+          formatDates(records[0].data[match[1]])
+        );
       }
       if (records[0][match[1]]) {
         // For metafields (createdAt, modifiedAt)
         if (records[0][match[1]] instanceof Date) {
           subject = subject.replace(
             match[0],
-            (records[0][match[1]] as Date).toDateString()
+            formatDates(records[0][match[1]])
           );
         }
       }
     }
 
-    if (subject.includes('{{now.time}}')) {
-      const nowToString = new Date().toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-      subject = subject.replace('{{now.time}}', nowToString);
-    }
-    if (subject.includes('{{now.datetime}}')) {
-      const nowToString = new Date().toLocaleString();
-      subject = subject.replace('{{now.datetime}}', nowToString);
-    }
-
-    if (subject.includes('{{today.date}}')) {
-      const todayToString = new Date().toDateString();
-      subject = subject.replace('{{today.date}}', todayToString);
-    }
+    subject = replaceDateMacro(subject);
   }
   return subject;
 };
@@ -158,30 +147,7 @@ export const replaceHeader = (header: {
       );
     }
 
-    if (header.headerHtml.includes('{{now.time}}')) {
-      const nowToString = new Date().toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-      header.headerHtml = header.headerHtml.replace(
-        '{{now.time}}',
-        nowToString
-      );
-    }
-    if (header.headerHtml.includes('{{now.datetime}}')) {
-      const nowToString = new Date().toLocaleString();
-      header.headerHtml = header.headerHtml.replace(
-        '{{now.datetime}}',
-        nowToString
-      );
-    }
-    if (header.headerHtml.includes('{{today.date}}')) {
-      const todayToString = new Date().toDateString();
-      header.headerHtml = header.headerHtml.replace(
-        '{{today.date}}',
-        todayToString
-      );
-    }
+    header.headerHtml = replaceDateMacro(header.headerHtml);
 
     const headerPTags = header.headerHtml.split('<p>').filter(Boolean);
     const headerText = headerPTags
@@ -425,30 +391,8 @@ export const replaceFooter = (footer: {
   }
 
   if (footer.footerHtml) {
-    if (footer.footerHtml.includes('{{now.time}}')) {
-      const nowToString = new Date().toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-      footer.footerHtml = footer.footerHtml.replace(
-        '{{now.time}}',
-        nowToString
-      );
-    }
-    if (footer.footerHtml.includes('{{now.datetime}}')) {
-      const nowToString = new Date().toLocaleString();
-      footer.footerHtml = footer.footerHtml.replace(
-        '{{now.datetime}}',
-        nowToString
-      );
-    }
-    if (footer.footerHtml.includes('{{today.date}}')) {
-      const todayToString = new Date().toDateString();
-      footer.footerHtml = footer.footerHtml.replace(
-        '{{today.date}}',
-        todayToString
-      );
-    }
+    footer.footerHtml = replaceDateMacro(footer.footerHtml);
+
     const footerPTags = footer.footerHtml.split('<p>').filter(Boolean);
     const footerText = footerPTags
       .map((ptag) => {

@@ -63,3 +63,47 @@ export const formatDates = (rowData: unknown): string => {
   }
   return rowData as string;
 };
+
+/**
+ * Replaces datetime macros in email template with datetimes
+ *
+ * @param textElement Email template section with date macros to replace
+ * @returns Mutated text element with datetime macros replaced
+ */
+export const replaceDateMacro = (textElement: string): string => {
+  if (textElement) {
+    if (textElement.includes('{{now.time}}')) {
+      const nowToString = new Date().toLocaleTimeString('en-US', {
+        timeZone: 'UTC',
+        timeZoneName: 'short',
+        hour: 'numeric',
+        minute: '2-digit',
+      });
+      textElement = textElement.replace('{{now.time}}', nowToString);
+    }
+    if (textElement.includes('{{now.datetime}}')) {
+      const nowToString = new Date().toLocaleString('en-US', {
+        timeZone: 'UTC',
+        timeZoneName: 'short',
+        month: 'numeric',
+        day: 'numeric',
+        year: '2-digit',
+        hour: 'numeric',
+        minute: '2-digit',
+      });
+      textElement = textElement.replace('{{now.datetime}}', nowToString);
+    }
+    if (textElement.includes('{{today.date}}')) {
+      const todayToString = new Date().toLocaleDateString('en-US', {
+        timeZone: 'UTC',
+        timeZoneName: 'short',
+        month: 'numeric',
+        day: 'numeric',
+        year: '2-digit',
+      });
+      textElement = textElement.replace('{{today.date}}', todayToString);
+    }
+  }
+
+  return textElement;
+};
