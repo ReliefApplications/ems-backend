@@ -333,8 +333,8 @@ router.post('/send-email/:configId', async (req, res) => {
 
     // TODO: Phase 2 - allow records from any table not just first
     const subjectRecords = processedRecords.find(
-      (dataset) => dataset.name === config.dataSets[0].name
-    ).records;
+      (dataset) => dataset.name === config.dataSets[0]?.name
+    )?.records;
 
     const emailSubject = replaceSubject(
       config.get('emailLayout').subject,
@@ -617,8 +617,8 @@ router.post('/send-individual-email/:configId', async (req, res) => {
     //TODO: Phase 2 - allow records from any table not just first
     if (!processedBlockRecords) {
       subjectRecords = processedRecords.find(
-        (dataset) => dataset.name === config.dataSets[0].name
-      ).record;
+        (dataset) => dataset.name === config.dataSets[0]?.name
+      )?.record;
     }
     // else {
     //   subjectRecords = processedBlockRecords.find(
