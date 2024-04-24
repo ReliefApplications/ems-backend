@@ -1,3 +1,25 @@
+# [2.8.0](https://github.com/ReliefApplications/ems-backend/compare/v2.7.2...v2.8.0) (2024-04-24)
+
+
+### Bug Fixes
+
+* csv export should now lookalike excel export ([#981](https://github.com/ReliefApplications/ems-backend/issues/981)) ([b13e55c](https://github.com/ReliefApplications/ems-backend/commit/b13e55c94c10bebae42e30ac29dc83b30c9a7a88))
+* some ref data aggregations would not send correct data. Now use field name instead of grahp ql field name ([#998](https://github.com/ReliefApplications/ems-backend/issues/998)) ([d2e7074](https://github.com/ReliefApplications/ems-backend/commit/d2e7074853ff10fd29ad7b7f4e3d41683846e5cf))
+* update user management and who configurations ([38798f2](https://github.com/ReliefApplications/ems-backend/commit/38798f252efa2a62bd5256fcf5e031d77cabfdfc))
+
+
+### Features
+
+* Add email + AAD user type to automation rules ([#2468](https://github.com/ReliefApplications/ems-backend/issues/2468)) ([2240e1e](https://github.com/ReliefApplications/ems-backend/commit/2240e1ecedb3626738273adecf92fc3ed80c3bad)), closes [#89936](https://github.com/ReliefApplications/ems-backend/issues/89936) [#89936](https://github.com/ReliefApplications/ems-backend/issues/89936) [#89936](https://github.com/ReliefApplications/ems-backend/issues/89936)
+* role based display for action buttons ([#1008](https://github.com/ReliefApplications/ems-backend/issues/1008)) ([1579d04](https://github.com/ReliefApplications/ems-backend/commit/1579d040f1828fd11acba366786fe188295014b6))
+
+
+### Reverts
+
+* Revert "AB#90725 - Transform gis/feature endpoint into POST" (#1019) ([62178d0](https://github.com/ReliefApplications/ems-backend/commit/62178d0bce90e270b673f87f939fff5de1ba2b1c)), closes [AB#90725](https://github.com/AB/issues/90725) [#1019](https://github.com/ReliefApplications/ems-backend/issues/1019)
+* Revert "change response type #90266 (#1011)" (#1016) ([35ff495](https://github.com/ReliefApplications/ems-backend/commit/35ff49551aaec6495b5928806d4af6452becfd0e)), closes [#90266](https://github.com/ReliefApplications/ems-backend/issues/90266) [#1011](https://github.com/ReliefApplications/ems-backend/issues/1011) [#1016](https://github.com/ReliefApplications/ems-backend/issues/1016)
+* use field name instead of graphql field name ([c6975da](https://github.com/ReliefApplications/ems-backend/commit/c6975da6cd10d071fb34ba64b4290fa585b976f0))
+
 ## [2.7.2](https://github.com/ReliefApplications/ems-backend/compare/v2.7.1...v2.7.2) (2024-03-25)
 
 
