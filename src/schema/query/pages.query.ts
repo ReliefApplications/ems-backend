@@ -28,8 +28,9 @@ export default {
       }
 
       // return the pages
-      return await Page.find(accessibleBy(ability, 'read'));
+      return await Page.find(accessibleBy(ability, 'read').Page);
     } catch (err) {
+      console.error(err.message);
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);

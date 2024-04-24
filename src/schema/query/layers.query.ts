@@ -62,7 +62,9 @@ export default {
       const queryFilters = getFilter(args.filter, FILTER_FIELDS);
       const filters: any[] = [queryFilters];
 
-      const sortField = SORT_FIELDS.find((x) => x.name === args.sortField);
+      const sortField = args.sortField
+        ? SORT_FIELDS.find((x) => x.name === args.sortField)
+        : SORT_FIELDS.find((x) => x.name === 'name');
       const sortOrder = args.sortOrder || 'asc';
 
       return await Layer.find({

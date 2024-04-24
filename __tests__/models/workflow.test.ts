@@ -65,7 +65,7 @@ describe('Workflow models tests', () => {
     }).save();
 
     const isDelete = await Workflow.deleteOne({ _id: workflow._id });
-    expect(isDelete.ok).toEqual(1);
+    expect(isDelete.acknowledged).toEqual(true);
     expect(isDelete.deletedCount).toEqual(1);
   });
 });

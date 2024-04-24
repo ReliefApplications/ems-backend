@@ -3,7 +3,7 @@
 const { server, email, user } = require('./who');
 
 /**
- * Configuration of back-office
+ * Configuration for UAT.
  * Use https://www.npmjs.com/package/config package.
  */
 module.exports = {

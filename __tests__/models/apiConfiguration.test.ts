@@ -34,9 +34,9 @@ describe('ApiConfiguration models tests', () => {
     };
     expect(async () =>
       new ApiConfiguration(duplicateApiConfig).save()
-    ).rejects.toThrowError(
-      'E11000 duplicate key error collection: test.apiconfigurations index: name_1 dup key'
-    );
+    ).rejects.toMatchObject({
+      code: 11000,
+    });
   });
 
   test('test with incorrect api configuration status field', async () => {
@@ -58,6 +58,28 @@ describe('ApiConfiguration models tests', () => {
       expect(async () =>
         new ApiConfiguration(apiConfig).save()
       ).rejects.toThrow(Error);
+    }
+  });
+
+  test('test with incorrect api configuration authType field', async () => {
+    for (let i = 0; i < 1; i++) {
+      const apiConfig = {
+        name: faker.random.word(),
+        status: status.pending,
+        authType: faker.random.word(), // Invalid value
+        endpoint: faker.internet.url(),
+        graphQLEndpoint: `${faker.internet.url()}/graphql`,
+        pingUrl: 'PR',
+        settings: {
+          authTargetUrl: faker.internet.url(),
+          apiClientID: faker.datatype.uuid(),
+          safeSecret: faker.datatype.uuid(),
+          scope: faker.random.word(),
+        },
+      };
+      await expect(
+        new ApiConfiguration(apiConfig).save()
+      ).rejects.toThrowError();
     }
   });
 });
