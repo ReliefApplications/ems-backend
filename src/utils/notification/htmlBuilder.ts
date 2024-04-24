@@ -1,3 +1,4 @@
+import { timeLocale } from '@const/locale';
 import { ProcessedDataset, TableStyle } from '@routes/notification';
 import {
   formatDates,
@@ -108,38 +109,39 @@ export const replaceHeader = (header: {
         currentDate.getTime() - Number(splitToken[2]) * 60000
       );
 
-      // Past Date to date (mm/dd/yyyy)
       const formattedPastDate = pastDate.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: '2-digit',
+        timeZone: 'UTC',
+        month: 'numeric',
+        day: 'numeric',
+        year: '2-digit',
       });
 
       // Past Date to time (hh:mm)
-      const formattedPastTime = pastDate.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-      });
+      const formattedPastTime = pastDate.toLocaleTimeString(
+        'en-US',
+        timeLocale
+      );
 
       // Current Date to date (mm/dd/yyyy)
       const formattedCurrentDate = currentDate.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: '2-digit',
+        timeZone: 'UTC',
+        month: 'numeric',
+        day: 'numeric',
+        year: '2-digit',
       });
 
       // Current Date to time (hh:mm)
-      const formattedCurrentTime = currentDate.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-      });
+      const formattedCurrentTime = currentDate.toLocaleTimeString(
+        'en-US',
+        timeLocale
+      );
 
       let newHeader;
       const minutesInAWeek = 7 * 24 * 60;
       if (Number(splitToken[2]) > minutesInAWeek) {
-        newHeader = `From ${formattedPastDate} ${formattedCurrentTime} UTC as of ${formattedCurrentDate} ${formattedCurrentTime} UTC`;
+        newHeader = `From ${formattedPastDate} ${formattedCurrentTime} as of ${formattedCurrentDate} ${formattedCurrentTime}`;
       } else {
-        newHeader = `From ${formattedPastDate} ${formattedPastTime} UTC as of ${formattedCurrentDate} ${formattedCurrentTime} UTC`;
+        newHeader = `From ${formattedPastDate} ${formattedPastTime} as of ${formattedCurrentDate} ${formattedCurrentTime}`;
       }
       header.headerHtml = header.headerHtml.replace(
         inthelastMatcher,

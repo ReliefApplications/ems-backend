@@ -1,3 +1,5 @@
+import { dateLocale, dateTimeLocale, timeLocale } from '@const/locale';
+
 /**
  * To replace all special characters with whitespace
  *
@@ -34,29 +36,11 @@ export const formatDates = (rowData: unknown): string => {
     const date = new Date(rowData);
     if (!isNaN(date.getTime())) {
       // Format the date as MM/DD/YY, hh:mm AM/PM UTC
-      return date.toLocaleString('en-US', {
-        month: 'numeric',
-        day: 'numeric',
-        year: '2-digit',
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-        timeZone: 'UTC',
-        timeZoneName: 'short',
-      });
+      return date.toLocaleString('en-US', dateTimeLocale);
     }
   } else if (rowData instanceof Date) {
     // Format the date as MM/DD/YY, hh:mm AM/PM UTC
-    return rowData.toLocaleString('en-US', {
-      month: 'numeric',
-      day: 'numeric',
-      year: '2-digit',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-      timeZone: 'UTC',
-      timeZoneName: 'short',
-    });
+    return rowData.toLocaleString('en-US', dateTimeLocale);
   }
   if (!rowData) {
     return '';
@@ -73,34 +57,15 @@ export const formatDates = (rowData: unknown): string => {
 export const replaceDateMacro = (textElement: string): string => {
   if (textElement) {
     if (textElement.includes('{{now.time}}')) {
-      const nowToString = new Date().toLocaleTimeString('en-US', {
-        timeZone: 'UTC',
-        timeZoneName: 'short',
-        hour: 'numeric',
-        minute: '2-digit',
-      });
+      const nowToString = new Date().toLocaleTimeString('en-US', timeLocale);
       textElement = textElement.replace('{{now.time}}', nowToString);
     }
     if (textElement.includes('{{now.datetime}}')) {
-      const nowToString = new Date().toLocaleString('en-US', {
-        timeZone: 'UTC',
-        timeZoneName: 'short',
-        month: 'numeric',
-        day: 'numeric',
-        year: '2-digit',
-        hour: 'numeric',
-        minute: '2-digit',
-      });
+      const nowToString = new Date().toLocaleString('en-US', dateTimeLocale);
       textElement = textElement.replace('{{now.datetime}}', nowToString);
     }
     if (textElement.includes('{{today.date}}')) {
-      const todayToString = new Date().toLocaleDateString('en-US', {
-        timeZone: 'UTC',
-        timeZoneName: 'short',
-        month: 'numeric',
-        day: 'numeric',
-        year: '2-digit',
-      });
+      const todayToString = new Date().toLocaleDateString('en-US', dateLocale);
       textElement = textElement.replace('{{today.date}}', todayToString);
     }
   }
