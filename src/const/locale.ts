@@ -35,3 +35,14 @@ export const timeLocale: Intl.DateTimeFormatOptions = {
   hour: 'numeric',
   minute: '2-digit',
 };
+
+/**
+ * Date
+ * Formats to m/d/yy
+ */
+export const inthelastDateLocale: Intl.DateTimeFormatOptions = {
+  timeZone: 'UTC',
+  month: 'numeric',
+  day: 'numeric',
+  year: '2-digit',
+};

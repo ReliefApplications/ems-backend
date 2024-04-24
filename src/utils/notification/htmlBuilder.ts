@@ -1,4 +1,4 @@
-import { timeLocale } from '@const/locale';
+import { inthelastDateLocale, timeLocale } from '@const/locale';
 import { ProcessedDataset, TableStyle } from '@routes/notification';
 import {
   formatDates,
@@ -109,12 +109,10 @@ export const replaceHeader = (header: {
         currentDate.getTime() - Number(splitToken[2]) * 60000
       );
 
-      const formattedPastDate = pastDate.toLocaleDateString('en-US', {
-        timeZone: 'UTC',
-        month: 'numeric',
-        day: 'numeric',
-        year: '2-digit',
-      });
+      const formattedPastDate = pastDate.toLocaleDateString(
+        'en-US',
+        inthelastDateLocale
+      );
 
       // Past Date to time (hh:mm)
       const formattedPastTime = pastDate.toLocaleTimeString(
@@ -123,12 +121,10 @@ export const replaceHeader = (header: {
       );
 
       // Current Date to date (mm/dd/yyyy)
-      const formattedCurrentDate = currentDate.toLocaleDateString('en-US', {
-        timeZone: 'UTC',
-        month: 'numeric',
-        day: 'numeric',
-        year: '2-digit',
-      });
+      const formattedCurrentDate = currentDate.toLocaleDateString(
+        'en-US',
+        inthelastDateLocale
+      );
 
       // Current Date to time (hh:mm)
       const formattedCurrentTime = currentDate.toLocaleTimeString(
