@@ -268,6 +268,32 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
               return { [fieldName]: { $exists: true, $ne: '' } };
             }
           }
+          // case 'in': {
+          //   value = Array.isArray(value) ? value : [value];
+          //   return {
+          //     $or: [
+          //       { [fieldName]: { $in: value } },
+          //       {
+          //         [fieldName]: {
+          //           $in: value.map((x) => new mongoose.Types.ObjectId(x)),
+          //         },
+          //       },
+          //     ],
+          //   };
+          // }
+          // case 'notin': {
+          //   value = Array.isArray(value) ? value : [value];
+          //   return {
+          //     $or: [
+          //       { [fieldName]: { $nin: value } },
+          //       {
+          //         [fieldName]: {
+          //           $nin: value.map((x) => new mongoose.Types.ObjectId(x)),
+          //         },
+          //       },
+          //     ],
+          //   };
+          // }
           default: {
             return;
           }
