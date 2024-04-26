@@ -38,9 +38,9 @@ describe('Application models tests', () => {
     };
     expect(async () =>
       new Application(duplicateApplication).save()
-    ).rejects.toThrowError(
-      'E11000 duplicate key error collection: test.applications index: name_1 dup key'
-    );
+    ).rejects.toMatchObject({
+      code: 11000,
+    });
   });
 
   test('test application delete', async () => {
@@ -71,7 +71,7 @@ describe('Application models tests', () => {
     }).save();
 
     const isDelete = await Application.deleteOne({ _id: applicationData._id });
-    expect(isDelete.ok).toEqual(1);
+    expect(isDelete.acknowledged).toEqual(true);
     expect(isDelete.deletedCount).toEqual(1);
   });
 });

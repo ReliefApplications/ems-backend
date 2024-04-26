@@ -6,15 +6,12 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { AccessType, PageType, StepType } from '.';
-import { ApiConfiguration, Page, ReferenceData, Step } from '@models';
+import { Page, Step } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import extendAbilityForStep from '@security/extendAbilityForStep';
 import { Types } from 'mongoose';
-import { CustomAPI } from '@server/apollo/dataSources';
 import { getContextData } from '@utils/context/getContextData';
-import extendAbilityForRecords from '@security/extendAbilityForRecords';
-import get from 'lodash/get';
 
 /** GraphQL dashboard type definition */
 export const DashboardType = new GraphQLObjectType({
@@ -34,7 +31,25 @@ export const DashboardType = new GraphQLObjectType({
         }
       },
     },
-    buttons: { type: GraphQLJSON },
+    buttons: {
+      type: GraphQLJSON,
+      async resolve(parent, args, context) {
+        const ability = await extendAbilityForContent(context.user, parent);
+        if (ability.can('update', parent)) {
+          return parent.buttons;
+        } else {
+          return parent.buttons.filter((button) => {
+            if (button.hasRoleRestriction) {
+              return context.user.roles?.some((role) =>
+                button.roles?.includes(role._id || '')
+              );
+            } else {
+              return true;
+            }
+          });
+        }
+      },
+    },
     gridOptions: {
       type: GraphQLJSON,
       resolve(parent) {
@@ -127,6 +142,11 @@ export const DashboardType = new GraphQLObjectType({
     contextData: {
       type: GraphQLJSON,
       async resolve(parent, args, context) {
+        // Check if the parent has context data already
+        if (parent.contextData) {
+          return parent.contextData;
+        }
+
         // Check if dashboard has context linked to it
         const page = await Page.findOne({
           contentWithContext: { $elemMatch: { content: parent.id } },
@@ -146,36 +166,7 @@ export const DashboardType = new GraphQLObjectType({
         const elementId =
           'element' in contentWithContext ? contentWithContext.element : null;
 
-        const ctx = page.context;
-
-        if (recordId) {
-          const resource = 'resource' in ctx ? ctx.resource : null;
-          try {
-            context.user.ability = await extendAbilityForRecords(context.user);
-            const data = await getContextData(resource, recordId, context);
-            return data;
-          } catch (err) {
-            return null;
-          }
-        } else if (elementId) {
-          const refData = 'refData' in ctx ? ctx.refData : null;
-          // get refData from page
-          const referenceData = await ReferenceData.findById(refData);
-          const apiConfiguration = await ApiConfiguration.findById(
-            referenceData.apiConfiguration
-          );
-          const items = apiConfiguration
-            ? await (
-                context.dataSources[apiConfiguration.name] as CustomAPI
-              ).getReferenceDataItems(referenceData, apiConfiguration)
-            : referenceData.data;
-          // Use '==' for number / string comparison
-          return items.find(
-            (x) => get(x, referenceData.valueField) == elementId
-          );
-        }
-
-        return null;
+        return getContextData(recordId, elementId, page, context);
       },
     },
     filter: { type: GraphQLJSON },

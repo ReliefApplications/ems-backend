@@ -7,7 +7,7 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { DashboardType } from '../types';
-import { Dashboard, Page, Step } from '@models';
+import { Button, Dashboard, Page, Step } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
 import { isEmpty } from 'lodash';
 import { logger } from '@services/logger.service';
@@ -16,14 +16,6 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 import { DashboardFilterInputType } from '@schema/inputs/dashboard-filter.input';
-
-type DashboardButtonArgs = {
-  text: string;
-  href: string;
-  variant: string;
-  category: string;
-  openInNewTab: boolean;
-};
 
 type DashboardFilterArgs = {
   variant?: string;
@@ -38,7 +30,7 @@ type EditDashboardArgs = {
   id: string | Types.ObjectId;
   structure?: any;
   name?: string;
-  buttons?: DashboardButtonArgs[];
+  buttons?: Button[];
   gridOptions?: any;
   filter?: DashboardFilterArgs;
 };

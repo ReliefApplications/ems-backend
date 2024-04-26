@@ -5,7 +5,8 @@
 			"dataNotFound": "Data not found",
 			"duplicatedGraphQLTypeName": "A form or a reference data with a similar name already exists. Please provide a different name.",
 			"fileExtensionNotAllowed": "File extension not allowed",
-			"fileSizeLimitReached": "File size exceed 5MB",
+			"fileSizeLimitReached": "File size exceed 7MB",
+			"fileTotalSizeLimitReached": "Total File size exceed 7MB",
 			"internalServerError": "Internal Server Error",
 			"invalidAPI": "API cannot be reached.",
 			"invalidEmailsInput": "Wrong format detected. Please provide valid emails.",
@@ -114,6 +115,7 @@
 			"addWithContext": {
 				"errors": {
 					"invalidArguments": "You need to provide one, and only one, argument between a reference data element and a record.",
+					"invalidContextEl": "The context element does not exist",
 					"invalidElement": "Provided element must be a string or a number"
 				}
 			},

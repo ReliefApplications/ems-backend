@@ -2,7 +2,7 @@ import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { getGraphQLTypeName } from '@utils/validators';
 import { referenceDataType } from '@const/enumTypes';
-import { get, set, snakeCase } from 'lodash';
+import { get, isArray, map, set, snakeCase } from 'lodash';
 import { aggregationSchema } from './aggregation.model';
 
 /**
@@ -34,13 +34,26 @@ export class DataTransformer {
    * @returns graphQL data
    */
   transformData() {
+    const getNestedValues = (obj, path) => {
+      if (path.includes('.')) {
+        const splitPath = path.split('.');
+        const parent = splitPath.shift();
+        return isArray(get(obj, parent))
+          ? map(get(obj, parent), (item) =>
+              getNestedValues(item, splitPath.join('.'))
+            )
+          : getNestedValues(get(obj, parent), splitPath.join('.'));
+      } else {
+        return get(obj, path);
+      }
+    };
+
     return this.data.map((item) => {
       const transformedItem = {};
 
       this.fields.forEach((field) => {
         const { name, graphQLFieldName } = field;
-        const value = get(item, name);
-
+        const value = getNestedValues(item, name);
         set(transformedItem, graphQLFieldName, value);
       });
 

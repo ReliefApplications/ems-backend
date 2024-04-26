@@ -27,14 +27,6 @@ checkConfig();
 /** SafeServer server port */
 const PORT = config.get('server.port');
 
-startDatabase();
-mongoose.connection.once('open', () => {
-  logger.log({ level: 'info', message: '📶 Connected to database' });
-  // subscriberSafe();
-  pullJobScheduler();
-  customNotificationScheduler();
-});
-
 /** Starts the server */
 const launchServer = async () => {
   const schema = await buildSchema();
@@ -52,4 +44,11 @@ const launchServer = async () => {
   });
 };
 
-launchServer();
+startDatabase();
+mongoose.connection.once('open', () => {
+  logger.log({ level: 'info', message: '📶 Connected to database' });
+  launchServer();
+  // subscriberSafe();
+  pullJobScheduler();
+  customNotificationScheduler();
+});

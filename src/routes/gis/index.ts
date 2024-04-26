@@ -11,62 +11,16 @@ import i18next from 'i18next';
 import mongoose from 'mongoose';
 import { logger } from '@services/logger.service';
 import axios from 'axios';
-import { isEqual, isNil, get, omit } from 'lodash';
+import { isEqual, get, omit, isEmpty } from 'lodash';
 import turf, { Feature, booleanPointInPolygon } from '@turf/turf';
 import dataSources, { CustomAPI } from '@server/apollo/dataSources';
 import { getAdmin0Polygons } from '@utils/gis/getCountryPolygons';
 import filterReferenceData from '@utils/referenceData/referenceDataFilter.util';
 
 /**
- * Interface of feature query
- */
-interface IFeatureQuery {
-  geoField?: string;
-  longitudeField?: string;
-  latitudeField?: string;
-  minLat?: number;
-  maxLat?: number;
-  minLng?: number;
-  maxLng?: number;
-  type: GeometryType;
-}
-
-/**
  * Endpoint for custom feature layers
  */
 const router = express.Router();
-
-/**
- * Get filter polygon from bounds
- *
- * @param query query parameters
- * @returns filter polygon
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const getFilterPolygon = (query: IFeatureQuery) => {
-  if (
-    !isNil(query.minLat) &&
-    !isNil(query.maxLat) &&
-    !isNil(query.minLng) &&
-    !isNil(query.maxLng)
-  ) {
-    const polygon: turf.Polygon = {
-      type: 'Polygon',
-      coordinates: [
-        [
-          [Number(query.minLat), Number(query.minLng)],
-          [Number(query.maxLat), Number(query.minLng)],
-          [Number(query.maxLat), Number(query.maxLng)],
-          [Number(query.minLat), Number(query.maxLng)],
-          [Number(query.minLat), Number(query.minLng)],
-        ],
-      ],
-    };
-    return polygon;
-  } else {
-    return null;
-  }
-};
 
 /**
  * Check geoJSON feature, if it's MultiLine or MultiPolygon, parse it
@@ -157,8 +111,12 @@ const getFeatureFromItem = (
     }
   } else {
     // Lowercase is needed as quick solution for solving ref data layers
-    const latitude = get(item, mapping.latitudeField.toLowerCase());
-    const longitude = get(item, mapping.longitudeField.toLowerCase());
+    const latitude =
+      get(item, mapping.latitudeField.toLowerCase()) ||
+      get(item, mapping.latitudeField);
+    const longitude =
+      get(item, mapping.longitudeField.toLowerCase()) ||
+      get(item, mapping.longitudeField);
     if (latitude && longitude) {
       const geo = {
         type: 'Feature',
@@ -275,57 +233,50 @@ const gqlQuery = (
  * @param res http response
  * @returns GeoJSON feature collection mutations
  */
-router.get('/feature', async (req, res) => {
-  const featureCollection = {
-    type: 'FeatureCollection',
-    features: [],
-  };
-  const latitudeField = get(req, 'query.latitudeField');
-  const longitudeField = get(req, 'query.longitudeField');
-  const geoField = get(req, 'query.geoField');
-  const adminField = get(req, 'query.adminField');
-  const layerType = (get(req, 'query.type') ||
-    GeometryType.POINT) as GeometryType;
-  const contextFilters = JSON.parse(
-    decodeURIComponent(get(req, 'query.contextFilters', null))
-  );
-  const graphQLVariables = JSON.parse(
-    decodeURIComponent(get(req, 'query.graphQLVariables', null))
-  );
-  const at = get(req, 'query.at') as string | undefined;
-  // const tolerance = get(req, 'query.tolerance', 1);
-  // const highQuality = get(req, 'query.highquality', true);
-  // turf.simplify(geoJsonData, {
-  //   tolerance: tolerance,
-  //   highQuality: highQuality,
-  // });
-  if (!geoField && !(latitudeField && longitudeField)) {
-    return res
-      .status(400)
-      .send(i18next.t('routes.gis.feature.errors.invalidFields'));
-  }
-
-  // Polygons are only supported for geoField
-  if (layerType === GeometryType.POLYGON && !geoField) {
-    return res
-      .status(400)
-      .send(i18next.t('routes.gis.feature.errors.missingPolygonGeoField'));
-  }
-
-  const mapping = {
-    geoField,
-    longitudeField,
-    latitudeField,
-    adminField,
-  };
+router.post('/feature', async (req, res) => {
   try {
+    const featureCollection = {
+      type: 'FeatureCollection',
+      features: [],
+    };
+    const latitudeField = get(req, 'body.latitudeField');
+    const longitudeField = get(req, 'body.longitudeField');
+    const geoField = get(req, 'body.geoField');
+    const adminField = get(req, 'body.adminField');
+    const layerType = (get(req, 'body.type') ||
+      GeometryType.POINT) as GeometryType;
+    const contextFilters = JSON.parse(get(req, 'body.contextFilters', null));
+    const graphQLVariables = JSON.parse(
+      get(req, 'body.graphQLVariables', null)
+    );
+    const at = get(req, 'body.at') as string | undefined;
+    if (!geoField && !(latitudeField && longitudeField)) {
+      return res
+        .status(400)
+        .send(i18next.t('routes.gis.feature.errors.invalidFields'));
+    }
+
+    // Polygons are only supported for geoField
+    if (layerType === GeometryType.POLYGON && !geoField) {
+      return res
+        .status(400)
+        .send(i18next.t('routes.gis.feature.errors.missingPolygonGeoField'));
+    }
+
+    const mapping = {
+      geoField,
+      longitudeField,
+      latitudeField,
+      adminField,
+    };
+
     // Fetch resource to populate layer
-    if (get(req, 'query.resource')) {
+    if (get(req, 'body.resource')) {
       let id: string;
-      if (get(req, 'query.aggregation')) {
-        id = get(req, 'query.aggregation') as string;
-      } else if (get(req, 'query.layout')) {
-        id = get(req, 'query.layout') as string;
+      if (get(req, 'body.aggregation')) {
+        id = get(req, 'body.aggregation') as string;
+      } else if (get(req, 'body.layout')) {
+        id = get(req, 'body.layout') as string;
       } else {
         return res.status(404).send(i18next.t('common.errors.dataNotFound'));
       }
@@ -395,14 +346,14 @@ router.get('/feature', async (req, res) => {
       ]).catch((err) => {
         throw new Error(err);
       });
-    } else if (get(req, 'query.refData')) {
+    } else if (get(req, 'body.refData')) {
       // Else, fetch reference data to populate layer
       const referenceData = await ReferenceData.findById(
-        new mongoose.Types.ObjectId(get(req, 'query.refData') as string)
+        new mongoose.Types.ObjectId(get(req, 'body.refData') as string)
       );
       if (referenceData) {
-        if (get(req, 'query.aggregation')) {
-          const aggregation = get(req, 'query.aggregation') as string;
+        if (get(req, 'body.aggregation')) {
+          const aggregation = get(req, 'body.aggregation') as string;
           const query = `query referenceDataAggregation(
             $referenceData: ID!
             $aggregation: ID!
@@ -442,7 +393,7 @@ router.get('/feature', async (req, res) => {
           });
         } else if (referenceData.type === 'static') {
           let data = referenceData.data || [];
-          if (contextFilters) {
+          if (contextFilters && !isEmpty(contextFilters)) {
             data = data.filter((x) => filterReferenceData(x, contextFilters));
           }
           await getFeatures(
@@ -471,7 +422,7 @@ router.get('/feature', async (req, res) => {
               apiConfiguration,
               graphQLVariables
             )) || [];
-          if (contextFilters) {
+          if (contextFilters && !isEmpty(contextFilters)) {
             data = data.filter((x) => filterReferenceData(x, contextFilters));
           }
           await getFeatures(

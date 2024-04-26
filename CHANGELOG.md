@@ -1,3 +1,92 @@
+# [2.8.0](https://github.com/ReliefApplications/ems-backend/compare/v2.7.2...v2.8.0) (2024-04-24)
+
+
+### Bug Fixes
+
+* csv export should now lookalike excel export ([#981](https://github.com/ReliefApplications/ems-backend/issues/981)) ([b13e55c](https://github.com/ReliefApplications/ems-backend/commit/b13e55c94c10bebae42e30ac29dc83b30c9a7a88))
+* some ref data aggregations would not send correct data. Now use field name instead of grahp ql field name ([#998](https://github.com/ReliefApplications/ems-backend/issues/998)) ([d2e7074](https://github.com/ReliefApplications/ems-backend/commit/d2e7074853ff10fd29ad7b7f4e3d41683846e5cf))
+* update user management and who configurations ([38798f2](https://github.com/ReliefApplications/ems-backend/commit/38798f252efa2a62bd5256fcf5e031d77cabfdfc))
+
+
+### Features
+
+* Add email + AAD user type to automation rules ([#2468](https://github.com/ReliefApplications/ems-backend/issues/2468)) ([2240e1e](https://github.com/ReliefApplications/ems-backend/commit/2240e1ecedb3626738273adecf92fc3ed80c3bad)), closes [#89936](https://github.com/ReliefApplications/ems-backend/issues/89936) [#89936](https://github.com/ReliefApplications/ems-backend/issues/89936) [#89936](https://github.com/ReliefApplications/ems-backend/issues/89936)
+* role based display for action buttons ([#1008](https://github.com/ReliefApplications/ems-backend/issues/1008)) ([1579d04](https://github.com/ReliefApplications/ems-backend/commit/1579d040f1828fd11acba366786fe188295014b6))
+
+
+### Reverts
+
+* Revert "AB#90725 - Transform gis/feature endpoint into POST" (#1019) ([62178d0](https://github.com/ReliefApplications/ems-backend/commit/62178d0bce90e270b673f87f939fff5de1ba2b1c)), closes [AB#90725](https://github.com/AB/issues/90725) [#1019](https://github.com/ReliefApplications/ems-backend/issues/1019)
+* Revert "change response type #90266 (#1011)" (#1016) ([35ff495](https://github.com/ReliefApplications/ems-backend/commit/35ff49551aaec6495b5928806d4af6452becfd0e)), closes [#90266](https://github.com/ReliefApplications/ems-backend/issues/90266) [#1011](https://github.com/ReliefApplications/ems-backend/issues/1011) [#1016](https://github.com/ReliefApplications/ems-backend/issues/1016)
+* use field name instead of graphql field name ([c6975da](https://github.com/ReliefApplications/ems-backend/commit/c6975da6cd10d071fb34ba64b4290fa585b976f0))
+
+## [2.7.2](https://github.com/ReliefApplications/ems-backend/compare/v2.7.1...v2.7.2) (2024-03-25)
+
+
+### Bug Fixes
+
+* add check for empty context filter ([#995](https://github.com/ReliefApplications/ems-backend/issues/995)) ([31a8544](https://github.com/ReliefApplications/ems-backend/commit/31a85447f4a418000d763049d1f0d38261d82f66))
+* now working nested fields in reference data aggregation ([ed564b3](https://github.com/ReliefApplications/ems-backend/commit/ed564b3f9eef48f06674144ac94d153c5e494d91))
+
+## [2.7.1](https://github.com/ReliefApplications/ems-backend/compare/v2.7.0...v2.7.1) (2024-03-04)
+
+
+### Bug Fixes
+
+* now working nested fields in reference data aggregation ([#993](https://github.com/ReliefApplications/ems-backend/issues/993)) ([0603afc](https://github.com/ReliefApplications/ems-backend/commit/0603afcf16f370fc29405622afbf1bd081aee10d))
+
+# [2.7.0](https://github.com/ReliefApplications/ems-backend/compare/v2.6.5...v2.7.0) (2024-02-23)
+
+
+### Bug Fixes
+
+* extractFields would fail if no choice ([ecd2f86](https://github.com/ReliefApplications/ems-backend/commit/ecd2f86ebee218bee9123b2dff60699db87e7b6c))
+* in operator would not work for layers using aggregation on ref data ([8dceae5](https://github.com/ReliefApplications/ems-backend/commit/8dceae5058c6bff31a9cc2419838c29cc37f202d))
+* replace NodeCache with RedisCache for multi-instances, to prevent using decoupled cache instances ([#990](https://github.com/ReliefApplications/ems-backend/issues/990)) ([8d71e3c](https://github.com/ReliefApplications/ems-backend/commit/8d71e3c3c0d12b53b921cfd452d24b1b4d5bb55a))
+* some layers could not correctly use latitude / longitude due to lowecase ([b85c074](https://github.com/ReliefApplications/ems-backend/commit/b85c0744aa930600b9c201a61af6ef6b4812598b))
+
+
+### Features
+
+* implementation of choicesByGraphQL questions ([#987](https://github.com/ReliefApplications/ems-backend/issues/987)) ([578be53](https://github.com/ReliefApplications/ems-backend/commit/578be5379377b2fdde91cc9cee0f592a8d23545c))
+
+## [2.6.5](https://github.com/ReliefApplications/ems-backend/compare/v2.6.4...v2.6.5) (2024-02-15)
+
+
+### Bug Fixes
+
+* due to multi instance setup, uploading files for email sending could fail ([c8e1a59](https://github.com/ReliefApplications/ems-backend/commit/c8e1a599426dcd0845412c2b9c6f88ca0996feed))
+
+## [2.6.4](https://github.com/ReliefApplications/ems-backend/compare/v2.6.3...v2.6.4) (2024-02-12)
+
+
+### Bug Fixes
+
+* choicesbyurl field with choices without text could break choices assignment ([1cb2cbb](https://github.com/ReliefApplications/ems-backend/commit/1cb2cbbfa3413591f365cb0af1b98db7bd708f0d))
+
+## [2.6.3](https://github.com/ReliefApplications/ems-backend/compare/v2.6.2...v2.6.3) (2024-02-12)
+
+
+### Bug Fixes
+
+* user ability would not be correctly set when cached ([648c5ce](https://github.com/ReliefApplications/ems-backend/commit/648c5ce20e3991011a41a04308abdbfd09719462))
+
+## [2.6.2](https://github.com/ReliefApplications/ems-backend/compare/v2.6.1...v2.6.2) (2024-02-07)
+
+
+### Bug Fixes
+
+* reference data resolvers could break schema ([98d8fe7](https://github.com/ReliefApplications/ems-backend/commit/98d8fe7baf9a63b7540ef75542556cd2fb6ece79))
+
+## [2.6.1](https://github.com/ReliefApplications/ems-backend/compare/v2.6.0...v2.6.1) (2024-02-01)
+
+
+### Bug Fixes
+
+* date & datetime filters not working as expected ([#919](https://github.com/ReliefApplications/ems-backend/issues/919)) ([ab3d2f3](https://github.com/ReliefApplications/ems-backend/commit/ab3d2f37445001941fcc7f728489c97c02a3f28c))
+* decodeUriComponent in feature layer would cause some issues ([7389f07](https://github.com/ReliefApplications/ems-backend/commit/7389f072bc0bd5f6561c370c400353bf92984d35))
+* feature route would sometimes stop server on failure ([3f11952](https://github.com/ReliefApplications/ems-backend/commit/3f119525240eb522c1218bb1b4b630b0c8030b40))
+
 # [2.6.0](https://github.com/ReliefApplications/ems-backend/compare/v2.5.1...v2.6.0) (2024-01-25)
 
 

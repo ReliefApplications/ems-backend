@@ -28,7 +28,7 @@ const jestConfig: JestConfigWithTsJest = {
   // cacheDirectory: "/private/var/folders/ly/twr74pdx4dlfdwtrtt3203fm0000gn/T/jest_dx",
 
   // Automatically clear mock calls and instances between every test
-  // clearMocks: false,
+  clearMocks: true,
 
   // Indicates whether the coverage information should be collected while executing the test
   collectCoverage: true,
@@ -177,6 +177,8 @@ const jestConfig: JestConfigWithTsJest = {
 
   // This option sets the URL for the jsdom environment. It is reflected in properties such as location.href
   // testURL: "http://localhost",
+
+  testTimeout: 20000,
 
   // Setting this value to "fake" allows the use of fake timers for functions such as "setTimeout"
   // timers: "real",

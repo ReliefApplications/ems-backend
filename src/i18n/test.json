@@ -6,6 +6,7 @@
 			"duplicatedGraphQLTypeName": "******",
 			"fileExtensionNotAllowed": "******",
 			"fileSizeLimitReached": "******",
+			"fileTotalSizeLimitReached": "******",
 			"internalServerError": "******",
 			"invalidAPI": "******",
 			"invalidEmailsInput": "******",
@@ -114,6 +115,7 @@
 			"addWithContext": {
 				"errors": {
 					"invalidArguments": "******",
+					"invalidContextEl": "******",
 					"invalidElement": "******"
 				}
 			},
