@@ -50,6 +50,7 @@ export default {
       //   }
       // }
       if (args.notification) {
+        console.log(args.notification.datasets);
         const updateFields = {
           name: args.notification.name,
           schedule: args.notification.schedule,
@@ -59,9 +60,9 @@ export default {
           },
           notificationType: args.notification.notificationType,
           applicationId: args.notification.applicationId,
-          dataSets: args.notification.dataSets,
+          datasets: args.notification.datasets,
           emailLayout: args.notification.emailLayout,
-          recipients: args.notification.recipients,
+          emailDistributionList: args.notification.emailDistributionList,
           status: args.notification.status,
           recipientsType: args.notification.recipientsType,
           lastExecution: args.notification.lastExecution,

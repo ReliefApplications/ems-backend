@@ -16,9 +16,9 @@ export type EmailNotificationArgs = {
   schedule: string;
   notificationType: string;
   applicationId: string | Types.ObjectId;
-  dataSets: any[];
+  datasets: any[];
   emailLayout: any;
-  recipients: string;
+  emailDistributionList: string;
   recipientsType: any;
   status: string;
   lastExecution: string;
@@ -36,9 +36,9 @@ export const EmailNotificationInputType = new GraphQLInputObjectType({
     schedule: { type: GraphQLString },
     applicationId: { type: new GraphQLNonNull(GraphQLID) },
     notificationType: { type: GraphQLString },
-    dataSets: { type: new GraphQLList(GraphQLJSON) },
+    datasets: { type: new GraphQLList(GraphQLJSON) },
     emailLayout: { type: GraphQLJSON },
-    recipients: { type: GraphQLJSON },
+    emailDistributionList: { type: GraphQLJSON },
     recipientsType: { type: GraphQLString },
     status: { type: GraphQLString },
     lastExecution: { type: GraphQLString },

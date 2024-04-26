@@ -59,10 +59,10 @@ const EmailLayoutType = new GraphQLObjectType({
 /**
  * GraphQL Recipients type.
  */
-export const RecipientsType = new GraphQLObjectType({
-  name: 'Recipients',
+export const EmailDistributionListType = new GraphQLObjectType({
+  name: 'EmailDistributionListType',
   fields: () => ({
-    distributionListName: { type: GraphQLString },
+    name: { type: GraphQLString },
     To: { type: new GraphQLList(GraphQLString) },
     Cc: { type: new GraphQLList(GraphQLString) },
     Bcc: { type: new GraphQLList(GraphQLString) },
@@ -86,9 +86,9 @@ export const EmailNotificationType = new GraphQLObjectType({
     createdBy: { type: GraphQLJSON },
     schedule: { type: GraphQLString },
     notificationType: { type: GraphQLString },
-    dataSets: { type: new GraphQLList(DataSetType) },
+    datasets: { type: new GraphQLList(DataSetType) },
     emailLayout: { type: EmailLayoutType },
-    recipients: { type: RecipientsType },
+    emailDistributionList: { type: EmailDistributionListType },
     lastExecution: { type: GraphQLString },
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },

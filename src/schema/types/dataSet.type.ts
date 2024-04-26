@@ -24,7 +24,7 @@ export const mergeArrayOfObjects = (
 };
 
 /** GraphQL DataSet type definition */
-export const DataSetType = new GraphQLObjectType({
+export const DatasetType = new GraphQLObjectType({
   name: 'Dataset',
   fields: () => ({
     emails: {

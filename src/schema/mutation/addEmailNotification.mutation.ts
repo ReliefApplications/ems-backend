@@ -44,9 +44,9 @@ export default {
         createdBy: { name: context.user.name, email: context.user.username },
         applicationId: args.notification.applicationId,
         notificationType: args.notification.notificationType,
-        dataSets: args.notification.dataSets,
+        datasets: args.notification.datasets,
         emailLayout: args.notification.emailLayout,
-        recipients: args.notification.recipients,
+        emailDistributionList: args.notification.emailDistributionList,
         status: args.notification.status,
         recipientsType: args.notification.recipientsType,
         lastExecution: args.notification.lastExecution,
@@ -66,7 +66,7 @@ export default {
         );
       }
 
-      update.dataSets = update.dataSets.filter(
+      update.datasets = update.datasets.filter(
         (block) => block.resource !== null
       );
       const emailNotification = new EmailNotification(update);

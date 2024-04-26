@@ -11,7 +11,7 @@ import {
   emailAggregation,
   getFields,
   projectAggregation,
-} from '@schema/query/dataSet.query';
+} from '@schema/query/dataset.query';
 import i18next from 'i18next';
 import {
   buildTable,
@@ -21,7 +21,7 @@ import {
   replaceSubject,
 } from '@utils/notification/htmlBuilder';
 import mongoose from 'mongoose';
-import { mergeArrayOfObjects } from '@schema/types/dataSet.type';
+import { mergeArrayOfObjects } from '@schema/types/dataset.type';
 import { getOwnerOptions, getUsersOptions } from '@utils/form/metadata.helper';
 import _ from 'lodash';
 
@@ -72,7 +72,7 @@ const router = express.Router();
 router.post('/send-email/:configId', async (req, res) => {
   try {
     const config = await EmailNotification.findById(req.params.configId);
-    const datasets = config.get('dataSets');
+    const datasets = config.get('datasets');
     const emailElement = parse(`<!DOCTYPE HTML>
     <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
     
@@ -378,7 +378,7 @@ router.post('/send-email/:configId', async (req, res) => {
 
     // TODO: Phase 2 - allow records from any table not just first
     const subjectRecords = processedRecords.find(
-      (dataset) => dataset.name === config.dataSets[0]?.name
+      (dataset) => dataset.name === config.datasets[0]?.name
     )?.records;
 
     const emailSubject = replaceSubject(
@@ -387,9 +387,9 @@ router.post('/send-email/:configId', async (req, res) => {
     );
 
     //recipients
-    const to = config.get('recipients').To;
-    const cc = config.get('recipients').Cc;
-    const bcc = config.get('recipients').Bcc;
+    const to = config.get('emailDistributionList').To;
+    const cc = config.get('emailDistributionList').Cc;
+    const bcc = config.get('emailDistributionList').Bcc;
     const attachments: { path: string; cid: string }[] = [];
     // Use base64 encoded images as path for CID attachments
     // This is required for images to render in the body on legacy clients
@@ -445,7 +445,7 @@ router.post('/send-email/:configId', async (req, res) => {
 router.post('/send-individual-email/:configId', async (req, res) => {
   try {
     const config = await EmailNotification.findById(req.params.configId);
-    const datasets = config.get('dataSets');
+    const datasets = config.get('datasets');
     let emailElement = parse(`<!DOCTYPE HTML>
     <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 
@@ -662,7 +662,7 @@ router.post('/send-individual-email/:configId', async (req, res) => {
     //TODO: Phase 2 - allow records from any table not just first
     if (!processedBlockRecords) {
       subjectRecords = processedRecords.find(
-        (dataset) => dataset.name === config.dataSets[0]?.name
+        (dataset) => dataset.name === config.datasets[0]?.name
       )?.record;
     }
     // else {
@@ -677,8 +677,8 @@ router.post('/send-individual-email/:configId', async (req, res) => {
 
     const bodyElement = mainTableElement.getElementById('body');
 
-    const cc = config.get('recipients').Cc;
-    const bcc = config.get('recipients').Bcc;
+    const cc = config.get('emailDistributionList').Cc;
+    const bcc = config.get('emailDistributionList').Bcc;
     const attachments: { path: string; cid: string }[] = [];
     // Use base64 encoded images as path for CID attachments
     // This is required for images to render in the body on legacy clients
