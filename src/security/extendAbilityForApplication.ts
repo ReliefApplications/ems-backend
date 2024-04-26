@@ -54,5 +54,30 @@ export default function extendAbilityForApplications(
   if (canManageCustomNotification)
     can(['create', 'delete', 'manage', 'read', 'update'], 'CustomNotification');
 
+  const canSeeEmailNotifications = user.roles?.some(
+    (r) =>
+      r.application?.equals(application) &&
+      r.permissions?.some((p) => p.type === 'can_see_email_notifications')
+  );
+
+  if (canSeeEmailNotifications) can('read', 'EmailNotification');
+
+  const canManageEmailNotifications = user.roles?.some(
+    (r) =>
+      r.application?.equals(application) &&
+      r.permissions?.some((p) => p.type === 'can_manage_email_notifications')
+  );
+
+  if (canManageEmailNotifications)
+    can(['delete', 'update'], 'EmailNotification');
+
+  const canCreateEmailNotifications = user.roles?.some(
+    (r) =>
+      r.application?.equals(application) &&
+      r.permissions?.some((p) => p.type === 'can_create_email_notifications')
+  );
+
+  if (canCreateEmailNotifications) can('create', 'EmailNotification');
+
   return abilityBuilder.build();
 }

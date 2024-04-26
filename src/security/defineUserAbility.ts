@@ -34,6 +34,7 @@ import {
   DistributionList,
   CustomNotification,
   Layer,
+  EmailNotification,
 } from '@models';
 
 /** Define available permissions on objects */
@@ -71,7 +72,8 @@ type Models =
   | Version
   | Workflow
   | CustomNotification
-  | Layer;
+  | Layer
+  | EmailNotification;
 export type Subjects = InferSubjects<Models>;
 
 // eslint-disable-next-line deprecation/deprecation

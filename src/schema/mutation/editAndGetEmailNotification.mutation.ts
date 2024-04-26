@@ -9,12 +9,15 @@ import {
   EmailNotificationInputType,
 } from '@schema/inputs/emailNotification.input';
 import { Types } from 'mongoose';
+import extendAbilityForApplications from '@security/extendAbilityForApplication';
+import { AppAbility } from '@security/defineUserAbility';
 
 /**
  *
  */
 interface AddCustomNotificationArgs {
   notification: EmailNotificationArgs;
+  application: string;
   id: string | Types.ObjectId;
 }
 
@@ -25,11 +28,17 @@ export default {
   type: EmailNotificationType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
+    application: { type: new GraphQLNonNull(GraphQLID) },
     notification: { type: EmailNotificationInputType },
   },
   async resolve(_, args: AddCustomNotificationArgs, context: Context) {
     try {
       graphQLAuthCheck(context);
+      const user = context.user;
+      const ability: AppAbility = extendAbilityForApplications(
+        user,
+        args.application
+      );
 
       // Uncomment the following block if validation is needed for the schedule
       // if (args.notification.schedule) {
@@ -59,6 +68,13 @@ export default {
           lastExecutionStatus: args.notification.lastExecutionStatus,
           isDeleted: args.notification.isDeleted,
         };
+
+        // Check permission to edit an email notification
+        if (ability.cannot('update', 'EmailNotification')) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.permissionNotGranted')
+          );
+        }
 
         const updatedData = await EmailNotification.findByIdAndUpdate(
           args.id,

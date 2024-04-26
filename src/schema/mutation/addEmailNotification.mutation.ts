@@ -8,6 +8,7 @@ import {
   EmailNotificationArgs,
   EmailNotificationInputType,
 } from '@schema/inputs/emailNotification.input';
+import extendAbilityForApplications from '@security/extendAbilityForApplication';
 
 /** Arguments for the addCustomNotification mutation */
 type AddCustomNotificationArgs = {
@@ -51,6 +52,19 @@ export default {
         lastExecution: args.notification.lastExecution,
         lastExecutionStatus: args.notification.lastExecutionStatus,
       };
+
+      // Check permission to edit an email notification
+      const user = context.user;
+      const ability = extendAbilityForApplications(
+        user,
+        args.notification.applicationId.toString()
+      );
+      if (ability.cannot('create', 'EmailNotification')) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
+      }
+
       update.dataSets = update.dataSets.filter(
         (block) => block.resource !== null
       );

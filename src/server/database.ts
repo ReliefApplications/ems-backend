@@ -117,6 +117,9 @@ export const initDatabase = async () => {
       'can_manage_templates',
       'can_manage_distribution_lists',
       'can_manage_custom_notifications',
+      'can_see_email_notifications',
+      'can_create_email_notifications',
+      'can_manage_email_notifications',
     ];
     for (const type of appPermissions.filter(
       (perm) => !currPermissions.find((p) => p.type === perm && !p.global)
