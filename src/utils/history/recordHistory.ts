@@ -252,6 +252,7 @@ export class RecordHistory {
       res.push({
         createdAt: this.record.createdAt,
         createdBy: this.record._createdBy?.user?.name,
+        incrementalId: this.record.incrementalId,
         changes,
       });
 
@@ -263,6 +264,7 @@ export class RecordHistory {
       createdAt: versions[0].createdAt,
       createdBy: this.record._createdBy?.user?.name,
       changes,
+      incrementalId: this.record.incrementalId,
       version: versions[0],
     });
 
@@ -272,6 +274,7 @@ export class RecordHistory {
         createdAt: versions[i].createdAt,
         createdBy: versions[i - 1].createdBy?.name,
         changes,
+        incrementalId: this.record.incrementalId,
         version: versions[i],
       });
     }
@@ -282,6 +285,7 @@ export class RecordHistory {
     res.push({
       createdAt: this.record.modifiedAt,
       createdBy: versions[versions.length - 1].createdBy?.name,
+      incrementalId: this.record.incrementalId,
       changes,
     });
 

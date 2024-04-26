@@ -14,6 +14,7 @@ export type RecordHistory = {
   createdBy: string;
   changes: Change[];
   version?: Version;
+  incrementalId?: string;
 }[];
 
 export type RecordHistoryMeta = {
