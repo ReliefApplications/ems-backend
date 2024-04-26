@@ -428,39 +428,23 @@ const buildMongoFilter = (
             }
           }
           case 'in': {
-            if (MULTISELECT_TYPES.includes(type)) {
-              return { [fieldName]: { $in: value } };
-            } else if (isNumber(value?.[0]?.value)) {
-              const eq = value.map((v) => {
-                return { [`data.${v.field}`]: { $eq: v.value } };
-              });
-              return { $or: eq };
-            } else if (
-              fieldName === 'data._globalSearch' &&
-              (type === 'text' || type === '')
-            ) {
-              return;
+            if (isAttributeFilter) {
+              return {
+                [fieldName]: { $regex: attrValue, $options: 'i' },
+              };
             } else {
-              return { [fieldName]: { $regex: value, $options: 'i' } };
+              value = Array.isArray(value) ? value : [value];
+              return { [fieldName]: { $in: value } };
             }
           }
           case 'notin': {
-            if (MULTISELECT_TYPES.includes(type)) {
-              return { [fieldName]: { $nin: value } };
-            } else if (isNumber(value?.[0]?.value)) {
-              const ne = value.map((v) => {
-                return { [`data.${v.field}`]: { $ne: v.value } };
-              });
-              return { $nor: ne };
-            } else if (
-              fieldName === 'data._globalSearch' &&
-              (type === 'text' || type === '')
-            ) {
-              return;
-            } else {
+            if (isAttributeFilter) {
               return {
-                [fieldName]: { $not: { $regex: value, $options: 'i' } },
+                [fieldName]: { $not: { $regex: attrValue, $options: 'i' } },
               };
+            } else {
+              value = Array.isArray(value) ? value : [value];
+              return { [fieldName]: { $nin: value } };
             }
           }
           case 'isempty': {
