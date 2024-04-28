@@ -20,6 +20,8 @@ import { filter, isEqual, keys, union, has, get } from 'lodash';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
+import { logEvent } from '@utils/events/logEvent';
+import { EventType } from '@utils/events/event.model';
 
 /**
  * Checks if the user has the permission to update all the fields they're trying to update
@@ -227,6 +229,13 @@ export default {
           new: true,
         });
         await version.save();
+        logEvent({
+          type: EventType.UPDATE_RECORD,
+          user: user._id.toString(),
+          datetime: new Date(),
+          record: oldRecord.incrementalId,
+          form: template.name,
+        });
         return await record;
       } else {
         // Revert an old version

@@ -10,6 +10,8 @@ import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
+import { logEvent } from '@utils/events/logEvent';
+import { EventType } from '@utils/events/event.model';
 
 /** Arguments for the addRecord mutation */
 type AddRecordArgs = {
@@ -133,6 +135,13 @@ export default {
         publisher.publish(channel.id, { notification });
       }
       await record.save();
+      logEvent({
+        type: EventType.ADD_RECORD,
+        user: user._id.toString(),
+        datetime: new Date(),
+        record: record.incrementalId,
+        form: form.name,
+      });
       return record;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

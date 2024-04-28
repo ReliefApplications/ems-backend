@@ -11,6 +11,8 @@ import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
+import { logEvent } from '@utils/events/logEvent';
+import { EventType } from '@utils/events/event.model';
 
 /** Arguments for the deleteRecord mutation */
 type DeleteRecordArgs = {
@@ -49,6 +51,13 @@ export default {
       if (args.hardDelete) {
         return await Record.findByIdAndDelete(record._id);
       } else {
+        logEvent({
+          type: EventType.UPDATE_RECORD,
+          user: user._id.toString(),
+          datetime: new Date(),
+          record: record.incrementalId,
+          form: form.name,
+        });
         return await Record.findByIdAndUpdate(
           record._id,
           { archived: true },
