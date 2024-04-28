@@ -40,7 +40,6 @@ export const createEventForm = async () => {
     permissions: resourcePermissions,
   });
   await resource.save();
-  console.log('Resource created');
 
   // Create the channel, with a special name
   const channel = new Channel({
@@ -48,7 +47,6 @@ export const createEventForm = async () => {
     form: EVENT_FORM._id,
   });
   await channel.save();
-  console.log('Channel created');
 
   // create form
   const form = new Form({
@@ -69,8 +67,6 @@ export const createEventForm = async () => {
  */
 export const logEvent = async (event: Event) => {
   const c = config.get('events') as EventConfig;
-  console.log('config', c);
-  console.log('event', event);
   if (c.provider !== 'oort') {
     return;
   }
