@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { Permission, Role, Channel } from '@models';
+import { Permission, Role, Channel, User } from '@models';
 import config from 'config';
 import { logger } from '../services/logger.service';
 
@@ -129,16 +129,32 @@ export const initDatabase = async () => {
       logger.info(`${type} application's permission created`);
     }
 
-    const hasAdminRole = !!(await Role.findOne({ title: 'admin' }));
-    if (!hasAdminRole) {
-      // Create admin role and assign permissions
-      const role = new Role({
-        title: 'admin',
-        permissions: await Permission.find().distinct('_id'),
-      });
-      await role.save();
-      logger.info('admin role created');
+    if (await Role.findOne({ title: 'admin' })) {
+      await Role.deleteMany({ title: 'admin' });
     }
+    // Create admin role and assign permissions
+    const role = new Role({
+      title: 'admin',
+      permissions: await Permission.find().distinct('_id'),
+    });
+    await role.save();
+    logger.info('admin role created');
+
+    if (
+      await User.findOne({
+        username: { $in: 'dummy@dummy.com' },
+      })
+    ) {
+      await User.deleteMany({ username: 'dummy@dummy.com' });
+    }
+    const date = new Date();
+    date.setDate(date.getDate() + 7);
+    await new User({
+      username: 'dummy@dummy.com',
+      roles: role._id,
+      // ability: SafeTestServer.defineUserAbilityMock(),
+      deleteAt: date,
+    }).save();
 
     const currChannels = await Channel.find();
     // Creates default channels.

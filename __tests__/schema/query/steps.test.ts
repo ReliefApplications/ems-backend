@@ -1,9 +1,20 @@
-import { ApolloServer } from 'apollo-server-express';
+import { Step, Role, User } from '@models';
+
+import supertest from 'supertest';
 import schema from '../../../src/schema';
 import { SafeTestServer } from '../../server.setup';
-import { Step, Role } from '@models';
+import { acquireToken } from '../../authentication.setup';
 
-let server: ApolloServer;
+let server: SafeTestServer;
+let request: supertest.SuperTest<supertest.Test>;
+let token: string;
+
+beforeAll(async () => {
+  server = new SafeTestServer();
+  await server.start(schema);
+  request = supertest(server.app);
+  token = `Bearer ${await acquireToken()}`;
+});
 
 /**
  * Test Steps query.
@@ -12,35 +23,36 @@ describe('Steps query tests', () => {
   const query = '{ steps { id, name } }';
 
   test('query with wrong user returns error', async () => {
-    server = await SafeTestServer.createApolloTestServer(schema, {
-      name: 'Wrong user',
-      roles: [],
-    });
-    const result = await server.executeOperation({ query });
-    expect(result.errors).toBeUndefined();
-    expect(result).toHaveProperty(['data', 'steps']);
-    expect(result.data?.steps).toEqual([]);
-    expect(result.data?.steps.length).toEqual(0);
+    await User.updateOne({ username: 'dummy@dummy.com' }, { roles: [] });
+    const response = await request
+      .post('/graphql')
+      .send({ query })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    expect(response.status).toBe(200);
+    expect(response.body).not.toHaveProperty('errors');
+    expect(response.body).toHaveProperty('data');
+    expect(response.body).toHaveProperty(['data', 'steps']);
+    expect(response.body.data.steps.length).toEqual(0);
   });
+
   test('query with admin user returns expected number of steps', async () => {
     const count = await Step.countDocuments();
-    const admin = await Role.findOne(
-      { title: 'admin' },
-      'id permissions'
-    ).populate({
-      path: 'permissions',
-      model: 'Permission',
-    });
-    server = await SafeTestServer.createApolloTestServer(schema, {
-      name: 'Admin user',
-      roles: [admin],
-    });
-    const result = await server.executeOperation({ query });
+    const admin = await Role.findOne({ title: 'admin' });
+    await User.updateOne(
+      { username: 'dummy@dummy.com' },
+      { roles: [admin._id] }
+    );
+    const response = await request
+      .post('/graphql')
+      .send({ query })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
 
-    expect(result.errors).toBeUndefined();
-    expect(result).toHaveProperty(['data', 'steps']);
-    expect(result.data?.steps.length).toEqual(count);
-    result.data?.steps.forEach((prop) => {
+    expect(response.body.errors).toBeUndefined();
+    expect(response.body).toHaveProperty(['data', 'steps']);
+    expect(response.body.data?.steps.length).toEqual(count);
+    response.body.data?.steps.forEach((prop) => {
       expect(prop).toHaveProperty('name');
     });
   });
