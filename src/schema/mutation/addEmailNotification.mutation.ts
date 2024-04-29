@@ -50,6 +50,7 @@ export default {
         recipientsType: args.notification.recipientsType,
         lastExecution: args.notification.lastExecution,
         lastExecutionStatus: args.notification.lastExecutionStatus,
+        isDraft: args.notification.isDraft,
       };
       update.dataSets = update.dataSets.filter(
         (block) => block.resource !== null

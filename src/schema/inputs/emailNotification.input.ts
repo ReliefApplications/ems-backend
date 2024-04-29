@@ -5,6 +5,7 @@ import {
   GraphQLInt,
   GraphQLID,
   GraphQLNonNull,
+  GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Types } from 'mongoose';
@@ -23,6 +24,7 @@ export type EmailNotificationArgs = {
   lastExecution: string;
   lastExecutionStatus: string;
   isDeleted: number;
+  isDraft: boolean;
 };
 
 /** GraphQL custom notification query input type definition */
@@ -42,5 +44,6 @@ export const EmailNotificationInputType = new GraphQLInputObjectType({
     lastExecution: { type: GraphQLString },
     lastExecutionStatus: { type: GraphQLString },
     isDeleted: { type: GraphQLInt },
+    isDraft: { type: GraphQLBoolean },
   }),
 });
