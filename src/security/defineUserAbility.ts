@@ -179,6 +179,7 @@ export default function defineUserAbility(user: User | Client): AppAbility {
         'Template',
         'DistributionList',
         'CustomNotification',
+        'EmailNotification',
       ]
     );
   } else {
