@@ -29,5 +29,4 @@ export * from './customNotification.type';
 export * from './metadata.type';
 export * from './layer.type';
 export * from './draftRecord.type';
-export * from './dataset.type';
 export * from './emailNotification.type';

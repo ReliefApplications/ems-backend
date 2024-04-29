@@ -21,7 +21,7 @@ import {
   replaceSubject,
 } from '@utils/notification/htmlBuilder';
 import mongoose from 'mongoose';
-import { mergeArrayOfObjects } from '@schema/types/dataset.type';
+import { mergeArrayOfObjects } from '@schema/types';
 import { getOwnerOptions, getUsersOptions } from '@utils/form/metadata.helper';
 import _ from 'lodash';
 
