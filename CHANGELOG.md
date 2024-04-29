@@ -1,3 +1,15 @@
+# [2.9.0](https://github.com/ReliefApplications/ems-backend/compare/v2.8.0...v2.9.0) (2024-04-29)
+
+
+### Bug Fixes
+
+* Graphql questions would not display text values in history downloads [#91235](https://github.com/ReliefApplications/ems-backend/issues/91235) ([#1026](https://github.com/ReliefApplications/ems-backend/issues/1026)) ([676f035](https://github.com/ReliefApplications/ems-backend/commit/676f035d05d4d33ff2624116a33854288e8db24e))
+
+
+### Features
+
+* Add 'in' and 'notIn' operators for record queries ([#951](https://github.com/ReliefApplications/ems-backend/issues/951)) ([e850042](https://github.com/ReliefApplications/ems-backend/commit/e850042dc77e7280a08511a470073bf6a5b5d2c7))
+
 # [2.8.0](https://github.com/ReliefApplications/ems-backend/compare/v2.7.2...v2.8.0) (2024-04-24)
 
 
