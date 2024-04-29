@@ -428,16 +428,23 @@ const buildMongoFilter = (
             }
           }
           case 'in': {
-            if (isAttributeFilter)
+            if (isAttributeFilter) {
               return {
                 [fieldName]: { $regex: attrValue, $options: 'i' },
               };
+            } else {
+              value = Array.isArray(value) ? value : [value];
+              return { [fieldName]: { $in: value } };
+            }
           }
           case 'notin': {
             if (isAttributeFilter) {
               return {
                 [fieldName]: { $not: { $regex: attrValue, $options: 'i' } },
               };
+            } else {
+              value = Array.isArray(value) ? value : [value];
+              return { [fieldName]: { $nin: value } };
             }
           }
           case 'isempty': {
