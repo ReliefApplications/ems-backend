@@ -5,13 +5,20 @@ import axios from 'axios';
  *
  * @param token The authorization token
  * @param filter The filter used for fetching the distant users
+ * @param offset offset to query users
  * @returns the choices
  */
-export const getPeople = async (token: string, filter: any): Promise<any[]> => {
+export const getPeople = async (
+  token: string,
+  filter: any,
+  offset = 0
+): Promise<any[]> => {
   const url = 'http://localhost:3000/proxy/common-services/graphql';
   const query = `query {
     users(
       filter: ${filter}
+      limitItems: 10
+      offset: ${offset}
     ) {
       userid
       firstname

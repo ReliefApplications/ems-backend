@@ -1,4 +1,4 @@
-import { GraphQLError, GraphQLList } from 'graphql';
+import { GraphQLError, GraphQLInt, GraphQLList } from 'graphql';
 import { logger } from '@services/logger.service';
 import { Context } from '@server/apollo/context';
 import GraphQLJSON from 'graphql-type-json';
@@ -8,6 +8,7 @@ import { getPeople } from '@utils/proxy';
 /** Arguments for the people query */
 type PeopleArgs = {
   filter?: any;
+  offset?: number;
 };
 
 /**
@@ -17,6 +18,7 @@ export default {
   type: new GraphQLList(PersonType),
   args: {
     filter: { type: GraphQLJSON },
+    offset: { type: GraphQLInt },
   },
   async resolve(parent, args: PeopleArgs, context: Context) {
     if (!args.filter) return [];
@@ -38,7 +40,7 @@ export default {
         return formattedFilter.replace(/\s/g, '');
       };
       const filter = getFormattedFilter(args.filter);
-      const people = await getPeople(context.token, filter);
+      const people = await getPeople(context.token, filter, args.offset ?? 0);
       if (people) {
         return people.map((person) => {
           const updatedPerson = { ...person };
