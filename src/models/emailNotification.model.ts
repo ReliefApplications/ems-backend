@@ -168,7 +168,7 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
       type: Number,
       default: 0,
     },
-    isDraft:{
+    isDraft: {
       type: Boolean,
       required: true,
     },
