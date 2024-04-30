@@ -9,6 +9,9 @@ import {
   encodeCursor,
 } from '@schema/types';
 import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
+import { accessibleBy } from '@casl/mongoose';
+import { AppAbility } from '@security/defineUserAbility';
+import extendAbilityForApplications from '@security/extendAbilityForApplication';
 
 /** Default page size */
 // const DEFAULT_FIRST = 10;
@@ -47,16 +50,30 @@ export default {
   async resolve(_, args, context: Context) {
     graphQLAuthCheck(context);
     try {
-      const query = EmailNotification.find({
-        isDeleted: { $ne: 1 },
-        applicationId: args.applicationId,
+      const ability: AppAbility = extendAbilityForApplications(
+        context.user,
+        args.applicationId
+      );
+      const abilityFilters = EmailNotification.find(
+        accessibleBy(ability, 'read').EmailNotification
+      ).getFilter();
+
+      const filters: any[] = [
+        {
+          isDeleted: { $ne: 1 },
+          applicationId: args.applicationId,
+        },
+        abilityFilters,
+      ];
+
+      const items = await EmailNotification.find({
+        $and: filters,
       })
         .sort(SORT_FIELDS[0].sort('desc'))
         .skip(args.skip)
         .limit(args.limit);
 
-      const emailNotifications = await query;
-      const edges = emailNotifications.map((r) => ({
+      const edges = items.map((r) => ({
         cursor: encodeCursor(SORT_FIELDS[0].cursorId(r)),
         node: r,
       }));
@@ -68,7 +85,7 @@ export default {
           endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
         },
         edges,
-        totalCount: await EmailNotification.countDocuments(),
+        totalCount: await EmailNotification.countDocuments({ $and: filters }),
       };
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

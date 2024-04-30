@@ -2,6 +2,7 @@ import { Ability, AbilityBuilder, AbilityClass } from '@casl/ability';
 import { clone } from 'lodash';
 import { User } from '@models';
 import { AppAbility } from './defineUserAbility';
+import permissions from '@const/permissions';
 
 /** Application ability class */
 // eslint-disable-next-line deprecation/deprecation
@@ -30,7 +31,7 @@ export default function extendAbilityForApplications(
   const canManageAppTemplates = user.roles?.some(
     (r) =>
       r.application?.equals(application) &&
-      r.permissions?.some((p) => p.type === 'can_manage_templates')
+      r.permissions?.some((p) => p.type === permissions.canManageTemplates)
   );
 
   if (canManageAppTemplates)
@@ -39,20 +40,56 @@ export default function extendAbilityForApplications(
   const canManageDistributionLists = user.roles?.some(
     (r) =>
       r.application?.equals(application) &&
-      r.permissions?.some((p) => p.type === 'can_manage_distribution_lists')
+      r.permissions?.some(
+        (p) => p.type === permissions.canManageDistributionLists
+      )
   );
 
   if (canManageDistributionLists)
     can(['create', 'delete', 'manage', 'read', 'update'], 'DistributionList');
 
+  // Deprecated
   const canManageCustomNotification = user.roles?.some(
     (r) =>
       r.application?.equals(application) &&
-      r.permissions?.some((p) => p.type === 'can_manage_custom_notifications')
+      r.permissions?.some(
+        (p) => p.type === permissions.canManageCustomNotifications
+      )
   );
 
   if (canManageCustomNotification)
     can(['create', 'delete', 'manage', 'read', 'update'], 'CustomNotification');
+
+  const canSeeEmailNotifications = user.roles?.some(
+    (r) =>
+      r.application?.equals(application) &&
+      r.permissions?.some(
+        (p) => p.type === permissions.canSeeEmailNotifications
+      )
+  );
+
+  if (canSeeEmailNotifications) can('read', 'EmailNotification');
+
+  const canManageEmailNotifications = user.roles?.some(
+    (r) =>
+      r.application?.equals(application) &&
+      r.permissions?.some(
+        (p) => p.type === permissions.canManageEmailNotifications
+      )
+  );
+
+  if (canManageEmailNotifications)
+    can(['delete', 'update'], 'EmailNotification');
+
+  const canCreateEmailNotifications = user.roles?.some(
+    (r) =>
+      r.application?.equals(application) &&
+      r.permissions?.some(
+        (p) => p.type === permissions.canCreateEmailNotifications
+      )
+  );
+
+  if (canCreateEmailNotifications) can('create', 'EmailNotification');
 
   return abilityBuilder.build();
 }
