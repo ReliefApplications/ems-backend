@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { Permission, Role, Channel, User } from '@models';
 import config from 'config';
 import { logger } from '../services/logger.service';
+import permissions from '@const/permissions';
 
 /**
  * Build the MongoDB url according to the environment parameters
@@ -112,14 +113,14 @@ export const initDatabase = async () => {
       logger.info(`${type} global permission created`);
     }
     const appPermissions = [
-      'can_see_roles',
-      'can_see_users',
-      'can_manage_templates',
-      'can_manage_distribution_lists',
-      'can_manage_custom_notifications',
-      'can_see_email_notifications',
-      'can_create_email_notifications',
-      'can_manage_email_notifications',
+      permissions.canSeeRoles,
+      permissions.canSeeUsers,
+      permissions.canManageTemplates,
+      permissions.canManageDistributionLists,
+      permissions.canManageCustomNotifications, // Deprecated
+      permissions.canSeeEmailNotifications,
+      permissions.canCreateEmailNotifications,
+      permissions.canManageEmailNotifications,
     ];
     for (const type of appPermissions.filter(
       (perm) => !currPermissions.find((p) => p.type === perm && !p.global)
