@@ -99,7 +99,7 @@ export const getToken = async (
   }
   if (apiConfiguration.authType === authType.userToService) {
     // Retrieve access token from settings, store it and return it
-    const settings: { token: string, tokenPrefix: string } = ping
+    const settings: { token: string; tokenPrefix: string } = ping
       ? apiConfiguration.settings
       : JSON.parse(
           CryptoJS.AES.decrypt(
@@ -107,7 +107,8 @@ export const getToken = async (
             config.get('encryption.key')
           ).toString(CryptoJS.enc.Utf8)
         );
-    const token = (settings.tokenPrefix ? settings.tokenPrefix : 'Bearer') + ' ' + settings.token;
+    const token =
+      (settings.tokenPrefix ? settings.tokenPrefix : 'Bearer') + ' ' + settings.token;
     cache.set(tokenID, token, 3570);
     return token;
   }
