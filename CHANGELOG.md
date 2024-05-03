@@ -1,3 +1,10 @@
+## [2.9.1](https://github.com/ReliefApplications/ems-backend/compare/v2.9.0...v2.9.1) (2024-05-03)
+
+
+### Bug Fixes
+
+* history could display modified values, even if no real update ([26fadd9](https://github.com/ReliefApplications/ems-backend/commit/26fadd9a4daf03e57c15d709bafd7da517c02d02))
+
 # [2.9.0](https://github.com/ReliefApplications/ems-backend/compare/v2.8.0...v2.9.0) (2024-04-29)
 
 
