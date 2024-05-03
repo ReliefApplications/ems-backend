@@ -9,6 +9,7 @@ import { getPeople } from '@utils/proxy';
 type PeopleArgs = {
   filter?: any;
   offset?: number;
+  limitItems?: number | null;
 };
 
 /**
@@ -19,6 +20,7 @@ export default {
   args: {
     filter: { type: GraphQLJSON },
     offset: { type: GraphQLInt },
+    limitItems: { type: GraphQLInt },
   },
   async resolve(parent, args: PeopleArgs, context: Context) {
     if (!args.filter) return [];
@@ -40,7 +42,12 @@ export default {
         return formattedFilter.replace(/\s/g, '');
       };
       const filter = getFormattedFilter(args.filter);
-      const people = await getPeople(context.token, filter, args.offset ?? 0);
+      const people = await getPeople(
+        context.token,
+        filter,
+        args.offset,
+        args.limitItems
+      );
       if (people) {
         return people.map((person) => {
           const updatedPerson = { ...person };
