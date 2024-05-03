@@ -170,7 +170,7 @@ export const getMetaResolver = (
                   )
                 ]
               : parent[fieldName];
-            if (field.type === 'people') {
+            if (field.type === 'people' || 'singlepeople') {
               field.resource = id;
             }
             return getMetaFieldResolver(field, context);

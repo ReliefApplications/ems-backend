@@ -31,7 +31,8 @@ const getMetaFieldResolver = (field: any, context: Context) => {
     case 'users': {
       return getMetaUsersResolver(field);
     }
-    case 'people': {
+    case 'people':
+    case 'singlepeople': {
       return getMetaPeopleResolver(field, context);
     }
     case 'owner': {

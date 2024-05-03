@@ -1,6 +1,7 @@
 import { Record } from '@models';
 import { Context } from '@server/apollo/context';
 import { getPeople } from '@utils/proxy';
+import { isArray } from 'lodash';
 
 /**
  * Return people meta resolver.
@@ -17,11 +18,15 @@ const getMetaPeopleResolver = async (field: any, context: Context) => {
   const peopleIds = [];
   records.forEach((record) => {
     const propertyValue = record.data[field.name];
-    propertyValue?.flat().forEach((id: string) => {
-      if (!peopleIds.includes(id)) {
-        peopleIds.push(id);
-      }
-    });
+    if (isArray(propertyValue))
+      propertyValue?.flat().forEach((id: string) => {
+        if (!peopleIds.includes(id)) {
+          peopleIds.push(id);
+        }
+      });
+    else {
+      peopleIds.push(propertyValue);
+    }
   });
   const getFilter = (people: any) => {
     const formattedFilter = `{
