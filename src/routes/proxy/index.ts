@@ -66,7 +66,8 @@ const proxyAPIRequest = async (
         url,
         method: req.method,
         headers: {
-          Authorization: `Bearer ${token}`,
+          // if user-to-service token may contain prefix so it's get directly in getToken
+          Authorization: api.authType == 'user-to-service' ? token : `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         maxRedirects: 35,
@@ -75,6 +76,7 @@ const proxyAPIRequest = async (
         }),
       })
         .then(async ({ data, status }) => {
+          console.log(data);
           // We are only caching the results of requests that are not user-dependent.
           // Otherwise, unwanted users could access cached data of other users.
           // As an improvement, we could include a stringified unique property of the user to the cache-key to enable user-specific cache.
