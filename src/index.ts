@@ -7,6 +7,7 @@ import config from 'config';
 import { logger } from './services/logger.service';
 import { checkConfig } from '@utils/server/checkConfig.util';
 import buildSchema from '@utils/schema/buildSchema';
+import { uploadSchemaFile } from '@utils/files/uploadSchemaFile';
 
 // Needed for survey.model, as xmlhttprequest is not defined in servers
 global.XMLHttpRequest = require('xhr2');
@@ -51,4 +52,5 @@ mongoose.connection.once('open', () => {
   // subscriberSafe();
   pullJobScheduler();
   customNotificationScheduler();
+  uploadSchemaFile();
 });
