@@ -342,22 +342,26 @@ export const replaceDatasets = async (
   bodyHtml: string,
   processedRecords: ProcessedDataset[]
 ): Promise<string> => {
-  await Promise.all(
-    processedRecords.map(async (processedDataSet) => {
-      if (bodyHtml.includes(`{{${processedDataSet.name}}}`)) {
-        bodyHtml = bodyHtml.replace(
-          `{{${processedDataSet.name}}}`,
-          buildTable(
-            processedDataSet.records,
-            processedDataSet.name,
-            processedDataSet.tableStyle,
-            processedDataSet.fields,
-            processedDataSet.fieldSet
-          )
-        );
-      }
-    })
-  );
+  if (bodyHtml) {
+    await Promise.all(
+      processedRecords.map(async (processedDataSet) => {
+        if (bodyHtml.includes(`{{${processedDataSet.name}}}`)) {
+          bodyHtml = bodyHtml.replace(
+            `{{${processedDataSet.name}}}`,
+            buildTable(
+              processedDataSet.records,
+              processedDataSet.name,
+              processedDataSet.tableStyle,
+              processedDataSet.fields,
+              processedDataSet.fieldSet
+            )
+          );
+        }
+      })
+    );
+  } else {
+    return '';
+  }
   return bodyHtml;
 };
 
