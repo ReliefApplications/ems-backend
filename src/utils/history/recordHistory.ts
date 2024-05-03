@@ -446,7 +446,8 @@ export class RecordHistory {
     };
 
     for (const version of history) {
-      for (const change of version.changes) {
+      for (let j = version.changes.length - 1; j >= 0; j--) {
+        const change = version.changes[j];
         const field = this.fields.find((f) => f.name === change.field);
         if (!field) continue;
         switch (field.type) {
@@ -611,6 +612,12 @@ export class RecordHistory {
           default:
             // for all other cases, keep the values
             break;
+        }
+        // In case of modification, check that old & new are really different
+        if (change.old !== undefined && change.new !== undefined) {
+          if (isEqual(change.old, change.new)) {
+            version.changes.splice(j, 1);
+          }
         }
       }
     }
