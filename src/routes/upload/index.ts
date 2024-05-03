@@ -445,8 +445,8 @@ router.post('/style/:application', async (req, res) => {
         .status(403)
         .send(i18next.t('common.errors.permissionNotGranted'));
     }
-    const css = compileString(file.data.toString()).css;
-    console.log(css);
+    file.data = Buffer.from(compileString(file.data.toString()).css);
+    file.name = file.name.replace('.scss', '.css');
     let path = '';
     try {
       path = await uploadFile('applications', req.params.application, file, {
