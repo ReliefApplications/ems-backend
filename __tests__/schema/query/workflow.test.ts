@@ -1,7 +1,7 @@
 import schema from '../../../src/schema';
 import { SafeTestServer } from '../../server.setup';
 import { acquireToken } from '../../authentication.setup';
-import { Dashboard, Step, Workflow } from '@models';
+import { Dashboard, Role, Step, User, Workflow } from '@models';
 import { faker } from '@faker-js/faker';
 import supertest from 'supertest';
 import { contentType } from '@const/enumTypes';
@@ -67,6 +67,11 @@ describe('Workflow query tests', () => {
   });
 
   test('query with admin user returns expected workflow', async () => {
+    const admin = await Role.findOne({ title: 'admin' });
+    await User.updateOne(
+      { username: 'dummy@dummy.com' },
+      { roles: [admin._id] }
+    );
     const variables = {
       id: workflow._id,
     };

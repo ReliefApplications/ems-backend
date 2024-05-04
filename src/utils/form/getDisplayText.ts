@@ -91,6 +91,9 @@ export const getFullChoices = async (
         headers: {
           Authorization: context.token,
           'Content-Type': 'application/json',
+          ...(context.accesstoken && {
+            accesstoken: context.accesstoken,
+          }),
         },
         data: {
           query: field.choicesByGraphQL.query,

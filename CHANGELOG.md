@@ -1,3 +1,52 @@
+## [2.9.1](https://github.com/ReliefApplications/ems-backend/compare/v2.9.0...v2.9.1) (2024-05-03)
+
+
+### Bug Fixes
+
+* history could display modified values, even if no real update ([26fadd9](https://github.com/ReliefApplications/ems-backend/commit/26fadd9a4daf03e57c15d709bafd7da517c02d02))
+
+# [2.9.0](https://github.com/ReliefApplications/ems-backend/compare/v2.8.0...v2.9.0) (2024-04-29)
+
+
+### Bug Fixes
+
+* Graphql questions would not display text values in history downloads [#91235](https://github.com/ReliefApplications/ems-backend/issues/91235) ([#1026](https://github.com/ReliefApplications/ems-backend/issues/1026)) ([676f035](https://github.com/ReliefApplications/ems-backend/commit/676f035d05d4d33ff2624116a33854288e8db24e))
+
+
+### Features
+
+* Add 'in' and 'notIn' operators for record queries ([#951](https://github.com/ReliefApplications/ems-backend/issues/951)) ([e850042](https://github.com/ReliefApplications/ems-backend/commit/e850042dc77e7280a08511a470073bf6a5b5d2c7))
+
+# [2.8.0](https://github.com/ReliefApplications/ems-backend/compare/v2.7.2...v2.8.0) (2024-04-24)
+
+
+### Bug Fixes
+
+* csv export should now lookalike excel export ([#981](https://github.com/ReliefApplications/ems-backend/issues/981)) ([b13e55c](https://github.com/ReliefApplications/ems-backend/commit/b13e55c94c10bebae42e30ac29dc83b30c9a7a88))
+* some ref data aggregations would not send correct data. Now use field name instead of grahp ql field name ([#998](https://github.com/ReliefApplications/ems-backend/issues/998)) ([d2e7074](https://github.com/ReliefApplications/ems-backend/commit/d2e7074853ff10fd29ad7b7f4e3d41683846e5cf))
+* update user management and who configurations ([38798f2](https://github.com/ReliefApplications/ems-backend/commit/38798f252efa2a62bd5256fcf5e031d77cabfdfc))
+
+
+### Features
+
+* Add email + AAD user type to automation rules ([#2468](https://github.com/ReliefApplications/ems-backend/issues/2468)) ([2240e1e](https://github.com/ReliefApplications/ems-backend/commit/2240e1ecedb3626738273adecf92fc3ed80c3bad)), closes [#89936](https://github.com/ReliefApplications/ems-backend/issues/89936) [#89936](https://github.com/ReliefApplications/ems-backend/issues/89936) [#89936](https://github.com/ReliefApplications/ems-backend/issues/89936)
+* role based display for action buttons ([#1008](https://github.com/ReliefApplications/ems-backend/issues/1008)) ([1579d04](https://github.com/ReliefApplications/ems-backend/commit/1579d040f1828fd11acba366786fe188295014b6))
+
+
+### Reverts
+
+* Revert "AB#90725 - Transform gis/feature endpoint into POST" (#1019) ([62178d0](https://github.com/ReliefApplications/ems-backend/commit/62178d0bce90e270b673f87f939fff5de1ba2b1c)), closes [AB#90725](https://github.com/AB/issues/90725) [#1019](https://github.com/ReliefApplications/ems-backend/issues/1019)
+* Revert "change response type #90266 (#1011)" (#1016) ([35ff495](https://github.com/ReliefApplications/ems-backend/commit/35ff49551aaec6495b5928806d4af6452becfd0e)), closes [#90266](https://github.com/ReliefApplications/ems-backend/issues/90266) [#1011](https://github.com/ReliefApplications/ems-backend/issues/1011) [#1016](https://github.com/ReliefApplications/ems-backend/issues/1016)
+* use field name instead of graphql field name ([c6975da](https://github.com/ReliefApplications/ems-backend/commit/c6975da6cd10d071fb34ba64b4290fa585b976f0))
+
+## [2.7.2](https://github.com/ReliefApplications/ems-backend/compare/v2.7.1...v2.7.2) (2024-03-25)
+
+
+### Bug Fixes
+
+* add check for empty context filter ([#995](https://github.com/ReliefApplications/ems-backend/issues/995)) ([31a8544](https://github.com/ReliefApplications/ems-backend/commit/31a85447f4a418000d763049d1f0d38261d82f66))
+* now working nested fields in reference data aggregation ([ed564b3](https://github.com/ReliefApplications/ems-backend/commit/ed564b3f9eef48f06674144ac94d153c5e494d91))
+
 ## [2.7.1](https://github.com/ReliefApplications/ems-backend/compare/v2.7.0...v2.7.1) (2024-03-04)
 
 

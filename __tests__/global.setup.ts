@@ -1,4 +1,6 @@
 import 'tsconfig-paths/register';
+import dotenv from 'dotenv';
+dotenv.config();
 import { startDatabase, initDatabase, stopDatabase } from '@server/database';
 import config from 'config';
 import { logger } from '@services/logger.service';

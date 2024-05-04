@@ -9,6 +9,7 @@ export interface Context {
   user: UserWithAbility;
   dataSources?: ReturnType<Awaited<ReturnType<typeof dataSources>>>;
   token?: string;
+  accesstoken?: string;
   i18next: any;
   timeZone: string;
 }
@@ -40,6 +41,9 @@ export default (server: ApolloServer<Context>) =>
         token: req.headers.authorization,
         timeZone: req.headers.usertimezone || 'UTC',
         locale: getICULocale(req?.headers?.language),
+        ...(req.headers.accesstoken && {
+          accesstoken: req.headers.accesstoken,
+        }),
       } as Context;
     }
   };

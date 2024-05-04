@@ -40,6 +40,13 @@ const userSchema = new Schema(
   }
 );
 
+/**
+ * Interface of user data provided by Microsoft Graph API
+ */
+export interface IUserMicrosoftGraph {
+  userType: 'Guest' | 'Member';
+}
+
 /** User documents interface definition */
 export interface User extends Document {
   kind: 'User';
@@ -56,6 +63,9 @@ export interface User extends Document {
   attributes?: any;
   modifiedAt?: Date;
   deleteAt?: Date;
+  // For internal logic only
+  graphData?: IUserMicrosoftGraph;
+  accessToken?: string;
 }
 
 userSchema.index(

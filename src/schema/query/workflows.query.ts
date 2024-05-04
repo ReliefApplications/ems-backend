@@ -13,12 +13,11 @@ import { Context } from '@server/apollo/context';
  */
 export default {
   type: new GraphQLList(WorkflowType),
-  resolve(parent, args, context: Context) {
+  async resolve(parent, args, context: Context) {
     graphQLAuthCheck(context);
     try {
       const ability: AppAbility = context.user.ability;
-      const workflows = Workflow.find(accessibleBy(ability, 'read').Workflow);
-      return workflows;
+      return await Workflow.find(accessibleBy(ability, 'read').Workflow);
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {
