@@ -43,9 +43,7 @@ const getGraphAccessToken = async () => {
 const getUserGraphInfo = async (user: User) => {
   const graphToken = await getGraphAccessToken();
   const oid = user.oid;
-  console.log('there');
   if (graphToken && oid) {
-    console.log('par ici');
     // Select url to fetch specific user info
     const url = `https://graph.microsoft.com/v1.0/users/${oid}?$select=userType`;
     return axios({
@@ -197,15 +195,11 @@ export const checkIfRoleIsAssigned = (user: User, filter: any): boolean => {
  * @returns list of auto assigned roles
  */
 export const getAutoAssignedRoles = async (user: User): Promise<Role[]> => {
-  console.log(user);
   // First, try to get user info from Microsoft graph
   if (user.oid && config.get('user.useMicrosoftGraph')) {
-    console.log('fetching graph');
     const graphData = await getUserGraphInfo(user);
     if (graphData) {
       user.graphData = graphData;
-    } else {
-      logger.error('error');
     }
   }
   // Check all roles with auto assignment rules set
