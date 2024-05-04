@@ -1,3 +1,10 @@
+## [2.9.2](https://github.com/ReliefApplications/ems-backend/compare/v2.9.1...v2.9.2) (2024-05-04)
+
+
+### Bug Fixes
+
+* getSearchFilter could break "contains" when used with non-text fields ([#1038](https://github.com/ReliefApplications/ems-backend/issues/1038)) ([ea1f1a8](https://github.com/ReliefApplications/ems-backend/commit/ea1f1a8cedcc3f7e22c28b0550f529fea9009b44))
+
 ## [2.9.1](https://github.com/ReliefApplications/ems-backend/compare/v2.9.0...v2.9.1) (2024-05-03)
 
 
