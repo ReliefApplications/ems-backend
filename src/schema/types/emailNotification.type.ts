@@ -95,6 +95,7 @@ export const EmailNotificationType = new GraphQLObjectType({
     status: { type: GraphQLString },
     recipientsType: { type: GraphQLString },
     isDeleted: { type: GraphQLInt },
+    isDraft: { type: GraphQLBoolean },
   }),
 });
 
