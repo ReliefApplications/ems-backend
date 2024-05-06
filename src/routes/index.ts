@@ -10,6 +10,7 @@ import permissions from './permissions';
 import roles from './roles';
 import gis from './gis';
 import style from './style';
+import schema from './schema';
 import config from 'config';
 
 /** Express router instance */
@@ -29,5 +30,6 @@ router.use('/summarycards', summarycards);
 router.use('/roles', roles);
 router.use('/gis', gis);
 router.use('/style', style);
+router.use('/schema', schema);
 
 export { router };

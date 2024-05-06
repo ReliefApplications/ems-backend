@@ -29,6 +29,7 @@ import {
 } from './apollo/queries/introspection.query';
 import { pluralize } from 'inflection';
 import config from 'config';
+import { uploadSchemaFile } from '@utils/files/uploadSchemaFile';
 
 /** List of user fields */
 const USER_FIELDS = ['id', 'name', 'username'];
@@ -241,6 +242,8 @@ class SafeServer {
         });
       }
     }
+    // Generate and upload updated schema file
+    uploadSchemaFile(schema);
 
     // === REST ===
     this.app.use(router);

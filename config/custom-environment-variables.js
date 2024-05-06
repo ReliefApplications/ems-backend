@@ -69,4 +69,7 @@ module.exports = {
     clientId: 'MICROSOFT_GRAPH_CLIENT_ID',
     clientSecret: 'MICROSOFT_GRAPH_CLIENT_SECRET',
   },
+  public: {
+    fileName: 'PUBLIC_FILE_NAME',
+  },
 };
