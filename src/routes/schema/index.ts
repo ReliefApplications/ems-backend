@@ -11,7 +11,7 @@ router.get('/url', async (req: any, res) => {
     // Current timestamp
     const timestamp = Date.now();
     const storageEndpoint = config.get('public.fileName');
-    const schemaUrl = `${storageEndpoint}/introspection/schema.graphql?${timestamp}`;
+    const schemaUrl = `${storageEndpoint}/introspection/schema?${timestamp}`;
     return res.status(200).send({ url: schemaUrl });
   } catch (err) {
     logger.error(err.message, { stack: err.stack });

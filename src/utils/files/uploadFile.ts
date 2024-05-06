@@ -91,7 +91,7 @@ export const uploadFile = async (
     // contains the folder and the blob name.
     const filename = get(options, 'filename', `${folder}/${blobName}`);
     const blockBlobClient = containerClient.getBlockBlobClient(filename);
-    await blockBlobClient.uploadData(file.data);
+    await blockBlobClient.uploadData(file.data ?? file);
     return filename;
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
