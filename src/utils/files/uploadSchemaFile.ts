@@ -7,10 +7,10 @@ import { printSchema } from 'graphql';
 import buildSchema from '@utils/schema/buildSchema';
 
 /** Storage connection string */
-// const STORAGE_CONNECTION_STRING: string = config.get('public.fileName');
-const STORAGE_CONNECTION_STRING: string = config.get(
-  'blobStorage.connectionString'
-);
+const STORAGE_CONNECTION_STRING: string = config.get('public.fileName');
+// const STORAGE_CONNECTION_STRING: string = config.get(
+//   'blobStorage.connectionString'
+// );
 
 /**
  * Generate and save GraphQL schema file.
