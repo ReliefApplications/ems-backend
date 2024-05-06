@@ -254,6 +254,7 @@ const buildMongoFilter = (
                 return;
               }
             }
+            return;
           }
           case 'startswith': {
             if (fieldName.includes('id')) {
