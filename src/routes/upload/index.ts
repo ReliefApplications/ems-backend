@@ -449,10 +449,15 @@ router.post('/style/:application', async (req, res) => {
     file.name = file.name.replace('.scss', '.css');
     let path = '';
     try {
-      path = await uploadFile('applications', req.params.application, file, {
-        filename: application.cssFilename,
-        allowedExtensions: ['css', 'scss'],
-      });
+      path = await uploadFile(
+        'public',
+        `applications/${req.params.application}`,
+        file,
+        {
+          filename: application.cssFilename,
+          allowedExtensions: ['css', 'scss'],
+        }
+      );
     } catch (err) {
       throw new GraphQLError(err.message);
     }
