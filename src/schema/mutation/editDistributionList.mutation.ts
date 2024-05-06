@@ -7,7 +7,7 @@ import {
   DistributionListArgs,
   DistributionListInputType,
 } from '@schema/inputs/distributionList.input';
-import { validateEmail } from '@utils/validators';
+import * as EmailValidator from 'email-validator';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
@@ -45,7 +45,7 @@ export default {
       }
       // Prevent wrong emails to be saved
       if (
-        args.distributionList.emails.filter((x) => !validateEmail(x)).length > 0
+        args.distributionList.emails.filter((x) => !EmailValidator.validate(x)).length > 0
       ) {
         throw new GraphQLError(
           context.i18next.t('common.errors.invalidEmailsInput')

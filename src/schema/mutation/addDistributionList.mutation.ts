@@ -3,7 +3,7 @@ import { Application } from '@models';
 import { DistributionListType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
-import { validateEmail } from '@utils/validators';
+import * as EmailValidator from 'email-validator';
 import {
   DistributionListInputType,
   DistributionListArgs,
@@ -42,7 +42,7 @@ export default {
       }
       // Prevent wrong emails to be saved
       if (
-        args.distributionList.emails.filter((x) => !validateEmail(x)).length > 0
+        args.distributionList.emails.filter((x) => !EmailValidator.validate(x)).length > 0
       ) {
         throw new GraphQLError(
           context.i18next.t('common.errors.invalidEmailsInput')

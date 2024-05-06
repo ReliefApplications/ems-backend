@@ -8,7 +8,7 @@ import {
 import permissions from '@const/permissions';
 import { PositionAttribute, Role, User } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
-import { validateEmail } from '@utils/validators';
+import * as EmailValidator from 'email-validator';
 import { PositionAttributeInputType } from '../inputs';
 import { UserType } from '../types';
 import { logger } from '@services/logger.service';
@@ -65,7 +65,7 @@ export default {
         }
       }
       // Prevent wrong emails to be invited.
-      if (args.usernames.filter((x) => !validateEmail(x)).length > 0) {
+      if (args.usernames.filter((x) => !EmailValidator.validate(x)).length > 0) {
         throw new GraphQLError(
           context.i18next.t('common.errors.invalidEmailsInput')
         );
