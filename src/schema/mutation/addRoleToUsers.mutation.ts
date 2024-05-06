@@ -65,7 +65,9 @@ export default {
         }
       }
       // Prevent wrong emails to be invited.
-      if (args.usernames.filter((x) => !EmailValidator.validate(x)).length > 0) {
+      if (
+        args.usernames.filter((x) => !EmailValidator.validate(x)).length > 0
+      ) {
         throw new GraphQLError(
           context.i18next.t('common.errors.invalidEmailsInput')
         );

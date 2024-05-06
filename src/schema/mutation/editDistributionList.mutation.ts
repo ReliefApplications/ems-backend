@@ -45,7 +45,8 @@ export default {
       }
       // Prevent wrong emails to be saved
       if (
-        args.distributionList.emails.filter((x) => !EmailValidator.validate(x)).length > 0
+        args.distributionList.emails.filter((x) => !EmailValidator.validate(x))
+          .length > 0
       ) {
         throw new GraphQLError(
           context.i18next.t('common.errors.invalidEmailsInput')
