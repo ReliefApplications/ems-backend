@@ -123,14 +123,17 @@ const getSortAggregation = async (
       },
     };
   });
-  aggregation.push({
-    ...(Object.keys(aggregationSort).length !== 0 && {
-      $sort: aggregationSort,
-    }),
-    ...(Object.keys(aggregationAddFields).length !== 0 && {
+
+  if (Object.keys(aggregationAddFields).length !== 0) {
+    aggregation.push({
       $addFields: aggregationAddFields,
-    }),
-  });
+    });
+  }
+  if (Object.keys(aggregationSort).length !== 0) {
+    aggregation.push({
+      $sort: aggregationSort,
+    });
+  }
 
   return aggregation;
 };
