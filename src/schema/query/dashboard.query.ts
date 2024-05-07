@@ -15,7 +15,6 @@ import GraphQLJSON from 'graphql-type-json';
 import { accessibleBy } from '@casl/mongoose';
 import { getNewDashboardName } from '@utils/context/getNewDashboardName';
 import { getContextData } from '@utils/context/getContextData';
-import * as EmailValidator from 'email-validator';
 
 /** Arguments for the dashboard query */
 type DashboardArgs = {
@@ -43,29 +42,6 @@ export default {
     // Authentication check
     graphQLAuthCheck(context);
     try {
-      const chien = [
-        'simple@example.com',
-        'very.common@example.com',
-        'FirstName.LastName@EasierReading.org',
-        'x@example.com',
-        'long.email-address-with-hyphens@and.subdomains.example.com',
-        'user.name+tag+sorting@example.com',
-        'name/surname@example.com',
-        'admin@example',
-        'example@s.example',
-        '" "@example.org',
-        '"john..doe"@example.org',
-        'mailhost!username@example.org',
-        '"very.(),:;<>[]".VERY."very@\\ "very".unusual"@strange.example.com',
-        'user%example.com@example.org',
-        'user-@example.org',
-        'postmaster@[123.123.123.123]',
-        'postmaster@[IPv6:2001:0db8:85a3:0000:0000:8a2e:0370:7334]',
-        '_test@[IPv6:2001:0db8:85a3:0000:0000:8a2e:0370:7334]',
-      ];
-      chien.map((chihuahua) => {
-        console.log(chihuahua, EmailValidator.validate(chihuahua));
-      });
       const user = context.user;
       // get data and check permissions
       const mainDashboard = await Dashboard.findById(args.id);
