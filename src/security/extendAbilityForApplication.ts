@@ -70,15 +70,15 @@ export default function extendAbilityForApplications(
 
   if (canSeeEmailNotifications) can('read', 'EmailNotification');
 
-  const canManageEmailNotifications = user.roles?.some(
+  const canUpdateEmailNotifications = user.roles?.some(
     (r) =>
       r.application?.equals(application) &&
       r.permissions?.some(
-        (p) => p.type === permissions.canManageEmailNotifications
+        (p) => p.type === permissions.canUpdateEmailNotifications
       )
   );
 
-  if (canManageEmailNotifications)
+  if (canUpdateEmailNotifications)
     can(['delete', 'update'], 'EmailNotification');
 
   const canCreateEmailNotifications = user.roles?.some(
