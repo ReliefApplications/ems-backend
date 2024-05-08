@@ -7,6 +7,7 @@ export enum PipelineStage {
   ADD_FIELDS = 'addFields',
   UNWIND = 'unwind',
   CUSTOM = 'custom',
+  LABEL = 'label',
 }
 
 /** Mongoose accumulators enum definition */

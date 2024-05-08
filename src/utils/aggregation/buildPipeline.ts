@@ -276,6 +276,211 @@ const buildPipeline = (
         }
         break;
       }
+      case PipelineStage.LABEL: {
+        const { copyFrom, field: copyTo } = stage.form;
+
+        const questionsWithChoices = resource.fields.filter(
+          (item) => 'choices' in item && item.choices
+        );
+
+        // If the we are copying from a question with choices
+        if (questionsWithChoices.map((item) => item.name).includes(copyFrom)) {
+          const questionType = questionsWithChoices.find(
+            (item) => item.name === copyFrom
+          ).type;
+          const questionChoices = questionsWithChoices.find(
+            (item) => item.name === copyFrom
+          ).choices;
+
+          const colChoiceMap: {
+            col: string;
+            value: any;
+            label: string;
+          }[] = [];
+
+          const generateSwitchOperation = (val: string, col: string) => ({
+            $cond: {
+              if: { $isArray: val },
+              then: {
+                $map: {
+                  input: val,
+                  as: 'value',
+                  in: {
+                    $switch: {
+                      branches: [
+                        ...colChoiceMap.map((choice) => ({
+                          case: {
+                            $and: [
+                              {
+                                $eq: ['$$value', choice.value],
+                              },
+                              {
+                                $eq: [
+                                  {
+                                    $toString: col,
+                                  },
+                                  choice.col,
+                                ],
+                              },
+                            ],
+                          },
+                          then: choice.label,
+                        })),
+                      ],
+                      default: '$$value',
+                    },
+                  },
+                },
+              },
+              else: {
+                $switch: {
+                  branches: [
+                    ...colChoiceMap.map((choice) => ({
+                      case: {
+                        $and: [
+                          {
+                            $eq: [val, choice.value],
+                          },
+                          {
+                            $eq: [col, choice.col],
+                          },
+                        ],
+                      },
+                      then: choice.label,
+                    })),
+                  ],
+                  default: val,
+                },
+              },
+            },
+          });
+
+          questionsWithChoices
+            .find((item) => item.name === copyFrom)
+            .columns?.forEach((column: any) => {
+              const columnChoices = column.choices || questionChoices;
+
+              colChoiceMap.push(
+                ...columnChoices.map((choice) => ({
+                  col: column.name,
+                  value: choice.value,
+                  label: choice.text,
+                }))
+              );
+            });
+
+          switch (questionType) {
+            // Matrixdropdown is an object of objects of either arrays or single values
+            case 'matrixdropdown': {
+              pipeline.push({
+                $addFields: {
+                  [copyTo]: {
+                    $arrayToObject: {
+                      $map: {
+                        input: { $objectToArray: `$${copyTo}` },
+                        as: 'row',
+                        in: {
+                          k: '$$row.k',
+                          v: {
+                            $arrayToObject: {
+                              $map: {
+                                input: { $objectToArray: '$$row.v' },
+                                as: 'column',
+                                in: {
+                                  k: '$$column.k',
+                                  v: generateSwitchOperation(
+                                    '$$column.v',
+                                    '$$column.k'
+                                  ),
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                  id: 1,
+                },
+              });
+              break;
+            }
+            // Matrixdynamic is an array of objects of either arrays or single values
+            case 'matrixdynamic': {
+              pipeline.push({
+                $addFields: {
+                  [copyTo]: {
+                    $map: {
+                      input: `$${copyTo}`,
+                      as: 'ans',
+                      in: {
+                        $arrayToObject: {
+                          $map: {
+                            input: { $objectToArray: '$$ans' },
+                            as: 'col',
+                            in: {
+                              k: '$$col.k',
+                              v: generateSwitchOperation('$$col.v', '$$col.k'),
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              });
+              break;
+            }
+            // Everything else is either an array or single value
+            default: {
+              pipeline.push({
+                $addFields: {
+                  [copyTo]: {
+                    $cond: {
+                      if: { $isArray: `$${copyTo}` },
+                      then: {
+                        $map: {
+                          input: `$${copyTo}`,
+                          as: 'value',
+                          in: {
+                            $switch: {
+                              branches: [
+                                ...questionChoices.map((choice) => ({
+                                  case: {
+                                    $eq: ['$$value', choice.value],
+                                  },
+                                  then: choice.text,
+                                })),
+                              ],
+                              default: '$$value',
+                            },
+                          },
+                        },
+                      },
+                      else: {
+                        $switch: {
+                          branches: [
+                            ...questionChoices.map((choice) => ({
+                              case: {
+                                $eq: [`$${copyTo}`, choice.value],
+                              },
+                              then: choice.text,
+                            })),
+                          ],
+                          default: `$${copyTo}`,
+                        },
+                      },
+                    },
+                  },
+                },
+              });
+              break;
+            }
+          }
+        }
+        break;
+      }
+
       case PipelineStage.CUSTOM: {
         const custom: string = stage.form.raw;
         if (forbiddenKeywords.some((x: string) => custom.includes(x))) {

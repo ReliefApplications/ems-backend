@@ -57,7 +57,6 @@ export default {
         args.name && { name: args.name },
         args.steps && { steps: args.steps }
       );
-      logger.info('update ==>> ', update);
       workflow = await Workflow.findByIdAndUpdate(args.id, update, {
         new: true,
       });
