@@ -1,5 +1,5 @@
-OORT Back-end
-=======
+# OORT Back-end
+
 [![GitHub version](https://img.shields.io/github/v/release/ReliefApplications/ems-backend)](https://img.shields.io/github/v/release/ReliefApplications/ems-backend)
 [![CodeQL](https://github.com/ReliefApplications/ems-backend/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/ReliefApplications/ems-backend/actions/workflows/codeql-analysis.yml)
 
@@ -11,8 +11,8 @@ It was made for a Proof of Concept of a UI Builder for WHO.
 
 To read more about the project, and how to setup the back-end, please refer to the [documentation of the project](https://gitlab.com/who-ems/ui-doc).
 
-*   [Setup](https://gitlab.com/who-ems/ui-doc#how-to-setup)
-*   [Deployment](https://gitlab.com/who-ems/ui-doc#how-to-deploy)
+- [Setup](https://gitlab.com/who-ems/ui-doc#how-to-setup)
+- [Deployment](https://gitlab.com/who-ems/ui-doc#how-to-deploy)
 
 # Utilities
 
@@ -20,31 +20,36 @@ Docker-compose executes nodemon command, which provides an inspector tool.
 
 9229 port is allocated to back-end inspection. You can use inspector with browser tools.
 
-For Chrome, go to **chrome://inspect)** and click on *inspect* below the remote target.
+For Chrome, go to **chrome://inspect)** and click on _inspect_ below the remote target.
 
 ## Testing
 
 In order to execute tests locally, you can execute the command:
+
 ```
 docker-compose -f docker-compose.test.yml run test-server npm run test
 ```
 
 Or this command:
+
 ```
 npm run test
 ```
 
 It is also possible to run tests on a single file, by passing it as a parameter:
+
 ```
 docker-compose -f docker-compose.test.yml run test-server npm run test -- <path_to_file>
 ```
 
 Or with this command:
+
 ```
 npm run test -- <path_to_file>
 ```
 
 You can also limit the tests to one specific folder. For example:
+
 ```
 npm run test -- --testPathPattern=models
 ```
@@ -54,6 +59,7 @@ Note: If you're running the tests on Windows, make sure the test command in your
 ```json
 "test": "node --max-old-space-size=8192 ./node_modules/jest/bin/jest.js --logHeapUsage --forceExit"
 ```
+
 Will only run tests in the **models** folder.
 
 # RabbitMQ
@@ -63,4 +69,3 @@ If management platform is not reachable at 15672, you can use this command ( whi
 ```
 docker-compose exec rabbitmq rabbitmq-plugins enable rabbitmq_management
 ```
-

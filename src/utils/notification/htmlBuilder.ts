@@ -301,14 +301,19 @@ export const buildTable = (
           table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
           ${formatDates(_.get(record, field.name))}</td>`;
         } else if (field.type === 'geospatial') {
-          table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
+          if (record.data[field.name]?.properties) {
+            table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
           ${formatDates(
-            record.data[field.name].properties.countryName
+            record.data[field.name]?.properties?.countryName
           )} (${formatDates(
-            record.data[field.name].properties.coordinates.lat
-          )}, ${formatDates(
-            record.data[field.name].properties.coordinates.lng
-          )}</td>`;
+              record.data[field.name]?.properties?.coordinates.lat
+            )}, ${formatDates(
+              record.data[field.name]?.properties?.coordinates.lng
+            )}</td>`;
+          } else {
+            table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
+          ${formatDates(record.data[field.name])}</td>`;
+          }
         } else if (field.select) {
           table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
           ${record.data[field.name] ?? ''}</td>`;
