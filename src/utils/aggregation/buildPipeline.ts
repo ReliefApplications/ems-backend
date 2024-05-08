@@ -481,6 +481,62 @@ const buildPipeline = (
         break;
       }
 
+      case PipelineStage.USER: {
+        // If the stage is a user stage, we need to add a lookup stage to get the user data
+        // to represents which user information we want to get, email or name
+        const { field: userField, to } = stage.form;
+        const newField = to === 'email' ? 'username' : to;
+
+        pipeline.push({
+          $addFields: {
+            [userField]: {
+              $cond: {
+                if: { $isArray: `$${userField}` },
+                then: {
+                  $map: {
+                    input: `$${userField}`,
+                    as: 'user',
+                    in: {
+                      $convert: {
+                        input: '$$user',
+                        to: 'objectId',
+                        onError: null,
+                      },
+                    },
+                  },
+                },
+                else: {
+                  $convert: {
+                    input: `$${userField}`,
+                    to: 'objectId',
+                    onError: null,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        // do lookup on objectId
+        pipeline.push({
+          $lookup: {
+            from: 'users',
+            localField: userField,
+            foreignField: '_id',
+            as: userField,
+          },
+        });
+
+        // If the user field is an array, we need to project the user data
+        pipeline.push({
+          $addFields: {
+            [userField]: `$${userField}.${newField}`,
+          },
+        });
+
+        break;
+      }
+
       case PipelineStage.CUSTOM: {
         const custom: string = stage.form.raw;
         if (forbiddenKeywords.some((x: string) => custom.includes(x))) {
