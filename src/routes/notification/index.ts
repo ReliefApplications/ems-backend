@@ -395,19 +395,19 @@ router.post('/send-email/:configId', async (req, res) => {
     // This is required for images to render in the body on legacy clients
     if (config.emailLayout.header.headerLogo) {
       attachments.push({
-        path: config.emailLayout.header.headerLogo.__zone_symbol__value,
+        path: config.emailLayout.header.headerLogo,
         cid: 'headerImage',
       });
     }
     if (config.emailLayout.footer.footerLogo) {
       attachments.push({
-        path: config.emailLayout.footer.footerLogo.__zone_symbol__value,
+        path: config.emailLayout.footer.footerLogo,
         cid: 'footerImage',
       });
     }
     if (config.emailLayout.banner.bannerImage) {
       attachments.push({
-        path: config.emailLayout.banner.bannerImage.__zone_symbol__value,
+        path: config.emailLayout.banner.bannerImage,
         cid: 'bannerImage',
       });
     }
@@ -684,19 +684,19 @@ router.post('/send-individual-email/:configId', async (req, res) => {
     // This is required for images to render in the body on legacy clients
     if (config.emailLayout.header.headerLogo) {
       attachments.push({
-        path: config.emailLayout.header.headerLogo.__zone_symbol__value,
+        path: config.emailLayout.header.headerLogo,
         cid: 'headerImage',
       });
     }
     if (config.emailLayout.footer.footerLogo) {
       attachments.push({
-        path: config.emailLayout.footer.footerLogo.__zone_symbol__value,
+        path: config.emailLayout.footer.footerLogo,
         cid: 'footerImage',
       });
     }
     if (config.emailLayout.banner.bannerImage) {
       attachments.push({
-        path: config.emailLayout.banner.bannerImage.__zone_symbol__value,
+        path: config.emailLayout.banner.bannerImage,
         cid: 'bannerImage',
       });
     }
