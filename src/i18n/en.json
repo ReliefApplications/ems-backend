@@ -236,7 +236,9 @@
 					},
 					"invalidArguments": "Either fields or permissions must be provided.",
 					"permission": {
-						"notVisible": "Please provide permission to read records before providing permission to edit them."
+						"notVisible": "Please provide permission to read records before providing permission to {{action}} them.",
+						"edit": "edit",
+						"download": "download"
 					}
 				}
 			}

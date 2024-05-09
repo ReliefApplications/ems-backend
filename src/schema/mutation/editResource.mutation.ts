@@ -36,9 +36,11 @@ type PermissionChange = {
   canSee?: SimplePermissionChange;
   canUpdate?: SimplePermissionChange;
   canDelete?: SimplePermissionChange;
+  canDownload?: SimplePermissionChange;
   canSeeRecords?: AccessPermissionChange;
   canUpdateRecords?: AccessPermissionChange;
   canDeleteRecords?: AccessPermissionChange;
+  canDownloadRecords?: AccessPermissionChange;
   recordsUnicity?: AccessPermissionChange;
 };
 
@@ -206,37 +208,42 @@ const checkPermission = (
   permission: string,
   permissions: any
 ) => {
-  switch (permission) {
-    case 'canUpdateRecords': {
-      // If there is a global see permission for this role it should be okay.
+  const checkPermissions =
+    permission === 'canUpdateRecords' || permission === 'canDownloadRecords';
+  if (checkPermissions) {
+    // If there is a global see permission for this role it should be okay.
+    if (
+      get(resourcePermissions, 'canSeeRecords', []).find((p) =>
+        p.role.equals(change.role)
+      )
+    ) {
+      return;
+    }
+    // Otherwise if the current rule apply see permissions as well it's okay.
+    if (change.access) {
+      const canSee = get(permissions, 'canSeeRecords', []);
       if (
-        get(resourcePermissions, 'canSeeRecords', []).find((p) =>
-          p.role.equals(change.role)
+        !Array.isArray(canSee) &&
+        canSee.add &&
+        canSee.add.length &&
+        canSee.add.some(
+          (x) => x.role === change.role && isEqual(x.access, change.access)
         )
       ) {
-        break;
+        return;
       }
-      // Otherwise if the current rule apply see permissions as well it's okay.
-      if (change.access) {
-        const canSee = get(permissions, 'canSeeRecords', []);
-        if (
-          !Array.isArray(canSee) &&
-          canSee.add &&
-          canSee.add.length &&
-          canSee.add.some(
-            (x) => x.role === change.role && isEqual(x.access, change.access)
-          )
-        ) {
-          break;
-        }
-      }
-      throw new GraphQLError(
-        context.i18next.t(
-          'mutations.resource.edit.errors.permission.notVisible'
-        )
-      );
-      break;
     }
+    throw new GraphQLError(
+      context.i18next.t(
+        'mutations.resource.edit.errors.permission.notVisible',
+        {
+          action: context.i18next.t(
+            'mutations.resource.edit.errors.permission.' +
+              (permission === 'canUpdateRecords' ? 'edit' : 'download')
+          ),
+        }
+      )
+    );
   }
 };
 
@@ -309,7 +316,7 @@ const automateFieldsPermission = (
             )
           );
       }
-      // Make sure that user does not have any read permission on resource
+      // Make sure that user does not have any see permission on resource
       if (
         !get(resourcePermissions, 'canSeeRecords', []).find((p) =>
           p.role.equals(change.role)
@@ -318,7 +325,7 @@ const automateFieldsPermission = (
           p.role.equals(change.role)
         )
       ) {
-        // Add update permission to all fields.
+        // Add see permission to all fields.
         resourceFields
           .map((f) => f.name)
           .forEach((f) =>

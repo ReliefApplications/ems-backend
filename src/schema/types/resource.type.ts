@@ -121,6 +121,11 @@ export const ResourceType = new GraphQLObjectType({
               parent.permissions,
               args.role
             ),
+            canDownloadRecords: rolePermissionResolver(
+              'canDownloadRecords',
+              parent.permissions,
+              args.role
+            ),
           };
         } else {
           return null;

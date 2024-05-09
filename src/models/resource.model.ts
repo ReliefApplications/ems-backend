@@ -17,10 +17,12 @@ export interface Resource extends Document {
     canSee?: any[];
     canUpdate?: any[];
     canDelete?: any[];
+    canDownload?: any[];
     canCreateRecords?: any[];
     canSeeRecords?: any[];
     canUpdateRecords?: any[];
     canDeleteRecords?: any[];
+    canDownloadRecords?: any[];
   };
   fields: {
     permissions?: {
@@ -60,6 +62,12 @@ const resourceSchema = new Schema<Resource>(
           ref: 'Role',
         },
       ],
+      canDownload: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Role',
+        },
+      ],
       canCreateRecords: [
         {
           role: {
@@ -91,6 +99,16 @@ const resourceSchema = new Schema<Resource>(
         },
       ],
       canDeleteRecords: [
+        {
+          role: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role',
+          },
+          access: mongoose.Schema.Types.Mixed,
+          _id: false,
+        },
+      ],
+      canDownloadRecords: [
         {
           role: {
             type: mongoose.Schema.Types.ObjectId,

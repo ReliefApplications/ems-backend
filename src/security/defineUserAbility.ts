@@ -46,7 +46,13 @@ export type ObjectPermissions = keyof (ApiConfiguration['permissions'] &
   Step['permissions']);
 
 /** Define actions types for casl */
-export type Actions = 'create' | 'read' | 'update' | 'delete' | 'manage';
+export type Actions =
+  | 'create'
+  | 'read'
+  | 'update'
+  | 'delete'
+  | 'manage'
+  | 'download';
 
 /** Define subjects types for casl */
 type Models =
@@ -217,10 +223,16 @@ export default function defineUserAbility(user: User | Client): AppAbility {
     Access of resources
   === */
   if (userGlobalPermissions.includes(permissions.canSeeResources)) {
-    can('read', ['Resource', 'Record']);
+    can(['read', 'download'], ['Resource', 'Record']);
   } else {
     can('read', 'Resource', filters('canSee', user));
+    can('download', 'Resource', filters('canDownload', user));
     can('read', 'Resource', filters('canSeeRecords', user, { suffix: 'role' }));
+    can(
+      'download',
+      'Resource',
+      filters('canDownloadRecords', user, { suffix: 'role' })
+    );
     can(
       'read',
       'Resource',
@@ -239,7 +251,10 @@ export default function defineUserAbility(user: User | Client): AppAbility {
     Creation / Edition / Deletion of resources
   === */
   if (userGlobalPermissions.includes(permissions.canManageResources)) {
-    can(['create', 'read', 'update', 'delete'], ['Resource', 'Record']);
+    can(
+      ['create', 'read', 'update', 'delete', 'download'],
+      ['Resource', 'Record']
+    );
     can('manage', 'Record');
   } else {
     can('update', 'Resource', filters('canUpdate', user));
