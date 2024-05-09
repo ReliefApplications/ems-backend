@@ -14,7 +14,7 @@ const nameMap = new Map<string, string>();
  *
  * @param doc Duplicated form or resource.
  */
-const handleRelatedNames = (doc: Form | Resource) => {
+export const handleRelatedNames = (doc: Form | Resource) => {
   doc.fields.forEach((f) => {
     // Only change resource/resources fields
     if (!['resource', 'resources'].includes(f.type)) {

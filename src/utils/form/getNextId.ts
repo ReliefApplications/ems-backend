@@ -9,6 +9,7 @@ import i18next from 'i18next';
 import { isEqual } from 'lodash';
 import { Types } from 'mongoose';
 import { logger } from '@services/logger.service';
+import NodeCache from 'node-cache';
 
 /** Maps each available variable to its template */
 const TEMPLATES = {
@@ -17,6 +18,11 @@ const TEMPLATES = {
   RESOURCE_NAME: '{resourceName}',
   INCREMENTAL_NUM: '{incremental}',
 } as const;
+
+/** Local storage initialization */
+const cache = new NodeCache();
+/** Cache duration */
+const CACHE_DURATION = 10;
 
 /**
  * Builds the incremental ID from the the shape string and an object with all the variables.
@@ -154,45 +160,78 @@ export const getNextId = async (structureId: string | Form) => {
   const idShape = resource.idShape ?? DEFAULT_INCREMENTAL_ID_SHAPE;
   const name = resource.name;
 
-  /** Gets the last id added to the form */
-  const getLastID = async () => {
-    const filters = {
-      $and: [
-        { resource: (structureId as Form).resource },
-        // Only add the year filter if the id shape includes the year variable
-        idShape.shape.includes(ID_SHAPE_VARIABLES.YEAR)
-          ? {
-              $expr: {
-                $eq: [{ $year: '$createdAt' }, new Date().getFullYear()],
-              },
-            }
-          : {},
-      ],
-    };
+  // Check if it's in the cache
+  const cachedId: number | Promise<number> | undefined = cache.get(
+    (structureId as Form).resource.toString()
+  );
 
-    // Fetches the last record to get the last id used
-    let lastRecord = await Record.findOne(filters)
-      .sort({ _id: -1 })
-      .limit(1)
-      .select('incID');
+  // If it's in the cache, increment it and return
+  if (cachedId) {
+    const id = await cachedId;
+    const incrementalId = buildIncrementalId(idShape, {
+      incremental: id.toString(),
+      year: new Date().getFullYear().toString(),
+      resourceInitial: name?.charAt(0).toUpperCase() || '',
+      resourceName: name?.toUpperCase() || '',
+    });
+    cache.set(
+      (structureId as Form).resource.toString(),
+      id + 1,
+      CACHE_DURATION
+    );
+    return { incID: id, incrementalId };
+  }
 
-    if (lastRecord && !lastRecord.incID) {
-      // If the last record has no incID, it means it was created before the incID field was added
-      // to the Record model. In this case, we need to update the incID of all records
-      // to avoid duplicates.
-      await updateIncrementalIds(resource, idShape, true);
+  const nextIdPromise = new Promise<number>(async (resolve) => {
+    /** Gets the last id added to the form */
+    const getLastID = async () => {
+      const filters = {
+        $and: [
+          { resource: (structureId as Form).resource },
+          // Only add the year filter if the id shape includes the year variable
+          idShape.shape.includes(ID_SHAPE_VARIABLES.YEAR)
+            ? {
+                $expr: {
+                  $eq: [{ $year: '$createdAt' }, new Date().getFullYear()],
+                },
+              }
+            : {},
+        ],
+      };
 
-      // Re-fetches the last record
-      lastRecord = await Record.findOne(filters)
+      // Fetches the last record to get the last id used
+      let lastRecord = await Record.findOne(filters)
         .sort({ _id: -1 })
         .limit(1)
         .select('incID');
-    }
-    return lastRecord?.incID ?? null;
-  };
 
-  const incID = ((await getLastID()) ?? 0) + 1;
+      if (lastRecord && !lastRecord.incID) {
+        // If the last record has no incID, it means it was created before the incID field was added
+        // to the Record model. In this case, we need to update the incID of all records
+        // to avoid duplicates.
+        await updateIncrementalIds(resource, idShape, true);
 
+        // Re-fetches the last record
+        lastRecord = await Record.findOne(filters)
+          .sort({ _id: -1 })
+          .limit(1)
+          .select('incID');
+      }
+      return lastRecord?.incID ?? null;
+    };
+
+    const nextID = ((await getLastID()) ?? 0) + 1;
+    resolve(nextID);
+  });
+
+  // If not in cache, add it as a promise with the next id + 1
+  cache.set(
+    (structureId as Form).resource.toString(),
+    new Promise((r) => nextIdPromise.then((id) => r(id + 1))),
+    10
+  );
+
+  const incID = await nextIdPromise;
   const incrementalId = buildIncrementalId(idShape, {
     incremental: incID.toString(),
     year: new Date().getFullYear().toString(),

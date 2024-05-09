@@ -32,8 +32,7 @@ interface ExportBatchParams {
   filter?: any;
   format: 'csv' | 'xlsx';
   query: any;
-  sortField?: string;
-  sortOrder?: 'asc' | 'desc';
+  sort?: any[];
   resource?: string;
   timeZone: string;
   fileName: string;
@@ -223,8 +222,7 @@ export default class Exporter {
     )();
     set(this.req.context, 'dataSources', contextDataSources);
     const sort = await getSortAggregation(
-      this.params.sortField,
-      this.params.sortOrder,
+      this.params.sort,
       this.resource.fields,
       this.req.context
     );

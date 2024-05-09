@@ -19,6 +19,12 @@ interface Filter {
   position?: string;
 }
 
+/** Mongoose state interface declaration */
+interface State {
+  name: string;
+  id: string;
+}
+
 /** Dashboard documents interface declaration */
 export interface Dashboard extends Document {
   kind: 'Dashboard';
@@ -27,6 +33,7 @@ export interface Dashboard extends Document {
   modifiedAt?: Date;
   structure?: any;
   showFilter?: boolean;
+  states?: State[];
   buttons?: Button[];
   archived: boolean;
   archivedAt?: Date;
@@ -58,12 +65,22 @@ const filterSchema = new Schema<Filter>(
   { _id: false }
 );
 
+/** Mongoose state schema declaration */
+const stateSchema = new Schema<State>(
+  {
+    name: String,
+    id: String,
+  },
+  { _id: false }
+);
+
 /** Mongoose dashboard schema declaration */
 const dashboardSchema = new Schema<Dashboard>(
   {
     name: String,
     structure: mongoose.Schema.Types.Mixed,
     showFilter: Boolean,
+    states: [stateSchema],
     buttons: [buttonSchema],
     archived: {
       type: Boolean,

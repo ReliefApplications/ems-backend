@@ -12,6 +12,7 @@ import extendAbilityForContent from '@security/extendAbilityForContent';
 import { isEmpty } from 'lodash';
 import { logger } from '@services/logger.service';
 import ButtonActionInputType from '@schema/inputs/button-action.input';
+import StateInputType from '@schema/inputs/state.input';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
@@ -33,10 +34,16 @@ type DashboardFilterArgs = {
   position?: string;
 };
 
+type DashboardStatesArgs = {
+  name: string;
+  id: string;
+};
+
 /** Arguments for the editDashboard mutation */
 type EditDashboardArgs = {
   id: string | Types.ObjectId;
   structure?: any;
+  states?: DashboardStatesArgs[];
   name?: string;
   buttons?: DashboardButtonArgs[];
   gridOptions?: any;
@@ -52,6 +59,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     structure: { type: GraphQLJSON },
+    states: { type: new GraphQLList(StateInputType) },
     name: { type: GraphQLString },
     buttons: { type: new GraphQLList(ButtonActionInputType) },
     gridOptions: { type: GraphQLJSON },
@@ -88,6 +96,7 @@ export default {
       Object.assign(
         updateDashboard,
         args.structure && { structure: args.structure },
+        args.states && { states: args.states },
         args.name && { name: args.name },
         args.filter && {
           filter: { ...dashboard.toObject().filter, ...args.filter },
