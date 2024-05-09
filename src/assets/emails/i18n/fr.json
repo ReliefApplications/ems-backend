@@ -13,7 +13,7 @@
   "createAccountToApp.noteTitle": "Note: ",
   "createAccountToApp.accessInfo": "Pour accéder à cette application, veuillez suivre ces étapes simples: ",
   "createAccountToApp.goTo": "rendez-vous sur cette page ",
-  "createAccountToApp.clickOn": "et cliquez sur le bouton S'inscrire pour créer votre compte. Attention à utiliser la même adresse email que celle-ci !",
+  "createAccountToApp.clickOn": "et créer votre compte. Attention à utiliser la même adresse email que celle-ci !",
   "createAccountToApp.validateEmail": "Validez votre adresse email avec l'email qui vous a été envoyé.",
   "createAccountToApp.openApplication": "Ouvrez l'application avec le bouton ci-dessous et profitez-en !",
   "createAccountToApp.noteContent": "Vous ne pouvez créer votre compte que pendant les 7 jours suivant la réception de cet email. Si l'invitation a expiré, veuillez demander au propriétaire de l'application de vous envoyer une autre invitation.",
