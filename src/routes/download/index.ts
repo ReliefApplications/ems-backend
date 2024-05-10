@@ -344,7 +344,11 @@ router.post('/records', async (req, res) => {
 
     /** check if user has access to resource before allowing him to download */
     const ability: AppAbility = req.context.user.ability;
-    const filters = Resource.find(accessibleBy(ability, 'read').Resource)
+    const readFilter = accessibleBy(ability, 'read');
+    const downloadFilter = accessibleBy(ability, 'download');
+    const filters = Resource.find({
+      $and: [readFilter.Resource, downloadFilter.Resource],
+    })
       .where({
         _id: {
           $eq: params.resource,
