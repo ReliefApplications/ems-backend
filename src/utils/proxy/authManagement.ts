@@ -108,7 +108,9 @@ export const getToken = async (
           ).toString(CryptoJS.enc.Utf8)
         );
     const token =
-      (settings.tokenPrefix ? settings.tokenPrefix : 'Bearer') + ' ' + settings.token;
+      (settings.tokenPrefix ? settings.tokenPrefix : 'Bearer') +
+      ' ' +
+      settings.token;
     cache.set(tokenID, token, 3570);
     return token;
   }

@@ -80,14 +80,16 @@ export default {
         canDeleteRecords: [],
       };
       try {
- 
         if (args.apiConfiguration) {
-          const apiConfiguration = await ApiConfiguration.findById(args.apiConfiguration);
-          
-          const url = apiConfiguration.endpoint + `assets/${args.kobo}?format=json`;
+          const apiConfiguration = await ApiConfiguration.findById(
+            args.apiConfiguration
+          );
+
+          const url =
+            apiConfiguration.endpoint + `assets/${args.kobo}?format=json`;
           const response = await axios.get(url);
           const survey = response.data.content.survey;
-          
+
           const structure = extractKoboFields(survey);
 
           // create resource
@@ -104,7 +106,7 @@ export default {
             resource,
             core: true,
             permissions: defaultFormPermissions,
-            structure: structure
+            structure: structure,
           });
           await form.save();
           return form;
