@@ -5,7 +5,7 @@ import { cloneDeep } from 'lodash';
 
 /**
  * Add to resources the new download permission to the permissions lists of each resource.
- * Duplicates the "see" permissions rules: "see" guarantees "download" & "create" guarantees "see" which guarantees "download".
+ * Duplicates the "see" permissions rules: "see" guarantees "download".
  */
 export const up = async () => {
   await startDatabaseForMigration();
@@ -16,10 +16,9 @@ export const up = async () => {
     resource.permissions = {
       ...permissions,
       canDownload: permissions.canSee ? cloneDeep(permissions.canSee) : [],
-      canDownloadRecords:
-        permissions.canSeeRecords || permissions.canCreateRecords
-          ? cloneDeep(permissions.canSeeRecords)
-          : [],
+      canDownloadRecords: permissions.canSeeRecords
+        ? cloneDeep(permissions.canSeeRecords)
+        : [],
     };
   }
 

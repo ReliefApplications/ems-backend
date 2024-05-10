@@ -435,6 +435,44 @@ const removeResourcePermission = (
 };
 
 /**
+ * Apply common sense rules on resources permissions.
+ * If user can see records, it should be able to download records
+ * If user can not see records, it should not be able to download records
+ *
+ * @param action current action being processed (add or remove permission)
+ * @param permission permission being added / removed
+ * @param update update document
+ * @param object remove/addition rules ( array of string or array of role / access)
+ */
+const automateResourcesPermission = (
+  action: 'add' | 'remove',
+  permission: string,
+  update: any,
+  object: any
+) => {
+  switch (permission) {
+    case 'canSeeRecords': {
+      switch (action) {
+        case 'add': {
+          // If adding canSeeRecords permission from role, add canDownloadRecords also
+          addResourcePermission(update, object, 'canDownloadRecords');
+          break;
+        }
+        case 'remove': {
+          // If removing canSeeRecords permission from role, remove canDownloadRecords also
+          removeResourcePermission(update, object, 'canDownloadRecords');
+          break;
+        }
+      }
+      break;
+    }
+    default: {
+      break;
+    }
+  }
+};
+
+/**
  * Apply common sense rules on fields.
  * If user cannot edit nor create new records, it should be not able to edit the fields
  * If user cannot see records, it should not be able to see the fields
@@ -627,6 +665,7 @@ export default {
             if (obj.add && obj.add.length) {
               // Add permission
               addResourcePermission(update, obj.add, permission);
+              automateResourcesPermission('add', permission, update, obj.add);
               /**
                * 'Common sense' rules, that apply if no existing permission for the role is set on this resource
                */
@@ -655,6 +694,12 @@ export default {
             if (obj.remove && obj.remove.length) {
               // Remove permission
               removeResourcePermission(update, obj.remove, permission);
+              automateResourcesPermission(
+                'remove',
+                permission,
+                update,
+                obj.remove
+              );
               // Remove permission for all fields, if role does not have any other access
               obj.remove.forEach((x) => {
                 if (x.role) {

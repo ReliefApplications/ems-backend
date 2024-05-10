@@ -236,7 +236,9 @@
 					},
 					"invalidArguments": "******",
 					"permission": {
-						"notVisible": "******"
+						"download": "******",
+						"edit": "******",
+						"notVisible": "****** {{action}} ******"
 					}
 				}
 			}
