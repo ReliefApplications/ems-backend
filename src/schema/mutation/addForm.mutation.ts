@@ -5,7 +5,8 @@ import {
   GraphQLError,
 } from 'graphql';
 import { validateGraphQLTypeName } from '@utils/validators';
-import { Resource, Form, Role, ReferenceData } from '@models';
+import { extractKoboFields } from '@utils/form';
+import { Resource, Form, Role, ReferenceData, ApiConfiguration } from '@models';
 import { FormType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { status } from '@const/enumTypes';
@@ -13,12 +14,15 @@ import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
+import axios from 'axios';
 
 /** Arguments for the addForm mutation */
 type AddFormArgs = {
   name: string;
   resource?: string | Types.ObjectId;
   template?: string | Types.ObjectId;
+  apiConfiguration?: string | Types.ObjectId;
+  kobo?: string;
 };
 
 /**
@@ -31,10 +35,13 @@ export default {
     name: { type: new GraphQLNonNull(GraphQLString) },
     resource: { type: GraphQLID },
     template: { type: GraphQLID },
+    apiConfiguration: { type: GraphQLID },
+    kobo: { type: GraphQLString },
   },
   async resolve(parent, args: AddFormArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
+      console.log(args);
       // Check authentication
       const user = context.user;
       const ability: AppAbility = user.ability;
@@ -73,7 +80,35 @@ export default {
         canDeleteRecords: [],
       };
       try {
-        if (!args.resource) {
+ 
+        if (args.apiConfiguration) {
+          const apiConfiguration = await ApiConfiguration.findById(args.apiConfiguration);
+          
+          const url = apiConfiguration.endpoint + `assets/${args.kobo}?format=json`;
+          const response = await axios.get(url);
+          const survey = response.data.content.survey;
+          
+          const structure = extractKoboFields(survey);
+
+          // create resource
+          const resource = new Resource({
+            name: args.name,
+            //createdAt: new Date(),
+            permissions: defaultResourcePermissions,
+          });
+          await resource.save();
+          const form = new Form({
+            name: args.name,
+            graphQLTypeName,
+            status: status.pending,
+            resource,
+            core: true,
+            permissions: defaultFormPermissions,
+            structure: structure
+          });
+          await form.save();
+          return form;
+        } else if (!args.resource) {
           // Check permission to create resource
           if (ability.cannot('create', 'Resource')) {
             throw new GraphQLError(

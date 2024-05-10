@@ -4,6 +4,7 @@ export * from './addField';
 export * from './replaceField';
 export * from './findDuplicateFields';
 export * from './extractFields';
+export * from './extractKoboFields';
 export * from './getFieldType';
 
 // === RECORDS ===
