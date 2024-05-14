@@ -68,7 +68,6 @@ export default {
           lastExecutionStatus: args.notification.lastExecutionStatus,
           isDeleted: args.notification.isDeleted,
           isDraft: args.notification.isDraft,
-          
         };
 
         // Check permission to edit an email notification
