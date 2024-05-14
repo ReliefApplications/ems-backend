@@ -442,7 +442,7 @@ export default {
       );
 
       // Check if resource exists and aggregation exists
-      if (!(referenceData && aggregation && referenceData.data)) {
+      if (!(referenceData && referenceData.data)) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       // sourceFields and pipeline from args have priority over current aggregation ones
