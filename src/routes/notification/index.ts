@@ -254,6 +254,10 @@ router.post('/send-email/:configId', async (req, res) => {
 
         for (const obj of tempRecords) {
           const data = obj?.data;
+          if (obj.form) {
+            // TEMP - until we can return form name.
+            obj.form = resource.name;
+          }
           for (const [key, value] of Object.entries(data)) {
             const userField = fields.find((x) => {
               return x.type === 'users' && x.name === key;

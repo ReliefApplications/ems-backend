@@ -38,6 +38,8 @@ export const formatDates = (rowData: unknown): string => {
       // Format the date as MM/DD/YY, hh:mm AM/PM UTC
       return date.toLocaleString('en-US', dateTimeLocale);
     }
+    // If string, return as-is.
+    return rowData;
   } else if (rowData instanceof Date) {
     // Format the date as MM/DD/YY, hh:mm AM/PM UTC
     return rowData.toLocaleString('en-US', dateTimeLocale);
@@ -48,7 +50,7 @@ export const formatDates = (rowData: unknown): string => {
   } else if (!rowData) {
     return '';
   }
-  return rowData as string;
+  return JSON.stringify(rowData);
 };
 
 /**
