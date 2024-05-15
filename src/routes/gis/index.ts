@@ -13,7 +13,7 @@ import { logger } from '@services/logger.service';
 import axios from 'axios';
 import { isEqual, get, omit, isEmpty } from 'lodash';
 import turf, { Feature, booleanPointInPolygon } from '@turf/turf';
-import dataSources, { CustomAPI } from '@server/apollo/dataSources';
+import { CustomAPI, buildDataSource } from '@server/apollo/dataSources';
 import { getAdmin0Polygons } from '@utils/gis/getCountryPolygons';
 import filterReferenceData from '@utils/referenceData/referenceDataFilter.util';
 
@@ -407,13 +407,13 @@ router.post('/feature', async (req, res) => {
             referenceData.apiConfiguration,
             'name endpoint graphQLEndpoint'
           );
-          const contextDataSources = (
-            await dataSources({
+          const contextDataSource = (
+            await buildDataSource(apiConfiguration.name, {
               // Passing upstream request so accesstoken can be used for authentication
               req: req,
             } as any)
           )();
-          const dataSource = contextDataSources[
+          const dataSource = contextDataSource[
             apiConfiguration.name
           ] as CustomAPI;
           let data: any =
