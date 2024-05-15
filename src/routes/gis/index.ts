@@ -11,7 +11,7 @@ import i18next from 'i18next';
 import mongoose from 'mongoose';
 import { logger } from '@services/logger.service';
 import axios from 'axios';
-import { isEqual, get, omit, isEmpty } from 'lodash';
+import { isEqual, get, omit, isEmpty, isNil } from 'lodash';
 import turf, { Feature, booleanPointInPolygon } from '@turf/turf';
 import dataSources, { CustomAPI } from '@server/apollo/dataSources';
 import { getAdmin0Polygons } from '@utils/gis/getCountryPolygons';
@@ -106,7 +106,6 @@ const getFeatureFromItem = (
             features.push(...parseToSingleFeature(feature));
           }
         }
-      } else {
       }
     }
   } else {
@@ -163,6 +162,35 @@ const getFeatures = async (
 };
 
 /**
+ * Formats the items by taking in consideration the field type
+ *
+ * @param items items to format
+ * @param fields fields to get the types of
+ */
+const transformItems = (items: any[], fields: any[]) => {
+  const itemFields = Object.keys(items[0])
+    .filter((key) => key !== 'id' && key !== 'canUpdate' && key !== 'canDelete')
+    .map((key) => {
+      return fields.find((field) => field.name === key);
+    });
+  for (const field of itemFields) {
+    switch (field.type) {
+      case 'date':
+        items.forEach((item) => {
+          item[field.name] = !isNil(item[field.name])
+            ? new Date(item[field.name]).toLocaleDateString('en-US', {
+                year: '2-digit',
+                month: 'numeric',
+                day: 'numeric',
+              })
+            : null;
+        });
+        break;
+    }
+  }
+};
+
+/**
  * Graphql query to fetch records from layouts and aggregations
  *
  * @param query gql query
@@ -171,6 +199,7 @@ const getFeatures = async (
  * @param featureCollection Feature collection to populate
  * @param layerType Type of layer we are getting
  * @param mapping mapping used in aggregations
+ * @param fields fields of the resource
  * @returns error if fails, otherwise populates feature collection
  */
 const gqlQuery = (
@@ -179,7 +208,8 @@ const gqlQuery = (
   req: any,
   featureCollection: any,
   layerType: GeometryType,
-  mapping: any
+  mapping: any,
+  fields?: any
 ) =>
   axios({
     url: `${config.get('server.url')}/graphql`,
@@ -202,23 +232,20 @@ const gqlQuery = (
     try {
       for (const field in data.data) {
         if (Object.prototype.hasOwnProperty.call(data.data, field)) {
-          if (data.data[field].items?.length > 0) {
-            // Aggregation
-            await getFeatures(
-              featureCollection.features,
-              layerType,
-              data.data[field].items,
-              mapping
-            );
-          } else if (data.data[field].edges?.length > 0) {
-            // Query
-            await getFeatures(
-              featureCollection.features,
-              layerType,
-              data.data[field].edges.map((x) => x.node),
-              mapping
-            );
-          }
+          const items =
+            data.data[field].items?.length > 0
+              ? data.data[field].items // Aggregation
+              : data.data[field].edges?.length > 0
+              ? data.data[field].edges.map((x) => x.node) // Query
+              : [];
+          transformItems(items, fields);
+
+          await getFeatures(
+            featureCollection.features,
+            layerType,
+            items,
+            mapping
+          );
         }
       }
     } catch (err) {
@@ -342,7 +369,15 @@ router.post('/feature', async (req, res) => {
         return res.status(404).send(i18next.t('common.errors.dataNotFound'));
       }
       await Promise.all([
-        gqlQuery(query, variables, req, featureCollection, layerType, mapping),
+        gqlQuery(
+          query,
+          variables,
+          req,
+          featureCollection,
+          layerType,
+          mapping,
+          resourceData.fields
+        ),
       ]).catch((err) => {
         throw new Error(err);
       });
