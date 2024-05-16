@@ -1,6 +1,6 @@
 import { graphQLAuthCheck } from '@schema/shared';
 import { logger } from '@services/logger.service';
-import { GraphQLError, GraphQLInt } from 'graphql';
+import { GraphQLError, GraphQLInt, GraphQLString } from 'graphql';
 import { Context } from '@server/apollo/context';
 import { EmailDistributionList } from '@models';
 import { decodeCursor, encodeCursor } from '@schema/types';
@@ -39,13 +39,18 @@ export default {
   args: {
     limit: { type: GraphQLInt, defaultValue: 0 },
     skip: { type: GraphQLInt, defaultValue: 0 },
+    id: { type: GraphQLString, defaultValue: '' },
   },
   async resolve(_, args, context: Context) {
     graphQLAuthCheck(context);
     try {
-      const emailDistributionLists = await EmailDistributionList.find({
-        isDeleted: { $ne: 1 },
-      })
+      const query: any = { isDeleted: { $ne: 1 } };
+
+      if (args?.id.length > 0) {
+        query._id = args.id;
+      }
+
+      const emailDistributionLists = await EmailDistributionList.find(query)
         .sort(SORT_FIELDS[0].sort('desc'))
         .skip(args.skip)
         .limit(args.limit);
