@@ -53,7 +53,16 @@ export const sendCreateAccountInvitation = async (
         senderName: sender.name,
         appName: application.name,
         url,
-        platformUrl: new URL(config.get('frontOffice.uri')),
+        platformUrl: new URL(
+          config.get('auth.url').toString() +
+            '/realms/' +
+            config.get('auth.realm').toString() +
+            '/protocol/openid-connect/registrations?client_id=' +
+            config.get('auth.clientId').toString() +
+            '&scope=openid%20profile&redirect_uri=' +
+            config.get('frontOffice.uri').toString().slice(0, -1) +
+            '&response_type=code'
+        ),
       },
     });
   } else {
@@ -64,9 +73,16 @@ export const sendCreateAccountInvitation = async (
       },
       locals: {
         senderName: sender.name,
-        url:
-          new URL(config.get('backOffice.uri')) +
-          (config.get('backOffice.uri').toString().slice(-1) != '/' ? '/' : ''), // Adds final slash if missing
+        url: new URL(
+          config.get('auth.url').toString() +
+            '/realms/' +
+            config.get('auth.realm').toString() +
+            '/protocol/openid-connect/registrations?client_id=' +
+            config.get('auth.clientId').toString() +
+            '&scope=openid%20profile&redirect_uri=' +
+            config.get('backOffice.uri').toString().slice(0, -1) +
+            '&response_type=code'
+        ),
       },
     });
   }
