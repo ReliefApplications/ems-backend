@@ -12,6 +12,7 @@ import deleteRecord from './deleteRecord.mutation';
 import deleteRecords from './deleteRecords.mutation';
 import convertRecord from './convertRecord.mutation';
 import restoreRecord from './restoreRecord.mutation';
+import generateRecords from './generateRecords.mutation';
 import addDashboard from './addDashboard.mutation';
 import editDashboard from './editDashboard.mutation';
 import deleteDashboard from './deleteDashboard.mutation';
@@ -105,6 +106,7 @@ const Mutation = new GraphQLObjectType({
     addPositionAttributeCategory,
     addPullJob,
     addRecord,
+    generateRecords,
     addReferenceData,
     addRole,
     addRoleToUsers,

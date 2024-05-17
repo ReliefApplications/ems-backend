@@ -100,11 +100,11 @@
     "winston": "^3.8.2",
     "winston-daily-rotate-file": "^4.7.1",
     "ws": "^8.13.0",
-    "xhr2": "^0.2.1"
+    "xhr2": "^0.2.1",
+    "@faker-js/faker": "^7.6.0"
   },
   "devDependencies": {
     "@azure/msal-node": "^1.15.0",
-    "@faker-js/faker": "^7.6.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/npm": "^11.0.1",
