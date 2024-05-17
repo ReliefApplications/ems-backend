@@ -88,7 +88,6 @@ export default {
           );
           const url =
             apiConfiguration.endpoint + `assets/${args.kobo}?format=json`;
-          
           const settings = JSON.parse(
             CryptoJS.AES.decrypt(
               apiConfiguration.settings,
@@ -97,14 +96,16 @@ export default {
           );
           const response = await axios.get(url, {
             headers: {
-              'Authorization': `${settings.tokenPrefix} ${settings.token}`
-            }
+              Authorization: `${settings.tokenPrefix} ${settings.token}`,
+            },
           });
           const survey = response.data.content.survey;
           const choices = response.data.content.choices;
           const title = response.data.name;
 
-          const structure = JSON.stringify(extractKoboFields(survey, title, choices));
+          const structure = JSON.stringify(
+            extractKoboFields(survey, title, choices)
+          );
 
           // create resource
           const resource = new Resource({

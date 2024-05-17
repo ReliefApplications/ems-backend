@@ -17,155 +17,153 @@ const AVAILABLE_TYPES = [
   // 'rank__level',
   // 'end_rank',
   'range',
+];
 
-
-]
 export const extractKoboFields = (survey: any, title: string, choices: any) => {
+  console.log(choices);
   const questions = {
-    "title": title,
-    "pages" : [
+    title: title,
+    pages: [
       {
-        "name": "page1",
-        "elements": [
-        ]
-      }
+        name: 'page1',
+        elements: [],
+      },
     ],
-    "showQuestionNumbers": "off"
+    showQuestionNumbers: 'off',
   };
 
   survey.map((question: any) => {
     if (AVAILABLE_TYPES.includes(question.type)) {
       switch (question.type) {
-        case 'decimal' : {
+        case 'decimal': {
           const newQuestion = {
-            'type': 'text',
-            'name': question.$autoname.toLowerCase(),
-            'title': question.label[0],
-            'valueName': question.$autoname.toLowerCase(),
-            "isRequired": question.required,
-            'inputType': 'number'
+            type: 'text',
+            name: question.$autoname.toLowerCase(),
+            title: question.label[0],
+            valueName: question.$autoname.toLowerCase(),
+            isRequired: question.required,
+            inputType: 'number',
           };
           questions.pages[0].elements.push(newQuestion);
           break;
         }
-        case 'geopoint' : {
+        case 'geopoint': {
           const newQuestion = {
-            'type': 'geospatial',
-            'name': question.$autoname.toLowerCase(),
-            'title': question.label[0],
-            'valueName': question.$autoname.toLowerCase(),
-            "isRequired": question.required,
+            type: 'geospatial',
+            name: question.$autoname.toLowerCase(),
+            title: question.label[0],
+            valueName: question.$autoname.toLowerCase(),
+            isRequired: question.required,
           };
           questions.pages[0].elements.push(newQuestion);
           break;
         }
-        case 'date' : {
+        case 'date': {
           const newQuestion = {
-            'type': 'text',
-            'name': question.$autoname.toLowerCase(),
-            'title': question.label[0],
-            "isRequired": question.required,
-            'valueName': question.$autoname.toLowerCase(),
-            'inputType': 'date'
+            type: 'text',
+            name: question.$autoname.toLowerCase(),
+            title: question.label[0],
+            isRequired: question.required,
+            valueName: question.$autoname.toLowerCase(),
+            inputType: 'date',
           };
           questions.pages[0].elements.push(newQuestion);
           break;
         }
-        case 'note' : {
+        case 'note': {
           const newQuestion = {
-            'type': 'expression',
-            'name': question.$autoname.toLowerCase(),
-            'title': question.label[0],
-            'valueName': question.$autoname.toLowerCase(),
+            type: 'expression',
+            name: question.$autoname.toLowerCase(),
+            title: question.label[0],
+            valueName: question.$autoname.toLowerCase(),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
         }
-        case 'text' : {
+        case 'text': {
           const newQuestion = {
-            'type': 'text',
-            'name': question.$autoname.toLowerCase(),
-            'title': question.label[0],
-            "isRequired": question.required,
-            'valueName': question.$autoname.toLowerCase(),
+            type: 'text',
+            name: question.$autoname.toLowerCase(),
+            title: question.label[0],
+            isRequired: question.required,
+            valueName: question.$autoname.toLowerCase(),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
         }
-        case 'time' : {
+        case 'time': {
           const newQuestion = {
-            'type': 'text',
-            'name': question.$autoname.toLowerCase(),
-            'title': question.label[0],
-            "isRequired": question.required,
-            'valueName': question.$autoname.toLowerCase(),
-            "inputType": "time"
+            type: 'text',
+            name: question.$autoname.toLowerCase(),
+            title: question.label[0],
+            isRequired: question.required,
+            valueName: question.$autoname.toLowerCase(),
+            inputType: 'time',
           };
           questions.pages[0].elements.push(newQuestion);
           break;
         }
-        case 'file' : {
+        case 'file': {
           const newQuestion = {
-            'type': 'file',
-            'name': question.$autoname.toLowerCase(),
-            'title': question.label[0],
-            "isRequired": question.required,
-            'valueName': question.$autoname.toLowerCase(),
-            "storeDataAsText": false,
-            "maxSize": 7340032
+            type: 'file',
+            name: question.$autoname.toLowerCase(),
+            title: question.label[0],
+            isRequired: question.required,
+            valueName: question.$autoname.toLowerCase(),
+            storeDataAsText: false,
+            maxSize: 7340032,
           };
           questions.pages[0].elements.push(newQuestion);
           break;
         }
-        case 'integer' : {
+        case 'integer': {
           const newQuestion = {
-            'type': 'text',
-            'name': question.$autoname.toLowerCase(),
-            'title': question.label[0],
-            "isRequired": question.required,
-            'valueName': question.$autoname.toLowerCase(),
-            'inputType': 'number'
+            type: 'text',
+            name: question.$autoname.toLowerCase(),
+            title: question.label[0],
+            isRequired: question.required,
+            valueName: question.$autoname.toLowerCase(),
+            inputType: 'number',
           };
           questions.pages[0].elements.push(newQuestion);
           break;
         }
-        case 'datetime' : {
+        case 'datetime': {
           const newQuestion = {
-            'type': 'text',
-            'name': question.$autoname.toLowerCase(),
-            'title': question.label[0],
-            "isRequired": question.required,
-            'valueName': question.$autoname.toLowerCase(),
-            'inputType': 'datetime-local'
+            type: 'text',
+            name: question.$autoname.toLowerCase(),
+            title: question.label[0],
+            isRequired: question.required,
+            valueName: question.$autoname.toLowerCase(),
+            inputType: 'datetime-local',
           };
           questions.pages[0].elements.push(newQuestion);
           break;
         }
-        case 'acknowledge' : {
+        case 'acknowledge': {
           const newQuestion = {
-            'type': 'boolean',
-            'name': question.$autoname.toLowerCase(),
-            'title': question.label[0],
-            'valueName': question.$autoname.toLowerCase(),
+            type: 'boolean',
+            name: question.$autoname.toLowerCase(),
+            title: question.label[0],
+            valueName: question.$autoname.toLowerCase(),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
         }
-        case 'range' : {
+        case 'range': {
           const newQuestion = {
-            'type': 'text',
-            'name': question.$autoname.toLowerCase(),
-            'title': question.label[0],
-            'valueName': question.$autoname.toLowerCase(),
-            "inputType": "range",
-            'step': question.parameters.split('step=1')[1]
+            type: 'text',
+            name: question.$autoname.toLowerCase(),
+            title: question.label[0],
+            valueName: question.$autoname.toLowerCase(),
+            inputType: 'range',
+            step: question.parameters.split('step=1')[1],
           };
           questions.pages[0].elements.push(newQuestion);
           break;
         }
       }
     }
-
   });
   //   "logoPosition": "right",
   //   "pages": [
