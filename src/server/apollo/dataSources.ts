@@ -2,7 +2,7 @@ import { AugmentedRequest, RESTDataSource } from '@apollo/datasource-rest';
 import { status, referenceDataType } from '@const/enumTypes';
 import { ApiConfiguration, ReferenceData } from '@models';
 import { getToken } from '@utils/proxy';
-import { get, memoize, set } from 'lodash';
+import { get, isEmpty, memoize, set } from 'lodash';
 import { logger } from '@services/logger.service';
 import jsonpath from 'jsonpath';
 import { ApolloServer } from '@apollo/server';
@@ -184,9 +184,26 @@ export class CustomAPI extends RESTDataSource {
         );
       }
       case referenceDataType.rest: {
-        const url = `${apiConfiguration.endpoint.replace(/\$/, '')}/${
+        let url = `${apiConfiguration.endpoint.replace(/\$/, '')}/${
           referenceData.query
         }`.replace(/([^:]\/)\/+/g, '$1');
+        if (variables && !isEmpty(variables)) {
+          // Transform the variables object into a string linked by '&'
+          const queryString = Object.keys(variables)
+            .map(
+              (key) =>
+                `${encodeURIComponent(key)}=${encodeURIComponent(
+                  variables[key]
+                )}`
+            )
+            .join('&');
+          // Append the query params to the URL
+          if (url.includes('?')) {
+            url = `${url}&${queryString}`;
+          } else {
+            url = `${url}?${queryString}`;
+          }
+        }
         const data = await this.get(url);
         return referenceData.path
           ? jsonpath.query(data, referenceData.path)
