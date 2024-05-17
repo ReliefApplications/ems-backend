@@ -1,104 +1,277 @@
-export const extractKoboFields = (survey: any) => {
+const AVAILABLE_TYPES = [
+  'decimal',
+  'geopoint',
+  // 'select_multiple',
+  'date',
+  'note',
+  // 'begin_score',
+  // 'score__row',
+  // 'end_score',
+  'text',
+  'time',
+  'file',
+  'integer',
+  'datetime',
+  'acknowledge',
+  // 'begin_rank',
+  // 'rank__level',
+  // 'end_rank',
+  'range',
+
+
+]
+export const extractKoboFields = (survey: any, title: string, choices: any) => {
+  const questions = {
+    "title": title,
+    "pages" : [
+      {
+        "name": "page1",
+        "elements": [
+        ]
+      }
+    ],
+    "showQuestionNumbers": "off"
+  };
+
   survey.map((question: any) => {
-    console.log(question);
+    if (AVAILABLE_TYPES.includes(question.type)) {
+      switch (question.type) {
+        case 'decimal' : {
+          const newQuestion = {
+            'type': 'text',
+            'name': question.$autoname.toLowerCase(),
+            'title': question.label[0],
+            'valueName': question.$autoname.toLowerCase(),
+            "isRequired": question.required,
+            'inputType': 'number'
+          };
+          questions.pages[0].elements.push(newQuestion);
+          break;
+        }
+        case 'geopoint' : {
+          const newQuestion = {
+            'type': 'geospatial',
+            'name': question.$autoname.toLowerCase(),
+            'title': question.label[0],
+            'valueName': question.$autoname.toLowerCase(),
+            "isRequired": question.required,
+          };
+          questions.pages[0].elements.push(newQuestion);
+          break;
+        }
+        case 'date' : {
+          const newQuestion = {
+            'type': 'text',
+            'name': question.$autoname.toLowerCase(),
+            'title': question.label[0],
+            "isRequired": question.required,
+            'valueName': question.$autoname.toLowerCase(),
+            'inputType': 'date'
+          };
+          questions.pages[0].elements.push(newQuestion);
+          break;
+        }
+        case 'note' : {
+          const newQuestion = {
+            'type': 'expression',
+            'name': question.$autoname.toLowerCase(),
+            'title': question.label[0],
+            'valueName': question.$autoname.toLowerCase(),
+          };
+          questions.pages[0].elements.push(newQuestion);
+          break;
+        }
+        case 'text' : {
+          const newQuestion = {
+            'type': 'text',
+            'name': question.$autoname.toLowerCase(),
+            'title': question.label[0],
+            "isRequired": question.required,
+            'valueName': question.$autoname.toLowerCase(),
+          };
+          questions.pages[0].elements.push(newQuestion);
+          break;
+        }
+        case 'time' : {
+          const newQuestion = {
+            'type': 'text',
+            'name': question.$autoname.toLowerCase(),
+            'title': question.label[0],
+            "isRequired": question.required,
+            'valueName': question.$autoname.toLowerCase(),
+            "inputType": "time"
+          };
+          questions.pages[0].elements.push(newQuestion);
+          break;
+        }
+        case 'file' : {
+          const newQuestion = {
+            'type': 'file',
+            'name': question.$autoname.toLowerCase(),
+            'title': question.label[0],
+            "isRequired": question.required,
+            'valueName': question.$autoname.toLowerCase(),
+            "storeDataAsText": false,
+            "maxSize": 7340032
+          };
+          questions.pages[0].elements.push(newQuestion);
+          break;
+        }
+        case 'integer' : {
+          const newQuestion = {
+            'type': 'text',
+            'name': question.$autoname.toLowerCase(),
+            'title': question.label[0],
+            "isRequired": question.required,
+            'valueName': question.$autoname.toLowerCase(),
+            'inputType': 'number'
+          };
+          questions.pages[0].elements.push(newQuestion);
+          break;
+        }
+        case 'datetime' : {
+          const newQuestion = {
+            'type': 'text',
+            'name': question.$autoname.toLowerCase(),
+            'title': question.label[0],
+            "isRequired": question.required,
+            'valueName': question.$autoname.toLowerCase(),
+            'inputType': 'datetime-local'
+          };
+          questions.pages[0].elements.push(newQuestion);
+          break;
+        }
+        case 'acknowledge' : {
+          const newQuestion = {
+            'type': 'boolean',
+            'name': question.$autoname.toLowerCase(),
+            'title': question.label[0],
+            'valueName': question.$autoname.toLowerCase(),
+          };
+          questions.pages[0].elements.push(newQuestion);
+          break;
+        }
+        case 'range' : {
+          const newQuestion = {
+            'type': 'text',
+            'name': question.$autoname.toLowerCase(),
+            'title': question.label[0],
+            'valueName': question.$autoname.toLowerCase(),
+            "inputType": "range",
+            'step': question.parameters.split('step=1')[1]
+          };
+          questions.pages[0].elements.push(newQuestion);
+          break;
+        }
+      }
+    }
+
   });
-  // {
-  //     "pages": [
+  //   "logoPosition": "right",
+  //   "pages": [
+  //    {
+  //     "name": "page1",
+  //     "elements": [
   //      {
-  //       "name": "page1",
-  //       "elements": [
-  //        {
-  //         "type": "text",
-  //         "name": "question_1",
-  //         "title": "Question 1",
-  //         "description": "What is the most famous rockstar?",
-  //         "valueName": "question_1"
-  //        },
-  //        {
-  //         "type": "text",
-  //         "name": "question2",
-  //         "description": "What is the best singer in rock?",
-  //         "valueName": "question2"
-  //        },
-  //        {
-  //         "type": "dropdown",
-  //         "name": "choose_your_favorite_rock_genre",
-  //         "title": "Choose your favorite rock genre",
-  //         "valueName": "choose_your_favorite_rock_genre",
-  //         "choices": [
-  //          {
-  //           "value": "item1",
-  //           "text": "Progressive"
-  //          },
-  //          {
-  //           "value": "item2",
-  //           "text": "Psicodelic"
-  //          },
-  //          {
-  //           "value": "item3",
-  //           "text": "Heavy metal"
-  //          }
-  //         ]
-  //        },
-  //        {
-  //         "type": "checkbox",
-  //         "name": "which_is_the_better_rock_band_of_all_time",
-  //         "title": "Which is the better rock band of all time",
-  //         "valueName": "which_is_the_better_rock_band_of_all_time",
-  //         "choices": [
-  //          {
-  //           "value": "item1",
-  //           "text": "The Beatles"
-  //          },
-  //          {
-  //           "value": "item2",
-  //           "text": "The Rolling Stones"
-  //          },
-  //          {
-  //           "value": "item3",
-  //           "text": "Queen"
-  //          },
-  //          {
-  //           "value": "item4",
-  //           "text": "Pink Floyd"
-  //          }
-  //         ]
-  //        },
-  //        {
-  //         "type": "geospatial",
-  //         "name": "question1",
-  //         "valueName": "question1",
-  //         "geoFields": [
-  //          {
-  //           "value": "city",
-  //           "label": "City"
-  //          }
-  //         ]
-  //        },
-  //        {
-  //         "type": "geospatial",
-  //         "name": "question3",
-  //         "valueName": "question3"
-  //        },
-  //        {
-  //         "type": "geospatial",
-  //         "name": "question4",
-  //         "valueName": "question4",
-  //         "geoFields": [
-  //          {
-  //           "value": "coordinates",
-  //           "label": "coordenadas"
-  //          },
-  //          {
-  //           "value": "city",
-  //           "label": "cidade"
-  //          }
-  //         ]
-  //        }
+  //       "type": "text",
+  //       "name": "decimal",
+  //       "title": "decimal",
+  //       "valueName": "decimal",
+  //       "inputType": "number"
+  //      },
+  //      {
+  //       "type": "geospatial",
+  //       "name": "ponto",
+  //       "title": "Ponto",
+  //       "valueName": "ponto"
+  //      },
+  //      {
+  //       "type": "checkbox",
+  //       "name": "question2",
+  //       "title": "Selecionar Multiplos",
+  //       "valueName": "question2",
+  //       "choices": [
+  //        "Item 1",
+  //        "Item 2"
+  //       ],
+  //       "showSelectAllItem": true
+  //      },
+  //      {
+  //       "type": "text",
+  //       "name": "data",
+  //       "title": "Data",
+  //       "valueName": "data",
+  //       "inputType": "date"
+  //      },
+  //      {
+  //       "type": "expression",
+  //       "name": "nota",
+  //       "title": "Nota",
+  //       "valueName": "nota"
+  //      },
+  //      {
+  //       "type": "radiogroup",
+  //       "name": "avaliacao",
+  //       "title": "Avaliação",
+  //       "valueName": "avaliacao",
+  //       "choices": [
+  //        "Item 1",
+  //        "Item 2",
+  //        "Item 3"
   //       ]
+  //      },
+  //      {
+  //       "type": "text",
+  //       "name": "texto",
+  //       "title": "texto",
+  //       "valueName": "texto"
+  //      },
+  //      {
+  //       "type": "text",
+  //       "name": "horario",
+  //       "title": "horario",
+  //       "valueName": "horario",
+  //       "inputType": "time"
+  //      },
+  //      {
+  //       "type": "file",
+  //       "name": "arquivo",
+  //       "title": "arquivo",
+  //       "valueName": "arquivo",
+  //       "storeDataAsText": false,
+  //       "maxSize": 7340032
+  //      },
+  //      {
+  //       "type": "text",
+  //       "name": "numero",
+  //       "title": "numero",
+  //       "valueName": "numero",
+  //       "inputType": "number"
+  //      },
+  //      {
+  //       "type": "text",
+  //       "name": "datetime",
+  //       "title": "datetime",
+  //       "valueName": "datetime",
+  //       "inputType": "datetime-local"
+  //      },
+  //      {
+  //       "type": "boolean",
+  //       "name": "reconhece",
+  //       "title": "reconhece",
+  //       "valueName": "reconhece"
+  //      },
+  //      {
+  //       "type": "text",
+  //       "name": "intervalo",
+  //       "title": "Intervalo",
+  //       "valueName": "intervalo",
+  //       "inputType": "range"
   //      }
-  //     ],
-  //     "showQuestionNumbers": "off"
+  //     ]
   //    }
-  return '';
+  //   ],
+  //   "showQuestionNumbers": "off"
+  //  }
+  return questions;
 };

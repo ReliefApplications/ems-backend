@@ -15,6 +15,8 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 import axios from 'axios';
+import config from 'config';
+import * as CryptoJS from 'crypto-js';
 
 /** Arguments for the addForm mutation */
 type AddFormArgs = {
@@ -84,18 +86,29 @@ export default {
           const apiConfiguration = await ApiConfiguration.findById(
             args.apiConfiguration
           );
-
           const url =
             apiConfiguration.endpoint + `assets/${args.kobo}?format=json`;
-          const response = await axios.get(url);
+          
+          const settings = JSON.parse(
+            CryptoJS.AES.decrypt(
+              apiConfiguration.settings,
+              config.get('encryption.key')
+            ).toString(CryptoJS.enc.Utf8)
+          );
+          const response = await axios.get(url, {
+            headers: {
+              'Authorization': `${settings.tokenPrefix} ${settings.token}`
+            }
+          });
           const survey = response.data.content.survey;
+          const choices = response.data.content.choices;
+          const title = response.data.name;
 
-          const structure = extractKoboFields(survey);
+          const structure = JSON.stringify(extractKoboFields(survey, title, choices));
 
           // create resource
           const resource = new Resource({
             name: args.name,
-            //createdAt: new Date(),
             permissions: defaultResourcePermissions,
           });
           await resource.save();
