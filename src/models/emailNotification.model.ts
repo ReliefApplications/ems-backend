@@ -83,6 +83,7 @@ export interface EmailNotification extends Document {
   createdAt?: Date;
   modifiedAt?: Date;
   isDraft?: boolean;
+  draftStepper?: number;
 }
 
 /** Mongoose email notification schema declaration */
@@ -171,6 +172,9 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
     isDraft: {
       type: Boolean,
       required: true,
+    },
+    draftStepper: {
+      type: Number,
     },
   },
   {

@@ -25,6 +25,7 @@ export type EmailNotificationArgs = {
   lastExecutionStatus: string;
   isDeleted: number;
   isDraft: boolean;
+  draftStepper: number;
 };
 
 /** GraphQL custom notification query input type definition */
@@ -45,5 +46,6 @@ export const EmailNotificationInputType = new GraphQLInputObjectType({
     lastExecutionStatus: { type: GraphQLString },
     isDeleted: { type: GraphQLInt },
     isDraft: { type: GraphQLBoolean },
+    draftStepper: { type: GraphQLInt },
   }),
 });

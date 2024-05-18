@@ -52,6 +52,7 @@ export default {
         lastExecution: args.notification.lastExecution,
         lastExecutionStatus: args.notification.lastExecutionStatus,
         isDraft: args.notification.isDraft,
+        draftStepper: args.notification.draftStepper,
       };
 
       // Check permission to edit an email notification
