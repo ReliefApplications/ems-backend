@@ -248,6 +248,10 @@ router.post('/send-email/:configId', async (req, res) => {
           dataList.push(data);
         }
 
+        const dropdownFields = fields.filter((field) => {
+          return field.type === 'dropdown';
+        });
+
         for (const obj of tempRecords) {
           const data = obj?.data;
           for (const [key, value] of Object.entries(data)) {
@@ -257,6 +261,7 @@ router.post('/send-email/:configId', async (req, res) => {
             const ownerField = fields.find((x) => {
               return x.type === 'owner' && x.name === key;
             });
+
             if (mongoose.isValidObjectId(value) && typeof value == 'string') {
               const project = mergeArrayOfObjects(nestedFields[key]) ?? {};
               Object.assign(project, { _id: 0 });
@@ -293,6 +298,15 @@ router.post('/send-email/:configId', async (req, res) => {
                 data[key] =
                   ownersJoined.length > 0 ? ownersJoined : value.join(', ');
               }
+            }
+            const thisDropdownField = dropdownFields.find((field) => {
+              return field.name == key;
+            });
+            if (thisDropdownField) {
+              const choiceText = thisDropdownField.choices.find((choice) => {
+                return choice.value === value;
+              }).text;
+              data[key] = choiceText;
             }
           }
 

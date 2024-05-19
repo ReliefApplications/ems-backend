@@ -315,6 +315,7 @@ export default {
           $and: [...filters],
         }),
         nestedFields: nestedFields,
+        fields: fields,
         tabIndex: tabIndex,
       };
     } catch (error) {

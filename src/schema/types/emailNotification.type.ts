@@ -69,6 +69,9 @@ export const DatasetType = new GraphQLObjectType({
         try {
           if (parent.records.length) {
             const nestedFields = parent.nestedFields;
+            const dropdownFields = parent.fields.filter((field) => {
+              return field.type === 'dropdown';
+            });
             for (const obj of parent.records) {
               const data = obj?.data;
 
@@ -81,6 +84,17 @@ export const DatasetType = new GraphQLObjectType({
                   Object.assign(project, { _id: 0 });
                   const record = await Record.findById(value, project);
                   data[key] = record;
+                }
+                const thisDropdownField = dropdownFields.find((field) => {
+                  return field.name == key;
+                });
+                if (thisDropdownField) {
+                  const choiceText = thisDropdownField.choices.find(
+                    (choice) => {
+                      return choice.value === value;
+                    }
+                  ).text;
+                  data[key] = choiceText;
                 }
               }
               Object.assign(obj, data);
