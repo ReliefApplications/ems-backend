@@ -246,9 +246,7 @@ router.post('/feature', async (req, res) => {
     const layerType = (get(req, 'body.type') ||
       GeometryType.POINT) as GeometryType;
     const contextFilters = JSON.parse(get(req, 'body.contextFilters', null));
-    const referenceDataVariables = JSON.parse(
-      get(req, 'body.referenceDataVariables', null)
-    );
+    const queryParams = JSON.parse(get(req, 'body.queryParams', null));
     const at = get(req, 'body.at') as string | undefined;
     if (!geoField && !(latitudeField && longitudeField)) {
       return res
@@ -358,7 +356,7 @@ router.post('/feature', async (req, res) => {
             $referenceData: ID!
             $aggregation: ID!
             $contextFilters: JSON
-            $referenceDataVariables: JSON
+            $queryParams: JSON
             $first: Int
             $at: Date
           ) {
@@ -366,7 +364,7 @@ router.post('/feature', async (req, res) => {
                 referenceData: $referenceData
                 aggregation: $aggregation
                 contextFilters: $contextFilters
-                referenceDataVariables: $referenceDataVariables
+                queryParams: $queryParams
                 first: $first
                 at: $at
               )
@@ -375,7 +373,7 @@ router.post('/feature', async (req, res) => {
             referenceData: referenceData._id,
             aggregation: aggregation,
             contextFilters,
-            referenceDataVariables,
+            queryParams,
             first: 1000,
             at: at ? new Date(at) : undefined,
           };
@@ -420,7 +418,7 @@ router.post('/feature', async (req, res) => {
             (await dataSource.getReferenceDataItems(
               referenceData,
               apiConfiguration,
-              referenceDataVariables
+              queryParams
             )) || [];
           if (contextFilters && !isEmpty(contextFilters)) {
             data = data.filter((x) => filterReferenceData(x, contextFilters));

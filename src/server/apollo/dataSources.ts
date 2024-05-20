@@ -166,13 +166,13 @@ export class CustomAPI extends RESTDataSource {
    *
    * @param referenceData ReferenceData to fetch
    * @param apiConfiguration ApiConfiguration to use
-   * @param variables supplementary graphQL variables
+   * @param queryParams supplementary query params
    * @returns referenceData objects
    */
   async getReferenceDataItems(
     referenceData: ReferenceData,
     apiConfiguration: ApiConfiguration,
-    variables?: any
+    queryParams?: any
   ): Promise<any[]> {
     switch (referenceData.type) {
       case referenceDataType.graphql: {
@@ -180,20 +180,20 @@ export class CustomAPI extends RESTDataSource {
         return this.memoizedReferenceDataGraphQLItems(
           referenceData,
           apiConfiguration,
-          variables
+          queryParams
         );
       }
       case referenceDataType.rest: {
         let url = `${apiConfiguration.endpoint.replace(/\$/, '')}/${
           referenceData.query
         }`.replace(/([^:]\/)\/+/g, '$1');
-        if (variables && !isEmpty(variables)) {
+        if (queryParams && !isEmpty(queryParams)) {
           // Transform the variables object into a string linked by '&'
-          const queryString = Object.keys(variables)
+          const queryString = Object.keys(queryParams)
             .map(
               (key) =>
                 `${encodeURIComponent(key)}=${encodeURIComponent(
-                  variables[key]
+                  queryParams[key]
                 )}`
             )
             .join('&');
