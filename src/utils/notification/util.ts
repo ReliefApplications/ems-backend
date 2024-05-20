@@ -41,8 +41,11 @@ export const formatDates = (rowData: unknown): string => {
   } else if (rowData instanceof Date) {
     // Format the date as MM/DD/YY, hh:mm AM/PM UTC
     return rowData.toLocaleString('en-US', dateTimeLocale);
-  }
-  if (!rowData) {
+  } else if (rowData === false) {
+    return 'False';
+  } else if (rowData === true) {
+    return 'True';
+  } else if (!rowData) {
     return '';
   }
   return rowData as string;
