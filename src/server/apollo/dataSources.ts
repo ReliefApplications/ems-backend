@@ -175,6 +175,7 @@ export class CustomAPI extends RESTDataSource {
     queryParams?: any
   ): Promise<any[]> {
     switch (referenceData.type) {
+      // GraphQL reference data
       case referenceDataType.graphql: {
         // Call memoized function to save external requests.
         return this.memoizedReferenceDataGraphQLItems(
@@ -183,6 +184,7 @@ export class CustomAPI extends RESTDataSource {
           queryParams
         );
       }
+      // REST reference data
       case referenceDataType.rest: {
         let url = `${apiConfiguration.endpoint.replace(/\$/, '')}/${
           referenceData.query
@@ -204,12 +206,15 @@ export class CustomAPI extends RESTDataSource {
             url = `${url}?${queryString}`;
           }
         }
+        // Fetch data from url
         const data = await this.get(url);
         return referenceData.path
           ? jsonpath.query(data, referenceData.path)
           : data;
       }
+      // Static reference data
       case referenceDataType.static: {
+        // Data is stored in model
         return referenceData.data;
       }
     }
