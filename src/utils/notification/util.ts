@@ -49,6 +49,14 @@ export const formatDates = (rowData: unknown): string => {
     return 'True';
   } else if (!rowData) {
     return '';
+  } else if (rowData instanceof Array) {
+    return rowData.join(', ');
+  } else if (rowData instanceof Object) {
+    let objectString = '';
+    for (const field in rowData) {
+      objectString += `${field}: ${rowData[field]}\n`;
+    }
+    return objectString;
   }
   return JSON.stringify(rowData);
 };

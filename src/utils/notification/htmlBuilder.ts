@@ -316,7 +316,7 @@ export const buildTable = (
           }
         } else if (field.select) {
           table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
-          ${record.data[field.name] ?? ''}</td>`;
+          ${formatDates(record.data[field.name])}</td>`;
         } else {
           table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
           ${formatDates(record.data[field.name])}</td>`;
