@@ -30,6 +30,12 @@ export default {
     try {
       // Delete the application
       const ability: AppAbility = context.user.ability;
+      if (!ability.can('delete', 'Application')) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
+      }
+
       const filters = Application.find(
         accessibleBy(ability, 'delete').Application
       )
