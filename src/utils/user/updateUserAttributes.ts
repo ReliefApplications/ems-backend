@@ -79,8 +79,10 @@ export const updateUserAttributes = async (
       }
       // Map them to user attributes
       for (const mapping of settings.mapping) {
-        const value = jsonpath.value(data, mapping.value);
-        set(user, mapping.field, value);
+        if (mapping.provider !== 'microsoftGraph') {
+          const value = jsonpath.value(data, mapping.value);
+          set(user, mapping.field, value);
+        }
       }
       user.markModified('attributes');
       return settings.mapping.length > 0;
