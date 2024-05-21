@@ -1,21 +1,22 @@
 import axios from 'axios';
+import { getToken } from './authManagement';
+import { commonServicesConfig } from '@routes/proxy';
 
 /**
  * Fetches the people
  *
- * @param token The authorization token
+ * @param accessToken The authorization token
  * @param filter The filter used for fetching the distant users
  * @param offset offset to query users
  * @param limitItems number of maximum items to fetch
  * @returns the choices
  */
 export const getPeople = async (
-  token: string,
+  accessToken: string,
   filter: any,
   offset = 0,
   limitItems = null
 ): Promise<any[]> => {
-  const url = 'http://localhost:3000/proxy/common-services/graphql';
   const query = `query {
     users(
       filter: ${filter}
@@ -29,12 +30,13 @@ export const getPeople = async (
     }
   }`;
   try {
+    const token = await getToken(commonServicesConfig, accessToken);
     let people: any[] = [];
     await axios({
-      url,
+      url: `${commonServicesConfig.endpoint}/graphql`,
       method: 'post',
       headers: {
-        Authorization: token,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       data: {
