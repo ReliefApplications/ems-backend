@@ -67,7 +67,7 @@ export default {
       }).select('username');
       const registeredEmails = registeredUsers.map((x) => x.username);
 
-      const allRolesIDs = args.users.map((x) => x.role);
+      const allRolesIDs = args.users.map((x) => x.roles).flat();
       const allRoles = await Role.find({ _id: { $in: allRolesIDs } });
       const allChannels = await Channel.find({ role: { $in: allRolesIDs } });
 
@@ -82,7 +82,7 @@ export default {
         .forEach((x) => {
           const newUser = new User();
           newUser.username = x.email;
-          newUser.roles = [x.role];
+          newUser.roles = x.roles;
           if (x.positionAttributes) {
             newUser.positionAttributes = x.positionAttributes;
           }
@@ -99,7 +99,7 @@ export default {
         .forEach((x) => {
           const updateUser = {
             $addToSet: {
-              roles: x.role,
+              roles: x.roles,
               positionAttributes: { $each: x?.positionAttributes || [] },
             },
           };
@@ -113,19 +113,21 @@ export default {
 
       // Create notifications to role channel
       args.users.forEach((x) => {
-        const channel = allChannels.find((y) =>
-          (y.role as Types.ObjectId).equals(x.role)
-        );
-        const role = allRoles.find((y) => y._id.equals(x.role));
-        if (channel && role) {
-          // @TODO: Localize this
-          const notification = new Notification({
-            action: `${user.name} a attribué le rôle d’${role.title} à ${x.email}`,
-            content: user._id,
-            channel: channel.id,
-          });
-          notifications.push({ notification, channel });
-        }
+        x.roles.forEach((r) => {
+          const channel = allChannels.find((y) =>
+            (y.role as Types.ObjectId).equals(r)
+          );
+          const role = allRoles.find((y) => y._id.equals(r));
+          if (channel && role) {
+            // @TODO: Localize this
+            const notification = new Notification({
+              action: `${user.name} a attribué le rôle d’${role.title} à ${x.email}`,
+              content: user._id,
+              channel: channel.id,
+            });
+            notifications.push({ notification, channel });
+          }
+        });
       });
 
       const application = args.application
