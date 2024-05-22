@@ -223,8 +223,14 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                 positionAttributes: [],
               });
               updateUser(user, req).then(() => {
-                user
-                  .save()
+                // Avoid duplication error in case parallel requests are sent
+                User.findOneAndUpdate(
+                  {
+                    oid: token.oid,
+                  },
+                  { $setOnInsert: user },
+                  { upsert: true, new: true }
+                )
                   .then(() => {
                     userAuthCallback(null, done, token, user);
                   })
