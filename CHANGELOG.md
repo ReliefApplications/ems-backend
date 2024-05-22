@@ -1,3 +1,16 @@
+# [2.10.0](https://github.com/ReliefApplications/ems-backend/compare/v2.9.2...v2.10.0) (2024-05-22)
+
+
+### Bug Fixes
+
+* creation of new users could fail due to duplication errors ([#1059](https://github.com/ReliefApplications/ems-backend/issues/1059)) ([95eadbe](https://github.com/ReliefApplications/ems-backend/commit/95eadbe58c795f29a5b058e8e5a099f1dc84f959))
+
+
+### Features
+
+* REST reference data can also use query params ([#1058](https://github.com/ReliefApplications/ems-backend/issues/1058)) ([506e551](https://github.com/ReliefApplications/ems-backend/commit/506e551fe7f5a4d5529ad59d3df8a0c216a4910b))
+* use microsoft graph to populate user's attributes ([#1062](https://github.com/ReliefApplications/ems-backend/issues/1062)) ([4396301](https://github.com/ReliefApplications/ems-backend/commit/4396301d60c9ea0621d29f170d2920614f167d90))
+
 ## [2.9.2](https://github.com/ReliefApplications/ems-backend/compare/v2.9.1...v2.9.2) (2024-05-04)
 
 
