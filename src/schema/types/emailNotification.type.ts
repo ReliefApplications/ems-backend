@@ -85,16 +85,18 @@ export const DatasetType = new GraphQLObjectType({
                   const record = await Record.findById(value, project);
                   data[key] = record;
                 }
-                const thisDropdownField = dropdownFields.find((field) => {
-                  return field.name == key;
-                });
-                if (thisDropdownField) {
-                  const choiceText = thisDropdownField.choices.find(
-                    (choice) => {
-                      return choice.value === value;
-                    }
-                  ).text;
-                  data[key] = choiceText;
+                if (dropdownFields) {
+                  const thisDropdownField = dropdownFields.find((field) => {
+                    return field.name == key;
+                  });
+                  if (thisDropdownField?.choices) {
+                    const thisChoice = thisDropdownField.choices.find(
+                      (choice) => {
+                        return choice.value === value;
+                      }
+                    );
+                    data[key] = thisChoice?.text ?? value;
+                  }
                 }
               }
               Object.assign(obj, data);

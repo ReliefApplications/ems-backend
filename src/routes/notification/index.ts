@@ -299,14 +299,16 @@ router.post('/send-email/:configId', async (req, res) => {
                   ownersJoined.length > 0 ? ownersJoined : value.join(', ');
               }
             }
-            const thisDropdownField = dropdownFields.find((field) => {
-              return field.name == key;
-            });
-            if (thisDropdownField) {
-              const choiceText = thisDropdownField.choices.find((choice) => {
-                return choice.value === value;
-              }).text;
-              data[key] = choiceText;
+            if (dropdownFields) {
+              const thisDropdownField = dropdownFields.find((field) => {
+                return field.name == key;
+              });
+              if (thisDropdownField?.choices) {
+                const thisChoice = thisDropdownField.choices.find((choice) => {
+                  return choice.value === value;
+                });
+                data[key] = thisChoice?.text ?? value;
+              }
             }
           }
 

@@ -270,8 +270,8 @@ export const buildTable = (
             _.get(record.data[`${field.parentName}`], field.childName)
           )}</td>`;
           } else if (
-            field.childName.split('.')[0] === '_createdBy' ||
-            field.childName.split('.')[0] === '_lastUpdatedBy'
+            field?.childName?.split('.')[0] === '_createdBy' ||
+            field?.childName?.split('.')[0] === '_lastUpdatedBy'
           ) {
             table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
             ${formatDates(
