@@ -18,7 +18,7 @@ const AVAILABLE_TYPES = [
   'begin_rank',
   'rank__level',
   'range',
-  'image'
+  'image',
 ];
 
 /**
@@ -77,11 +77,15 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             title: question.label[0],
             valueName: question.$autoname.toLowerCase(),
             isRequired: question.required,
-            choices: 
-              choices
-              .filter(choice => question.select_from_list_name === choice.list_name)
-              .map(choice => ({ value: choice.$autovalue, text: choice.label[0] })),
-            showSelectAllItem: true
+            choices: choices
+              .filter(
+                (choice) => question.select_from_list_name === choice.list_name
+              )
+              .map((choice) => ({
+                value: choice.$autovalue,
+                text: choice.label[0],
+              })),
+            showSelectAllItem: true,
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -119,10 +123,12 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             title: question.label[0],
             valueName: question.$autoname.toLowerCase(),
             isRequired: question.required,
-            choices: 
-              choices
-              .filter(choice => scoreChoiceId === choice.list_name)
-              .map(choice => ({ value: choice.$autovalue, text: choice.label[0] })),
+            choices: choices
+              .filter((choice) => scoreChoiceId === choice.list_name)
+              .map((choice) => ({
+                value: choice.$autovalue,
+                text: choice.label[0],
+              })),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -138,10 +144,12 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             title: question.label[0],
             valueName: question.$autoname.toLowerCase(),
             isRequired: question.required,
-            choices: 
-              choices
-              .filter(choice => rankChoiceId === choice.list_name)
-              .map(choice => ({ value: choice.$autovalue, text: choice.label[0] })),
+            choices: choices
+              .filter((choice) => rankChoiceId === choice.list_name)
+              .map((choice) => ({
+                value: choice.$autovalue,
+                text: choice.label[0],
+              })),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
