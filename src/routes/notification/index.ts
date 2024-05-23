@@ -24,6 +24,7 @@ import mongoose from 'mongoose';
 import { mergeArrayOfObjects } from '@schema/types';
 import { getOwnerOptions, getUsersOptions } from '@utils/form/metadata.helper';
 import _ from 'lodash';
+import { getColumns, getRows } from '@utils/files';
 
 /**
  *
@@ -119,6 +120,13 @@ router.post('/send-email/:configId', async (req, res) => {
         }
         const fields = resource?.fields;
         const filters = getFilter(filterLogic, resource.fields);
+        // Fields to fetch from GraphQL/REST API
+        const foreignFields = fields.filter(
+          (field) =>
+            field?.choicesByGraphQL ||
+            field?.referenceData ||
+            field?.choicesByUrl
+        );
         const usedFields = extractFilterFields(filterLogic);
 
         // Get list of needed resources for the aggregation
@@ -251,8 +259,16 @@ router.post('/send-email/:configId', async (req, res) => {
         const dropdownFields = fields.filter((field) => {
           return field.type === 'dropdown';
         });
+        // TODO: Pass all fields to reduce duplication of existing implementation
+        const columns = await getColumns(
+          foreignFields,
+          req.headers.authorization,
+          false
+        );
+        const rows = await getRows(columns, tempRecords);
 
-        for (const obj of tempRecords) {
+        for (const [index, obj] of tempRecords.entries()) {
+          Object.assign(obj?.data, rows[index]);
           const data = obj?.data;
           if (obj.form) {
             // TEMP - until we can return form name.
