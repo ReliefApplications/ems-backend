@@ -1,26 +1,35 @@
+/**
+ * available fields types in kobo that are compatible with oort
+ */
 const AVAILABLE_TYPES = [
   'decimal',
   'geopoint',
-  // 'select_multiple',
+  'select_multiple',
   'date',
   'note',
-  // 'begin_score',
-  // 'score__row',
-  // 'end_score',
+  'begin_score',
+  'score__row',
   'text',
   'time',
   'file',
   'integer',
   'datetime',
   'acknowledge',
-  // 'begin_rank',
-  // 'rank__level',
-  // 'end_rank',
+  'begin_rank',
+  'rank__level',
   'range',
+  'image'
 ];
 
+/**
+ * Extract kobo form fields and convert to oort fields
+ *
+ * @param survey survey structure
+ * @param title title
+ * @param choices choices
+ * @returns oort survey
+ */
 export const extractKoboFields = (survey: any, title: string, choices: any) => {
-  console.log(choices);
   const questions = {
     title: title,
     pages: [
@@ -31,6 +40,9 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
     ],
     showQuestionNumbers: 'off',
   };
+
+  let scoreChoiceId = '';
+  let rankChoiceId = '';
 
   survey.map((question: any) => {
     if (AVAILABLE_TYPES.includes(question.type)) {
@@ -58,6 +70,22 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
           questions.pages[0].elements.push(newQuestion);
           break;
         }
+        case 'select_multiple': {
+          const newQuestion = {
+            type: 'checkbox',
+            name: question.$autoname.toLowerCase(),
+            title: question.label[0],
+            valueName: question.$autoname.toLowerCase(),
+            isRequired: question.required,
+            choices: 
+              choices
+              .filter(choice => question.select_from_list_name === choice.list_name)
+              .map(choice => ({ value: choice.$autovalue, text: choice.label[0] })),
+            showSelectAllItem: true
+          };
+          questions.pages[0].elements.push(newQuestion);
+          break;
+        }
         case 'date': {
           const newQuestion = {
             type: 'text',
@@ -76,6 +104,44 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             name: question.$autoname.toLowerCase(),
             title: question.label[0],
             valueName: question.$autoname.toLowerCase(),
+          };
+          questions.pages[0].elements.push(newQuestion);
+          break;
+        }
+        case 'begin_score': {
+          scoreChoiceId = question['kobo--score-choices'];
+          break;
+        }
+        case 'score__row': {
+          const newQuestion = {
+            type: 'radiogroup',
+            name: question.$autoname.toLowerCase(),
+            title: question.label[0],
+            valueName: question.$autoname.toLowerCase(),
+            isRequired: question.required,
+            choices: 
+              choices
+              .filter(choice => scoreChoiceId === choice.list_name)
+              .map(choice => ({ value: choice.$autovalue, text: choice.label[0] })),
+          };
+          questions.pages[0].elements.push(newQuestion);
+          break;
+        }
+        case 'begin_rank': {
+          rankChoiceId = question['kobo--rank-items'];
+          break;
+        }
+        case 'rank__level': {
+          const newQuestion = {
+            type: 'dropdown',
+            name: question.$autoname.toLowerCase(),
+            title: question.label[0],
+            valueName: question.$autoname.toLowerCase(),
+            isRequired: question.required,
+            choices: 
+              choices
+              .filter(choice => rankChoiceId === choice.list_name)
+              .map(choice => ({ value: choice.$autovalue, text: choice.label[0] })),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -103,6 +169,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
           questions.pages[0].elements.push(newQuestion);
           break;
         }
+        case 'image':
         case 'file': {
           const newQuestion = {
             type: 'file',
@@ -165,111 +232,5 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
       }
     }
   });
-  //   "logoPosition": "right",
-  //   "pages": [
-  //    {
-  //     "name": "page1",
-  //     "elements": [
-  //      {
-  //       "type": "text",
-  //       "name": "decimal",
-  //       "title": "decimal",
-  //       "valueName": "decimal",
-  //       "inputType": "number"
-  //      },
-  //      {
-  //       "type": "geospatial",
-  //       "name": "ponto",
-  //       "title": "Ponto",
-  //       "valueName": "ponto"
-  //      },
-  //      {
-  //       "type": "checkbox",
-  //       "name": "question2",
-  //       "title": "Selecionar Multiplos",
-  //       "valueName": "question2",
-  //       "choices": [
-  //        "Item 1",
-  //        "Item 2"
-  //       ],
-  //       "showSelectAllItem": true
-  //      },
-  //      {
-  //       "type": "text",
-  //       "name": "data",
-  //       "title": "Data",
-  //       "valueName": "data",
-  //       "inputType": "date"
-  //      },
-  //      {
-  //       "type": "expression",
-  //       "name": "nota",
-  //       "title": "Nota",
-  //       "valueName": "nota"
-  //      },
-  //      {
-  //       "type": "radiogroup",
-  //       "name": "avaliacao",
-  //       "title": "Avaliação",
-  //       "valueName": "avaliacao",
-  //       "choices": [
-  //        "Item 1",
-  //        "Item 2",
-  //        "Item 3"
-  //       ]
-  //      },
-  //      {
-  //       "type": "text",
-  //       "name": "texto",
-  //       "title": "texto",
-  //       "valueName": "texto"
-  //      },
-  //      {
-  //       "type": "text",
-  //       "name": "horario",
-  //       "title": "horario",
-  //       "valueName": "horario",
-  //       "inputType": "time"
-  //      },
-  //      {
-  //       "type": "file",
-  //       "name": "arquivo",
-  //       "title": "arquivo",
-  //       "valueName": "arquivo",
-  //       "storeDataAsText": false,
-  //       "maxSize": 7340032
-  //      },
-  //      {
-  //       "type": "text",
-  //       "name": "numero",
-  //       "title": "numero",
-  //       "valueName": "numero",
-  //       "inputType": "number"
-  //      },
-  //      {
-  //       "type": "text",
-  //       "name": "datetime",
-  //       "title": "datetime",
-  //       "valueName": "datetime",
-  //       "inputType": "datetime-local"
-  //      },
-  //      {
-  //       "type": "boolean",
-  //       "name": "reconhece",
-  //       "title": "reconhece",
-  //       "valueName": "reconhece"
-  //      },
-  //      {
-  //       "type": "text",
-  //       "name": "intervalo",
-  //       "title": "Intervalo",
-  //       "valueName": "intervalo",
-  //       "inputType": "range"
-  //      }
-  //     ]
-  //    }
-  //   ],
-  //   "showQuestionNumbers": "off"
-  //  }
   return questions;
 };

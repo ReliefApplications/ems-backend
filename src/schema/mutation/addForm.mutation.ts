@@ -43,7 +43,6 @@ export default {
   async resolve(parent, args: AddFormArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
-      console.log(args);
       // Check authentication
       const user = context.user;
       const ability: AppAbility = user.ability;
@@ -94,6 +93,7 @@ export default {
               config.get('encryption.key')
             ).toString(CryptoJS.enc.Utf8)
           );
+          // get kobo form data
           const response = await axios.get(url, {
             headers: {
               Authorization: `${settings.tokenPrefix} ${settings.token}`,
@@ -103,6 +103,7 @@ export default {
           const choices = response.data.content.choices;
           const title = response.data.name;
 
+          // get structure
           const structure = JSON.stringify(
             extractKoboFields(survey, title, choices)
           );
