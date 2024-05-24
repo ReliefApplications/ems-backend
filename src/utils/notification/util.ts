@@ -32,13 +32,6 @@ export const titleCase = (str: string): string => {
  */
 export const formatDates = (rowData: unknown): string => {
   if (typeof rowData === 'string') {
-    // Create the string in date format
-    const date = new Date(rowData);
-    if (!isNaN(date.getTime())) {
-      // Format the date as MM/DD/YY, hh:mm AM/PM UTC
-      return date.toLocaleString('en-US', dateTimeLocale);
-    }
-    // If string, return as-is.
     return rowData;
   } else if (rowData instanceof Date) {
     // Format the date as MM/DD/YY, hh:mm AM/PM UTC
