@@ -52,6 +52,7 @@ export interface AttributeSettings {
     field: string;
     value: any;
     text: string;
+    provider?: string;
   }[];
 }
 
