@@ -257,7 +257,7 @@ router.post('/send-email/:configId', async (req, res) => {
         }
 
         const dropdownFields = fields.filter((field) => {
-          return field.type === 'dropdown';
+          return field.type === 'dropdown' || field.type === 'radiogroup';
         });
         // TODO: Pass all fields to reduce duplication of existing implementation
         const columns = await getColumns(

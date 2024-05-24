@@ -70,7 +70,7 @@ export const DatasetType = new GraphQLObjectType({
           if (parent.records.length) {
             const nestedFields = parent.nestedFields;
             const dropdownFields = parent.fields.filter((field) => {
-              return field.type === 'dropdown';
+              return field.type === 'dropdown' || field.type === 'radiogroup';
             });
             for (const obj of parent.records) {
               const data = obj?.data;
