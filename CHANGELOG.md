@@ -1,3 +1,10 @@
+## [2.10.1](https://github.com/ReliefApplications/ems-backend/compare/v2.10.0...v2.10.1) (2024-05-24)
+
+
+### Bug Fixes
+
+* choices by graphql questions could not be set as required ([#1069](https://github.com/ReliefApplications/ems-backend/issues/1069)) ([dd8b9b8](https://github.com/ReliefApplications/ems-backend/commit/dd8b9b8b57fa4d42ebbd4234a95ca3f5e1a79bcf))
+
 # [2.10.0](https://github.com/ReliefApplications/ems-backend/compare/v2.9.2...v2.10.0) (2024-05-22)
 
 
