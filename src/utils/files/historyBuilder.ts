@@ -1,6 +1,7 @@
 import { Borders, Fill, Workbook } from 'exceljs';
 import { RecordHistory, RecordHistoryMeta, Change } from '@models';
 import getTimeWithTimezone from '@utils/date/getTimeWithTimezone';
+import { isNil } from 'lodash';
 
 /**
  * Check if an object value is detected in the change.
@@ -9,18 +10,18 @@ import getTimeWithTimezone from '@utils/date/getTimeWithTimezone';
  * @returns true if an object is detected
  */
 const changeValueIsObject = (change: Change) => {
-  if (change.new) {
+  if (!isNil(change.new)) {
     return (
       !Array.isArray(change.new) &&
       change.new instanceof Object &&
       !(change.new instanceof Date)
     );
   }
-  if (change.old) {
+  if (!isNil(change.old)) {
     return (
       !Array.isArray(change.old) &&
       change.old instanceof Object &&
-      !(change.new instanceof Date)
+      !(change.old instanceof Date)
     );
   }
   return false;
@@ -59,6 +60,7 @@ const addToWhiteText = (_firstChange: boolean, whiteText: number[]) => {
  * @param row.createdBy User who did the change.
  * @param row.displayType Type of change.
  * @param row.displayName Name of the changed field.
+ * @param row.fieldName Name of the field.
  * @param row.old Old value of the field.
  * @param row.new New value of the field.
  * @param translate i18n translation function
@@ -74,6 +76,7 @@ const pushRow = (
     createdBy: string;
     displayType: string;
     displayName: string;
+    fieldName: string;
     new: any;
     old: any;
   },
@@ -83,7 +86,7 @@ const pushRow = (
   let oldValue = row.old;
   let displayType = row.displayType;
   if (Array.isArray(newValue)) {
-    // If old AND new value are arrays, we may divide the row in two differents ones.
+    // If old AND new value are arrays, we may divide the row in two different ones.
     // One row for added elements and one for removed elements.
     if (oldValue && Array.isArray(oldValue)) {
       const added = newValue.filter((value) => !oldValue.includes(value));
@@ -102,6 +105,7 @@ const pushRow = (
             row.createdBy,
             displayType,
             row.displayName,
+            row.fieldName,
             newValue,
             oldValue,
           ]);
@@ -125,6 +129,7 @@ const pushRow = (
     row.createdBy,
     displayType,
     row.displayName,
+    row.fieldName,
     newValue,
     oldValue,
   ]);
@@ -135,7 +140,7 @@ const pushRow = (
  * Builds an XLSX file for the a record's history.
  *
  * @param history The record's history
- * @param meta The record's metadate
+ * @param meta The record's metadata
  * @param options Options object
  * @param options.translate i18n translation function
  * @param options.dateLocale date formatting locale string
@@ -197,9 +202,16 @@ const historyBuilder = async (
 
   // header for the changes
   const headerRow = worksheet.addRow(
-    ['date', 'time', 'user', 'type', 'displayName', 'new', 'old'].map((t) =>
-      options.translate(`history.headers.${t}`)
-    )
+    [
+      'date',
+      'time',
+      'user',
+      'type',
+      'displayName',
+      'fieldName',
+      'new',
+      'old',
+    ].map((t) => options.translate(`history.headers.${t}`))
   );
   headerRow.font = headerStyles.font;
   headerRow.fill = headerStyles.fill;
@@ -217,8 +229,8 @@ const historyBuilder = async (
       if (changeValueIsObject(change)) {
         const keys = Object.keys(change.new) || Object.keys(change.old);
         for (const key of keys) {
-          const newVal = change.new ? change.new[key] : '';
-          const oldVal = change.old ? change.old[key] : '';
+          const newVal = !isNil(change.new) ? change.new[key] : '';
+          const oldVal = !isNil(change.old) ? change.old[key] : '';
           firstChange = pushRow(
             firstChange,
             whiteText,
@@ -229,6 +241,7 @@ const historyBuilder = async (
               createdBy: version.createdBy,
               displayType: change.displayType,
               displayName: `${change.displayName}.${key}`,
+              fieldName: change.field,
               new: newVal,
               old: oldVal,
             },
@@ -246,6 +259,7 @@ const historyBuilder = async (
             createdBy: version.createdBy,
             displayType: change.displayType,
             displayName: change.displayName,
+            fieldName: change.field,
             new: change.new,
             old: change.old,
           },

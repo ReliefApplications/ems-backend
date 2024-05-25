@@ -20,8 +20,9 @@
 		"filename": "Record history {{id}}",
 		"headers": {
 			"date": "Date",
-			"displayName": "Field",
+			"displayName": "Field title",
 			"exportDate": "Export date",
+			"fieldName": "Field name",
 			"fields": "Filtered fields",
 			"form": "Form",
 			"fromDate": "Filter from",
