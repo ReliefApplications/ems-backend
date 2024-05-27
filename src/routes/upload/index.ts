@@ -219,6 +219,11 @@ router.post('/resource/records/:id', async (req: any, res) => {
  */
 router.post('/resource/insert', async (req: any, res) => {
   try {
+    if (req.body.records.length < 1) {
+      return res
+        .status(200)
+        .send(req.t('routes.upload.errors.noRecordsToInsert'));
+    }
     const authToken = req.headers.authorization.split(' ')[1];
     const decodedToken = jwtDecode(authToken) as any;
 
