@@ -220,6 +220,7 @@ router.post('/resource/records/:id', async (req: any, res) => {
 router.post('/resource/insert', async (req: any, res) => {
   try {
     if (req.body.records.length < 1) {
+      logger.info('No records were provided for insertion.');
       return res
         .status(200)
         .send(req.t('routes.upload.errors.noRecordsToInsert'));
