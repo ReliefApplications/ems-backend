@@ -1,3 +1,10 @@
+## [2.10.2](https://github.com/ReliefApplications/ems-backend/compare/v2.10.1...v2.10.2) (2024-05-28)
+
+
+### Bug Fixes
+
+* webjob sending error when no provided records ([#1073](https://github.com/ReliefApplications/ems-backend/issues/1073)) ([84c0ff1](https://github.com/ReliefApplications/ems-backend/commit/84c0ff1c686fbeb8539155abef6e02f13cdd232c))
+
 ## [2.10.1](https://github.com/ReliefApplications/ems-backend/compare/v2.10.0...v2.10.1) (2024-05-24)
 
 
