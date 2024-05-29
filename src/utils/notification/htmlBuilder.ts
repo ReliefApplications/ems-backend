@@ -41,7 +41,7 @@ export const replaceSubject = (subject: string, records: any[]): string => {
     const matches = subject.matchAll(subjectMatch);
 
     for (const match of matches) {
-      if (records[0].data[match[1]]) {
+      if (_.get(records[0].data, match[1])) {
         subject = subject.replace(
           match[0],
           formatDates(records[0].data[match[1]])
