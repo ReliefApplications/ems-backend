@@ -1,4 +1,5 @@
 import { dateLocale, dateTimeLocale, timeLocale } from '@const/locale';
+import { mongo } from 'mongoose';
 
 /**
  * To replace all special characters with whitespace
@@ -40,6 +41,8 @@ export const formatDates = (rowData: unknown): string => {
     return 'False';
   } else if (rowData === true) {
     return 'True';
+  } else if (rowData instanceof mongo.ObjectId) {
+    return rowData.toString();
   } else if (!rowData) {
     return '';
   } else if (rowData instanceof Array) {
