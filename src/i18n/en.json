@@ -199,6 +199,9 @@
 			}
 		},
 		"record": {
+			"add": {
+				"recordAlreadyExists": "Record with specified ID already exists"
+			},
 			"convert": {
 				"errors": {
 					"invalidConversion": "Cannot convert this record to this target form type."

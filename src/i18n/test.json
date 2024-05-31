@@ -199,6 +199,9 @@
 			}
 		},
 		"record": {
+			"add": {
+				"recordAlreadyExists": "******"
+			},
 			"convert": {
 				"errors": {
 					"invalidConversion": "******"
