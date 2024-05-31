@@ -1,3 +1,17 @@
+## [2.10.2](https://github.com/ReliefApplications/ems-backend/compare/v2.10.1...v2.10.2) (2024-05-28)
+
+
+### Bug Fixes
+
+* webjob sending error when no provided records ([#1073](https://github.com/ReliefApplications/ems-backend/issues/1073)) ([84c0ff1](https://github.com/ReliefApplications/ems-backend/commit/84c0ff1c686fbeb8539155abef6e02f13cdd232c))
+
+## [2.10.1](https://github.com/ReliefApplications/ems-backend/compare/v2.10.0...v2.10.1) (2024-05-24)
+
+
+### Bug Fixes
+
+* choices by graphql questions could not be set as required ([#1069](https://github.com/ReliefApplications/ems-backend/issues/1069)) ([dd8b9b8](https://github.com/ReliefApplications/ems-backend/commit/dd8b9b8b57fa4d42ebbd4234a95ca3f5e1a79bcf))
+
 # [2.10.0](https://github.com/ReliefApplications/ems-backend/compare/v2.9.2...v2.10.0) (2024-05-22)
 
 

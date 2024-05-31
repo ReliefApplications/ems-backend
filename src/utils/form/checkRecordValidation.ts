@@ -20,6 +20,33 @@ import * as Survey from 'survey-knockout';
 // };
 
 /**
+ * Adding choices artificially so that the data is not deleted upon doing survey completeLastPage
+ *
+ * @param structure structure of the form
+ * @param newData data to get choices from
+ * @returns modified structure
+ */
+const addChoicesToGraphQLQuestions = (structure: any, newData: any) => {
+  return {
+    ...structure,
+    pages: structure.pages.map((page) => ({
+      ...page,
+      elements: page.elements.map((element) => {
+        if (element.gqlUrl) {
+          return {
+            ...element,
+            choices: newData[element.name].map((choice) => {
+              return { text: choice, value: choice };
+            }),
+          };
+        }
+        return element;
+      }),
+    })),
+  };
+};
+
+/**
  * Check if the record is correct according to the defined surveyjs validators
  *
  * @param record The record to check
@@ -40,10 +67,13 @@ export const checkRecordValidation = (
   // passTokenForChoicesByUrl(context);
   // Avoid the choices by url to be called, as it could freeze system depending on the choices
   (Survey.ChoicesRestful as any).getCachedItemsResult = () => true;
-  // create the form
-  const survey = new Survey.Model(form.structure);
-  Survey.settings.commentPrefix = '_comment';
   const structure = JSON.parse(form.structure);
+  const modifiedStructure = JSON.stringify(
+    addChoicesToGraphQLQuestions(structure, newData)
+  );
+  // create the form
+  const survey = new Survey.Model(modifiedStructure);
+  Survey.settings.commentPrefix = '_comment';
   // Run completion
   const onCompleteExpression = survey.toJSON().onCompleteExpression;
   if (onCompleteExpression) {
