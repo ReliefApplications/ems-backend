@@ -6,14 +6,12 @@ on:
     branches:
       - main
       - next
-      - next-major
       - beta
       - alpha
   pull_request:
     branches:
       - main
       - next
-      - next-major
       - beta
       - alpha
   schedule:
