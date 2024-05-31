@@ -13,7 +13,6 @@ jobs:
         include:
           - ref: main
           - ref: next
-          - ref: next-major
           - ref: beta
           - ref: alpha
     steps:
