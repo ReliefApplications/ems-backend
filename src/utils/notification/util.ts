@@ -1,4 +1,5 @@
 import { dateLocale, dateTimeLocale, timeLocale } from '@const/locale';
+import _ from 'lodash';
 import { mongo } from 'mongoose';
 
 /**
@@ -46,6 +47,9 @@ export const formatDates = (rowData: unknown): string => {
   } else if (!rowData) {
     return '';
   } else if (rowData instanceof Array) {
+    if (rowData[0] instanceof Object) {
+      return _.map(rowData, 'text').join(', ');
+    }
     return rowData.join(', ');
   } else if (rowData instanceof Object) {
     let objectString = '';

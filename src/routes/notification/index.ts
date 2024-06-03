@@ -122,10 +122,7 @@ router.post('/send-email/:configId', async (req, res) => {
         const filters = getFilter(filterLogic, resource.fields);
         // Fields to fetch from GraphQL/REST API
         const foreignFields = fields.filter(
-          (field) =>
-            field?.choicesByGraphQL ||
-            field?.referenceData ||
-            field?.choicesByUrl
+          (field) => field?.choicesByGraphQL || field?.choicesByUrl
         );
         const usedFields = extractFilterFields(filterLogic);
 
@@ -257,7 +254,17 @@ router.post('/send-email/:configId', async (req, res) => {
         }
 
         const dropdownFields = fields.filter((field) => {
-          return field.type === 'dropdown' || field.type === 'radiogroup';
+          return (
+            !(
+              field?.choicesByUrl ||
+              field?.choicesByGraphQL ||
+              field?.referenceData
+            ) &&
+            (field.type === 'dropdown' ||
+              field.type === 'radiogroup' ||
+              field.type === 'tagbox' ||
+              field.type === 'checkbox')
+          );
         });
         // TODO: Pass all fields to reduce duplication of existing implementation
         const columns = await getColumns(
@@ -286,8 +293,9 @@ router.post('/send-email/:configId', async (req, res) => {
               const project = mergeArrayOfObjects(nestedFields[key]) ?? {};
               Object.assign(project, { _id: 0 });
               const record = await Record.findById(value, project);
-              data[key] = record;
-              console.log('HIT');
+              if (record) {
+                data[key] = record;
+              }
             }
             if (value instanceof Array) {
               if (userField) {
@@ -324,10 +332,21 @@ router.post('/send-email/:configId', async (req, res) => {
                 return field.name == key;
               });
               if (thisDropdownField?.choices) {
-                const thisChoice = thisDropdownField.choices.find((choice) => {
-                  return choice.value === value;
+                const thisChoice = thisDropdownField.choices.map((choice) => {
+                  if (
+                    choice.value === value ||
+                    (value instanceof Array && value.includes(choice.value))
+                  ) {
+                    return choice.text;
+                  }
                 });
-                data[key] = thisChoice?.text ?? value;
+                if (thisChoice instanceof Array) {
+                  data[key] = thisChoice.filter(Boolean).join(', ');
+                } else if (typeof thisChoice === 'string') {
+                  data[key] = thisChoice;
+                } else {
+                  data[key] = value;
+                }
               }
             }
           }
