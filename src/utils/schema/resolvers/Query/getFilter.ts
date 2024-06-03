@@ -143,13 +143,22 @@ const buildMongoFilter = (
     }
 
     // Special filter on id, to be used in context filters
-    if (filter.field === '__ID__') {
+    if (filter.field.endsWith('__ID__')) {
+      const toMatch = filter.field.replace('__ID__', '_id');
       switch (filter.operator) {
         case 'eq':
-          return { _id: new Types.ObjectId(filter.value) };
+          return { [toMatch]: new Types.ObjectId(filter.value) };
         case 'neq':
-          return { _id: { $ne: new Types.ObjectId(filter.value) } };
+          return { [toMatch]: { $ne: new Types.ObjectId(filter.value) } };
         default:
+        case 'in':
+          return {
+            [toMatch]: { $in: filter.value.map((x) => new Types.ObjectId(x)) },
+          };
+        case 'nin':
+          return {
+            [toMatch]: { $nin: filter.value.map((x) => new Types.ObjectId(x)) },
+          };
           return {};
       }
     }

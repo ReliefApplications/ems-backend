@@ -493,6 +493,9 @@ export default {
                       [`data.${fieldName}.data.id`]: {
                         $toString: `$data.${fieldName}._id`,
                       },
+                      [`data.${fieldName}.data.__ID__`]: {
+                        $toString: `$data.${fieldName}._id`,
+                      },
                       [`data.${fieldName}.data._id`]: `$data.${fieldName}._id`,
                     });
                   } else if (!selectableField.includes('By')) {
