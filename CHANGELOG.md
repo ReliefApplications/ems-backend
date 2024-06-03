@@ -1,3 +1,56 @@
+## [2.10.2](https://github.com/ReliefApplications/ems-backend/compare/v2.10.1...v2.10.2) (2024-05-28)
+
+
+### Bug Fixes
+
+* webjob sending error when no provided records ([#1073](https://github.com/ReliefApplications/ems-backend/issues/1073)) ([84c0ff1](https://github.com/ReliefApplications/ems-backend/commit/84c0ff1c686fbeb8539155abef6e02f13cdd232c))
+
+## [2.10.1](https://github.com/ReliefApplications/ems-backend/compare/v2.10.0...v2.10.1) (2024-05-24)
+
+
+### Bug Fixes
+
+* choices by graphql questions could not be set as required ([#1069](https://github.com/ReliefApplications/ems-backend/issues/1069)) ([dd8b9b8](https://github.com/ReliefApplications/ems-backend/commit/dd8b9b8b57fa4d42ebbd4234a95ca3f5e1a79bcf))
+
+# [2.10.0](https://github.com/ReliefApplications/ems-backend/compare/v2.9.2...v2.10.0) (2024-05-22)
+
+
+### Bug Fixes
+
+* creation of new users could fail due to duplication errors ([#1059](https://github.com/ReliefApplications/ems-backend/issues/1059)) ([95eadbe](https://github.com/ReliefApplications/ems-backend/commit/95eadbe58c795f29a5b058e8e5a099f1dc84f959))
+
+
+### Features
+
+* REST reference data can also use query params ([#1058](https://github.com/ReliefApplications/ems-backend/issues/1058)) ([506e551](https://github.com/ReliefApplications/ems-backend/commit/506e551fe7f5a4d5529ad59d3df8a0c216a4910b))
+* use microsoft graph to populate user's attributes ([#1062](https://github.com/ReliefApplications/ems-backend/issues/1062)) ([4396301](https://github.com/ReliefApplications/ems-backend/commit/4396301d60c9ea0621d29f170d2920614f167d90))
+
+## [2.9.2](https://github.com/ReliefApplications/ems-backend/compare/v2.9.1...v2.9.2) (2024-05-04)
+
+
+### Bug Fixes
+
+* getSearchFilter could break "contains" when used with non-text fields ([#1038](https://github.com/ReliefApplications/ems-backend/issues/1038)) ([ea1f1a8](https://github.com/ReliefApplications/ems-backend/commit/ea1f1a8cedcc3f7e22c28b0550f529fea9009b44))
+
+## [2.9.1](https://github.com/ReliefApplications/ems-backend/compare/v2.9.0...v2.9.1) (2024-05-03)
+
+
+### Bug Fixes
+
+* history could display modified values, even if no real update ([26fadd9](https://github.com/ReliefApplications/ems-backend/commit/26fadd9a4daf03e57c15d709bafd7da517c02d02))
+
+# [2.9.0](https://github.com/ReliefApplications/ems-backend/compare/v2.8.0...v2.9.0) (2024-04-29)
+
+
+### Bug Fixes
+
+* Graphql questions would not display text values in history downloads [#91235](https://github.com/ReliefApplications/ems-backend/issues/91235) ([#1026](https://github.com/ReliefApplications/ems-backend/issues/1026)) ([676f035](https://github.com/ReliefApplications/ems-backend/commit/676f035d05d4d33ff2624116a33854288e8db24e))
+
+
+### Features
+
+* Add 'in' and 'notIn' operators for record queries ([#951](https://github.com/ReliefApplications/ems-backend/issues/951)) ([e850042](https://github.com/ReliefApplications/ems-backend/commit/e850042dc77e7280a08511a470073bf6a5b5d2c7))
+
 # [2.8.0](https://github.com/ReliefApplications/ems-backend/compare/v2.7.2...v2.8.0) (2024-04-24)
 
 

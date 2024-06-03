@@ -1,8 +1,10 @@
-import { difference, eq, get, isEqual } from 'lodash';
+import { clone, difference, eq, get, isEqual, set } from 'lodash';
 import { Role, User, IUserMicrosoftGraph } from '@models';
 import config from 'config';
 import axios from 'axios';
 import { logger } from '@services/logger.service';
+import { AttributeSettings } from './userManagement';
+import jsonpath from 'jsonpath';
 
 /**
  * Generate a new access token for Microsoft graph, on behalf of the user.
@@ -45,7 +47,7 @@ const getUserGraphInfo = async (user: User) => {
   const oid = user.oid;
   if (graphToken && oid) {
     // Select url to fetch specific user info
-    const url = `https://graph.microsoft.com/v1.0/users/${oid}?$select=userType`;
+    const url = `https://graph.microsoft.com/v1.0/users/${oid}?$select=userType,department`;
     return axios({
       url,
       method: 'get',
@@ -200,6 +202,22 @@ export const getAutoAssignedRoles = async (user: User): Promise<Role[]> => {
     const graphData = await getUserGraphInfo(user);
     if (graphData) {
       user.graphData = graphData;
+      const settings: AttributeSettings = config.get('user.attributes');
+      if (settings.mapping) {
+        const prevAttributes = clone(get(user, 'attributes'));
+        // Map them to user attributes
+        for (const mapping of settings.mapping) {
+          if (mapping.provider === 'microsoftGraph') {
+            const value = jsonpath.value(graphData, mapping.value);
+            set(user, mapping.field, value);
+          }
+        }
+        // Compare attributes with previous ones, and save user if needed
+        if (!isEqual(prevAttributes, user.attributes)) {
+          user.markModified('attributes');
+          await user.save();
+        }
+      }
     }
   }
   // Check all roles with auto assignment rules set
