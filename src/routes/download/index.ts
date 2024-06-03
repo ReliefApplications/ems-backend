@@ -79,16 +79,15 @@ const buildChartDataExport = (req, res) => {
   const rows = req.body.chartData[0].data;
 
   if (rows) {
-    
-    const columns = Object.keys(rows[0]).map(key => {
+    const columns = Object.keys(rows[0]).map((key) => {
       return {
         name: key,
         title: key,
-        field: key
-      }
+        field: key,
+      };
     });
     const type = req.body.format;
-    const fileName = req.body.fileName
+    const fileName = req.body.fileName;
     return fileBuilder(res, fileName, columns, rows, type);
   } else {
     return false;
@@ -489,39 +488,12 @@ router.post('/charts', async (req, res) => {
     if (!resource) {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
-
     return await buildChartDataExport(req, res);
-    // Make distinction if we send the file by email or in the response
-    // if (!params.email) {
-    //   return await buildChartDataExport(req, res);
-    // } else {
-    //   // Send response so the client is not frozen
-    //   res.status(200).send('Export ongoing');
-    //   // Build the file
-    //   const file = await buildChartDataExport(req, res);
-    //   // Pass it in attachment
-    //   const attachments = [
-    //     {
-    //       filename: `${params.fileName}.${params.format}`,
-    //       content: file,
-    //     },
-    //   ];
-    //   console.log(attachments);
-    //   await sendEmail({
-    //     message: {
-    //       to: req.context.user.username,
-    //       subject: `${params.application} - Your data export is completed - ${params.fileName}`, // TODO : put in config for 1.3
-    //       html: 'Dear colleague,\n\nPlease find attached to this e-mail the requested data export.\n\nFor any issues with the data export, please contact ems2@who.int\n\n Best regards,\nems2@who.int', // TODO : put in config for 1.3
-    //       attachments,
-    //     },
-    //   });
-    // }
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
     res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
-
 
 /**
  * Export the template to add new users to an application by uploading a file
