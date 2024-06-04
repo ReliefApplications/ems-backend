@@ -151,65 +151,91 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
       };
   passport.use(
     new BearerStrategy(credentials, (req, token: ITokenPayload, done) => {
-      // === USER ===
-      if (token.name) {
-        // Checks if user already exists in the DB
-        User.findOne({
-          $or: [{ oid: token.oid }, { username: token.preferred_username }],
-        })
-          .populate({
-            // Add to the user context all roles / permissions it has
-            path: 'roles',
-            model: 'Role',
-            populate: {
-              path: 'permissions',
-              model: 'Permission',
-            },
+      try {
+        // === USER ===
+        if (token.name) {
+          // Checks if user already exists in the DB
+          User.findOne({
+            $or: [{ oid: token.oid }, { username: token.preferred_username }],
           })
-          .populate({
-            // Add to the user context all positionAttributes with corresponding categories it has
-            path: 'positionAttributes.category',
-            model: 'PositionAttributeCategory',
-          })
-          .then((user) => {
-            if (user) {
-              logger.info('=== existing user ===');
-              // Returns the user if found but update it if needed
-              if (!user.oid) {
-                user.firstName = token.given_name;
-                user.lastName = token.family_name;
-                user.name = token.name;
-                user.oid = token.oid;
-                updateUser(user, req).then(() => {
-                  User.findOneAndUpdate(
-                    {
-                      username: token.preferred_username,
-                    },
-                    { $setOnInsert: user },
-                    { upsert: false, new: true }
-                  )
+            .populate({
+              // Add to the user context all roles / permissions it has
+              path: 'roles',
+              model: 'Role',
+              populate: {
+                path: 'permissions',
+                model: 'Permission',
+              },
+            })
+            .populate({
+              // Add to the user context all positionAttributes with corresponding categories it has
+              path: 'positionAttributes.category',
+              model: 'PositionAttributeCategory',
+            })
+            .then((user) => {
+              if (user) {
+                // Returns the user if found but update it if needed
+                if (!user.oid) {
+                  user.firstName = token.given_name;
+                  user.lastName = token.family_name;
+                  user.name = token.name;
+                  user.oid = token.oid;
+                  updateUser(user, req)
                     .then(() => {
-                      userAuthCallback(null, done, token, user);
+                      user
+                        .save()
+                        .then(() => {
+                          userAuthCallback(null, done, token, user);
+                        })
+                        .catch((err2) => {
+                          userAuthCallback(err2, done, token, user);
+                        });
                     })
-                    .catch((err2) => {
-                      userAuthCallback(err2, done, token, user);
-                    });
-                });
+                    .catch((err) => done(err));
+                } else {
+                  updateUser(user, req)
+                    .then((changed) => {
+                      if (changed || !user.firstName || !user.lastName) {
+                        if (!user.firstName) {
+                          user.firstName = token.given_name;
+                        }
+                        if (!user.lastName) {
+                          user.lastName = token.family_name;
+                        }
+                        user
+                          .save()
+                          .then(() => {
+                            userAuthCallback(null, done, token, user);
+                          })
+                          .catch((err2) => {
+                            userAuthCallback(err2, done, token, user);
+                          });
+                      } else {
+                        userAuthCallback(null, done, token, user);
+                      }
+                    })
+                    .catch((err) => done(err));
+                }
               } else {
-                updateUser(user, req).then((changed) => {
-                  if (changed || !user.firstName || !user.lastName) {
-                    if (!user.firstName) {
-                      user.firstName = token.given_name;
-                    }
-                    if (!user.lastName) {
-                      user.lastName = token.family_name;
-                    }
+                // Creates the user from azure oid if not found
+                user = new User({
+                  firstName: token.given_name,
+                  lastName: token.family_name,
+                  username: token.preferred_username,
+                  name: token.name,
+                  oid: token.oid,
+                  roles: [],
+                  positionAttributes: [],
+                });
+                updateUser(user, req)
+                  .then(() => {
+                    // Avoid duplication error in case parallel requests are sent
                     User.findOneAndUpdate(
                       {
                         oid: token.oid,
                       },
                       { $setOnInsert: user },
-                      { upsert: false, new: true }
+                      { upsert: true, new: true }
                     )
                       .then(() => {
                         userAuthCallback(null, done, token, user);
@@ -217,99 +243,72 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                       .catch((err2) => {
                         userAuthCallback(err2, done, token, user);
                       });
-                  } else {
-                    userAuthCallback(null, done, token, user);
-                  }
-                });
-              }
-            } else {
-              // Creates the user from azure oid if not found
-              user = new User({
-                firstName: token.given_name,
-                lastName: token.family_name,
-                username: token.preferred_username,
-                name: token.name,
-                oid: token.oid,
-                roles: [],
-                positionAttributes: [],
-              });
-              logger.info('=== new user ===');
-              updateUser(user, req).then(() => {
-                // Avoid duplication error in case parallel requests are sent
-                User.findOneAndUpdate(
-                  {
-                    oid: token.oid,
-                  },
-                  { $setOnInsert: user },
-                  { upsert: true, new: true }
-                )
-                  .then(() => {
-                    userAuthCallback(null, done, token, user);
                   })
-                  .catch((err2) => {
-                    userAuthCallback(err2, done, token, user);
-                  });
-              });
-            }
+                  .catch((err) => done(err));
+              }
+            })
+            .catch((err) => {
+              done(err);
+            });
+          // === CLIENT ===
+        } else if (token.azp) {
+          // Checks if client already exists in the DB
+          Client.findOne({
+            $or: [{ oid: token.oid }, { clientId: token.azp }],
           })
-          .catch((err) => {
-            done(err);
-          });
-        // === CLIENT ===
-      } else if (token.azp) {
-        // Checks if client already exists in the DB
-        Client.findOne({
-          $or: [{ oid: token.oid }, { clientId: token.azp }],
-        })
-          .populate({
-            // Add to the context all roles / permissions the client has
-            path: 'roles',
-            model: 'Role',
-            populate: {
-              path: 'permissions',
-              model: 'Permission',
-            },
-          })
-          .populate({
-            // Add to the context all positionAttributes with corresponding categories
-            path: 'positionAttributes.category',
-            model: 'PositionAttributeCategory',
-          })
-          .then((client) => {
-            if (client) {
-              // Returns the client if found and add more information if first connection
-              if (!client.oid || !client.clientId) {
-                client.azureRoles = token.roles;
-                client.oid = token.oid;
-                client.clientId = token.azp;
+            .populate({
+              // Add to the context all roles / permissions the client has
+              path: 'roles',
+              model: 'Role',
+              populate: {
+                path: 'permissions',
+                model: 'Permission',
+              },
+            })
+            .populate({
+              // Add to the context all positionAttributes with corresponding categories
+              path: 'positionAttributes.category',
+              model: 'PositionAttributeCategory',
+            })
+            .then((client) => {
+              if (client) {
+                // Returns the client if found and add more information if first connection
+                if (!client.oid || !client.clientId) {
+                  client.azureRoles = token.roles;
+                  client.oid = token.oid;
+                  client.clientId = token.azp;
+                  client
+                    .save()
+                    .then((res) => done(null, res, token))
+                    .catch((error) => done(error));
+                } else {
+                  return done(null, client, token);
+                }
+              } else {
+                // Creates the client from azure oid if not found
+                client = new Client({
+                  name: `${token.azp}${
+                    token.roles ? ' / ' + token.roles.join(',') : ''
+                  }`,
+                  azureRoles: token.roles,
+                  clientId: token.azp,
+                  oid: token.oid,
+                  roles: [],
+                  positionAttributes: [],
+                });
                 client
                   .save()
                   .then((res) => done(null, res, token))
                   .catch((error) => done(error));
-              } else {
-                return done(null, client, token);
               }
-            } else {
-              // Creates the client from azure oid if not found
-              client = new Client({
-                name: `${token.azp}${
-                  token.roles ? ' / ' + token.roles.join(',') : ''
-                }`,
-                azureRoles: token.roles,
-                clientId: token.azp,
-                oid: token.oid,
-                roles: [],
-                positionAttributes: [],
-              });
-              client
-                .save()
-                .then((res) => done(null, res, token))
-                .catch((error) => done(error));
-            }
-          });
-      } else {
-        logger.info(token);
-        return done('error');
+            })
+            .catch((err) => done(err));
+        } else {
+          logger.info(token);
+          return done('error');
+        }
+      } catch (err) {
+        done(err);
       }
     })
   );
