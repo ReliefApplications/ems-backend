@@ -181,8 +181,13 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                 user.name = token.name;
                 user.oid = token.oid;
                 updateUser(user, req).then(() => {
-                  user
-                    .save()
+                  User.findOneAndUpdate(
+                    {
+                      username: token.preferred_username,
+                    },
+                    { $setOnInsert: user },
+                    { upsert: false, new: true }
+                  )
                     .then(() => {
                       userAuthCallback(null, done, token, user);
                     })
@@ -199,8 +204,13 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                     if (!user.lastName) {
                       user.lastName = token.family_name;
                     }
-                    user
-                      .save()
+                    User.findOneAndUpdate(
+                      {
+                        oid: token.oid,
+                      },
+                      { $setOnInsert: user },
+                      { upsert: false, new: true }
+                    )
                       .then(() => {
                         userAuthCallback(null, done, token, user);
                       })
