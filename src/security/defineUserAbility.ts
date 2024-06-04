@@ -179,7 +179,6 @@ export default function defineUserAbility(user: User | Client): AppAbility {
         'Template',
         'DistributionList',
         'CustomNotification',
-        'EmailNotification',
       ]
     );
   } else {
@@ -344,6 +343,13 @@ export default function defineUserAbility(user: User | Client): AppAbility {
   === */
   if (userGlobalPermissions.includes(permissions.canSeeLayer)) {
     can(['create', 'read', 'update', 'delete'], 'Layer');
+  }
+
+  /* ===
+    Creation / Access / Edition / Deletion of email notification
+  === */
+  if (userGlobalPermissions.includes(permissions.canManageEmailNotifications)) {
+    can(['create', 'read', 'update', 'delete'], 'EmailNotification');
   }
 
   return abilityBuilder.build({ conditionsMatcher });

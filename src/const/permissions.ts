@@ -19,6 +19,7 @@ const permissions = {
   canSeeLayer: 'can_see_layer',
   canManageCustomNotifications: 'can_manage_custom_notifications', // Deprecated
   canSeeEmailNotifications: 'can_see_email_notifications',
+  canUpdateEmailNotifications: 'can_update_email_notifications',
   canManageEmailNotifications: 'can_manage_email_notifications',
   canCreateEmailNotifications: 'can_create_email_notifications',
 };

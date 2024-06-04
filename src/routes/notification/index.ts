@@ -11,7 +11,7 @@ import {
   emailAggregation,
   getFields,
   projectAggregation,
-} from '@schema/query/dataSet.query';
+} from '@schema/query/dataset.query';
 import i18next from 'i18next';
 import {
   buildTable,
@@ -21,7 +21,10 @@ import {
   replaceSubject,
 } from '@utils/notification/htmlBuilder';
 import mongoose from 'mongoose';
-import { mergeArrayOfObjects } from '@schema/types/dataSet.type';
+import { mergeArrayOfObjects } from '@schema/types';
+import { getOwnerOptions, getUsersOptions } from '@utils/form/metadata.helper';
+import _ from 'lodash';
+import { getColumns, getRows } from '@utils/files';
 
 /**
  *
@@ -70,7 +73,7 @@ const router = express.Router();
 router.post('/send-email/:configId', async (req, res) => {
   try {
     const config = await EmailNotification.findById(req.params.configId);
-    const datasets = config.get('dataSets');
+    const datasets = config.get('datasets');
     const emailElement = parse(`<!DOCTYPE HTML>
     <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
     
@@ -117,6 +120,10 @@ router.post('/send-email/:configId', async (req, res) => {
         }
         const fields = resource?.fields;
         const filters = getFilter(filterLogic, resource.fields);
+        // Fields to fetch from GraphQL/REST API
+        const foreignFields = fields.filter(
+          (field) => field?.choicesByGraphQL || field?.choicesByUrl
+        );
         const usedFields = extractFilterFields(filterLogic);
 
         // Get list of needed resources for the aggregation
@@ -246,16 +253,104 @@ router.post('/send-email/:configId', async (req, res) => {
           dataList.push(data);
         }
 
-        for (const obj of tempRecords) {
+        const dropdownFields = fields.filter((field) => {
+          return (
+            !(
+              field?.choicesByUrl ||
+              field?.choicesByGraphQL ||
+              field?.referenceData
+            ) &&
+            (field.type === 'dropdown' ||
+              field.type === 'radiogroup' ||
+              field.type === 'tagbox' ||
+              field.type === 'checkbox')
+          );
+        });
+        // TODO: Pass all fields to reduce duplication of existing implementation
+        const columns = await getColumns(
+          foreignFields,
+          req.headers.authorization,
+          false
+        );
+        const rows = await getRows(columns, tempRecords);
+
+        for (const [index, obj] of tempRecords.entries()) {
+          Object.assign(obj?.data, rows[index]);
           const data = obj?.data;
+          if (obj.form) {
+            // TEMP - until we can return form name.
+            obj.form = resource.name;
+          }
           for (const [key, value] of Object.entries(data)) {
-            if (mongoose.isValidObjectId(value) && typeof value === 'string') {
+            const userField = fields.find((x) => {
+              return x.type === 'users' && x.name === key;
+            });
+            const ownerField = fields.find((x) => {
+              return x.type === 'owner' && x.name === key;
+            });
+
+            if (mongoose.isValidObjectId(value) && typeof value == 'string') {
               const project = mergeArrayOfObjects(nestedFields[key]) ?? {};
               Object.assign(project, { _id: 0 });
               const record = await Record.findById(value, project);
-              data[key] = record;
+              if (record) {
+                data[key] = record;
+              }
+            }
+            if (value instanceof Array) {
+              if (userField) {
+                const options = await getUsersOptions(userField.applications);
+                const users = value.map((user: any) => {
+                  const values = options.filter((opt) => {
+                    return opt.value.toString() === user;
+                  });
+                  return _.map(values, 'text');
+                });
+
+                const usersJoined = users.join(', ');
+                data[key] =
+                  usersJoined.length > 0 ? usersJoined : value.join(', ');
+              }
+              if (ownerField) {
+                const ownerOptions = await getOwnerOptions(
+                  ownerField.applications
+                );
+                const owners = value.map((owner: any) => {
+                  const values = ownerOptions.filter((opt) => {
+                    return opt.value.toString() === owner;
+                  });
+                  return _.map(values, 'text');
+                });
+
+                const ownersJoined = owners.join(', ');
+                data[key] =
+                  ownersJoined.length > 0 ? ownersJoined : value.join(', ');
+              }
+            }
+            if (dropdownFields) {
+              const thisDropdownField = dropdownFields.find((field) => {
+                return field.name == key;
+              });
+              if (thisDropdownField?.choices) {
+                const thisChoice = thisDropdownField.choices.map((choice) => {
+                  if (
+                    choice.value === value ||
+                    (value instanceof Array && value.includes(choice.value))
+                  ) {
+                    return choice.text;
+                  }
+                });
+                if (thisChoice instanceof Array) {
+                  data[key] = thisChoice.filter(Boolean).join(', ');
+                } else if (typeof thisChoice === 'string') {
+                  data[key] = thisChoice;
+                } else {
+                  data[key] = value;
+                }
+              }
             }
           }
+
           Object.assign(obj, data);
         }
 
@@ -338,7 +433,7 @@ router.post('/send-email/:configId', async (req, res) => {
 
     // TODO: Phase 2 - allow records from any table not just first
     const subjectRecords = processedRecords.find(
-      (dataset) => dataset.name === config.dataSets[0]?.name
+      (dataset) => dataset.name === config.datasets[0]?.name
     )?.records;
 
     const emailSubject = replaceSubject(
@@ -347,27 +442,27 @@ router.post('/send-email/:configId', async (req, res) => {
     );
 
     //recipients
-    const to = config.get('recipients').To;
-    const cc = config.get('recipients').Cc;
-    const bcc = config.get('recipients').Bcc;
+    const to = config.get('emailDistributionList').To;
+    const cc = config.get('emailDistributionList').Cc;
+    const bcc = config.get('emailDistributionList').Bcc;
     const attachments: { path: string; cid: string }[] = [];
     // Use base64 encoded images as path for CID attachments
     // This is required for images to render in the body on legacy clients
     if (config.emailLayout.header.headerLogo) {
       attachments.push({
-        path: config.emailLayout.header.headerLogo.__zone_symbol__value,
+        path: config.emailLayout.header.headerLogo,
         cid: 'headerImage',
       });
     }
     if (config.emailLayout.footer.footerLogo) {
       attachments.push({
-        path: config.emailLayout.footer.footerLogo.__zone_symbol__value,
+        path: config.emailLayout.footer.footerLogo,
         cid: 'footerImage',
       });
     }
     if (config.emailLayout.banner.bannerImage) {
       attachments.push({
-        path: config.emailLayout.banner.bannerImage.__zone_symbol__value,
+        path: config.emailLayout.banner.bannerImage,
         cid: 'bannerImage',
       });
     }
@@ -405,16 +500,16 @@ router.post('/send-email/:configId', async (req, res) => {
 router.post('/send-individual-email/:configId', async (req, res) => {
   try {
     const config = await EmailNotification.findById(req.params.configId);
-    const datasets = config.get('dataSets');
+    const datasets = config.get('datasets');
     let emailElement = parse(`<!DOCTYPE HTML>
     <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
-    
+
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;">
         <title>EMSPOC - Email Alert</title>
     </head>
-    
+
     <body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" style="width: 100%; background-color: #ffffff; margin: 0; padding: 0; -webkit-font-smoothing: antialiased;">
         <table border="0" width="100%" cellpadding="0" cellspacing="0">
             <tr>
@@ -424,14 +519,14 @@ router.post('/send-individual-email/:configId', async (req, res) => {
                 <td width="100%" align="center" valign="top" bgcolor="#ffffff">
                     <!----------   main content----------->
                     <table id="mainTable" width="800" style="border: 3px solid #00205c; margin: 0 auto;" cellpadding="0" cellspacing="0" bgcolor="#fff">
-                        
+
                     </table>
                     <!----------   end main content----------->
                 </td>
             </tr>
         </table>
     </body>
-    
+
     </html>`);
 
     const mainTableElement = emailElement.getElementById('mainTable');
@@ -622,7 +717,7 @@ router.post('/send-individual-email/:configId', async (req, res) => {
     //TODO: Phase 2 - allow records from any table not just first
     if (!processedBlockRecords) {
       subjectRecords = processedRecords.find(
-        (dataset) => dataset.name === config.dataSets[0]?.name
+        (dataset) => dataset.name === config.datasets[0]?.name
       )?.record;
     }
     // else {
@@ -637,26 +732,26 @@ router.post('/send-individual-email/:configId', async (req, res) => {
 
     const bodyElement = mainTableElement.getElementById('body');
 
-    const cc = config.get('recipients').Cc;
-    const bcc = config.get('recipients').Bcc;
+    const cc = config.get('emailDistributionList').Cc;
+    const bcc = config.get('emailDistributionList').Bcc;
     const attachments: { path: string; cid: string }[] = [];
     // Use base64 encoded images as path for CID attachments
     // This is required for images to render in the body on legacy clients
     if (config.emailLayout.header.headerLogo) {
       attachments.push({
-        path: config.emailLayout.header.headerLogo.__zone_symbol__value,
+        path: config.emailLayout.header.headerLogo,
         cid: 'headerImage',
       });
     }
     if (config.emailLayout.footer.footerLogo) {
       attachments.push({
-        path: config.emailLayout.footer.footerLogo.__zone_symbol__value,
+        path: config.emailLayout.footer.footerLogo,
         cid: 'footerImage',
       });
     }
     if (config.emailLayout.banner.bannerImage) {
       attachments.push({
-        path: config.emailLayout.banner.bannerImage.__zone_symbol__value,
+        path: config.emailLayout.banner.bannerImage,
         cid: 'bannerImage',
       });
     }

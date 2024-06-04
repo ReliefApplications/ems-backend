@@ -8,6 +8,28 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Connection } from './pagination.type';
+import { logger } from '@services/logger.service';
+import mongoose from 'mongoose';
+import { Record } from '@models';
+
+/**
+ * GraphQL DataSet type definition
+ *
+ * @param arrayOfObjects object array
+ * @returns project
+ */
+export const mergeArrayOfObjects = (
+  arrayOfObjects: { [key: string]: number }[]
+): any => {
+  if (!arrayOfObjects) {
+    return {};
+  }
+  return arrayOfObjects.reduce((result, obj) => {
+    const key = Object.keys(obj)[0];
+    result[key] = obj[key];
+    return result;
+  }, {});
+};
 
 /**
  * GraphQL Resource type.
@@ -25,8 +47,8 @@ const ResourceType = new GraphQLObjectType({
  * GraphQL DataSet type.
  */
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const DataSetType = new GraphQLObjectType({
-  name: 'DataSet',
+export const DatasetType = new GraphQLObjectType({
+  name: 'Dataset',
   fields: () => ({
     name: { type: GraphQLString },
     resource: { type: ResourceType },
@@ -38,6 +60,63 @@ const DataSetType = new GraphQLObjectType({
     textStyle: { type: GraphQLJSON },
     sendAsAttachment: { type: GraphQLBoolean },
     individualEmail: { type: GraphQLBoolean },
+    emails: {
+      type: GraphQLJSON,
+    },
+    records: {
+      type: GraphQLJSON,
+      async resolve(parent) {
+        try {
+          if (parent.records.length) {
+            const nestedFields = parent.nestedFields;
+            const dropdownFields = parent.fields.filter((field) => {
+              return field.type === 'dropdown' || field.type === 'radiogroup';
+            });
+            for (const obj of parent.records) {
+              const data = obj?.data;
+
+              for (const [key, value] of Object.entries(data)) {
+                if (
+                  mongoose.isValidObjectId(value) &&
+                  typeof value === 'string'
+                ) {
+                  const project = mergeArrayOfObjects(nestedFields[key]) ?? {};
+                  Object.assign(project, { _id: 0 });
+                  const record = await Record.findById(value, project);
+                  data[key] = record;
+                }
+                if (dropdownFields) {
+                  const thisDropdownField = dropdownFields.find((field) => {
+                    return field.name == key;
+                  });
+                  if (thisDropdownField?.choices) {
+                    const thisChoice = thisDropdownField.choices.find(
+                      (choice) => {
+                        return choice.value === value;
+                      }
+                    );
+                    data[key] = thisChoice?.text ?? value;
+                  }
+                }
+              }
+              Object.assign(obj, data);
+              delete obj.data;
+            }
+          }
+          return parent.records;
+        } catch (error) {
+          logger.error('DataSets Resolver', error.message, {
+            stack: error.stack,
+          });
+        }
+      },
+    },
+    totalCount: {
+      type: GraphQLInt,
+    },
+    tabIndex: {
+      type: GraphQLInt,
+    },
   }),
 });
 
@@ -59,10 +138,10 @@ const EmailLayoutType = new GraphQLObjectType({
 /**
  * GraphQL Recipients type.
  */
-export const RecipientsType = new GraphQLObjectType({
-  name: 'Recipients',
+export const EmailDistributionListType = new GraphQLObjectType({
+  name: 'EmailDistributionList',
   fields: () => ({
-    distributionListName: { type: GraphQLString },
+    name: { type: GraphQLString },
     To: { type: new GraphQLList(GraphQLString) },
     Cc: { type: new GraphQLList(GraphQLString) },
     Bcc: { type: new GraphQLList(GraphQLString) },
@@ -86,15 +165,17 @@ export const EmailNotificationType = new GraphQLObjectType({
     createdBy: { type: GraphQLJSON },
     schedule: { type: GraphQLString },
     notificationType: { type: GraphQLString },
-    dataSets: { type: new GraphQLList(DataSetType) },
+    datasets: { type: new GraphQLList(DatasetType) },
     emailLayout: { type: EmailLayoutType },
-    recipients: { type: RecipientsType },
+    emailDistributionList: { type: EmailDistributionListType },
     lastExecution: { type: GraphQLString },
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     status: { type: GraphQLString },
     recipientsType: { type: GraphQLString },
     isDeleted: { type: GraphQLInt },
+    isDraft: { type: GraphQLBoolean },
+    draftStepper: { type: GraphQLInt },
   }),
 });
 

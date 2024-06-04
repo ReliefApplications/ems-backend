@@ -41,7 +41,7 @@ export const replaceSubject = (subject: string, records: any[]): string => {
     const matches = subject.matchAll(subjectMatch);
 
     for (const match of matches) {
-      if (records[0].data[match[1]]) {
+      if (_.get(records[0].data, match[1])) {
         subject = subject.replace(
           match[0],
           formatDates(records[0].data[match[1]])
@@ -270,8 +270,8 @@ export const buildTable = (
             _.get(record.data[`${field.parentName}`], field.childName)
           )}</td>`;
           } else if (
-            field.childName.split('.')[0] === '_createdBy' ||
-            field.childName.split('.')[0] === '_lastUpdatedBy'
+            field?.childName?.split('.')[0] === '_createdBy' ||
+            field?.childName?.split('.')[0] === '_lastUpdatedBy'
           ) {
             table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
             ${formatDates(
@@ -301,17 +301,22 @@ export const buildTable = (
           table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
           ${formatDates(_.get(record, field.name))}</td>`;
         } else if (field.type === 'geospatial') {
-          table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
+          if (record.data[field.name]?.properties) {
+            table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
           ${formatDates(
-            record.data[field.name].properties.countryName
+            record.data[field.name]?.properties?.countryName
           )} (${formatDates(
-            record.data[field.name].properties.coordinates.lat
-          )}, ${formatDates(
-            record.data[field.name].properties.coordinates.lng
-          )}</td>`;
+              record.data[field.name]?.properties?.coordinates.lat
+            )}, ${formatDates(
+              record.data[field.name]?.properties?.coordinates.lng
+            )}</td>`;
+          } else {
+            table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
+          ${formatDates(record.data[field.name])}</td>`;
+          }
         } else if (field.select) {
           table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
-          ${record.data[field.name] ?? ''}</td>`;
+          ${formatDates(record.data[field.name])}</td>`;
         } else {
           table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
           ${formatDates(record.data[field.name])}</td>`;
@@ -337,22 +342,26 @@ export const replaceDatasets = async (
   bodyHtml: string,
   processedRecords: ProcessedDataset[]
 ): Promise<string> => {
-  await Promise.all(
-    processedRecords.map(async (processedDataSet) => {
-      if (bodyHtml.includes(`{{${processedDataSet.name}}}`)) {
-        bodyHtml = bodyHtml.replace(
-          `{{${processedDataSet.name}}}`,
-          buildTable(
-            processedDataSet.records,
-            processedDataSet.name,
-            processedDataSet.tableStyle,
-            processedDataSet.fields,
-            processedDataSet.fieldSet
-          )
-        );
-      }
-    })
-  );
+  if (bodyHtml) {
+    await Promise.all(
+      processedRecords.map(async (processedDataSet) => {
+        if (bodyHtml.includes(`{{${processedDataSet.name}}}`)) {
+          bodyHtml = bodyHtml.replace(
+            `{{${processedDataSet.name}}}`,
+            buildTable(
+              processedDataSet.records,
+              processedDataSet.name,
+              processedDataSet.tableStyle,
+              processedDataSet.fields,
+              processedDataSet.fieldSet
+            )
+          );
+        }
+      })
+    );
+  } else {
+    return '';
+  }
   return bodyHtml;
 };
 

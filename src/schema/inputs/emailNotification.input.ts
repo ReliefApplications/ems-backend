@@ -5,6 +5,7 @@ import {
   GraphQLInt,
   GraphQLID,
   GraphQLNonNull,
+  GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Types } from 'mongoose';
@@ -15,14 +16,16 @@ export type EmailNotificationArgs = {
   schedule: string;
   notificationType: string;
   applicationId: string | Types.ObjectId;
-  dataSets: any[];
+  datasets: any[];
   emailLayout: any;
-  recipients: string;
+  emailDistributionList: string;
   recipientsType: any;
   status: string;
   lastExecution: string;
   lastExecutionStatus: string;
   isDeleted: number;
+  isDraft: boolean;
+  draftStepper: number;
 };
 
 /** GraphQL custom notification query input type definition */
@@ -34,13 +37,15 @@ export const EmailNotificationInputType = new GraphQLInputObjectType({
     schedule: { type: GraphQLString },
     applicationId: { type: new GraphQLNonNull(GraphQLID) },
     notificationType: { type: GraphQLString },
-    dataSets: { type: new GraphQLList(GraphQLJSON) },
+    datasets: { type: new GraphQLList(GraphQLJSON) },
     emailLayout: { type: GraphQLJSON },
-    recipients: { type: GraphQLJSON },
+    emailDistributionList: { type: GraphQLJSON },
     recipientsType: { type: GraphQLString },
     status: { type: GraphQLString },
     lastExecution: { type: GraphQLString },
     lastExecutionStatus: { type: GraphQLString },
     isDeleted: { type: GraphQLInt },
+    isDraft: { type: GraphQLBoolean },
+    draftStepper: { type: GraphQLInt },
   }),
 });

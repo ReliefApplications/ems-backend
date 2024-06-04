@@ -19,7 +19,7 @@ interface Resource {
 /**
  *DataSet interface
  */
-interface DataSet {
+interface Dataset {
   name: string;
   resource: Resource;
   filter: any;
@@ -56,8 +56,8 @@ interface EmailLayout {
 /**
  *Recipients interface
  */
-interface Recipients {
-  distributionListName: string;
+interface EmailDistributionList {
+  name: string;
   To: string[];
   Cc: string[];
   Bcc: string[];
@@ -72,8 +72,8 @@ export interface EmailNotification extends Document {
   applicationId: mongoose.Schema.Types.ObjectId;
   createdBy: { name: string; email: string };
   notificationType: string;
-  dataSets: DataSet[];
-  recipients: Recipients;
+  datasets: Dataset[];
+  emailDistributionList: EmailDistributionList;
   emailLayout: EmailLayout;
   recipientsType: string;
   status: string;
@@ -82,6 +82,8 @@ export interface EmailNotification extends Document {
   isDeleted: number;
   createdAt?: Date;
   modifiedAt?: Date;
+  isDraft?: boolean;
+  draftStepper?: number;
 }
 
 /** Mongoose email notification schema declaration */
@@ -106,7 +108,7 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
     applicationId: {
       type: mongoose.Schema.Types.ObjectId,
     },
-    dataSets: [
+    datasets: [
       {
         name: String,
         resource: {
@@ -127,8 +129,8 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
         individualEmail: { type: Boolean, default: false },
       },
     ],
-    recipients: {
-      distributionListName: String,
+    emailDistributionList: {
+      name: String,
       To: [{ type: String }],
       Cc: [{ type: String }],
       Bcc: [{ type: String }],
@@ -166,6 +168,13 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
     isDeleted: {
       type: Number,
       default: 0,
+    },
+    isDraft: {
+      type: Boolean,
+      required: true,
+    },
+    draftStepper: {
+      type: Number,
     },
   },
   {

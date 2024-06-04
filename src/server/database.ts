@@ -100,6 +100,7 @@ export const initDatabase = async () => {
       'can_create_applications',
       'can_manage_layer',
       'can_see_layer',
+      'can_manage_email_notifications',
     ];
     const currPermissions = await Permission.find();
     for (const type of globalPermissions.filter(
@@ -120,7 +121,7 @@ export const initDatabase = async () => {
       permissions.canManageCustomNotifications, // Deprecated
       permissions.canSeeEmailNotifications,
       permissions.canCreateEmailNotifications,
-      permissions.canManageEmailNotifications,
+      permissions.canUpdateEmailNotifications,
     ];
     for (const type of appPermissions.filter(
       (perm) => !currPermissions.find((p) => p.type === perm && !p.global)

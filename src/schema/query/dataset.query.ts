@@ -11,7 +11,7 @@ import { Types } from 'mongoose';
 import getFilter, {
   extractFilterFields,
 } from '../../utils/schema/resolvers/Query/getFilter';
-import { DataSetType } from '@schema/types';
+import { DatasetType } from '@schema/types';
 
 /** Arguments for the dataSet query */
 type Args = {
@@ -139,7 +139,7 @@ export const getFields = (fieldSet: any) => {
  * @returns datasets
  */
 export default {
-  type: DataSetType,
+  type: DatasetType,
   args: {
     query: { type: new GraphQLNonNull(GraphQLJSON) },
   },
@@ -315,6 +315,7 @@ export default {
           $and: [...filters],
         }),
         nestedFields: nestedFields,
+        fields: fields,
         tabIndex: tabIndex,
       };
     } catch (error) {

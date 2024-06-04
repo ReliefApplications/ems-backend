@@ -1,4 +1,6 @@
 import { dateLocale, dateTimeLocale, timeLocale } from '@const/locale';
+import _ from 'lodash';
+import { mongo } from 'mongoose';
 
 /**
  * To replace all special characters with whitespace
@@ -32,20 +34,31 @@ export const titleCase = (str: string): string => {
  */
 export const formatDates = (rowData: unknown): string => {
   if (typeof rowData === 'string') {
-    // Create the string in date format
-    const date = new Date(rowData);
-    if (!isNaN(date.getTime())) {
-      // Format the date as MM/DD/YY, hh:mm AM/PM UTC
-      return date.toLocaleString('en-US', dateTimeLocale);
-    }
+    return rowData;
   } else if (rowData instanceof Date) {
     // Format the date as MM/DD/YY, hh:mm AM/PM UTC
     return rowData.toLocaleString('en-US', dateTimeLocale);
-  }
-  if (!rowData) {
+  } else if (rowData === false) {
+    return 'False';
+  } else if (rowData === true) {
+    return 'True';
+  } else if (rowData instanceof mongo.ObjectId) {
+    return rowData.toString();
+  } else if (!rowData) {
     return '';
+  } else if (rowData instanceof Array) {
+    if (rowData[0] instanceof Object) {
+      return _.map(rowData, 'text').join(', ');
+    }
+    return rowData.join(', ');
+  } else if (rowData instanceof Object) {
+    let objectString = '';
+    for (const field in rowData) {
+      objectString += `${field}: ${rowData[field]}\n`;
+    }
+    return objectString;
   }
-  return rowData as string;
+  return JSON.stringify(rowData);
 };
 
 /**
