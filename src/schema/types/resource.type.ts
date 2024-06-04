@@ -89,7 +89,9 @@ export const ResourceType = new GraphQLObjectType({
       type: AccessType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return ability.can('update', parent) ? parent.permissions : null;
+        return ability.can('update', parent)
+          ? parent.permissions
+          : { canDownloadRecords: parent.permissions.canDownloadRecords };
       },
     },
     rolePermissions: {
