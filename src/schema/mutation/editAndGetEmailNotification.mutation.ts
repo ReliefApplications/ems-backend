@@ -50,7 +50,6 @@ export default {
       //   }
       // }
       if (args.notification) {
-        console.log(args.notification.datasets);
         const updateFields = {
           name: args.notification.name,
           schedule: args.notification.schedule,

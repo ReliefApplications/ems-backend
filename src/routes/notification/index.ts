@@ -23,11 +23,11 @@ import {
 import mongoose from 'mongoose';
 import { mergeArrayOfObjects } from '@schema/types';
 import { getOwnerOptions, getUsersOptions } from '@utils/form/metadata.helper';
-import _ from 'lodash';
 import { getColumns, getRows } from '@utils/files';
+import { map } from 'lodash';
 
 /**
- *
+ * Interface for processed datasets.
  */
 export interface ProcessedDataset {
   name: string;
@@ -39,7 +39,7 @@ export interface ProcessedDataset {
 }
 
 /**
- * Interface for processing datasets for separate emails
+ * Interface for processed datasets for separate emails
  */
 export interface ProcessedIndividualDataset {
   name: string;
@@ -52,7 +52,7 @@ export interface ProcessedIndividualDataset {
 }
 
 /**
- *
+ * Interface of table style.
  */
 export interface TableStyle {
   tableStyle: string;
@@ -74,6 +74,8 @@ router.post('/send-email/:configId', async (req, res) => {
   try {
     const config = await EmailNotification.findById(req.params.configId);
     const datasets = config.get('datasets');
+
+    // Generate main html structure
     const emailElement = parse(`<!DOCTYPE HTML>
     <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
     
@@ -304,7 +306,7 @@ router.post('/send-email/:configId', async (req, res) => {
                   const values = options.filter((opt) => {
                     return opt.value.toString() === user;
                   });
-                  return _.map(values, 'text');
+                  return map(values, 'text');
                 });
 
                 const usersJoined = users.join(', ');
@@ -319,7 +321,7 @@ router.post('/send-email/:configId', async (req, res) => {
                   const values = ownerOptions.filter((opt) => {
                     return opt.value.toString() === owner;
                   });
-                  return _.map(values, 'text');
+                  return map(values, 'text');
                 });
 
                 const ownersJoined = owners.join(', ');
@@ -365,6 +367,7 @@ router.post('/send-email/:configId', async (req, res) => {
       })
     );
 
+    // Add banner image
     if (config.emailLayout.banner.bannerImage) {
       const bannerElement = parse(
         `<tr bgcolor="#fff" align="center">
@@ -378,6 +381,7 @@ router.post('/send-email/:configId', async (req, res) => {
       mainTableElement.appendChild(bannerElement);
     }
 
+    // Add header
     if (config.emailLayout.header) {
       const headerElement = replaceHeader(config.emailLayout.header);
       const backgroundColor =
@@ -395,6 +399,7 @@ router.post('/send-email/:configId', async (req, res) => {
                 <td height="25"></td>
             </tr>`)
     );
+    // Add body
     if (config.emailLayout.body) {
       const datasetsHtml = await replaceDatasets(
         config.emailLayout.body.bodyHtml,
@@ -410,6 +415,7 @@ router.post('/send-email/:configId', async (req, res) => {
       );
     }
 
+    // Add footer
     if (config.emailLayout.footer) {
       const footerElement = replaceFooter(config.emailLayout.footer);
       const backgroundColor =
@@ -422,6 +428,7 @@ router.post('/send-email/:configId', async (req, res) => {
       );
     }
 
+    // Add copyright
     mainTableElement.appendChild(
       parse(/*html*/ `
       <tr bgcolor="#00205c">
@@ -441,25 +448,31 @@ router.post('/send-email/:configId', async (req, res) => {
       subjectRecords
     );
 
-    //recipients
+    // Get recipients
     const to = config.get('emailDistributionList').To;
     const cc = config.get('emailDistributionList').Cc;
     const bcc = config.get('emailDistributionList').Bcc;
-    const attachments: { path: string; cid: string }[] = [];
+
+    // Add attachments
     // Use base64 encoded images as path for CID attachments
     // This is required for images to render in the body on legacy clients
+    const attachments: { path: string; cid: string }[] = [];
+
+    // Add header logo
     if (config.emailLayout.header.headerLogo) {
       attachments.push({
         path: config.emailLayout.header.headerLogo,
         cid: 'headerImage',
       });
     }
+    // Add footer logo
     if (config.emailLayout.footer.footerLogo) {
       attachments.push({
         path: config.emailLayout.footer.footerLogo,
         cid: 'footerImage',
       });
     }
+    // Add banner image
     if (config.emailLayout.banner.bannerImage) {
       attachments.push({
         path: config.emailLayout.banner.bannerImage,
@@ -467,7 +480,7 @@ router.post('/send-email/:configId', async (req, res) => {
       });
     }
 
-    // Create email options
+    // Build email
     const emailParams = {
       message: {
         to: to,
@@ -478,10 +491,8 @@ router.post('/send-email/:configId', async (req, res) => {
         attachments: attachments,
       },
     };
-
     // Send email
     await sendEmail(emailParams);
-
     res.status(200).json({ message: 'Email sent successfully' });
   } catch (err) {
     logger.error(

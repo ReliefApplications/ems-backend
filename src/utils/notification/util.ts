@@ -1,5 +1,5 @@
 import { dateLocale, dateTimeLocale, timeLocale } from '@const/locale';
-import _ from 'lodash';
+import { map } from 'lodash';
 import { mongo } from 'mongoose';
 
 /**
@@ -13,10 +13,10 @@ export const replaceUnderscores = (userValue: string): string => {
 };
 
 /**
- * Converts String to Title Case
+ * Converts String to Title case
  *
  * @param str Input string to be converted
- * @returns Titlecase string
+ * @returns Title case string
  */
 export const titleCase = (str: string): string => {
   return str
@@ -48,7 +48,7 @@ export const formatDates = (rowData: unknown): string => {
     return '';
   } else if (rowData instanceof Array) {
     if (rowData[0] instanceof Object) {
-      return _.map(rowData, 'text').join(', ');
+      return map(rowData, 'text').join(', ');
     }
     return rowData.join(', ');
   } else if (rowData instanceof Object) {

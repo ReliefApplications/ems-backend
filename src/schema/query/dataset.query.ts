@@ -69,7 +69,7 @@ export const projectAggregation = {
   },
 };
 
-/** emailAggregation for the dataSet query */
+/** emailAggregation for the dataset query */
 export const emailAggregation = [
   {
     $addFields: {

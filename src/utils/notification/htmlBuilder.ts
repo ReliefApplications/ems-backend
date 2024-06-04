@@ -6,7 +6,7 @@ import {
   replaceUnderscores,
   replaceDateMacro,
 } from '@utils/notification/util';
-import _ from 'lodash';
+import { get } from 'lodash';
 
 /**
  * Fieldset object
@@ -41,7 +41,7 @@ export const replaceSubject = (subject: string, records: any[]): string => {
     const matches = subject.matchAll(subjectMatch);
 
     for (const match of matches) {
-      if (_.get(records[0].data, match[1])) {
+      if (get(records[0].data, match[1])) {
         subject = subject.replace(
           match[0],
           formatDates(records[0].data[match[1]])
@@ -267,7 +267,7 @@ export const buildTable = (
           ) {
             table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
           ${formatDates(
-            _.get(record.data[`${field.parentName}`], field.childName)
+            get(record.data[`${field.parentName}`], field.childName)
           )}</td>`;
           } else if (
             field?.childName?.split('.')[0] === '_createdBy' ||
@@ -275,7 +275,7 @@ export const buildTable = (
           ) {
             table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
             ${formatDates(
-              _.get(record.data[`${field.parentName}`], field.childName)
+              get(record.data[`${field.parentName}`], field.childName)
             )}</td>`;
           } else {
             table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
@@ -291,7 +291,7 @@ export const buildTable = (
           field.name.split('.')[0] === '_lastUpdatedBy'
         ) {
           table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
-          ${formatDates(_.get(record.data, field.name))}</td>`;
+          ${formatDates(get(record.data, field.name))}</td>`;
         } else if (
           field.name === 'incrementalId' ||
           field.name === 'id' ||
@@ -299,7 +299,7 @@ export const buildTable = (
           field.name === 'lastUpdateForm'
         ) {
           table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
-          ${formatDates(_.get(record, field.name))}</td>`;
+          ${formatDates(get(record, field.name))}</td>`;
         } else if (field.type === 'geospatial') {
           if (record.data[field.name]?.properties) {
             table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
@@ -346,7 +346,7 @@ export const replaceDatasets = async (
     await Promise.all(
       processedRecords.map(async (processedDataSet) => {
         if (bodyHtml.includes(`{{${processedDataSet.name}}}`)) {
-          bodyHtml = bodyHtml.replace(
+          bodyHtml = bodyHtml.replaceAll(
             `{{${processedDataSet.name}}}`,
             buildTable(
               processedDataSet.records,
