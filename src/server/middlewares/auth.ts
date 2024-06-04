@@ -173,6 +173,7 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
           })
           .then((user) => {
             if (user) {
+              logger.info('=== existing user ===');
               // Returns the user if found but update it if needed
               if (!user.oid) {
                 user.firstName = token.given_name;
@@ -222,6 +223,7 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                 roles: [],
                 positionAttributes: [],
               });
+              logger.info('=== new user ===');
               updateUser(user, req).then(() => {
                 // Avoid duplication error in case parallel requests are sent
                 User.findOneAndUpdate(
