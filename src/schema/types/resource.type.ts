@@ -89,9 +89,7 @@ export const ResourceType = new GraphQLObjectType({
       type: AccessType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return ability.can('update', parent)
-          ? parent.permissions
-          : { canDownloadRecords: parent.permissions.canDownloadRecords };
+        return ability.can('update', parent) ? parent.permissions : null;
       },
     },
     rolePermissions: {
@@ -281,6 +279,13 @@ export const ResourceType = new GraphQLObjectType({
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
         return ability.can('delete', parent);
+      },
+    },
+    canDownload: {
+      type: GraphQLBoolean,
+      resolve(parent, args, context) {
+        const ability: AppAbility = context.user.ability;
+        return ability.can('download', parent);
       },
     },
     layouts: {
