@@ -13,8 +13,8 @@ import getFilter, {
 } from '../../utils/schema/resolvers/Query/getFilter';
 import { DatasetType } from '@schema/types';
 
-/** Arguments for the dataSet query */
-type Args = {
+/** Arguments for the dataset query */
+type DatasetArgs = {
   query: {
     resource: {
       id: string | Types.ObjectId;
@@ -32,7 +32,7 @@ type Args = {
     tabIndex: number;
   };
 };
-/** defaultRecordAggregation for the dataSet query */
+/** defaultRecordAggregation for the dataset query */
 export const defaultRecordAggregation = [
   { $addFields: { id: { $toString: '$_id' } } },
   {
@@ -46,7 +46,7 @@ export const defaultRecordAggregation = [
     },
   },
 ];
-/** projectAggregation for the dataSet query */
+/** projectAggregation for the dataset query */
 export const projectAggregation = {
   $project: {
     id: 1,
@@ -143,7 +143,7 @@ export default {
   args: {
     query: { type: new GraphQLNonNull(GraphQLJSON) },
   },
-  async resolve(_, args: Args, context: Context) {
+  async resolve(_, args: DatasetArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const query = args.query;
