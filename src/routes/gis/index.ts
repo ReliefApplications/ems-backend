@@ -73,7 +73,7 @@ const getFeatureFromItem = (
     longitudeField?: string;
     adminField?: string;
   },
-  geoFilter?: turf.Polygon
+  geoFilter?: turf.Polygon // Seems to be unused, could be removed?
 ) => {
   if (mapping.geoField) {
     // removed the toLowerCase there, which may cause an issue
@@ -106,7 +106,6 @@ const getFeatureFromItem = (
             features.push(...parseToSingleFeature(feature));
           }
         }
-      } else {
       }
     }
   } else {
@@ -147,7 +146,7 @@ const getFeatureFromItem = (
  * @param items list of items
  * @param mapping mapping
  */
-const getFeatures = async (
+const getFeatures = (
   features: any[],
   layerType: GeometryType,
   items: any[],
@@ -204,7 +203,7 @@ const gqlQuery = (
         if (Object.prototype.hasOwnProperty.call(data.data, field)) {
           if (data.data[field].items?.length > 0) {
             // Aggregation
-            await getFeatures(
+            getFeatures(
               featureCollection.features,
               layerType,
               data.data[field].items,
@@ -212,7 +211,7 @@ const gqlQuery = (
             );
           } else if (data.data[field].edges?.length > 0) {
             // Query
-            await getFeatures(
+            getFeatures(
               featureCollection.features,
               layerType,
               data.data[field].edges.map((x) => x.node),
@@ -394,12 +393,7 @@ router.post('/feature', async (req, res) => {
           if (contextFilters && !isEmpty(contextFilters)) {
             data = data.filter((x) => filterReferenceData(x, contextFilters));
           }
-          await getFeatures(
-            featureCollection.features,
-            layerType,
-            data,
-            mapping
-          );
+          getFeatures(featureCollection.features, layerType, data, mapping);
         } else {
           const apiConfiguration = await ApiConfiguration.findById(
             referenceData.apiConfiguration,
@@ -423,12 +417,7 @@ router.post('/feature', async (req, res) => {
           if (contextFilters && !isEmpty(contextFilters)) {
             data = data.filter((x) => filterReferenceData(x, contextFilters));
           }
-          await getFeatures(
-            featureCollection.features,
-            layerType,
-            data,
-            mapping
-          );
+          getFeatures(featureCollection.features, layerType, data, mapping);
         }
       } else {
         return res.status(404).send(i18next.t('common.errors.dataNotFound'));
