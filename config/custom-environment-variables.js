@@ -63,7 +63,6 @@ module.exports = {
     clientId: 'COMMON_SERVICES_CLIENT_ID',
     clientSecret: 'COMMON_SERVICES_CLIENT_SECRET',
     scope: 'COMMON_SERVICES_SCOPE',
-    authUrl: 'COMMON_SERVICES_AUTH_URL',
     url: 'COMMON_SERVICES_URL',
   },
   microsoftGraph: {

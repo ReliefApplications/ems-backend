@@ -26,7 +26,7 @@ export const commonServicesConfig = new ApiConfiguration({
   endpoint: config.get<string>('commonServices.url'),
   settings: CryptoJS.AES.encrypt(
     JSON.stringify({
-      authTargetUrl: config.get<string>('commonServices.authUrl'),
+      authTargetUrl: config.get<string>('commonServices.tokenEndpoint'),
       apiClientID: config.get<string>('commonServices.clientId'),
       scope: config.get<string>('commonServices.scope'),
       safeSecret: config.get<string>('commonServices.clientSecret'),
