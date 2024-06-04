@@ -229,19 +229,31 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                 });
                 updateUser(user, req)
                   .then(() => {
+                    const upsertUser = (retries) => {
+                      return User.findOneAndUpdate(
+                        {
+                          oid: token.oid,
+                        },
+                        { $setOnInsert: user },
+                        { upsert: true, new: true }
+                      )
+                        .then((savedUser) => savedUser)
+                        .catch((err) => {
+                          if (err.code === 11000 && retries > 0) {
+                            // If there's a duplicate key error and retries are remaining, retry upsert
+                            return upsertUser(retries - 1);
+                          } else {
+                            throw err;
+                          }
+                        });
+                    };
                     // Avoid duplication error in case parallel requests are sent
-                    User.findOneAndUpdate(
-                      {
-                        oid: token.oid,
-                      },
-                      { $setOnInsert: user },
-                      { upsert: true, new: true }
-                    )
-                      .then(() => {
-                        userAuthCallback(null, done, token, user);
+                    upsertUser(3)
+                      .then((finalUser) => {
+                        userAuthCallback(null, done, token, finalUser);
                       })
-                      .catch((err2) => {
-                        userAuthCallback(err2, done, token, user);
+                      .catch((error) => {
+                        userAuthCallback(error, done, token, null);
                       });
                   })
                   .catch((err) => done(err));
