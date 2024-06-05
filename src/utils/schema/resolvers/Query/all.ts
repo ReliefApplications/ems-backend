@@ -256,39 +256,61 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       }
 
       // Get list of needed resources for the aggregation
-      const resourcesToQuery = [
+      const resourceToQuery = [
         ...new Set(usedFields.map((x) => x.split('.')[0])),
       ].filter((x) =>
         fields.find((f) => f.name === x && f.type === 'resource')
       );
+      const resourcesToQuery = [
+        ...new Set(usedFields.map((x) => x.split('.')[0])),
+      ].filter((x) =>
+        fields.find((f) => f.name === x && f.type === 'resources')
+      );
 
-      const resourceFieldsById = resourcesToQuery.reduce((o, x) => {
-        const resourceId = fields.find((f) => f.name === x).resource;
-        const resourceName = Object.keys(idsByName).find(
-          (key) => idsByName[key] == resourceId
-        );
-        const resourceFields = fieldsByName[resourceName];
-        return {
-          ...o,
-          [resourceId]: resourceFields,
-        };
-      }, {});
-
+      const resourceFieldsById = resourceToQuery
+        .concat(resourcesToQuery)
+        .reduce((o, x) => {
+          const resourceId = fields.find((f) => f.name === x).resource;
+          const resourceName = Object.keys(idsByName).find(
+            (key) => idsByName[key] == resourceId
+          );
+          const resourceFields = fieldsByName[resourceName];
+          return {
+            ...o,
+            [resourceId]: resourceFields,
+          };
+        }, {});
       context = { ...context, resourceFieldsById };
 
       let linkedRecordsAggregation = [];
-      for (const resource of resourcesToQuery) {
-        // Build linked records aggregations
+      const handleLinkedRecords = (
+        resource: string,
+        isOfTypeResource: boolean // Build linked records aggregations
+      ) => {
         linkedRecordsAggregation = linkedRecordsAggregation.concat([
           {
             $addFields: {
-              [`data.${resource}_id`]: {
-                $convert: {
-                  input: `$data.${resource}`,
-                  to: 'objectId',
-                  onError: null,
-                },
-              },
+              [`data.${resource}_id`]: isOfTypeResource
+                ? {
+                    $convert: {
+                      input: `$data.${resource}`,
+                      to: 'objectId',
+                      onError: null,
+                    },
+                  }
+                : {
+                    $map: {
+                      input: `$data.${resource}`,
+                      as: 'resource',
+                      in: {
+                        $convert: {
+                          input: '$$resource',
+                          to: 'objectId',
+                          onError: null,
+                        },
+                      },
+                    },
+                  },
             },
           },
           {
@@ -299,18 +321,28 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               as: `_${resource}`,
             },
           },
-          {
+        ]);
+        if (isOfTypeResource) {
+          linkedRecordsAggregation.push({
             $unwind: {
               path: `$_${resource}`,
               preserveNullAndEmptyArrays: true,
             },
+          });
+        }
+        linkedRecordsAggregation.push({
+          $addFields: {
+            [`_${resource}.id`]: isOfTypeResource
+              ? { $toString: `$_${resource}._id` }
+              : {
+                  $map: {
+                    input: `$_${resource}`,
+                    as: 'resource',
+                    in: { $toString: '$$resource._id' },
+                  },
+                },
           },
-          {
-            $addFields: {
-              [`_${resource}.id`]: { $toString: `$_${resource}._id` },
-            },
-          },
-        ]);
+        });
 
         // Build linked records filter
         const resourceId = fields.find((f) => f.name === resource).resource;
@@ -329,6 +361,13 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               ...{ name: `${resource}.${x.name}` },
             })
           );
+      };
+
+      for (const resource of resourceToQuery) {
+        handleLinkedRecords(resource, true);
+      }
+      for (const resources of resourcesToQuery) {
+        handleLinkedRecords(resources, false);
       }
 
       // Get list of reference data fields to query
@@ -435,7 +474,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // Finally putting all filters together
       const filters = {
-        $and: [basicFilters, mongooseFilter, permissionFilters],
+        $and: [mongooseFilter, permissionFilters],
       };
 
       const searchFilter = getSearchFilter(filter, fields, context);
@@ -453,7 +492,10 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           context
         );
         const pipeline = [
+          { $match: basicFilters },
           ...(searchFilter ? [searchFilter] : []),
+          ...linkedRecordsAggregation,
+          ...linkedReferenceDataAggregation,
           ...calculatedFieldsAggregation,
           ...defaultRecordAggregation,
           { $match: filters },
@@ -461,8 +503,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         ];
         const aggregation = await Record.aggregate(pipeline).facet({
           items: [
-            ...linkedRecordsAggregation,
-            ...linkedReferenceDataAggregation,
             ...sort,
             ...projectAggregation,
             { $skip: skip },
