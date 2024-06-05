@@ -2,7 +2,7 @@ import { AugmentedRequest, RESTDataSource } from '@apollo/datasource-rest';
 import { status, referenceDataType } from '@const/enumTypes';
 import { ApiConfiguration, ReferenceData } from '@models';
 import { getToken } from '@utils/proxy';
-import { get, memoize, set } from 'lodash';
+import { get, isEmpty, memoize, set } from 'lodash';
 import { logger } from '@services/logger.service';
 import jsonpath from 'jsonpath';
 import { ApolloServer } from '@apollo/server';
@@ -166,33 +166,55 @@ export class CustomAPI extends RESTDataSource {
    *
    * @param referenceData ReferenceData to fetch
    * @param apiConfiguration ApiConfiguration to use
-   * @param variables supplementary graphQL variables
+   * @param queryParams supplementary query params
    * @returns referenceData objects
    */
   async getReferenceDataItems(
     referenceData: ReferenceData,
     apiConfiguration: ApiConfiguration,
-    variables?: any
+    queryParams?: any
   ): Promise<any[]> {
     switch (referenceData.type) {
+      // GraphQL reference data
       case referenceDataType.graphql: {
         // Call memoized function to save external requests.
         return this.memoizedReferenceDataGraphQLItems(
           referenceData,
           apiConfiguration,
-          variables
+          queryParams
         );
       }
+      // REST reference data
       case referenceDataType.rest: {
-        const url = `${apiConfiguration.endpoint.replace(/\$/, '')}/${
+        let url = `${apiConfiguration.endpoint.replace(/\$/, '')}/${
           referenceData.query
         }`.replace(/([^:]\/)\/+/g, '$1');
+        if (queryParams && !isEmpty(queryParams)) {
+          // Transform the variables object into a string linked by '&'
+          const queryString = Object.keys(queryParams)
+            .map(
+              (key) =>
+                `${encodeURIComponent(key)}=${encodeURIComponent(
+                  queryParams[key]
+                )}`
+            )
+            .join('&');
+          // Append the query params to the URL
+          if (url.includes('?')) {
+            url = `${url}&${queryString}`;
+          } else {
+            url = `${url}?${queryString}`;
+          }
+        }
+        // Fetch data from url
         const data = await this.get(url);
         return referenceData.path
           ? jsonpath.query(data, referenceData.path)
           : data;
       }
+      // Static reference data
       case referenceDataType.static: {
+        // Data is stored in model
         return referenceData.data;
       }
     }
@@ -282,7 +304,7 @@ export class CustomAPI extends RESTDataSource {
  * @param server Apollo server instance.
  * @returns Definitions of the data sources.
  */
-export default async (server?: ApolloServer<Context>) => {
+const buildDataSources = async (server?: ApolloServer<Context>) => {
   const apiConfigurations = await ApiConfiguration.find({
     status: status.active,
   });
@@ -297,3 +319,27 @@ export default async (server?: ApolloServer<Context>) => {
       _rest: new CustomAPI(server),
     } as Record<string, CustomAPI> & { _rest: CustomAPI });
 };
+
+/**
+ * Create a single data source, fetching api by name. Create also an additional one for classic REST requests.
+ *
+ * @param apiName Name of the api configuration
+ * @param server Apollo server instance.
+ * @returns Definitions of the data sources.
+ */
+export const buildDataSource = async (
+  apiName: string,
+  server?: ApolloServer<Context>
+) => {
+  const apiConfiguration = await ApiConfiguration.findOne({
+    status: status.active,
+    name: apiName,
+  });
+  return () =>
+    ({
+      ...{ [apiConfiguration.name]: new CustomAPI(server, apiConfiguration) },
+      _rest: new CustomAPI(server),
+    } as Record<string, CustomAPI> & { _rest: CustomAPI });
+};
+
+export default buildDataSources;

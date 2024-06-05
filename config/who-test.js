@@ -42,6 +42,10 @@ module.exports = {
           value: 'location',
           text: 'Location',
         },
+        {
+          value: 'department',
+          text: 'Department',
+        },
       ],
       apiConfiguration: '62cc2355d3d00f628c6d3574',
       endpoint: '/users/permissions',
@@ -57,6 +61,11 @@ module.exports = {
         {
           field: 'attributes.location',
           value: '$.user.userBaseLocation.locationType.name',
+        },
+        {
+          field: 'attributes.department',
+          value: 'department',
+          provider: 'microsoftGraph',
         },
       ],
     },

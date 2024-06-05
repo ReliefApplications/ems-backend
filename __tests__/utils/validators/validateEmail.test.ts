@@ -1,4 +1,4 @@
-import { validateEmail } from '@utils/validators';
+import * as EmailValidator from 'email-validator';
 import { faker } from '@faker-js/faker';
 
 /**
@@ -6,15 +6,17 @@ import { faker } from '@faker-js/faker';
  */
 describe('Email validator tests', () => {
   describe('Correct email should return true', () => {
-    const emails = new Array(100).fill(faker.internet.email());
+    const emails = Array.from({ length: 100 }).map(() =>
+      faker.internet.email()
+    );
     test.each(emails)(
       'Random valid email should return true',
       (email: string) => {
-        expect(validateEmail(email)).toEqual(true);
+        expect(EmailValidator.validate(email)).toEqual(true);
       }
     );
 
-    const complexEmails = new Array(100).fill(
+    const complexEmails = Array.from({ length: 100 }).map(() =>
       faker.internet.email(undefined, undefined, undefined, {
         allowSpecialCharacters: true,
       })
@@ -22,15 +24,17 @@ describe('Email validator tests', () => {
     test.each(complexEmails)(
       'Random valid email with special characters should return true',
       (email: string) => {
-        expect(validateEmail(email)).toEqual(true);
+        expect(EmailValidator.validate(email)).toEqual(true);
       }
     );
   });
 
   describe('Random strings should return false', () => {
-    const strings = new Array(100).fill(faker.internet.userName());
+    const strings = Array.from({ length: 100 }).map(() =>
+      faker.internet.userName()
+    );
     test.each(strings)('Random string should return false', (text: string) => {
-      expect(validateEmail(text)).toEqual(false);
+      expect(EmailValidator.validate(text)).toEqual(false);
     });
   });
 });

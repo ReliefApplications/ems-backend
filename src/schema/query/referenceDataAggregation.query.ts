@@ -130,7 +130,7 @@ const applyFilters = (data: any, filter: any): boolean => {
         } else {
           return !isNil(filter.value) && filter.value.includes(value);
         }
-      case 'notint':
+      case 'notin':
         if (isString(value)) {
           if (isArray(filter.value)) {
             return isNil(filter.value) || !filter.value.includes(value);
@@ -396,7 +396,7 @@ type ReferenceDataAggregationArgs = {
   sortField?: string;
   sortOrder?: string;
   contextFilters?: CompositeFilterDescriptor;
-  graphQLVariables: any;
+  queryParams: any;
 };
 
 /**
@@ -411,7 +411,7 @@ export default {
     pipeline: { type: GraphQLJSON },
     sourceFields: { type: GraphQLJSON },
     contextFilters: { type: GraphQLJSON },
-    graphQLVariables: { type: GraphQLJSON },
+    queryParams: { type: GraphQLJSON },
     mapping: { type: GraphQLJSON },
     first: { type: GraphQLInt },
     skip: { type: GraphQLInt },
@@ -442,7 +442,7 @@ export default {
       );
 
       // Check if resource exists and aggregation exists
-      if (!(referenceData && aggregation && referenceData.data)) {
+      if (!(referenceData && referenceData.data)) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       // sourceFields and pipeline from args have priority over current aggregation ones
@@ -463,7 +463,7 @@ export default {
               (await dataSource.getReferenceDataItems(
                 referenceData,
                 referenceData.apiConfiguration as any,
-                args.graphQLVariables
+                args.queryParams
               )) || [];
           }
           const transformer = new DataTransformer(

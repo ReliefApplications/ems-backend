@@ -219,6 +219,12 @@ router.post('/resource/records/:id', async (req: any, res) => {
  */
 router.post('/resource/insert', async (req: any, res) => {
   try {
+    if (req.body.records.length < 1) {
+      logger.info('No records were provided for insertion.');
+      return res
+        .status(200)
+        .send(req.t('routes.upload.errors.noRecordsToInsert'));
+    }
     const authToken = req.headers.authorization.split(' ')[1];
     const decodedToken = jwtDecode(authToken) as any;
 
@@ -402,7 +408,7 @@ router.post('/file/:form', async (req, res) => {
     return res.status(200).send({ path });
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    return res.status(500).send(req.t('common.errors.internalServerError'));
+    return res.status(500).send(err.message);
   }
 });
 

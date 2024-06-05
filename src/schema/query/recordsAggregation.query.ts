@@ -209,7 +209,7 @@ export default {
 
       const mongooseFilter = {};
       // Check if resource exists and aggregation exists
-      if (resource && aggregation) {
+      if (resource) {
         Object.assign(
           mongooseFilter,
           { resource: new mongoose.Types.ObjectId(args.resource) },
