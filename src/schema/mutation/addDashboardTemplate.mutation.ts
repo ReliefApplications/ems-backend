@@ -120,6 +120,7 @@ export default {
           ),
           // Copy structure from the main dashboard
           structure: mainDashboard.structure || [],
+          buttons: mainDashboard.buttons,
         });
 
         await newDashboard.save();
