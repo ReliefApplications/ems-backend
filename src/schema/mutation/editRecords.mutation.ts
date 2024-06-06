@@ -49,7 +49,7 @@ export default {
     data: { type: new GraphQLNonNull(GraphQLJSON) },
     template: { type: GraphQLID },
     lang: { type: GraphQLString },
-    skipValidation: { type: GraphQLBoolean, defaultValue: false },
+    skipValidation: { type: GraphQLBoolean, defaultValue: true },
   },
   async resolve(parent, args: EditRecordsArgs, context: Context) {
     graphQLAuthCheck(context);
