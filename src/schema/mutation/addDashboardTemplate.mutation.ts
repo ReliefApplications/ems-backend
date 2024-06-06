@@ -140,7 +140,6 @@ export default {
 
         page.markModified('contentWithContext');
         await page.save();
-        console.log(newDashboard);
 
         return newDashboard;
       }

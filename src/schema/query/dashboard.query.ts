@@ -123,7 +123,6 @@ export default {
           ),
           newTemplate: true,
         });
-        console.log(mainDashboard);
 
         return mainDashboard;
       }

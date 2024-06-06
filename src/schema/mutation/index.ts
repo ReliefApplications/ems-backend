@@ -88,7 +88,7 @@ import addDraftRecord from './addDraftRecord.mutation';
 import deleteDraftRecord from './deleteDraftRecord.mutation';
 import editDraftRecord from './editDraftRecord.mutation';
 import addDashboardTemplate from './addDashboardTemplate.mutation';
-import deleteDashboardTemplate from './deleteDashboardTemplate.mutation';
+import deleteDashboardTemplates from './deleteDashboardTemplates.mutation';
 
 /** GraphQL mutation definition */
 const Mutation = new GraphQLObjectType({
@@ -183,7 +183,7 @@ const Mutation = new GraphQLObjectType({
     deleteDraftRecord,
     editDraftRecord,
     addDashboardTemplate,
-    deleteDashboardTemplate,
+    deleteDashboardTemplates,
   },
 });
 
