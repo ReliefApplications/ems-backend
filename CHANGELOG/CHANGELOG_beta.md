@@ -1,3 +1,16 @@
+# [2.11.0-beta.1](https://github.com/ReliefApplications/ems-backend/compare/v2.10.3-beta.1...v2.11.0-beta.1) (2024-06-06)
+
+
+### Bug Fixes
+
+* allow to skip validation of records ([35fe868](https://github.com/ReliefApplications/ems-backend/commit/35fe8680ec6f92fe78577e7651d7373bbead8cee))
+* record validation would not be done correctly for some fields / requests, and make them fail AB[#95404](https://github.com/ReliefApplications/ems-backend/issues/95404) AB[#95398](https://github.com/ReliefApplications/ems-backend/issues/95398) ([2ecfe0f](https://github.com/ReliefApplications/ems-backend/commit/2ecfe0f0c026808dd9d07c4b5a7f49a819956eb0))
+
+
+### Features
+
+* add canDownloadRecords permission ([#1095](https://github.com/ReliefApplications/ems-backend/issues/1095)) ([abc3e05](https://github.com/ReliefApplications/ems-backend/commit/abc3e05fea50edee6e3ed4b7cc00bc83f6f9de71))
+
 ## [2.10.3-beta.1](https://github.com/ReliefApplications/ems-backend/compare/v2.10.2...v2.10.3-beta.1) (2024-06-05)
 
 
