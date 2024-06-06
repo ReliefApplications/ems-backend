@@ -207,6 +207,7 @@ const checkPermission = (
   permissions: any
 ) => {
   switch (permission) {
+    case 'canDownloadRecords':
     case 'canUpdateRecords': {
       // If there is a global see permission for this role it should be okay.
       if (
@@ -230,12 +231,19 @@ const checkPermission = (
           break;
         }
       }
-      throw new GraphQLError(
-        context.i18next.t(
-          'mutations.resource.edit.errors.permission.notVisible'
-        )
-      );
-      break;
+      if (permission === 'canDownloadRecords') {
+        throw new GraphQLError(
+          context.i18next.t(
+            'mutations.resource.edit.errors.permission.downloadRecords.notVisible'
+          )
+        );
+      } else {
+        throw new GraphQLError(
+          context.i18next.t(
+            'mutations.resource.edit.errors.permission.updateRecords.notVisible'
+          )
+        );
+      }
     }
   }
 };
@@ -406,7 +414,7 @@ const removeResourcePermission = (
       },
     };
   } else {
-    // canCreateRecords, canSeeRecords, canUpdateRecords, canDeleteRecords
+    // canCreateRecords, canSeeRecords, canUpdateRecords, canDeleteRecords, canDownloadRecords
     pullRoles = {
       [`permissions.${permission}`]: {
         $in: remove.map((perm: any) =>
@@ -620,9 +628,7 @@ export default {
             if (obj.add && obj.add.length) {
               // Add permission
               addResourcePermission(update, obj.add, permission);
-              /**
-               * 'Common sense' rules, that apply if no existing permission for the role is set on this resource
-               */
+              // 'Common sense' rules, that apply if no existing permission for the role is set on this resource
               obj.add.forEach((x) => {
                 if (x.role) {
                   // Ensure that the permissions make 'common sense'
