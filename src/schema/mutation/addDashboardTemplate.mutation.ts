@@ -17,12 +17,20 @@ type DashboardArgs = {
 };
 
 /**
- * Throw GraphQL error if not logged.
- * Returns the dashboard by id if no contextEl is provided.
- * If contextEl is provided and its template already exists, returns the template.
- * If contextEl is provided and its template does not exist:
- *   - if createIfMissing is false, returns the main dashboard with the relevant context
- *   - if createIfMissing is true, creates a new template for the element and returns it (if user has permissions)
+ * Resolves the dashboard template if it exists, else create it
+ *
+ * @async
+ * @function resolve
+ * @param {Object} parent - The parent resolver result.
+ * @param {Object} args - The arguments provided to the resolver.
+ * @param {string} args.id - The ID of the dashboard to retrieve.
+ * @param {string|number} [args.contextEl] - The context element to retrieve the dashboard with respect to the context.
+ * @param {Context} context - The GraphQL execution context.
+ * @returns {Promise<Dashboard>} The resolved dashboard.
+ * @throws {GraphQLError} If the user does not have permission to read or create the dashboard.
+ * @throws {GraphQLError} If the provided context element is invalid.
+ * @throws {GraphQLError} If the dashboard or associated data cannot be found.
+ * @throws {GraphQLError} If an internal server error occurs.
  */
 export default {
   type: DashboardType,
@@ -61,7 +69,6 @@ export default {
         accessibleBy(ability, 'read').Page
       ).getFilter();
 
-      // Else we get the dashboard with respect to the context
       // Get the page that contains this dashboard
       const page = await Page.findOne({
         $and: [
