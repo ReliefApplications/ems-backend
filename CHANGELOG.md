@@ -1,3 +1,10 @@
+## [2.10.3-rc.2](https://github.com/ReliefApplications/ems-backend/compare/v2.10.3-rc.1...v2.10.3-rc.2) (2024-06-06)
+
+
+### Bug Fixes
+
+* allow to skip validation of records ([35fe868](https://github.com/ReliefApplications/ems-backend/commit/35fe8680ec6f92fe78577e7651d7373bbead8cee))
+
 ## [2.10.3-rc.1](https://github.com/ReliefApplications/ems-backend/compare/v2.10.2...v2.10.3-rc.1) (2024-06-06)
 
 
