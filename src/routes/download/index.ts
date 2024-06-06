@@ -11,7 +11,9 @@ import {
   RecordHistory as RecordHistoryType,
 } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
-import extendAbilityForRecords from '@security/extendAbilityForRecords';
+import extendAbilityForRecords, {
+  userHasRoleFor,
+} from '@security/extendAbilityForRecords';
 import fs from 'fs';
 import {
   fileBuilder,
@@ -351,13 +353,20 @@ router.post('/records', async (req, res) => {
         },
       })
       .getFilter();
-    const resource = await Resource.findOne(filters).select('fields');
+    const resource = await Resource.findOne(filters).select(
+      'fields permissions'
+    );
     if (!resource) {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
-
-    // Make distinction if we send the file by email or in the response
+    if (
+      !ability.can('manage', 'Record') &&
+      !userHasRoleFor('canDownloadRecords', req.context.user, resource)
+    ) {
+      return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    }
     if (!params.email) {
+      // Make distinction if we send the file by email or in the response
       switch (params.format) {
         case 'xlsx': {
           res.setHeader(

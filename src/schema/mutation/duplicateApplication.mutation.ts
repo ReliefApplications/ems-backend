@@ -160,6 +160,7 @@ export default {
                 'canCreateRecords',
                 'canUpdateRecords',
                 'canDeleteRecords',
+                'canDownloadRecords',
               ] as const
             ).forEach((permType) => {
               const permissions = resource.permissions[permType] ?? [];

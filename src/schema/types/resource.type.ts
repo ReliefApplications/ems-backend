@@ -121,6 +121,11 @@ export const ResourceType = new GraphQLObjectType({
               parent.permissions,
               args.role
             ),
+            canDownloadRecords: rolePermissionResolver(
+              'canDownloadRecords',
+              parent.permissions,
+              args.role
+            ),
           };
         } else {
           return null;
@@ -274,6 +279,17 @@ export const ResourceType = new GraphQLObjectType({
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
         return ability.can('delete', parent);
+      },
+    },
+    canDownloadRecords: {
+      type: GraphQLBoolean,
+      async resolve(parent, args, context) {
+        const ability: AppAbility = context.user.ability;
+        // either check that user can manage records, either check that user has a role to create records
+        return (
+          ability.can('manage', 'Record') ||
+          userHasRoleFor('canDownloadRecords', context.user, parent)
+        );
       },
     },
     layouts: {

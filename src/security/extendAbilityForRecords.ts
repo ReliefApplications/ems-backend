@@ -167,6 +167,15 @@ function extendAbilityForRecordsOnForm(
       } as MongoQuery);
     }
 
+    // download records
+    if (userHasRoleFor('canDownloadRecords', user, resource)) {
+      // warning: the filter on the form is not used if we call can('create', 'Record')
+      // instead of can('create', record) with an already existing record instance
+      can('download', 'Record', {
+        $or: [{ 'form._id': form._id }, { form: form._id }],
+      } as MongoQuery);
+    }
+
     // access a record
     if (userHasRoleFor('canSeeRecords', user, resource)) {
       // can('read', 'Form', { _id: form._id });
