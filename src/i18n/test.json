@@ -236,7 +236,12 @@
 					},
 					"invalidArguments": "******",
 					"permission": {
-						"notVisible": "******"
+						"downloadRecords": {
+							"notVisible": "******"
+						},
+						"updateRecords": {
+							"notVisible": "******"
+						}
 					}
 				}
 			}
