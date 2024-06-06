@@ -32,13 +32,31 @@ const addChoicesToGraphQLQuestions = (structure: any, newData: any) => {
     pages: structure.pages.map((page) => ({
       ...page,
       elements: page.elements.map((element) => {
-        if (element.gqlUrl) {
-          return {
-            ...element,
-            choices: newData[element.name].map((choice) => {
-              return { text: choice, value: choice };
-            }),
-          };
+        if (element.gqlUrl && newData[element.name]) {
+          if (['dropdown', 'radiogroup'].includes(element.type)) {
+            // single select
+            return {
+              ...element,
+              choices: newData[element.name]
+                ? [
+                    {
+                      text: newData[element.name],
+                      value: newData[element.name],
+                    },
+                  ]
+                : [],
+            };
+          } else {
+            // multiselect
+            return {
+              ...element,
+              choices: newData[element.name]
+                ? newData[element.name].map((choice) => {
+                    return { text: choice, value: choice };
+                  })
+                : [],
+            };
+          }
         }
         return element;
       }),
@@ -63,13 +81,15 @@ export const checkRecordValidation = (
   context,
   lang = 'en'
 ): { question: string; errors: string[] }[] => {
+  // Start to build data
+  const data = { ...record.data, ...newData };
   // Necessary to fix 401 errors if we have choicesByUrl targeting self API.
   // passTokenForChoicesByUrl(context);
   // Avoid the choices by url to be called, as it could freeze system depending on the choices
   (Survey.ChoicesRestful as any).getCachedItemsResult = () => true;
   const structure = JSON.parse(form.structure);
   const modifiedStructure = JSON.stringify(
-    addChoicesToGraphQLQuestions(structure, newData)
+    addChoicesToGraphQLQuestions(structure, data)
   );
   // create the form
   const survey = new Survey.Model(modifiedStructure);
@@ -83,7 +103,7 @@ export const checkRecordValidation = (
   }
   survey.locale = lang;
   // fill with the record data
-  survey.data = { ...record.data, ...newData };
+  survey.data = data;
   // validate the record
   survey.completeLastPage();
   if (survey.hasErrors()) {
