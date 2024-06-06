@@ -4,6 +4,7 @@ import {
   GraphQLError,
   GraphQLList,
   GraphQLString,
+  GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Record, Version, Form } from '@models';
@@ -34,6 +35,7 @@ type EditRecordsArgs = {
   data: any;
   template?: string | Types.ObjectId;
   lang?: string;
+  skipValidation: boolean;
 };
 
 /**
@@ -47,6 +49,7 @@ export default {
     data: { type: new GraphQLNonNull(GraphQLJSON) },
     template: { type: GraphQLID },
     lang: { type: GraphQLString },
+    skipValidation: { type: GraphQLBoolean, defaultValue: false },
   },
   async resolve(parent, args: EditRecordsArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -79,7 +82,7 @@ export default {
             context,
             args.lang
           );
-          if (validationErrors.length) {
+          if (validationErrors.length && !args.skipValidation) {
             records.push(
               Object.assign(record, { validationErrors: validationErrors })
             );
