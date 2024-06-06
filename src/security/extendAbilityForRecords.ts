@@ -13,6 +13,7 @@ import {
 import { getFormPermissionFilter } from '@utils/filter';
 import { Form, Role, User, Resource } from '@models';
 import { Types } from 'mongoose';
+import { resourcePermission } from 'types';
 
 /** Application ability class */
 // eslint-disable-next-line deprecation/deprecation
@@ -159,7 +160,7 @@ function extendAbilityForRecordsOnForm(
     const editableFields = getAccessibleFields('update', user, resource);
 
     // create a new record
-    if (userHasRoleFor('canCreateRecords', user, resource)) {
+    if (userHasRoleFor(resourcePermission.CREATE_RECORDS, user, resource)) {
       // warning: the filter on the form is not used if we call can('create', 'Record')
       // instead of can('create', record) with an already existing record instance
       can('create', 'Record', {
@@ -168,7 +169,7 @@ function extendAbilityForRecordsOnForm(
     }
 
     // download records
-    if (userHasRoleFor('canDownloadRecords', user, resource)) {
+    if (userHasRoleFor(resourcePermission.DOWNLOAD_RECORDS, user, resource)) {
       // warning: the filter on the form is not used if we call can('create', 'Record')
       // instead of can('create', record) with an already existing record instance
       can('download', 'Record', {
@@ -177,10 +178,14 @@ function extendAbilityForRecordsOnForm(
     }
 
     // access a record
-    if (userHasRoleFor('canSeeRecords', user, resource)) {
+    if (userHasRoleFor(resourcePermission.SEE_RECORDS, user, resource)) {
       // can('read', 'Form', { _id: form._id });
       // can('read', 'Resource', { _id: resource._id });
-      const filter = formFilters('canSeeRecords', user, resource);
+      const filter = formFilters(
+        resourcePermission.SEE_RECORDS,
+        user,
+        resource
+      );
       can('read', 'Record', filter);
       cannot('read', 'Record', ['data.**'], filter);
       if (readableFields.length > 0) {
@@ -193,8 +198,12 @@ function extendAbilityForRecordsOnForm(
     }
 
     // update a record
-    if (userHasRoleFor('canUpdateRecords', user, resource)) {
-      const filter = formFilters('canUpdateRecords', user, resource);
+    if (userHasRoleFor(resourcePermission.UPDATE_RECORDS, user, resource)) {
+      const filter = formFilters(
+        resourcePermission.UPDATE_RECORDS,
+        user,
+        resource
+      );
       can('update', 'Record', filter);
       cannot('update', 'Record', ['data.**'], filter);
       if (editableFields.length > 0) {
@@ -203,8 +212,12 @@ function extendAbilityForRecordsOnForm(
     }
 
     // delete a record
-    if (userHasRoleFor('canDeleteRecords', user, resource)) {
-      can('delete', 'Record', formFilters('canDeleteRecords', user, resource));
+    if (userHasRoleFor(resourcePermission.DELETE_RECORDS, user, resource)) {
+      can(
+        'delete',
+        'Record',
+        formFilters(resourcePermission.DELETE_RECORDS, user, resource)
+      );
     }
 
     // Readable fields

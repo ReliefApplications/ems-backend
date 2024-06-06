@@ -28,6 +28,7 @@ import { getMetaData } from '@utils/form/metadata.helper';
 import { getAccessibleFields } from '@utils/form';
 import { get, indexOf } from 'lodash';
 import { accessibleBy } from '@casl/mongoose';
+import { resourcePermission } from 'types';
 
 /**
  * Resolve single permission
@@ -102,27 +103,27 @@ export const ResourceType = new GraphQLObjectType({
         if (ability.can('update', parent)) {
           return {
             canCreateRecords: rolePermissionResolver(
-              'canCreateRecords',
+              resourcePermission.CREATE_RECORDS,
               parent.permissions,
               args.role
             ),
             canSeeRecords: rolePermissionResolver(
-              'canSeeRecords',
+              resourcePermission.SEE_RECORDS,
               parent.permissions,
               args.role
             ),
             canUpdateRecords: rolePermissionResolver(
-              'canUpdateRecords',
+              resourcePermission.UPDATE_RECORDS,
               parent.permissions,
               args.role
             ),
             canDeleteRecords: rolePermissionResolver(
-              'canDeleteRecords',
+              resourcePermission.DELETE_RECORDS,
               parent.permissions,
               args.role
             ),
             canDownloadRecords: rolePermissionResolver(
-              'canDownloadRecords',
+              resourcePermission.DOWNLOAD_RECORDS,
               parent.permissions,
               args.role
             ),
@@ -256,7 +257,11 @@ export const ResourceType = new GraphQLObjectType({
         // either check that user can manage records, either check that user has a role to create records
         return (
           ability.can('manage', 'Record') ||
-          userHasRoleFor('canCreateRecords', context.user, parent)
+          userHasRoleFor(
+            resourcePermission.CREATE_RECORDS,
+            context.user,
+            parent
+          )
         );
       },
     },
@@ -288,7 +293,11 @@ export const ResourceType = new GraphQLObjectType({
         // either check that user can manage records, either check that user has a role to create records
         return (
           ability.can('manage', 'Record') ||
-          userHasRoleFor('canDownloadRecords', context.user, parent)
+          userHasRoleFor(
+            resourcePermission.DOWNLOAD_RECORDS,
+            context.user,
+            parent
+          )
         );
       },
     },

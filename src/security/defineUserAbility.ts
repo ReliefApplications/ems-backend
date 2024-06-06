@@ -35,6 +35,7 @@ import {
   CustomNotification,
   Layer,
 } from '@models';
+import { resourcePermission } from 'types';
 
 /** Define available permissions on objects */
 export type ObjectPermissions = keyof (ApiConfiguration['permissions'] &
@@ -197,8 +198,16 @@ export default function defineUserAbility(user: User | Client): AppAbility {
     can('read', ['Form', 'Record']);
   } else {
     can('read', 'Form', filters('canSee', user));
-    can('read', 'Form', filters('canSeeRecords', user, { suffix: 'role' }));
-    can('read', 'Form', filters('canCreateRecords', user, { suffix: 'role' }));
+    can(
+      'read',
+      'Form',
+      filters(resourcePermission.SEE_RECORDS, user, { suffix: 'role' })
+    );
+    can(
+      'read',
+      'Form',
+      filters(resourcePermission.CREATE_RECORDS, user, { suffix: 'role' })
+    );
   }
 
   /* ===
@@ -227,11 +236,15 @@ export default function defineUserAbility(user: User | Client): AppAbility {
     can(['read', 'download'], 'Record');
   } else {
     can('read', 'Resource', filters('canSee', user));
-    can('read', 'Resource', filters('canSeeRecords', user, { suffix: 'role' }));
     can(
       'read',
       'Resource',
-      filters('canCreateRecords', user, { suffix: 'role' })
+      filters(resourcePermission.SEE_RECORDS, user, { suffix: 'role' })
+    );
+    can(
+      'read',
+      'Resource',
+      filters(resourcePermission.CREATE_RECORDS, user, { suffix: 'role' })
     );
   }
 

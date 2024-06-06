@@ -34,6 +34,7 @@ import { sendEmail } from '@utils/email';
 import { accessibleBy } from '@casl/mongoose';
 import dataSources from '@server/apollo/dataSources';
 import Exporter from '@utils/files/resourceExporter';
+import { resourcePermission } from 'types';
 
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwise
@@ -361,7 +362,11 @@ router.post('/records', async (req, res) => {
     }
     if (
       !ability.can('manage', 'Record') &&
-      !userHasRoleFor('canDownloadRecords', req.context.user, resource)
+      !userHasRoleFor(
+        resourcePermission.DOWNLOAD_RECORDS,
+        req.context.user,
+        resource
+      )
     ) {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }

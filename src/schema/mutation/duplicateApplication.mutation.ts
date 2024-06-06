@@ -26,6 +26,7 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { accessibleBy } from '@casl/mongoose';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
+import { resourcePermission } from 'types';
 
 type ResourcePermission =
   | {
@@ -156,11 +157,11 @@ export default {
                 'canSee',
                 'canUpdate',
                 'canDelete',
-                'canSeeRecords',
-                'canCreateRecords',
-                'canUpdateRecords',
-                'canDeleteRecords',
-                'canDownloadRecords',
+                resourcePermission.SEE_RECORDS,
+                resourcePermission.CREATE_RECORDS,
+                resourcePermission.UPDATE_RECORDS,
+                resourcePermission.DELETE_RECORDS,
+                resourcePermission.DOWNLOAD_RECORDS,
               ] as const
             ).forEach((permType) => {
               const permissions = resource.permissions[permType] ?? [];
