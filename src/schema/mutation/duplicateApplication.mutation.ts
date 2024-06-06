@@ -26,7 +26,7 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { accessibleBy } from '@casl/mongoose';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
-import { resourcePermission } from 'types';
+import { resourcePermission } from '@types';
 
 type ResourcePermission =
   | {

@@ -11,7 +11,7 @@ import { introspectionResult } from '@server/index';
  */
 export default {
   type: new GraphQLObjectType({
-    name: 'Types',
+    name: 'types',
     fields: () => ({
       availableQueries: {
         type: GraphQLJSON,

@@ -35,7 +35,7 @@ import {
   CustomNotification,
   Layer,
 } from '@models';
-import { resourcePermission } from 'types';
+import { resourcePermission } from '@types';
 
 /** Define available permissions on objects */
 export type ObjectPermissions = keyof (ApiConfiguration['permissions'] &
