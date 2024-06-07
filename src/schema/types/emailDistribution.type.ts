@@ -19,6 +19,7 @@ export const EmailDistributionListType = new GraphQLObjectType({
         return parent._id ? parent._id : parent.id;
       },
     },
+    name: { type: GraphQLString },
     distributionListName: { type: GraphQLString },
     To: { type: new GraphQLList(GraphQLString) },
     Cc: { type: new GraphQLList(GraphQLString) },
