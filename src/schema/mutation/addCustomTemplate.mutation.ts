@@ -26,7 +26,7 @@ export default {
         createdBy: { name: context.user.name, email: context.user.username },
       };
 
-      console.log(customTemplateData)
+      console.log(customTemplateData);
 
       const customTemplate = new CustomTemplate(customTemplateData);
       await customTemplate.save();
