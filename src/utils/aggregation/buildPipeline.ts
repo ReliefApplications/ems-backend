@@ -197,7 +197,10 @@ const buildPipeline = (
             });
           } else {
             pipeline.push({
-              $unwind: `$${x.field}`,
+              $unwind: {
+                path: `$${x.field}`,
+                preserveNullAndEmptyArrays: x.keepNull || false,
+              },
             });
           }
           if (x.expression && x.expression.operator) {
