@@ -41,6 +41,9 @@ interface EmailDistributionList extends Document {
   isDeleted: number;
 }
 
+/**
+ *
+ */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const EmailDistributionList = mongoose.model<
   EmailDistributionList,

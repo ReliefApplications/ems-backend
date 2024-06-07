@@ -23,6 +23,9 @@ export const customTemplateSchema = new Schema(
   }
 );
 
+/**
+ *
+ */
 interface CustomTemplate extends Document {
   kind: 'customTemplate';
   subject: string;
@@ -33,6 +36,9 @@ interface CustomTemplate extends Document {
   isDeleted: number;
 }
 
+/**
+ *
+ */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CustomTemplate = mongoose.model<
   CustomTemplate,
