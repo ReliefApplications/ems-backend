@@ -189,7 +189,7 @@ const Mutation = new GraphQLObjectType({
     deleteDraftRecord,
     editDraftRecord,
     addEmailDistributionList,
-    editAndGetDistributionList
+    editAndGetDistributionList,
     addDashboardTemplate,
     deleteDashboardTemplates,
   },
