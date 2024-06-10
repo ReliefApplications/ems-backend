@@ -13,7 +13,7 @@ import { logger } from '@services/logger.service';
 import axios from 'axios';
 import { isEqual, get, omit, isEmpty } from 'lodash';
 import turf, { Feature, booleanPointInPolygon } from '@turf/turf';
-import dataSources, { CustomAPI } from '@server/apollo/dataSources';
+import { CustomAPI, buildDataSource } from '@server/apollo/dataSources';
 import { getAdmin0Polygons } from '@utils/gis/getCountryPolygons';
 import filterReferenceData from '@utils/referenceData/referenceDataFilter.util';
 
@@ -73,7 +73,7 @@ const getFeatureFromItem = (
     longitudeField?: string;
     adminField?: string;
   },
-  geoFilter?: turf.Polygon
+  geoFilter?: turf.Polygon // Seems to be unused, could be removed?
 ) => {
   if (mapping.geoField) {
     // removed the toLowerCase there, which may cause an issue
@@ -106,7 +106,6 @@ const getFeatureFromItem = (
             features.push(...parseToSingleFeature(feature));
           }
         }
-      } else {
       }
     }
   } else {
@@ -147,7 +146,7 @@ const getFeatureFromItem = (
  * @param items list of items
  * @param mapping mapping
  */
-const getFeatures = async (
+const getFeatures = (
   features: any[],
   layerType: GeometryType,
   items: any[],
@@ -204,7 +203,7 @@ const gqlQuery = (
         if (Object.prototype.hasOwnProperty.call(data.data, field)) {
           if (data.data[field].items?.length > 0) {
             // Aggregation
-            await getFeatures(
+            getFeatures(
               featureCollection.features,
               layerType,
               data.data[field].items,
@@ -212,7 +211,7 @@ const gqlQuery = (
             );
           } else if (data.data[field].edges?.length > 0) {
             // Query
-            await getFeatures(
+            getFeatures(
               featureCollection.features,
               layerType,
               data.data[field].edges.map((x) => x.node),
@@ -246,9 +245,7 @@ router.post('/feature', async (req, res) => {
     const layerType = (get(req, 'body.type') ||
       GeometryType.POINT) as GeometryType;
     const contextFilters = JSON.parse(get(req, 'body.contextFilters', null));
-    const graphQLVariables = JSON.parse(
-      get(req, 'body.graphQLVariables', null)
-    );
+    const queryParams = JSON.parse(get(req, 'body.queryParams', null));
     const at = get(req, 'body.at') as string | undefined;
     if (!geoField && !(latitudeField && longitudeField)) {
       return res
@@ -358,7 +355,7 @@ router.post('/feature', async (req, res) => {
             $referenceData: ID!
             $aggregation: ID!
             $contextFilters: JSON
-            $graphQLVariables: JSON
+            $queryParams: JSON
             $first: Int
             $at: Date
           ) {
@@ -366,7 +363,7 @@ router.post('/feature', async (req, res) => {
                 referenceData: $referenceData
                 aggregation: $aggregation
                 contextFilters: $contextFilters
-                graphQLVariables: $graphQLVariables
+                queryParams: $queryParams
                 first: $first
                 at: $at
               )
@@ -375,7 +372,7 @@ router.post('/feature', async (req, res) => {
             referenceData: referenceData._id,
             aggregation: aggregation,
             contextFilters,
-            graphQLVariables,
+            queryParams,
             first: 1000,
             at: at ? new Date(at) : undefined,
           };
@@ -396,41 +393,31 @@ router.post('/feature', async (req, res) => {
           if (contextFilters && !isEmpty(contextFilters)) {
             data = data.filter((x) => filterReferenceData(x, contextFilters));
           }
-          await getFeatures(
-            featureCollection.features,
-            layerType,
-            data,
-            mapping
-          );
+          getFeatures(featureCollection.features, layerType, data, mapping);
         } else {
           const apiConfiguration = await ApiConfiguration.findById(
             referenceData.apiConfiguration,
             'name endpoint graphQLEndpoint'
           );
-          const contextDataSources = (
-            await dataSources({
+          const contextDataSource = (
+            await buildDataSource(apiConfiguration.name, {
               // Passing upstream request so accesstoken can be used for authentication
               req: req,
             } as any)
           )();
-          const dataSource = contextDataSources[
+          const dataSource = contextDataSource[
             apiConfiguration.name
           ] as CustomAPI;
           let data: any =
             (await dataSource.getReferenceDataItems(
               referenceData,
               apiConfiguration,
-              graphQLVariables
+              queryParams
             )) || [];
           if (contextFilters && !isEmpty(contextFilters)) {
             data = data.filter((x) => filterReferenceData(x, contextFilters));
           }
-          await getFeatures(
-            featureCollection.features,
-            layerType,
-            data,
-            mapping
-          );
+          getFeatures(featureCollection.features, layerType, data, mapping);
         }
       } else {
         return res.status(404).send(i18next.t('common.errors.dataNotFound'));

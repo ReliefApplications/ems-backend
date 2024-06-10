@@ -236,7 +236,12 @@
 					},
 					"invalidArguments": "******",
 					"permission": {
-						"notVisible": "******"
+						"downloadRecords": {
+							"notVisible": "******"
+						},
+						"updateRecords": {
+							"notVisible": "******"
+						}
 					}
 				}
 			}
@@ -312,7 +317,8 @@
 		"upload": {
 			"errors": {
 				"invalidUserUpload": "******",
-				"missingFile": "******"
+				"missingFile": "******",
+				"noRecordsToInsert": "******"
 			}
 		}
 	},

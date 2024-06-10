@@ -236,7 +236,12 @@
 					},
 					"invalidArguments": "Either fields or permissions must be provided.",
 					"permission": {
-						"notVisible": "Please provide permission to read records before providing permission to edit them."
+						"downloadRecords": {
+							"notVisible": "Please provide permission to read records before providing permission to download them."
+						},
+						"updateRecords": {
+							"notVisible": "Please provide permission to read records before providing permission to edit them."
+						}
 					}
 				}
 			}
@@ -312,7 +317,8 @@
 		"upload": {
 			"errors": {
 				"invalidUserUpload": "Please provide email and role for each user.",
-				"missingFile": "No file detected."
+				"missingFile": "No file detected.",
+				"noRecordsToInsert": "No records were provided for insertion."
 			}
 		}
 	},

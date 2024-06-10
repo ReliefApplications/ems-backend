@@ -36,14 +36,19 @@ export const checkRecordValidation = (
   context,
   lang = 'en'
 ): { question: string; errors: string[] }[] => {
+  // Start to build data
+  // const data = { ...record.data, ...newData };
   // Necessary to fix 401 errors if we have choicesByUrl targeting self API.
   // passTokenForChoicesByUrl(context);
   // Avoid the choices by url to be called, as it could freeze system depending on the choices
   (Survey.ChoicesRestful as any).getCachedItemsResult = () => true;
-  // create the form
-  const survey = new Survey.Model(form.structure);
-  Survey.settings.commentPrefix = '_comment';
   const structure = JSON.parse(form.structure);
+  // create the form
+  const survey = new Survey.Model(structure);
+  // Survey would try to scroll in a non existing html element
+  survey.scrollElementToTop = () => null;
+
+  Survey.settings.commentPrefix = '_comment';
   // Run completion
   const onCompleteExpression = survey.toJSON().onCompleteExpression;
   if (onCompleteExpression) {
@@ -79,8 +84,14 @@ export const checkRecordValidation = (
       const question = flatQuestions.find((q2) => q2.name === q.name);
 
       // if it has choices coming from reference data, and has data, skip validation
-      if (question.referenceData && { ...record.data, ...newData }[q.name])
+      if (question.referenceData && { ...record.data, ...newData }[q.name]) {
         return false;
+      }
+
+      // if it has choices coming from graphql, and has data, skip validation
+      if (question.gqlUrl && { ...record.data, ...newData }[q.name]) {
+        return false;
+      }
 
       return true;
     });

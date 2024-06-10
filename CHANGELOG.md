@@ -1,3 +1,44 @@
+## [2.10.3-rc.2](https://github.com/ReliefApplications/ems-backend/compare/v2.10.3-rc.1...v2.10.3-rc.2) (2024-06-06)
+
+
+### Bug Fixes
+
+* allow to skip validation of records ([35fe868](https://github.com/ReliefApplications/ems-backend/commit/35fe8680ec6f92fe78577e7651d7373bbead8cee))
+
+## [2.10.3-rc.1](https://github.com/ReliefApplications/ems-backend/compare/v2.10.2...v2.10.3-rc.1) (2024-06-06)
+
+
+### Bug Fixes
+
+* record validation would not be done correctly for some fields / requests, and make them fail AB[#95404](https://github.com/ReliefApplications/ems-backend/issues/95404) AB[#95398](https://github.com/ReliefApplications/ems-backend/issues/95398) ([2ecfe0f](https://github.com/ReliefApplications/ems-backend/commit/2ecfe0f0c026808dd9d07c4b5a7f49a819956eb0))
+
+## [2.10.2](https://github.com/ReliefApplications/ems-backend/compare/v2.10.1...v2.10.2) (2024-05-28)
+
+
+### Bug Fixes
+
+* webjob sending error when no provided records ([#1073](https://github.com/ReliefApplications/ems-backend/issues/1073)) ([84c0ff1](https://github.com/ReliefApplications/ems-backend/commit/84c0ff1c686fbeb8539155abef6e02f13cdd232c))
+
+## [2.10.1](https://github.com/ReliefApplications/ems-backend/compare/v2.10.0...v2.10.1) (2024-05-24)
+
+
+### Bug Fixes
+
+* choices by graphql questions could not be set as required ([#1069](https://github.com/ReliefApplications/ems-backend/issues/1069)) ([dd8b9b8](https://github.com/ReliefApplications/ems-backend/commit/dd8b9b8b57fa4d42ebbd4234a95ca3f5e1a79bcf))
+
+# [2.10.0](https://github.com/ReliefApplications/ems-backend/compare/v2.9.2...v2.10.0) (2024-05-22)
+
+
+### Bug Fixes
+
+* creation of new users could fail due to duplication errors ([#1059](https://github.com/ReliefApplications/ems-backend/issues/1059)) ([95eadbe](https://github.com/ReliefApplications/ems-backend/commit/95eadbe58c795f29a5b058e8e5a099f1dc84f959))
+
+
+### Features
+
+* REST reference data can also use query params ([#1058](https://github.com/ReliefApplications/ems-backend/issues/1058)) ([506e551](https://github.com/ReliefApplications/ems-backend/commit/506e551fe7f5a4d5529ad59d3df8a0c216a4910b))
+* use microsoft graph to populate user's attributes ([#1062](https://github.com/ReliefApplications/ems-backend/issues/1062)) ([4396301](https://github.com/ReliefApplications/ems-backend/commit/4396301d60c9ea0621d29f170d2920614f167d90))
+
 ## [2.9.2](https://github.com/ReliefApplications/ems-backend/compare/v2.9.1...v2.9.2) (2024-05-04)
 
 

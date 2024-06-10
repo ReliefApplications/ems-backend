@@ -13,7 +13,7 @@ import protectedNames from '@const/protectedNames';
  */
 describe('Name validator tests', () => {
   describe('GraphQL type name of random string should return camel case string', () => {
-    const name = new Array(100).fill(faker.word.adjective());
+    const name = Array.from({ length: 100 }, () => faker.word.adjective());
     test.each(name)(
       'Random world should return camel case string',
       (string: string) => {
@@ -25,7 +25,7 @@ describe('Name validator tests', () => {
   });
 
   describe('Validation of correct GraphQL type name should pass', () => {
-    const name = new Array(100).fill(faker.word.adjective());
+    const name = Array.from({ length: 100 }, () => faker.word.adjective());
     test.each(name)(
       'Random GraphQL type name should pass',
       (string: string) => {
@@ -36,7 +36,7 @@ describe('Name validator tests', () => {
   });
 
   describe('Validation of random string without any special character should pass', () => {
-    const name = new Array(100).fill(faker.word.adjective());
+    const name = Array.from({ length: 100 }, () => faker.word.adjective());
     test.each(name)('Random string should pass', (string: string) => {
       const test = () => validateGraphQLFieldName(string);
       expect(test).not.toThrow();
