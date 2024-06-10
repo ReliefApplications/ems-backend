@@ -328,6 +328,9 @@ export const getMetaData = async (
         fieldMeta._field = field;
         break;
       }
+      case 'editor': {
+        fieldMeta.filter = { operators: ['isnull', 'isnotnull'] };
+      }
       default: {
         break;
       }
