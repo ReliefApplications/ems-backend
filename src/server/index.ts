@@ -29,6 +29,7 @@ import {
 } from './apollo/queries/introspection.query';
 import { pluralize } from 'inflection';
 import config from 'config';
+import { isEqual } from 'lodash';
 
 /** List of user fields */
 const USER_FIELDS = ['id', 'name', 'username'];
@@ -107,7 +108,7 @@ class SafeServer {
         this.update();
       }
       if (data.operationType === 'update') {
-        // When a form is updated, only reload schema if name, structure or status were updated
+        // When a resource is updated, only reload if fields are updated
         const fieldsThatRequireSchemaUpdate = ['fields'];
         const updatedDocFields = Object.keys(
           data.updateDescription.updatedFields
@@ -119,7 +120,8 @@ class SafeServer {
               data.updateDescription.updatedFields[f].some(
                 (field) => field.isCalculated === true
               )
-          )
+          ) ||
+          isEqual(updatedDocFields, ['modifiedAt']) // we only edit the modification date, if we delete a non-core form
         ) {
           this.update();
         }
