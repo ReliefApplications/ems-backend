@@ -45,6 +45,10 @@ export default {
         await Resource.deleteOne({ _id: form.resource });
       } else {
         await form.deleteOne();
+        // Trick the change stream, by updating the resource
+        const resource = await Resource.findById(form.resource).select('name');
+        resource.markModified('modifiedAt');
+        await resource.save();
       }
       return form;
     } catch (err) {
