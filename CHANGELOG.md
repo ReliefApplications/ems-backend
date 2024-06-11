@@ -1,3 +1,34 @@
+# [2.11.0-rc.1](https://github.com/ReliefApplications/ems-backend/compare/v2.10.3-rc.2...v2.11.0-rc.1) (2024-06-11)
+
+
+### Bug Fixes
+
+* Deleting resource breaks schema ([#1099](https://github.com/ReliefApplications/ems-backend/issues/1099)) ([595f294](https://github.com/ReliefApplications/ems-backend/commit/595f2941e69f3e2271368c8447434dde5155811b))
+
+
+### Features
+
+* allow null values in aggregation ([afe4656](https://github.com/ReliefApplications/ems-backend/commit/afe4656ca8e26cf90659a9bffdffbc78c1547ef8))
+
+
+### Reverts
+
+* Revert "bug: Deleting resource breaks schema (#1099)" (#1101) ([e99b0dc](https://github.com/ReliefApplications/ems-backend/commit/e99b0dccbd3ffec2ec03eb026a35a45b7c342fb2)), closes [#1099](https://github.com/ReliefApplications/ems-backend/issues/1099) [#1101](https://github.com/ReliefApplications/ems-backend/issues/1101)
+
+## [2.10.3-rc.2](https://github.com/ReliefApplications/ems-backend/compare/v2.10.3-rc.1...v2.10.3-rc.2) (2024-06-06)
+
+
+### Bug Fixes
+
+* allow to skip validation of records ([35fe868](https://github.com/ReliefApplications/ems-backend/commit/35fe8680ec6f92fe78577e7651d7373bbead8cee))
+
+## [2.10.3-rc.1](https://github.com/ReliefApplications/ems-backend/compare/v2.10.2...v2.10.3-rc.1) (2024-06-06)
+
+
+### Bug Fixes
+
+* record validation would not be done correctly for some fields / requests, and make them fail AB[#95404](https://github.com/ReliefApplications/ems-backend/issues/95404) AB[#95398](https://github.com/ReliefApplications/ems-backend/issues/95398) ([2ecfe0f](https://github.com/ReliefApplications/ems-backend/commit/2ecfe0f0c026808dd9d07c4b5a7f49a819956eb0))
+
 ## [2.10.2](https://github.com/ReliefApplications/ems-backend/compare/v2.10.1...v2.10.2) (2024-05-28)
 
 
