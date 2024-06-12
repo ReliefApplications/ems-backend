@@ -83,7 +83,9 @@ export const DatasetType = new GraphQLObjectType({
                   const project = mergeArrayOfObjects(nestedFields[key]) ?? {};
                   Object.assign(project, { _id: 0 });
                   const record = await Record.findById(value, project);
-                  data[key] = record;
+                  if (record) {
+                    data[key] = record;
+                  }
                 }
                 if (dropdownFields) {
                   const thisDropdownField = dropdownFields.find((field) => {
