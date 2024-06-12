@@ -476,13 +476,27 @@ router.post('/style/:application', async (req, res) => {
 /* Import email address from excel file for the distribution list */
 router.post('/distributionList', async (req: any, res) => {
   try {
+    // Check file
+    if (!req.files || Object.keys(req.files).length === 0)
+      return res
+        .status(400)
+        .send(i18next.t('routes.upload.errors.missingFile'));
+    // Get the file from request
+    const file = req.files.excelFile;
+    // Check file extension (only allowed .xlsx)
+    if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
+      return res
+        .status(400)
+        .send(i18next.t('common.errors.fileExtensionNotAllowed'));
+
+    // Distribution list emails
     const emails = {
       Cc: [],
       Bcc: [],
       To: [],
     };
     const workbook = new Workbook();
-    await workbook.xlsx.load(req.files.file.data).then(() => {
+    await workbook.xlsx.load(file.data).then(() => {
       const distributionList = workbook.getWorksheet('distributionList');
       distributionList.eachRow({ includeEmpty: false }, (row, rowCount) => {
         const toAddress = row?.values[1];
