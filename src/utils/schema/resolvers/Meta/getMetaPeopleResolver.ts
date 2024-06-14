@@ -11,10 +11,14 @@ import { isArray } from 'lodash';
  * @returns People resolver.
  */
 const getMetaPeopleResolver = async (field: any, context: Context) => {
-  const records = await Record.find({
-    resource: field.resource,
-    archived: false,
-  });
+  // Optimize the query by only fetching target field
+  const records = await Record.find(
+    {
+      resource: field.resource,
+      archived: false,
+    },
+    { [`data.${field.name}`]: 1 }
+  );
   const peopleIds = [];
   records.forEach((record) => {
     const propertyValue = record.data[field.name];
@@ -28,6 +32,7 @@ const getMetaPeopleResolver = async (field: any, context: Context) => {
       peopleIds.push(propertyValue);
     }
   });
+  // Generate a filter to only fetch users we need
   const getFilter = (people: any) => {
     const formattedFilter = `{
           userid_in:
