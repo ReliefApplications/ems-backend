@@ -5,6 +5,7 @@ import { logger } from '@services/logger.service';
 import axios from 'axios';
 import get from 'lodash/get';
 import jsonpath from 'jsonpath';
+import { getPeople } from '@utils/proxy';
 
 /**
  * Gets display text from choice value.
@@ -38,11 +39,13 @@ export const getText = (choices: any[], value: any): string => {
  *
  * @param field field to get value of.
  * @param context provides the data sources context.
+ * @param peopleIds ids of people to fetch
  * @returns Choice list of the field.
  */
 export const getFullChoices = async (
   field: any,
-  context: Context
+  context: Context,
+  peopleIds?: string[]
 ): Promise<{ value: string; text: string }[] | string[]> => {
   try {
     if (field.choicesByUrl) {
@@ -110,6 +113,30 @@ export const getFullChoices = async (
         choices.push({ [valueField]: 'other', [textField]: 'Other' });
       }
       return choices;
+    } else if (['people', 'singlepeople'].includes(field.type)) {
+      // Generate a filter to only fetch users we need
+      const getFilter = (people: any) => {
+        const formattedFilter = `{
+          userid_in:
+          [${people.map((el: any) => `"${el}"`)}]
+    }`;
+        return formattedFilter.replace(/\s/g, '');
+      };
+      const filter = getFilter(peopleIds);
+      const people = await getPeople(context.token, filter);
+      if (!people) {
+        return [];
+      }
+      return people.map((x: any) => {
+        const fullname =
+          x.firstname && x.lastname
+            ? `${x.firstname}, ${x.lastname}`
+            : x.firstname || x.lastname;
+        return {
+          text: `${fullname} (${x.emailaddress})`,
+          value: x.userid,
+        };
+      });
     } else {
       return field.choices;
     }
@@ -133,7 +160,7 @@ const getDisplayText = async (
   context: Context
 ): Promise<string | string[]> => {
   const choices: { value: string; text: string }[] | string[] =
-    await getFullChoices(field, context);
+    await getFullChoices(field, context, [value]);
   if (choices && choices.length) {
     if (Array.isArray(value)) {
       return value.map((x) => getText(choices, x));
