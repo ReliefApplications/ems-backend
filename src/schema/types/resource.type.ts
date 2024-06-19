@@ -218,7 +218,7 @@ export const ResourceType = new GraphQLObjectType({
             { id: r._id }
           ),
         }));
-        console.log('mekkkkkk');
+
         return {
           pageInfo: {
             hasNextPage,
