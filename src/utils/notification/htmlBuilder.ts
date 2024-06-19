@@ -285,7 +285,11 @@ export const buildTable = (
           }
         } else if (field.type === 'resources') {
           table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
-          ${record.data[field.name]?.length} items</td>`;
+          ${
+            record.data[field.name]
+              ? `${record.data[field.name].length} items`
+              : ''
+          }</td>`;
         } else if (
           field.name.split('.')[0] === '_createdBy' ||
           field.name.split('.')[0] === '_lastUpdatedBy'
