@@ -5,6 +5,7 @@ const AVAILABLE_TYPES = [
   'decimal',
   'geopoint',
   'select_multiple',
+  'select_one',
   'date',
   'note',
   'begin_score',
@@ -19,6 +20,9 @@ const AVAILABLE_TYPES = [
   'rank__level',
   'range',
   'image',
+  'audio',
+  'video',
+  'geoshape',
 ];
 
 /**
@@ -61,6 +65,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
           questions.pages[0].elements.push(newQuestion);
           break;
         }
+        case 'geoshape':
         case 'geopoint': {
           const newQuestion = {
             type: 'geospatial',
@@ -73,9 +78,14 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
           questions.pages[0].elements.push(newQuestion);
           break;
         }
+        case 'select_one':
         case 'select_multiple': {
           const newQuestion = {
-            type: 'checkbox',
+            type:
+              question.type === 'select_multiple' ? 'checkbox' : 'radiogroup',
+            ...(question.type === 'select_multiple' && {
+              showSelectAllItem: true,
+            }),
             name: question.$autoname.toLowerCase(),
             title: question.label[0],
             valueName: question.$autoname.toLowerCase(),
@@ -88,8 +98,11 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
                 value: choice.$autovalue,
                 text: choice.label[0],
               })),
-            showSelectAllItem: true,
             ...(question.hint && { description: question.hint[0] }),
+            ...(question.parameters &&
+              question.parameters.split('randomize=')[1]?.includes('true') && {
+                choicesOrder: 'random',
+              }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -188,6 +201,8 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
           questions.pages[0].elements.push(newQuestion);
           break;
         }
+        case 'audio':
+        case 'video':
         case 'image':
         case 'file': {
           const newQuestion = {
