@@ -12,7 +12,7 @@ import { PositionAttribute } from '@models/positionAttribute.model';
 /** User type for queries/mutations argument */
 export type UserArgs = {
   email: string;
-  role: string | Types.ObjectId;
+  roles: (string | Types.ObjectId)[];
   positionAttributes?: PositionAttribute[];
 };
 
@@ -23,7 +23,7 @@ export const UserInputType = new GraphQLInputObjectType({
   name: 'UserInputType',
   fields: () => ({
     email: { type: new GraphQLNonNull(GraphQLString) },
-    role: { type: new GraphQLNonNull(GraphQLID) },
+    roles: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
     positionAttributes: { type: new GraphQLList(PositionAttributeInputType) },
   }),
 });

@@ -95,6 +95,7 @@ export const initDatabase = async () => {
       'can_create_resources',
       'can_manage_resources',
       'can_manage_applications',
+      'can_delete_applications',
       'can_manage_api_configurations',
       'can_create_applications',
       'can_manage_layer',

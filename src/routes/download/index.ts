@@ -187,6 +187,14 @@ router.get('/form/records/:id/history', async (req, res) => {
       .populate({
         path: 'createdBy.user',
         model: 'User',
+      })
+      .populate({
+        path: 'form',
+        model: 'Form',
+      })
+      .populate({
+        path: 'resource',
+        model: 'Resource',
       });
     if (!record) {
       return res.status(404).send(req.t('common.errors.dataNotFound'));

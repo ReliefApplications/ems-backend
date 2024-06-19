@@ -31,7 +31,7 @@ import { EventType } from '@utils/events/event.model';
  * @param ability The user ability
  * @returns If there's a field the user can't update
  */
-export const hasInaccessibleFields = (
+export const inaccessibleFields = (
   record: Record,
   newData: any,
   ability: AppAbility
@@ -49,11 +49,13 @@ export const hasInaccessibleFields = (
     return !isEqual(previous, next);
   });
 
-  return updatedKeys.some(
+  const failedKeys = updatedKeys.filter(
     (question) =>
       ability.cannot('update', record, `data.${question}`) &&
       has(newData, question)
   );
+
+  return failedKeys;
 };
 
 /** Arguments for the editRecord mutation */
@@ -126,12 +128,11 @@ export default {
 
       // Check permissions with two layers
       const ability = await extendAbilityForRecords(user, parentForm);
-      if (
-        ability.cannot('update', oldRecord) ||
-        hasInaccessibleFields(oldRecord, args.data, ability)
-      ) {
+      const errorFields = inaccessibleFields(oldRecord, args.data, ability);
+      if (ability.cannot('update', oldRecord) || errorFields.length > 0) {
         throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
+          context.i18next.t('common.errors.permissionNotGranted') +
+            errorFields.join(', ')
         );
       }
 

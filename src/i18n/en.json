@@ -20,8 +20,9 @@
 		"filename": "Record history {{id}}",
 		"headers": {
 			"date": "Date",
-			"displayName": "Field",
+			"displayName": "Field title",
 			"exportDate": "Export date",
+			"fieldName": "Field name",
 			"fields": "Filtered fields",
 			"form": "Form",
 			"fromDate": "Filter from",
@@ -198,6 +199,9 @@
 			}
 		},
 		"record": {
+			"add": {
+				"recordAlreadyExists": "Record with specified ID already exists"
+			},
 			"convert": {
 				"errors": {
 					"invalidConversion": "Cannot convert this record to this target form type."

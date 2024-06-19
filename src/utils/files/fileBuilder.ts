@@ -40,7 +40,7 @@ export const fileBuilder = async (
  *
  * @param res Request response
  * @param history The record's history
- * @param meta The record's metadate
+ * @param meta The record's metadata
  * @param options Options object
  * @param options.translate i18n translation function
  * @param options.dateLocale date formatting locale string

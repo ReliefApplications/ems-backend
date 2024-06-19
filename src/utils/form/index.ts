@@ -15,3 +15,4 @@ export * from './getDisplayText';
 export * from './checkRecordValidation';
 export * from './getAccessibleFields';
 export * from './checkRecordTriggers';
+export * from './generateData';

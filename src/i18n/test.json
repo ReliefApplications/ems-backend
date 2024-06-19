@@ -22,6 +22,7 @@
 			"date": "******",
 			"displayName": "******",
 			"exportDate": "******",
+			"fieldName": "******",
 			"fields": "******",
 			"form": "******",
 			"fromDate": "******",
@@ -198,6 +199,9 @@
 			}
 		},
 		"record": {
+			"add": {
+				"recordAlreadyExists": "******"
+			},
 			"convert": {
 				"errors": {
 					"invalidConversion": "******"

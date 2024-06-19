@@ -14,7 +14,7 @@ import {
   // checkRecordValidation,
 } from '@utils/form';
 import { RecordType } from '../types';
-import { hasInaccessibleFields } from './editRecord.mutation';
+import { inaccessibleFields } from './editRecord.mutation';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
@@ -70,7 +70,7 @@ export default {
         const ability = await extendAbilityForRecords(user, record.form);
         if (
           ability.can('update', record) &&
-          !hasInaccessibleFields(record, args.data, ability)
+          inaccessibleFields(record, args.data, ability).length === 0
         ) {
           // const validationErrors = checkRecordValidation(
           //   record,

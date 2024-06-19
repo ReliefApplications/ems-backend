@@ -15,6 +15,7 @@ import { EventType } from '@utils/events/event.model';
 
 /** Arguments for the addRecord mutation */
 type AddRecordArgs = {
+  id?: string | Types.ObjectId;
   form?: string | Types.ObjectId;
   data: any;
 };
@@ -27,6 +28,7 @@ type AddRecordArgs = {
 export default {
   type: RecordType,
   args: {
+    id: { type: GraphQLID },
     form: { type: GraphQLID },
     data: { type: new GraphQLNonNull(GraphQLJSON) },
   },
@@ -76,45 +78,60 @@ export default {
       // Create the record instance
       transformRecord(args.data, form.fields);
 
+      // If an id is supplied, we check if another record with the same id exists
+      if (args.id) {
+        const existingRecord = await Record.findById(args.id);
+        if (existingRecord) {
+          throw new GraphQLError(
+            context.i18next.t('mutations.record.add.recordAlreadyExists')
+          );
+        }
+      }
+
       const { incrementalId, incID } = await getNextId(
         String(form.resource ? form.resource : args.form)
       );
 
-      const record = new Record({
-        incrementalId,
-        incID,
-        form: args.form,
-        //createdAt: new Date(),
-        //modifiedAt: new Date(),
-        data: args.data,
-        resource: form.resource ? form.resource : null,
-        createdBy: {
-          user: user._id,
-          roles: user.roles.map((x) => x._id),
-          positionAttributes: user.positionAttributes.map((x) => {
-            return {
-              value: x.value,
-              category: x.category._id,
-            };
-          }),
-        },
-        lastUpdateForm: form.id,
-        _createdBy: {
-          user: {
-            _id: context.user._id,
-            name: context.user.name,
-            username: context.user.username,
+      const record = new Record(
+        Object.assign(
+          {
+            incrementalId,
+            incID,
+            form: args.form,
+            //createdAt: new Date(),
+            //modifiedAt: new Date(),
+            data: args.data,
+            resource: form.resource ? form.resource : null,
+            createdBy: {
+              user: user._id,
+              roles: user.roles.map((x) => x._id),
+              positionAttributes: user.positionAttributes.map((x) => {
+                return {
+                  value: x.value,
+                  category: x.category._id,
+                };
+              }),
+            },
+            lastUpdateForm: form.id,
+            _createdBy: {
+              user: {
+                _id: context.user._id,
+                name: context.user.name,
+                username: context.user.username,
+              },
+            },
+            _form: {
+              _id: form._id,
+              name: form.name,
+            },
+            _lastUpdateForm: {
+              _id: form._id,
+              name: form.name,
+            },
           },
-        },
-        _form: {
-          _id: form._id,
-          name: form.name,
-        },
-        _lastUpdateForm: {
-          _id: form._id,
-          name: form.name,
-        },
-      });
+          args.id ? { _id: new Types.ObjectId(args.id) } : {}
+        )
+      );
       // Update the createdBy property if we pass some owner data
       const ownership = getOwnership(form.fields, args.data);
       if (ownership) {
