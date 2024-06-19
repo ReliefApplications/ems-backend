@@ -128,6 +128,7 @@
 		"form": {
 			"add": {
 				"errors": {
+					"koboForm": "An error occurred when trying to create a new form from a Kobo form",
 					"resourceDuplicated": "An existing resource with that name already exists."
 				}
 			},

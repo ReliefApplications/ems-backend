@@ -128,6 +128,7 @@
 		"form": {
 			"add": {
 				"errors": {
+					"koboForm": "******",
 					"resourceDuplicated": "******"
 				}
 			},

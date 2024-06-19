@@ -55,6 +55,8 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             valueName: question.$autoname.toLowerCase(),
             isRequired: question.required,
             inputType: 'number',
+            ...(question.hint && { description: question.hint[0] }),
+            ...(question.default && { defaultValue: question.default }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -66,6 +68,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             title: question.label[0],
             valueName: question.$autoname.toLowerCase(),
             isRequired: question.required,
+            ...(question.hint && { description: question.hint[0] }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -86,6 +89,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
                 text: choice.label[0],
               })),
             showSelectAllItem: true,
+            ...(question.hint && { description: question.hint[0] }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -98,6 +102,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             isRequired: question.required,
             valueName: question.$autoname.toLowerCase(),
             inputType: 'date',
+            ...(question.hint && { description: question.hint[0] }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -108,6 +113,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             name: question.$autoname.toLowerCase(),
             title: question.label[0],
             valueName: question.$autoname.toLowerCase(),
+            ...(question.hint && { description: question.hint[0] }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -129,6 +135,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
                 value: choice.$autovalue,
                 text: choice.label[0],
               })),
+            ...(question.hint && { description: question.hint[0] }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -150,6 +157,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
                 value: choice.$autovalue,
                 text: choice.label[0],
               })),
+            ...(question.hint && { description: question.hint[0] }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -161,6 +169,8 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             title: question.label[0],
             isRequired: question.required,
             valueName: question.$autoname.toLowerCase(),
+            ...(question.hint && { description: question.hint[0] }),
+            ...(question.default && { defaultValue: question.default }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -173,6 +183,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             isRequired: question.required,
             valueName: question.$autoname.toLowerCase(),
             inputType: 'time',
+            ...(question.hint && { description: question.hint[0] }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -187,6 +198,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             valueName: question.$autoname.toLowerCase(),
             storeDataAsText: false,
             maxSize: 7340032,
+            ...(question.hint && { description: question.hint[0] }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -199,6 +211,8 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             isRequired: question.required,
             valueName: question.$autoname.toLowerCase(),
             inputType: 'number',
+            ...(question.hint && { description: question.hint[0] }),
+            ...(question.default && { defaultValue: question.default }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -211,6 +225,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             isRequired: question.required,
             valueName: question.$autoname.toLowerCase(),
             inputType: 'datetime-local',
+            ...(question.hint && { description: question.hint[0] }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -221,6 +236,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             name: question.$autoname.toLowerCase(),
             title: question.label[0],
             valueName: question.$autoname.toLowerCase(),
+            ...(question.hint && { description: question.hint[0] }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -232,7 +248,9 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             title: question.label[0],
             valueName: question.$autoname.toLowerCase(),
             inputType: 'range',
-            step: question.parameters.split('step=1')[1],
+            step: question.parameters.split('step=')[1],
+            ...(question.hint && { description: question.hint[0] }),
+            ...(question.default && { defaultValue: question.default }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;

@@ -5,8 +5,19 @@ import {
   GraphQLError,
 } from 'graphql';
 import { validateGraphQLTypeName } from '@utils/validators';
-import { extractKoboFields } from '@utils/form';
-import { Resource, Form, Role, ReferenceData, ApiConfiguration } from '@models';
+import {
+  extractFields,
+  extractKoboFields,
+  findDuplicateFields,
+} from '@utils/form';
+import {
+  Resource,
+  Form,
+  Role,
+  ReferenceData,
+  ApiConfiguration,
+  Version,
+} from '@models';
 import { FormType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { status } from '@const/enumTypes';
@@ -17,6 +28,7 @@ import { Context } from '@server/apollo/context';
 import axios from 'axios';
 import config from 'config';
 import * as CryptoJS from 'crypto-js';
+import checkDefaultFields from '@utils/form/checkDefaultFields';
 
 /** Arguments for the addForm mutation */
 type AddFormArgs = {
@@ -103,15 +115,32 @@ export default {
           const choices = response.data.content.choices;
           const title = response.data.name;
 
-          // get structure
+          // Get structure from the kobo form
           const structure = JSON.stringify(
             extractKoboFields(survey, title, choices)
           );
 
-          // create resource
+          // Extract fields
+          const fields = [];
+          const structureObj = JSON.parse(structure);
+          for (const page of structureObj.pages) {
+            await extractFields(page, fields, true);
+            findDuplicateFields(fields);
+          }
+          // Check if default fields are used
+          checkDefaultFields(fields);
+
+          // Create version with structure
+          const version = new Version({
+            data: structure,
+          });
+          await version.save();
+
+          // create resource and form
           const resource = new Resource({
             name: args.name,
             permissions: defaultResourcePermissions,
+            fields,
           });
           await resource.save();
           const form = new Form({
@@ -121,11 +150,21 @@ export default {
             resource,
             core: true,
             permissions: defaultFormPermissions,
-            structure: structure,
+            structure,
+            fields,
+            versions: [version._id],
           });
           await form.save();
           return form;
-        } else if (!args.resource) {
+        }
+      } catch (err) {
+        logger.error(err.message, { stack: err.stack });
+        throw new GraphQLError(
+          context.i18next.t('mutations.form.add.errors.koboForm:')
+        );
+      }
+      try {
+        if (!args.resource) {
           // Check permission to create resource
           if (ability.cannot('create', 'Resource')) {
             throw new GraphQLError(
