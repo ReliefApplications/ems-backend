@@ -26,6 +26,50 @@ const AVAILABLE_TYPES = [
 ];
 
 /**
+ * Maps the "Skip Logic" expression of kobo questions (used to display the question only if the expression is true)
+ * to a condition that will work with the visibleIf property of the SurveyJS.
+ *
+ * The numeric operators (Greater than >, Less than <, Greater than or equal to >=, Less than or equal to <=) are used the in same way in Kobo and SurveyJS.
+ *
+ * @param koboExpression the initial kobo logic expression
+ * @returns the mapped logic expression that will work on the SurveyJS form
+ */
+const mapKoboSkipLogic = (koboExpression: string) => {
+  // Not contains
+  koboExpression = koboExpression.replace(
+    /not\(selected\(\$\{(\w+)\}, '(.*?)'\)\)/g,
+    "{$1} notcontains '$2'"
+  );
+  // Empty
+  koboExpression = koboExpression.replace(/\$\{(\w+)\} = ''/g, '{$1} empty');
+  // Equal to
+  koboExpression = koboExpression.replace(
+    /\$\{(\w+)\} = '(.*?)'/g,
+    "({$1} = '$2')"
+  );
+  // Contains
+  koboExpression = koboExpression.replace(
+    /selected\(\$\{(\w+)\}, '(.*?)'\)/g,
+    "{$1} contains '$2'"
+  );
+  // No empty
+  koboExpression = koboExpression.replace(
+    /\$\{(\w+)\} != ''/g,
+    '{$1} notempty'
+  );
+  // Not equal to
+  koboExpression = koboExpression.replace(
+    /\$\{(\w+)\} != '(.*?)'/g,
+    "{$1} <> '$2'"
+  );
+  // Date values
+  koboExpression = koboExpression.replace(/date\('(.*?)'\)/g, "'$1'");
+  // Replace any remaining ${variable} to {variable}
+  koboExpression = koboExpression.replace(/\$\{(\w+)\}/g, '{$1}');
+  return koboExpression;
+};
+
+/**
  * Extract kobo form fields and convert to oort fields
  *
  * @param survey survey structure
@@ -61,6 +105,9 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             inputType: 'number',
             ...(question.hint && { description: question.hint[0] }),
             ...(question.default && { defaultValue: question.default }),
+            ...(question.relevant && {
+              visibleIf: mapKoboSkipLogic(question.relevant),
+            }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -74,6 +121,9 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             valueName: question.$autoname.toLowerCase(),
             isRequired: question.required,
             ...(question.hint && { description: question.hint[0] }),
+            ...(question.relevant && {
+              visibleIf: mapKoboSkipLogic(question.relevant),
+            }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -103,6 +153,9 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
               question.parameters.split('randomize=')[1]?.includes('true') && {
                 choicesOrder: 'random',
               }),
+            ...(question.relevant && {
+              visibleIf: mapKoboSkipLogic(question.relevant),
+            }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -116,6 +169,9 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             valueName: question.$autoname.toLowerCase(),
             inputType: 'date',
             ...(question.hint && { description: question.hint[0] }),
+            ...(question.relevant && {
+              visibleIf: mapKoboSkipLogic(question.relevant),
+            }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -127,6 +183,9 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             title: question.label[0],
             valueName: question.$autoname.toLowerCase(),
             ...(question.hint && { description: question.hint[0] }),
+            ...(question.relevant && {
+              visibleIf: mapKoboSkipLogic(question.relevant),
+            }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -149,6 +208,9 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
                 text: choice.label[0],
               })),
             ...(question.hint && { description: question.hint[0] }),
+            ...(question.relevant && {
+              visibleIf: mapKoboSkipLogic(question.relevant),
+            }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -171,6 +233,9 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
                 text: choice.label[0],
               })),
             ...(question.hint && { description: question.hint[0] }),
+            ...(question.relevant && {
+              visibleIf: mapKoboSkipLogic(question.relevant),
+            }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -184,6 +249,9 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             valueName: question.$autoname.toLowerCase(),
             ...(question.hint && { description: question.hint[0] }),
             ...(question.default && { defaultValue: question.default }),
+            ...(question.relevant && {
+              visibleIf: mapKoboSkipLogic(question.relevant),
+            }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -197,6 +265,9 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             valueName: question.$autoname.toLowerCase(),
             inputType: 'time',
             ...(question.hint && { description: question.hint[0] }),
+            ...(question.relevant && {
+              visibleIf: mapKoboSkipLogic(question.relevant),
+            }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -214,6 +285,9 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             storeDataAsText: false,
             maxSize: 7340032,
             ...(question.hint && { description: question.hint[0] }),
+            ...(question.relevant && {
+              visibleIf: mapKoboSkipLogic(question.relevant),
+            }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -228,6 +302,9 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             inputType: 'number',
             ...(question.hint && { description: question.hint[0] }),
             ...(question.default && { defaultValue: question.default }),
+            ...(question.relevant && {
+              visibleIf: mapKoboSkipLogic(question.relevant),
+            }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -241,6 +318,9 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             valueName: question.$autoname.toLowerCase(),
             inputType: 'datetime-local',
             ...(question.hint && { description: question.hint[0] }),
+            ...(question.relevant && {
+              visibleIf: mapKoboSkipLogic(question.relevant),
+            }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -252,6 +332,9 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             title: question.label[0],
             valueName: question.$autoname.toLowerCase(),
             ...(question.hint && { description: question.hint[0] }),
+            ...(question.relevant && {
+              visibleIf: mapKoboSkipLogic(question.relevant),
+            }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -266,6 +349,9 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             step: question.parameters.split('step=')[1],
             ...(question.hint && { description: question.hint[0] }),
             ...(question.default && { defaultValue: question.default }),
+            ...(question.relevant && {
+              visibleIf: mapKoboSkipLogic(question.relevant),
+            }),
           };
           questions.pages[0].elements.push(newQuestion);
           break;
