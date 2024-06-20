@@ -116,7 +116,7 @@ router.post('/send-email/:configId', async (req, res) => {
         const nestedFields = getFields(dataset?.fields ?? [])?.nestedField;
         const resource = await Resource.findOne({
           _id: dataset.resource.id,
-        });
+        }).select('name fields');
         if (!resource) {
           return res.status(404).send(req.t('common.errors.dataNotFound'));
         }
