@@ -26,15 +26,21 @@ const AVAILABLE_TYPES = [
 ];
 
 /**
- * Maps the "Skip Logic" expression of kobo questions (used to display the question only if the expression is true)
- * to a condition that will work with the visibleIf property of the SurveyJS.
+ * Maps expressions from kobo questions to a expression format that will work on the SurveyJS.
  *
  * The numeric operators (Greater than >, Less than <, Greater than or equal to >=, Less than or equal to <=) are used the in same way in Kobo and SurveyJS.
  *
  * @param koboExpression the initial kobo logic expression
+ * @param questionName name of the question to replace in the expression
  * @returns the mapped logic expression that will work on the SurveyJS form
  */
-const mapKoboSkipLogic = (koboExpression: string) => {
+const mapKoboExpression = (koboExpression: string, questionName?: string) => {
+  // Replace . with {questionName}
+  if (questionName) {
+    // Expressions in Kobo can have ' . ' to indicate that the expression is about the question in which it is defined.
+    // Example: a Validation Criteria can be ". > 5 ": the value of the question itself must be greater than 5
+    koboExpression = koboExpression.replace(/\./g, `{${questionName}}`);
+  }
   // Not contains
   koboExpression = koboExpression.replace(
     /not\(selected\(\$\{(\w+)\}, '(.*?)'\)\)/g,
@@ -91,6 +97,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
 
   let scoreChoiceId = '';
   let rankChoiceId = '';
+  let constraintMessage = '';
 
   survey.map((question: any) => {
     if (AVAILABLE_TYPES.includes(question.type)) {
@@ -106,7 +113,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             ...(question.hint && { description: question.hint[0] }),
             ...(question.default && { defaultValue: question.default }),
             ...(question.relevant && {
-              visibleIf: mapKoboSkipLogic(question.relevant),
+              visibleIf: mapKoboExpression(question.relevant),
             }),
           };
           questions.pages[0].elements.push(newQuestion);
@@ -122,7 +129,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             isRequired: question.required,
             ...(question.hint && { description: question.hint[0] }),
             ...(question.relevant && {
-              visibleIf: mapKoboSkipLogic(question.relevant),
+              visibleIf: mapKoboExpression(question.relevant),
             }),
           };
           questions.pages[0].elements.push(newQuestion);
@@ -154,7 +161,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
                 choicesOrder: 'random',
               }),
             ...(question.relevant && {
-              visibleIf: mapKoboSkipLogic(question.relevant),
+              visibleIf: mapKoboExpression(question.relevant),
             }),
           };
           questions.pages[0].elements.push(newQuestion);
@@ -170,7 +177,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             inputType: 'date',
             ...(question.hint && { description: question.hint[0] }),
             ...(question.relevant && {
-              visibleIf: mapKoboSkipLogic(question.relevant),
+              visibleIf: mapKoboExpression(question.relevant),
             }),
           };
           questions.pages[0].elements.push(newQuestion);
@@ -184,7 +191,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             valueName: question.$autoname.toLowerCase(),
             ...(question.hint && { description: question.hint[0] }),
             ...(question.relevant && {
-              visibleIf: mapKoboSkipLogic(question.relevant),
+              visibleIf: mapKoboExpression(question.relevant),
             }),
           };
           questions.pages[0].elements.push(newQuestion);
@@ -209,14 +216,16 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
               })),
             ...(question.hint && { description: question.hint[0] }),
             ...(question.relevant && {
-              visibleIf: mapKoboSkipLogic(question.relevant),
+              visibleIf: mapKoboExpression(question.relevant),
             }),
+            // This question does not have Validation Criteria settings
           };
           questions.pages[0].elements.push(newQuestion);
           break;
         }
         case 'begin_rank': {
           rankChoiceId = question['kobo--rank-items'];
+          constraintMessage = question['kobo--rank-constraint-message'];
           break;
         }
         case 'rank__level': {
@@ -234,8 +243,9 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
               })),
             ...(question.hint && { description: question.hint[0] }),
             ...(question.relevant && {
-              visibleIf: mapKoboSkipLogic(question.relevant),
+              visibleIf: mapKoboExpression(question.relevant),
             }),
+            // This question does not have Validation Criteria settings
           };
           questions.pages[0].elements.push(newQuestion);
           break;
@@ -250,7 +260,20 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             ...(question.hint && { description: question.hint[0] }),
             ...(question.default && { defaultValue: question.default }),
             ...(question.relevant && {
-              visibleIf: mapKoboSkipLogic(question.relevant),
+              visibleIf: mapKoboExpression(question.relevant),
+            }),
+            ...(question.constraint && {
+              validators: [
+                {
+                  type: 'expression',
+                  text: question.constraint_message ?? '',
+                  expression: mapKoboExpression(
+                    question.constraint,
+                    question.$autoname.toLowerCase()
+                  ),
+                },
+              ],
+              validateOnValueChange: true,
             }),
           };
           questions.pages[0].elements.push(newQuestion);
@@ -266,7 +289,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             inputType: 'time',
             ...(question.hint && { description: question.hint[0] }),
             ...(question.relevant && {
-              visibleIf: mapKoboSkipLogic(question.relevant),
+              visibleIf: mapKoboExpression(question.relevant),
             }),
           };
           questions.pages[0].elements.push(newQuestion);
@@ -286,7 +309,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             maxSize: 7340032,
             ...(question.hint && { description: question.hint[0] }),
             ...(question.relevant && {
-              visibleIf: mapKoboSkipLogic(question.relevant),
+              visibleIf: mapKoboExpression(question.relevant),
             }),
           };
           questions.pages[0].elements.push(newQuestion);
@@ -303,7 +326,20 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             ...(question.hint && { description: question.hint[0] }),
             ...(question.default && { defaultValue: question.default }),
             ...(question.relevant && {
-              visibleIf: mapKoboSkipLogic(question.relevant),
+              visibleIf: mapKoboExpression(question.relevant),
+            }),
+            ...(question.constraint && {
+              validators: [
+                {
+                  type: 'expression',
+                  text: question.constraint_message ?? '',
+                  expression: mapKoboExpression(
+                    question.constraint,
+                    question.$autoname.toLowerCase()
+                  ),
+                },
+              ],
+              validateOnValueChange: true,
             }),
           };
           questions.pages[0].elements.push(newQuestion);
@@ -319,7 +355,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             inputType: 'datetime-local',
             ...(question.hint && { description: question.hint[0] }),
             ...(question.relevant && {
-              visibleIf: mapKoboSkipLogic(question.relevant),
+              visibleIf: mapKoboExpression(question.relevant),
             }),
           };
           questions.pages[0].elements.push(newQuestion);
@@ -333,7 +369,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             valueName: question.$autoname.toLowerCase(),
             ...(question.hint && { description: question.hint[0] }),
             ...(question.relevant && {
-              visibleIf: mapKoboSkipLogic(question.relevant),
+              visibleIf: mapKoboExpression(question.relevant),
             }),
           };
           questions.pages[0].elements.push(newQuestion);
@@ -350,7 +386,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             ...(question.hint && { description: question.hint[0] }),
             ...(question.default && { defaultValue: question.default }),
             ...(question.relevant && {
-              visibleIf: mapKoboSkipLogic(question.relevant),
+              visibleIf: mapKoboExpression(question.relevant),
             }),
           };
           questions.pages[0].elements.push(newQuestion);
