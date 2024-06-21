@@ -17,6 +17,7 @@ import i18next from 'i18next';
 import get from 'lodash/get';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import validator from 'email-validator';
 import { insertRecords as insertRecordsPulljob } from '@server/pullJobScheduler';
 import jwtDecode from 'jwt-decode';
 import { GraphQLError } from 'graphql';
@@ -472,4 +473,80 @@ router.post('/style/:application', async (req, res) => {
   }
 });
 
+/* Import email address from excel file for the distribution list */
+router.post('/distributionList', async (req: any, res) => {
+  try {
+    // Check file
+    if (!req.files || Object.keys(req.files).length === 0)
+      return res
+        .status(400)
+        .send(i18next.t('routes.upload.errors.missingFile'));
+    // Get the file from request
+    const file = req.files.excelFile;
+    // Check file extension (only allowed .xlsx)
+    if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
+      return res
+        .status(400)
+        .send(i18next.t('common.errors.fileExtensionNotAllowed'));
+
+    // Distribution list emails
+    const emails = {
+      Cc: [],
+      Bcc: [],
+      To: [],
+    };
+    const workbook = new Workbook();
+    await workbook.xlsx.load(file.data).then(() => {
+      const distributionList = workbook.getWorksheet('distributionList');
+      distributionList.eachRow({ includeEmpty: false }, (row, rowCount) => {
+        const toAddress = row?.values[1];
+        const ccAddress = row?.values[2];
+        const bccAddress = row?.values[3];
+
+        if (rowCount !== 1) {
+          /* if provided cell value is plain text */
+          if (typeof toAddress === 'string') {
+            if (validator.validate(toAddress)) {
+              emails.To.push(toAddress);
+            }
+          }
+          if (typeof ccAddress === 'string') {
+            if (validator.validate(ccAddress)) {
+              emails.Cc.push(ccAddress);
+            }
+          }
+
+          if (typeof bccAddress === 'string') {
+            if (validator.validate(bccAddress)) {
+              emails.Bcc.push(bccAddress);
+            }
+          }
+
+          /* if provided cell value is object */
+          if (typeof toAddress === 'object') {
+            if (validator.validate(toAddress?.text)) {
+              emails.To.push(toAddress?.text);
+            }
+          }
+
+          if (typeof ccAddress === 'object') {
+            if (validator.validate(ccAddress?.text)) {
+              emails.Cc.push(ccAddress?.text);
+            }
+          }
+
+          if (typeof bccAddress === 'object') {
+            if (validator.validate(bccAddress?.text)) {
+              emails.Bcc.push(bccAddress?.text);
+            }
+          }
+        }
+      });
+    });
+    res.status(200).send(emails);
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    return res.status(500).send(req.t('common.errors.internalServerError'));
+  }
+});
 export default router;
