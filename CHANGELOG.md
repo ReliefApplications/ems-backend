@@ -1,3 +1,10 @@
+# [2.11.0-rc.2](https://github.com/ReliefApplications/ems-backend/compare/v2.11.0-rc.1...v2.11.0-rc.2) (2024-06-21)
+
+
+### Features
+
+* Email notification feature ([#1005](https://github.com/ReliefApplications/ems-backend/issues/1005)) ([55d671a](https://github.com/ReliefApplications/ems-backend/commit/55d671a78cd073dfd74d1a9e7e48c12e2c3da766))
+
 # [2.11.0-rc.1](https://github.com/ReliefApplications/ems-backend/compare/v2.10.3-rc.2...v2.11.0-rc.1) (2024-06-11)
 
 
