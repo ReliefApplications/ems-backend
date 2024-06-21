@@ -1,3 +1,21 @@
+# [2.11.0](https://github.com/ReliefApplications/ems-backend/compare/v2.10.3...v2.11.0) (2024-06-21)
+
+
+### Bug Fixes
+
+* Deleting resource breaks schema ([#1099](https://github.com/ReliefApplications/ems-backend/issues/1099)) ([595f294](https://github.com/ReliefApplications/ems-backend/commit/595f2941e69f3e2271368c8447434dde5155811b))
+
+
+### Features
+
+* allow null values in aggregation ([afe4656](https://github.com/ReliefApplications/ems-backend/commit/afe4656ca8e26cf90659a9bffdffbc78c1547ef8))
+* Email notification feature ([#1005](https://github.com/ReliefApplications/ems-backend/issues/1005)) ([55d671a](https://github.com/ReliefApplications/ems-backend/commit/55d671a78cd073dfd74d1a9e7e48c12e2c3da766))
+
+
+### Reverts
+
+* Revert "bug: Deleting resource breaks schema (#1099)" (#1101) ([e99b0dc](https://github.com/ReliefApplications/ems-backend/commit/e99b0dccbd3ffec2ec03eb026a35a45b7c342fb2)), closes [#1099](https://github.com/ReliefApplications/ems-backend/issues/1099) [#1101](https://github.com/ReliefApplications/ems-backend/issues/1101)
+
 # [2.11.0-rc.2](https://github.com/ReliefApplications/ems-backend/compare/v2.11.0-rc.1...v2.11.0-rc.2) (2024-06-21)
 
 
