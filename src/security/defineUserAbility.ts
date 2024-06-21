@@ -34,6 +34,7 @@ import {
   DistributionList,
   CustomNotification,
   Layer,
+  EmailNotification,
 } from '@models';
 
 /** Define available permissions on objects */
@@ -71,7 +72,8 @@ type Models =
   | Version
   | Workflow
   | CustomNotification
-  | Layer;
+  | Layer
+  | EmailNotification;
 export type Subjects = InferSubjects<Models>;
 
 // eslint-disable-next-line deprecation/deprecation
@@ -341,6 +343,13 @@ export default function defineUserAbility(user: User | Client): AppAbility {
   === */
   if (userGlobalPermissions.includes(permissions.canSeeLayer)) {
     can(['create', 'read', 'update', 'delete'], 'Layer');
+  }
+
+  /* ===
+    Creation / Access / Edition / Deletion of email notification
+  === */
+  if (userGlobalPermissions.includes(permissions.canManageEmailNotifications)) {
+    can(['create', 'read', 'update', 'delete'], 'EmailNotification');
   }
 
   return abilityBuilder.build({ conditionsMatcher });
