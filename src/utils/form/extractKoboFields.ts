@@ -69,8 +69,12 @@ const mapKoboExpression = (koboExpression: string, questionName?: string) => {
     /\$\{(\w+)\} != '(.*?)'/g,
     "{$1} <> '$2'"
   );
+  // Replace ends-with with endsWith
+  koboExpression = koboExpression.replace(/ends-with\(/g, 'endsWith(');
   // Replace if with iif
   koboExpression = koboExpression.replace(/if\(/g, 'iif(');
+  // Replace now() with currentDate()
+  koboExpression = koboExpression.replace(/now\(\)/g, 'currentDate()');
   // Date values
   koboExpression = koboExpression.replace(/date\('(.*?)'\)/g, "'$1'");
   // Replace any remaining ${variable} to {variable}
@@ -94,10 +98,7 @@ const validators = (question: any) => {
             ? question.constraint_message
             : question.constraint_message[0]
           : '',
-        expression: mapKoboExpression(
-          question.constraint,
-          question.$autoname.toLowerCase()
-        ),
+        expression: mapKoboExpression(question.constraint, question.$autoname),
       },
     ],
     validateOnValueChange: true,
@@ -115,13 +116,12 @@ const validators = (question: any) => {
 const commonProperties = (question: any, type: string, title?: string) => {
   return {
     type,
-    name: question.$autoname.toLowerCase(),
+    name: question.$autoname,
     title: title ?? question.label[0],
-    valueName: question.$autoname.toLowerCase(),
+    valueName: question.$autoname,
     isRequired: question.required,
     ...(question.hint && { description: question.hint[0] }),
-    // TODO: make sure that the defaultValue works for all type of questions. Works for sure for the questions type: integer, text, decimal, range.
-    ...(question.default && { defaultValue: question.default }),
+    ...(question.default && { defaultValue: question.default }), // TODO: add mapKoboExpression because the value can be a expression or function
     ...(question.relevant && {
       visibleIf: mapKoboExpression(question.relevant),
     }),
