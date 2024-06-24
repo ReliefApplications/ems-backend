@@ -70,7 +70,7 @@ import fetchGroups from './fetchGroups.mutation';
 import addAggregation from './addAggregation.mutation';
 import editAggregation from './editAggregation.mutation';
 import deleteAggregation from './deleteAggregation.mutation';
-import addTemplate from './addTemplate.mutation';
+import addEmailTemplate from './addEmailTemplate.mutation';
 import editTemplate from './editTemplate.mutation';
 import deleteTemplate from './deleteTemplate.mutation';
 import addDistributionList from './addDistributionList.mutation';
@@ -87,6 +87,8 @@ import restorePage from './restorePage.mutation';
 import addDraftRecord from './addDraftRecord.mutation';
 import deleteDraftRecord from './deleteDraftRecord.mutation';
 import editDraftRecord from './editDraftRecord.mutation';
+import addDashboardTemplate from './addDashboardTemplate.mutation';
+import deleteDashboardTemplates from './deleteDashboardTemplates.mutation';
 
 /** GraphQL mutation definition */
 const Mutation = new GraphQLObjectType({
@@ -109,7 +111,7 @@ const Mutation = new GraphQLObjectType({
     addRoleToUsers,
     addStep,
     addSubscription,
-    addTemplate,
+    addEmailTemplate,
     addUsers,
     addWorkflow,
     convertRecord,
@@ -180,6 +182,8 @@ const Mutation = new GraphQLObjectType({
     addDraftRecord,
     deleteDraftRecord,
     editDraftRecord,
+    addDashboardTemplate,
+    deleteDashboardTemplates,
   },
 });
 
