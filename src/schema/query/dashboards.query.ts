@@ -1,14 +1,16 @@
-import { GraphQLList, GraphQLBoolean, GraphQLError } from 'graphql';
+import { GraphQLList, GraphQLBoolean, GraphQLError, GraphQLID } from 'graphql';
 import { contentType } from '@const/enumTypes';
 import { Page, Step, Dashboard } from '@models';
 import { DashboardType } from '../types';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
+import { Types } from 'mongoose';
 
 /** Arguments for the dashboards query */
 type DashboardsArgs = {
   all?: boolean;
+  ids?: (string | Types.ObjectId)[];
 };
 
 /**
@@ -19,12 +21,16 @@ export default {
   type: new GraphQLList(DashboardType),
   args: {
     all: { type: GraphQLBoolean },
+    ids: { type: new GraphQLList(GraphQLID) },
   },
   async resolve(parent, args: DashboardsArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const ability = context.user.ability;
       const filters = {};
+      if (args.ids) {
+        return await Dashboard.find({ _id: { $in: args.ids } });
+      }
       if (!args.all) {
         const contentIds = await Page.find({
           type: { $eq: contentType.dashboard },

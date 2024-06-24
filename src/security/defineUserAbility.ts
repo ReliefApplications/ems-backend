@@ -36,6 +36,7 @@ import {
   Layer,
   EmailNotification,
 } from '@models';
+import { resourcePermission } from '@types';
 
 /** Define available permissions on objects */
 export type ObjectPermissions = keyof (ApiConfiguration['permissions'] &
@@ -47,7 +48,13 @@ export type ObjectPermissions = keyof (ApiConfiguration['permissions'] &
   Step['permissions']);
 
 /** Define actions types for casl */
-export type Actions = 'create' | 'read' | 'update' | 'delete' | 'manage';
+export type Actions =
+  | 'create'
+  | 'read'
+  | 'update'
+  | 'delete'
+  | 'manage'
+  | 'download';
 
 /** Define subjects types for casl */
 type Models =
@@ -193,8 +200,16 @@ export default function defineUserAbility(user: User | Client): AppAbility {
     can('read', ['Form', 'Record']);
   } else {
     can('read', 'Form', filters('canSee', user));
-    can('read', 'Form', filters('canSeeRecords', user, { suffix: 'role' }));
-    can('read', 'Form', filters('canCreateRecords', user, { suffix: 'role' }));
+    can(
+      'read',
+      'Form',
+      filters(resourcePermission.SEE_RECORDS, user, { suffix: 'role' })
+    );
+    can(
+      'read',
+      'Form',
+      filters(resourcePermission.CREATE_RECORDS, user, { suffix: 'role' })
+    );
   }
 
   /* ===
@@ -219,14 +234,19 @@ export default function defineUserAbility(user: User | Client): AppAbility {
     Access of resources
   === */
   if (userGlobalPermissions.includes(permissions.canSeeResources)) {
-    can('read', ['Resource', 'Record']);
+    can('read', 'Resource');
+    can(['read', 'download'], 'Record');
   } else {
     can('read', 'Resource', filters('canSee', user));
-    can('read', 'Resource', filters('canSeeRecords', user, { suffix: 'role' }));
     can(
       'read',
       'Resource',
-      filters('canCreateRecords', user, { suffix: 'role' })
+      filters(resourcePermission.SEE_RECORDS, user, { suffix: 'role' })
+    );
+    can(
+      'read',
+      'Resource',
+      filters(resourcePermission.CREATE_RECORDS, user, { suffix: 'role' })
     );
   }
 
@@ -242,7 +262,7 @@ export default function defineUserAbility(user: User | Client): AppAbility {
   === */
   if (userGlobalPermissions.includes(permissions.canManageResources)) {
     can(['create', 'read', 'update', 'delete'], ['Resource', 'Record']);
-    can('manage', 'Record');
+    can(['manage', 'download'], 'Record');
   } else {
     can('update', 'Resource', filters('canUpdate', user));
     can('delete', 'Resource', filters('canDelete', user));

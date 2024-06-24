@@ -409,7 +409,7 @@ router.post('/file/:form', async (req, res) => {
     return res.status(200).send({ path });
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    return res.status(500).send(req.t('common.errors.internalServerError'));
+    return res.status(500).send(err.message);
   }
 });
 

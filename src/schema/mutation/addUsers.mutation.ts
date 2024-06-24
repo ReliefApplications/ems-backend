@@ -3,7 +3,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { User, Application } from '@models';
 import { UserType } from '../types';
 import permissions from '@const/permissions';
-import { validateEmail } from '@utils/validators';
+import * as EmailValidator from 'email-validator';
 import { sendAppInvitation, sendCreateAccountInvitation } from '@utils/user';
 import config from 'config';
 import { logger } from '@services/logger.service';
@@ -53,7 +53,9 @@ export default {
           );
         }
       }
-      if (args.users.filter((x) => !validateEmail(x.email)).length > 0) {
+      if (
+        args.users.filter((x) => !EmailValidator.validate(x.email)).length > 0
+      ) {
         throw new GraphQLError(
           context.i18next.t('common.errors.invalidEmailsInput')
         );
