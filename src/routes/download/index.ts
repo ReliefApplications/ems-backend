@@ -72,6 +72,21 @@ const buildUserExport = (req, res, users) => {
 };
 
 /**
+ * Template for distribution list.
+ *
+ * @param res response object
+ * @returns distribution list template.
+ */
+const templateExport = (res) => {
+  const columns = [
+    { name: 'to', title: 'to', field: 'To' },
+    { name: 'cc', title: 'cc', field: 'Cc' },
+    { name: 'bcc', title: 'bcc', field: 'Bcc' },
+  ];
+  return fileBuilder(res, 'distributionList', columns, [], 'xlsx');
+};
+
+/**
  * Get list of fields for user template file
  *
  * @param roles list of roles
@@ -495,6 +510,17 @@ router.post('/users', async (req, res) => {
   }
 });
 
+/**
+ * Export distribution list excel template,
+ */
+router.get('/templates', async (req, res) => {
+  try {
+    return await templateExport(res);
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    return res.status(500).send(req.t('common.errors.internalServerError'));
+  }
+});
 /**
  * Export the users of a specific application,
  * if a list with ids is not provided in the body, export all of them

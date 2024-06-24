@@ -89,6 +89,8 @@ import deleteDraftRecord from './deleteDraftRecord.mutation';
 import editDraftRecord from './editDraftRecord.mutation';
 import addDashboardTemplate from './addDashboardTemplate.mutation';
 import deleteDashboardTemplates from './deleteDashboardTemplates.mutation';
+import addEmailNotification from './addEmailNotification.mutation';
+import editAndGetEmailNotification from './editAndGetEmailNotification.mutation';
 
 /** GraphQL mutation definition */
 const Mutation = new GraphQLObjectType({
@@ -108,6 +110,7 @@ const Mutation = new GraphQLObjectType({
     addRecord,
     addReferenceData,
     addRole,
+    addEmailNotification,
     addRoleToUsers,
     addStep,
     addSubscription,
@@ -147,6 +150,7 @@ const Mutation = new GraphQLObjectType({
     editPage,
     editPageContext,
     editPositionAttributeCategory,
+    editAndGetEmailNotification,
     editPullJob,
     editRecord,
     editRecords,

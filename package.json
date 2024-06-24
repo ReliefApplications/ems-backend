@@ -1,6 +1,6 @@
 {
   "name": "ems-backend",
-  "version": "2.11.0-beta.2",
+  "version": "2.11.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -85,6 +85,7 @@
     "mongoose": "^7.4.3",
     "node-cache": "^5.1.2",
     "node-fetch": "^2.6.1",
+    "node-html-parser": "^6.1.13",
     "nodemailer": "^6.7.2",
     "passport": "^0.6.0",
     "passport-azure-ad": "^4.3.4",
