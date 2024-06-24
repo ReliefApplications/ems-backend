@@ -129,7 +129,7 @@ export default {
             args.contextEl,
             context.dataSources
           ),
-          newTemplate: true,
+          defaultTemplate: true,
         });
 
         return mainDashboard;

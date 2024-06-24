@@ -170,6 +170,6 @@ export const DashboardType = new GraphQLObjectType({
       },
     },
     filter: { type: GraphQLJSON },
-    newTemplate: { type: GraphQLBoolean },
+    defaultTemplate: { type: GraphQLBoolean },
   }),
 });

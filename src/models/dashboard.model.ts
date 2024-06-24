@@ -34,7 +34,7 @@ export interface Dashboard extends Document {
   archivedAt?: Date;
   gridOptions?: any;
   filter?: Filter;
-  newTemplate?: boolean;
+  defaultTemplate?: boolean;
 }
 
 /** Mongoose button schema declaration */
