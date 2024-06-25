@@ -1,4 +1,29 @@
 /**
+ * Saves all groupElement questions equivalent to the panel question.
+ * Groups and panels can be nested.
+ */
+const groupElements = [];
+/**
+ * Saves the repeatGroupElement question equivalent to the dynamic panel question.
+ * Groups and panels can be nested.
+ */
+const repeatGroupElements = [];
+
+/**
+ * SurveyJS survey structure
+ */
+const survey = {
+  title: '',
+  pages: [
+    {
+      name: 'page1',
+      elements: [],
+    },
+  ],
+  showQuestionNumbers: 'off',
+};
+
+/**
  * available fields types in kobo that are compatible with oort
  */
 const AVAILABLE_TYPES = [
@@ -24,6 +49,10 @@ const AVAILABLE_TYPES = [
   'video',
   'geoshape',
   'calculate',
+  'begin_group',
+  'end_group',
+  'begin_repeat',
+  'end_repeat',
 ];
 
 /**
@@ -130,29 +159,67 @@ const commonProperties = (question: any, type: string, title?: string) => {
 };
 
 /**
+ * Get all the groups names that are related to a kobo element.
+ *
+ * @param groupPath string with the group path of the kobo element (e.g. 'group_au9sz58/group_hl8uz79/ig1')
+ * @returns array with all the groups in the groupPath of the element.
+ */
+const getElementsGroups = (groupPath: string) => {
+  const groupDelimiter = 'group_';
+  // Split all the paths in the group path
+  const allPaths = groupPath.split('/');
+  // Filter parts that start with the groupDelimiter (that are group names)
+  return allPaths.filter((part: string) => part.startsWith(groupDelimiter));
+};
+
+/**
+ * Adds a new question/element to the page elements, panel elements or to the dynamic panel template elements
+ *
+ * @param newElement element to add
+ * @param elementPath string with the element path of the kobo element (e.g. 'group_au9sz58/group_hl8uz79/ig1')
+ */
+const addToElements = (newElement: any, elementPath: string | null) => {
+  const groups = elementPath ? getElementsGroups(elementPath) : [];
+  // If element is not part of a group
+  if (!groups.length) {
+    survey.pages[0].elements.push(newElement);
+  } else {
+    // If element is part of a group, find out which one to add it to
+    const groupElement = groupElements.find(
+      (element: any) => element.name === groups[groups.length - 1]
+    );
+    if (groupElement) {
+      groupElement.elements.push(newElement);
+    } else {
+      const repeatGroupElement = repeatGroupElements.find(
+        (element: any) => element.name === groups[groups.length - 1]
+      );
+      if (repeatGroupElement) {
+        repeatGroupElement.templateElements.push(newElement);
+      }
+    }
+  }
+};
+
+/**
  * Extract kobo form fields and convert to oort fields
  *
- * @param survey survey structure
- * @param title title
- * @param choices choices
+ * @param koboSurvey Kobo survey structure
+ * @param title Kobo survey title
+ * @param choices Kobo choices data for the questions
  * @returns oort survey
  */
-export const extractKoboFields = (survey: any, title: string, choices: any) => {
-  const questions = {
-    title: title,
-    pages: [
-      {
-        name: 'page1',
-        elements: [],
-      },
-    ],
-    showQuestionNumbers: 'off',
-  };
-
+export const extractKoboFields = (
+  koboSurvey: any,
+  title: string,
+  choices: any
+) => {
+  survey.title = title;
+  survey.pages[0].elements = [];
   let scoreChoiceId = '';
   let rankChoiceId = '';
 
-  survey.map((question: any) => {
+  koboSurvey.map((question: any) => {
     if (AVAILABLE_TYPES.includes(question.type)) {
       switch (question.type) {
         case 'decimal': {
@@ -160,7 +227,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             ...commonProperties(question, 'text'),
             inputType: 'number',
           };
-          questions.pages[0].elements.push(newQuestion);
+          addToElements(newQuestion, question.$xpath);
           break;
         }
         case 'geoshape':
@@ -168,7 +235,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
           const newQuestion = {
             ...commonProperties(question, 'geospatial'),
           };
-          questions.pages[0].elements.push(newQuestion);
+          addToElements(newQuestion, question.$xpath);
           break;
         }
         case 'select_one':
@@ -194,7 +261,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
                 choicesOrder: 'random',
               }),
           };
-          questions.pages[0].elements.push(newQuestion);
+          addToElements(newQuestion, question.$xpath);
           break;
         }
         case 'date': {
@@ -202,14 +269,14 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             ...commonProperties(question, 'text'),
             inputType: 'date',
           };
-          questions.pages[0].elements.push(newQuestion);
+          addToElements(newQuestion, question.$xpath);
           break;
         }
         case 'note': {
           const newQuestion = {
             ...commonProperties(question, 'expression'),
           };
-          questions.pages[0].elements.push(newQuestion);
+          addToElements(newQuestion, question.$xpath);
           break;
         }
         case 'begin_score': {
@@ -227,7 +294,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
               })),
             // This question does not have Validation Criteria settings (validators property)
           };
-          questions.pages[0].elements.push(newQuestion);
+          addToElements(newQuestion, question.$xpath);
           break;
         }
         case 'begin_rank': {
@@ -245,14 +312,14 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
               })),
             // This question does not have Validation Criteria settings
           };
-          questions.pages[0].elements.push(newQuestion);
+          addToElements(newQuestion, question.$xpath);
           break;
         }
         case 'text': {
           const newQuestion = {
             ...commonProperties(question, 'text'),
           };
-          questions.pages[0].elements.push(newQuestion);
+          addToElements(newQuestion, question.$xpath);
           break;
         }
         case 'time': {
@@ -260,7 +327,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             ...commonProperties(question, 'text'),
             inputType: 'time',
           };
-          questions.pages[0].elements.push(newQuestion);
+          addToElements(newQuestion, question.$xpath);
           break;
         }
         case 'audio':
@@ -272,7 +339,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             storeDataAsText: false,
             maxSize: 7340032,
           };
-          questions.pages[0].elements.push(newQuestion);
+          addToElements(newQuestion, question.$xpath);
           break;
         }
         case 'integer': {
@@ -280,7 +347,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             ...commonProperties(question, 'text'),
             inputType: 'number',
           };
-          questions.pages[0].elements.push(newQuestion);
+          addToElements(newQuestion, question.$xpath);
           break;
         }
         case 'datetime': {
@@ -288,14 +355,14 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             ...commonProperties(question, 'text'),
             inputType: 'datetime-local',
           };
-          questions.pages[0].elements.push(newQuestion);
+          addToElements(newQuestion, question.$xpath);
           break;
         }
         case 'acknowledge': {
           const newQuestion = {
             ...commonProperties(question, 'boolean'),
           };
-          questions.pages[0].elements.push(newQuestion);
+          addToElements(newQuestion, question.$xpath);
           break;
         }
         case 'range': {
@@ -304,7 +371,7 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             inputType: 'range',
             step: question.parameters.split('step=')[1],
           };
-          questions.pages[0].elements.push(newQuestion);
+          addToElements(newQuestion, question.$xpath);
           break;
         }
         case 'calculate': {
@@ -314,11 +381,64 @@ export const extractKoboFields = (survey: any, title: string, choices: any) => {
             expression: mapKoboExpression(question.calculation),
             // This question does not have hint (description)
           };
-          questions.pages[0].elements.push(newQuestion);
+          addToElements(newQuestion, question.$xpath);
+          break;
+        }
+        case 'begin_group': {
+          // Get all the groups names that are related to this group
+          const groups = getElementsGroups(question.$xpath);
+          // Remove the last group because it is this group
+          groups.pop();
+          const newGroupElement = {
+            ...commonProperties(question, 'panel'),
+            state: 'expanded',
+            elements: [],
+            groupId: question.$kuid,
+            // If groups still has names, the last one is the directly parent group (i.e. this group is within another group)
+            parentGroup: groups.length ? groups[groups.length - 1] : null,
+          };
+          groupElements.push(newGroupElement);
+          break;
+        }
+        case 'end_group': {
+          const groupIndex = groupElements.findIndex(
+            (element: any) => element.groupId === question.$kuid.substring(1)
+          );
+          const groupElement = groupElements.splice(groupIndex, 1)[0];
+          addToElements(groupElement, groupElement.parentGroup);
+          break;
+        }
+        case 'begin_repeat': {
+          // Get all the groups names that are related to this group
+          const groups = getElementsGroups(question.$xpath);
+          // Remove the last group because it is this group
+          groups.pop();
+          const newRepeatGroupElement = {
+            ...commonProperties(question, 'paneldynamic'),
+            state: 'expanded',
+            confirmDelete: true,
+            panelCount: 1,
+            templateElements: [],
+            groupId: question.$kuid,
+            // If groups still has group names, the last one is the directly parent group (i.e. this group is within another group)
+            parentGroup: groups.length ? groups[groups.length - 1] : null,
+          };
+          repeatGroupElements.push(newRepeatGroupElement);
+          break;
+        }
+        case 'end_repeat': {
+          const groupIndex = repeatGroupElements.findIndex(
+            (element: any) => element.groupId === question.$kuid.substring(1)
+          );
+          const repeatGroupElement = repeatGroupElements.splice(
+            groupIndex,
+            1
+          )[0];
+          addToElements(repeatGroupElement, repeatGroupElement.parentGroup);
           break;
         }
       }
     }
   });
-  return questions;
+  return survey;
 };
