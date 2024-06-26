@@ -46,6 +46,8 @@ router.get('/application/:id', async (req, res) => {
 
 /**
  * Get raw scss and return it to css.
+ *
+ * @deprecated front-end now handles the scss-to-css logic
  */
 router.post('/scss-to-css', async (req, res) => {
   try {

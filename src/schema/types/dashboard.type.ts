@@ -38,7 +38,7 @@ export const DashboardType = new GraphQLObjectType({
         if (ability.can('update', parent)) {
           return parent.buttons;
         } else {
-          return parent.buttons.filter((button) => {
+          return parent.buttons?.filter((button) => {
             if (button.hasRoleRestriction) {
               return context.user.roles?.some((role) =>
                 button.roles?.includes(role._id || '')
@@ -170,5 +170,6 @@ export const DashboardType = new GraphQLObjectType({
       },
     },
     filter: { type: GraphQLJSON },
+    defaultTemplate: { type: GraphQLBoolean },
   }),
 });

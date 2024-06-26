@@ -304,7 +304,7 @@ export class CustomAPI extends RESTDataSource {
  * @param server Apollo server instance.
  * @returns Definitions of the data sources.
  */
-export default async (server?: ApolloServer<Context>) => {
+const buildDataSources = async (server?: ApolloServer<Context>) => {
   const apiConfigurations = await ApiConfiguration.find({
     status: status.active,
   });
@@ -319,3 +319,27 @@ export default async (server?: ApolloServer<Context>) => {
       _rest: new CustomAPI(server),
     } as Record<string, CustomAPI> & { _rest: CustomAPI });
 };
+
+/**
+ * Create a single data source, fetching api by name. Create also an additional one for classic REST requests.
+ *
+ * @param apiName Name of the api configuration
+ * @param server Apollo server instance.
+ * @returns Definitions of the data sources.
+ */
+export const buildDataSource = async (
+  apiName: string,
+  server?: ApolloServer<Context>
+) => {
+  const apiConfiguration = await ApiConfiguration.findOne({
+    status: status.active,
+    name: apiName,
+  });
+  return () =>
+    ({
+      ...{ [apiConfiguration.name]: new CustomAPI(server, apiConfiguration) },
+      _rest: new CustomAPI(server),
+    } as Record<string, CustomAPI> & { _rest: CustomAPI });
+};
+
+export default buildDataSources;
