@@ -7,6 +7,7 @@ import {
   replaceFooter,
   replaceHeader,
   replaceSubject,
+  buildTableHtml,
 } from '@utils/notification/htmlBuilder';
 import { ProcessedDataset, fetchDatasets } from '@utils/notification/util';
 import { baseTemplate } from '@const/notification';
@@ -413,6 +414,167 @@ router.post('/send-individual-email/:configId', async (req, res) => {
       { stack: err.stack }
     );
     return res.status(500).send(req.t('common.errors.internalServerError'));
+  }
+});
+
+router.post('/send-quick-email', async (req, res) => {
+  try {
+    const { emailDistributionList, emailLayout, tableInfo } = req.body;
+
+    // Generate main html structure
+    const emailElement = parse(`<!DOCTYPE HTML>
+    <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+    
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;">
+        <title>Email Alert</title>
+    </head>
+    
+    <body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" style="width: 100%; background-color: #ffffff; margin: 0; padding: 0; -webkit-font-smoothing: antialiased;">
+        <table border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+                <td height="30"></td>
+            </tr>
+            <tr bgcolor="#4c4e4e">
+                <td width="100%" align="center" valign="top" bgcolor="#ffffff">
+                    <!----------   main content----------->
+                    <table id="mainTable" width="800" style="border: 3px solid #00205c; margin: 0 auto;" cellpadding="0" cellspacing="0" bgcolor="#fff">
+                        
+                    </table>
+                    <!----------   end main content----------->
+                </td>
+            </tr>
+        </table>
+    </body>
+    
+    </html>`);
+
+    const mainTableElement = emailElement.getElementById('mainTable');
+
+    // Add header
+    if (emailLayout.header) {
+      const headerElement = replaceHeader(emailLayout.header);
+      const backgroundColor =
+        emailLayout.header.headerBackgroundColor || '#00205c';
+      const textColor = emailLayout.header.headerTextColor || '#ffffff';
+      mainTableElement.appendChild(
+        parse(
+          `<tr bgcolor = ${backgroundColor} style="${emailLayout.header.headerStyle}"><td style="font-size: 13px; font-family: Helvetica, Arial, sans-serif; color: ${textColor};">${headerElement}</td></tr>`
+        )
+      );
+    }
+
+    mainTableElement.appendChild(
+      parse(`<tr>
+                <td height="25"></td>
+            </tr>`)
+    );
+
+    // Add body with table data
+    if (emailLayout.body) {
+      let bodyHtml = emailLayout.body.bodyHtml;
+      tableInfo.forEach((tableInfoData, index) => {
+        const tableHtml = buildTableHtml(
+          tableInfoData.datasetFields,
+          tableInfoData.dataList
+        );
+        bodyHtml = bodyHtml.replace(
+          `{{${tableInfo[index].tabName}}}`,
+          tableHtml
+        );
+      });
+      const bodyElement = parse(bodyHtml);
+      const textColor = emailLayout.body.bodyTextColor || '#000000';
+      mainTableElement.appendChild(
+        parse(
+          `<tr bgcolor="${emailLayout.body.bodyBackgroundColor}" color = ${textColor} style="${emailLayout.body.bodyStyle}"><td style="${emailLayout.body.bodyHtmlStyle}">${bodyElement}</td></tr>`
+        )
+      );
+    }
+
+    // Add footer
+    if (emailLayout.footer) {
+      const footerElement = replaceFooter(emailLayout.footer);
+      const backgroundColor =
+        emailLayout.footer.footerBackgroundColor || '#ffffff';
+      const textColor = emailLayout.footer.footerTextColor || '#000000';
+      const footerStyle =
+        emailLayout.footer.footerStyle ||
+        `font-size: 13px; font-family: Helvetica, Arial, sans-serif; color: ${textColor};`;
+      mainTableElement.appendChild(
+        parse(
+          `<tr bgcolor= ${backgroundColor}><td style="${footerStyle}">${footerElement}</td></tr>`
+        )
+      );
+    }
+
+    // Add copyright
+    const copyrightStyle =
+      emailLayout.bamner?.copyrightStyle ||
+      "font-size: 12px; color: #fff; font-family: 'Roboto', Arial, sans-serif; text-align: center; padding: 0 10px;";
+    mainTableElement.appendChild(
+      parse(/*html*/ `
+      <tr bgcolor="#00205c">
+        <td mc:edit="footer1" style="${copyrightStyle}">
+          ${i18next.t('common.copyright.who')}
+        </td>
+      </tr>`)
+    );
+
+    // Replace subject placeholders
+    const emailSubject = emailLayout.subject;
+
+    // Get recipients
+    const to = emailDistributionList.To;
+    const cc = emailDistributionList.Cc;
+    const bcc = emailDistributionList.B;
+
+    // Add attachments
+    const attachments: { path: string; cid: string }[] = [];
+
+    // Add header logo
+    if (emailLayout.header.headerLogo) {
+      attachments.push({
+        path: emailLayout.header.headerLogo,
+        cid: 'headerImage',
+      });
+    }
+    // Add footer logo
+    if (emailLayout.footer.footerLogo) {
+      attachments.push({
+        path: emailLayout.footer.footerLogo,
+        cid: 'footerImage',
+      });
+    }
+    // Add banner image
+    if (emailLayout.banner.bannerImage) {
+      attachments.push({
+        path: emailLayout.banner.bannerImage,
+        cid: 'bannerImage',
+      });
+    }
+
+    // Build email
+    const emailParams = {
+      message: {
+        to: to,
+        cc: cc,
+        bcc: bcc,
+        subject: emailSubject,
+        html: emailElement.toString(),
+        attachments: attachments,
+      },
+    };
+
+    // Send email
+    await sendEmail(emailParams);
+    res.status(200).json({ message: 'Email sent successfully' });
+  } catch (err) {
+    logger.error('send-quick-email route handler - error', err.message, {
+      stack: err.stack,
+    });
+    return res.status(500).send(i18next.t('common.errors.internalServerError'));
   }
 });
 

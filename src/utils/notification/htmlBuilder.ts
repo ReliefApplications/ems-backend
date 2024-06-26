@@ -418,3 +418,39 @@ export const buildEmail = async (
   );
   return mainTableElement;
 };
+
+/**
+ * Build HTML table from dataset fields and data list.
+ *
+ * @param fields - Array of dataset fields
+ * @param dataList - Array of data objects
+ * @returns HTML string representing the table
+ */
+export const buildTableHtml = (fields: string[], dataList: any[]) => {
+  let tableHtml =
+    '<table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%;">';
+  tableHtml += '<thead><tr>';
+
+  // Add table headers
+  fields.forEach((field) => {
+    tableHtml += `<th>${titleCase(replaceUnderscores(`${field}`))}</th>`;
+  });
+
+  tableHtml += '</tr></thead>';
+  tableHtml += '<tbody>';
+
+  // Add table rows
+  dataList.forEach((data) => {
+    tableHtml += '<tr>';
+    fields.forEach((field) => {
+      const value = Array.isArray(data[field])
+        ? data[field].join(', ')
+        : data[field] || '';
+      tableHtml += `<td>${value}</td>`;
+    });
+    tableHtml += '</tr>';
+  });
+
+  tableHtml += '</tbody></table>';
+  return tableHtml;
+};
