@@ -76,6 +76,26 @@ const mapKoboExpression = (koboExpression: string, questionName?: string) => {
     /not\(selected\(\$\{(\w+)\}, '(.*?)'\)\)/g,
     "{$1} notcontains '$2'"
   );
+  // Replace not(...) with !(...)
+  koboExpression = koboExpression.replace(/not\(/g, '!(');
+  // Replace mod with %
+  koboExpression = koboExpression.replace(
+    /([^\/]*)\s+mod\s+([^\/]*)/g,
+    (match, before, after) => {
+      const transformedBefore = before.replace(/\$\{(\w+)\}/g, '{$1}');
+      const transformedAfter = after.replace(/\$\{(\w+)\}/g, '{$1}');
+      return `${transformedBefore} % ${transformedAfter}`;
+    }
+  );
+  // Replace div with /
+  koboExpression = koboExpression.replace(
+    /([^\/]*)\s+div\s+([^\/]*)/g,
+    (match, before, after) => {
+      const transformedBefore = before.replace(/\$\{(\w+)\}/g, '{$1}');
+      const transformedAfter = after.replace(/\$\{(\w+)\}/g, '{$1}');
+      return `${transformedBefore} / ${transformedAfter}`;
+    }
+  );
   // Empty
   koboExpression = koboExpression.replace(/\$\{(\w+)\} = ''/g, '{$1} empty');
   // Equal to
@@ -100,8 +120,28 @@ const mapKoboExpression = (koboExpression: string, questionName?: string) => {
   );
   // Replace ends-with with endsWith
   koboExpression = koboExpression.replace(/ends-with\(/g, 'endsWith(');
+  // Replace count-selected with length
+  koboExpression = koboExpression.replace(/count-selected\(/g, 'length(');
+  // Replace of format-date-time with formatDateTime
+  koboExpression = koboExpression.replace(
+    /format-date-time\(/g,
+    'formatDateTime('
+  );
   // Replace if with iif
   koboExpression = koboExpression.replace(/if\(/g, 'iif(');
+  // TODO: FIX not working with expressions like if(${number1} + ${number2} > 10,45,30) + today()
+  // For calculations with today() + or - days, add addDays() custom function to work on oort
+  koboExpression = koboExpression.replace(
+    /today\(\)\s*([\+\-])\s*(\w+)/g,
+    (match, operator, term) => {
+      const transformedTerm = term.replace(/\$\{(\w+)\}/g, '{$1}');
+      if (operator === '+') {
+        return `addDays(today(), ${transformedTerm})`;
+      } else {
+        return `addDays(today(), -${transformedTerm})`;
+      }
+    }
+  );
   // Replace now() with currentDate()
   koboExpression = koboExpression.replace(/now\(\)/g, 'currentDate()');
   // Date values
