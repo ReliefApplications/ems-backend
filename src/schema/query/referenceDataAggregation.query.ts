@@ -130,7 +130,7 @@ const applyFilters = (data: any, filter: any): boolean => {
         } else {
           return !isNil(filter.value) && filter.value.includes(value);
         }
-      case 'notint':
+      case 'notin':
         if (isString(value)) {
           if (isArray(filter.value)) {
             return isNil(filter.value) || !filter.value.includes(value);
@@ -442,7 +442,7 @@ export default {
       );
 
       // Check if resource exists and aggregation exists
-      if (!(referenceData && aggregation && referenceData.data)) {
+      if (!(referenceData && referenceData.data)) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       // sourceFields and pipeline from args have priority over current aggregation ones

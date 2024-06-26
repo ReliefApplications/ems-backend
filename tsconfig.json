@@ -15,7 +15,9 @@
       "@security/*": ["security/*"],
       "@server/*": ["server/*"],
       "@services/*": ["services/*"],
-      "@utils/*": ["utils/*"]
+      "@utils/*": ["utils/*"],
+      "@types": ["types"],
+      "@types/*": ["types/*"]
     },
     "esModuleInterop": true,
     "skipLibCheck": true,

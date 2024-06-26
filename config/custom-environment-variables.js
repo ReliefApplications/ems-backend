@@ -70,4 +70,7 @@ module.exports = {
     clientId: 'MICROSOFT_GRAPH_CLIENT_ID',
     clientSecret: 'MICROSOFT_GRAPH_CLIENT_SECRET',
   },
+  publicStorage: {
+    url: 'PUBLIC_STORAGE_URL',
+  },
 };

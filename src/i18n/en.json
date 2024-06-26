@@ -1,5 +1,8 @@
 {
 	"common": {
+		"copyright": {
+			"who": "Copyright © World Health Organization 2024."
+		},
 		"errors": {
 			"authenticationTokenNotFound": "Missing bearer token.",
 			"dataNotFound": "Data not found",
@@ -236,7 +239,12 @@
 					},
 					"invalidArguments": "Either fields or permissions must be provided.",
 					"permission": {
-						"notVisible": "Please provide permission to read records before providing permission to edit them."
+						"downloadRecords": {
+							"notVisible": "Please provide permission to read records before providing permission to download them."
+						},
+						"updateRecords": {
+							"notVisible": "Please provide permission to read records before providing permission to edit them."
+						}
 					}
 				}
 			}

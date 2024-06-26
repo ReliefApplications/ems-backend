@@ -11,7 +11,9 @@ import {
   RecordHistory as RecordHistoryType,
 } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
-import extendAbilityForRecords from '@security/extendAbilityForRecords';
+import extendAbilityForRecords, {
+  userHasRoleFor,
+} from '@security/extendAbilityForRecords';
 import fs from 'fs';
 import {
   fileBuilder,
@@ -32,6 +34,7 @@ import { sendEmail } from '@utils/email';
 import { accessibleBy } from '@casl/mongoose';
 import dataSources from '@server/apollo/dataSources';
 import Exporter from '@utils/files/resourceExporter';
+import { resourcePermission } from '@types';
 
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwise
@@ -66,6 +69,21 @@ const buildUserExport = (req, res, users) => {
   } else {
     return false;
   }
+};
+
+/**
+ * Template for distribution list.
+ *
+ * @param res response object
+ * @returns distribution list template.
+ */
+const templateExport = (res) => {
+  const columns = [
+    { name: 'to', title: 'to', field: 'To' },
+    { name: 'cc', title: 'cc', field: 'Cc' },
+    { name: 'bcc', title: 'bcc', field: 'Bcc' },
+  ];
+  return fileBuilder(res, 'distributionList', columns, [], 'xlsx');
 };
 
 /**
@@ -351,13 +369,24 @@ router.post('/records', async (req, res) => {
         },
       })
       .getFilter();
-    const resource = await Resource.findOne(filters).select('fields');
+    const resource = await Resource.findOne(filters).select(
+      'fields permissions'
+    );
     if (!resource) {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
-
-    // Make distinction if we send the file by email or in the response
+    if (
+      !ability.can('manage', 'Record') &&
+      !userHasRoleFor(
+        resourcePermission.DOWNLOAD_RECORDS,
+        req.context.user,
+        resource
+      )
+    ) {
+      return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    }
     if (!params.email) {
+      // Make distinction if we send the file by email or in the response
       switch (params.format) {
         case 'xlsx': {
           res.setHeader(
@@ -481,6 +510,17 @@ router.post('/users', async (req, res) => {
   }
 });
 
+/**
+ * Export distribution list excel template,
+ */
+router.get('/templates', async (req, res) => {
+  try {
+    return await templateExport(res);
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    return res.status(500).send(req.t('common.errors.internalServerError'));
+  }
+});
 /**
  * Export the users of a specific application,
  * if a list with ids is not provided in the body, export all of them
