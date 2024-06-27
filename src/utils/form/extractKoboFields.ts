@@ -120,6 +120,13 @@ const mapKoboExpression = (koboExpression: string, questionName?: string) => {
   );
   // Replace ends-with with endsWith
   koboExpression = koboExpression.replace(/ends-with\(/g, 'endsWith(');
+  // Replace indexed-repeat(...) with indexedRepeat(...) and handle the first parameter to be the question/field name and not the question value
+  koboExpression = koboExpression.replace(
+    /indexed-repeat\(\$\{(\w+)\},\s*\$\{(\w+)\},\s*(.*?)\)/g,
+    'indexedRepeat($1, {$2}, $3)'
+  );
+  // Replace position(..) with {panelIndex}
+  koboExpression = koboExpression.replace(/position\(\.\.\)/g, '{panelIndex}');
   // Replace count-selected with length
   koboExpression = koboExpression.replace(/count-selected\(/g, 'length(');
   // Replace of format-date-time with formatDateTime
@@ -190,7 +197,9 @@ const commonProperties = (question: any, type: string, title?: string) => {
     valueName: question.$autoname,
     isRequired: question.required,
     ...(question.hint && { description: question.hint[0] }),
-    ...(question.default && { defaultValue: question.default }), // TODO: add mapKoboExpression because the value can be a expression or function
+    ...(question.default && {
+      defaultValue: mapKoboExpression(question.default),
+    }),
     ...(question.relevant && {
       visibleIf: mapKoboExpression(question.relevant),
     }),
