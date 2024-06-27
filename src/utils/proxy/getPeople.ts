@@ -1,6 +1,22 @@
 import axios from 'axios';
 import { getToken } from './authManagement';
 import { commonServicesConfig } from '@routes/proxy';
+import { isArray } from 'lodash';
+
+/**
+ *  Generate a filter to only fetch users we need
+ *
+ * @param people list of people
+ * @returns the filter to get people
+ */
+export const getPeopleFilter = (people: string[] | string) => {
+  people = isArray(people) ? people : [people];
+  const formattedFilter = `{
+userid_in:
+[${people.map((el) => `"${el}"`)}]
+}`;
+  return formattedFilter.replace(/\s/g, '');
+};
 
 /**
  * Fetches the people

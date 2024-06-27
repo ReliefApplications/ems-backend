@@ -5,7 +5,7 @@ import { logger } from '@services/logger.service';
 import axios from 'axios';
 import get from 'lodash/get';
 import jsonpath from 'jsonpath';
-import { getPeople } from '@utils/proxy';
+import { getPeople, getPeopleFilter } from '@utils/proxy';
 
 /**
  * Gets display text from choice value.
@@ -45,7 +45,7 @@ export const getText = (choices: any[], value: any): string => {
 export const getFullChoices = async (
   field: any,
   context: Context,
-  peopleIds?: string[]
+  peopleIds?: string[] | string
 ): Promise<{ value: string; text: string }[] | string[]> => {
   try {
     if (field.choicesByUrl) {
@@ -115,14 +115,7 @@ export const getFullChoices = async (
       return choices;
     } else if (['people', 'singlepeople'].includes(field.type)) {
       // Generate a filter to only fetch users we need
-      const getFilter = (people: any) => {
-        const formattedFilter = `{
-          userid_in:
-          [${people.map((el: any) => `"${el}"`)}]
-    }`;
-        return formattedFilter.replace(/\s/g, '');
-      };
-      const filter = getFilter(peopleIds);
+      const filter = getPeopleFilter(peopleIds);
       const people = await getPeople(context.token, filter);
       if (!people) {
         return [];

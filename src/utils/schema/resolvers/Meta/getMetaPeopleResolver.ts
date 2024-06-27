@@ -1,6 +1,6 @@
 import { Record } from '@models';
 import { Context } from '@server/apollo/context';
-import { getPeople } from '@utils/proxy';
+import { getPeople, getPeopleFilter } from '@utils/proxy';
 import { isArray } from 'lodash';
 
 /**
@@ -32,15 +32,7 @@ const getMetaPeopleResolver = async (field: any, context: Context) => {
       peopleIds.push(propertyValue);
     }
   });
-  // Generate a filter to only fetch users we need
-  const getFilter = (people: any) => {
-    const formattedFilter = `{
-          userid_in:
-          [${people.map((el: any) => `"${el}"`)}]
-    }`;
-    return formattedFilter.replace(/\s/g, '');
-  };
-  const filter = getFilter(peopleIds);
+  const filter = getPeopleFilter(peopleIds);
   const people = await getPeople(context.token, filter);
   if (!people) {
     return [];
