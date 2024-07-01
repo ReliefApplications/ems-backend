@@ -22,10 +22,11 @@ interface Resource {
 interface Dataset {
   name: string;
   resource: Resource;
-  filter: any;
-  pageSize?: number;
-  fields?: any[];
-  style?: any[];
+  query: {
+    name: string;
+    filter: any;
+    fields: any[];
+  };
   tableStyle: {
     tableStyle: string;
     theadStyle: string;
@@ -119,6 +120,7 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
           },
           name: String,
         },
+        query: { type: mongoose.Schema.Types.Mixed },
         filter: { type: mongoose.Schema.Types.Mixed },
         pageSize: { type: mongoose.Schema.Types.Number },
         fields: [{ type: mongoose.Schema.Types.Mixed }],

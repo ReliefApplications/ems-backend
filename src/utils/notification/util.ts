@@ -1,6 +1,22 @@
 import { dateLocale, dateTimeLocale, timeLocale } from '@const/locale';
+import { EmailNotification, Resource } from '@models';
+import Exporter from '@utils/files/resourceExporter';
+import { Response } from 'express';
 import { map } from 'lodash';
 import { mongo } from 'mongoose';
+
+/**
+ *
+ */
+export interface ProcessedDataset {
+  name: string;
+  records: { [field: string]: unknown }[];
+  columns: {
+    field: string;
+    name: string;
+    type: string;
+  }[];
+}
 
 /**
  * To replace all special characters with whitespace
@@ -62,6 +78,35 @@ export const formatDates = (rowData: unknown): string => {
 };
 
 /**
+ * Flattens the fields array, to also include the subfields of objects.
+ *
+ * @param fields Fields to flatten
+ * @param path Current path to the field
+ * @returns The flattened fields array
+ */
+export const getFlatFields = (fields: any, path = ''): any => {
+  const flatFields: any = [];
+
+  fields.forEach((field: any) => {
+    flatFields.push({
+      ...field,
+      name: path + field.name,
+    });
+
+    // If an object, also include its subfields as data keys
+    if (field.kind === 'OBJECT') {
+      flatFields.push(...getFlatFields(field.fields, path + field.name + '.'));
+    } else if (field.kind === 'LIST') {
+      flatFields.push(
+        ...getFlatFields(field.fields, path + field.name + '.[0].')
+      );
+    }
+  });
+
+  return flatFields;
+};
+
+/**
  * Replaces datetime macros in email template with datetimes
  *
  * @param textElement Email template section with date macros to replace
@@ -84,4 +129,42 @@ export const replaceDateMacro = (textElement: string): string => {
   }
 
   return textElement;
+};
+
+/**
+ * Fetch all datasets belonging to a particular email notification
+ *
+ * @param config Email Notification with records to fetch
+ * @param req user request
+ * @param res server response
+ */
+export const fetchDatasets = async (
+  config: EmailNotification,
+  req: any,
+  res: Response<any, Record<string, any>>
+): Promise<ProcessedDataset[]> => {
+  const datasetQueries = config.get('datasets');
+  console.log(datasetQueries);
+  const datasets = await Promise.all(
+    datasetQueries.map(async (dataset) => {
+      const resource = await Resource.findOne({
+        _id: dataset.resource.id,
+      });
+      if (!resource) {
+        throw new Error('common.errors.dataNotFound');
+      }
+      const resourceExporter = new Exporter(req, res, resource, {
+        query: dataset.query,
+        timeZone: 'UTC',
+        format: 'email',
+        // Temp
+        fields: getFlatFields(dataset.query.fields),
+        filter: dataset.query.filter,
+      });
+
+      const records = await resourceExporter.export();
+      return { ...records, name: dataset.name };
+    })
+  );
+  return datasets;
 };
