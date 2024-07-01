@@ -19,7 +19,7 @@ interface Resource {
 /**
  *DataSet interface
  */
-interface Dataset {
+export interface Dataset {
   name: string;
   resource: Resource;
   query: {

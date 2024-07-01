@@ -27,6 +27,19 @@ export interface TableStyle {
 }
 
 /**
+ *
+ */
+export interface DatasetPreviewArgs {
+  resource: string;
+  name: string;
+  query: {
+    name: string;
+    filter: any;
+    fields: any[];
+  };
+}
+
+/**
  * Send email using SMTP email client
  */
 const router = express.Router();
@@ -34,17 +47,27 @@ const router = express.Router();
 router.post('/send-email/:configId', async (req, res) => {
   try {
     const config = await EmailNotification.findById(req.params.configId).exec();
+    const datasetQueries: DatasetPreviewArgs[] = config.datasets.map(
+      (dataset) => {
+        return {
+          name: dataset.name,
+          query: dataset.query,
+          resource: dataset.resource.id.toString(),
+        };
+      }
+    );
+
     const mainTableElement = emailElement.getElementById('mainTable');
     let datasets: ProcessedDataset[];
     try {
-      datasets = await fetchDatasets(config, req, res);
+      datasets = await fetchDatasets(datasetQueries, req, res);
     } catch (e) {
       if (e == 'common.errors.dataNotFound') {
         return res.status(404).send(req.t(e));
       } else throw e;
     }
     console.log(datasets);
-    console.log(buildTable(datasets[0], null));
+    console.log(buildTable(datasets[0]));
 
     // // Add banner image
     // if (config.emailLayout.banner.bannerImage) {
@@ -180,6 +203,47 @@ router.post('/send-email/:configId', async (req, res) => {
       { stack: err.stack }
     );
     return res.status(500).send(req.t('common.errors.internalServerError'));
+  }
+});
+
+router.post('/preview-email/:configId', async (req, res) => {
+  const config = await EmailNotification.findById(req.params.configId).exec();
+  const datasetQueries: DatasetPreviewArgs[] = config.datasets.map(
+    (dataset) => {
+      return {
+        name: dataset.name,
+        query: dataset.query,
+        resource: dataset.resource.id.toString(),
+      };
+    }
+  );
+  let datasets: ProcessedDataset[];
+  try {
+    datasets = await fetchDatasets(datasetQueries, req, res);
+  } catch (e) {
+    if (e == 'common.errors.dataNotFound') {
+      return res.status(404).send(req.t(e));
+    } else throw e;
+  }
+  console.log(datasets);
+  console.log(buildTable(datasets[0]));
+  res.send(buildTable(datasets[0]));
+});
+
+router.post('/preview-dataset', async (req, res) => {
+  try {
+    const config = req.body.dataset as DatasetPreviewArgs;
+    let dataset: ProcessedDataset;
+    try {
+      dataset = await fetchDatasets([config], req, res)[0];
+      res.send(buildTable(dataset));
+    } catch (e) {
+      if (e == 'common.errors.dataNotFound') {
+        return res.status(404).send(req.t(e));
+      } else throw e;
+    }
+  } catch (e) {
+    console.log(e);
   }
 });
 
