@@ -5,12 +5,23 @@
  *
  * @param koboExpression the initial kobo logic expression
  * @param questionName name of the question to replace in the expression
+ * @param choiceValue value of the choice to replace in the expression
  * @returns the mapped logic expression that will work on the SurveyJS form
  */
 export const mapKoboExpression = (
   koboExpression: string,
-  questionName?: string
+  questionName?: string,
+  choiceValue?: string
 ) => {
+  // Replace 'name' with choiceValue in selected expressions (for choice_filter on select questions)
+  if (choiceValue) {
+    koboExpression = koboExpression.replace(
+      /selected\(\$\{(\w+)\}, name\)/g,
+      `selected(\$\{$1\}, ${choiceValue})`
+    );
+    // If in the Kobo form the choice has a other property, we will remove the 'or other=0' from the choice visibleIf
+    koboExpression = koboExpression.replace(/or other=0/g, '');
+  }
   // Replace . with {questionName}
   if (questionName) {
     // Expressions in Kobo can have ' . ' to indicate that the expression is about the question in which it is defined.
@@ -48,11 +59,6 @@ export const mapKoboExpression = (
   koboExpression = koboExpression.replace(
     /\$\{(\w+)\} = '(.*?)'/g,
     "({$1} = '$2')"
-  );
-  // Contains
-  koboExpression = koboExpression.replace(
-    /selected\(\$\{(\w+)\}, '(.*?)'\)/g,
-    "{$1} contains '$2'"
   );
   // No empty
   koboExpression = koboExpression.replace(

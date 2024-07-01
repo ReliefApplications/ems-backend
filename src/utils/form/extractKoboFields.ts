@@ -155,6 +155,15 @@ export const extractKoboFields = (
               .map((choice) => ({
                 value: choice.$autovalue,
                 text: choice.label[0],
+                ...(question.choice_filter &&
+                  // If in the Kobo form the choice has the 'other' property, we will not add the visibleIf because of the 'or other=0' in the expression
+                  !Object.prototype.hasOwnProperty.call(choice, 'other') && {
+                    visibleIf: mapKoboExpression(
+                      question.choice_filter,
+                      null,
+                      choice.$autovalue
+                    ),
+                  }),
               })),
             ...(question.parameters &&
               question.parameters.split('randomize=')[1]?.includes('true') && {

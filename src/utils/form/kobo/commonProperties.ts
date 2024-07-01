@@ -39,7 +39,7 @@ export const commonProperties = (
   return {
     type,
     name: question.$autoname,
-    title: title ?? question.label[0],
+    title: title ?? question.label ? question.label[0] : question.$autoname,
     valueName: question.$autoname,
     isRequired: question.required,
     ...(question.hint && { description: question.hint[0] }),
