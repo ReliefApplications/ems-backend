@@ -30,13 +30,13 @@ import dataSources from '@server/apollo/dataSources';
 interface ExportBatchParams {
   fields?: any[];
   filter?: any;
-  format: 'csv' | 'xlsx';
+  format: 'csv' | 'xlsx' | 'email';
   query: any;
   sortField?: string;
   sortOrder?: 'asc' | 'desc';
   resource?: string;
   timeZone: string;
-  fileName: string;
+  fileName?: string;
 }
 
 /**
@@ -144,6 +144,27 @@ export default class Exporter {
         // Generate the file by parsing the data, set the response parameters and send it
         const csv = json2csv.parse(csvData);
         return csv;
+      }
+      case 'email': {
+        // Generate csv, by parsing the data
+        const csvData = [];
+        try {
+          for (const row of records) {
+            const temp = {};
+            for (const column of this.columns) {
+              if (column.subColumns) {
+                temp[column.name] = (get(row, column.name) || []).length;
+              } else {
+                temp[column.name] = get(row, column.name, null);
+              }
+            }
+            csvData.push(temp);
+          }
+        } catch (err) {
+          logger.error(err.message);
+        }
+        // Generate the file by parsing the data, set the response parameters and send it
+        return { records: csvData, columns: this.columns };
       }
     }
   }
