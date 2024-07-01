@@ -1,5 +1,6 @@
 import { dateLocale, dateTimeLocale, timeLocale } from '@const/locale';
-import { EmailNotification, Resource } from '@models';
+import { Resource } from '@models';
+import { DatasetPreviewArgs } from '@routes/notification';
 import Exporter from '@utils/files/resourceExporter';
 import { Response } from 'express';
 import { map } from 'lodash';
@@ -134,22 +135,18 @@ export const replaceDateMacro = (textElement: string): string => {
 /**
  * Fetch all datasets belonging to a particular email notification
  *
- * @param config Email Notification with records to fetch
+ * @param datasets Email Notification with records to fetch
  * @param req user request
  * @param res server response
  */
 export const fetchDatasets = async (
-  config: EmailNotification,
+  datasets: DatasetPreviewArgs[],
   req: any,
   res: Response<any, Record<string, any>>
 ): Promise<ProcessedDataset[]> => {
-  const datasetQueries = config.get('datasets');
-  console.log(datasetQueries);
-  const datasets = await Promise.all(
-    datasetQueries.map(async (dataset) => {
-      const resource = await Resource.findOne({
-        _id: dataset.resource.id,
-      });
+  const processedDatasets = await Promise.all(
+    datasets.map(async (dataset) => {
+      const resource = await Resource.findById(dataset.resource);
       if (!resource) {
         throw new Error('common.errors.dataNotFound');
       }
@@ -166,5 +163,5 @@ export const fetchDatasets = async (
       return { ...records, name: dataset.name };
     })
   );
-  return datasets;
+  return processedDatasets;
 };
