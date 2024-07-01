@@ -26,20 +26,23 @@ const validators = (question: any) => {
 /**
  * Extract from a Kobo question the common properties in a object for a SurveyJS question
  *
+ * @param index index/order of the element inside the Kobo structure
  * @param question Kobo question object
  * @param type type of the questions
  * @param title optional title
  * @returns the common properties in a object for a SurveyJS question extracted from the Kobo question
  */
 export const commonProperties = (
+  index: number,
   question: any,
   type: string,
   title?: string
 ) => {
   return {
+    index,
     type,
     name: question.$autoname,
-    title: title ?? question.label ? question.label[0] : question.$autoname,
+    title: title ?? (question.label ? question.label[0] : question.$autoname),
     valueName: question.$autoname,
     isRequired: question.required,
     ...(question.hint && { description: question.hint[0] }),

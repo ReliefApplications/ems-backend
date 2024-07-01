@@ -65,11 +65,16 @@ const AVAILABLE_TYPES = [
  * @returns array with all the groups in the groupPath of the element.
  */
 const getElementsGroups = (groupPath: string) => {
-  const groupDelimiter = 'group_';
   // Split all the paths in the group path
   const allPaths = groupPath.split('/');
+  // Remove the last element (is the name of the current question)
+  allPaths.pop();
+  return allPaths;
+
+  // NO LONGER USED BECAUSE IN THE INTEGRATION TESTS ALL THE GROUPS ARE RE-NAMED AND THE ID IS NOT THE SAME
+  // const groupDelimiter = 'group_';
   // Filter parts that start with the groupDelimiter (that are group names)
-  return allPaths.filter((part: string) => part.startsWith(groupDelimiter));
+  // return allPaths.filter((part: string) => part.startsWith(groupDelimiter));
 };
 
 /**
@@ -119,12 +124,12 @@ export const extractKoboFields = (
   let scoreChoiceId = '';
   let rankChoiceId = '';
 
-  koboSurvey.map((question: any) => {
+  koboSurvey.map((question: any, index: number) => {
     if (AVAILABLE_TYPES.includes(question.type)) {
       switch (question.type) {
         case 'decimal': {
           const newQuestion = {
-            ...commonProperties(question, 'text'),
+            ...commonProperties(index, question, 'text'),
             inputType: 'number',
           };
           addToElements(newQuestion, question.$xpath);
@@ -133,7 +138,7 @@ export const extractKoboFields = (
         case 'geoshape':
         case 'geopoint': {
           const newQuestion = {
-            ...commonProperties(question, 'geospatial'),
+            ...commonProperties(index, question, 'geospatial'),
           };
           addToElements(newQuestion, question.$xpath);
           break;
@@ -142,6 +147,7 @@ export const extractKoboFields = (
         case 'select_multiple': {
           const newQuestion = {
             ...commonProperties(
+              index,
               question,
               question.type === 'select_multiple' ? 'checkbox' : 'radiogroup'
             ),
@@ -175,7 +181,7 @@ export const extractKoboFields = (
         }
         case 'date': {
           const newQuestion = {
-            ...commonProperties(question, 'text'),
+            ...commonProperties(index, question, 'text'),
             inputType: 'date',
           };
           addToElements(newQuestion, question.$xpath);
@@ -183,7 +189,7 @@ export const extractKoboFields = (
         }
         case 'note': {
           const newQuestion = {
-            ...commonProperties(question, 'expression'),
+            ...commonProperties(index, question, 'expression'),
           };
           addToElements(newQuestion, question.$xpath);
           break;
@@ -194,7 +200,7 @@ export const extractKoboFields = (
         }
         case 'score__row': {
           const newQuestion = {
-            ...commonProperties(question, 'radiogroup'),
+            ...commonProperties(index, question, 'radiogroup'),
             choices: choices
               .filter((choice) => scoreChoiceId === choice.list_name)
               .map((choice) => ({
@@ -212,7 +218,7 @@ export const extractKoboFields = (
         }
         case 'rank__level': {
           const newQuestion = {
-            ...commonProperties(question, 'dropdown'),
+            ...commonProperties(index, question, 'dropdown'),
             choices: choices
               .filter((choice) => rankChoiceId === choice.list_name)
               .map((choice) => ({
@@ -226,14 +232,14 @@ export const extractKoboFields = (
         }
         case 'text': {
           const newQuestion = {
-            ...commonProperties(question, 'text'),
+            ...commonProperties(index, question, 'text'),
           };
           addToElements(newQuestion, question.$xpath);
           break;
         }
         case 'time': {
           const newQuestion = {
-            ...commonProperties(question, 'text'),
+            ...commonProperties(index, question, 'text'),
             inputType: 'time',
           };
           addToElements(newQuestion, question.$xpath);
@@ -244,7 +250,7 @@ export const extractKoboFields = (
         case 'image':
         case 'file': {
           const newQuestion = {
-            ...commonProperties(question, 'file'),
+            ...commonProperties(index, question, 'file'),
             storeDataAsText: false,
             maxSize: 7340032,
           };
@@ -253,7 +259,7 @@ export const extractKoboFields = (
         }
         case 'integer': {
           const newQuestion = {
-            ...commonProperties(question, 'text'),
+            ...commonProperties(index, question, 'text'),
             inputType: 'number',
           };
           addToElements(newQuestion, question.$xpath);
@@ -261,7 +267,7 @@ export const extractKoboFields = (
         }
         case 'datetime': {
           const newQuestion = {
-            ...commonProperties(question, 'text'),
+            ...commonProperties(index, question, 'text'),
             inputType: 'datetime-local',
           };
           addToElements(newQuestion, question.$xpath);
@@ -269,14 +275,14 @@ export const extractKoboFields = (
         }
         case 'acknowledge': {
           const newQuestion = {
-            ...commonProperties(question, 'boolean'),
+            ...commonProperties(index, question, 'boolean'),
           };
           addToElements(newQuestion, question.$xpath);
           break;
         }
         case 'range': {
           const newQuestion = {
-            ...commonProperties(question, 'text'),
+            ...commonProperties(index, question, 'text'),
             inputType: 'range',
             step: question.parameters.split('step=')[1],
           };
@@ -285,7 +291,12 @@ export const extractKoboFields = (
         }
         case 'calculate': {
           const newQuestion = {
-            ...commonProperties(question, 'expression', question.calculation),
+            ...commonProperties(
+              index,
+              question,
+              'expression',
+              question.calculation
+            ),
             visible: false, // They are not displayed in the Kobo form, so make it invisible by default for the SurveyJS
             expression: mapKoboExpression(question.calculation),
             // This question does not have hint (description)
@@ -299,7 +310,7 @@ export const extractKoboFields = (
           // Remove the last group because it is this group
           groups.pop();
           const newGroupElement = {
-            ...commonProperties(question, 'panel'),
+            ...commonProperties(index, question, 'panel'),
             state: 'expanded',
             elements: [],
             groupId: question.$kuid,
@@ -311,7 +322,9 @@ export const extractKoboFields = (
         }
         case 'end_group': {
           const groupIndex = groupElements.findIndex(
-            (element: any) => element.groupId === question.$kuid.substring(1)
+            (element: any) =>
+              element.groupId === question.$kuid.substring(1) ||
+              question.name === element.valueName
           );
           const groupElement = groupElements.splice(groupIndex, 1)[0];
           addToElements(groupElement, groupElement.parentGroup);
@@ -323,7 +336,7 @@ export const extractKoboFields = (
           // Remove the last group because it is this group
           groups.pop();
           const newRepeatGroupElement = {
-            ...commonProperties(question, 'paneldynamic'),
+            ...commonProperties(index, question, 'paneldynamic'),
             state: 'expanded',
             confirmDelete: true,
             panelCount: 1,
@@ -337,7 +350,9 @@ export const extractKoboFields = (
         }
         case 'end_repeat': {
           const groupIndex = repeatGroupElements.findIndex(
-            (element: any) => element.groupId === question.$kuid.substring(1)
+            (element: any) =>
+              element.groupId === question.$kuid.substring(1) ||
+              question.name === element.valueName
           );
           const repeatGroupElement = repeatGroupElements.splice(
             groupIndex,
@@ -349,5 +364,9 @@ export const extractKoboFields = (
       }
     }
   });
+  // Order elements (is necessary because of groups being added to the survey elements only after closed)
+  survey.pages[0].elements = survey.pages[0].elements.sort((a, b) =>
+    a.index > b.index ? 1 : -1
+  );
   return survey;
 };
