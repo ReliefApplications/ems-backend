@@ -82,22 +82,29 @@ const getElementsGroups = (groupPath: string) => {
  *
  * @param newElement element to add
  * @param elementPath string with the element path of the kobo element (e.g. 'group_au9sz58/group_hl8uz79/ig1')
+ * @param parentGroup if element is a group and have a parent group, we already know it's parent group
  */
-const addToElements = (newElement: any, elementPath: string | null) => {
+const addToElements = (
+  newElement: any,
+  elementPath: string | null,
+  parentGroup?: string
+) => {
   const groups = elementPath ? getElementsGroups(elementPath) : [];
   // If element is not part of a group
-  if (!groups.length) {
+  if (!groups.length && !parentGroup) {
     survey.pages[0].elements.push(newElement);
   } else {
     // If element is part of a group, find out which one to add it to
     const groupElement = groupElements.find(
-      (element: any) => element.name === groups[groups.length - 1]
+      (element: any) =>
+        element.name === (parentGroup ?? groups[groups.length - 1])
     );
     if (groupElement) {
       groupElement.elements.push(newElement);
     } else {
       const repeatGroupElement = repeatGroupElements.find(
-        (element: any) => element.name === groups[groups.length - 1]
+        (element: any) =>
+          element.name === (parentGroup ?? groups[groups.length - 1])
       );
       if (repeatGroupElement) {
         repeatGroupElement.templateElements.push(newElement);
@@ -307,8 +314,6 @@ export const extractKoboFields = (
         case 'begin_group': {
           // Get all the groups names that are related to this group
           const groups = getElementsGroups(question.$xpath);
-          // Remove the last group because it is this group
-          groups.pop();
           const newGroupElement = {
             ...commonProperties(index, question, 'panel'),
             state: 'expanded',
@@ -327,14 +332,12 @@ export const extractKoboFields = (
               question.name === element.valueName
           );
           const groupElement = groupElements.splice(groupIndex, 1)[0];
-          addToElements(groupElement, groupElement.parentGroup);
+          addToElements(groupElement, null, groupElement.parentGroup);
           break;
         }
         case 'begin_repeat': {
           // Get all the groups names that are related to this group
           const groups = getElementsGroups(question.$xpath);
-          // Remove the last group because it is this group
-          groups.pop();
           const newRepeatGroupElement = {
             ...commonProperties(index, question, 'paneldynamic'),
             state: 'expanded',
@@ -358,7 +361,11 @@ export const extractKoboFields = (
             groupIndex,
             1
           )[0];
-          addToElements(repeatGroupElement, repeatGroupElement.parentGroup);
+          addToElements(
+            repeatGroupElement,
+            null,
+            repeatGroupElement.parentGroup
+          );
           break;
         }
       }
