@@ -16,6 +16,13 @@ import config from 'config';
 import { pluralize } from 'inflection';
 import { getGraphQLTypeName } from '@utils/validators';
 
+// This migration duplicates the base app for a new country
+//
+// In order to run it, fill the auth and COUNTRY_NAME variables with the appropriate values
+// After that, two steps need to be taken manually:
+//   1. Make any changes to the Proactive and Register a complaint forms (e.g. the description) and save them
+//   2. Copy the custom styling of the base app to the new one
+
 /** Use your own bearer token when running this */
 const auth = 'Bearer [...]';
 /** Name of the new country to duplicate base app from */
@@ -146,6 +153,13 @@ export const up = async () => {
     logger.error('Please set the COUNTRY_NAME variable');
     return;
   }
+
+  // Check if the user supplied a valid bearer token
+  if (!auth || (auth as string) === 'Bearer [...]') {
+    logger.error('Please set the auth variable');
+    return;
+  }
+
   await startDatabaseForMigration();
 
   // Check that the app exists
