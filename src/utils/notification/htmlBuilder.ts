@@ -1,4 +1,5 @@
 import { inthelastDateLocale, timeLocale } from '@const/locale';
+import { EmailNotification } from '@models';
 // import { ProcessedDataset, TableStyle } from '@routes/notification';
 import {
   formatDates,
@@ -7,61 +8,47 @@ import {
   replaceDateMacro,
   ProcessedDataset,
 } from '@utils/notification/util';
+import { get } from 'lodash';
+import i18next from 'i18next';
+import { parse, HTMLElement } from 'node-html-parser';
 
-// /**
-//  * Fieldset object
-//  */
-// interface FieldStore {
-//   name: string;
-//   type: string;
-//   fields?: string[] | null;
-//   // eslint-disable-next-line @typescript-eslint/naming-convention
-//   __typename: string;
-//   parentName?: string | null;
-//   childName?: string | null;
-//   childType?: string | null;
-//   options?: string[] | null;
-//   multiSelect?: boolean | null;
-//   select?: boolean | null;
-// }
+/**
+ * Replaces macros in subject with values
+ *
+ * @param subject Subject of the email with field name macros to replace
+ * @param records First table's records
+ * @returns mutated string with replaced macro
+ */
+export const replaceSubject = (subject: string, records: any[]): string => {
+  const subjectMatch = new RegExp(
+    '{{((?!today.date|now.datetime|now.time)[^{{|^}}]+)}}',
+    'g'
+  );
+  if (subject) {
+    const matches = subject.matchAll(subjectMatch);
 
-// /**
-//  * Replaces macros in subject with values
-//  *
-//  * @param subject Subject of the email with field name macros to replace
-//  * @param records First table's records
-//  * @returns mutated string with replaced macro
-//  */
-// export const replaceSubject = (subject: string, records: any[]): string => {
-//   const subjectMatch = new RegExp(
-//     '{{((?!today.date|now.datetime|now.time)[^{{|^}}]+)}}',
-//     'g'
-//   );
-//   if (subject) {
-//     const matches = subject.matchAll(subjectMatch);
+    for (const match of matches) {
+      if (get(records[0], match[1])) {
+        subject = subject.replace(
+          match[0],
+          formatDates(records[0].data[match[1]])
+        );
+      }
+      if (records[0][match[1]]) {
+        // For metafields (createdAt, modifiedAt)
+        if (records[0][match[1]] instanceof Date) {
+          subject = subject.replace(
+            match[0],
+            formatDates(records[0][match[1]])
+          );
+        }
+      }
+    }
 
-//     for (const match of matches) {
-//       if (get(records[0].data, match[1])) {
-//         subject = subject.replace(
-//           match[0],
-//           formatDates(records[0].data[match[1]])
-//         );
-//       }
-//       if (records[0][match[1]]) {
-//         // For metafields (createdAt, modifiedAt)
-//         if (records[0][match[1]] instanceof Date) {
-//           subject = subject.replace(
-//             match[0],
-//             formatDates(records[0][match[1]])
-//           );
-//         }
-//       }
-//     }
-
-//     subject = replaceDateMacro(subject);
-//   }
-//   return subject;
-// };
+    subject = replaceDateMacro(subject);
+  }
+  return subject;
+};
 
 /**
  * Replaces macros in header with values
@@ -181,7 +168,6 @@ export const replaceHeader = (header: {
  * Converts a JSON array of records and a block name to a formatted HTML representation
  *
  * @param dataset dataset records
- * @param styles tableStyles loaded from DB
  * @returns html table
  */
 export const buildTable = (
@@ -269,32 +255,26 @@ export const buildTable = (
  * @param processedRecords Datasets returned from DB and processed
  * @returns mutated string with replaced macro
  */
-// export const replaceDatasets = async (
-//   bodyHtml: string,
-//   processedRecords: ProcessedDataset[]
-// ): Promise<string> => {
-//   if (bodyHtml) {
-//     await Promise.all(
-//       processedRecords.map(async (processedDataSet) => {
-//         if (bodyHtml.includes(`{{${processedDataSet.name}}}`)) {
-//           bodyHtml = bodyHtml.replaceAll(
-//             `{{${processedDataSet.name}}}`,
-//             buildTable(
-//               processedDataSet.records,
-//               processedDataSet.name,
-//               processedDataSet.tableStyle,
-//               processedDataSet.fields,
-//               processedDataSet.fieldSet
-//             )
-//           );
-//         }
-//       })
-//     );
-//   } else {
-//     return '';
-//   }
-//   return bodyHtml;
-// };
+export const replaceDatasets = async (
+  bodyHtml: string,
+  processedRecords: ProcessedDataset[]
+): Promise<string> => {
+  if (bodyHtml) {
+    await Promise.all(
+      processedRecords.map(async (processedDataSet) => {
+        if (bodyHtml.includes(`{{${processedDataSet.name}}}`)) {
+          bodyHtml = bodyHtml.replaceAll(
+            `{{${processedDataSet.name}}}`,
+            buildTable(processedDataSet)
+          );
+        }
+      })
+    );
+  } else {
+    return '';
+  }
+  return bodyHtml;
+};
 
 /**
  * Replaces macros in footer with values
@@ -361,4 +341,89 @@ export const replaceFooter = (footer: {
   footerString += '</tr></tbody></table>';
 
   return footerString;
+};
+
+/**
+ * Mutates mainTableElement to contain templates from config with data
+ *
+ * @param config Config object returned from DB, containing template
+ * @param mainTableElement Blank table element for the email body
+ * @param records Fetched records to insert into email
+ */
+export const buildEmail = async (
+  config: EmailNotification,
+  mainTableElement: HTMLElement,
+  records: any[]
+): Promise<HTMLElement> => {
+  // Add banner image
+  if (config.emailLayout.banner.bannerImage) {
+    const bannerElement = parse(
+      `<tr bgcolor="#fff" align="center">
+          <td>
+            <a href="#" style="display: block; border-style: none !important; border: 0 !important;">
+                <img width="100%" data-imagetype="DataUri" src="cid:bannerImage" alt="logo">
+            </a>
+          </td>
+       </tr>`
+    );
+    mainTableElement.appendChild(bannerElement);
+  }
+
+  // Add header
+  if (config.emailLayout.header) {
+    const headerElement = replaceHeader(config.emailLayout.header);
+    const backgroundColor =
+      config.emailLayout.header.headerBackgroundColor || '#00205c';
+    const textColor = config.emailLayout.header.headerTextColor || '#ffffff';
+    mainTableElement.appendChild(
+      parse(
+        `<tr bgcolor = ${backgroundColor} color = ${textColor}><td style="font-size: 13px; font-family: Helvetica, Arial, sans-serif; color: ${textColor};">${headerElement}</td></tr>`
+      )
+    );
+  }
+
+  mainTableElement.appendChild(
+    parse(`<tr>
+              <td height="25"></td>
+          </tr>`)
+  );
+  // Add body
+  if (config.emailLayout.body) {
+    const datasetsHtml = await replaceDatasets(
+      config.emailLayout.body.bodyHtml,
+      records
+    );
+    const backgroundColor =
+      config.emailLayout.body.bodyBackgroundColor || '#ffffff';
+    const textColor = config.emailLayout.body.bodyTextColor || '#000000';
+    mainTableElement.appendChild(
+      parse(
+        `<tr bgcolor = ${backgroundColor} color = ${textColor}><td style="color:${textColor}">${datasetsHtml}</td></tr>`
+      )
+    );
+  }
+
+  // Add footer
+  if (config.emailLayout.footer) {
+    const footerElement = replaceFooter(config.emailLayout.footer);
+    const backgroundColor =
+      config.emailLayout.footer.footerBackgroundColor || '#ffffff';
+    const textColor = config.emailLayout.footer.footerTextColor || '#000000';
+    mainTableElement.appendChild(
+      parse(
+        `<tr bgcolor= ${backgroundColor}><td style="font-size: 13px; font-family: Helvetica, Arial, sans-serif; color: ${textColor};">${footerElement}</td></tr>`
+      )
+    );
+  }
+
+  // // Add copyright
+  mainTableElement.appendChild(
+    parse(/*html*/ `
+    <tr bgcolor="#00205c">
+      <td mc:edit="footer1" style="font-size: 12px; color: #fff; font-family: 'Roboto', Arial, sans-serif; text-align: center; padding: 0 10px;">
+        ${i18next.t('common.copyright.who')}
+      </td>
+    </tr>`)
+  );
+  return mainTableElement;
 };

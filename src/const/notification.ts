@@ -1,9 +1,7 @@
-import parse from 'node-html-parser';
-
 /**
  *
  */
-export const emailElement = parse(`<!DOCTYPE HTML>
+export const baseTemplate = `<!DOCTYPE HTML>
     <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 
     <head>
@@ -29,4 +27,4 @@ export const emailElement = parse(`<!DOCTYPE HTML>
         </table>
     </body>
 
-    </html>`);
+    </html>`;

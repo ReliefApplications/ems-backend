@@ -1,17 +1,17 @@
 import express from 'express';
-import { parse } from 'node-html-parser';
 // import { sendEmail } from '@utils/email';
 import { logger } from '@services/logger.service';
 import { EmailNotification } from '@models';
 import {
+  buildEmail,
   buildTable,
-  // replaceDatasets,
-  // replaceFooter,
-  replaceHeader,
-  // replaceSubject,
+  replaceSubject,
 } from '@utils/notification/htmlBuilder';
 import { ProcessedDataset, fetchDatasets } from '@utils/notification/util';
-import { emailElement } from '@const/notification';
+import { baseTemplate } from '@const/notification';
+// import i18next from 'i18next';
+import { sendEmail } from '@utils/email/sendEmail';
+import parse from 'node-html-parser';
 /**
  * Interface of table style.
  */
@@ -56,8 +56,6 @@ router.post('/send-email/:configId', async (req, res) => {
         };
       }
     );
-
-    const mainTableElement = emailElement.getElementById('mainTable');
     let datasets: ProcessedDataset[];
     try {
       datasets = await fetchDatasets(datasetQueries, req, res);
@@ -66,136 +64,66 @@ router.post('/send-email/:configId', async (req, res) => {
         return res.status(404).send(req.t(e));
       } else throw e;
     }
-    console.log(datasets);
-    console.log(buildTable(datasets[0]));
-
-    // // Add banner image
-    // if (config.emailLayout.banner.bannerImage) {
-    //   const bannerElement = parse(
-    //     `<tr bgcolor="#fff" align="center">
-    //         <td>
-    //           <a href="#" style="display: block; border-style: none !important; border: 0 !important;">
-    //               <img width="100%" data-imagetype="DataUri" src="cid:bannerImage" alt="logo">
-    //           </a>
-    //         </td>
-    //      </tr>`
-    //   );
-    //   mainTableElement.appendChild(bannerElement);
-    // }
-
-    // Add header
-    if (config.emailLayout.header) {
-      const headerElement = replaceHeader(config.emailLayout.header);
-      const backgroundColor =
-        config.emailLayout.header.headerBackgroundColor || '#00205c';
-      const textColor = config.emailLayout.header.headerTextColor || '#ffffff';
-      mainTableElement.appendChild(
-        parse(
-          `<tr bgcolor = ${backgroundColor} color = ${textColor}><td style="font-size: 13px; font-family: Helvetica, Arial, sans-serif; color: ${textColor};">${headerElement}</td></tr>`
-        )
-      );
-    }
-
-    // mainTableElement.appendChild(
-    //   parse(`<tr>
-    //             <td height="25"></td>
-    //         </tr>`)
-    // );
-    // Add body
-    // if (config.emailLayout.body) {
-    //   const datasetsHtml = await replaceDatasets(
-    //     config.emailLayout.body.bodyHtml,
-    //     processedRecords
-    //   );
-    //   const backgroundColor =
-    //     config.emailLayout.body.bodyBackgroundColor || '#ffffff';
-    //   const textColor = config.emailLayout.body.bodyTextColor || '#000000';
-    //   mainTableElement.appendChild(
-    //     parse(
-    //       `<tr bgcolor = ${backgroundColor} color = ${textColor}><td style="color:${textColor}">${datasetsHtml}</td></tr>`
-    //     )
-    //   );
-    // }
-
-    // Add footer
-    // if (config.emailLayout.footer) {
-    //   const footerElement = replaceFooter(config.emailLayout.footer);
-    //   const backgroundColor =
-    //     config.emailLayout.footer.footerBackgroundColor || '#ffffff';
-    //   const textColor = config.emailLayout.footer.footerTextColor || '#000000';
-    //   mainTableElement.appendChild(
-    //     parse(
-    //       `<tr bgcolor= ${backgroundColor}><td style="font-size: 13px; font-family: Helvetica, Arial, sans-serif; color: ${textColor};">${footerElement}</td></tr>`
-    //     )
-    //   );
-    // }
-
-    // // Add copyright
-    // mainTableElement.appendChild(
-    //   parse(/*html*/ `
-    //   <tr bgcolor="#00205c">
-    //     <td mc:edit="footer1" style="font-size: 12px; color: #fff; font-family: 'Roboto', Arial, sans-serif; text-align: center; padding: 0 10px;">
-    //       ${i18next.t('common.copyright.who')}
-    //     </td>
-    //   </tr>`)
-    // );
+    const baseElement = parse(baseTemplate);
+    const mainTableElement = baseElement.getElementById('mainTable');
+    await buildEmail(config, mainTableElement, datasets);
 
     // TODO: Phase 2 - allow records from any table not just first
-    // const subjectRecords = processedRecords.find(
-    //   (dataset) => dataset.name === config.datasets[0]?.name
-    // )?.records;
+    const subjectRecords = datasets.find(
+      (dataset) => dataset.name === config.datasets[0]?.name
+    )?.records;
 
-    // const emailSubject = replaceSubject(
-    //   config.get('emailLayout').subject,
-    //   subjectRecords
-    // );
+    const emailSubject = replaceSubject(
+      config.get('emailLayout').subject,
+      subjectRecords
+    );
 
     // // Get recipients
-    // const to = config.get('emailDistributionList').To;
-    // const cc = config.get('emailDistributionList').Cc;
-    // const bcc = config.get('emailDistributionList').Bcc;
+    const to = config.get('emailDistributionList').To;
+    const cc = config.get('emailDistributionList').Cc;
+    const bcc = config.get('emailDistributionList').Bcc;
 
-    // // Add attachments
-    // // Use base64 encoded images as path for CID attachments
-    // // This is required for images to render in the body on legacy clients
-    // const attachments: { path: string; cid: string }[] = [];
+    // Add attachments
+    // Use base64 encoded images as path for CID attachments
+    // This is required for images to render in the body on legacy clients
+    const attachments: { path: string; cid: string }[] = [];
 
-    // // Add header logo
-    // if (config.emailLayout.header.headerLogo) {
-    //   attachments.push({
-    //     path: config.emailLayout.header.headerLogo,
-    //     cid: 'headerImage',
-    //   });
-    // }
-    // // Add footer logo
-    // if (config.emailLayout.footer.footerLogo) {
-    //   attachments.push({
-    //     path: config.emailLayout.footer.footerLogo,
-    //     cid: 'footerImage',
-    //   });
-    // }
-    // // Add banner image
-    // if (config.emailLayout.banner.bannerImage) {
-    //   attachments.push({
-    //     path: config.emailLayout.banner.bannerImage,
-    //     cid: 'bannerImage',
-    //   });
-    // }
+    // Add header logo
+    if (config.emailLayout.header.headerLogo) {
+      attachments.push({
+        path: config.emailLayout.header.headerLogo,
+        cid: 'headerImage',
+      });
+    }
+    // Add footer logo
+    if (config.emailLayout.footer.footerLogo) {
+      attachments.push({
+        path: config.emailLayout.footer.footerLogo,
+        cid: 'footerImage',
+      });
+    }
+    // Add banner image
+    if (config.emailLayout.banner.bannerImage) {
+      attachments.push({
+        path: config.emailLayout.banner.bannerImage,
+        cid: 'bannerImage',
+      });
+    }
 
-    // // Build email
-    // const emailParams = {
-    //   message: {
-    //     to: to,
-    //     cc: cc,
-    //     bcc: bcc,
-    //     subject: emailSubject,
-    //     html: emailElement.toString(),
-    //     attachments: attachments,
-    //   },
-    // };
-    // // Send email
-    // await sendEmail(emailParams);
-    res.status(200).json({ message: 'Email sent successfully' });
+    // Build email
+    const emailParams = {
+      message: {
+        to: to,
+        cc: cc,
+        bcc: bcc,
+        subject: emailSubject,
+        html: baseElement.toString(),
+        attachments: attachments,
+      },
+    };
+    // Send email
+    await sendEmail(emailParams);
+    // res.status(200).json({ message: 'Email sent successfully' });
   } catch (err) {
     logger.error(
       'send-email route handler - configuration query',
@@ -225,9 +153,10 @@ router.post('/preview-email/:configId', async (req, res) => {
       return res.status(404).send(req.t(e));
     } else throw e;
   }
-  console.log(datasets);
-  console.log(buildTable(datasets[0]));
-  res.send(buildTable(datasets[0]));
+  const baseElement = parse(baseTemplate);
+  const mainTableElement = baseElement.getElementById('mainTable');
+  await buildEmail(config, mainTableElement, datasets);
+  res.send(baseElement.toString());
 });
 
 router.post('/preview-dataset', async (req, res) => {
@@ -246,7 +175,6 @@ router.post('/preview-dataset', async (req, res) => {
     console.log(e);
   }
 });
-
 /**
  * POST request for sending separate emails.
  * On a selected boolean flag the dataset is sliced and send independently by row to each email in the distribution list
