@@ -5,11 +5,13 @@ import { EmailNotification } from '@models';
 import {
   buildEmail,
   buildTable,
+  replaceFooter,
+  replaceHeader,
   replaceSubject,
 } from '@utils/notification/htmlBuilder';
 import { ProcessedDataset, fetchDatasets } from '@utils/notification/util';
 import { baseTemplate } from '@const/notification';
-// import i18next from 'i18next';
+import i18next from 'i18next';
 import { sendEmail } from '@utils/email/sendEmail';
 import parse from 'node-html-parser';
 /**
@@ -37,6 +39,7 @@ export interface DatasetPreviewArgs {
     filter: any;
     fields: any[];
   };
+  isIndividualEmail?: boolean;
 }
 
 /**
@@ -175,313 +178,201 @@ router.post('/preview-dataset', async (req, res) => {
     console.log(e);
   }
 });
+
 /**
  * POST request for sending separate emails.
  * On a selected boolean flag the dataset is sliced and send independently by row to each email in the distribution list
  */
-// router.post('/send-individual-email/:configId', async (req, res) => {
-//   try {
-//     const config = await EmailNotification.findById(req.params.configId);
-//     const datasets = config.get('datasets');
-//     let emailElement = parse(`<!DOCTYPE HTML>
-//     <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+router.post('/send-individual-email/:configId', async (req, res) => {
+  try {
+    const config = await EmailNotification.findById(req.params.configId).exec();
+    const datasetQueries: DatasetPreviewArgs[] = config.datasets.map(
+      (dataset) => {
+        return {
+          name: dataset.name,
+          query: dataset.query,
+          resource: dataset.resource.id.toString(),
+          isIndividualEmail: dataset.individualEmail || false,
+        };
+      }
+    );
 
-//     <head>
-//         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-//         <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;">
-//         <title>EMSPOC - Email Alert</title>
-//     </head>
+    let datasets: ProcessedDataset[];
+    const processedIndividualRecords: ProcessedDataset[] = [];
 
-//     <body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" style="width: 100%; background-color: #ffffff; margin: 0; padding: 0; -webkit-font-smoothing: antialiased;">
-//         <table border="0" width="100%" cellpadding="0" cellspacing="0">
-//             <tr>
-//                 <td height="30"></td>
-//             </tr>
-//             <tr bgcolor="#4c4e4e">
-//                 <td width="100%" align="center" valign="top" bgcolor="#ffffff">
-//                     <!----------   main content----------->
-//                     <table id="mainTable" width="800" style="border: 3px solid #00205c; margin: 0 auto;" cellpadding="0" cellspacing="0" bgcolor="#fff">
+    try {
+      datasets = await fetchDatasets(datasetQueries, req, res);
+    } catch (e) {
+      if (e == 'common.errors.dataNotFound') {
+        return res.status(404).send(req.t(e));
+      } else throw e;
+    }
 
-//                     </table>
-//                     <!----------   end main content----------->
-//                 </td>
-//             </tr>
-//         </table>
-//     </body>
+    const baseElement = parse(baseTemplate);
+    const mainTableElement = baseElement.getElementById('mainTable');
 
-//     </html>`);
+    console.log(datasets);
 
-//     const mainTableElement = emailElement.getElementById('mainTable');
+    // Add banner if available
+    if (config.emailLayout.banner.bannerImage) {
+      const bannerElement = parse(
+        `<tr bgcolor="#fff" align="center">
+            <td>
+              <a href="#" style="display: block; border-style: none !important; border: 0 !important;">
+                  <img width="100%" data-imagetype="DataUri" src="cid:bannerImage" alt="logo">
+              </a>
+            </td>
+         </tr>`
+      );
+      mainTableElement.appendChild(bannerElement);
+    }
 
-//     const processedRecords: ProcessedIndividualDataset[] = [];
+    // Add header if available
+    if (config.emailLayout.header) {
+      const headerElement = replaceHeader(config.emailLayout.header);
+      const backgroundColor =
+        config.emailLayout.header.headerBackgroundColor || '#00205c';
+      mainTableElement.appendChild(
+        parse(
+          `<tr bgcolor = ${backgroundColor}><td style="font-size: 13px; font-family: Helvetica, Arial, sans-serif;">${headerElement}</td></tr>`
+        )
+      );
+    }
 
-//     const processedBlockRecords: ProcessedDataset[] = [];
+    mainTableElement.appendChild(
+      parse(`<tr>
+                <td height="25"></td>
+            </tr>`)
+    );
 
-//     await Promise.all(
-//       datasets.map(async (dataset) => {
-//         const filterLogic = dataset?.filter ?? {};
-//         const limit = 50;
-//         const fieldsList = getFields(dataset?.fields ?? [])?.fields;
-//         // const nestedFields = getFields(dataset?.fields ?? [])?.nestedField;
-//         const resource = await Resource.findOne({
-//           _id: dataset.resource.id,
-//         });
+    // Add body div
+    const bodyDiv = parse(
+      '<tr id ="body" bgcolor = ${backgroundColor}><td></td></tr>'
+    );
+    mainTableElement.appendChild(bodyDiv);
 
-//         if (!resource) {
-//           return res.status(404).send(req.t('common.errors.dataNotFound'));
-//         }
-//         const filters = getFilter(filterLogic, resource.fields);
+    let bodyString = config.emailLayout.body.bodyHtml;
 
-//         const projectFields: { [key: string]: number | string } = {};
-//         fieldsList.forEach((fieldData) => {
-//           if (
-//             fieldData.includes('createdAt') ||
-//             fieldData.includes('modifiedAt')
-//           ) {
-//             projectFields[fieldData] = `$${fieldData}`;
-//           } else if (
-//             fieldData.includes('createdBy') ||
-//             fieldData.includes('lastUpdatedBy')
-//           ) {
-//             const fieldName = fieldData.replaceAll('.', '_');
-//             projectFields[fieldName] = `$${fieldData}`;
-//           } else {
-//             projectFields[fieldData] = 1;
-//           }
-//         });
+    // Add footer if available
+    if (config.emailLayout.footer) {
+      const footerElement = replaceFooter(config.emailLayout.footer);
+      const backgroundColor =
+        config.emailLayout.footer.footerBackgroundColor || '#ffffff';
+      mainTableElement.appendChild(
+        parse(
+          `<tr bgcolor= ${backgroundColor}><td style="font-size: 13px; font-family: Helvetica, Arial, sans-serif;">${footerElement}</td></tr>`
+        )
+      );
+    }
 
-//         const aggregations: any[] = [
-//           ...defaultRecordAggregation,
-//           {
-//             $match: {
-//               $and: [filters, { resource: resource._id }],
-//             },
-//           },
-//           ...emailAggregation,
-//           Object.keys(projectFields).length
-//             ? {
-//                 $project: {
-//                   _id: 0,
-//                   modifiedAt: 1,
-//                   ...projectFields,
-//                   data: {
-//                     ...projectFields,
-//                   },
-//                   emailFields: 1,
-//                 },
-//               }
-//             : {
-//                 ...projectAggregation,
-//               },
-//           limit && { $limit: limit },
-//         ].filter(Boolean);
+    // Add copyright
+    mainTableElement.appendChild(
+      parse(/*html*/ `
+      <tr bgcolor="#00205c">
+        <td mc:edit="footer1" style="font-size: 12px; color: #fff; font-family: 'Roboto', Arial, sans-serif; text-align: center; padding: 0 10px;">
+          ${i18next.t('common.copyright.who')}
+        </td>
+      </tr>`)
+    );
 
-//         const tempRecords = await Record.aggregate(aggregations);
-//         if (!tempRecords) {
-//           return res
-//             .status(403)
-//             .send(req.t('common.errors.permissionNotGranted'));
-//         }
+    let subjectRecords = {};
 
-//         if (dataset.individualEmail) {
-//           const emailList = [];
-//           const dataList = [];
-//           for (const data of tempRecords) {
-//             const emails = data.emailFields;
-//             if (emails.length) {
-//               emails.forEach((obj: { [key: string]: string }) => {
-//                 emailList.push(obj.v);
-//                 data.email = obj.v;
-//                 processedRecords.push({
-//                   name: dataset.name,
-//                   record: { data: data, emails: obj.v },
-//                   tableStyle: dataset.tableStyle,
-//                   fields: fieldsList,
-//                 });
-//               });
-//             }
-//             delete data.emailFields;
-//             dataList.push(data);
-//           }
-//         } else {
-//           const emailList = [];
-//           const dataList = [];
-//           for (const data of tempRecords) {
-//             const emails = data.emailFields;
-//             if (emails.length) {
-//               emails.forEach((obj: { [key: string]: string }) => {
-//                 emailList.push(obj.v);
-//                 data.email = obj.v;
-//               });
-//             }
-//             delete data.emailFields;
-//             dataList.push(data);
-//           }
-//           processedBlockRecords.push({
-//             name: dataset.name,
-//             records: tempRecords,
-//             emails: emailList,
-//             tableStyle: dataset.tableStyle,
-//             fields: fieldsList,
-//           });
-//         }
-//       })
-//     );
+    // TODO: Phase 2 - allow records from any table not just first
 
-//     if (config.emailLayout.banner.bannerImage) {
-//       const bannerElement = parse(
-//         `<tr bgcolor="#fff" align="center">
-//             <td>
-//               <a href="#" style="display: block; border-style: none !important; border: 0 !important;">
-//                   <img width="100%" data-imagetype="DataUri" src="cid:bannerImage" alt="logo">
-//               </a>
-//             </td>
-//          </tr>`
-//       );
-//       mainTableElement.appendChild(bannerElement);
-//     }
+    subjectRecords = datasets.find(
+      (dataset) => dataset.name === config.datasets[0].name
+    ).records;
 
-//     // Add header if available
-//     if (config.emailLayout.header) {
-//       const headerElement = replaceHeader(config.emailLayout.header);
-//       const backgroundColor =
-//         config.emailLayout.header.headerBackgroundColor || '#00205c';
-//       mainTableElement.appendChild(
-//         parse(
-//           `<tr bgcolor = ${backgroundColor}><td style="font-size: 13px; font-family: Helvetica, Arial, sans-serif;">${headerElement}</td></tr>`
-//         )
-//       );
-//     }
+    const emailSubject = replaceSubject(config.get('emailLayout').subject, [
+      subjectRecords,
+    ]);
 
-//     mainTableElement.appendChild(
-//       parse(`<tr>
-//                 <td height="25"></td>
-//             </tr>`)
-//     );
+    const bodyElement = mainTableElement.getElementById('body');
 
-//     // Add body div
-//     const bodyDiv = parse(
-//       '<tr id ="body" bgcolor = ${backgroundColor}><td></td></tr>'
-//     );
-//     mainTableElement.appendChild(bodyDiv);
+    const cc = config.get('emailDistributionList').Cc;
+    const bcc = config.get('emailDistributionList').Bcc;
+    const attachments: { path: string; cid: string }[] = [];
+    // Use base64 encoded images as path for CID attachments
+    // This is required for images to render in the body on legacy clients
+    if (config.emailLayout.header.headerLogo) {
+      attachments.push({
+        path: config.emailLayout.header.headerLogo,
+        cid: 'headerImage',
+      });
+    }
+    if (config.emailLayout.footer.footerLogo) {
+      attachments.push({
+        path: config.emailLayout.footer.footerLogo,
+        cid: 'footerImage',
+      });
+    }
+    if (config.emailLayout.banner.bannerImage) {
+      attachments.push({
+        path: config.emailLayout.banner.bannerImage,
+        cid: 'bannerImage',
+      });
+    }
 
-//     let bodyString = await replaceDatasets(
-//       config.emailLayout.body.bodyHtml,
-//       processedBlockRecords
-//     );
+    for (const dataset of datasets) {
+      if (dataset.isIndividualEmail) {
+        // Individual email format
+        dataset.records.forEach((record) =>
+          processedIndividualRecords.push({
+            records: [record],
+            name: dataset.name,
+            columns: dataset.columns,
+          })
+        );
+      } else {
+        // Block email format
+        if (bodyString.includes(`{{${dataset.name}}}`)) {
+          bodyString = bodyString.replace(
+            `{{${dataset.name}}}`,
+            buildTable(dataset)
+          );
+        }
+      }
+    }
 
-//     // containerDiv.appendChild(datasetsHtml);
+    for (const block of processedIndividualRecords) {
+      // let bodyHtml = config.emailLayout.body.bodyHtml;
+      const bodyStringCopy = bodyString;
+      if (bodyString.includes(`{{${block.name}}}`)) {
+        bodyString = bodyString.replace(`{{${block.name}}}`, buildTable(block));
+      }
 
-//     // Add footer if available
-//     if (config.emailLayout.footer) {
-//       const footerElement = replaceFooter(config.emailLayout.footer);
-//       const backgroundColor =
-//         config.emailLayout.footer.footerBackgroundColor || '#ffffff';
-//       mainTableElement.appendChild(
-//         parse(
-//           `<tr bgcolor= ${backgroundColor}><td style="font-size: 13px; font-family: Helvetica, Arial, sans-serif;">${footerElement}</td></tr>`
-//         )
-//       );
-//     }
+      const bodyBlock = parse(`<tr><td>${bodyString}</td></tr>`);
 
-//     // Add copyright
-//     mainTableElement.appendChild(
-//       parse(/*html*/ `
-//       <tr bgcolor="#00205c">
-//         <td mc:edit="footer1" style="font-size: 12px; color: #fff; font-family: 'Roboto', Arial, sans-serif; text-align: center; padding: 0 10px;">
-//           ${i18next.t('common.copyright.who')}
-//         </td>
-//       </tr>`)
-//     );
+      // remove other individual blocks
+      const regex = /<p>{{\s*.*?\s*}}<\/p>/g;
+      const emailHtml = baseElement.toString().replace(regex, '');
 
-//     let subjectRecords = {};
+      bodyElement.appendChild(bodyBlock);
+      const emailParams = {
+        message: {
+          to: config.get('emailDistributionList').To, // Recipient's email address
+          cc: cc,
+          bcc: bcc,
+          subject: emailSubject,
+          html: emailHtml,
+          attachments: attachments,
+        },
+      };
+      // Send email
+      await sendEmail(emailParams);
+      bodyElement.removeChild(bodyBlock);
+      bodyString = bodyStringCopy;
+    }
 
-//     //TODO: Phase 2 - allow records from any table not just first
-//     if (!processedBlockRecords) {
-//       subjectRecords = processedRecords.find(
-//         (dataset) => dataset.name === config.datasets[0]?.name
-//       )?.record;
-//     }
-//     // else {
-//     //   subjectRecords = processedBlockRecords.find(
-//     //     (dataset) => dataset.name === config.dataSets[0].name
-//     //   ).records;
-//     // }
-
-//     const emailSubject = replaceSubject(config.get('emailLayout').subject, [
-//       subjectRecords,
-//     ]);
-
-//     const bodyElement = mainTableElement.getElementById('body');
-
-//     const cc = config.get('emailDistributionList').Cc;
-//     const bcc = config.get('emailDistributionList').Bcc;
-//     const attachments: { path: string; cid: string }[] = [];
-//     // Use base64 encoded images as path for CID attachments
-//     // This is required for images to render in the body on legacy clients
-//     if (config.emailLayout.header.headerLogo) {
-//       attachments.push({
-//         path: config.emailLayout.header.headerLogo,
-//         cid: 'headerImage',
-//       });
-//     }
-//     if (config.emailLayout.footer.footerLogo) {
-//       attachments.push({
-//         path: config.emailLayout.footer.footerLogo,
-//         cid: 'footerImage',
-//       });
-//     }
-//     if (config.emailLayout.banner.bannerImage) {
-//       attachments.push({
-//         path: config.emailLayout.banner.bannerImage,
-//         cid: 'bannerImage',
-//       });
-//     }
-
-//     for (const block of processedRecords) {
-//       // let bodyHtml = config.emailLayout.body.bodyHtml;
-//       const bodyStringCopy = bodyString;
-//       if (bodyString.includes(`{{${block.name}}}`)) {
-//         bodyString = bodyString.replace(
-//           `{{${block.name}}}`,
-//           buildTable(
-//             [block.record.data],
-//             block.name,
-//             block.tableStyle,
-//             block.fields
-//           )
-//         );
-//       }
-
-//       const bodyBlock = parse(`<tr><td>${bodyString}</td></tr>`);
-
-//       bodyElement.appendChild(bodyBlock);
-//       emailElement = mainTableElement;
-//       const emailParams = {
-//         message: {
-//           to: [block.record.emails], // Recipient's email address
-//           cc: cc,
-//           bcc: bcc,
-//           subject: emailSubject,
-//           html: emailElement.toString(),
-//           attachments: attachments,
-//         },
-//       };
-//       // Send email
-//       await sendEmail(emailParams);
-//       bodyElement.removeChild(bodyBlock);
-//       bodyString = bodyStringCopy;
-//     }
-
-//     res.status(200).json({ message: 'Email sent successfully' });
-//   } catch (err) {
-//     logger.error(
-//       'send-email route handler - configuration query',
-//       err.message,
-//       { stack: err.stack }
-//     );
-//     return res.status(500).send(req.t('common.errors.internalServerError'));
-//   }
-// });
+    res.status(200).json({ message: 'Email sent successfully' });
+  } catch (err) {
+    logger.error(
+      'send-email route handler - configuration query',
+      err.message,
+      { stack: err.stack }
+    );
+    return res.status(500).send(req.t('common.errors.internalServerError'));
+  }
+});
 
 export default router;
