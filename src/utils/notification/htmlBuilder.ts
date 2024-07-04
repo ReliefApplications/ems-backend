@@ -192,10 +192,11 @@ export const buildTable = (
   // // THE FOLLOWING CSS SELECTORS ARE BANNED:
   // // overflow, justify, display
 
-  let table = '';
-  // //Checks if data is undefined
-  if (!dataset.records[0]) {
-    table = `
+  try {
+    let table = '';
+    // //Checks if data is undefined
+    if (!dataset.records[0]) {
+      table = `
     <table  border="0" width="760" align="center" cellpadding="0" cellspacing="0" bgcolor="ffffff" >
       <tbody>
         <tr bgcolor="#00205c">
@@ -207,8 +208,8 @@ export const buildTable = (
         </tr>
       </tbody>
     </table>`;
-  } else {
-    table += `<table border="0" width="760" align="center" cellpadding="0" cellspacing="0"  >
+    } else {
+      table += `<table border="0" width="760" align="center" cellpadding="0" cellspacing="0"  >
                 <tbody><tr bgcolor="#00205c">
                     <td mc:edit="title1" height="40" style="color: #fff; font-size: 15px; font-weight: 700; font-family: 'Roboto', Arial, sans-serif; padding-left: 10px;">
                     ${dataset.name}</td>
@@ -218,34 +219,37 @@ export const buildTable = (
             </tr>
             </tbody>
             </table>`;
-    table +=
-      '<table bgcolor="ffffff" border="0" width="760" align="center" cellpadding="0" cellspacing="0" style="margin: 0 auto; border: 1px solid black;">';
-    table += '<thead>';
-    table += '<tr bgcolor="#00205c">';
-    dataset.columns.forEach((field) => {
-      table += `<th align="left" style="color: #fff; font-size: 14px; font-family: 'Roboto', Arial, sans-serif; padding-left: 10px">${titleCase(
-        replaceUnderscores(`${field.name}`)
-      )}</th>`;
-    });
+      table +=
+        '<table bgcolor="ffffff" border="0" width="760" align="center" cellpadding="0" cellspacing="0" style="margin: 0 auto; border: 1px solid black;">';
+      table += '<thead>';
+      table += '<tr bgcolor="#00205c">';
+      dataset.columns.forEach((field) => {
+        table += `<th align="left" style="color: #fff; font-size: 14px; font-family: 'Roboto', Arial, sans-serif; padding-left: 10px">${titleCase(
+          replaceUnderscores(`${field.name}`)
+        )}</th>`;
+      });
 
-    table += '</tr></thead>';
-    table += '<tbody>';
-    // Iterate over each record
-    for (const record of dataset.records) {
-      table += '<tr>';
-      // Create a new cell for each field in the record
-      for (const value of Object.values(record)) {
-        table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
+      table += '</tr></thead>';
+      table += '<tbody>';
+      // Iterate over each record
+      for (const record of dataset.records) {
+        table += '<tr>';
+        // Create a new cell for each field in the record
+        for (const value of Object.values(record)) {
+          table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
         ${formatDates(value)}</td>`;
+        }
+        table += '</tr>';
       }
-      table += '</tr>';
+      table += '</tbody>';
+      table += '</table>';
     }
-    table += '</tbody>';
-    table += '</table>';
+    // TODO: Replace overflow
+    return table;
+  } catch (error) {
+    console.log(error);
+    return '<table><tr><td>Error while generating table - Please contact support</td></tr></table>';
   }
-  // TODO: Replace overflow
-  return table;
-  return '';
 };
 
 /**

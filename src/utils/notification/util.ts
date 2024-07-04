@@ -17,6 +17,7 @@ export interface ProcessedDataset {
     name: string;
     type: string;
   }[];
+  isIndividualEmail?: boolean;
 }
 
 /**
@@ -144,24 +145,37 @@ export const fetchDatasets = async (
   req: any,
   res: Response<any, Record<string, any>>
 ): Promise<ProcessedDataset[]> => {
-  const processedDatasets = await Promise.all(
-    datasets.map(async (dataset) => {
-      const resource = await Resource.findById(dataset.resource);
-      if (!resource) {
-        throw new Error('common.errors.dataNotFound');
-      }
-      const resourceExporter = new Exporter(req, res, resource, {
-        query: dataset.query,
-        timeZone: 'UTC',
-        format: 'email',
-        // Temp
-        fields: getFlatFields(dataset.query.fields),
-        filter: dataset.query.filter,
-      });
+  try {
+    const processedDatasets = await Promise.all(
+      datasets.map(async (dataset) => {
+        const resource = await Resource.findById(dataset.resource);
+        if (!resource) {
+          throw new Error('common.errors.dataNotFound');
+        }
+        const resourceExporter = new Exporter(req, res, resource, {
+          query: dataset.query,
+          timeZone: 'UTC',
+          format: 'email',
+          // Temp
+          fields: getFlatFields(dataset.query.fields),
+          filter: dataset.query.filter,
+        });
 
-      const records = await resourceExporter.export();
-      return { ...records, name: dataset.name };
-    })
-  );
-  return processedDatasets;
+        const records = await resourceExporter.export();
+        return {
+          ...records,
+          name: dataset.name,
+          isIndividualEmail: dataset.isIndividualEmail,
+        };
+      })
+    );
+    return processedDatasets;
+  } catch (error) {
+    // Handle the error appropriately, e.g., log it and send a response
+    console.error('Error fetching datasets:', error);
+    res
+      .status(500)
+      .send({ error: 'An error occurred while fetching datasets.' });
+    return [];
+  }
 };
