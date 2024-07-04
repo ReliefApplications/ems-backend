@@ -188,20 +188,15 @@ export const ResourceType = new GraphQLObjectType({
           resource: parent.id,
           archived: args.archived ? true : { $ne: true },
         };
-
         if (args.filter) {
           mongooseFilter = {
             ...mongooseFilter,
-            ...getFilter(
-              { logic: 'and', filters: args.filter },
-              parent.fields,
-              {
-                ...context,
-                resourceFieldsById: {
-                  [parent.id]: parent.fields,
-                },
-              }
-            ),
+            ...getFilter(args.filter, parent.fields, {
+              ...context,
+              resourceFieldsById: {
+                [parent.id]: parent.fields,
+              },
+            }),
           };
         }
         // PAGINATION

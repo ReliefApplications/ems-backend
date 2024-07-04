@@ -48,7 +48,7 @@ const APPLICATION_PAGES = [
   },
   {
     page: 'emergency',
-    id: '64f14f7f2a0ef630b33a4473',
+    id: '661dafa5aec204f5fd882473',
   },
   {
     page: 'transfer',
@@ -259,6 +259,7 @@ export const linkStructureAppsToDemo = async (rerun = false) => {
             });
             break;
           case 'library':
+          case 'emergency':
           case 'family_wf':
             workflow.steps.forEach((step) => {
               step.permissions.canSee.push(...roles.map((r) => r._id));

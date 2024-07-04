@@ -19,6 +19,7 @@ const updateDashboard = async (
       filter: {
         show: true,
         closable: false,
+        keepPrevious: true,
         structure: application.contextualFilter,
         position: application.contextualFilterPosition,
         variant: 'default',

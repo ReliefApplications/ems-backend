@@ -8,6 +8,7 @@ export type FilterArgs = {
   closable?: boolean;
   structure?: any;
   position?: string;
+  keepPrevious?: boolean;
 };
 
 /** GraphQL position attribute input type definition */
@@ -19,5 +20,6 @@ export const DashboardFilterInputType = new GraphQLInputObjectType({
     closable: { type: GraphQLBoolean },
     structure: { type: GraphQLJSON },
     position: { type: GraphQLString },
+    keepPrevious: { type: GraphQLBoolean },
   }),
 });
