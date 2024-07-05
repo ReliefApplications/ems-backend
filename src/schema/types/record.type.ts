@@ -75,7 +75,8 @@ export const RecordType = new GraphQLObjectType({
                 if (
                   field.choices ||
                   field.choicesByUrl ||
-                  field.choicesByGraphQL
+                  field.choicesByGraphQL ||
+                  ['people', 'singlepeople'].includes(field.type)
                 ) {
                   res[name] = await getDisplayText(
                     field,

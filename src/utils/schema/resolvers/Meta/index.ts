@@ -161,7 +161,7 @@ export const getMetaResolver = (
     .reduce(
       (resolvers, fieldName) =>
         Object.assign({}, resolvers, {
-          [fieldName]: (parent) => {
+          [fieldName]: (parent, args, context) => {
             const field = relationshipFields.includes(fieldName)
               ? parent[
                   fieldName.slice(
@@ -170,7 +170,10 @@ export const getMetaResolver = (
                   )
                 ]
               : parent[fieldName];
-            return getMetaFieldResolver(field);
+            if (['people', 'singlepeople'].includes(field.type)) {
+              field.resource = id;
+            }
+            return getMetaFieldResolver(field, context);
           },
         }),
       {}

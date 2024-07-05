@@ -1,17 +1,20 @@
 import get from 'lodash/get';
 import set from 'lodash/set';
 import { getText } from '../form/getDisplayText';
+import { getPeople, getPeopleFilter } from '@utils/proxy';
 
 /**
  * Transforms records into export rows, using fields definition.
  *
  * @param columns definition of export columns.
  * @param records list of records.
+ * @param token used to make graphql queries
  * @returns list of export rows.
  */
 export const getRows = async (
   columns: any[],
-  records: any[]
+  records: any[],
+  token?: string
 ): Promise<any[]> => {
   const rows = [];
   for (const record of records) {
@@ -111,6 +114,29 @@ export const getRows = async (
           } else {
             set(row, column.name, value);
           }
+          break;
+        }
+        case 'people':
+        case 'singlepeople': {
+          const value = get(data, column.field);
+          const filter = getPeopleFilter(value);
+          const people = await getPeople(token, filter);
+          if (!people) {
+            return;
+          }
+          set(
+            row,
+            column.name,
+            people
+              .map((x) => {
+                const fullname =
+                  x.firstname && x.lastname
+                    ? `${x.firstname}, ${x.lastname}`
+                    : x.firstname || x.lastname;
+                return `${fullname} (${x.emailaddress})`;
+              })
+              .join(', ')
+          );
           break;
         }
         default: {

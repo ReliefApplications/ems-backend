@@ -18,6 +18,23 @@ const router = express.Router();
 /** Placeholder to hide settings in UI once saved */
 const SETTING_PLACEHOLDER = '●●●●●●●●●●●●●';
 
+/** common services configuration */
+export const commonServicesConfig = new ApiConfiguration({
+  name: 'common-services',
+  status: 'active',
+  authType: 'service-to-service',
+  endpoint: config.get<string>('commonServices.url'),
+  settings: CryptoJS.AES.encrypt(
+    JSON.stringify({
+      authTargetUrl: config.get<string>('commonServices.tokenEndpoint'),
+      apiClientID: config.get<string>('commonServices.clientId'),
+      scope: config.get<string>('commonServices.scope'),
+      safeSecret: config.get<string>('commonServices.clientSecret'),
+    }),
+    config.get('encryption.key')
+  ).toString(),
+});
+
 /**
  * Proxy API request
  *
@@ -165,6 +182,16 @@ router.post('/ping/**', async (req: Request, res: Response) => {
       req.method = 'GET';
       await proxyAPIRequest(req, res, parameters, api.pingUrl, true);
     }
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    return res.status(500).send(req.t('common.errors.internalServerError'));
+  }
+});
+
+router.all('/common-services/**', async (req, res) => {
+  try {
+    const path = req.originalUrl.split('common-services').pop().substring(1);
+    await proxyAPIRequest(req, res, commonServicesConfig, path);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
     return res.status(500).send(req.t('common.errors.internalServerError'));

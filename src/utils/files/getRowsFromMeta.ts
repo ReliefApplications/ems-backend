@@ -58,6 +58,8 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
           set(row, column.name, Array.isArray(value) ? value.join(',') : value);
           break;
         }
+        case 'people':
+        case 'singlepeople':
         case 'users': {
           let value: any = get(record, column.field);
           const choices = column.meta.field.choices || [];
@@ -92,16 +94,8 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
           set(row, column.name, Array.isArray(value) ? value.join(',') : value);
           break;
         }
-        case 'multipletext': {
-          const value = get(record, column.name);
-          set(row, column.name, value);
-          break;
-        }
-        case 'matrix': {
-          const value = get(record, column.name);
-          set(row, column.name, value);
-          break;
-        }
+        case 'multipletext':
+        case 'matrix':
         case 'matrixdropdown': {
           const value = get(record, column.name);
           set(row, column.name, value);

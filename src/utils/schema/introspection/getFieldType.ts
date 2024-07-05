@@ -122,6 +122,12 @@ const getFieldType = (
     case 'owner': {
       return GraphQLJSON;
     }
+    case 'people': {
+      return GraphQLJSON;
+    }
+    case 'singlepeople': {
+      return GraphQLString;
+    }
     case 'geospatial': {
       return GraphQLJSON;
     }

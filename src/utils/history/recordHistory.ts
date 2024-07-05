@@ -358,32 +358,32 @@ export class RecordHistory {
         });
       } else {
         // Otherwise, get the display value from choices stored in the field/choicesByUrl
-        const choices = await getFullChoices(field, this.options.context);
+        const choices = await getFullChoices(
+          field,
+          this.options.context,
+          [].concat(change.old).concat(change.new)
+        );
         if (change.old !== undefined) {
-          if (isArray(change.old)) {
-            change.old = [
-              ...new Set(
-                change.old.map((item: string) =>
-                  getOptionFromChoices(item, choices)
-                )
-              ),
-            ];
-          } else {
-            change.old = getOptionFromChoices(change.old, choices);
-          }
+          change.old = Array.isArray(change.old)
+            ? [
+                ...new Set(
+                  change.old.map((item: string) =>
+                    getOptionFromChoices(item, choices)
+                  )
+                ),
+              ]
+            : getOptionFromChoices(change.old, choices);
         }
         if (change.new !== undefined) {
-          if (isArray(change.new)) {
-            change.new = [
-              ...new Set(
-                change.new.map((item: string) =>
-                  getOptionFromChoices(item, choices)
-                )
-              ),
-            ];
-          } else {
-            change.new = getOptionFromChoices(change.new, choices);
-          }
+          change.new = Array.isArray(change.new)
+            ? [
+                ...new Set(
+                  change.new.map((item: string) =>
+                    getOptionFromChoices(item, choices)
+                  )
+                ),
+              ]
+            : getOptionFromChoices(change.new, choices);
         }
       }
     };
@@ -608,6 +608,10 @@ export class RecordHistory {
               change.old = new Date(change.old).toTimeString();
             if (change.new !== undefined)
               change.new = new Date(change.new).toTimeString();
+            break;
+          case 'people':
+          case 'singlepeople':
+            await formatSelectable(field, change);
             break;
           default:
             // for all other cases, keep the values

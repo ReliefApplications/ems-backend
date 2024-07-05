@@ -141,7 +141,8 @@ router.get('/form/records/:id', async (req, res) => {
         const records = await Record.find(filter);
         const rows = await getRows(
           columns,
-          getAccessibleFields(records, formAbility)
+          getAccessibleFields(records, formAbility),
+          req.headers.authorization
         );
         const type = (req.query ? req.query.type : 'xlsx').toString();
         const filename = formatFilename(form.name);
@@ -318,7 +319,7 @@ router.get('/resource/records/:id', async (req, res) => {
             archived: { $ne: true },
           });
         }
-        const rows = await getRows(columns, records);
+        const rows = await getRows(columns, records, req.headers.authorization);
         const type = (req.query ? req.query.type : 'xlsx').toString();
         const filename = formatFilename(resource.name);
         return await fileBuilder(res, filename, columns, rows, type);

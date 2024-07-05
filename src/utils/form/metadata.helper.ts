@@ -328,6 +328,27 @@ export const getMetaData = async (
         fieldMeta._field = field;
         break;
       }
+      case 'people':
+        fieldMeta.editor = 'people';
+        fieldMeta.multiSelect = true;
+        fieldMeta.filter = {
+          operators: [
+            'isempty',
+            'isnotempty',
+            'eq',
+            'neq',
+            'contains',
+            'doesnotcontain',
+          ],
+        };
+        break;
+      case 'singlepeople': {
+        fieldMeta.editor = 'people';
+        fieldMeta.filter = {
+          operators: ['isempty', 'isnotempty', 'eq', 'neq'],
+        };
+        break;
+      }
       default: {
         break;
       }

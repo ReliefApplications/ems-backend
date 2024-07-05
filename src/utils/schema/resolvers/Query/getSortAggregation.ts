@@ -27,7 +27,10 @@ const getSortAggregation = async (
   // If we need to populate choices to sort on the text value
   if (
     field &&
-    (field.choices || field.choicesByUrl || field.choicesByGraphQL)
+    (field.choices ||
+      field.choicesByUrl ||
+      field.choicesByGraphQL ||
+      ['people, singlepeople'].includes(field.type))
   ) {
     const choices = (await getFullChoices(field, context)) || [];
     const choicesValue = choices.map((x) => x.value);
