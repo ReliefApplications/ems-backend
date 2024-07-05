@@ -8,9 +8,9 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Connection } from './pagination.type';
-import { logger } from '@services/logger.service';
-import mongoose from 'mongoose';
-import { Record } from '@models';
+// import { logger } from '@services/logger.service';
+// import mongoose from 'mongoose';
+// import { Record } from '@models';
 
 /**
  * GraphQL DataSet type definition
@@ -35,13 +35,13 @@ export const mergeArrayOfObjects = (
  * GraphQL Resource type.
  */
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const ResourceType = new GraphQLObjectType({
-  name: 'Resources',
-  fields: () => ({
-    id: { type: GraphQLID },
-    name: { type: GraphQLString },
-  }),
-});
+// const ResourceType = new GraphQLObjectType({
+//   name: 'Resources',
+//   fields: () => ({
+//     id: { type: GraphQLID },
+//     name: { type: GraphQLString },
+//   }),
+// });
 
 /**
  * GraphQL DataSet type.
@@ -51,7 +51,8 @@ export const DatasetType = new GraphQLObjectType({
   name: 'Dataset',
   fields: () => ({
     name: { type: GraphQLString },
-    resource: { type: ResourceType },
+    query: { type: GraphQLJSON },
+    // resource: { type: ResourceType },
     filter: { type: GraphQLJSON },
     pageSize: { type: GraphQLString },
     fields: { type: new GraphQLList(GraphQLJSON) },
@@ -63,56 +64,56 @@ export const DatasetType = new GraphQLObjectType({
     emails: {
       type: GraphQLJSON,
     },
-    records: {
-      type: GraphQLJSON,
-      async resolve(parent) {
-        try {
-          if (parent.records.length) {
-            const nestedFields = parent.nestedFields;
-            const dropdownFields = parent.fields.filter((field) => {
-              return field.type === 'dropdown' || field.type === 'radiogroup';
-            });
-            for (const obj of parent.records) {
-              const data = obj?.data;
+    // records: {
+    //   type: GraphQLJSON,
+    //   async resolve(parent) {
+    //     try {
+    //       if (parent.records.length) {
+    //         const nestedFields = parent.nestedFields;
+    //         const dropdownFields = parent.fields.filter((field) => {
+    //           return field.type === 'dropdown' || field.type === 'radiogroup';
+    //         });
+    //         for (const obj of parent.records) {
+    //           const data = obj?.data;
 
-              for (const [key, value] of Object.entries(data)) {
-                if (
-                  mongoose.isValidObjectId(value) &&
-                  typeof value === 'string'
-                ) {
-                  const project = mergeArrayOfObjects(nestedFields[key]) ?? {};
-                  Object.assign(project, { _id: 0 });
-                  const record = await Record.findById(value, project);
-                  if (record) {
-                    data[key] = record;
-                  }
-                }
-                if (dropdownFields) {
-                  const thisDropdownField = dropdownFields.find((field) => {
-                    return field.name == key;
-                  });
-                  if (thisDropdownField?.choices) {
-                    const thisChoice = thisDropdownField.choices.find(
-                      (choice) => {
-                        return choice.value === value;
-                      }
-                    );
-                    data[key] = thisChoice?.text ?? value;
-                  }
-                }
-              }
-              Object.assign(obj, data);
-              delete obj.data;
-            }
-          }
-          return parent.records;
-        } catch (error) {
-          logger.error('DataSets Resolver', error.message, {
-            stack: error.stack,
-          });
-        }
-      },
-    },
+    //           for (const [key, value] of Object.entries(data)) {
+    //             if (
+    //               mongoose.isValidObjectId(value) &&
+    //               typeof value === 'string'
+    //             ) {
+    //               const project = mergeArrayOfObjects(nestedFields[key]) ?? {};
+    //               Object.assign(project, { _id: 0 });
+    //               const record = await Record.findById(value, project);
+    //               if (record) {
+    //                 data[key] = record;
+    //               }
+    //             }
+    //             if (dropdownFields) {
+    //               const thisDropdownField = dropdownFields.find((field) => {
+    //                 return field.name == key;
+    //               });
+    //               if (thisDropdownField?.choices) {
+    //                 const thisChoice = thisDropdownField.choices.find(
+    //                   (choice) => {
+    //                     return choice.value === value;
+    //                   }
+    //                 );
+    //                 data[key] = thisChoice?.text ?? value;
+    //               }
+    //             }
+    //           }
+    //           Object.assign(obj, data);
+    //           delete obj.data;
+    //         }
+    //       }
+    //       return parent.records;
+    //     } catch (error) {
+    //       logger.error('DataSets Resolver', error.message, {
+    //         stack: error.stack,
+    //       });
+    //     }
+    //   },
+    // },
     totalCount: {
       type: GraphQLInt,
     },
