@@ -112,14 +112,14 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
     datasets: [
       {
         name: String,
-        resource: {
-          id: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Resource',
-            required: true,
-          },
-          name: String,
-        },
+        // resource: {
+        //   id: {
+        //     type: mongoose.Schema.Types.ObjectId,
+        //     ref: 'Resource',
+        //     required: true,
+        //   },
+        //   name: String,
+        // },
         query: { type: mongoose.Schema.Types.Mixed },
         filter: { type: mongoose.Schema.Types.Mixed },
         pageSize: { type: mongoose.Schema.Types.Number },
