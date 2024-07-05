@@ -344,8 +344,7 @@ router.post('/send-individual-email/:configId', async (req, res) => {
       const bodyBlock = parse(`<tr><td>${bodyString}</td></tr>`);
 
       // remove other individual blocks
-      const regex = /<p>{{\s*.*?\s*}}<\/p>/g;
-      const emailHtml = baseElement.toString().replace(regex, '');
+      const blockNameRegex = /<p>{{\s*.*?\s*}}<\/p>/g;
 
       bodyElement.appendChild(bodyBlock);
       const emailParams = {
@@ -354,7 +353,7 @@ router.post('/send-individual-email/:configId', async (req, res) => {
           cc: cc,
           bcc: bcc,
           subject: emailSubject,
-          html: emailHtml,
+          html: mainTableElement.toString().replace(blockNameRegex, ''),
           attachments: attachments,
         },
       };
