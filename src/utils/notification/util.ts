@@ -1,6 +1,7 @@
 import { dateLocale, dateTimeLocale, timeLocale } from '@const/locale';
 import { Resource } from '@models';
 import { DatasetPreviewArgs } from '@routes/notification';
+import { logger } from '@services/logger.service';
 import Exporter from '@utils/files/resourceExporter';
 import { Response } from 'express';
 import { map } from 'lodash';
@@ -147,11 +148,10 @@ export const fetchDatasets = async (
 ): Promise<ProcessedDataset[]> => {
   try {
     const processedDatasets = await Promise.all(
-      datasets.map(async (dataset) => {
-        const resource = await Resource.findById(dataset.resource);
-        if (!resource) {
-          throw new Error('common.errors.dataNotFound');
-        }
+      datasets.map(async (dataset): Promise<ProcessedDataset> => {
+        const resource = await Resource.findById(dataset.resource.id).exec();
+        if (!resource) throw new Error('common.errors.dataNotFound');
+
         const resourceExporter = new Exporter(req, res, resource, {
           query: dataset.query,
           timeZone: 'UTC',
@@ -171,11 +171,7 @@ export const fetchDatasets = async (
     );
     return processedDatasets;
   } catch (error) {
-    // Handle the error appropriately, e.g., log it and send a response
-    console.error('Error fetching datasets:', error);
-    res
-      .status(500)
-      .send({ error: 'An error occurred while fetching datasets.' });
-    return [];
+    logger.error(error.message, { stack: error.stack });
+    throw error;
   }
 };
