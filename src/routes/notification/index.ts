@@ -1,5 +1,4 @@
 import express from 'express';
-// import { sendEmail } from '@utils/email';
 import { logger } from '@services/logger.service';
 import { EmailNotification } from '@models';
 import {
@@ -32,7 +31,10 @@ export interface TableStyle {
  *
  */
 export interface DatasetPreviewArgs {
-  resource: string;
+  resource: {
+    id: string;
+    name?: string;
+  };
   name: string;
   query: {
     name: string;
@@ -55,7 +57,10 @@ router.post('/send-email/:configId', async (req, res) => {
         return {
           name: dataset.name,
           query: dataset.query,
-          resource: dataset.resource.id.toString(),
+          resource: {
+            id: dataset.resource.id.toString(),
+            name: dataset.resource.name,
+          },
         };
       }
     );
@@ -63,8 +68,8 @@ router.post('/send-email/:configId', async (req, res) => {
     try {
       datasets = await fetchDatasets(datasetQueries, req, res);
     } catch (e) {
-      if (e == 'common.errors.dataNotFound') {
-        return res.status(404).send(req.t(e));
+      if (e.message == 'common.errors.dataNotFound') {
+        return res.status(404).send(i18next.t(e.message));
       } else throw e;
     }
     const baseElement = parse(baseTemplate);
@@ -138,44 +143,62 @@ router.post('/send-email/:configId', async (req, res) => {
 });
 
 router.post('/preview-email/:configId', async (req, res) => {
-  const config = await EmailNotification.findById(req.params.configId).exec();
-  const datasetQueries: DatasetPreviewArgs[] = config.datasets.map(
-    (dataset) => {
-      return {
-        name: dataset.name,
-        query: dataset.query,
-        resource: dataset.resource.id.toString(),
-      };
-    }
-  );
-  let datasets: ProcessedDataset[];
   try {
-    datasets = await fetchDatasets(datasetQueries, req, res);
-  } catch (e) {
-    if (e == 'common.errors.dataNotFound') {
-      return res.status(404).send(req.t(e));
-    } else throw e;
+    const config = await EmailNotification.findById(req.params.configId).exec();
+    const datasetQueries: DatasetPreviewArgs[] = config.datasets.map(
+      (dataset) => {
+        return {
+          name: dataset.name,
+          query: dataset.query,
+          resource: {
+            id: dataset.resource.id.toString(),
+            name: dataset.resource.name,
+          },
+        };
+      }
+    );
+    let datasets: ProcessedDataset[];
+    try {
+      datasets = await fetchDatasets(datasetQueries, req, res);
+    } catch (e) {
+      if (e.message === 'common.errors.dataNotFound') {
+        return res.status(404).send(req.t(e));
+      } else {
+        logger.error(
+          'preview-email route handler - configuration query',
+          e.message,
+          { stack: e.stack }
+        );
+      }
+    }
+    const baseElement = parse(baseTemplate);
+    const mainTableElement = baseElement.getElementById('mainTable');
+    await buildEmail(config, mainTableElement, datasets);
+    res.send(baseElement.toString());
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
-  const baseElement = parse(baseTemplate);
-  const mainTableElement = baseElement.getElementById('mainTable');
-  await buildEmail(config, mainTableElement, datasets);
-  res.send(baseElement.toString());
 });
 
 router.post('/preview-dataset', async (req, res) => {
   try {
-    const config = req.body.dataset as DatasetPreviewArgs;
+    const config = req.body as DatasetPreviewArgs;
     let dataset: ProcessedDataset;
     try {
-      dataset = await fetchDatasets([config], req, res)[0];
-      res.send(buildTable(dataset));
+      dataset = (await fetchDatasets([config], req, res))[0];
+      const table = buildTable(dataset);
+      res.send(table);
     } catch (e) {
-      if (e == 'common.errors.dataNotFound') {
-        return res.status(404).send(req.t(e));
+      if (e.message === 'common.errors.dataNotFound') {
+        return res.status(404).send(i18next.t(e.message));
       } else throw e;
     }
   } catch (e) {
-    console.log(e);
+    logger.error('preview-dataset route handler', e.message, {
+      stack: e.stack,
+    });
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
@@ -191,7 +214,10 @@ router.post('/send-individual-email/:configId', async (req, res) => {
         return {
           name: dataset.name,
           query: dataset.query,
-          resource: dataset.resource.id.toString(),
+          resource: {
+            id: dataset.resource.id.toString(),
+            name: dataset.resource.name,
+          },
           isIndividualEmail: dataset.individualEmail || false,
         };
       }
@@ -203,8 +229,8 @@ router.post('/send-individual-email/:configId', async (req, res) => {
     try {
       datasets = await fetchDatasets(datasetQueries, req, res);
     } catch (e) {
-      if (e == 'common.errors.dataNotFound') {
-        return res.status(404).send(req.t(e));
+      if (e.message === 'common.errors.dataNotFound') {
+        return res.status(404).send(req.t(e.message));
       } else throw e;
     }
 
@@ -366,7 +392,7 @@ router.post('/send-individual-email/:configId', async (req, res) => {
     res.status(200).json({ message: 'Email sent successfully' });
   } catch (err) {
     logger.error(
-      'send-email route handler - configuration query',
+      'send-individual-email route handler - configuration query',
       err.message,
       { stack: err.stack }
     );
