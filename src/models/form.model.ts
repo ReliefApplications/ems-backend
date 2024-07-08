@@ -10,6 +10,7 @@ import { getGraphQLTypeName } from '@utils/validators';
 import { deleteFolder } from '@utils/files/deleteFolder';
 import { logger } from '@services/logger.service';
 import { DEFAULT_IMPORT_FIELD } from './resource.model';
+import { ApiConfiguration } from './apiConfiguration.model';
 
 /** Form documents interface declaration */
 interface FormDocument extends Document {
@@ -38,6 +39,11 @@ interface FormDocument extends Document {
   versions?: any[];
   channel?: any;
   layouts?: any;
+  kobo?: {
+    id: string;
+    deployedVersionId: string;
+    apiConfiguration: ApiConfiguration;
+  };
 }
 
 /** Interface of form */
@@ -67,6 +73,14 @@ const schema = new Schema<Form>(
     status: {
       type: String,
       enum: Object.values(status),
+    },
+    kobo: {
+      id: String,
+      deployedVersionId: String,
+      apiConfiguration: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'ApiConfiguration',
+      },
     },
     permissions: {
       canSee: [

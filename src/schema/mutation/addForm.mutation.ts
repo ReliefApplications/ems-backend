@@ -114,6 +114,7 @@ export default {
           const survey = response.data.content.survey;
           const choices = response.data.content.choices;
           const title = response.data.name;
+          const deployedVersionId = response.data.deployed_version_id;
 
           // Get structure from the kobo form
           const structure = JSON.stringify(
@@ -153,6 +154,11 @@ export default {
             structure,
             fields,
             versions: [version._id],
+            kobo: {
+              id: args.kobo,
+              deployedVersionId,
+              apiConfiguration: args.apiConfiguration,
+            },
           });
           await form.save();
           return form;
