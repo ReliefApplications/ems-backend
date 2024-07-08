@@ -5,6 +5,7 @@ import onFamilyTransfer from './onFamilyTransfer';
 import onFamilyUpdated from './onFamilyEdited';
 import onFamilyAdded from './onFamilyAdded';
 import { Record } from '@models';
+import onStructureUpdated from './onStructureUpdated';
 
 /** Whether or not the current environment is Alimentaide */
 const IS_ALIMENTAIDE =
@@ -45,6 +46,8 @@ export const setupCustomAlimentaideListeners = <DocType>(
   schema.post('findOneAndUpdate', async function (doc) {
     if (FAMILY_FORM_ID.equals(doc.form)) {
       await onFamilyUpdated(doc);
+    } else if (STRUCTURE_FORM_ID.equals(doc.form)) {
+      await onStructureUpdated(doc);
     }
   });
 
