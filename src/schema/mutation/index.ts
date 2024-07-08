@@ -90,7 +90,7 @@ import editDraftRecord from './editDraftRecord.mutation';
 import addDashboardTemplate from './addDashboardTemplate.mutation';
 import deleteDashboardTemplates from './deleteDashboardTemplates.mutation';
 import addEmailNotification from './addEmailNotification.mutation';
-import editAndGetEmailNotification from './editAndGetEmailNotification.mutation';
+import editEmailNotification from './editEmailNotification.mutation';
 
 /** GraphQL mutation definition */
 const Mutation = new GraphQLObjectType({
@@ -150,7 +150,7 @@ const Mutation = new GraphQLObjectType({
     editPage,
     editPageContext,
     editPositionAttributeCategory,
-    editAndGetEmailNotification,
+    editEmailNotification,
     editPullJob,
     editRecord,
     editRecords,

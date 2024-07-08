@@ -28,6 +28,31 @@ export type EmailNotificationArgs = {
   draftStepper: number;
 };
 
+/**
+ * Query object representing query executed against DB
+ */
+export const QueryInputType = new GraphQLInputObjectType({
+  name: 'QueryInput',
+  fields: () => ({
+    name: { type: GraphQLString },
+    filter: { type: GraphQLJSON },
+    fields: { type: new GraphQLList(GraphQLJSON) },
+  }),
+});
+
+/**
+ * Dataset object containing resource and query, used to fetch data
+ */
+export const DatasetInputType = new GraphQLInputObjectType({
+  name: 'DatasetInput',
+  fields: () => ({
+    resource: { type: GraphQLString },
+    name: { type: GraphQLString },
+    query: { type: QueryInputType },
+    isIndividualEmail: { type: GraphQLBoolean },
+  }),
+});
+
 /** GraphQL custom notification query input type definition */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const EmailNotificationInputType = new GraphQLInputObjectType({
@@ -37,7 +62,7 @@ export const EmailNotificationInputType = new GraphQLInputObjectType({
     schedule: { type: GraphQLString },
     applicationId: { type: new GraphQLNonNull(GraphQLID) },
     notificationType: { type: GraphQLString },
-    datasets: { type: new GraphQLList(GraphQLJSON) },
+    datasets: { type: new GraphQLList(DatasetInputType) },
     emailLayout: { type: GraphQLJSON },
     emailDistributionList: { type: GraphQLJSON },
     recipientsType: { type: GraphQLString },

@@ -38,7 +38,6 @@ import layers from './layers.query';
 import layer from './layer.query';
 import draftRecords from './draftRecords.query';
 import referenceDataAggregation from './referenceDataAggregation.query';
-import dataset from './dataset.query';
 import emailNotifications from './emailNotifications.query';
 import types from './types.query';
 
@@ -62,7 +61,6 @@ const Query = new GraphQLObjectType({
     notifications,
     page,
     pages,
-    dataset,
     permissions,
     pullJobs,
     record,
