@@ -9,19 +9,11 @@ import {
 import { AccessibleRecordModel } from '@casl/mongoose';
 
 /**
- *Resource interface
- */
-interface Resource {
-  id: Schema.Types.ObjectId;
-  name: string;
-}
-
-/**
  *DataSet interface
  */
 export interface Dataset {
   name: string;
-  resource: Resource;
+  resource: string;
   query: {
     name: string;
     filter: any;
@@ -112,18 +104,13 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
     datasets: [
       {
         name: String,
-        // resource: {
-        //   id: {
-        //     type: mongoose.Schema.Types.ObjectId,
-        //     ref: 'Resource',
-        //     required: true,
-        //   },
-        //   name: String,
-        // },
-        query: { type: mongoose.Schema.Types.Mixed },
-        filter: { type: mongoose.Schema.Types.Mixed },
+        resource: String,
+        query: {
+          name: String,
+          fields: [{ type: mongoose.Schema.Types.Mixed }],
+          filter: { type: mongoose.Schema.Types.Mixed },
+        },
         pageSize: { type: mongoose.Schema.Types.Number },
-        fields: [{ type: mongoose.Schema.Types.Mixed }],
         tableStyle: { type: mongoose.Schema.Types.Mixed },
         blockType: { type: mongoose.Schema.Types.Mixed },
         textStyle: { type: mongoose.Schema.Types.Mixed },

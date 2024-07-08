@@ -49,7 +49,12 @@ export const DatasetInputType = new GraphQLInputObjectType({
     resource: { type: GraphQLString },
     name: { type: GraphQLString },
     query: { type: QueryInputType },
-    isIndividualEmail: { type: GraphQLBoolean },
+    tableStyle: { type: GraphQLJSON },
+    blockType: { type: GraphQLJSON },
+    textStyle: { type: GraphQLJSON },
+    sendAsAttachment: { type: GraphQLBoolean },
+    individualEmail: { type: GraphQLBoolean },
+    pageSize: { type: GraphQLInt },
   }),
 });
 
