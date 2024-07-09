@@ -39,6 +39,7 @@ export interface DatasetPreviewArgs {
     fields: any[];
   };
   individualEmail?: boolean;
+  limit?: number;
 }
 
 /**
@@ -178,8 +179,10 @@ router.post('/preview-dataset', async (req, res) => {
     let dataset: ProcessedDataset;
     try {
       dataset = (await fetchDatasets([config], req, res))[0];
+      const resultCount = dataset.records.length;
+      dataset.records = dataset.records.slice(0, config.limit || 50); // Todo: do it on query layer for all email apis
       const table = buildTable(dataset);
-      res.send(table);
+      res.send({ tableHtml: table, count: resultCount });
     } catch (e) {
       if (e.message === 'common.errors.dataNotFound') {
         return res.status(404).send(i18next.t(e.message));
