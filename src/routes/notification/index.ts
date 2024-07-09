@@ -165,8 +165,15 @@ router.post('/preview-email/:configId', async (req, res) => {
     }
     const baseElement = parse(baseTemplate);
     const mainTableElement = baseElement.getElementById('mainTable');
+    const subjectRecords = datasets.find(
+      (dataset) => dataset.name === config.datasets[0]?.name
+    )?.records;
+    const emailSubject = replaceSubject(
+      config.get('emailLayout').subject,
+      subjectRecords
+    );
     await buildEmail(config, mainTableElement, datasets);
-    res.send(baseElement.toString());
+    res.send({ html: baseElement.toString(), subject: emailSubject });
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
     return res.status(500).send(req.t('common.errors.internalServerError'));
