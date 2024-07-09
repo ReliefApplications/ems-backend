@@ -173,7 +173,14 @@ router.post('/preview-email/:configId', async (req, res) => {
       subjectRecords
     );
     await buildEmail(config, mainTableElement, datasets);
-    res.send({ html: baseElement.toString(), subject: emailSubject });
+    const emailTable = baseElement
+      .removeWhitespace()
+      .toString()
+      .replaceAll('"', "'");
+    res.send({
+      html: emailTable,
+      subject: emailSubject,
+    });
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
     return res.status(500).send(req.t('common.errors.internalServerError'));
@@ -188,8 +195,12 @@ router.post('/preview-dataset', async (req, res) => {
       dataset = (await fetchDatasets([config], req, res))[0];
       const resultCount = dataset.records.length;
       dataset.records = dataset.records.slice(0, config.limit || 50); // Todo: do it on query layer for all email apis
-      const table = buildTable(dataset);
-      res.send({ tableHtml: table, count: resultCount });
+      const table = parse(buildTable(dataset));
+      const tableElement = table
+        .removeWhitespace()
+        .toString()
+        .replaceAll('"', "'");
+      res.send({ tableHtml: tableElement, count: resultCount });
     } catch (e) {
       if (e.message === 'common.errors.dataNotFound') {
         return res.status(404).send(i18next.t(e.message));
