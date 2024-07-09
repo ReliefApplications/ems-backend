@@ -3,6 +3,7 @@ import {
   GraphQLID,
   GraphQLString,
   GraphQLError,
+  GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Form, Resource, Version, Channel, ReferenceData } from '@models';
@@ -22,7 +23,7 @@ import isEqual from 'lodash/isEqual';
 import differenceWith from 'lodash/differenceWith';
 import unionWith from 'lodash/unionWith';
 import i18next from 'i18next';
-import { get, isArray } from 'lodash';
+import { get, isArray, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
 import checkDefaultFields from '@utils/form/checkDefaultFields';
 import { graphQLAuthCheck } from '@schema/shared';
@@ -74,6 +75,7 @@ type EditFormArgs = {
   status?: StatusType;
   name?: string;
   permissions?: any;
+  dataFromDeployedVersion?: boolean;
 };
 
 /**
@@ -88,6 +90,7 @@ export default {
     status: { type: StatusEnumType },
     name: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
+    dataFromDeployedVersion: { type: GraphQLBoolean },
   },
   async resolve(parent, args: EditFormArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -206,6 +209,14 @@ export default {
             }
           }
         }
+      }
+
+      // Update kobo dataFromDeployedVersion
+      if (!isNil(args.dataFromDeployedVersion)) {
+        update.kobo = {
+          ...form.kobo,
+          dataFromDeployedVersion: args.dataFromDeployedVersion,
+        };
       }
 
       // Update fields and structure, check that structure is different

@@ -42,6 +42,7 @@ interface FormDocument extends Document {
   kobo?: {
     id: string;
     deployedVersionId: string;
+    dataFromDeployedVersion: boolean;
     apiConfiguration: ApiConfiguration;
   };
 }
@@ -77,6 +78,7 @@ const schema = new Schema<Form>(
     kobo: {
       id: String,
       deployedVersionId: String,
+      dataFromDeployedVersion: { type: Boolean, default: false },
       apiConfiguration: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'ApiConfiguration',
