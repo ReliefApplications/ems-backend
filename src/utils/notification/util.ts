@@ -149,7 +149,7 @@ export const fetchDatasets = async (
   try {
     const processedDatasets = await Promise.all(
       datasets.map(async (dataset): Promise<ProcessedDataset> => {
-        const resource = await Resource.findById(dataset.resource.id).exec();
+        const resource = await Resource.findById(dataset.resource).exec();
         if (!resource) throw new Error('common.errors.dataNotFound');
 
         const resourceExporter = new Exporter(req, res, resource, {
@@ -165,7 +165,7 @@ export const fetchDatasets = async (
         return {
           ...records,
           name: dataset.name,
-          isIndividualEmail: dataset.isIndividualEmail,
+          individualEmail: dataset.individualEmail,
         };
       })
     );

@@ -31,17 +31,14 @@ export interface TableStyle {
  *
  */
 export interface DatasetPreviewArgs {
-  resource: {
-    id: string;
-    name?: string;
-  };
+  resource: string;
   name: string;
   query: {
     name: string;
     filter: any;
     fields: any[];
   };
-  isIndividualEmail?: boolean;
+  individualEmail?: boolean;
 }
 
 /**
@@ -57,10 +54,7 @@ router.post('/send-email/:configId', async (req, res) => {
         return {
           name: dataset.name,
           query: dataset.query,
-          resource: {
-            id: dataset.resource.id.toString(),
-            name: dataset.resource.name,
-          },
+          resource: dataset.resource,
         };
       }
     );
@@ -150,10 +144,7 @@ router.post('/preview-email/:configId', async (req, res) => {
         return {
           name: dataset.name,
           query: dataset.query,
-          resource: {
-            id: dataset.resource.id.toString(),
-            name: dataset.resource.name,
-          },
+          resource: dataset.resource,
         };
       }
     );
@@ -214,10 +205,7 @@ router.post('/send-individual-email/:configId', async (req, res) => {
         return {
           name: dataset.name,
           query: dataset.query,
-          resource: {
-            id: dataset.resource.id.toString(),
-            name: dataset.resource.name,
-          },
+          resource: dataset.resource,
           isIndividualEmail: dataset.individualEmail || false,
         };
       }
