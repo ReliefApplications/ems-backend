@@ -159,6 +159,7 @@ export const fetchDatasets = async (
           // Temp
           fields: getFlatFields(dataset.query.fields),
           filter: dataset.query.filter,
+          limit: dataset.limit <= 50 ? dataset.limit : 50,
         });
 
         const records = await resourceExporter.export();

@@ -194,7 +194,6 @@ router.post('/preview-dataset', async (req, res) => {
     try {
       dataset = (await fetchDatasets([config], req, res))[0];
       const resultCount = dataset.records.length;
-      dataset.records = dataset.records.slice(0, config.limit || 50); // Todo: do it on query layer for all email apis
       const table = parse(buildTable(dataset));
       const tableElement = table
         .removeWhitespace()

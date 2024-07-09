@@ -37,6 +37,7 @@ interface ExportBatchParams {
   resource?: string;
   timeZone: string;
   fileName?: string;
+  limit?: number;
 }
 
 /**
@@ -252,9 +253,10 @@ export default class Exporter {
       this.resource.fields,
       this.req.context
     );
-    const countAggregation = await Record.aggregate(
-      await this.recordsPipeline()
-    ).facet({
+    const countAggregation = await Record.aggregate([
+      ...(await this.recordsPipeline()),
+      { $limit: this.params.limit || 0 },
+    ]).facet({
       items: [
         ...sort,
         {
