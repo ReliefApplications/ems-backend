@@ -193,13 +193,17 @@ router.post('/preview-dataset', async (req, res) => {
     let dataset: ProcessedDataset;
     try {
       dataset = (await fetchDatasets([config], req, res))[0];
-      const resultCount = dataset.records.length;
-      const table = parse(buildTable(dataset));
-      const tableElement = table
-        .removeWhitespace()
-        .toString()
-        .replaceAll('"', "'");
-      res.send({ tableHtml: tableElement, count: resultCount });
+      if (dataset.records.length <= 50) {
+        const resultCount = dataset.records.length;
+        const table = parse(buildTable(dataset));
+        const tableElement = table
+          .removeWhitespace()
+          .toString()
+          .replaceAll('"', "'");
+        res.send({ tableHtml: tableElement, count: resultCount });
+      } else {
+        res.send({ count: dataset.records.length });
+      }
     } catch (e) {
       if (e.message === 'common.errors.dataNotFound') {
         return res.status(404).send(i18next.t(e.message));
