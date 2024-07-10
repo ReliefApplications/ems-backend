@@ -13,6 +13,11 @@ import { baseTemplate } from '@const/notification';
 import i18next from 'i18next';
 import { sendEmail } from '@utils/email/sendEmail';
 import parse from 'node-html-parser';
+
+/**
+ * Limit of records to be fetched for each dataset in email notification
+ */
+const DATASET_COUNT_LIMIT = 50;
 /**
  * Interface of table style.
  */
@@ -56,6 +61,7 @@ router.post('/send-email/:configId', async (req, res) => {
           name: dataset.name,
           query: dataset.query,
           resource: dataset.resource,
+          limit: DATASET_COUNT_LIMIT,
         };
       }
     );
@@ -146,6 +152,7 @@ router.post('/preview-email/:configId', async (req, res) => {
           name: dataset.name,
           query: dataset.query,
           resource: dataset.resource,
+          limit: DATASET_COUNT_LIMIT,
         };
       }
     );
@@ -192,8 +199,11 @@ router.post('/preview-dataset', async (req, res) => {
     const config = req.body as DatasetPreviewArgs;
     let dataset: ProcessedDataset;
     try {
+      if (!config.limit) {
+        config.limit = 0;
+      }
       dataset = (await fetchDatasets([config], req, res))[0];
-      if (dataset.records.length <= 50) {
+      if (dataset.records.length <= DATASET_COUNT_LIMIT) {
         const resultCount = dataset.records.length;
         const table = parse(buildTable(dataset));
         const tableElement = table
