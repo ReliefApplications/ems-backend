@@ -200,7 +200,7 @@ router.post('/preview-dataset', async (req, res) => {
     let dataset: ProcessedDataset;
     try {
       if (!config.limit) {
-        config.limit = 0;
+        config.limit = Number.MAX_SAFE_INTEGER;
       }
       dataset = (await fetchDatasets([config], req, res))[0];
       if (dataset.records.length <= DATASET_COUNT_LIMIT) {

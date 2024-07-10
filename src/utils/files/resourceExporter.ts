@@ -255,7 +255,6 @@ export default class Exporter {
     );
     const countAggregation = await Record.aggregate([
       ...(await this.recordsPipeline()),
-      { $limit: this.params.limit || 0 },
     ]).facet({
       items: [
         ...sort,
@@ -412,6 +411,7 @@ export default class Exporter {
     const pipeline: any = [
       ...(searchFilter ? [searchFilter] : []),
       { $match: filters },
+      { $limit: this.params.limit || Number.MAX_SAFE_INTEGER },
     ];
     this.columns
       .filter((col) => col.meta?.field?.isCalculated)

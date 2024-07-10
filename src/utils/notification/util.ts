@@ -159,7 +159,7 @@ export const fetchDatasets = async (
           // Temp
           fields: getFlatFields(dataset.query.fields),
           filter: dataset.query.filter,
-          limit: dataset.limit || 0,
+          limit: dataset.limit || Number.MAX_SAFE_INTEGER,
         });
 
         const records = await resourceExporter.export();
