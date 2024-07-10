@@ -132,7 +132,7 @@ router.post('/send-email/:configId', async (req, res) => {
     };
     // Send email
     await sendEmail(emailParams);
-    // res.status(200).json({ message: 'Email sent successfully' });
+    res.status(200).json({ message: 'Email sent successfully' });
   } catch (err) {
     logger.error(
       'send-email route handler - configuration query',
