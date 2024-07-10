@@ -272,7 +272,7 @@ export default class Exporter {
       ],
     });
     // Get total count
-    const totalCount = countAggregation[0].totalCount[0].count;
+    const totalCount = countAggregation?.[0]?.totalCount?.[0]?.count ?? 0;
     // Create a list of all ids
     const ids = countAggregation[0].items.map((x) => x._id);
     // Build an empty list of records
