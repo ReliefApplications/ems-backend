@@ -177,7 +177,7 @@ export default class Exporter {
    */
   private getColumns = (): Promise<void> => {
     const metaQuery = buildMetaQuery(this.params.query);
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       axios({
         url: `${config.get('server.url')}/graphql`,
         method: 'POST',
@@ -185,50 +185,54 @@ export default class Exporter {
         data: {
           query: metaQuery,
         },
-      }).then(async ({ data }) => {
-        for (const field in data.data) {
-          if (Object.prototype.hasOwnProperty.call(data.data, field)) {
-            const meta = data.data[field];
-            const rawColumns = getColumnsFromMeta(meta, this.params.fields);
-            const columns = rawColumns.filter((x) =>
-              this.params.fields.find((f) => f.name === x.name)
-            );
-            // Edits the column to match with the fields
-            for (const column of columns) {
-              const queryField = this.params.fields.find(
-                (f) => f.name === column.name
+      })
+        .then(async ({ data }) => {
+          for (const field in data.data) {
+            if (Object.prototype.hasOwnProperty.call(data.data, field)) {
+              const meta = data.data[field];
+              const rawColumns = getColumnsFromMeta(meta, this.params.fields);
+              const columns = rawColumns.filter((x) =>
+                this.params.fields.find((f) => f.name === x.name)
               );
-              column.title = queryField.title;
-              if (column.subColumns) {
-                // Field does not exist in the template
-                if (!this.resource.fields.find((f) => f.name === column.name)) {
-                  const relatedResource = await Resource.findOne({
-                    fields: {
-                      $elemMatch: {
-                        resource: this.resource._id.toString(),
-                        relatedName: column.name,
+              // Edits the column to match with the fields
+              for (const column of columns) {
+                const queryField = this.params.fields.find(
+                  (f) => f.name === column.name
+                );
+                column.title = queryField.title;
+                if (column.subColumns) {
+                  // Field does not exist in the template
+                  if (
+                    !this.resource.fields.find((f) => f.name === column.name)
+                  ) {
+                    const relatedResource = await Resource.findOne({
+                      fields: {
+                        $elemMatch: {
+                          resource: this.resource._id.toString(),
+                          relatedName: column.name,
+                        },
                       },
-                    },
-                  }).select('fields');
-                  if (relatedResource) {
-                    column.parent = relatedResource;
+                    }).select('fields');
+                    if (relatedResource) {
+                      column.parent = relatedResource;
+                    }
+                  }
+                  if ((queryField.subFields || []).length > 0) {
+                    column.subColumns.forEach((subColumn) => {
+                      const subQueryField = queryField.subFields.find(
+                        (z) => z.name === `${column.name}.${subColumn.name}`
+                      );
+                      subColumn.title = subQueryField.title;
+                    });
                   }
                 }
-                if ((queryField.subFields || []).length > 0) {
-                  column.subColumns.forEach((subColumn) => {
-                    const subQueryField = queryField.subFields.find(
-                      (z) => z.name === `${column.name}.${subColumn.name}`
-                    );
-                    subColumn.title = subQueryField.title;
-                  });
-                }
               }
+              this.columns = columns;
+              resolve();
             }
-            this.columns = columns;
-            resolve();
           }
-        }
-      });
+        })
+        .catch((err) => reject(err));
     });
   };
 
