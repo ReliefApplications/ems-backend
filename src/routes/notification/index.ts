@@ -180,10 +180,7 @@ router.post('/preview-email/:configId', async (req, res) => {
       subjectRecords
     );
     await buildEmail(config, mainTableElement, datasets);
-    const emailTable = baseElement
-      .removeWhitespace()
-      .toString()
-      .replaceAll('"', "'");
+    const emailTable = Buffer.from(baseElement.toString()).toString('base64');
     res.send({
       html: emailTable,
       subject: emailSubject,
@@ -206,10 +203,7 @@ router.post('/preview-dataset', async (req, res) => {
       if (dataset.records.length <= DATASET_COUNT_LIMIT) {
         const resultCount = dataset.records.length;
         const table = parse(buildTable(dataset));
-        const tableElement = table
-          .removeWhitespace()
-          .toString()
-          .replaceAll('"', "'");
+        const tableElement = Buffer.from(table.toString()).toString('base64');
         res.send({ tableHtml: tableElement, count: resultCount });
       } else {
         res.send({ count: dataset.records.length });
