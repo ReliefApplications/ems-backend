@@ -1,6 +1,5 @@
 import { inthelastDateLocale, timeLocale } from '@const/locale';
 import { EmailNotification } from '@models';
-// import { ProcessedDataset, TableStyle } from '@routes/notification';
 import {
   formatDates,
   titleCase,
@@ -8,7 +7,6 @@ import {
   replaceDateMacro,
   ProcessedDataset,
 } from '@utils/notification/util';
-import { get } from 'lodash';
 import i18next from 'i18next';
 import { parse, HTMLElement } from 'node-html-parser';
 
@@ -28,23 +26,12 @@ export const replaceSubject = (subject: string, records: any[]): string => {
     const matches = subject.matchAll(subjectMatch);
 
     for (const match of matches) {
-      if (get(records[0], match[1])) {
-        subject = subject.replace(
-          match[0],
-          formatDates(records[0].data[match[1]])
-        );
-      }
-      if (records[0][match[1]]) {
-        // For metafields (createdAt, modifiedAt)
-        if (records[0][match[1]] instanceof Date) {
-          subject = subject.replace(
-            match[0],
-            formatDates(records[0][match[1]])
-          );
-        }
+      if (records[0][match[1]] != undefined && records[0][match[1]] != null) {
+        subject = subject.replace(match[0], formatDates(records[0][match[1]]));
+      } else {
+        subject = subject.replace(match[0], '');
       }
     }
-
     subject = replaceDateMacro(subject);
   }
   return subject;
