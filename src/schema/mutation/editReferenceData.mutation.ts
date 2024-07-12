@@ -35,6 +35,7 @@ type EditReferenceDataArgs = {
   path?: string;
   data?: any;
   graphQLFilter?: string;
+  separator?: string;
   permissions?: any;
   graphQLTypeName?: string;
 };
@@ -56,6 +57,7 @@ export default {
     path: { type: GraphQLString },
     data: { type: GraphQLJSON },
     graphQLFilter: { type: GraphQLString },
+    separator: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
     pageInfo: {
       type: new GraphQLInputObjectType({
