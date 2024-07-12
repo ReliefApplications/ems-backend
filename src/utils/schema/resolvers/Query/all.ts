@@ -208,7 +208,7 @@ const sortRecords = (records: any[], sortArgs: any): void => {
  * @returns true if field is used to sorting
  */
 const isSortField = (sortFields: any[], fieldName: string): boolean =>
-  sortFields.includes((item: any) => item.field === fieldName);
+  sortFields?.includes((item: any) => item.field === fieldName);
 
 /**
  * Returns a resolver that fetches records from resources/forms
