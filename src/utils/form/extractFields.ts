@@ -98,7 +98,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
                 }),
               };
             }),
-            choices: element.choices.map((x) => {
+            choices: (element.choices ?? []).map((x) => {
               return {
                 value: x.value ? x.value : x,
                 text: x.text ? x.text : x,
