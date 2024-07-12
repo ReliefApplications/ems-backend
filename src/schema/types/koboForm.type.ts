@@ -6,7 +6,7 @@ import { accessibleBy } from '@casl/mongoose';
 
 /** GraphQL Kobo form type definition */
 export const KoboFormType = new GraphQLObjectType({
-  name: 'Geospatial',
+  name: 'KoboForm',
   fields: () => ({
     id: { type: GraphQLString },
     deployedVersionId: { type: GraphQLString },

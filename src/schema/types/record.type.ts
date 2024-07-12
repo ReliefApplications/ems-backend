@@ -23,6 +23,7 @@ export const RecordType = new GraphQLObjectType({
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     archived: { type: GraphQLBoolean },
+    koboId: { type: GraphQLString },
     form: {
       type: FormType,
       async resolve(parent, args, context) {
