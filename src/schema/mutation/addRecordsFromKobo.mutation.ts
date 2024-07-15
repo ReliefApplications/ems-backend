@@ -1,4 +1,11 @@
-import { ApiConfiguration, Form, Record, Version } from '@models';
+import {
+  ApiConfiguration,
+  Channel,
+  Notification,
+  Form,
+  Record,
+  Version,
+} from '@models';
 import {
   GraphQLBoolean,
   GraphQLError,
@@ -15,6 +22,7 @@ import * as CryptoJS from 'crypto-js';
 import axios from 'axios';
 import { getNextId, transformRecord } from '@utils/form';
 import { cloneDeep, isEqual } from 'lodash';
+import pubsub from '../../server/pubsub';
 
 /** Arguments for the addRecordsFromKobo mutation */
 type AddRecordsFromKoboArgs = {
@@ -81,7 +89,8 @@ export default {
       );
       const response = await axios.get(url, {
         headers: {
-          Authorization: `${settings.tokenPrefix} ${settings.token}`,
+          // settings.tokenPrefix MUST be 'Token'
+          Authorization: `Token ${settings.token}`,
         },
       });
       let submissions = response.data.results;
@@ -108,12 +117,15 @@ export default {
         const fieldsNames = form.fields.map((field: any) => field.name);
 
         for (const submission of submissions) {
-          const oldRecord = oldRecords.find((rec: Record) =>
-            rec.koboId === submission._uuid ||
-            Object.prototype.hasOwnProperty.call(submission, 'meta/rootUuid')
-              ? rec.koboId === submission['meta/rootUuid']
-              : false
-          );
+          const oldRecord = oldRecords.find((rec: Record) => {
+            const submissionId = Object.prototype.hasOwnProperty.call(
+              submission,
+              'meta/rootUuid'
+            )
+              ? submission['meta/rootUuid']
+              : submission._uuid;
+            return rec.koboId === submissionId;
+          });
           if (oldRecord) {
             const recordToUpdate = cloneDeep(oldRecord);
             const data = getData(submission, form.fields, fieldsNames);
@@ -135,7 +147,12 @@ export default {
             // Records already exists, check if data changed on Kobo and we need to updated it here
           } else {
             // Create record from submission data
-            const koboId = submission._uuid;
+            const koboId = Object.prototype.hasOwnProperty.call(
+              submission,
+              'meta/rootUuid'
+            )
+              ? submission['meta/rootUuid']
+              : submission._uuid;
             const { incrementalId, incID } = await getNextId(
               String(form.resource ? form.resource : args.form)
             );
@@ -187,6 +204,19 @@ export default {
           try {
             await Version.bulkSave(versionsToCreate);
             await Record.bulkSave(recordsToSave);
+            // Send notifications to channel
+            const channel = await Channel.findOne({ form: form._id });
+            if (channel) {
+              const notification = new Notification({
+                action: `Records created from Kobo synchronized data submissions - ${form.name}`,
+                content: '',
+                channel: channel.id,
+                seenBy: [],
+              });
+              await notification.save();
+              const publisher = await pubsub();
+              publisher.publish(channel.id, { notification });
+            }
             return true;
           } catch (err2) {
             logger.error(err2.message, { stack: err2.stack });
