@@ -1,4 +1,4 @@
-import { Record as RecordModel, User } from '@models';
+import { Record as RecordModel, Role, User } from '@models';
 import { Types } from 'mongoose';
 
 /** The ID for the person form */
@@ -11,6 +11,14 @@ const AID_FORM_ID = new Types.ObjectId('64e6e0933c7bf35dfbf4f04e');
 const STAFF_FORM_ID = new Types.ObjectId('649e9ec5eae9f845cd921f01');
 /** The ID of the structure form */
 const STRUCTURE_FORM_ID = new Types.ObjectId('649ade1ceae9f80d6591886a');
+/** The id of the user role */
+const USER_ROLE_ID = new Types.ObjectId('6511574c8e4cb3d8a3f22a82');
+/** The id of the user can_see_graphs */
+const SEE_GRAPHS_ROLE_ID = new Types.ObjectId('668aab45a268e8463bf0d157');
+/** The id of the user can_manage_structures */
+const MANAGE_STRUCTURES_ROLE_ID = new Types.ObjectId(
+  '668aab26a268e8463bf0d14c'
+);
 
 /**
  * Updated the members of the family when they are removed from it
@@ -84,7 +92,7 @@ const onStructureUpdated = async (rec: RecordModel) => {
       },
     },
     {
-      $addToSet: { roles: new Types.ObjectId('6511574c8e4cb3d8a3f22a82') },
+      $addToSet: { roles: USER_ROLE_ID },
     }
   );
 
@@ -94,7 +102,7 @@ const onStructureUpdated = async (rec: RecordModel) => {
       _id: { $in: [...usersPlus, ...heads].map((u) => new Types.ObjectId(u)) },
     },
     {
-      $addToSet: { roles: new Types.ObjectId('668aab45a268e8463bf0d157') },
+      $addToSet: { roles: SEE_GRAPHS_ROLE_ID },
     }
   );
 
@@ -104,7 +112,7 @@ const onStructureUpdated = async (rec: RecordModel) => {
       _id: { $in: heads.map((u) => new Types.ObjectId(u)) },
     },
     {
-      $addToSet: { roles: new Types.ObjectId('668aab26a268e8463bf0d14c') },
+      $addToSet: { roles: MANAGE_STRUCTURES_ROLE_ID },
     }
   );
 };
@@ -117,6 +125,29 @@ export const migrateAllStructures = async () => {
     form: STRUCTURE_FORM_ID,
     archived: { $ne: true },
   });
+
+  const newRoles = [
+    USER_ROLE_ID,
+    SEE_GRAPHS_ROLE_ID,
+    MANAGE_STRUCTURES_ROLE_ID,
+  ];
+
+  // First we remove all old application roles, keeping only the new ones
+  await Role.deleteMany({
+    $and: [{ _id: { $nin: newRoles } }, { application: { $type: 'objectId' } }],
+  });
+
+  const backOfficeRoles = await Role.find({ application: null });
+
+  const allUsers = await User.find({});
+  for (const user of allUsers) {
+    // Only keep the back office roles,
+    // the other ones will be added back on the onStructureUpdated function
+    user.roles = user.roles.filter((r) =>
+      backOfficeRoles.find((br) => br._id.equals(r))
+    );
+    await user.save();
+  }
 
   for (const record of records) {
     await onStructureUpdated(record);
