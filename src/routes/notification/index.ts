@@ -13,6 +13,7 @@ import { baseTemplate } from '@const/notification';
 import i18next from 'i18next';
 import { sendEmail } from '@utils/email/sendEmail';
 import parse from 'node-html-parser';
+import { validateEmail } from '@utils/validators/validateEmail';
 
 /**
  * Limit of records to be fetched for each dataset in email notification
@@ -37,7 +38,7 @@ export interface TableStyle {
  */
 export interface DatasetPreviewArgs {
   resource: string;
-  name: string;
+  name?: string;
   query: {
     name: string;
     filter: any;
@@ -88,9 +89,9 @@ router.post('/send-email/:configId', async (req, res) => {
     );
 
     // // Get recipients
-    const to = config.get('emailDistributionList').To;
-    const cc = config.get('emailDistributionList').Cc;
-    const bcc = config.get('emailDistributionList').Bcc;
+    const to = config.get('emailDistributionList').to.inputEmails;
+    const cc = config.get('emailDistributionList').cc.inputEmails;
+    const bcc = config.get('emailDistributionList').bcc.inputEmails;
 
     // Add attachments
     // Use base64 encoded images as path for CID attachments
@@ -184,6 +185,85 @@ router.post('/preview-email/:configId', async (req, res) => {
     res.send({
       html: emailTable,
       subject: emailSubject,
+    });
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    return res.status(500).send(req.t('common.errors.internalServerError'));
+  }
+});
+
+router.post('/preview-distribution-lists/:configId', async (req, res) => {
+  try {
+    const config = await EmailNotification.findById(req.params.configId).exec();
+    const toEmails = [];
+    const ccEmails = [];
+    const bccEmails = [];
+
+    if (config.emailDistributionList.to?.filterEmails) {
+      const toQuery = config.emailDistributionList.to.filterEmails;
+      const toRecords = (await fetchDatasets([toQuery], req, res))[0].records;
+      toRecords.forEach((record) => {
+        Object.values(record).forEach((value) => {
+          if (typeof value === 'string' && validateEmail(value)) {
+            toEmails.push(value);
+          } else if (Array.isArray(value)) {
+            value.forEach((item) => {
+              if (typeof item === 'string' && validateEmail(item)) {
+                toEmails.push(item);
+              }
+            });
+          }
+        });
+      });
+    }
+    if (config.emailDistributionList.cc?.filterEmails) {
+      const ccQuery = config.emailDistributionList.cc.filterEmails;
+      const ccRecords = (await fetchDatasets([ccQuery], req, res))[0].records;
+      ccRecords.forEach((record) => {
+        Object.values(record).forEach((value) => {
+          if (typeof value === 'string' && validateEmail(value)) {
+            ccEmails.push(value);
+          } else if (Array.isArray(value)) {
+            value.forEach((item) => {
+              if (typeof item === 'string' && validateEmail(item)) {
+                ccEmails.push(item);
+              }
+            });
+          }
+        });
+      });
+    }
+    if (config.emailDistributionList.bcc?.filterEmails) {
+      const bccQuery = config.emailDistributionList.cc.filterEmails;
+      const bccRecords = (await fetchDatasets([bccQuery], req, res))[0].records;
+      bccRecords.forEach((record) => {
+        Object.values(record).forEach((value) => {
+          if (typeof value === 'string' && validateEmail(value)) {
+            bccEmails.push(value);
+          } else if (Array.isArray(value)) {
+            value.forEach((item) => {
+              if (typeof item === 'string' && validateEmail(item)) {
+                bccEmails.push(item);
+              }
+            });
+          }
+        });
+      });
+    }
+    if (config.emailDistributionList.to?.inputEmails) {
+      toEmails.push(...config.emailDistributionList.to?.inputEmails);
+    }
+    if (config.emailDistributionList.cc?.inputEmails) {
+      ccEmails.push(...config.emailDistributionList.cc?.inputEmails);
+    }
+    if (config.emailDistributionList.bcc?.inputEmails) {
+      bccEmails.push(...config.emailDistributionList.bcc?.inputEmails);
+    }
+    res.send({
+      to: toEmails,
+      cc: ccEmails,
+      bcc: bccEmails,
+      name: config.emailDistributionList.name,
     });
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
@@ -331,8 +411,8 @@ router.post('/send-individual-email/:configId', async (req, res) => {
 
     const bodyElement = mainTableElement.getElementById('body');
 
-    const cc = config.get('emailDistributionList').Cc;
-    const bcc = config.get('emailDistributionList').Bcc;
+    const cc = config.get('emailDistributionList').cc.inputEmails;
+    const bcc = config.get('emailDistributionList').bcc.inputEmails;
     const attachments: { path: string; cid: string }[] = [];
     // Use base64 encoded images as path for CID attachments
     // This is required for images to render in the body on legacy clients
@@ -391,7 +471,7 @@ router.post('/send-individual-email/:configId', async (req, res) => {
       bodyElement.appendChild(bodyBlock);
       const emailParams = {
         message: {
-          to: config.get('emailDistributionList').To, // Recipient's email address
+          to: config.get('emailDistributionList').to.inputEmails, // Recipient's email address
           cc: cc,
           bcc: bcc,
           subject: emailSubject,
