@@ -1,5 +1,5 @@
 import { inthelastDateLocale, timeLocale } from '@const/locale';
-import { EmailNotification } from '@models';
+import { EmailLayout } from '@models';
 import {
   formatDates,
   titleCase,
@@ -337,17 +337,17 @@ export const replaceFooter = (footer: {
 /**
  * Mutates mainTableElement to contain templates from config with data
  *
- * @param config Config object returned from DB, containing template
+ * @param emailLayout config for email layout
  * @param mainTableElement Blank table element for the email body
  * @param records Fetched records to insert into email
  */
 export const buildEmail = async (
-  config: EmailNotification,
+  emailLayout: EmailLayout,
   mainTableElement: HTMLElement,
   records: any[]
 ): Promise<HTMLElement> => {
   // Add banner image
-  if (config.emailLayout.banner.bannerImage) {
+  if (emailLayout.banner.bannerImage) {
     const bannerElement = parse(
       `<tr bgcolor="#fff" align="center">
           <td>
@@ -361,11 +361,11 @@ export const buildEmail = async (
   }
 
   // Add header
-  if (config.emailLayout.header) {
-    const headerElement = replaceHeader(config.emailLayout.header);
+  if (emailLayout.header) {
+    const headerElement = replaceHeader(emailLayout.header);
     const backgroundColor =
-      config.emailLayout.header.headerBackgroundColor || '#00205c';
-    const textColor = config.emailLayout.header.headerTextColor || '#ffffff';
+      emailLayout.header.headerBackgroundColor || '#00205c';
+    const textColor = emailLayout.header.headerTextColor || '#ffffff';
     mainTableElement.appendChild(
       parse(
         `<tr bgcolor = ${backgroundColor} color = ${textColor}><td style="font-size: 13px; font-family: Helvetica, Arial, sans-serif; color: ${textColor};">${headerElement}</td></tr>`
@@ -379,14 +379,13 @@ export const buildEmail = async (
           </tr>`)
   );
   // Add body
-  if (config.emailLayout.body) {
+  if (emailLayout.body) {
     const datasetsHtml = await replaceDatasets(
-      config.emailLayout.body.bodyHtml,
+      emailLayout.body.bodyHtml,
       records
     );
-    const backgroundColor =
-      config.emailLayout.body.bodyBackgroundColor || '#ffffff';
-    const textColor = config.emailLayout.body.bodyTextColor || '#000000';
+    const backgroundColor = emailLayout.body.bodyBackgroundColor || '#ffffff';
+    const textColor = emailLayout.body.bodyTextColor || '#000000';
     mainTableElement.appendChild(
       parse(
         `<tr bgcolor = ${backgroundColor} color = ${textColor}><td style="color:${textColor}">${datasetsHtml}</td></tr>`
@@ -395,11 +394,11 @@ export const buildEmail = async (
   }
 
   // Add footer
-  if (config.emailLayout.footer) {
-    const footerElement = replaceFooter(config.emailLayout.footer);
+  if (emailLayout.footer) {
+    const footerElement = replaceFooter(emailLayout.footer);
     const backgroundColor =
-      config.emailLayout.footer.footerBackgroundColor || '#ffffff';
-    const textColor = config.emailLayout.footer.footerTextColor || '#000000';
+      emailLayout.footer.footerBackgroundColor || '#ffffff';
+    const textColor = emailLayout.footer.footerTextColor || '#000000';
     mainTableElement.appendChild(
       parse(
         `<tr bgcolor= ${backgroundColor}><td style="font-size: 13px; font-family: Helvetica, Arial, sans-serif; color: ${textColor};">${footerElement}</td></tr>`
