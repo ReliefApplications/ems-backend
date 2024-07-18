@@ -38,7 +38,7 @@ export interface Dataset {
 /**
  *EmailLayout interface
  */
-interface EmailLayout {
+export interface EmailLayout {
   subject: string;
   header?: any;
   body?: any;
