@@ -47,13 +47,28 @@ export interface EmailLayout {
 }
 
 /**
- *Recipients interface
+ *
  */
-interface EmailDistributionList {
+interface DistributionList {
   name: string;
-  To: string[];
-  Cc: string[];
-  Bcc: string[];
+  to: DistributionListSource;
+  cc?: DistributionListSource;
+  bcc?: DistributionListSource;
+}
+
+/**
+ *
+ */
+interface DistributionListSource {
+  filterEmails?: {
+    resource: string;
+    query: {
+      name: string;
+      filter: any;
+      fields: any[];
+    };
+  };
+  inputEmails?: string[];
 }
 
 /** custom notification documents interface declaration */
@@ -66,7 +81,7 @@ export interface EmailNotification extends Document {
   createdBy: { name: string; email: string };
   notificationType: string;
   datasets: Dataset[];
-  emailDistributionList: EmailDistributionList;
+  emailDistributionList: DistributionList;
   emailLayout: EmailLayout;
   recipientsType: string;
   status: string;
@@ -120,9 +135,33 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
     ],
     emailDistributionList: {
       name: String,
-      To: [{ type: String }],
-      Cc: [{ type: String }],
-      Bcc: [{ type: String }],
+      to: {
+        resource: String,
+        query: {
+          name: String,
+          filter: { type: mongoose.Schema.Types.Mixed },
+          fields: [{ type: mongoose.Schema.Types.Mixed }],
+        },
+        inputEmails: { type: [String] },
+      },
+      cc: {
+        resource: String,
+        query: {
+          name: String,
+          filter: { type: mongoose.Schema.Types.Mixed },
+          fields: [{ type: mongoose.Schema.Types.Mixed }],
+        },
+        inputEmails: { type: [String] },
+      },
+      bcc: {
+        resource: String,
+        query: {
+          name: String,
+          filter: { type: mongoose.Schema.Types.Mixed },
+          fields: [{ type: mongoose.Schema.Types.Mixed }],
+        },
+        inputEmails: { type: [String] },
+      },
     },
     emailLayout: {
       subject: String,
