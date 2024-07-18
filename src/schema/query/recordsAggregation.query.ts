@@ -458,7 +458,7 @@ export default {
                 $addFields: {
                   [`data.${fieldName}`]: {
                     $map: {
-                      input: `$data.${fieldName}`,
+                      input: { $ifNull: [`$data.${fieldName}`, []] },
                       in: {
                         $convert: {
                           input: '$$this',
@@ -487,7 +487,7 @@ export default {
             pipeline.push({
               $addFields: selectableDefaultRecordFieldsFlat.reduce(
                 (fields, selectableField) => {
-                  if (selectableField === 'id') {
+                  if (selectableField === 'id' && field.type === 'resource') {
                     // Special case for id
                     return Object.assign(fields, {
                       [`data.${fieldName}.data.id`]: {
