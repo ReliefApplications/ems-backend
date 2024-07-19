@@ -192,9 +192,9 @@ router.post('/preview-email/:configId', async (req, res) => {
   }
 });
 
-router.post('/preview-distribution-lists/:configId', async (req, res) => {
+router.post('/preview-distribution-lists/', async (req, res) => {
   try {
-    const config = await EmailNotification.findById(req.params.configId).exec();
+    const config = req.body as EmailNotification;
     const toEmails = [];
     const ccEmails = [];
     const bccEmails = [];
