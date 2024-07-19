@@ -148,7 +148,7 @@ router.post('/send-email/:configId', async (req, res) => {
 
 router.post('/preview-email', async (req, res) => {
   try {
-    const config = req.body;
+    const config = req.body as EmailNotification;
     const datasetQueries: DatasetPreviewArgs[] = config.datasets.map(
       (dataset) => {
         return {
@@ -159,7 +159,7 @@ router.post('/preview-email', async (req, res) => {
         };
       }
     );
-    let datasets: ProcessedDataset[];
+    let datasets: ProcessedDataset[] = [];
     try {
       datasets = await fetchDatasets(datasetQueries, req, res);
     } catch (e) {
