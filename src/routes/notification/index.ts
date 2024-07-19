@@ -199,8 +199,11 @@ router.post('/preview-distribution-lists/:configId', async (req, res) => {
     const ccEmails = [];
     const bccEmails = [];
 
-    if (config.emailDistributionList.to?.filterEmails) {
-      const toQuery = config.emailDistributionList.to.filterEmails;
+    if (config.emailDistributionList.to?.query) {
+      const toQuery = {
+        query: config.emailDistributionList.to.query,
+        resource: config.emailDistributionList.to.resource,
+      };
       const toRecords = (await fetchDatasets([toQuery], req, res))[0].records;
       toRecords.forEach((record) => {
         Object.values(record).forEach((value) => {
@@ -216,8 +219,11 @@ router.post('/preview-distribution-lists/:configId', async (req, res) => {
         });
       });
     }
-    if (config.emailDistributionList.cc?.filterEmails) {
-      const ccQuery = config.emailDistributionList.cc.filterEmails;
+    if (config.emailDistributionList.cc?.query) {
+      const ccQuery = {
+        query: config.emailDistributionList.cc.query,
+        resource: config.emailDistributionList.cc.resource,
+      };
       const ccRecords = (await fetchDatasets([ccQuery], req, res))[0].records;
       ccRecords.forEach((record) => {
         Object.values(record).forEach((value) => {
@@ -233,8 +239,11 @@ router.post('/preview-distribution-lists/:configId', async (req, res) => {
         });
       });
     }
-    if (config.emailDistributionList.bcc?.filterEmails) {
-      const bccQuery = config.emailDistributionList.cc.filterEmails;
+    if (config.emailDistributionList.bcc?.query) {
+      const bccQuery = {
+        query: config.emailDistributionList.bcc.query,
+        resource: config.emailDistributionList.bcc.resource,
+      };
       const bccRecords = (await fetchDatasets([bccQuery], req, res))[0].records;
       bccRecords.forEach((record) => {
         Object.values(record).forEach((value) => {
