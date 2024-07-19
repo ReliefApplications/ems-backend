@@ -146,9 +146,9 @@ router.post('/send-email/:configId', async (req, res) => {
   }
 });
 
-router.post('/preview-email/:configId', async (req, res) => {
+router.post('/preview-email', async (req, res) => {
   try {
-    const config = await EmailNotification.findById(req.params.configId).exec();
+    const config = req.body;
     const datasetQueries: DatasetPreviewArgs[] = config.datasets.map(
       (dataset) => {
         return {
@@ -179,7 +179,7 @@ router.post('/preview-email/:configId', async (req, res) => {
       (dataset) => dataset.name === config.datasets[0]?.name
     )?.records;
     const emailSubject = replaceSubject(
-      config.get('emailLayout').subject,
+      config?.emailLayout?.subject,
       subjectRecords
     );
     await buildEmail(config.emailLayout, mainTableElement, datasets);
