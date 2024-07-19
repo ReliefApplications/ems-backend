@@ -199,7 +199,7 @@ router.post('/preview-distribution-lists/:configId', async (req, res) => {
     const ccEmails = [];
     const bccEmails = [];
 
-    if (config.emailDistributionList.to?.query) {
+    if (config.emailDistributionList.to?.resource) {
       const toQuery = {
         query: config.emailDistributionList.to.query,
         resource: config.emailDistributionList.to.resource,
@@ -219,7 +219,7 @@ router.post('/preview-distribution-lists/:configId', async (req, res) => {
         });
       });
     }
-    if (config.emailDistributionList.cc?.query) {
+    if (config.emailDistributionList.cc?.resource) {
       const ccQuery = {
         query: config.emailDistributionList.cc.query,
         resource: config.emailDistributionList.cc.resource,
@@ -239,7 +239,7 @@ router.post('/preview-distribution-lists/:configId', async (req, res) => {
         });
       });
     }
-    if (config.emailDistributionList.bcc?.query) {
+    if (config.emailDistributionList.bcc?.resource) {
       const bccQuery = {
         query: config.emailDistributionList.bcc.query,
         resource: config.emailDistributionList.bcc.resource,
