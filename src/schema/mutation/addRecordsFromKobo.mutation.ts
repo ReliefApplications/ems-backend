@@ -52,7 +52,6 @@ const getData = (submission: any, fields: any, fieldsNames: string[]) => {
  * Throw an error if not logged or authorized, or if arguments are invalid.
  */
 export default {
-  // type: new GraphQLList(RecordType),
   type: GraphQLBoolean,
   args: {
     form: { type: new GraphQLNonNull(GraphQLID) },
