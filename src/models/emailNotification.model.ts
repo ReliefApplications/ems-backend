@@ -47,7 +47,7 @@ export interface EmailLayout {
 }
 
 /**
- *
+ * Interface representing a distribution list configured for an email template
  */
 interface DistributionList {
   name: string;
@@ -57,16 +57,14 @@ interface DistributionList {
 }
 
 /**
- *
+ * Interface representing either a filter definition used to fetch emails, a static list of emails, or both
  */
 interface DistributionListSource {
-  filterEmails?: {
-    resource: string;
-    query: {
-      name: string;
-      filter: any;
-      fields: any[];
-    };
+  resource?: string;
+  query?: {
+    name: string;
+    filter: any;
+    fields: any[];
   };
   inputEmails?: string[];
 }
