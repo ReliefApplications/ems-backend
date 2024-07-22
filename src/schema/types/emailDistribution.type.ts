@@ -11,7 +11,7 @@ import { Connection } from './pagination.type';
  * GraphQL DistributionList type.
  */
 export const EmailDistributionListType = new GraphQLObjectType({
-  name: 'EmailDistributionList',
+  name: 'QuickEmailDistributionList',
   fields: () => ({
     id: {
       type: GraphQLID,
