@@ -28,6 +28,7 @@ import { logger } from '@services/logger.service';
 import checkDefaultFields from '@utils/form/checkDefaultFields';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
+import { scheduleKoboSync } from '@server/koboSyncScheduler';
 
 /**
  * List of keys of the structure's object which we want to inherit to the children forms when they are modified on the core form
@@ -74,6 +75,7 @@ type EditFormArgs = {
   structure?: any;
   status?: StatusType;
   name?: string;
+  cronSchedule?: string;
   permissions?: any;
   dataFromDeployedVersion?: boolean;
 };
@@ -89,6 +91,7 @@ export default {
     structure: { type: GraphQLJSON },
     status: { type: StatusEnumType },
     name: { type: GraphQLString },
+    cronSchedule: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
     dataFromDeployedVersion: { type: GraphQLBoolean },
   },
@@ -211,11 +214,14 @@ export default {
         }
       }
 
-      // Update kobo dataFromDeployedVersion
-      if (!isNil(args.dataFromDeployedVersion)) {
+      // Update kobo info
+      if (!isNil(args.dataFromDeployedVersion) || !isNil(args.cronSchedule)) {
         update.kobo = {
           ...form.kobo,
-          dataFromDeployedVersion: args.dataFromDeployedVersion,
+          ...(!isNil(args.cronSchedule) && {
+            dataFromDeployedVersion: args.dataFromDeployedVersion,
+          }),
+          ...(!isNil(args.cronSchedule) && { cronSchedule: args.cronSchedule }),
         };
       }
 
@@ -539,6 +545,11 @@ export default {
       const resForm = await Form.findByIdAndUpdate(args.id, update, {
         new: true,
       });
+
+      // If form was created from Kobo, check if update should stop/update possible scheduled synchronization
+      if (resForm.kobo.id) {
+        scheduleKoboSync(resForm);
+      }
 
       // Return updated form
       return resForm;

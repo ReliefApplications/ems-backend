@@ -10,6 +10,7 @@ export const KoboFormType = new GraphQLObjectType({
   fields: () => ({
     id: { type: GraphQLString },
     deployedVersionId: { type: GraphQLString },
+    cronSchedule: { type: GraphQLString },
     dataFromDeployedVersion: { type: GraphQLBoolean },
     apiConfiguration: {
       type: ApiConfigurationType,

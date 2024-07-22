@@ -14,7 +14,7 @@ export interface Context {
 }
 
 /** User interface with specified AppAbility */
-interface UserWithAbility extends User {
+export interface UserWithAbility extends User {
   ability: AppAbility;
 }
 

@@ -7,6 +7,7 @@ import config from 'config';
 import { logger } from './services/logger.service';
 import { checkConfig } from '@utils/server/checkConfig.util';
 import buildSchema from '@utils/schema/buildSchema';
+import koboSyncScheduler from './server/koboSyncScheduler';
 
 // Needed for survey.model, as xmlhttprequest is not defined in servers
 global.XMLHttpRequest = require('xhr2');
@@ -50,5 +51,6 @@ mongoose.connection.once('open', () => {
   launchServer();
   // subscriberSafe();
   pullJobScheduler();
+  koboSyncScheduler();
   customNotificationScheduler();
 });

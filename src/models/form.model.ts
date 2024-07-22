@@ -43,6 +43,7 @@ interface FormDocument extends Document {
     id: string;
     deployedVersionId: string;
     dataFromDeployedVersion: boolean;
+    cronSchedule?: string;
     apiConfiguration: ApiConfiguration;
   };
 }
@@ -79,6 +80,7 @@ const schema = new Schema<Form>(
       id: String,
       deployedVersionId: String,
       dataFromDeployedVersion: { type: Boolean, default: false },
+      cronSchedule: String,
       apiConfiguration: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'ApiConfiguration',
