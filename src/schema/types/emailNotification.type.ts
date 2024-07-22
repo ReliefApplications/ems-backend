@@ -8,7 +8,6 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Connection } from './pagination.type';
-import { EmailDistributionListType } from './emailDistribution.type';
 
 /**
  *
@@ -70,23 +69,10 @@ const EmailLayoutType = new GraphQLObjectType({
 });
 
 /**
- * GraphQL Recipients type. (old schema, quick send)
- */
-// export const EmailDistributionListType = new GraphQLObjectType({
-//   name: 'EmailDistributionList',
-//   fields: () => ({
-//     name: { type: GraphQLString },
-//     To: { type: new GraphQLList(GraphQLString) },
-//     Cc: { type: new GraphQLList(GraphQLString) },
-//     Bcc: { type: new GraphQLList(GraphQLString) },
-//   }),
-// });
-
-/**
  * GraphQL Recipients type. (new schema, for general case)
  */
-export const DistributionListType = new GraphQLObjectType({
-  name: 'DistributionList',
+export const EmailDistributionListType = new GraphQLObjectType({
+  name: 'EmailDistributionList',
   fields: () => ({
     name: { type: GraphQLString },
     to: { type: DistributionListSource },
@@ -114,7 +100,7 @@ export const EmailNotificationType = new GraphQLObjectType({
     notificationType: { type: GraphQLString },
     datasets: { type: new GraphQLList(DatasetType) },
     emailLayout: { type: EmailLayoutType },
-    emailDistributionList: { type: DistributionListType },
+    emailDistributionList: { type: EmailDistributionListType },
     lastExecution: { type: GraphQLString },
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
