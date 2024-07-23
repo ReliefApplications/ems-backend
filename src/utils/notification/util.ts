@@ -1,5 +1,5 @@
 import { dateLocale, dateTimeLocale, timeLocale } from '@const/locale';
-import { EmailDistributionList, Resource } from '@models';
+import { EmailDistributionListQuery, Resource } from '@models';
 import { DatasetPreviewArgs } from '@routes/notification';
 import { logger } from '@services/logger.service';
 import Exporter from '@utils/files/resourceExporter';
@@ -187,7 +187,7 @@ export const fetchDatasets = async (
  * @param res User reponse
  */
 export const fetchDistributionList = async (
-  emailDistributionList: EmailDistributionList,
+  emailDistributionList: EmailDistributionListQuery,
   req: Request<any, any>,
   res: Response<any, any>
 ): Promise<{ to: string[]; cc: string[]; bcc: string[] }> => {
