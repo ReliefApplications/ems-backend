@@ -49,7 +49,7 @@ export interface EmailLayout {
 /**
  * Interface representing a distribution list configured for an email template
  */
-interface DistributionList {
+export interface EmailDistributionList {
   name: string;
   to: DistributionListSource;
   cc?: DistributionListSource;
@@ -79,7 +79,7 @@ export interface EmailNotification extends Document {
   createdBy: { name: string; email: string };
   notificationType: string;
   datasets: Dataset[];
-  emailDistributionList: DistributionList;
+  emailDistributionList: EmailDistributionList;
   emailLayout: EmailLayout;
   recipientsType: string;
   status: string;
