@@ -11,6 +11,7 @@ import { deleteFolder } from '@utils/files/deleteFolder';
 import { logger } from '@services/logger.service';
 import { DEFAULT_IMPORT_FIELD } from './resource.model';
 import { ApiConfiguration } from './apiConfiguration.model';
+import { unscheduleKoboSync } from '@server/koboSyncScheduler';
 
 /** Form documents interface declaration */
 interface FormDocument extends Document {
@@ -197,6 +198,10 @@ schema.statics.hasDuplicate = function (
 addOnBeforeDeleteMany(schema, async (forms) => {
   try {
     for (const form of forms) {
+      // If form was created from Kobo, check if should delete a scheduled synchronization
+      if (form.kobo.id) {
+        unscheduleKoboSync(form);
+      }
       await deleteFolder('forms', form.id);
       logger.info(`Files from form ${form.id} successfully removed.`);
     }

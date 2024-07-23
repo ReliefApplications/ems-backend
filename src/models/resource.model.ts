@@ -7,6 +7,7 @@ import { aggregationSchema } from './aggregation.model';
 import { Record } from './record.model';
 import { deleteFolder } from '@utils/files/deleteFolder';
 import { logger } from '@services/logger.service';
+import { unscheduleKoboSync } from '@server/koboSyncScheduler';
 
 /** The type of the shape of the incrementalId field */
 export type DefaultIncrementalIdShapeT = {
@@ -172,6 +173,10 @@ addOnBeforeDeleteMany(resourceSchema, async (resources) => {
     // and preventing the deletion of forms and records
     try {
       for (const form of forms) {
+        // If form was created from Kobo, check if should delete a scheduled synchronization
+        if (form.kobo.id) {
+          unscheduleKoboSync(form);
+        }
         await deleteFolder('forms', form.id);
         logger.info(`Files from form ${form.id} successfully removed.`);
       }
