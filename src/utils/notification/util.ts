@@ -1,9 +1,11 @@
 import { dateLocale, dateTimeLocale, timeLocale } from '@const/locale';
-import { Resource } from '@models';
+import { EmailDistributionList, Resource } from '@models';
 import { DatasetPreviewArgs } from '@routes/notification';
 import { logger } from '@services/logger.service';
 import Exporter from '@utils/files/resourceExporter';
+import { validateEmail } from '@utils/validators/validateEmail';
 import { Response } from 'express';
+import { Request } from 'express-serve-static-core';
 import { map } from 'lodash';
 import { mongo } from 'mongoose';
 
@@ -175,4 +177,92 @@ export const fetchDatasets = async (
     logger.error(error.message, { stack: error.stack });
     throw error;
   }
+};
+
+/**
+ * Given query descriptors and static emails, fetches and returns the complete distribution list
+ *
+ * @param emailDistributionList Distribution list object containing to, cc, and bcc elements with their query and input emails
+ * @param req User request
+ * @param res User reponse
+ */
+export const fetchDistributionList = async (
+  emailDistributionList: EmailDistributionList,
+  req: Request<any, any>,
+  res: Response<any, any>
+): Promise<{ to: string[]; cc: string[]; bcc: string[] }> => {
+  const toEmails = [];
+  const ccEmails = [];
+  const bccEmails = [];
+
+  if (emailDistributionList.to?.resource && emailDistributionList.to?.query) {
+    const toQuery = {
+      query: emailDistributionList.to.query,
+      resource: emailDistributionList.to.resource,
+    };
+    const toRecords = (await fetchDatasets([toQuery], req, res))[0].records;
+    toRecords.forEach((record) => {
+      Object.values(record).forEach((value) => {
+        if (typeof value === 'string' && validateEmail(value)) {
+          toEmails.push(value);
+        } else if (Array.isArray(value)) {
+          value.forEach((item) => {
+            if (typeof item === 'string' && validateEmail(item)) {
+              toEmails.push(item);
+            }
+          });
+        }
+      });
+    });
+  }
+  if (emailDistributionList.cc?.resource && emailDistributionList.cc?.query) {
+    const ccQuery = {
+      query: emailDistributionList.cc.query,
+      resource: emailDistributionList.cc.resource,
+    };
+    const ccRecords = (await fetchDatasets([ccQuery], req, res))[0].records;
+    ccRecords.forEach((record) => {
+      Object.values(record).forEach((value) => {
+        if (typeof value === 'string' && validateEmail(value)) {
+          ccEmails.push(value);
+        } else if (Array.isArray(value)) {
+          value.forEach((item) => {
+            if (typeof item === 'string' && validateEmail(item)) {
+              ccEmails.push(item);
+            }
+          });
+        }
+      });
+    });
+  }
+  if (emailDistributionList.bcc?.resource && emailDistributionList.bcc?.query) {
+    const bccQuery = {
+      query: emailDistributionList.bcc.query,
+      resource: emailDistributionList.bcc.resource,
+    };
+    const bccRecords = (await fetchDatasets([bccQuery], req, res))[0].records;
+    bccRecords.forEach((record) => {
+      Object.values(record).forEach((value) => {
+        if (typeof value === 'string' && validateEmail(value)) {
+          bccEmails.push(value);
+        } else if (Array.isArray(value)) {
+          value.forEach((item) => {
+            if (typeof item === 'string' && validateEmail(item)) {
+              bccEmails.push(item);
+            }
+          });
+        }
+      });
+    });
+  }
+  if (emailDistributionList.to?.inputEmails) {
+    toEmails.push(...emailDistributionList.to?.inputEmails);
+  }
+  if (emailDistributionList.cc?.inputEmails) {
+    ccEmails.push(...emailDistributionList.cc?.inputEmails);
+  }
+  if (emailDistributionList.bcc?.inputEmails) {
+    bccEmails.push(...emailDistributionList.bcc?.inputEmails);
+  }
+  return { to: toEmails, cc: ccEmails, bcc: bccEmails };
 };

@@ -8,12 +8,15 @@ import {
   replaceHeader,
   replaceSubject,
 } from '@utils/notification/htmlBuilder';
-import { ProcessedDataset, fetchDatasets } from '@utils/notification/util';
+import {
+  ProcessedDataset,
+  fetchDatasets,
+  fetchDistributionList,
+} from '@utils/notification/util';
 import { baseTemplate } from '@const/notification';
 import i18next from 'i18next';
 import { sendEmail } from '@utils/email/sendEmail';
 import parse from 'node-html-parser';
-import { validateEmail } from '@utils/validators/validateEmail';
 
 /**
  * Limit of records to be fetched for each dataset in email notification
@@ -88,11 +91,6 @@ router.post('/send-email/:configId', async (req, res) => {
       subjectRecords
     );
 
-    // // Get recipients
-    const to = config.get('emailDistributionList').to.inputEmails;
-    const cc = config.get('emailDistributionList').cc.inputEmails;
-    const bcc = config.get('emailDistributionList').bcc.inputEmails;
-
     // Add attachments
     // Use base64 encoded images as path for CID attachments
     // This is required for images to render in the body on legacy clients
@@ -120,12 +118,16 @@ router.post('/send-email/:configId', async (req, res) => {
       });
     }
 
+    const emails = await fetchDistributionList(
+      config.emailDistributionList,
+      req,
+      res
+    );
+
     // Build email
     const emailParams = {
       message: {
-        to: to,
-        cc: cc,
-        bcc: bcc,
+        ...emails,
         subject: emailSubject,
         html: baseElement.toString(),
         attachments: attachments,
@@ -195,83 +197,16 @@ router.post('/preview-email/:configId', async (req, res) => {
 router.post('/preview-distribution-lists/', async (req, res) => {
   try {
     const config = req.body as EmailNotification;
-    const toEmails = [];
-    const ccEmails = [];
-    const bccEmails = [];
-
-    if (config.emailDistributionList.to?.resource) {
-      const toQuery = {
-        query: config.emailDistributionList.to.query,
-        resource: config.emailDistributionList.to.resource,
-      };
-      const toRecords = (await fetchDatasets([toQuery], req, res))[0].records;
-      toRecords.forEach((record) => {
-        Object.values(record).forEach((value) => {
-          if (typeof value === 'string' && validateEmail(value)) {
-            toEmails.push(value);
-          } else if (Array.isArray(value)) {
-            value.forEach((item) => {
-              if (typeof item === 'string' && validateEmail(item)) {
-                toEmails.push(item);
-              }
-            });
-          }
-        });
-      });
+    if (!config.emailDistributionList) {
+      return res.status(400).send(req.t('common.errors.internalServerError'));
     }
-    if (config.emailDistributionList.cc?.resource) {
-      const ccQuery = {
-        query: config.emailDistributionList.cc.query,
-        resource: config.emailDistributionList.cc.resource,
-      };
-      const ccRecords = (await fetchDatasets([ccQuery], req, res))[0].records;
-      ccRecords.forEach((record) => {
-        Object.values(record).forEach((value) => {
-          if (typeof value === 'string' && validateEmail(value)) {
-            ccEmails.push(value);
-          } else if (Array.isArray(value)) {
-            value.forEach((item) => {
-              if (typeof item === 'string' && validateEmail(item)) {
-                ccEmails.push(item);
-              }
-            });
-          }
-        });
-      });
-    }
-    if (config.emailDistributionList.bcc?.resource) {
-      const bccQuery = {
-        query: config.emailDistributionList.bcc.query,
-        resource: config.emailDistributionList.bcc.resource,
-      };
-      const bccRecords = (await fetchDatasets([bccQuery], req, res))[0].records;
-      bccRecords.forEach((record) => {
-        Object.values(record).forEach((value) => {
-          if (typeof value === 'string' && validateEmail(value)) {
-            bccEmails.push(value);
-          } else if (Array.isArray(value)) {
-            value.forEach((item) => {
-              if (typeof item === 'string' && validateEmail(item)) {
-                bccEmails.push(item);
-              }
-            });
-          }
-        });
-      });
-    }
-    if (config.emailDistributionList.to?.inputEmails) {
-      toEmails.push(...config.emailDistributionList.to?.inputEmails);
-    }
-    if (config.emailDistributionList.cc?.inputEmails) {
-      ccEmails.push(...config.emailDistributionList.cc?.inputEmails);
-    }
-    if (config.emailDistributionList.bcc?.inputEmails) {
-      bccEmails.push(...config.emailDistributionList.bcc?.inputEmails);
-    }
+    const emails = await fetchDistributionList(
+      config.emailDistributionList,
+      req,
+      res
+    );
     res.send({
-      to: toEmails,
-      cc: ccEmails,
-      bcc: bccEmails,
+      ...emails,
       name: config.emailDistributionList.name,
     });
   } catch (err) {
