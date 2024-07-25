@@ -407,6 +407,7 @@ export default {
           {
             $addFields: {
               'fields.form': '$_id',
+              'fields.relatedFieldResource': '$resource',
             },
           },
           {
@@ -538,7 +539,10 @@ export default {
                       $filter: {
                         input: `$data.${fieldName}`,
                         cond: {
-                          $eq: ['$$this.form', relatedField.form],
+                          $eq: [
+                            '$$this.resource',
+                            relatedField.relatedFieldResource,
+                          ],
                         },
                       },
                     },
