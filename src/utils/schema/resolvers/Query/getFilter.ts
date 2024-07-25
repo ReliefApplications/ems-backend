@@ -1,6 +1,7 @@
 import mongoose, { Types } from 'mongoose';
 import { getDateForMongo } from '@utils/filter/getDateForMongo';
 import { getTimeForMongo } from '@utils/filter/getTimeForMongo';
+import { Context } from '@server/apollo/context';
 
 /** The default fields */
 const DEFAULT_FIELDS = [
@@ -80,7 +81,7 @@ export const extractFilterFields = (filter: any): string[] => {
 const buildMongoFilter = (
   filter: any,
   fields: any[],
-  context: any,
+  context: Context,
   prefix = ''
 ): any => {
   if (filter.filters) {
@@ -216,7 +217,7 @@ const buildMongoFilter = (
         }
       } else {
         // Recreate the field name in order to match with aggregation
-        // Logic is: _resource_name.data.field, if not default field, else _resource_name.field
+        // Logic is: _resource_name.data.field, if not default field, else resource_name.field
         if (FLAT_DEFAULT_FIELDS.includes(filter.field.split('.')[1])) {
           fieldName = `_${filter.field.split('.')[0]}.${
             filter.field.split('.')[1]
@@ -225,7 +226,7 @@ const buildMongoFilter = (
             (x) => x.name === filter.field.split('.')[1]
           ).type;
         } else {
-          fieldName = `_${filter.field.split('.')[0]}.data.${
+          fieldName = `${filter.field.split('.')[0]}.${
             filter.field.split('.')[1]
           }`;
         }

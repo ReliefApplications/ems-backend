@@ -26,6 +26,7 @@ const FILTER_FIELDS: { name: string; type: string }[] = [
     name: 'name',
     type: 'text',
   },
+  { name: 'ids', type: 'ObjectId' },
 ];
 
 /** Available sort fields */

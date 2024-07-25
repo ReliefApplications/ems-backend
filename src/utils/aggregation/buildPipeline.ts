@@ -8,6 +8,7 @@ import {
 import getFilter from '../schema/resolvers/Query/getFilter';
 import { isEmpty } from 'lodash';
 import { selectableDefaultRecordFieldsFlat } from '@const/defaultRecordFields';
+import { Context } from '@server/apollo/context';
 
 /**
  * Unnests a nested field in a MongoDB aggregation pipeline and performs specified operations.
@@ -135,7 +136,7 @@ const buildPipeline = (
   pipeline: any[],
   settings: any[],
   resource: Resource,
-  context
+  context: Context
 ): any => {
   for (const stage of settings) {
     switch (stage.type) {
@@ -143,6 +144,7 @@ const buildPipeline = (
         context = {
           ...context,
           resourceFieldsById: {
+            ...(context.resourceFieldsById ?? {}),
             [resource.id]: resource.fields,
           },
         };

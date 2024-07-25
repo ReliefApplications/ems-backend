@@ -637,6 +637,30 @@ export default {
       }
       // Build pipeline stages
       if (aggregation.pipeline && aggregation.pipeline.length) {
+        // Add related resources to context.resourcesFieldsById
+        const resourcesAlreadyInContext = Object.keys(
+          context.resourceFieldsById ?? {}
+        );
+
+        const resourcesToFetch = aggregation.sourceFields.map((fieldName) => {
+          const field = resource.fields.find((f) => f.name === fieldName);
+          return field?.resource;
+        });
+
+        const relatedResources = await Resource.find({
+          _id: {
+            $in: resourcesToFetch,
+            $nin: resourcesAlreadyInContext,
+          },
+        }).select('fields');
+
+        for (const relatedResource of relatedResources) {
+          context.resourceFieldsById = {
+            ...(context.resourceFieldsById ?? {}),
+            [relatedResource._id.toString()]: relatedResource.fields,
+          };
+        }
+
         buildPipeline(pipeline, aggregation.pipeline, resource, context);
       }
       // Build mapping step
