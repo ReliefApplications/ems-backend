@@ -18,6 +18,7 @@ export default {
     graphQLAuthCheck(context);
     try {
       const customTemplateData = {
+        applicationId: args.customTemplate.applicationId,
         subject: args.customTemplate.subject,
         header: args.customTemplate.header,
         body: args.customTemplate.body,

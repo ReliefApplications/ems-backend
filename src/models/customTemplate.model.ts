@@ -21,6 +21,9 @@ export const customTemplateSchema = new Schema(
       name: String,
       email: String,
     },
+    applicationId: {
+      type: mongoose.Schema.Types.ObjectId,
+    },
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
@@ -38,6 +41,7 @@ interface ICustomTemplate extends Document {
   banner?: any;
   footer?: any;
   isDeleted: number;
+  applicationId?: mongoose.Schema.Types.ObjectId;
 }
 
 /**
