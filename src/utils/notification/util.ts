@@ -191,9 +191,9 @@ export const fetchDistributionList = async (
   req: Request<any, any>,
   res: Response<any, any>
 ): Promise<{ to: string[]; cc: string[]; bcc: string[] }> => {
-  const toEmails = [];
-  const ccEmails = [];
-  const bccEmails = [];
+  const toEmails = new Set<string>();
+  const ccEmails = new Set<string>();
+  const bccEmails = new Set<string>();
 
   if (emailDistributionList.to?.resource && emailDistributionList.to?.query) {
     const toQuery = {
@@ -204,11 +204,11 @@ export const fetchDistributionList = async (
     toRecords.forEach((record) => {
       Object.values(record).forEach((value) => {
         if (typeof value === 'string' && validateEmail(value)) {
-          toEmails.push(value);
+          toEmails.add(value);
         } else if (Array.isArray(value)) {
           value.forEach((item) => {
             if (typeof item === 'string' && validateEmail(item)) {
-              toEmails.push(item);
+              toEmails.add(item);
             }
           });
         }
@@ -224,11 +224,11 @@ export const fetchDistributionList = async (
     ccRecords.forEach((record) => {
       Object.values(record).forEach((value) => {
         if (typeof value === 'string' && validateEmail(value)) {
-          ccEmails.push(value);
+          ccEmails.add(value);
         } else if (Array.isArray(value)) {
           value.forEach((item) => {
             if (typeof item === 'string' && validateEmail(item)) {
-              ccEmails.push(item);
+              ccEmails.add(item);
             }
           });
         }
@@ -244,11 +244,11 @@ export const fetchDistributionList = async (
     bccRecords.forEach((record) => {
       Object.values(record).forEach((value) => {
         if (typeof value === 'string' && validateEmail(value)) {
-          bccEmails.push(value);
+          bccEmails.add(value);
         } else if (Array.isArray(value)) {
           value.forEach((item) => {
             if (typeof item === 'string' && validateEmail(item)) {
-              bccEmails.push(item);
+              bccEmails.add(item);
             }
           });
         }
@@ -256,13 +256,23 @@ export const fetchDistributionList = async (
     });
   }
   if (emailDistributionList.to?.inputEmails) {
-    toEmails.push(...emailDistributionList.to?.inputEmails);
+    emailDistributionList.to.inputEmails.forEach((email) => {
+      toEmails.add(email);
+    });
   }
   if (emailDistributionList.cc?.inputEmails) {
-    ccEmails.push(...emailDistributionList.cc?.inputEmails);
+    emailDistributionList.cc.inputEmails.forEach((email) => {
+      ccEmails.add(email);
+    });
   }
   if (emailDistributionList.bcc?.inputEmails) {
-    bccEmails.push(...emailDistributionList.bcc?.inputEmails);
+    emailDistributionList.bcc.inputEmails.forEach((email) => {
+      bccEmails.add(email);
+    });
   }
-  return { to: toEmails, cc: ccEmails, bcc: bccEmails };
+  return {
+    to: Array.from(toEmails),
+    cc: Array.from(ccEmails),
+    bcc: Array.from(bccEmails),
+  };
 };
