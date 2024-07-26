@@ -26,6 +26,7 @@ export const EmailDistributionListType = new GraphQLObjectType({
     Bcc: { type: new GraphQLList(GraphQLString) },
     isDeleted: { type: GraphQLInt },
     createdBy: { type: GraphQLJSON },
+    applicationId: { type: GraphQLID },
   }),
 });
 
