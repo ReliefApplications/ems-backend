@@ -25,6 +25,7 @@ export const CustomTemplateType = new GraphQLObjectType({
     footer: { type: GraphQLJSON },
     isDeleted: { type: GraphQLInt },
     createdBy: { type: GraphQLJSON },
+    applicationId: { type: GraphQLID },
   }),
 });
 

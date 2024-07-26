@@ -17,6 +17,9 @@ export const emailDistributionListSchema = new Schema(
       type: Number,
       default: 0,
     },
+    applicationId: {
+      type: mongoose.Schema.Types.ObjectId,
+    },
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
@@ -40,6 +43,7 @@ interface EmailDistributionList extends Document {
   Bcc: string[];
   createdBy: { name: string; email: string };
   isDeleted: number;
+  applicationId?: mongoose.Schema.Types.ObjectId;
 }
 
 /**

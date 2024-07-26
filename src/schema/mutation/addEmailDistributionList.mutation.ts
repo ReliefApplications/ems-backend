@@ -1,4 +1,4 @@
-import { GraphQLError, GraphQLNonNull } from 'graphql';
+import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
@@ -13,6 +13,7 @@ export default {
   type: EmailDistributionListType,
   args: {
     distributionList: { type: new GraphQLNonNull(GraphQLJSON) },
+    applicationId: { type: GraphQLID },
   },
   async resolve(_, args, context: Context) {
     graphQLAuthCheck(context);
@@ -23,6 +24,7 @@ export default {
         Bcc: args.distributionList.Bcc,
         Cc: args.distributionList.Cc,
         createdBy: { name: context.user.name, email: context.user.username },
+        ...(args.applicationId && { applicationId: args.applicationId }),
       };
 
       const distributionList = new EmailDistributionList(update);
