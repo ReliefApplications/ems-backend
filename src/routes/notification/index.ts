@@ -589,4 +589,43 @@ router.post('/preview-quick-email', async (req, res) => {
   }
 });
 
+router.post('/update-subscription', async (req, res) => {
+  let configId = '';
+  let userEmail = '';
+  try {
+    configId = req.body.configId;
+    userEmail = req.context.user.username;
+    let notification: EmailNotification;
+    try {
+      notification = await EmailNotification.findById(configId).exec();
+      if (!notification) {
+        return res.status(400).send(i18next.t('common.errors.dataNotFound'));
+      }
+      // Check if notification contains individual email datasets, if so do not proceed
+      let containsIndividualBlock = false;
+      notification.datasets.forEach((dataset) => {
+        if (dataset.individualEmail) {
+          containsIndividualBlock = true;
+        }
+      });
+      if (containsIndividualBlock) {
+        return res.status(400).send(i18next.t('common.errors.dataNotFound'));
+      }
+      // Create as set to handle duplicates
+      const emails = new Set(notification.emailDistributionList.to.inputEmails);
+      emails.add(userEmail);
+      notification.emailDistributionList.to.inputEmails = Array.from(emails);
+      await notification.save();
+    } catch (err) {
+      logger.error(err);
+      return res
+        .status(500)
+        .send(i18next.t('common.errors.internalServerError'));
+    }
+    res.send(userEmail);
+  } catch (err) {
+    return res.status(400).send('common.errors.dataNotFound');
+  }
+});
+
 export default router;
