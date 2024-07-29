@@ -37,6 +37,15 @@ export default {
       //     );
       //   }
       // }
+      if (
+        !args.notification.isDraft &&
+        (!args.notification.emailDistributionList.name ||
+          (!args.notification.emailDistributionList.to.resource &&
+            args.notification.emailDistributionList.to.inputEmails.length ===
+              0))
+      ) {
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
 
       const update = {
         name: args.notification.name,
