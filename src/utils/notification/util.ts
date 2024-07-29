@@ -151,6 +151,9 @@ export const fetchDatasets = async (
   try {
     const processedDatasets = await Promise.all(
       datasets.map(async (dataset): Promise<ProcessedDataset> => {
+        if (!dataset.resource) {
+          return;
+        }
         const resource = await Resource.findById(dataset.resource).exec();
         if (!resource) throw new Error('common.errors.dataNotFound');
 
@@ -172,7 +175,7 @@ export const fetchDatasets = async (
         };
       })
     );
-    return processedDatasets;
+    return processedDatasets.filter(Boolean);
   } catch (error) {
     logger.error(error.message, { stack: error.stack });
     throw error;
