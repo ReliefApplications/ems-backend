@@ -50,6 +50,18 @@ export default {
       //   }
       // }
       if (args.notification) {
+        // Can't do this type of type check on type level
+        if (
+          !args.notification.isDraft &&
+          (!args.notification.emailDistributionList.name ||
+            (!args.notification.emailDistributionList.to.resource &&
+              args.notification.emailDistributionList.to.inputEmails.length ===
+                0))
+        ) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
+        }
         const updateFields = {
           name: args.notification.name,
           schedule: args.notification.schedule,
