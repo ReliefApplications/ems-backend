@@ -230,7 +230,11 @@ router.post('/preview-dataset', async (req, res) => {
         const tableElement = Buffer.from(table.toString()).toString('base64');
         res.send({ tableHtml: tableElement, count: resultCount });
       } else {
-        res.send({ count: dataset.records.length });
+        const resultCount = dataset.records.length;
+        dataset.records = dataset.records.slice(0, 50);
+        const table = parse(buildTable(dataset));
+        const tableElement = Buffer.from(table.toString()).toString('base64');
+        res.send({ tableHtml: tableElement, count: resultCount });
       }
     } catch (e) {
       if (e.message === 'common.errors.dataNotFound') {
