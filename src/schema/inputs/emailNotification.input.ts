@@ -1,3 +1,4 @@
+import { EmailDistributionListQuery } from '@models';
 import {
   GraphQLInputObjectType,
   GraphQLString,
@@ -18,7 +19,7 @@ export type EmailNotificationArgs = {
   applicationId: string | Types.ObjectId;
   datasets: any[];
   emailLayout: any;
-  emailDistributionList: string;
+  emailDistributionList: EmailDistributionListQuery;
   recipientsType: any;
   status: string;
   lastExecution: string;
@@ -58,6 +59,41 @@ export const DatasetInputType = new GraphQLInputObjectType({
   }),
 });
 
+/**
+ * Used to source emails for cc and bcc. Can be a resource query, a static list, or both
+ */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const DistributionListSourceType = new GraphQLInputObjectType({
+  name: 'DistributionListSourceType',
+  fields: () => ({
+    resource: { type: GraphQLID },
+    query: { type: QueryInputType },
+    inputEmails: { type: new GraphQLList(GraphQLString) },
+  }),
+});
+
+/**
+ * Schema representing configured distribution list; name and to fields are required
+ */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const EmailNotificationDistributionListType = new GraphQLInputObjectType({
+  name: 'EmailNotificationDistributionListType',
+  fields: () => ({
+    name: {
+      type: GraphQLString,
+    },
+    to: {
+      type: new GraphQLNonNull(DistributionListSourceType),
+    },
+    cc: {
+      type: DistributionListSourceType,
+    },
+    bcc: {
+      type: DistributionListSourceType,
+    },
+  }),
+});
+
 /** GraphQL custom notification query input type definition */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const EmailNotificationInputType = new GraphQLInputObjectType({
@@ -69,7 +105,9 @@ export const EmailNotificationInputType = new GraphQLInputObjectType({
     notificationType: { type: GraphQLString },
     datasets: { type: new GraphQLList(DatasetInputType) },
     emailLayout: { type: GraphQLJSON },
-    emailDistributionList: { type: GraphQLJSON },
+    emailDistributionList: {
+      type: new GraphQLNonNull(EmailNotificationDistributionListType),
+    },
     recipientsType: { type: GraphQLString },
     status: { type: GraphQLString },
     lastExecution: { type: GraphQLString },
