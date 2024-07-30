@@ -212,7 +212,7 @@ export const buildTable = (
       table += '<tr bgcolor="#00205c">';
       dataset.columns.forEach((field) => {
         table += `<th align="left" style="color: #fff; font-size: 14px; font-family: 'Roboto', Arial, sans-serif; padding-left: 10px">${titleCase(
-          replaceUnderscores(`${field.name}`)
+          replaceUnderscores(`${field.name ?? field}`)
         )}</th>`;
       });
 
