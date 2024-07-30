@@ -166,6 +166,13 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
           set(row, column.name, value);
           break;
         }
+        case 'radiogroup': {
+          const radioValue = get(record, column.field);
+          const choices = column?.meta?.field?.choices || [];
+          const text = choices?.length ? getText(choices, radioValue) : '';
+          set(row, column.name, text || radioValue);
+          break;
+        }
         default: {
           const value = get(record, column.field);
           if (column.subColumns) {
