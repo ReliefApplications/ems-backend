@@ -83,7 +83,7 @@ const EmailNotificationDistributionListType = new GraphQLInputObjectType({
       type: GraphQLString,
     },
     to: {
-      type: new GraphQLNonNull(DistributionListSourceType),
+      type: DistributionListSourceType,
     },
     cc: {
       type: DistributionListSourceType,
@@ -106,7 +106,7 @@ export const EmailNotificationInputType = new GraphQLInputObjectType({
     datasets: { type: new GraphQLList(DatasetInputType) },
     emailLayout: { type: GraphQLJSON },
     emailDistributionList: {
-      type: new GraphQLNonNull(EmailNotificationDistributionListType),
+      type: EmailNotificationDistributionListType,
     },
     recipientsType: { type: GraphQLString },
     status: { type: GraphQLString },
