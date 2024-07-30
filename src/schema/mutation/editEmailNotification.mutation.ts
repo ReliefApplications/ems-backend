@@ -52,7 +52,7 @@ export default {
       if (args.notification) {
         // Can't do this type of type check on type level
         if (
-          !args.notification.isDraft &&
+          !(args.notification.isDraft || args.notification.isDeleted === 1) &&
           (!args.notification.emailDistributionList.name ||
             (!args.notification.emailDistributionList.to.resource &&
               args.notification.emailDistributionList.to.inputEmails.length ===
