@@ -1,4 +1,5 @@
 import { Record } from '@models';
+import onStructureUpdated from './onStructureUpdated';
 /**
  * Migrates the data of the family to the new structure
  *
@@ -38,6 +39,9 @@ const onFamilyTransfer = async (rec: Record) => {
       },
     }
   );
+
+  // Update the ownership of the family (members) and aids
+  onStructureUpdated(newStructure);
 
   // Maybe delete the transfer record?
 };
