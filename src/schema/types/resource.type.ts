@@ -15,8 +15,9 @@ import {
   LayoutConnectionType,
   AggregationConnectionType,
   FieldMetaDataType,
+  CustomNotificationType,
 } from '.';
-import { Form, Record } from '@models';
+import { Application, Form, Record } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForRecords, {
   userHasRoleFor,
@@ -250,6 +251,25 @@ export const ResourceType = new GraphQLObjectType({
           ...accessibleBy(ability, 'read').Record,
         }).count();
         return count;
+      },
+    },
+    customNotifications: {
+      type: new GraphQLList(CustomNotificationType),
+      args: {
+        application: { type: GraphQLID },
+      },
+      async resolve(parent, args) {
+        if (args.application) {
+          const application = await Application.findById(
+            args.application
+          ).populate({
+            path: 'customNotifications',
+            model: 'CustomNotification',
+            match: { applicationTrigger: true },
+          });
+          return application?.customNotifications ?? [];
+        }
+        return [];
       },
     },
     fields: { type: GraphQLJSON },

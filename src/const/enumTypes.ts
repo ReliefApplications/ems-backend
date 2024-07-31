@@ -99,6 +99,7 @@ export const customNotificationStatus = {
 export const customNotificationRecipientsType = {
   email: 'email',
   userField: 'userField',
+  emailField: 'userField',
   distributionList: 'distributionList',
 };
 
@@ -107,6 +108,7 @@ export const customNotificationRecipientsType = {
  */
 export const customNotificationType = {
   email: 'email',
+  notification: 'notification',
 };
 
 /**
