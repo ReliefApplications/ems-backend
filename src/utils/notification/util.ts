@@ -10,6 +10,21 @@ import { map } from 'lodash';
 import { mongo } from 'mongoose';
 
 /**
+ * Interface validate dataset count
+ */
+export interface ValidateDataSet {
+  name: string;
+  records?: { [field: string]: unknown }[];
+  columns?: {
+    field: string;
+    name: string;
+    type: string;
+  }[];
+  isIndividualEmail?: boolean;
+  recordsCount?: number;
+}
+
+/**
  *
  */
 export interface ProcessedDataset {
@@ -142,15 +157,17 @@ export const replaceDateMacro = (textElement: string): string => {
  * @param datasets Email Notification with records to fetch
  * @param req user request
  * @param res server response
+ * @param isValidate validate dataset records count
  */
 export const fetchDatasets = async (
   datasets: DatasetPreviewArgs[],
   req: any,
-  res: Response<any, Record<string, any>>
+  res: Response<any, Record<string, any>>,
+  isValidate?: boolean
 ): Promise<ProcessedDataset[]> => {
   try {
     const processedDatasets = await Promise.all(
-      datasets.map(async (dataset): Promise<ProcessedDataset> => {
+      datasets.map(async (dataset): Promise<any> => {
         if (!dataset.resource) {
           return;
         }
@@ -167,12 +184,21 @@ export const fetchDatasets = async (
           limit: dataset.limit || Number.MAX_SAFE_INTEGER,
         });
 
-        const records = await resourceExporter.export();
-        return {
-          ...records,
-          name: dataset.name,
-          individualEmail: dataset.individualEmail,
-        };
+        if (isValidate) {
+          const records = await resourceExporter.getRecordsCount(true);
+          const recordsCount = records?.[0]?.totalCount?.[0]?.count ?? 0;
+          return {
+            recordsCount,
+            name: dataset.name,
+          };
+        } else {
+          const records = await resourceExporter.export();
+          return {
+            ...records,
+            name: dataset.name,
+            individualEmail: dataset.individualEmail,
+          };
+        }
       })
     );
     return processedDatasets.filter(Boolean);

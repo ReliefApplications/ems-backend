@@ -10,6 +10,7 @@ import {
 } from '@utils/notification/htmlBuilder';
 import {
   ProcessedDataset,
+  ValidateDataSet,
   fetchDatasets,
   fetchDistributionList,
 } from '@utils/notification/util';
@@ -236,6 +237,37 @@ router.post('/preview-dataset', async (req, res) => {
         const tableElement = Buffer.from(table.toString()).toString('base64');
         res.send({ tableHtml: tableElement, count: resultCount });
       }
+    } catch (e) {
+      if (e.message === 'common.errors.dataNotFound') {
+        return res.status(404).send(i18next.t(e.message));
+      } else throw e;
+    }
+  } catch (e) {
+    logger.error('preview-dataset route handler', e.message, {
+      stack: e.stack,
+    });
+    return res.status(500).send(req.t('common.errors.internalServerError'));
+  }
+});
+
+router.post('/validate-dataset', async (req, res) => {
+  try {
+    const config = req.body as DatasetPreviewArgs[];
+    let datasetArray: ValidateDataSet[];
+    try {
+      config.forEach((dataset) => {
+        if (!dataset.limit) {
+          dataset.limit = Number.MAX_SAFE_INTEGER;
+        }
+      });
+      datasetArray = await fetchDatasets(config, req, res, true);
+      const inValidDataSets = datasetArray
+        .filter((dataset) => dataset?.recordsCount > DATASET_COUNT_LIMIT)
+        .map((dataset) => ({
+          count: dataset?.recordsCount,
+          name: dataset?.name,
+        }));
+      res.send({ inValidDataSets });
     } catch (e) {
       if (e.message === 'common.errors.dataNotFound') {
         return res.status(404).send(i18next.t(e.message));

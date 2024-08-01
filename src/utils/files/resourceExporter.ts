@@ -237,11 +237,13 @@ export default class Exporter {
   };
 
   /**
-   * Get records to put into the file
+   * Get records count
    *
-   * @returns list of data
+   * @param isValidate validate records count
+   * @returns records
    */
-  private getRecords = async () => {
+  public getRecordsCount = async (isValidate?: boolean) => {
+    if (isValidate) await this.getColumns();
     const ability = await extendAbilityForRecords(this.req.context.user);
     set(this.req.context.user, 'ability', ability);
     const contextDataSources = (
@@ -274,6 +276,17 @@ export default class Exporter {
         },
       ],
     });
+
+    return countAggregation;
+  };
+
+  /**
+   * Get records to put into the file
+   *
+   * @returns list of data
+   */
+  private getRecords = async () => {
+    const countAggregation = await this.getRecordsCount();
     // Get total count
     const totalCount = countAggregation?.[0]?.totalCount?.[0]?.count ?? 0;
     // Create a list of all ids
