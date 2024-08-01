@@ -173,6 +173,20 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
           set(row, column.name, text || radioValue);
           break;
         }
+        case 'geospatial': {
+          const geoValue = get(record, `${column.field}.properties`);
+          const lat = geoValue?.coordinates.lat;
+          const lng = geoValue?.coordinates.lng;
+          const countryName = geoValue?.countryName;
+          if (lat && countryName) {
+            set(row, column.name, `${countryName}: ${lat}, ${lng}`);
+          } else if (lat) {
+            set(row, column.name, `${lat}, ${lng}`);
+          } else if (countryName) {
+            set(row, column.name, `${countryName}`);
+          }
+          break;
+        }
         default: {
           const value = get(record, column.field);
           if (column.subColumns) {
