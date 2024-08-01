@@ -3,6 +3,7 @@ import {
   Dashboard,
   Form,
   Page,
+  ReferenceData,
   Resource,
   Step,
   Workflow,
@@ -24,9 +25,10 @@ import { getGraphQLTypeName } from '@utils/validators';
 //   2. Copy the custom styling of the base app to the new one
 
 /** Use your own bearer token when running this */
-const auth = 'Bearer [...]';
+const auth =
+  'Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJQa2tSMjhVUl9qUDFmT3loS1ktMG1PU1lwZ19hR3p6c0cyczdhc3YyelNBIn0.eyJleHAiOjE3MjIzNjMwMTUsImlhdCI6MTcyMjM1OTQxNSwiYXV0aF90aW1lIjoxNzIyMzU5NDEzLCJqdGkiOiI5YTUzY2Q3YS0xYjdjLTRmNzctYjgzOC0xNjA3NmNhMjhmNWIiLCJpc3MiOiJodHRwczovL2lkLWxpZnQub29ydGNsb3VkLnRlY2gvYXV0aC9yZWFsbXMvb29ydCIsImF1ZCI6ImFjY291bnQiLCJzdWIiOiIxYTA5MmIxOS0zODg4LTQ3MDMtODk1Ny0yZWFkMWU4NWE3OWQiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJvb3J0LWNsaWVudCIsIm5vbmNlIjoiVFdNek5XNW9UbEExV1RkMWRVRXdkVGg1TVVGWmREQjNaMTlRYlZwUmJWWndNbEo2WVhKbFZHcExlSGhZIiwic2Vzc2lvbl9zdGF0ZSI6ImFhMmQxNzRlLTI3MjQtNGJiYS04MmEyLTk1NmRjZDJjMzFhNyIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiaHR0cHM6Ly9saWZ0Lm9vcnRjbG91ZC50ZWNoIiwiaHR0cDovL2xvY2FsaG9zdDo0MjAwIiwiaHR0cDovL2xvY2FsaG9zdDozMDAwIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJvZmZsaW5lX2FjY2VzcyIsImRlZmF1bHQtcm9sZXMtb29ydCIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJvcGVuaWQgb2ZmbGluZV9hY2Nlc3MgcHJvZmlsZSBlbWFpbCIsInNpZCI6ImFhMmQxNzRlLTI3MjQtNGJiYS04MmEyLTk1NmRjZDJjMzFhNyIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJuYW1lIjoiTWF0aGV1cyBEaWFzIiwicHJlZmVycmVkX3VzZXJuYW1lIjoibWF0aGV1cy5yZWxpZWZhcHBzQGdtYWlsLmNvbSIsImdpdmVuX25hbWUiOiJNYXRoZXVzIiwiZmFtaWx5X25hbWUiOiJEaWFzIiwiZW1haWwiOiJtYXRoZXVzLnJlbGllZmFwcHNAZ21haWwuY29tIn0.JuLG56i45zTJJoWsAX3TNOLwNzvglFjBtFEBxXWatr5IU0_K5j-xsLVKcB3h5pxpTE8hruzzwvnis8unGayGpuYW-43EzcU36qcHYPsT-kSf6jjh4rQ4PoKIiRl1n9hJScChYAiqbxfU9qbra0TjVdQqRxm9TdkUUHLYzSdPtRA8DXqS1h8p1O1Ye6hP_qHDQhD3xLgwMSDNG2qmI216ESHQm1ueWwxhEEVddcQ0EyurHZAHYQX-ObqB7otfXItjz-R4wR2Lz8zXUgU1V8bXDoSJSabZCiioL-ADFSsHe4dWsohnw7-zhuzlWSkRNBYnrLX7etjR9KQbopbw8fgkRw';
 /** Name of the new country to duplicate base app from */
-const COUNTRY_NAME = '';
+const COUNTRY_NAME = 'ABrazil9';
 
 /** ID of the base app to be copied */
 const BASE_APP = '64ccb80356774f7aa3f6861b';
@@ -67,6 +69,41 @@ const substitute = (obj: { [key: string]: any } | string) => {
  * @returns The duplicated resource
  */
 const duplicateResource = async (resource: Resource) => {
+  // First we duplicate any reference data that the resource uses
+  const refDatasToDuplicate = resource.fields
+    .filter(
+      // Only duplicates reference data that have not been duplicated yet (not in the map)
+      (f) => f.referenceData?.id && !idSubstitutionMap.has(f.referenceData.id)
+    )
+    .map((f) => f.referenceData.id);
+
+  const refDatas = await ReferenceData.find({
+    _id: { $in: refDatasToDuplicate },
+  });
+
+  const duplicatedRefDatas = refDatas.map((refData) => {
+    const name = refData.name.replace('Standard -', `${COUNTRY_NAME} -`);
+    const newRefData = {
+      ...refData.toJSON(),
+      name,
+      graphQLTypeName: ReferenceData.getGraphQLTypeName(name),
+    };
+    delete newRefData._id;
+
+    return new ReferenceData(newRefData);
+  });
+
+  // Save the duplicated reference data
+  await ReferenceData.insertMany(duplicatedRefDatas);
+
+  // Add the new ids to the map
+  refDatas.forEach((refData, i) => {
+    idSubstitutionMap.set(
+      refData._id.toString(),
+      duplicatedRefDatas[i]._id.toString()
+    );
+  });
+
   const resourceName = RESOURCES_IDS.find(
     (r) => r[1] === resource._id.toString()
   )?.[0];
@@ -182,7 +219,10 @@ export const up = async () => {
   }
 
   // Duplicate each resource
-  await Promise.all(resources.map(duplicateResource));
+  for (const resource of resources) {
+    await duplicateResource(resource);
+  }
+
   // sleep for 5 seconds
   logger.info('Sleeping for 5 seconds');
   await new Promise((resolve) => setTimeout(resolve, 5000));
