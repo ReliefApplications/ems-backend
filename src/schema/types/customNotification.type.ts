@@ -36,7 +36,6 @@ export const CustomNotificationType = new GraphQLObjectType({
     onRecordCreation: { type: GraphQLBoolean },
     onRecordUpdate: { type: GraphQLBoolean },
     applicationTrigger: { type: GraphQLBoolean },
-    filter: { type: GraphQLJSON },
   }),
 });
 

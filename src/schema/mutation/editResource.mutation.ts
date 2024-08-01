@@ -567,6 +567,7 @@ type EditResourceArgs = {
   permissions?: any;
   fieldsPermissions?: any;
   calculatedField?: any;
+  triggersFilters?: any;
   idShape?: DefaultIncrementalIdShapeT;
   importField?: string;
 };
@@ -583,6 +584,7 @@ export default {
     permissions: { type: GraphQLJSON },
     fieldsPermissions: { type: GraphQLJSON },
     calculatedField: { type: GraphQLJSON },
+    triggersFilters: { type: GraphQLJSON },
     idShape: { type: IdShapeType },
     importField: { type: GraphQLString },
   },
@@ -597,6 +599,7 @@ export default {
           !args.calculatedField &&
           !args.fieldsPermissions &&
           !args.idShape &&
+          !args.triggersFilters &&
           !args.importField)
       ) {
         throw new GraphQLError(
@@ -835,6 +838,18 @@ export default {
         } else {
           Object.assign(update, {
             $set: { ['importField']: args.importField },
+          });
+        }
+      }
+
+      if (args.triggersFilters) {
+        if (update.$set) {
+          Object.assign(update.$set, {
+            ['triggersFilters']: args.triggersFilters,
+          });
+        } else {
+          Object.assign(update, {
+            $set: { ['triggersFilters']: args.triggersFilters },
           });
         }
       }

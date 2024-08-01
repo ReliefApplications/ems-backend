@@ -65,6 +65,7 @@ export interface Resource extends Document {
   layouts: any;
   aggregations: any;
   importField?: string;
+  triggersFilters?: any;
 }
 
 /** Mongoose resource schema definition */
@@ -149,6 +150,10 @@ const resourceSchema = new Schema<Resource>(
       // name of field, id if external resource
       type: mongoose.Schema.Types.Mixed,
       default: [],
+    },
+    triggersFilters: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
     },
     layouts: [layoutSchema],
     aggregations: [aggregationSchema],
