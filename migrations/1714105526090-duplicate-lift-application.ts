@@ -21,13 +21,13 @@ import { getGraphQLTypeName } from '@utils/validators';
 //
 // In order to run it, fill the auth and COUNTRY_NAME variables with the appropriate values
 // After that, two steps need to be taken manually:
-//   1. Make any changes to the Proactive and Register a complaint forms (e.g. the description) and save them
+//   1. Make any change to the Register a complaint form (e.g. the description) and save it
 //   2. Copy the custom styling of the base app to the new one
 
 /** Use your own bearer token when running this */
 const auth = 'Bearer ...';
 /** Name of the new country to duplicate base app from */
-const COUNTRY_NAME = 'ABrazil9';
+const COUNTRY_NAME = '[COUNTRY NAME]';
 
 /** ID of the base app to be copied */
 const BASE_APP = '64ccb80356774f7aa3f6861b';
@@ -272,9 +272,6 @@ export const up = async () => {
 
   // Add the new id to the map
   idSubstitutionMap.set(BASE_APP, res.data.data.duplicateApplication.id);
-
-  logger.info('Substitution map:');
-  logger.info(Object.keys(idSubstitutionMap));
 
   // Replace resource ids in widget aggregations
   const newApp = await Application.findById(
