@@ -3,6 +3,7 @@ import {
   GraphQLNonNull,
   GraphQLString,
   GraphQLID,
+  GraphQLBoolean,
 } from 'graphql';
 import { Types } from 'mongoose';
 
@@ -10,13 +11,16 @@ import { Types } from 'mongoose';
 export type CustomNotificationArgs = {
   name: string;
   description?: string;
-  schedule: string;
+  schedule?: string;
   notificationType: string;
   resource: string | Types.ObjectId;
   layout: string | Types.ObjectId;
   template: string | Types.ObjectId;
   recipients: string;
   recipientsType: string;
+  onRecordCreation?: boolean;
+  onRecordUpdate?: boolean;
+  applicationTrigger?: boolean;
   // eslint-disable-next-line @typescript-eslint/naming-convention
   notification_status?: string;
 };
@@ -28,13 +32,16 @@ export const CustomNotificationInputType = new GraphQLInputObjectType({
   fields: () => ({
     name: { type: new GraphQLNonNull(GraphQLString) },
     description: { type: GraphQLString },
-    schedule: { type: new GraphQLNonNull(GraphQLString) },
+    schedule: { type: GraphQLString },
     notificationType: { type: new GraphQLNonNull(GraphQLString) },
     resource: { type: new GraphQLNonNull(GraphQLID) },
     layout: { type: new GraphQLNonNull(GraphQLID) },
     template: { type: new GraphQLNonNull(GraphQLID) },
     recipients: { type: new GraphQLNonNull(GraphQLString) },
     recipientsType: { type: new GraphQLNonNull(GraphQLString) },
+    onRecordCreation: { type: GraphQLBoolean },
+    onRecordUpdate: { type: GraphQLBoolean },
+    applicationTrigger: { type: GraphQLBoolean },
     // notification_status: { type: new GraphQLNonNull(GraphQLString) },
   }),
 });

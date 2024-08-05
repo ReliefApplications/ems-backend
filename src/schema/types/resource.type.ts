@@ -305,6 +305,12 @@ export const ResourceType = new GraphQLObjectType({
         return ability.can('delete', parent);
       },
     },
+    hasLayouts: {
+      type: GraphQLBoolean,
+      resolve(parent) {
+        return parent.layouts?.length;
+      },
+    },
     layouts: {
       type: LayoutConnectionType,
       args: {
