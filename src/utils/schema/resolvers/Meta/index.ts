@@ -15,7 +15,7 @@ import meta from '../Query/meta';
 import getMetaFieldResolver from './getMetaFieldResolver';
 import getMetaReferenceDataResolver from './getMetaReferenceDataResolver';
 import { Types } from 'mongoose';
-import { ReferenceData } from '@models';
+import { ReferenceData, Resource } from '@models';
 
 /**
  * Gets the resolvers for each field of the document for a given resource
@@ -161,7 +161,7 @@ export const getMetaResolver = (
     .reduce(
       (resolvers, fieldName) =>
         Object.assign({}, resolvers, {
-          [fieldName]: (parent) => {
+          [fieldName]: async (parent) => {
             const field = relationshipFields.includes(fieldName)
               ? parent[
                   fieldName.slice(
@@ -170,7 +170,24 @@ export const getMetaResolver = (
                   )
                 ]
               : parent[fieldName];
-            return getMetaFieldResolver(field);
+
+            if (field) {
+              return getMetaFieldResolver(field);
+            }
+
+            // For relationship fields
+            if (parent.resource) {
+              const resource = await Resource.findOne({
+                _id: parent.resource,
+              }).select('fields');
+
+              const relatedFields = resource.fields.reduce((prev, curr) => {
+                prev[curr.name] = curr;
+                return prev;
+              });
+
+              return getMetaFieldResolver(relatedFields[fieldName]);
+            }
           },
         }),
       {}

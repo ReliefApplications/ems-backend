@@ -36,7 +36,11 @@ export const formatValue = (field: any, value: any): any => {
       break;
     case 'file':
       if (!isNil(value)) {
-        return value.map((x) => ({ name: x.name, content: x.content }));
+        return value.map((x) => ({
+          name: x.name,
+          content: x.content,
+          includeToken: x.includeToken,
+        }));
       }
       break;
     case 'resource':
