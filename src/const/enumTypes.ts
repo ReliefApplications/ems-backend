@@ -101,6 +101,7 @@ export const customNotificationRecipientsType = {
   userField: 'userField',
   emailField: 'userField',
   distributionList: 'distributionList',
+  channel: 'channel',
 };
 
 /**
