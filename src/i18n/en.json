@@ -298,6 +298,11 @@
 			}
 		},
 		"email": {
+			"distributionList": {
+				"errors": {
+					"userAlreadyExists": "User is already subscribed to distribution list."
+				}
+			},
 			"errors": {
 				"missingFile": "No file detected."
 			}

@@ -613,6 +613,13 @@ router.post('/update-subscription', async (req, res) => {
       }
       // Create as set to handle duplicates
       const emails = new Set(notification.emailDistributionList.to.inputEmails);
+      if (emails.has(userEmail)) {
+        return res
+          .status(400)
+          .send(
+            i18next.t('routes.email.distributionList.errors.userAlreadyExists')
+          );
+      }
       emails.add(userEmail);
       notification.emailDistributionList.to.inputEmails = Array.from(emails);
       await notification.save();
