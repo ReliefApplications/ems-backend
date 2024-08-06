@@ -33,6 +33,11 @@ export interface Dataset {
   textStyle: any;
   sendAsAttachment: boolean;
   individualEmail: boolean;
+  individualEmailQuery?: {
+    name: string;
+    filter: any;
+    fields: any[];
+  };
 }
 
 /**
@@ -121,6 +126,11 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
         name: String,
         resource: String,
         query: {
+          name: String,
+          fields: [{ type: mongoose.Schema.Types.Mixed }],
+          filter: { type: mongoose.Schema.Types.Mixed },
+        },
+        individualEmailQuery: {
           name: String,
           fields: [{ type: mongoose.Schema.Types.Mixed }],
           filter: { type: mongoose.Schema.Types.Mixed },

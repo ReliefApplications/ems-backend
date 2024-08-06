@@ -300,16 +300,41 @@ router.post('/send-individual-email/:configId', async (req, res) => {
           name: dataset.name,
           query: dataset.query,
           resource: dataset.resource,
-          isIndividualEmail: dataset.individualEmail || false,
+          individualEmail: dataset.individualEmail || false,
         };
       }
     );
 
+    const individualEmailQueries: DatasetPreviewArgs[] = config.datasets
+      .filter((dataset) => dataset.individualEmail)
+      .map((dataset) => {
+        return {
+          name: dataset.name,
+          query: dataset.individualEmailQuery,
+          resource: dataset.resource,
+          individualEmail: dataset.individualEmail,
+        };
+      });
+
     let datasets: ProcessedDataset[];
+    let individualEmails: ProcessedDataset[];
     const processedIndividualRecords: ProcessedDataset[] = [];
 
     try {
       datasets = await fetchDatasets(datasetQueries, req, res);
+      individualEmails = await fetchDatasets(individualEmailQueries, req, res);
+      datasets = datasets.map((data) => {
+        const individualEmail = individualEmails.find(
+          (email) => email.name === data.name
+        );
+
+        const individualEmailRecords = (individualEmail?.records.flatMap(
+          (record) => Object.values(record) as string[]
+        ) ?? []) as string[];
+
+        data.individualEmailRecords = individualEmailRecords;
+        return data;
+      });
     } catch (e) {
       if (e.message === 'common.errors.dataNotFound') {
         return res.status(404).send(req.t(e.message));
@@ -420,17 +445,20 @@ router.post('/send-individual-email/:configId', async (req, res) => {
         cid: 'bannerImage',
       });
     }
-
+    const toEmails = {};
+    const individualEmail = [];
     for (const dataset of datasets) {
-      if (dataset.isIndividualEmail) {
+      if (dataset.individualEmail) {
         // Individual email format
         dataset.records.forEach((record) =>
           processedIndividualRecords.push({
             records: [record],
             name: dataset.name,
             columns: dataset.columns,
+            individualEmail: true,
           })
         );
+        individualEmail.push(...dataset.individualEmailRecords);
       } else {
         // Block email format
         if (bodyString.includes(`{{${dataset.name}}}`)) {
@@ -439,6 +467,26 @@ router.post('/send-individual-email/:configId', async (req, res) => {
             buildTable(dataset)
           );
         }
+        processedIndividualRecords.push({
+          records: [...dataset.records],
+          name: dataset.name,
+          columns: dataset.columns,
+        });
+      }
+    }
+    for (const dataset of datasets) {
+      if (dataset.individualEmail) {
+        toEmails[dataset.name] = config
+          .get('emailDistributionList')
+          ?.to?.inputEmails?.filter((email) =>
+            dataset?.individualEmailRecords?.includes(email)
+          );
+      } else {
+        toEmails[dataset.name] = config
+          .get('emailDistributionList')
+          ?.to?.inputEmails?.filter(
+            (email) => !individualEmail?.includes(email)
+          );
       }
     }
 
@@ -455,18 +503,35 @@ router.post('/send-individual-email/:configId', async (req, res) => {
       const blockNameRegex = /<p>{{\s*.*?\s*}}<\/p>/g;
 
       bodyElement.appendChild(bodyBlock);
+      if (block.individualEmail && toEmails[block.name]?.length) {
+        for (const email of toEmails[block.name]) {
+          const emailParams = {
+            message: {
+              to: email, // Recipient's email address
+              cc: cc,
+              bcc: bcc,
+              subject: emailSubject,
+              html: mainTableElement.toString().replaceAll(blockNameRegex, ''),
+              attachments: attachments,
+            },
+          };
+          // Send email
+          await sendEmail(emailParams);
+        }
+      } else {
       const emailParams = {
         message: {
-          to: config.get('emailDistributionList').to.inputEmails, // Recipient's email address
+            to: toEmails[block.name], // Recipient's email address
           cc: cc,
           bcc: bcc,
           subject: emailSubject,
-          html: mainTableElement.toString().replace(blockNameRegex, ''),
+            html: mainTableElement.toString().replaceAll(blockNameRegex, ''),
           attachments: attachments,
         },
       };
       // Send email
       await sendEmail(emailParams);
+      }
       bodyElement.removeChild(bodyBlock);
       bodyString = bodyStringCopy;
     }
