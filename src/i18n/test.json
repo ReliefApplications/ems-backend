@@ -298,13 +298,20 @@
 			}
 		},
 		"email": {
-			"distributionList": {
-				"errors": {
-					"userAlreadyExists": "******"
-				}
-			},
 			"errors": {
 				"missingFile": "******"
+			},
+			"subscription": {
+				"alerts": {
+					"dataNotFound": "****** {{type}} ******",
+					"restricted": "******",
+					"success": "****** {{notificationName}} ******",
+					"unsubscribe": {
+						"success": "****** {{notificationName}} ******"
+					},
+					"userAlreadyExists": "****** {{notificationName}} ******",
+					"userNotSubscribed": "****** {{notificationName}}"
+				}
 			}
 		},
 		"gis": {

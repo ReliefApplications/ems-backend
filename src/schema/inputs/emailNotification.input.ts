@@ -20,6 +20,8 @@ export type EmailNotificationArgs = {
   datasets: any[];
   emailLayout: any;
   emailDistributionList: EmailDistributionListQuery;
+  subscriptionList: string[];
+  restrictSubscription: boolean;
   recipientsType: any;
   status: string;
   lastExecution: string;
@@ -108,6 +110,8 @@ export const EmailNotificationInputType = new GraphQLInputObjectType({
     emailDistributionList: {
       type: EmailNotificationDistributionListType,
     },
+    subscriptionList: { type: new GraphQLList(GraphQLString) },
+    restrictSubscription: { type: GraphQLBoolean },
     recipientsType: { type: GraphQLString },
     status: { type: GraphQLString },
     lastExecution: { type: GraphQLString },

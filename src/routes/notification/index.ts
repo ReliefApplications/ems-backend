@@ -119,10 +119,16 @@ router.post('/send-email/:configId', async (req, res) => {
       });
     }
 
+    // Enforces clear if restrict is true
+    if (config.restrictSubscription === true) {
+      config.subscriptionList = [];
+    }
+
     const emails = await fetchDistributionList(
       config.emailDistributionList,
       req,
-      res
+      res,
+      config.subscriptionList
     );
 
     // Build email
@@ -589,7 +595,7 @@ router.post('/preview-quick-email', async (req, res) => {
   }
 });
 
-router.post('/update-subscription', async (req, res) => {
+router.post('/add-subscription', async (req, res) => {
   let configId = '';
   let userEmail = '';
   try {
@@ -599,29 +605,31 @@ router.post('/update-subscription', async (req, res) => {
     try {
       notification = await EmailNotification.findById(configId).exec();
       if (!notification) {
-        return res.status(400).send(i18next.t('common.errors.dataNotFound'));
+        // Response handling when email notification does not exist
+        return res.status(400).send(
+          i18next.t('routes.email.subscription.alerts.dataNotFound', {
+            type: 'add subscription',
+          })
+        );
       }
-      // Check if notification contains individual email datasets, if so do not proceed
-      let containsIndividualBlock = false;
-      notification.datasets.forEach((dataset) => {
-        if (dataset.individualEmail) {
-          containsIndividualBlock = true;
-        }
-      });
-      if (containsIndividualBlock) {
-        return res.status(400).send(i18next.t('common.errors.dataNotFound'));
-      }
-      // Create as set to handle duplicates
-      const emails = new Set(notification.emailDistributionList.to.inputEmails);
-      if (emails.has(userEmail)) {
+
+      if (notification.restrictSubscription) {
         return res
           .status(400)
-          .send(
-            i18next.t('routes.email.distributionList.errors.userAlreadyExists')
-          );
+          .send(i18next.t('routes.email.subscription.alerts.restricted'));
+      }
+
+      // Response handling when user exists in distribution list
+      const emails = new Set(notification.subscriptionList);
+      if (emails.has(userEmail)) {
+        return res.status(409).send(
+          i18next.t('routes.email.subscription.alerts.userAlreadyExists', {
+            notificationName: notification.name,
+          })
+        );
       }
       emails.add(userEmail);
-      notification.emailDistributionList.to.inputEmails = Array.from(emails);
+      notification.subscriptionList = Array.from(emails);
       await notification.save();
     } catch (err) {
       logger.error(err);
@@ -629,9 +637,74 @@ router.post('/update-subscription', async (req, res) => {
         .status(500)
         .send(i18next.t('common.errors.internalServerError'));
     }
-    res.send(userEmail);
+
+    // Successful response for adding user to distribution list
+    res.send(
+      i18next.t('routes.email.subscription.alerts.success', {
+        notificationName: notification.name,
+      })
+    );
   } catch (err) {
-    return res.status(400).send('common.errors.dataNotFound');
+    // Response handling when email notification does not exist
+    return res.status(400).send(
+      i18next.t('routes.email.subscription.alerts.dataNotFound', {
+        type: 'add subscription',
+      })
+    );
+  }
+});
+
+router.post('/remove-subscription', async (req, res) => {
+  let configId = '';
+  let userEmail = '';
+  try {
+    configId = req.body.configId;
+    userEmail = req.context.user.username;
+    let notification: EmailNotification;
+    try {
+      notification = await EmailNotification.findById(configId).exec();
+      if (!notification) {
+        // Response handling when email notification does not exist
+        return res.status(400).send(
+          i18next.t('routes.email.subscription.alerts.dataNotFound', {
+            type: 'remove subscription',
+          })
+        );
+      }
+
+      // Response handling when user exists in distribution list
+      const emails = new Set(notification.subscriptionList);
+      if (emails.has(userEmail)) {
+        emails.delete(userEmail);
+        notification.subscriptionList = Array.from(emails);
+        await notification.save();
+        // Successful response for removing user from distribution list
+        res.send(
+          i18next.t('routes.email.subscription.alerts.unsubscribe.success', {
+            notificationName: notification.name,
+          })
+        );
+      } else {
+        // Response handling when user does not exist in distribution list
+        return res.status(409).send(
+          i18next.t('routes.email.subscription.alerts.userNotSubscribed', {
+            notificationName: notification.name,
+          })
+        );
+      }
+    } catch (err) {
+      logger.error(err);
+      return res
+        .status(500)
+        .send(i18next.t('common.errors.internalServerError'));
+    }
+  } catch (err) {
+    // Response handling when email notification does not exist
+    return res.status(400).send(
+      i18next.t('routes.email.subscription.alerts.dataNotFound', {
+        type: 'remove subscription',
+      })
+    );
   }
 });
 

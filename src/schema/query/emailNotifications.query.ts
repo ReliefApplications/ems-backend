@@ -16,6 +16,10 @@ import extendAbilityForApplications from '@security/extendAbilityForApplication'
 /** Default page size */
 // const DEFAULT_FIRST = 10;
 
+export interface EmailNotificationReturn extends EmailNotification {
+  userSubscribed: boolean;
+}
+
 /** Available sort fields */
 const SORT_FIELDS = [
   {
@@ -73,10 +77,13 @@ export default {
         .skip(args.skip)
         .limit(args.limit);
 
-      const edges = items.map((r) => ({
-        cursor: encodeCursor(SORT_FIELDS[0].cursorId(r)),
-        node: r,
-      }));
+      const edges = (items as Array<EmailNotificationReturn>).map((r) => {
+        r.userSubscribed = r.subscriptionList.includes(context.user.username);
+        return {
+          cursor: encodeCursor(SORT_FIELDS[0].cursorId(r)),
+          node: r,
+        };
+      });
 
       return {
         pageInfo: {
