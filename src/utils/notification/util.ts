@@ -36,7 +36,8 @@ export interface ProcessedDataset {
     type: string;
     label?: string;
   }[];
-  isIndividualEmail?: boolean;
+  individualEmail?: boolean;
+  individualEmailRecords?: string[];
 }
 
 /**
