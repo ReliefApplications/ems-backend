@@ -519,18 +519,18 @@ router.post('/send-individual-email/:configId', async (req, res) => {
           await sendEmail(emailParams);
         }
       } else {
-      const emailParams = {
-        message: {
+        const emailParams = {
+          message: {
             to: toEmails[block.name], // Recipient's email address
-          cc: cc,
-          bcc: bcc,
-          subject: emailSubject,
+            cc: cc,
+            bcc: bcc,
+            subject: emailSubject,
             html: mainTableElement.toString().replaceAll(blockNameRegex, ''),
-          attachments: attachments,
-        },
-      };
-      // Send email
-      await sendEmail(emailParams);
+            attachments: attachments,
+          },
+        };
+        // Send email
+        await sendEmail(emailParams);
       }
       bodyElement.removeChild(bodyBlock);
       bodyString = bodyStringCopy;
