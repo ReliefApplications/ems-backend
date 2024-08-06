@@ -4,6 +4,7 @@ import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 import { EmailNotificationType } from '@schema/types/emailNotification.type';
+import { EmailNotificationReturn } from '@schema/types/emailNotification.type';
 import {
   EmailNotificationArgs,
   EmailNotificationInputType,
@@ -47,6 +48,10 @@ export default {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
 
+      const userIsSubscribed = args.notification.subscriptionList.includes(
+        context.user.username
+      );
+
       const update = {
         name: args.notification.name,
         schedule: args.notification.schedule,
@@ -56,6 +61,8 @@ export default {
         datasets: args.notification.datasets,
         emailLayout: args.notification.emailLayout,
         emailDistributionList: args.notification.emailDistributionList,
+        subscriptionList: args.notification.subscriptionList,
+        restrictSubscription: args.notification.restrictSubscription,
         status: args.notification.status,
         recipientsType: args.notification.recipientsType,
         lastExecution: args.notification.lastExecution,
@@ -81,7 +88,9 @@ export default {
       );
       const emailNotification = new EmailNotification(update);
       await emailNotification.save();
-      return emailNotification;
+      const response = emailNotification as EmailNotificationReturn;
+      response.userSubscribed = userIsSubscribed;
+      return response;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {

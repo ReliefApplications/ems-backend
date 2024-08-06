@@ -8,6 +8,7 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Connection } from './pagination.type';
+import { EmailNotification } from '@models';
 
 /**
  *
@@ -101,6 +102,9 @@ export const EmailNotificationType = new GraphQLObjectType({
     datasets: { type: new GraphQLList(DatasetType) },
     emailLayout: { type: EmailLayoutType },
     emailDistributionList: { type: EmailDistributionListType },
+    userSubscribed: { type: GraphQLBoolean },
+    subscriptionList: { type: new GraphQLList(GraphQLString) },
+    restrictSubscription: { type: GraphQLBoolean },
     lastExecution: { type: GraphQLString },
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
@@ -116,3 +120,10 @@ export const EmailNotificationType = new GraphQLObjectType({
 export const EmailNotificationConnectionType = Connection(
   EmailNotificationType
 );
+
+/**
+ * Graphql return type
+ */
+export interface EmailNotificationReturn extends EmailNotification {
+  userSubscribed: boolean;
+}

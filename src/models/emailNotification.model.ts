@@ -80,6 +80,8 @@ export interface EmailNotification extends Document {
   notificationType: string;
   datasets: Dataset[];
   emailDistributionList: EmailDistributionListQuery;
+  subscriptionList: string[];
+  restrictSubscription: boolean;
   emailLayout: EmailLayout;
   recipientsType: string;
   status: string;
@@ -160,6 +162,13 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
         },
         inputEmails: { type: [String] },
       },
+    },
+    subscriptionList: {
+      type: [String],
+    },
+    restrictSubscription: {
+      type: Boolean,
+      default: false,
     },
     emailLayout: {
       subject: String,

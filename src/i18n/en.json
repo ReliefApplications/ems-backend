@@ -298,13 +298,20 @@
 			}
 		},
 		"email": {
-			"distributionList": {
-				"errors": {
-					"userAlreadyExists": "User is already subscribed to distribution list."
-				}
-			},
 			"errors": {
 				"missingFile": "No file detected."
+			},
+			"subscription": {
+				"alerts": {
+					"dataNotFound": "Failed to {{type}}. Error: Data not found!",
+					"restricted": "Subscriptions to this Email notification are not permitted!",
+					"success": "Subscribed to email notification: {{notificationName}}.",
+					"unsubscribe": {
+						"success": "Unsubscribed from email notification: {{notificationName}}."
+					},
+					"userAlreadyExists": "User email address already exists in distribution list for: {{notificationName}}.",
+					"userNotSubscribed": "User not currently subscribed to {{notificationName}}"
+				}
 			}
 		},
 		"gis": {

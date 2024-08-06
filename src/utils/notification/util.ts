@@ -215,11 +215,13 @@ export const fetchDatasets = async (
  * @param emailDistributionList Distribution list object containing to, cc, and bcc elements with their query and input emails
  * @param req User request
  * @param res User reponse
+ * @param subscriptionList List of emails that are subscribed to the notification
  */
 export const fetchDistributionList = async (
   emailDistributionList: EmailDistributionListQuery,
   req: Request<any, any>,
-  res: Response<any, any>
+  res: Response<any, any>,
+  subscriptionList?: string[]
 ): Promise<{ to: string[]; cc: string[]; bcc: string[] }> => {
   const toEmails = new Set<string>();
   const ccEmails = new Set<string>();
@@ -287,6 +289,11 @@ export const fetchDistributionList = async (
   }
   if (emailDistributionList.to?.inputEmails) {
     emailDistributionList.to.inputEmails.forEach((email) => {
+      toEmails.add(email);
+    });
+  }
+  if (subscriptionList) {
+    subscriptionList.forEach((email) => {
       toEmails.add(email);
     });
   }

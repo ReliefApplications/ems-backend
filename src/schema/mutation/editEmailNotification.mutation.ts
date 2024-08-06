@@ -11,6 +11,7 @@ import {
 import { Types } from 'mongoose';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { AppAbility } from '@security/defineUserAbility';
+import { EmailNotificationReturn } from '@schema/types/emailNotification.type';
 
 /**
  *
@@ -62,6 +63,11 @@ export default {
             context.i18next.t('common.errors.dataNotFound')
           );
         }
+
+        // Check if user is subscribed to the notification
+        const userIsSubscribed = args.notification.subscriptionList.includes(
+          context.user.username
+        );
         const updateFields = {
           name: args.notification.name,
           schedule: args.notification.schedule,
@@ -74,6 +80,8 @@ export default {
           datasets: args.notification.datasets,
           emailLayout: args.notification.emailLayout,
           emailDistributionList: args.notification.emailDistributionList,
+          subscriptionList: args.notification.subscriptionList,
+          restrictSubscription: args.notification.restrictSubscription,
           status: args.notification.status,
           recipientsType: args.notification.recipientsType,
           lastExecution: args.notification.lastExecution,
@@ -95,8 +103,9 @@ export default {
           { $set: updateFields },
           { new: true } // Return the modified document
         );
-
-        return updatedData;
+        const response = updatedData as EmailNotificationReturn;
+        response.userSubscribed = userIsSubscribed;
+        return response;
       } else {
         const emailNotification = await EmailNotification.findById(args.id);
         return emailNotification;
