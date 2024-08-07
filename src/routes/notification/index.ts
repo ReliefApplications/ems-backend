@@ -310,7 +310,11 @@ router.post('/send-individual-email/:configId', async (req, res) => {
       .map((dataset) => {
         return {
           name: dataset.name,
-          query: dataset.individualEmailQuery,
+          query: {
+            name: dataset?.query?.name,
+            fields: dataset?.individualEmailQuery,
+            filter: {},
+          },
           resource: dataset.resource,
           individualEmail: dataset.individualEmail,
         };
@@ -458,6 +462,7 @@ router.post('/send-individual-email/:configId', async (req, res) => {
             individualEmail: true,
           })
         );
+        // emails from send individual blocks
         individualEmail.push(...dataset.individualEmailRecords);
       } else {
         // Block email format
@@ -476,6 +481,7 @@ router.post('/send-individual-email/:configId', async (req, res) => {
     }
     for (const dataset of datasets) {
       if (dataset.individualEmail) {
+        //filter individual emails from to-emails
         toEmails[dataset.name] = config
           .get('emailDistributionList')
           ?.to?.inputEmails?.filter((email) =>
@@ -503,6 +509,7 @@ router.post('/send-individual-email/:configId', async (req, res) => {
       const blockNameRegex = /<p>{{\s*.*?\s*}}<\/p>/g;
 
       bodyElement.appendChild(bodyBlock);
+      // send emails separately for each email
       if (block.individualEmail && toEmails[block.name]?.length) {
         for (const email of toEmails[block.name]) {
           const emailParams = {
