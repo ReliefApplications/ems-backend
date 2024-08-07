@@ -30,6 +30,7 @@ type DashboardFilterArgs = {
   variant?: string;
   show?: boolean;
   closable?: boolean;
+  keepPrevious?: boolean;
   structure?: any;
   position?: string;
 };

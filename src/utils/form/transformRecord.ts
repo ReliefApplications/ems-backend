@@ -36,24 +36,25 @@ export const formatValue = (field: any, value: any): any => {
       break;
     case 'file':
       if (!isNil(value)) {
-        return value.map((x) => ({ name: x.name, content: x.content }));
+        return value.map((x) => ({
+          name: x.name,
+          content: x.content,
+          includeToken: x.includeToken,
+        }));
       }
       break;
     case 'resource':
       if (!isNil(value)) {
         //checks if the id is a valid mongo id
-        return new mongoose.Types.ObjectId(value).toString() === value
-          ? value
-          : null;
+        return mongoose.isValidObjectId(value) ? value : null;
       }
       break;
 
     case 'resources':
       if (!isNil(value) && Array.isArray(value)) {
         //returns only valid ids from an array of ids
-        return value.filter(
-          (resourceId) =>
-            new mongoose.Types.ObjectId(resourceId).toString() === resourceId
+        return value.filter((resourceId) =>
+          mongoose.isValidObjectId(resourceId)
         );
       }
       break;

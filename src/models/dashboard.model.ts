@@ -15,6 +15,7 @@ interface Filter {
   variant?: string;
   show?: boolean;
   closable?: boolean;
+  keepPrevious?: boolean;
   structure?: any;
   position?: string;
 }
@@ -59,6 +60,7 @@ const filterSchema = new Schema<Filter>(
     variant: String,
     show: Boolean,
     closable: Boolean,
+    keepPrevious: Boolean,
     structure: mongoose.Schema.Types.Mixed,
     position: String,
   },

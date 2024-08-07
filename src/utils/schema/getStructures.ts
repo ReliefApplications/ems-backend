@@ -1,8 +1,9 @@
 import { Form, ReferenceData, Resource } from '@models';
+import { Types } from 'mongoose';
 
 /** Interface definition for the structure of a schema */
 export interface SchemaStructure {
-  _id: string;
+  _id: Types.ObjectId;
   name: string;
   fields: any[];
 }

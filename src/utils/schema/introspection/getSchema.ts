@@ -56,7 +56,7 @@ export const getSchema = (
   }, {});
 
   const namesById: any = structures.reduce((obj, x) => {
-    obj[x._id] = x.name;
+    obj[x._id.toString()] = x.name;
     return obj;
   }, {});
 

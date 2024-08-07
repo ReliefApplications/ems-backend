@@ -46,6 +46,39 @@ function userCanAccessField(
 }
 
 /**
+ * Populate the fields of resource question fields of a resource
+ *
+ * @param resource The resource to populate
+ * @returns The resource with populated fields
+ */
+async function populateResourceFields(resource: Resource): Promise<Resource> {
+  const newFields = [];
+
+  for (const field of resource.fields) {
+    if (field.type !== 'resource') {
+      newFields.push(field);
+      continue;
+    }
+
+    const res = await Resource.findById(field.resource);
+    if (!res) {
+      newFields.push(field);
+      continue;
+    }
+
+    newFields.push({
+      ...field,
+      fields: res.fields,
+    });
+  }
+
+  return {
+    ...resource.toObject(),
+    fields: newFields,
+  } as Resource;
+}
+
+/**
  * Check if a user has a role with a permission on this form
  *
  * @param type The type of the permission
@@ -231,7 +264,7 @@ async function extendAbilityForRecordsOnResource(
       ability = extendAbilityForRecordsOnForm(
         user,
         form,
-        form.resource,
+        await populateResourceFields(form.resource),
         ability
       );
     }
@@ -298,7 +331,7 @@ export default async function extendAbilityForRecords(
       ability = extendAbilityForRecordsOnForm(
         user,
         onObject as Form,
-        resource,
+        await populateResourceFields(resource),
         ability
       );
     } else if (onObject instanceof Resource) {

@@ -63,6 +63,7 @@ interface ReferenceDataDocument extends Document {
   path: string;
   data: any;
   graphQLFilter: string;
+  separator?: string;
   permissions?: {
     canSee?: any[];
     canUpdate?: any[];
@@ -136,6 +137,7 @@ const schema = new Schema<ReferenceData>(
     path: String,
     data: mongoose.Schema.Types.Mixed,
     graphQLFilter: String,
+    separator: String,
     permissions: {
       canSee: [
         {

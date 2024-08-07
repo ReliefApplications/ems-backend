@@ -208,7 +208,7 @@ const sortRecords = (records: any[], sortArgs: any): void => {
  * @returns true if field is used to sorting
  */
 const isSortField = (sortFields: any[], fieldName: string): boolean =>
-  sortFields.includes((item: any) => item.field === fieldName);
+  sortFields?.includes((item: any) => item.field === fieldName);
 
 /**
  * Returns a resolver that fetches records from resources/forms
@@ -305,21 +305,26 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               from: 'records',
               localField: `data.${resource}_id`,
               foreignField: '_id',
-              as: `_${resource}`,
+              as: `${resource}`,
             },
           },
           {
             $unwind: {
-              path: `$_${resource}`,
+              path: `$${resource}`,
               preserveNullAndEmptyArrays: true,
             },
           },
           {
             $addFields: {
-              [`_${resource}.id`]: { $toString: `$_${resource}._id` },
-              [`_${resource}.data.id`]: { $toString: `$_${resource}._id` },
-              [`_${resource}.data._id`]: { $toString: `$_${resource}._id` },
-              [`_${resource}.data.archived`]: `$_${resource}.archived`,
+              [`${resource}.id`]: { $toString: `$${resource}._id` },
+              [`${resource}.data.id`]: { $toString: `$${resource}._id` },
+              [`${resource}.data._id`]: { $toString: `$${resource}._id` },
+              [`${resource}.data.archived`]: `$${resource}.archived`,
+            },
+          },
+          {
+            $addFields: {
+              [`${resource}`]: `$${resource}.data`,
             },
           },
         ]);

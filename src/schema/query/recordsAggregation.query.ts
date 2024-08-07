@@ -407,6 +407,7 @@ export default {
           {
             $addFields: {
               'fields.form': '$_id',
+              'fields.relatedFieldResource': '$resource',
             },
           },
           {
@@ -458,7 +459,7 @@ export default {
                 $addFields: {
                   [`data.${fieldName}`]: {
                     $map: {
-                      input: `$data.${fieldName}`,
+                      input: { $ifNull: [`$data.${fieldName}`, []] },
                       in: {
                         $convert: {
                           input: '$$this',
@@ -487,7 +488,7 @@ export default {
             pipeline.push({
               $addFields: selectableDefaultRecordFieldsFlat.reduce(
                 (fields, selectableField) => {
-                  if (selectableField === 'id') {
+                  if (selectableField === 'id' && field.type === 'resource') {
                     // Special case for id
                     return Object.assign(fields, {
                       [`data.${fieldName}.data.id`]: {
@@ -538,7 +539,10 @@ export default {
                       $filter: {
                         input: `$data.${fieldName}`,
                         cond: {
-                          $eq: ['$$this.form', relatedField.form],
+                          $eq: [
+                            '$$this.resource',
+                            relatedField.relatedFieldResource,
+                          ],
                         },
                       },
                     },
@@ -633,6 +637,30 @@ export default {
       }
       // Build pipeline stages
       if (aggregation.pipeline && aggregation.pipeline.length) {
+        // Add related resources to context.resourcesFieldsById
+        const resourcesAlreadyInContext = Object.keys(
+          context.resourceFieldsById ?? {}
+        );
+
+        const resourcesToFetch = aggregation.sourceFields.map((fieldName) => {
+          const field = resource.fields.find((f) => f.name === fieldName);
+          return field?.resource;
+        });
+
+        const relatedResources = await Resource.find({
+          _id: {
+            $in: resourcesToFetch,
+            $nin: resourcesAlreadyInContext,
+          },
+        }).select('fields');
+
+        for (const relatedResource of relatedResources) {
+          context.resourceFieldsById = {
+            ...(context.resourceFieldsById ?? {}),
+            [relatedResource._id.toString()]: relatedResource.fields,
+          };
+        }
+
         buildPipeline(pipeline, aggregation.pipeline, resource, context);
       }
       // Build mapping step

@@ -1,4 +1,5 @@
 import { Record } from '@models';
+import onStructureUpdated from './onStructureUpdated';
 /**
  * Migrates the data of the family to the new structure
  *
@@ -19,6 +20,13 @@ const onFamilyTransfer = async (rec: Record) => {
     []
   );
 
+  // Get the new network of the structure
+  const newStructure = await Record.findOne({
+    _id: structure,
+  });
+
+  const network = newStructure?.data?.network;
+
   // Update all records
   await Record.updateMany(
     {
@@ -27,9 +35,13 @@ const onFamilyTransfer = async (rec: Record) => {
     {
       $set: {
         'data.registered_by': structure,
+        'data.network': network,
       },
     }
   );
+
+  // Update the ownership of the family (members) and aids
+  onStructureUpdated(newStructure);
 
   // Maybe delete the transfer record?
 };
