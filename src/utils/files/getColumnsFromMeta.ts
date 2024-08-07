@@ -17,6 +17,8 @@ export const getColumnsFromMeta = (
     if (field && field.name && typeof field.name === 'string') {
       // To get reference data fields
       const name = field.graphQLFieldName || field.name;
+      const label =
+        fields.find((data) => data.name === field.name)?.label || field.name;
       // Classic field
       columns.push({
         name: prefix ? `${prefix}.${name}` : name,
@@ -25,6 +27,7 @@ export const getColumnsFromMeta = (
         meta: {
           field,
         },
+        label,
       });
     } else {
       const queryField = fields.find((x) => x.name === key);
