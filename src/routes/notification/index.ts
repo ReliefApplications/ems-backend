@@ -10,7 +10,7 @@ import {
 } from '@utils/notification/htmlBuilder';
 import {
   ProcessedDataset,
-  ValidateDataSet,
+  ValidateDataset,
   fetchDatasets,
   fetchDistributionList,
 } from '@utils/notification/util';
@@ -253,7 +253,7 @@ router.post('/preview-dataset', async (req, res) => {
 router.post('/validate-dataset', async (req, res) => {
   try {
     const config = req.body as DatasetPreviewArgs[];
-    let datasetArray: ValidateDataSet[];
+    let datasetArray: ValidateDataset[];
     try {
       config.forEach((dataset) => {
         if (!dataset.limit) {
@@ -274,7 +274,7 @@ router.post('/validate-dataset', async (req, res) => {
       } else throw e;
     }
   } catch (e) {
-    logger.error('preview-dataset route handler', e.message, {
+    logger.error('validate-dataset route handler', e.message, {
       stack: e.stack,
     });
     return res.status(500).send(req.t('common.errors.internalServerError'));

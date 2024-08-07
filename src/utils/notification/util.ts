@@ -12,7 +12,7 @@ import { mongo } from 'mongoose';
 /**
  * Interface validate dataset count
  */
-export interface ValidateDataSet {
+export interface ValidateDataset {
   name: string;
   records?: { [field: string]: unknown }[];
   columns?: {
@@ -20,7 +20,7 @@ export interface ValidateDataSet {
     name: string;
     type: string;
   }[];
-  isIndividualEmail?: boolean;
+  individualEmail?: boolean;
   recordsCount?: number;
 }
 
