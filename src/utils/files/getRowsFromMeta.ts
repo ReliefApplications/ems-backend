@@ -37,9 +37,14 @@ const setMultiselectRow = (column: any, data: any, row: any) => {
  *
  * @param columns definition of export columns.
  * @param records list of records.
+ * @param isEmail
  * @returns list of export rows.
  */
-export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
+export const getRowsFromMeta = (
+  columns: any[],
+  records: any[],
+  isEmail = false
+): any[] => {
   const rows = [];
   for (const record of records) {
     const row = {};
@@ -174,18 +179,20 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
           break;
         }
         case 'geospatial': {
-          const geoValue = get(record, `${column.field}.properties`);
-          const lat = geoValue?.coordinates.lat;
-          const lng = geoValue?.coordinates.lng;
-          const countryName = geoValue?.countryName;
-          if (lat && countryName) {
-            set(row, column.name, `${countryName}: ${lat}, ${lng}`);
-          } else if (lat) {
-            set(row, column.name, `${lat}, ${lng}`);
-          } else if (countryName) {
-            set(row, column.name, `${countryName}`);
+          if (isEmail) {
+            const geoValue = get(record, `${column.field}.properties`);
+            const lat = geoValue?.coordinates.lat;
+            const lng = geoValue?.coordinates.lng;
+            const countryName = geoValue?.countryName;
+            if (lat && countryName) {
+              set(row, column.name, `${countryName}: ${lat}, ${lng}`);
+            } else if (lat) {
+              set(row, column.name, `${lat}, ${lng}`);
+            } else if (countryName) {
+              set(row, column.name, `${countryName}`);
+            }
+            break;
           }
-          break;
         }
         default: {
           const value = get(record, column.field);
