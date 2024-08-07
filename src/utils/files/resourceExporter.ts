@@ -85,12 +85,13 @@ export default class Exporter {
     // Get total count and columns
     // todo: replace with resource fields
     await this.getColumns();
-    const records: Record[] = getRowsFromMeta(
-      this.columns,
-      await this.getRecords()
-    );
+
     switch (this.params.format) {
       case 'xlsx': {
+        const records: Record[] = getRowsFromMeta(
+          this.columns,
+          await this.getRecords()
+        );
         let workbook: Workbook | stream.xlsx.WorkbookWriter;
         // Create a new instance of a Workbook class
         if (this.res.closed) {
@@ -119,6 +120,10 @@ export default class Exporter {
         }
       }
       case 'csv': {
+        const records: Record[] = getRowsFromMeta(
+          this.columns,
+          await this.getRecords()
+        );
         // Create a string array with the columns' labels or names as fallback, then construct the parser from it
         const fields = this.columns.flatMap((x) => ({
           label: x.title,
@@ -147,6 +152,11 @@ export default class Exporter {
         return csv;
       }
       case 'email': {
+        const records: Record[] = getRowsFromMeta(
+          this.columns,
+          await this.getRecords(),
+          true
+        );
         // Generate csv, by parsing the data
         const csvData = [];
         try {
