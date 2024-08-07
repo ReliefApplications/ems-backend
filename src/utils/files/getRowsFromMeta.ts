@@ -172,11 +172,13 @@ export const getRowsFromMeta = (
           break;
         }
         case 'radiogroup': {
-          const radioValue = get(record, column.field);
-          const choices = column?.meta?.field?.choices || [];
-          const text = choices?.length ? getText(choices, radioValue) : '';
-          set(row, column.name, text || radioValue);
-          break;
+          if (isEmail) {
+            const radioValue = get(record, column.field);
+            const choices = column?.meta?.field?.choices || [];
+            const text = choices?.length ? getText(choices, radioValue) : '';
+            set(row, column.name, text || radioValue);
+            break;
+          }
         }
         case 'geospatial': {
           if (isEmail) {
