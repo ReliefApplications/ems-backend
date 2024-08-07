@@ -5,6 +5,7 @@ export enum Placeholder {
   DATASET = '{{dataset}}',
   NOW = '{{now}}',
   LAST_UPDATE = '{{lastUpdate}}',
+  RECORD_ID = '{{recordId}}',
 }
 
 /** Regex to detect placeholder usage.  */

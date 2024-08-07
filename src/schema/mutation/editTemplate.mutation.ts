@@ -44,6 +44,7 @@ export default {
         $set: {
           'templates.$.name': args.template.name,
           'templates.$.content': args.template.content,
+          'templates.$.type': args.template.type,
         },
       };
 
