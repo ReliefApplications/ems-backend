@@ -312,7 +312,7 @@ router.post('/send-individual-email/:configId', async (req, res) => {
           name: dataset.name,
           query: {
             name: dataset?.query?.name,
-            fields: dataset?.individualEmailQuery,
+            fields: dataset?.individualEmailFields,
             filter: {},
           },
           resource: dataset.resource,
