@@ -57,6 +57,7 @@ export const DatasetInputType = new GraphQLInputObjectType({
     textStyle: { type: GraphQLJSON },
     sendAsAttachment: { type: GraphQLBoolean },
     individualEmail: { type: GraphQLBoolean },
+    individualEmailFields: { type: new GraphQLList(GraphQLJSON) },
     pageSize: { type: GraphQLInt },
   }),
 });
