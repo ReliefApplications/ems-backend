@@ -4,6 +4,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 /** Mongoose distribution list schema declaration */
 export const customTemplateSchema = new Schema(
   {
+    name: String,
     subject: String,
     header: {
       type: mongoose.Schema.Types.Mixed,
@@ -29,6 +30,8 @@ export const customTemplateSchema = new Schema(
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
   }
 );
+
+customTemplateSchema.index({ name: 1, applicationId: 1 }, { unique: true });
 
 /**
  *

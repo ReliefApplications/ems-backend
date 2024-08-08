@@ -217,6 +217,8 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
   }
 );
 
+emailNotificationSchema.index({ name: 1, applicationId: 1 }, { unique: true });
+
 /**
  *
  */

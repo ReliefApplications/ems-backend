@@ -19,6 +19,7 @@ export default {
     try {
       const customTemplateData = {
         applicationId: args.customTemplate.applicationId,
+        name: args.customTemplate.name,
         subject: args.customTemplate.subject,
         header: args.customTemplate.header,
         body: args.customTemplate.body,

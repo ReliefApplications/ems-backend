@@ -18,6 +18,7 @@ export const CustomTemplateType = new GraphQLObjectType({
         return parent._id ? parent._id : parent.id;
       },
     },
+    name: { type: GraphQLString },
     subject: { type: GraphQLString },
     header: { type: GraphQLJSON },
     body: { type: GraphQLJSON },
