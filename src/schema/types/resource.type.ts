@@ -265,9 +265,13 @@ export const ResourceType = new GraphQLObjectType({
           ).populate({
             path: 'customNotifications',
             model: 'CustomNotification',
-            match: { applicationTrigger: true },
           });
-          return application?.customNotifications ?? [];
+          const filteredNotifications = application.customNotifications.filter(
+            (notification) =>
+              notification.applicationTrigger === true &&
+              notification.resource.equals(parent._id)
+          );
+          return filteredNotifications ?? [];
         }
         return [];
       },
