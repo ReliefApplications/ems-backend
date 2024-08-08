@@ -313,7 +313,7 @@ router.post('/send-individual-email/:configId', async (req, res) => {
           query: {
             name: dataset?.query?.name,
             fields: dataset?.individualEmailFields,
-            filter: {},
+            filter: dataset?.query?.filter,
           },
           resource: dataset.resource,
           individualEmail: dataset.individualEmail,
@@ -496,6 +496,8 @@ router.post('/send-individual-email/:configId', async (req, res) => {
       }
     }
 
+    const isEmailSend = {};
+
     for (const block of processedIndividualRecords) {
       // let bodyHtml = config.emailLayout.body.bodyHtml;
       const bodyStringCopy = bodyString;
@@ -512,20 +514,30 @@ router.post('/send-individual-email/:configId', async (req, res) => {
       // send emails separately for each email
       if (block.individualEmail && toEmails[block.name]?.length) {
         for (const email of toEmails[block.name]) {
-          const emailParams = {
-            message: {
-              to: email, // Recipient's email address
-              cc: cc,
-              bcc: bcc,
-              subject: emailSubject,
-              html: mainTableElement.toString().replaceAll(blockNameRegex, ''),
-              attachments: attachments,
-            },
-          };
-          // Send email
-          await sendEmail(emailParams);
+          const isSent = block.records
+            .map((item: any) => item.email)
+            ?.includes(email);
+          if (isSent) {
+            isEmailSend[email] = false;
+            const emailParams = {
+              message: {
+                to: email, // Recipient's email address
+                cc: cc,
+                bcc: bcc,
+                subject: emailSubject,
+                html: mainTableElement
+                  .toString()
+                  .replaceAll(blockNameRegex, ''),
+                attachments: attachments,
+              },
+            };
+            // Send email
+            await sendEmail(emailParams);
+            isEmailSend[email] = true;
+          }
         }
       } else {
+        isEmailSend[toEmails[block.name]] = false;
         const emailParams = {
           message: {
             to: toEmails[block.name], // Recipient's email address
@@ -538,12 +550,23 @@ router.post('/send-individual-email/:configId', async (req, res) => {
         };
         // Send email
         await sendEmail(emailParams);
+        isEmailSend[toEmails[block.name]] = true;
       }
       bodyElement.removeChild(bodyBlock);
       bodyString = bodyStringCopy;
     }
 
-    res.status(200).json({ message: 'Email sent successfully' });
+    const isSend = Object.keys(isEmailSend).length
+      ? Object.entries(isEmailSend).every(
+          ([key, val]) => typeof key === 'object' || val === true
+        )
+      : false;
+
+    if (isSend) {
+      res.status(200).json({ message: 'Email sent successfully' });
+    } else {
+      res.status(400).json({ message: 'No emails were sent' });
+    }
   } catch (err) {
     logger.error(
       'send-individual-email route handler - configuration query',
