@@ -152,8 +152,8 @@ const resourceSchema = new Schema<Resource>(
       default: [],
     },
     triggersFilters: {
-      type: mongoose.Schema.Types.Mixed,
-      default: {},
+      type: [mongoose.Schema.Types.Mixed],
+      default: [],
     },
     layouts: [layoutSchema],
     aggregations: [aggregationSchema],

@@ -843,13 +843,25 @@ export default {
       }
 
       if (args.triggersFilters) {
+        let triggersFilters = [args.triggersFilters];
+        if (resource.triggersFilters.length) {
+          triggersFilters = [...resource.triggersFilters];
+          const index = resource.triggersFilters.findIndex(
+            (tg: any) => tg.application === args.triggersFilters.application
+          );
+          if (index !== -1) {
+            triggersFilters[index] = args.triggersFilters;
+          } else {
+            triggersFilters.push(args.triggersFilters);
+          }
+        }
         if (update.$set) {
           Object.assign(update.$set, {
-            ['triggersFilters']: args.triggersFilters,
+            ['triggersFilters']: triggersFilters,
           });
         } else {
           Object.assign(update, {
-            $set: { ['triggersFilters']: args.triggersFilters },
+            $set: { ['triggersFilters']: triggersFilters },
           });
         }
       }
