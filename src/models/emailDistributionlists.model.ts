@@ -2,8 +2,20 @@
 import { AccessibleRecordModel } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
+/** distribution list documents interface declaration */
+export interface EmailDistributionList extends Document {
+  kind: 'EmailDistributionList';
+  distributionListName: string;
+  To: string[];
+  Cc: string[];
+  Bcc: string[];
+  createdBy: { name: string; email: string };
+  isDeleted: number;
+  applicationId?: mongoose.Schema.Types.ObjectId;
+}
+
 /** Mongoose distribution list schema declaration */
-export const emailDistributionListSchema = new Schema(
+export const emailDistributionListSchema = new Schema<EmailDistributionList>(
   {
     distributionListName: String,
     To: [{ type: String }],
@@ -26,25 +38,10 @@ export const emailDistributionListSchema = new Schema(
   }
 );
 
-/** distribution list documents interface declaration */
-// export interface DistributionList extends Document {
-//   kind: 'DistributionList';
-//   name?: string;
-//   emails?: string[];
-//   createdAt?: Date;
-//   modifiedAt?: Date;
-// }
-
-interface EmailDistributionList extends Document {
-  kind: 'EmailDistributionList';
-  distributionListName: string;
-  To: string[];
-  Cc: string[];
-  Bcc: string[];
-  createdBy: { name: string; email: string };
-  isDeleted: number;
-  applicationId?: mongoose.Schema.Types.ObjectId;
-}
+emailDistributionListSchema.index(
+  { distributionListName: 1, applicationId: 1 },
+  { unique: true }
+);
 
 /**
  *

@@ -21,6 +21,7 @@ export default {
       if (args.customTemplate) {
         const customTemplateData = {
           subject: args.customTemplate.subject,
+          name: args.customTemplate.name,
           header: args.customTemplate.header,
           body: args.customTemplate.body,
           banner: args.customTemplate.banner,
