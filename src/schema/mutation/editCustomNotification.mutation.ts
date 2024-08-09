@@ -74,6 +74,12 @@ export default {
           'customNotifications.$.status': args.notification.notification_status,
           'customNotifications.$.recipientsType':
             args.notification.recipientsType,
+          'customNotifications.$.onRecordCreation':
+            args.notification.onRecordCreation,
+          'customNotifications.$.onRecordUpdate':
+            args.notification.onRecordUpdate,
+          'customNotifications.$.applicationTrigger':
+            args.notification.applicationTrigger,
         },
       };
 
@@ -87,8 +93,9 @@ export default {
         (customNotification) => customNotification.id.toString() === args.id
       );
       if (
+        args.notification.schedule &&
         args.notification.notification_status ===
-        customNotificationStatus.active
+          customNotificationStatus.active
       ) {
         scheduleCustomNotificationJob(notificationDetail, application);
       } else {

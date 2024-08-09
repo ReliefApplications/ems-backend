@@ -67,6 +67,9 @@ export default {
             recipients: args.notification.recipients,
             status: args.notification.notification_status,
             recipientsType: args.notification.recipientsType,
+            onRecordCreation: args.notification.onRecordCreation,
+            onRecordUpdate: args.notification.onRecordUpdate,
+            applicationTrigger: args.notification.applicationTrigger,
           },
         },
       };
@@ -78,8 +81,9 @@ export default {
       );
       const notificationDetail = application.customNotifications.pop();
       if (
+        args.notification.schedule &&
         args.notification.notification_status ===
-        customNotificationStatus.active
+          customNotificationStatus.active
       ) {
         scheduleCustomNotificationJob(notificationDetail, application);
       }

@@ -42,6 +42,6 @@ export const CustomNotificationInputType = new GraphQLInputObjectType({
     onRecordCreation: { type: GraphQLBoolean },
     onRecordUpdate: { type: GraphQLBoolean },
     applicationTrigger: { type: GraphQLBoolean },
-    // notification_status: { type: new GraphQLNonNull(GraphQLString) },
+    notification_status: { type: new GraphQLNonNull(GraphQLString) },
   }),
 });
