@@ -298,47 +298,24 @@ router.post('/send-individual-email/:configId', async (req, res) => {
       (dataset) => {
         return {
           name: dataset.name,
-          query: dataset.query,
+          query: {
+            name: dataset?.query?.name,
+            fields: dataset?.individualEmailFields.concat(
+              dataset?.query.fields
+            ),
+            filter: dataset?.query?.filter,
+          },
           resource: dataset.resource,
           individualEmail: dataset.individualEmail || false,
         };
       }
     );
 
-    const individualEmailQueries: DatasetPreviewArgs[] = config.datasets
-      .filter((dataset) => dataset.individualEmail)
-      .map((dataset) => {
-        return {
-          name: dataset.name,
-          query: {
-            name: dataset?.query?.name,
-            fields: dataset?.individualEmailFields,
-            filter: dataset?.query?.filter,
-          },
-          resource: dataset.resource,
-          individualEmail: dataset.individualEmail,
-        };
-      });
-
     let datasets: ProcessedDataset[];
-    let individualEmails: ProcessedDataset[];
     const processedIndividualRecords: ProcessedDataset[] = [];
 
     try {
       datasets = await fetchDatasets(datasetQueries, req, res);
-      individualEmails = await fetchDatasets(individualEmailQueries, req, res);
-      datasets = datasets.map((data) => {
-        const individualEmail = individualEmails.find(
-          (email) => email.name === data.name
-        );
-
-        const individualEmailRecords = (individualEmail?.records.flatMap(
-          (record) => Object.values(record) as string[]
-        ) ?? []) as string[];
-
-        data.individualEmailRecords = individualEmailRecords;
-        return data;
-      });
     } catch (e) {
       if (e.message === 'common.errors.dataNotFound') {
         return res.status(404).send(req.t(e.message));
@@ -449,21 +426,23 @@ router.post('/send-individual-email/:configId', async (req, res) => {
         cid: 'bannerImage',
       });
     }
-    const toEmails = {};
     const individualEmail = [];
+    let commonBlockEmails = [];
+
     for (const dataset of datasets) {
       if (dataset.individualEmail) {
         // Individual email format
-        dataset.records.forEach((record) =>
+        dataset.records.forEach((record) => {
+          const email = record.email as string;
           processedIndividualRecords.push({
             records: [record],
             name: dataset.name,
             columns: dataset.columns,
             individualEmail: true,
-          })
-        );
-        // emails from send individual blocks
-        individualEmail.push(...dataset.individualEmailRecords);
+            email,
+          });
+          individualEmail.push(email);
+        });
       } else {
         // Block email format
         if (bodyString.includes(`{{${dataset.name}}}`)) {
@@ -480,15 +459,9 @@ router.post('/send-individual-email/:configId', async (req, res) => {
       }
     }
     for (const dataset of datasets) {
-      if (dataset.individualEmail) {
+      if (!dataset.individualEmail) {
         //filter individual emails from to-emails
-        toEmails[dataset.name] = config
-          .get('emailDistributionList')
-          ?.to?.inputEmails?.filter((email) =>
-            dataset?.individualEmailRecords?.includes(email)
-          );
-      } else {
-        toEmails[dataset.name] = config
+        commonBlockEmails = config
           .get('emailDistributionList')
           ?.to?.inputEmails?.filter(
             (email) => !individualEmail?.includes(email)
@@ -496,7 +469,8 @@ router.post('/send-individual-email/:configId', async (req, res) => {
       }
     }
 
-    const isEmailSend = {};
+    const isEmailSend = { commonBlockEmails: false };
+    const commonBlocks = [];
 
     for (const block of processedIndividualRecords) {
       // let bodyHtml = config.emailLayout.body.bodyHtml;
@@ -508,39 +482,15 @@ router.post('/send-individual-email/:configId', async (req, res) => {
       const bodyBlock = parse(`<tr><td>${bodyString}</td></tr>`);
 
       // remove other individual blocks
-      const blockNameRegex = /<p>{{\s*.*?\s*}}<\/p>/g;
+      const blockNameRegex = /{{\s*[\s\S]*?\s*}}/g;
 
       bodyElement.appendChild(bodyBlock);
       // send emails separately for each email
-      if (block.individualEmail && toEmails[block.name]?.length) {
-        for (const email of toEmails[block.name]) {
-          const isSent = block.records
-            .map((item: any) => item.email)
-            ?.includes(email);
-          if (isSent) {
-            isEmailSend[email] = false;
-            const emailParams = {
-              message: {
-                to: email, // Recipient's email address
-                cc: cc,
-                bcc: bcc,
-                subject: emailSubject,
-                html: mainTableElement
-                  .toString()
-                  .replaceAll(blockNameRegex, ''),
-                attachments: attachments,
-              },
-            };
-            // Send email
-            await sendEmail(emailParams);
-            isEmailSend[email] = true;
-          }
-        }
-      } else {
-        isEmailSend[toEmails[block.name]] = false;
+      if (block.individualEmail) {
+        isEmailSend[block.email] = false;
         const emailParams = {
           message: {
-            to: toEmails[block.name], // Recipient's email address
+            to: block.email, // Recipient's email address
             cc: cc,
             bcc: bcc,
             subject: emailSubject,
@@ -550,17 +500,42 @@ router.post('/send-individual-email/:configId', async (req, res) => {
         };
         // Send email
         await sendEmail(emailParams);
-        isEmailSend[toEmails[block.name]] = true;
+        isEmailSend[block.email] = true;
+      } else {
+        commonBlocks.push(block);
       }
       bodyElement.removeChild(bodyBlock);
       bodyString = bodyStringCopy;
     }
 
-    const isSend = Object.keys(isEmailSend).length
-      ? Object.entries(isEmailSend).every(
-          ([key, val]) => typeof key === 'object' || val === true
-        )
-      : false;
+    if (commonBlockEmails.length) {
+      // let bodyHtml = config.emailLayout.body.bodyHtml;
+      if (bodyString.includes(`{{${commonBlocks[0].name}}}`)) {
+        bodyString = bodyString.replace(
+          `{{${commonBlocks[0].name}}}`,
+          buildTable(commonBlocks[0])
+        );
+      }
+      const bodyBlock = parse(`<tr><td>${bodyString}</td></tr>`);
+      bodyElement.appendChild(bodyBlock);
+
+      const blockNameRegex = /{{\s*[\s\S]*?\s*}}/g;
+      const emailParams = {
+        message: {
+          to: commonBlockEmails, // Recipient's email address
+          cc: cc,
+          bcc: bcc,
+          subject: emailSubject,
+          html: mainTableElement.toString().replaceAll(blockNameRegex, ''),
+          attachments: attachments,
+        },
+      };
+      // Send email
+      await sendEmail(emailParams);
+      isEmailSend.commonBlockEmails = true;
+    }
+
+    const isSend = Object.values(isEmailSend).every((val) => val === true);
 
     if (isSend) {
       res.status(200).json({ message: 'Email sent successfully' });
