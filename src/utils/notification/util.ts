@@ -38,6 +38,7 @@ export interface ProcessedDataset {
   }[];
   individualEmail?: boolean;
   individualEmailRecords?: string[];
+  email?: any;
 }
 
 /**
