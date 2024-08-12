@@ -260,6 +260,8 @@ export const extractKoboFields = (
             ...commonProperties(index, question, 'file'),
             storeDataAsText: false,
             maxSize: 7340032,
+            acceptedTypes:
+              question.type !== 'file' ? `${question.type}/*` : undefined,
           };
           addToElements(newQuestion, question.$xpath);
           break;

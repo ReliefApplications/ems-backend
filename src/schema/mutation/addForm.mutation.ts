@@ -166,7 +166,7 @@ export default {
       } catch (err) {
         logger.error(err.message, { stack: err.stack });
         throw new GraphQLError(
-          context.i18next.t('mutations.form.add.errors.koboForm:')
+          context.i18next.t('mutations.form.add.errors.koboForm')
         );
       }
       try {
