@@ -13,7 +13,7 @@ import {
   getExpressionFromString,
   OperationTypeMap,
 } from '@utils/aggregation/expressionFromString';
-import { DefaultIncrementalIdShapeT, Resource } from '@models';
+import { Application, DefaultIncrementalIdShapeT, Resource } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { get, has, isArray, isEqual, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
@@ -21,6 +21,8 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 import { IdShapeType } from '@schema/inputs/id-shape.input';
 import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
+import { customNotificationStatus } from '@const/enumTypes';
+import { scheduleCustomNotificationJob } from '@server/customNotificationScheduler';
 
 /** Simple resource permission change type */
 type SimplePermissionChange =
@@ -879,11 +881,36 @@ export default {
         await updateIncrementalIds(resource, args.idShape);
       }
 
-      return await Resource.findByIdAndUpdate(
+      // Make sure that filters changes are applied in the scheduled notifications
+      if (args.triggersFilters) {
+        const application = await Application.findById(
+          args.triggersFilters.application
+        ).populate({
+          path: 'customNotifications',
+          model: 'CustomNotification',
+        });
+        const filteredNotifications = application.customNotifications.filter(
+          (notification) =>
+            notification.applicationTrigger === true &&
+            notification.resource.equals(args.id)
+        );
+        filteredNotifications.forEach((notification) => {
+          if (
+            notification.schedule &&
+            notification.applicationTrigger &&
+            notification.status === customNotificationStatus.active
+          ) {
+            scheduleCustomNotificationJob(notification, application);
+          }
+        });
+      }
+
+      const updatedResource = await Resource.findByIdAndUpdate(
         args.id,
         update.$addToSet ? { $addToSet: update.$addToSet } : {},
         { new: true }
       );
+      return updatedResource;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) throw err;
