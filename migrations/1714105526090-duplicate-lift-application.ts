@@ -146,6 +146,7 @@ const duplicateResource = async (resource: Resource) => {
 
   // Get all forms with the resource id
   const forms = await Form.find({ resource: resource._id });
+  const newForms: Form[] = [];
 
   // Duplicate forms with new resource id
   for (const form of forms) {
@@ -171,12 +172,22 @@ const duplicateResource = async (resource: Resource) => {
     handleRelatedNames(duplicatedForm);
 
     await Form.create(duplicatedForm);
+    newForms.push(duplicatedForm);
 
     // Add the new id to the map
     idSubstitutionMap.set(form._id.toString(), duplicatedForm._id.toString());
   }
 
-  return duplicatedResource;
+  return {
+    resource: duplicatedResource,
+    updateStructure: async () => {
+      for (const form of newForms) {
+        form.structure = JSON.stringify(substitute(form.structure));
+      }
+
+      await Form.bulkSave(newForms);
+    },
+  };
 };
 
 /**
@@ -217,9 +228,12 @@ export const up = async () => {
     return;
   }
 
+  const updateFormCallbacks: (() => Promise<void>)[] = [];
+
   // Duplicate each resource
   for (const resource of resources) {
-    await duplicateResource(resource);
+    const { updateStructure } = await duplicateResource(resource);
+    updateFormCallbacks.push(updateStructure);
   }
 
   // sleep for 5 seconds
@@ -272,6 +286,11 @@ export const up = async () => {
 
   // Add the new id to the map
   idSubstitutionMap.set(BASE_APP, res.data.data.duplicateApplication.id);
+
+  // Replace the application id on the users questions of each form
+  for (const cb of updateFormCallbacks) {
+    await cb();
+  }
 
   // Replace resource ids in widget aggregations
   const newApp = await Application.findById(
