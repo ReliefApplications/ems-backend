@@ -403,8 +403,8 @@ router.post('/send-individual-email/:configId', async (req, res) => {
 
     const bodyElement = mainTableElement.getElementById('body');
 
-    const cc = config.get('emailDistributionList').cc.inputEmails;
-    const bcc = config.get('emailDistributionList').bcc.inputEmails;
+    const cc = config.get('emailDistributionList')?.cc?.inputEmails;
+    const bcc = config.get('emailDistributionList')?.bcc?.inputEmails;
     const attachments: { path: string; cid: string }[] = [];
     // Use base64 encoded images as path for CID attachments
     // This is required for images to render in the body on legacy clients
@@ -490,9 +490,9 @@ router.post('/send-individual-email/:configId', async (req, res) => {
         isEmailSend[block.email] = false;
         const emailParams = {
           message: {
-            to: block.email, // Recipient's email address
-            cc: cc,
-            bcc: bcc,
+            to: block.email ?? [], // Recipient's email address
+            cc: cc ?? [],
+            bcc: bcc ?? [],
             subject: emailSubject,
             html: mainTableElement.toString().replaceAll(blockNameRegex, ''),
             attachments: attachments,
@@ -522,9 +522,9 @@ router.post('/send-individual-email/:configId', async (req, res) => {
       const blockNameRegex = /{{\s*[\s\S]*?\s*}}/g;
       const emailParams = {
         message: {
-          to: commonBlockEmails, // Recipient's email address
-          cc: cc,
-          bcc: bcc,
+          to: commonBlockEmails ?? [], // Recipient's email address
+          cc: cc ?? [],
+          bcc: bcc ?? [],
           subject: emailSubject,
           html: mainTableElement.toString().replaceAll(blockNameRegex, ''),
           attachments: attachments,

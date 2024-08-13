@@ -12,6 +12,7 @@ import { Types } from 'mongoose';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { AppAbility } from '@security/defineUserAbility';
 import { EmailNotificationReturn } from '@schema/types/emailNotification.type';
+import { cloneDeep } from 'lodash';
 
 /**
  *
@@ -52,12 +53,29 @@ export default {
       // }
       if (args.notification) {
         // Can't do this type of type check on type level
+        // Only count as a dataset if it has a resource
+        const datasetsCount = cloneDeep(args.notification.datasets).filter(
+          ({ resource }) => resource
+        ).length;
+        // Individual email count
+        let individualCount = 0;
+        for (const dataset of args.notification.datasets) {
+          if (dataset.resource && dataset.individualEmail) {
+            individualCount += 1;
+          }
+        }
+        let allSeparate = false;
+        if (datasetsCount === individualCount) {
+          allSeparate = true;
+        }
+
         if (
           !(args.notification.isDraft || args.notification.isDeleted === 1) &&
           (!args.notification.emailDistributionList.name ||
             (!args.notification.emailDistributionList.to.resource &&
               args.notification.emailDistributionList.to.inputEmails.length ===
-                0))
+                0)) &&
+          !allSeparate
         ) {
           throw new GraphQLError(
             context.i18next.t('common.errors.dataNotFound')
