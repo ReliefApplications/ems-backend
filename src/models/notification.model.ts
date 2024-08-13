@@ -9,10 +9,13 @@ const notificationSchema = new Schema(
     channel: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Channel',
-      required: true,
     },
     seenBy: {
       type: [mongoose.Schema.Types.ObjectId],
+      ref: 'User',
+    },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
     },
   },
@@ -34,7 +37,17 @@ export interface Notification extends Document {
   createdAt: Date;
   channel: any;
   seenBy: any[];
+  user: any[];
 }
+
+notificationSchema.pre('validate', function (next) {
+  if (!this.channel && !this.user) {
+    return next(
+      new Error('At least only field (channels, user) should be populated')
+    );
+  }
+  next();
+});
 
 notificationSchema.plugin(accessibleRecordsPlugin);
 

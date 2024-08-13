@@ -42,6 +42,7 @@ export const NotificationType = new GraphQLObjectType({
         return users;
       },
     },
+    user: { type: new GraphQLList(UserType) },
   }),
 });
 

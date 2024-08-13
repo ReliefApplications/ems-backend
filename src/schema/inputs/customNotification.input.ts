@@ -21,8 +21,7 @@ export type CustomNotificationArgs = {
   onRecordCreation?: boolean;
   onRecordUpdate?: boolean;
   applicationTrigger?: boolean;
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  notification_status?: string;
+  status?: string;
 };
 
 /** GraphQL custom notification query input type definition */
@@ -42,6 +41,6 @@ export const CustomNotificationInputType = new GraphQLInputObjectType({
     onRecordCreation: { type: GraphQLBoolean },
     onRecordUpdate: { type: GraphQLBoolean },
     applicationTrigger: { type: GraphQLBoolean },
-    notification_status: { type: new GraphQLNonNull(GraphQLString) },
+    status: { type: new GraphQLNonNull(GraphQLString) },
   }),
 });

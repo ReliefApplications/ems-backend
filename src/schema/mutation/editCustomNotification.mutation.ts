@@ -71,7 +71,7 @@ export default {
           'customNotifications.$.layout': args.notification.layout,
           'customNotifications.$.template': args.notification.template,
           'customNotifications.$.recipients': args.notification.recipients,
-          'customNotifications.$.status': args.notification.notification_status,
+          'customNotifications.$.status': args.notification.status,
           'customNotifications.$.recipientsType':
             args.notification.recipientsType,
           'customNotifications.$.onRecordCreation':
@@ -94,8 +94,7 @@ export default {
       );
       if (
         args.notification.schedule &&
-        args.notification.notification_status ===
-          customNotificationStatus.active
+        args.notification.status === customNotificationStatus.active
       ) {
         scheduleCustomNotificationJob(notificationDetail, application);
       } else {
