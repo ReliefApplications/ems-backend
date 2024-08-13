@@ -130,6 +130,34 @@ export const getFlatFields = (fields: any, path = ''): any => {
 };
 
 /**
+ * Recursively flattens a nested object, converting nested keys into dot-separated strings.
+ *
+ * @param {Object} obj - The object to be flattened. This object can contain nested objects.
+ * @param {string} [parentKey=''] - The base key to which nested keys will be appended. It starts as an empty string and accumulates key names during recursion.
+ * @param {Object} [result={}] - The resulting flattened object. This object accumulates key-value pairs where the keys are dot-separated strings representing the nested structure.
+ *
+ * @returns {Object} - The flattened object with dot-separated keys.
+ */
+export const flattenObject = (obj, parentKey = '', result = {}) => {
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      const newKey = parentKey ? `${parentKey}.${key}` : key;
+
+      if (
+        typeof obj[key] === 'object' &&
+        obj[key] !== null &&
+        !Array.isArray(obj[key])
+      ) {
+        flattenObject(obj[key], newKey, result);
+      } else {
+        result[newKey] = obj[key];
+      }
+    }
+  }
+  return result;
+};
+
+/**
  * Replaces datetime macros in email template with datetimes
  *
  * @param textElement Email template section with date macros to replace

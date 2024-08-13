@@ -13,6 +13,8 @@ import {
   ValidateDataset,
   fetchDatasets,
   fetchDistributionList,
+  flattenObject,
+  getFlatFields,
 } from '@utils/notification/util';
 import { baseTemplate } from '@const/notification';
 import i18next from 'i18next';
@@ -555,7 +557,15 @@ router.post('/send-individual-email/:configId', async (req, res) => {
 router.post('/send-quick-email', async (req, res) => {
   try {
     const { emailDistributionList, emailLayout, tableInfo } = req.body;
-
+    // need different format payload from FE. commented for now
+    // tableInfo.forEach((tableData) => {
+    //   tableData.columns = getFlatFields(tableData.columns).filter(
+    //     (column) => !column?.fields?.length
+    //   );
+    //   tableData.records = tableData.records?.map((record) =>
+    //     flattenObject(record)
+    //   );
+    // });
     const baseElement = parse(baseTemplate);
     const mainTableElement = baseElement.getElementById('mainTable');
     await buildEmail(emailLayout, mainTableElement, tableInfo);
@@ -619,7 +629,14 @@ router.post('/send-quick-email', async (req, res) => {
 router.post('/preview-quick-email', async (req, res) => {
   try {
     const { emailLayout, tableInfo } = req.body;
-
+    tableInfo.forEach((tableData) => {
+      tableData.columns = getFlatFields(tableData.columns).filter(
+        (column) => !column?.fields?.length
+      );
+      tableData.records = tableData.records?.map((record) =>
+        flattenObject(record)
+      );
+    });
     // Generate main html structure
     const baseElement = parse(baseTemplate);
     const mainTableElement = baseElement.getElementById('mainTable');
