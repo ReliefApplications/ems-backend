@@ -18,7 +18,10 @@ export const getColumnsFromMeta = (
       // To get reference data fields
       const name = field.graphQLFieldName || field.name;
       const label =
-        fields.find((data) => data.name === field.name)?.label || field.name;
+        fields.find((data) => {
+          const item = data.name.split('.');
+          return item[item.length - 1] === field.name;
+        })?.label || field.name;
       // Classic field
       columns.push({
         name: prefix ? `${prefix}.${name}` : name,
