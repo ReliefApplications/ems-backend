@@ -557,15 +557,14 @@ router.post('/send-individual-email/:configId', async (req, res) => {
 router.post('/send-quick-email', async (req, res) => {
   try {
     const { emailDistributionList, emailLayout, tableInfo } = req.body;
-    // need different format payload from FE. commented for now
-    // tableInfo.forEach((tableData) => {
-    //   tableData.columns = getFlatFields(tableData.columns).filter(
-    //     (column) => !column?.fields?.length
-    //   );
-    //   tableData.records = tableData.records?.map((record) =>
-    //     flattenObject(record)
-    //   );
-    // });
+    tableInfo.forEach((tableData) => {
+      tableData.columns = getFlatFields(tableData.columns).filter(
+        (column) => !column?.fields?.length
+      );
+      tableData.records = tableData.records?.map((record) =>
+        flattenObject(record)
+      );
+    });
     const baseElement = parse(baseTemplate);
     const mainTableElement = baseElement.getElementById('mainTable');
     await buildEmail(emailLayout, mainTableElement, tableInfo);
