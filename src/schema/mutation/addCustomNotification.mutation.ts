@@ -70,6 +70,7 @@ export default {
             onRecordCreation: args.notification.onRecordCreation,
             onRecordUpdate: args.notification.onRecordUpdate,
             applicationTrigger: args.notification.applicationTrigger,
+            redirect: args.notification.redirect,
           },
         },
       };

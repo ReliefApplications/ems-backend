@@ -18,6 +18,7 @@ const notificationSchema = new Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
     },
+    redirect: mongoose.Schema.Types.Mixed,
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
@@ -37,7 +38,14 @@ export interface Notification extends Document {
   createdAt: Date;
   channel: any;
   seenBy: any[];
-  user: any[];
+  user?: any;
+  redirect?: any;
+  // redirect?: {
+  //   active: boolean;
+  //   type: string; // 'url' | 'recordIds'
+  //   url?: string;
+  //   recordIds?: string[];
+  // };
 }
 
 notificationSchema.pre('validate', function (next) {

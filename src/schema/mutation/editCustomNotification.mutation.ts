@@ -80,6 +80,7 @@ export default {
             args.notification.onRecordUpdate,
           'customNotifications.$.applicationTrigger':
             args.notification.applicationTrigger,
+          'customNotifications.$.redirect': args.notification.redirect,
         },
       };
 

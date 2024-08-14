@@ -5,6 +5,7 @@ import {
   GraphQLID,
   GraphQLBoolean,
 } from 'graphql';
+import GraphQLJSON from 'graphql-type-json';
 import { Types } from 'mongoose';
 
 /** Custom Notification type for queries/mutations argument */
@@ -22,6 +23,12 @@ export type CustomNotificationArgs = {
   onRecordUpdate?: boolean;
   applicationTrigger?: boolean;
   status?: string;
+  redirect?: {
+    active: boolean;
+    type: string; // 'url' | 'recordIds'
+    url?: string;
+    recordIds?: string[];
+  };
 };
 
 /** GraphQL custom notification query input type definition */
@@ -42,5 +49,6 @@ export const CustomNotificationInputType = new GraphQLInputObjectType({
     onRecordUpdate: { type: GraphQLBoolean },
     applicationTrigger: { type: GraphQLBoolean },
     status: { type: new GraphQLNonNull(GraphQLString) },
+    redirect: { type: GraphQLJSON },
   }),
 });

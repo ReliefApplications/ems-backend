@@ -54,7 +54,7 @@ export default {
         : {};
 
       let items: any[] = await Notification.find({
-        $and: [cursorFilters, ...filters],
+        $or: [{ $and: [cursorFilters, ...filters] }, { user: context.user }],
       })
         .sort({ createdAt: -1 })
         .limit(first + 1);
@@ -74,7 +74,9 @@ export default {
           endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
         },
         edges,
-        totalCount: await Notification.countDocuments({ $and: filters }),
+        totalCount: await Notification.countDocuments({
+          $or: [{ $and: filters }, { user: context.user }],
+        }),
       };
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
