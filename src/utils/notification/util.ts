@@ -52,6 +52,18 @@ export const replaceUnderscores = (userValue: string): string => {
 };
 
 /**
+ * Removes all whitespace characters from a given string.
+ *
+ * @param {string} input - The input string from which whitespace will be removed.
+ * @returns {string} - The string with all whitespace characters removed.
+ *
+ */
+export const removeWhitespace = (input: string): string => {
+  // Use a regular expression to replace all whitespace characters with an empty string
+  return input.replace(/\s+/g, '');
+};
+
+/**
  * Converts String to Title case
  *
  * @param str Input string to be converted
@@ -130,15 +142,24 @@ export const getFlatFields = (fields: any, path = ''): any => {
 };
 
 /**
- * Recursively flattens a nested object, converting nested keys into dot-separated strings.
+ * Recursively flattens a nested object, converting nested keys into dot-separated strings
+ * and filters the keys based on the provided columns.
  *
  * @param {Object} obj - The object to be flattened. This object can contain nested objects.
- * @param {string} [parentKey=''] - The base key to which nested keys will be appended. It starts as an empty string and accumulates key names during recursion.
+ * @param {string[]} columns -  An array of column names (keys) that should be included in the flattened result.
+ *                             If provided, only keys that match these columns will be included in the output.
+ *                             If the array is empty, no filtering will be applied.
+ * @param {string} [parentKey=''] - The base key to which nested keys will be appended. It starts as an empty string and accumulates key names during recursion to form dot-separated keys.
  * @param {Object} [result={}] - The resulting flattened object. This object accumulates key-value pairs where the keys are dot-separated strings representing the nested structure.
  *
  * @returns {Object} - The flattened object with dot-separated keys.
  */
-export const flattenObject = (obj, parentKey = '', result = {}) => {
+export const flattenObject = (
+  obj,
+  columns = [],
+  parentKey = '',
+  result = {}
+) => {
   for (const key in obj) {
     if (obj.hasOwnProperty(key)) {
       const newKey = parentKey ? `${parentKey}.${key}` : key;
@@ -148,7 +169,9 @@ export const flattenObject = (obj, parentKey = '', result = {}) => {
         obj[key] !== null &&
         !Array.isArray(obj[key])
       ) {
-        flattenObject(obj[key], newKey, result);
+        flattenObject(obj[key], columns, newKey, result);
+      } else if (columns?.length) {
+        if (columns.includes(newKey.toLowerCase())) result[newKey] = obj[key];
       } else {
         result[newKey] = obj[key];
       }
