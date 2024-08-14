@@ -15,6 +15,7 @@ import {
   fetchDistributionList,
   flattenObject,
   getFlatFields,
+  removeWhitespace,
 } from '@utils/notification/util';
 import { baseTemplate } from '@const/notification';
 import i18next from 'i18next';
@@ -561,8 +562,11 @@ router.post('/send-quick-email', async (req, res) => {
       tableData.columns = getFlatFields(tableData.columns).filter(
         (column) => !column?.fields?.length
       );
+      const columns = tableData.columns?.map((column) =>
+        removeWhitespace(column.name?.toLowerCase())
+      );
       tableData.records = tableData.records?.map((record) =>
-        flattenObject(record)
+        flattenObject(record, columns)
       );
     });
     const baseElement = parse(baseTemplate);
@@ -632,8 +636,11 @@ router.post('/preview-quick-email', async (req, res) => {
       tableData.columns = getFlatFields(tableData.columns).filter(
         (column) => !column?.fields?.length
       );
+      const columns = tableData.columns?.map((column) =>
+        removeWhitespace(column.name?.toLowerCase())
+      );
       tableData.records = tableData.records?.map((record) =>
-        flattenObject(record)
+        flattenObject(record, columns)
       );
     });
     // Generate main html structure
