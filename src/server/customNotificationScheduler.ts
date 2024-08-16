@@ -54,7 +54,6 @@ const customNotificationMailSend = async (
   notification
 ) => {
   if (!!template && recipients.length > 0) {
-    // console.log('content: ', template, template.content);
     await sendEmail({
       message: {
         to: recipients,
@@ -112,27 +111,37 @@ const processTemplateContent = async (
  * @param template processed email template
  * @param recipients custom notification recipients (form id or users from user field)
  * @param notification custom notification
+ * @param recordsIds records ids list (if any)
  */
 const customNotificationNotificationSend = async (
   template,
   recipients,
-  notification
+  notification,
+  recordsIds
 ) => {
   if (!!template && !!recipients) {
+    const redirect =
+      notification.redirect && notification.redirect.active
+        ? {
+            ...notification.redirect,
+            recordIds: recordsIds,
+            layout: notification.layout,
+            resource: notification.resource,
+          }
+        : null;
     if (
       notification.recipientsType === customNotificationRecipientsType.channel
     ) {
       // Send notification to channel
       const channel = await Channel.findById(recipients[0]);
       if (channel) {
-        // const content = JSON.parse(template.content);
-        // console.log('TEM channel', template.content.title, channel.id);
         const notificationInstance = new Notification({
           action: template.content.title,
           content: template.content.description,
           //createdAt: new Date(),
           channel: channel.id,
           seenBy: [],
+          redirect,
         });
         await notificationInstance.save();
         const publisher = await pubsub();
@@ -148,6 +157,7 @@ const customNotificationNotificationSend = async (
         //createdAt: new Date(),
         user: recipients,
         seenBy: [],
+        redirect,
       });
       await notificationInstance.save();
       const publisher = await pubsub();
@@ -167,21 +177,26 @@ const customNotificationNotificationSend = async (
  * @param recipients custom notification recipients (always a array)
  * (can be a single email, a list of emails, a channel id or users from a user field)
  * @param notification custom notification
+ * @param recordsIds records ids list
  */
-const customNotificationSend = async (template, recipients, notification) => {
+const customNotificationSend = async (
+  template,
+  recipients,
+  notification,
+  recordsIds?: string[]
+) => {
   if (!!template && recipients.length > 0) {
     const notificationType = get(notification, 'notificationType', 'email');
     if (notificationType === customNotificationType.email) {
-      // console.log('customNotificationMailSend');
       // If custom notification type is email
       await customNotificationMailSend(template, recipients, notification);
     } else {
-      // console.log('customNotificationNotificationSend');
       // If custom notification type is notification
       await customNotificationNotificationSend(
         template,
         recipients,
-        notification
+        notification,
+        recordsIds
       );
     }
   } else {
@@ -202,7 +217,6 @@ export const scheduleCustomNotificationJob = async (
   application: Application
 ) => {
   try {
-    // console.log('scheduleCustomNotificationJob');
     const task = get(customNotificationMap, notification.id, null);
     if (task) {
       task.stop();
@@ -223,7 +237,7 @@ export const scheduleCustomNotificationJob = async (
                 'notificationType',
                 'email'
               );
-
+              let sent = false;
               let recipients: string[] = [];
               let userField = '';
               let emailField = '';
@@ -298,15 +312,14 @@ export const scheduleCustomNotificationJob = async (
                       'cronBased'
                     )
                   ) {
-                    // TODO: fix always returning empty {}
+                    // TODO: take into account resources questions
                     // Filter from the query definition
                     mongooseFilter = getFilter(
-                      triggersFilters.cronBased,
+                      { ...triggersFilters.cronBased, logic: 'and' },
                       resource.fields
                     );
                   }
                 }
-                // console.log('--- mongooseFilter: ', mongooseFilter);
                 const records = await RecordModel.aggregate([
                   {
                     $match: {
@@ -320,92 +333,108 @@ export const scheduleCustomNotificationJob = async (
                   },
                 ]);
 
-                const recordListArr = [];
-                for (const record of records) {
-                  if (record.data) {
-                    Object.keys(record.data).forEach(function (key) {
-                      record.data[key] =
-                        typeof record.data[key] == 'object'
-                          ? record.data[key]?.join(',')
-                          : record.data[key];
-                    });
-                    recordListArr.push({ ...record.data, id: record._id });
-                  }
-                }
-
-                if (!!userField || !!emailField) {
-                  const field = userField || emailField;
-                  const groupRecordArr = [];
-                  const groupValArr = [];
-                  for (const record of recordListArr) {
-                    const index = groupValArr.indexOf(record[field]);
-                    if (index == -1) {
-                      groupValArr.push(record[field]);
-                      delete record[field];
-                      groupRecordArr.push([record]);
-                    } else {
-                      delete record[field];
-                      groupRecordArr[index].push(record);
-                    }
-                  }
-
-                  let d = 0;
-                  for await (const groupRecord of groupRecordArr) {
-                    if (groupRecord.length > 0) {
-                      template.content = await processTemplateContent(
-                        template.content,
-                        notificationType,
-                        fieldArr,
-                        groupRecord
-                      );
-                      // console.log('template.content: ', template.content);
-                    }
-                    if (!!userField) {
-                      // If using userField, get the user with the id saved in the record data
-                      const userDetail = await User.findById(groupValArr[d]);
-                      if (!!userDetail && !!userDetail.username) {
-                        if (notificationType === customNotificationType.email) {
-                          // If email type, should get user email
-                          recipients = [userDetail.username];
-                          await customNotificationSend(
-                            template,
-                            recipients,
-                            notification
-                          );
-                        } else {
-                          // If notification type, should get user id
-                          recipients = userDetail.id;
-                          await customNotificationSend(
-                            template,
-                            recipients,
-                            notification
-                          );
-                        }
+                if (records) {
+                  const redirectToRecords =
+                    notification.redirect &&
+                    notification.redirect.active &&
+                    notification.redirect.type === 'recordIds';
+                  const recordsIds = [];
+                  const recordListArr = [];
+                  for (const record of records) {
+                    if (record.data) {
+                      Object.keys(record.data).forEach(function (key) {
+                        record.data[key] =
+                          typeof record.data[key] == 'object'
+                            ? record.data[key]?.join(',')
+                            : record.data[key];
+                      });
+                      recordListArr.push({ ...record.data, id: record._id });
+                      if (redirectToRecords) {
+                        recordsIds.push(record._id);
                       }
-                    } else {
-                      // If using emailField, get the email saved in the record data
-                      recipients = groupValArr[d];
-                      await customNotificationSend(
-                        template,
-                        recipients,
-                        notification
-                      );
                     }
-                    d++;
                   }
-                } else {
-                  template.content = await processTemplateContent(
-                    template.content,
-                    notificationType,
-                    fieldArr,
-                    recordListArr
-                  );
-                  // console.log('template.content: ', template.content);
-                  await customNotificationSend(
-                    template,
-                    recipients,
-                    notification
-                  );
+
+                  if (!!userField || !!emailField) {
+                    const field = userField || emailField;
+                    const groupRecordArr = [];
+                    const groupValArr = [];
+                    for (const record of recordListArr) {
+                      const index = groupValArr.indexOf(record[field]);
+                      if (index == -1) {
+                        groupValArr.push(record[field]);
+                        delete record[field];
+                        groupRecordArr.push([record]);
+                      } else {
+                        delete record[field];
+                        groupRecordArr[index].push(record);
+                      }
+                    }
+
+                    let d = 0;
+                    for await (const groupRecord of groupRecordArr) {
+                      if (groupRecord.length > 0) {
+                        template.content = await processTemplateContent(
+                          template.content,
+                          notificationType,
+                          fieldArr,
+                          groupRecord
+                        );
+                      }
+                      if (!!userField) {
+                        // If using userField, get the user with the id saved in the record data
+                        const userDetail = await User.findById(groupValArr[d]);
+                        if (!!userDetail && !!userDetail.username) {
+                          if (
+                            notificationType === customNotificationType.email
+                          ) {
+                            // If email type, should get user email
+                            recipients = [userDetail.username];
+                            await customNotificationSend(
+                              template,
+                              recipients,
+                              notification
+                            );
+                            sent = true;
+                          } else {
+                            // If notification type, should get user id
+                            recipients = userDetail.id;
+                            await customNotificationSend(
+                              template,
+                              recipients,
+                              notification,
+                              recordsIds
+                            );
+                            sent = true;
+                          }
+                        }
+                      } else {
+                        // If using emailField, get the email saved in the record data
+                        recipients = groupValArr[d];
+                        await customNotificationSend(
+                          template,
+                          recipients,
+                          notification
+                        );
+                        sent = true;
+                      }
+                      d++;
+                    }
+                  } else {
+                    template.content = await processTemplateContent(
+                      template.content,
+                      notificationType,
+                      fieldArr,
+                      recordListArr
+                    );
+                    await customNotificationSend(
+                      template,
+                      recipients,
+                      notification,
+                      recordsIds
+                    );
+                    sent = true;
+                  }
                 }
               } else {
                 await customNotificationSend(
@@ -413,21 +442,24 @@ export const scheduleCustomNotificationJob = async (
                   recipients,
                   notification
                 );
+                sent = true;
               }
 
-              const update = {
-                $set: {
-                  'customNotifications.$.lastExecutionStatus': 'success',
-                  'customNotifications.$.lastExecution': new Date(),
-                },
-              };
-              await Application.findOneAndUpdate(
-                {
-                  _id: application._id,
-                  'customNotifications._id': notification._id,
-                },
-                update
-              );
+              if (sent) {
+                const update = {
+                  $set: {
+                    'customNotifications.$.lastExecutionStatus': 'success',
+                    'customNotifications.$.lastExecution': new Date(),
+                  },
+                };
+                await Application.findOneAndUpdate(
+                  {
+                    _id: application._id,
+                    'customNotifications._id': notification._id,
+                  },
+                  update
+                );
+              }
             } catch (error) {
               logger.error(error.message, { stack: error.stack });
             }

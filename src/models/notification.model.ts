@@ -45,6 +45,8 @@ export interface Notification extends Document {
   //   type: string; // 'url' | 'recordIds'
   //   url?: string;
   //   recordIds?: string[];
+  //   layout?: string;
+  //   resource?: string;
   // };
 }
 

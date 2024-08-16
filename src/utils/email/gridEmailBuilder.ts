@@ -179,6 +179,13 @@ export const preprocess = (
     text = text.split(Placeholder.NOW).join(nowToString);
   }
 
+  // === NOW ===
+  if (text.includes(Placeholder.RECORD_ID)) {
+    const textArray: string[] = [];
+    dataset.rows.forEach((record: any) => textArray.push(record.id));
+    text = textArray.join(', ');
+  }
+
   // === DATASET ===
   if (text.includes(Placeholder.DATASET) && dataset) {
     if (dataset.fields.length > 0 && dataset.rows.length > 0) {
