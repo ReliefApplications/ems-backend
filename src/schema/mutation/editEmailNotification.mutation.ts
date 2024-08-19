@@ -53,20 +53,23 @@ export default {
       // }
       if (args.notification) {
         // Can't do this type of type check on type level
-        // Only count as a dataset if it has a resource
-        const datasetsCount = cloneDeep(args.notification.datasets).filter(
-          ({ resource }) => resource
-        ).length;
-        // Individual email count
-        let individualCount = 0;
-        for (const dataset of args.notification.datasets) {
-          if (dataset.resource && dataset.individualEmail) {
-            individualCount += 1;
-          }
-        }
         let allSeparate = false;
-        if (datasetsCount === individualCount) {
-          allSeparate = true;
+        // Only count as a dataset if it has a resource
+        if (args.notification.datasets) {
+          const datasetsCount =
+            cloneDeep(args.notification.datasets)?.filter(
+              ({ resource }) => resource
+            ).length ?? 0;
+          // Individual email count
+          let individualCount = 0;
+          for (const dataset of args.notification.datasets) {
+            if (dataset.resource && dataset.individualEmail) {
+              individualCount += 1;
+            }
+          }
+          if (datasetsCount === individualCount) {
+            allSeparate = true;
+          }
         }
 
         if (
@@ -83,7 +86,7 @@ export default {
         }
 
         // Check if user is subscribed to the notification
-        const userIsSubscribed = args.notification.subscriptionList.includes(
+        const userIsSubscribed = args.notification.subscriptionList?.includes(
           context.user.username
         );
         const updateFields = {
