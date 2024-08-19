@@ -395,7 +395,6 @@ export const ResourceType = new GraphQLObjectType({
         return getMetaData(parent, context);
       },
     },
-    triggersFilters: { type: GraphQLJSON },
   }),
 });
 

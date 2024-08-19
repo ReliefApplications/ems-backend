@@ -3,21 +3,19 @@ import {
   CustomNotification,
   Resource,
   Record as RecordModel,
-  Notification,
   User,
-  Channel,
 } from '@models';
 import { CronJob } from 'cron';
 import { logger } from '../services/logger.service';
 import * as cronValidator from 'cron-validator';
 import get from 'lodash/get';
-import { sendEmail, preprocess } from '@utils/email';
+import { preprocess } from '@utils/email';
 import {
   customNotificationRecipientsType,
   customNotificationType,
 } from '@const/enumTypes';
-import pubsub from './pubsub';
 import getFilter from '@utils/schema/resolvers/Query/getFilter';
+import customNotificationSend from '@utils/customNotification/customNotificationSend';
 
 /** A map with the custom notification ids as keys and the scheduled custom notification as values */
 const customNotificationMap: Record<string, CronJob> = {};
@@ -40,34 +38,6 @@ const customNotificationScheduler = async () => {
 };
 
 export default customNotificationScheduler;
-
-/**
- * Send email for custom notification
- *
- * @param template processed email template
- * @param recipients custom notification recipients
- * @param notification custom notification
- */
-const customNotificationMailSend = async (
-  template,
-  recipients,
-  notification
-) => {
-  if (!!template && recipients.length > 0) {
-    await sendEmail({
-      message: {
-        to: recipients,
-        subject: template.content.subject,
-        html: template.content.body,
-        attachments: [],
-      },
-    });
-  } else {
-    throw new Error(
-      `[${notification.name}] notification email template not available or recipients not available:`
-    );
-  }
-};
 
 /**
  * Depending on  notification type,  for custom notification
@@ -103,107 +73,6 @@ const processTemplateContent = async (
     });
   }
   return content;
-};
-
-/**
- * Send email for custom notification
- *
- * @param template processed email template
- * @param recipients custom notification recipients (form id or users from user field)
- * @param notification custom notification
- * @param recordsIds records ids list (if any)
- */
-const customNotificationNotificationSend = async (
-  template,
-  recipients,
-  notification,
-  recordsIds
-) => {
-  if (!!template && !!recipients) {
-    const redirect =
-      notification.redirect && notification.redirect.active
-        ? {
-            ...notification.redirect,
-            recordIds: recordsIds,
-            layout: notification.layout,
-            resource: notification.resource,
-          }
-        : null;
-    if (
-      notification.recipientsType === customNotificationRecipientsType.channel
-    ) {
-      // Send notification to channel
-      const channel = await Channel.findById(recipients[0]);
-      if (channel) {
-        const notificationInstance = new Notification({
-          action: template.content.title,
-          content: template.content.description,
-          //createdAt: new Date(),
-          channel: channel.id,
-          seenBy: [],
-          redirect,
-        });
-        await notificationInstance.save();
-        const publisher = await pubsub();
-        publisher.publish(channel.id, { notificationInstance });
-      }
-    } else if (
-      notification.recipientsType === customNotificationRecipientsType.userField
-    ) {
-      // Send notification to a user
-      const notificationInstance = new Notification({
-        action: template.content.title,
-        content: template.content.description,
-        //createdAt: new Date(),
-        user: recipients,
-        seenBy: [],
-        redirect,
-      });
-      await notificationInstance.save();
-      const publisher = await pubsub();
-      publisher.publish(recipients, { notificationInstance });
-    }
-  } else {
-    throw new Error(
-      `[${notification.name}] notification template not available or recipients not available:`
-    );
-  }
-};
-
-/**
- * Prepare custom notification to be sent by type (email or notification)
- *
- * @param template processed email template
- * @param recipients custom notification recipients (always a array)
- * (can be a single email, a list of emails, a channel id or users from a user field)
- * @param notification custom notification
- * @param recordsIds records ids list
- */
-const customNotificationSend = async (
-  template,
-  recipients,
-  notification,
-  recordsIds?: string[]
-) => {
-  if (!!template && recipients.length > 0) {
-    const notificationType = get(notification, 'notificationType', 'email');
-    if (notificationType === customNotificationType.email) {
-      // If custom notification type is email
-      await customNotificationMailSend(template, recipients, notification);
-    } else {
-      // If custom notification type is notification
-      await customNotificationNotificationSend(
-        template,
-        recipients,
-        notification,
-        recordsIds
-      );
-    }
-  } else {
-    throw new Error(
-      `[${notification.name}] notification template not available or recipients not available:`
-    );
-  }
 };
 
 /**
@@ -299,26 +168,18 @@ export const scheduleCustomNotificationJob = async (
                     fieldArr.push(obj);
                   }
                 }
-                // If triggers, check if has filters
+                // If triggers check if has filters
                 let mongooseFilter = {};
-                if (notification.applicationTrigger) {
-                  const triggersFilters = resource.triggersFilters.find(
-                    (tg: any) => tg.application === application.id
+                if (
+                  notification.applicationTrigger &&
+                  notification.filter?.filters?.length
+                ) {
+                  // TODO: take into account resources questions
+                  // Filter from the query definition
+                  mongooseFilter = getFilter(
+                    notification.filter,
+                    resource.fields
                   );
-                  if (
-                    triggersFilters &&
-                    Object.prototype.hasOwnProperty.call(
-                      triggersFilters,
-                      'cronBased'
-                    )
-                  ) {
-                    // TODO: take into account resources questions
-                    // Filter from the query definition
-                    mongooseFilter = getFilter(
-                      { ...triggersFilters.cronBased, logic: 'and' },
-                      resource.fields
-                    );
-                  }
                 }
                 const records = await RecordModel.aggregate([
                   {

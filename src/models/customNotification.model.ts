@@ -65,6 +65,7 @@ export const customNotificationSchema = new Schema(
     onRecordUpdate: Boolean,
     applicationTrigger: Boolean,
     redirect: mongoose.Schema.Types.Mixed,
+    filter: mongoose.Schema.Types.Mixed,
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
@@ -91,6 +92,7 @@ export interface CustomNotification extends Document {
   onRecordCreation?: boolean;
   onRecordUpdate?: boolean; // record deletion counts as an update
   applicationTrigger?: boolean;
+  filter?: any;
   redirect?: any;
   // redirect?: {
   //   active: boolean;

@@ -13,7 +13,7 @@ import {
   getExpressionFromString,
   OperationTypeMap,
 } from '@utils/aggregation/expressionFromString';
-import { Application, DefaultIncrementalIdShapeT, Resource } from '@models';
+import { DefaultIncrementalIdShapeT, Resource } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { get, has, isArray, isEqual, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
@@ -21,8 +21,6 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 import { IdShapeType } from '@schema/inputs/id-shape.input';
 import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
-import { customNotificationStatus } from '@const/enumTypes';
-import { scheduleCustomNotificationJob } from '@server/customNotificationScheduler';
 
 /** Simple resource permission change type */
 type SimplePermissionChange =
@@ -569,7 +567,6 @@ type EditResourceArgs = {
   permissions?: any;
   fieldsPermissions?: any;
   calculatedField?: any;
-  triggersFilters?: any;
   idShape?: DefaultIncrementalIdShapeT;
   importField?: string;
 };
@@ -586,7 +583,6 @@ export default {
     permissions: { type: GraphQLJSON },
     fieldsPermissions: { type: GraphQLJSON },
     calculatedField: { type: GraphQLJSON },
-    triggersFilters: { type: GraphQLJSON },
     idShape: { type: IdShapeType },
     importField: { type: GraphQLString },
   },
@@ -601,7 +597,6 @@ export default {
           !args.calculatedField &&
           !args.fieldsPermissions &&
           !args.idShape &&
-          !args.triggersFilters &&
           !args.importField)
       ) {
         throw new GraphQLError(
@@ -844,30 +839,6 @@ export default {
         }
       }
 
-      if (args.triggersFilters) {
-        let triggersFilters = [args.triggersFilters];
-        if (resource.triggersFilters.length) {
-          triggersFilters = [...resource.triggersFilters];
-          const index = resource.triggersFilters.findIndex(
-            (tg: any) => tg.application === args.triggersFilters.application
-          );
-          if (index !== -1) {
-            triggersFilters[index] = args.triggersFilters;
-          } else {
-            triggersFilters.push(args.triggersFilters);
-          }
-        }
-        if (update.$set) {
-          Object.assign(update.$set, {
-            ['triggersFilters']: triggersFilters,
-          });
-        } else {
-          Object.assign(update, {
-            $set: { ['triggersFilters']: triggersFilters },
-          });
-        }
-      }
-
       // Split the request in three parts, to avoid conflict
       if (!!update.$set) {
         await Resource.findByIdAndUpdate(args.id, { $set: update.$set });
@@ -879,30 +850,6 @@ export default {
 
       if (args.idShape) {
         await updateIncrementalIds(resource, args.idShape);
-      }
-
-      // Make sure that filters changes are applied in the scheduled notifications
-      if (args.triggersFilters) {
-        const application = await Application.findById(
-          args.triggersFilters.application
-        ).populate({
-          path: 'customNotifications',
-          model: 'CustomNotification',
-        });
-        const filteredNotifications = application.customNotifications.filter(
-          (notification) =>
-            notification.applicationTrigger === true &&
-            notification.resource.equals(args.id)
-        );
-        filteredNotifications.forEach((notification) => {
-          if (
-            notification.schedule &&
-            notification.applicationTrigger &&
-            notification.status === customNotificationStatus.active
-          ) {
-            scheduleCustomNotificationJob(notification, application);
-          }
-        });
       }
 
       const updatedResource = await Resource.findByIdAndUpdate(
