@@ -21,6 +21,7 @@ import { baseTemplate } from '@const/notification';
 import i18next from 'i18next';
 import { sendEmail } from '@utils/email/sendEmail';
 import parse from 'node-html-parser';
+import { validateEmail } from '@utils/validators/validateEmail';
 
 /**
  * Limit of records to be fetched for each dataset in email notification
@@ -297,8 +298,17 @@ router.post('/validate-dataset', async (req, res) => {
 router.post('/send-individual-email/:configId', async (req, res) => {
   try {
     const config = await EmailNotification.findById(req.params.configId).exec();
+    const individualEmailFields = [];
     const datasetQueries: DatasetPreviewArgs[] = config.datasets.map(
       (dataset) => {
+        if (dataset.individualEmail) {
+          individualEmailFields.push({
+            name: dataset.name,
+            emailFields: getFlatFields(dataset.individualEmailFields)?.map(
+              ({ name }) => name
+            ),
+          });
+        }
         return {
           name: dataset.name,
           query: {
@@ -434,17 +444,50 @@ router.post('/send-individual-email/:configId', async (req, res) => {
 
     for (const dataset of datasets) {
       if (dataset.individualEmail) {
+        const selectedEmailFieldName = individualEmailFields.find(
+          (field) => field.name === dataset.name
+        ).emailFields;
+        // remove individual fields from column
+        dataset.columns = dataset.columns?.filter(
+          (column) => !selectedEmailFieldName.includes(column.name)
+        );
+        //get all emails from selected fields and add it in new key - individualEmails
+        dataset.records = dataset.records.map((record) => {
+          const individualEmails = [];
+          selectedEmailFieldName.forEach((field) => {
+            if (record[field])
+              individualEmails.push(
+                ...(record[field] as string)?.split(',').filter(validateEmail)
+              );
+            // delete individual fields from records
+            delete record[field];
+          });
+          return {
+            ...record,
+            individualEmails,
+          };
+        });
+      }
+    }
+
+    for (const dataset of datasets) {
+      if (dataset.individualEmail) {
         // Individual email format
         dataset.records.forEach((record) => {
-          const email = record.email as string;
-          processedIndividualRecords.push({
-            records: [record],
-            name: dataset.name,
-            columns: dataset.columns,
-            individualEmail: true,
-            email,
-          });
-          individualEmail.push(email);
+          const emails = record.individualEmails as Array<string>;
+          delete record.individualEmails;
+          if (emails.length) {
+            emails?.forEach((email) => {
+              processedIndividualRecords.push({
+                records: [record],
+                name: dataset.name,
+                columns: dataset.columns,
+                individualEmail: true,
+                email,
+              });
+              individualEmail.push(email);
+            });
+          }
         });
       } else {
         // Block email format
