@@ -338,8 +338,6 @@ router.post('/send-individual-email/:configId', async (req, res) => {
     const baseElement = parse(baseTemplate);
     const mainTableElement = baseElement.getElementById('mainTable');
 
-    console.log(datasets);
-
     // Add banner if available
     if (config.emailLayout.banner.bannerImage) {
       const bannerElement = parse(
@@ -467,6 +465,13 @@ router.post('/send-individual-email/:configId', async (req, res) => {
             individualEmails,
           };
         });
+      } else {
+        //filter individual emails from to-emails
+        commonBlockEmails = config
+          .get('emailDistributionList')
+          ?.to?.inputEmails?.filter(
+            (email) => !individualEmail?.includes(email)
+          );
       }
     }
 
@@ -504,18 +509,8 @@ router.post('/send-individual-email/:configId', async (req, res) => {
         });
       }
     }
-    for (const dataset of datasets) {
-      if (!dataset.individualEmail) {
-        //filter individual emails from to-emails
-        commonBlockEmails = config
-          .get('emailDistributionList')
-          ?.to?.inputEmails?.filter(
-            (email) => !individualEmail?.includes(email)
-          );
-      }
-    }
 
-    const isEmailSend = { commonBlockEmails: false };
+    let isEmailSend = false;
     const commonBlocks = [];
 
     for (const block of processedIndividualRecords) {
@@ -533,7 +528,6 @@ router.post('/send-individual-email/:configId', async (req, res) => {
       bodyElement.appendChild(bodyBlock);
       // send emails separately for each email
       if (block.individualEmail) {
-        isEmailSend[block.email] = false;
         const emailParams = {
           message: {
             to: block.email ?? [], // Recipient's email address
@@ -546,7 +540,7 @@ router.post('/send-individual-email/:configId', async (req, res) => {
         };
         // Send email
         await sendEmail(emailParams);
-        isEmailSend[block.email] = true;
+        isEmailSend = true;
       } else {
         commonBlocks.push(block);
       }
@@ -578,12 +572,10 @@ router.post('/send-individual-email/:configId', async (req, res) => {
       };
       // Send email
       await sendEmail(emailParams);
-      isEmailSend.commonBlockEmails = true;
+      isEmailSend = true;
     }
 
-    const isSend = Object.values(isEmailSend).every((val) => val === true);
-
-    if (isSend) {
+    if (isEmailSend) {
       res.status(200).json({ message: 'Email sent successfully' });
     } else {
       res.status(400).json({ message: 'No emails were sent' });
