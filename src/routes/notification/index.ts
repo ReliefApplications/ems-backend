@@ -298,15 +298,27 @@ router.post('/validate-dataset', async (req, res) => {
 router.post('/send-individual-email/:configId', async (req, res) => {
   try {
     const config = await EmailNotification.findById(req.params.configId).exec();
-    const individualEmailFields = [];
+    const sendSeparateFields = [];
+    // fields which are common in send separate and query fields
+    const commonFields = [];
     const datasetQueries: DatasetPreviewArgs[] = config.datasets.map(
       (dataset) => {
         if (dataset.individualEmail) {
-          individualEmailFields.push({
+          const flattenIndividualFields = getFlatFields(
+            dataset.individualEmailFields
+          );
+          const flattenFields = getFlatFields(dataset?.query?.fields);
+          commonFields.push({
             name: dataset.name,
-            emailFields: getFlatFields(dataset.individualEmailFields)?.map(
-              ({ name }) => name
-            ),
+            emailFields: flattenIndividualFields
+              .filter((emailField) =>
+                flattenFields.some((field) => field.name === emailField.name)
+              )
+              .map(({ name }) => name),
+          });
+          sendSeparateFields.push({
+            name: dataset.name,
+            emailFields: flattenIndividualFields?.map(({ name }) => name),
           });
         }
         return {
@@ -442,14 +454,19 @@ router.post('/send-individual-email/:configId', async (req, res) => {
 
     for (const dataset of datasets) {
       if (dataset.individualEmail) {
-        const selectedEmailFieldName = individualEmailFields.find(
+        const selectedEmailFieldName = sendSeparateFields.find(
           (field) => field.name === dataset.name
         ).emailFields;
-        // remove individual fields from column
+        const selectedCommonFieldName = commonFields.find(
+          (field) => field.name === dataset.name
+        ).emailFields;
+        // remove individual email fields from column
         dataset.columns = dataset.columns?.filter(
-          (column) => !selectedEmailFieldName.includes(column.name)
+          (column) =>
+            !selectedEmailFieldName.includes(column.name) ||
+            selectedCommonFieldName.includes(column.name)
         );
-        //get all emails from selected fields and add it in new key - individualEmails
+        //get all emails from selected individual email fields and add it in new key - individualEmails
         dataset.records = dataset.records.map((record) => {
           const individualEmails = [];
           selectedEmailFieldName.forEach((field) => {
@@ -457,8 +474,8 @@ router.post('/send-individual-email/:configId', async (req, res) => {
               individualEmails.push(
                 ...(record[field] as string)?.split(',').filter(validateEmail)
               );
-            // delete individual fields from records
-            delete record[field];
+            // delete individual email fields from records
+            if (!selectedCommonFieldName.includes(field)) delete record[field];
           });
           return {
             ...record,
