@@ -11,6 +11,8 @@ const groupElements = [];
  * Groups and panels can be nested.
  */
 const repeatGroupElements = [];
+/** Saves the matrixElement question equivalent to the matrix question */
+let matrixElement = null;
 
 /**
  * SurveyJS survey structure
@@ -24,6 +26,7 @@ const survey = {
     },
   ],
   showQuestionNumbers: 'off',
+  checkErrorsMode: 'onValueChanged',
 };
 
 /**
@@ -32,12 +35,15 @@ const survey = {
 const AVAILABLE_TYPES = [
   'decimal',
   'geopoint',
+  'geoshape',
+  'geotrace',
   'select_multiple',
   'select_one',
   'date',
   'note',
   'begin_score',
   'score__row',
+  'barcode',
   'text',
   'time',
   'file',
@@ -50,12 +56,15 @@ const AVAILABLE_TYPES = [
   'image',
   'audio',
   'video',
-  'geoshape',
   'calculate',
   'begin_group',
   'end_group',
   'begin_repeat',
   'end_repeat',
+  'end_score',
+  'end_rank',
+  'begin_kobomatrix',
+  'end_kobomatrix',
 ];
 
 /**
@@ -89,6 +98,15 @@ const addToElements = (
   elementPath: string | null,
   parentGroup?: string
 ) => {
+  if (matrixElement) {
+    const element = structuredClone(newElement);
+    element.cellType = element.type;
+    delete element.type;
+
+    matrixElement.columns.push(element);
+    return;
+  }
+
   const groups = elementPath ? getElementsGroups(elementPath) : [];
   // If element is not part of a group
   if (!groups.length && !parentGroup) {
@@ -128,7 +146,8 @@ export const extractKoboFields = (
 ) => {
   survey.title = title;
   survey.pages[0].elements = [];
-  let scoreChoiceId = '';
+  let newRateQuestion: any = null;
+  let rakingItems: string[] = [];
   let rankChoiceId = '';
 
   koboSurvey.map((question: any, index: number) => {
@@ -143,9 +162,17 @@ export const extractKoboFields = (
           break;
         }
         case 'geoshape':
+        case 'geotrace':
         case 'geopoint': {
+          const typeToFeature = {
+            geoshape: 'Polygon',
+            geotrace: 'PolyLine',
+            geopoint: 'Point',
+          } as const;
+
           const newQuestion = {
             ...commonProperties(index, question, 'geospatial'),
+            geometry: typeToFeature[question.type],
           };
           addToElements(newQuestion, question.$xpath);
           break;
@@ -158,9 +185,6 @@ export const extractKoboFields = (
               question,
               question.type === 'select_multiple' ? 'checkbox' : 'radiogroup'
             ),
-            ...(question.type === 'select_multiple' && {
-              showSelectAllItem: true,
-            }),
             choices: choices
               .filter(
                 (choice) => question.select_from_list_name === choice.list_name
@@ -202,28 +226,54 @@ export const extractKoboFields = (
           break;
         }
         case 'begin_score': {
-          scoreChoiceId = question['kobo--score-choices'];
-          break;
-        }
-        case 'score__row': {
-          const newQuestion = {
-            ...commonProperties(index, question, 'radiogroup'),
+          newRateQuestion = {
+            ...commonProperties(index, question, 'matrixdropdown'),
+            columns: [
+              {
+                name: 'rating',
+                cellType: 'radiogroup',
+                showInMultipleColumns: true,
+              },
+            ],
             choices: choices
-              .filter((choice) => scoreChoiceId === choice.list_name)
+              .filter(
+                (choice) => question['kobo--score-choices'] === choice.list_name
+              )
               .map((choice) => ({
                 value: choice.$autovalue,
                 text: choice.label[0],
               })),
-            // This question does not have Validation Criteria settings (validators property)
+            rows: [],
+            $xpath: question.$xpath,
           };
-          addToElements(newQuestion, question.$xpath);
+          break;
+        }
+        case 'score__row': {
+          newRateQuestion.rows.push({
+            value: question.$autoname,
+            text: question.label[0],
+          });
+          break;
+        }
+        case 'end_score': {
+          const xpath = newRateQuestion.$xpath;
+          delete newRateQuestion.$xpath;
+
+          // Add the matrix question to the survey
+          addToElements(newRateQuestion, xpath);
+
+          // Reset the newRateQuestion object
+          newRateQuestion = null;
           break;
         }
         case 'begin_rank': {
           rankChoiceId = question['kobo--rank-items'];
+          rakingItems = [];
           break;
         }
         case 'rank__level': {
+          rakingItems.push(question.$autoname);
+
           const newQuestion = {
             ...commonProperties(index, question, 'dropdown'),
             choices: choices
@@ -232,11 +282,57 @@ export const extractKoboFields = (
                 value: choice.$autovalue,
                 text: choice.label[0],
               })),
-            // This question does not have Validation Criteria settings
           };
+
           addToElements(newQuestion, question.$xpath);
           break;
         }
+        case 'end_rank': {
+          // For the last rank_level questions, we add validators to ensure that they can never be the same as the previous ones
+
+          const rakingQuestions = survey.pages[0].elements.slice(
+            -rakingItems.length
+          );
+
+          rakingQuestions.forEach((rakingQuestion) => {
+            rakingQuestion.validators = rakingQuestions
+              .filter((q) => {
+                return q.name !== rakingQuestion.name;
+              })
+              .map((item) => ({
+                type: 'expression',
+                text: `Value can't be the same as ${item.title ?? item.name}`,
+                expression: `{${item.name}} <> {${rakingQuestion.name}} and {${rakingQuestion.name}} notempty`,
+              }));
+          });
+
+          break;
+        }
+        case 'begin_kobomatrix': {
+          const rows = choices
+            .filter(
+              (choice) => question['kobo--matrix_list'] === choice.list_name
+            )
+            .map((choice) => ({
+              value: choice.$autovalue,
+              text: choice.label[0],
+            }));
+
+          const newMatrixQuestion = {
+            ...commonProperties(index, question, 'matrixdropdown'),
+            columns: [],
+            rows,
+          };
+
+          addToElements(newMatrixQuestion, question.$xpath);
+          matrixElement = newMatrixQuestion;
+          break;
+        }
+        case 'end_kobomatrix': {
+          matrixElement = null;
+          break;
+        }
+        case 'barcode':
         case 'text': {
           const newQuestion = {
             ...commonProperties(index, question, 'text'),
@@ -290,10 +386,18 @@ export const extractKoboFields = (
           break;
         }
         case 'range': {
+          // Parameters are in the format 'start=0;end=10;step=1'
+          const parameters = question.parameters.split(';');
+          const [minValue, maxValue] = parameters
+            .slice(0, 2)
+            .map((param) => parseInt(param.split('=')[1]));
+          const step = parseInt(parameters[2].split('=')[1]);
           const newQuestion = {
             ...commonProperties(index, question, 'text'),
             inputType: 'range',
-            step: question.parameters.split('step=')[1],
+            step: typeof step === 'number' ? step : undefined,
+            min: typeof minValue === 'number' ? minValue : undefined,
+            max: typeof maxValue === 'number' ? maxValue : undefined,
           };
           addToElements(newQuestion, question.$xpath);
           break;
@@ -377,5 +481,7 @@ export const extractKoboFields = (
   survey.pages[0].elements = survey.pages[0].elements.sort((a, b) =>
     a.index > b.index ? 1 : -1
   );
+
+  console.log('survey', JSON.stringify(survey));
   return survey;
 };
