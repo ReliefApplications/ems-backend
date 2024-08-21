@@ -216,8 +216,36 @@ router.post('/preview-distribution-lists/', async (req, res) => {
       req,
       res
     );
+    const individualEmailQueries: DatasetPreviewArgs[] = config.datasets
+      .filter((dataset) => dataset.individualEmail)
+      .map((dataset) => {
+        return {
+          name: dataset.name,
+          query: {
+            name: dataset?.query?.name,
+            fields: dataset?.individualEmailFields || [],
+            filter: dataset?.query?.filter,
+          },
+          resource: dataset.resource,
+          individualEmail: dataset.individualEmail,
+        };
+      });
+    let individualEmails: ProcessedDataset[] = [];
+    individualEmails = await fetchDatasets(individualEmailQueries, req, res);
+    const individualEmailList = individualEmails?.map((data) => ({
+      name: data.name,
+      emails: data.records
+        .flatMap((record) =>
+          Object.values(record).flatMap((email: string) =>
+            email ? email.split(',') : []
+          )
+        )
+        .filter(validateEmail),
+    }));
+
     res.send({
       ...emails,
+      individualEmailList,
       name: config.emailDistributionList.name,
     });
   } catch (err) {
@@ -454,12 +482,12 @@ router.post('/send-individual-email/:configId', async (req, res) => {
 
     for (const dataset of datasets) {
       if (dataset.individualEmail) {
-        const selectedEmailFieldName = sendSeparateFields.find(
-          (field) => field.name === dataset.name
-        ).emailFields;
-        const selectedCommonFieldName = commonFields.find(
-          (field) => field.name === dataset.name
-        ).emailFields;
+        const selectedEmailFieldName =
+          sendSeparateFields.find((field) => field.name === dataset.name)
+            ?.emailFields || [];
+        const selectedCommonFieldName =
+          commonFields.find((field) => field.name === dataset.name)
+            ?.emailFields || [];
         // remove individual email fields from column
         dataset.columns = dataset.columns?.filter(
           (column) =>
