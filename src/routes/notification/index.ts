@@ -654,7 +654,9 @@ router.post('/send-quick-email', async (req, res) => {
     await buildEmail(emailLayout, mainTableElement, tableInfo);
 
     // Replace subject placeholders
-    const emailSubject = emailLayout.subject;
+    const subjectRecords = tableInfo[0].records;
+
+    const emailSubject = replaceSubject(emailLayout.subject, subjectRecords);
 
     // Get recipients
     const to = emailDistributionList.To;
@@ -729,31 +731,29 @@ router.post('/preview-quick-email', async (req, res) => {
     await buildEmail(emailLayout, mainTableElement, tableInfo);
 
     // Replace subject placeholders
-    const emailSubject = emailLayout.subject;
+    const subjectRecords = tableInfo[0].records;
 
-    // Add attachments
-    const attachments: { path: string; cid: string }[] = [];
-
+    const emailSubject = replaceSubject(emailLayout.subject, subjectRecords);
     // Add header logo
     if (emailLayout.header.headerLogo) {
-      attachments.push({
-        path: emailLayout.header.headerLogo,
-        cid: 'headerImage',
-      });
+      const headerImageElement = baseElement.getElementById('headerImage');
+      if (headerImageElement) {
+        headerImageElement.setAttribute('src', emailLayout.header.headerLogo);
+      }
     }
     // Add footer logo
     if (emailLayout.footer.footerLogo) {
-      attachments.push({
-        path: emailLayout.footer.footerLogo,
-        cid: 'footerImage',
-      });
+      const footerImageElement = baseElement.getElementById('footerImage');
+      if (footerImageElement) {
+        footerImageElement.setAttribute('src', emailLayout.footer.footerLogo);
+      }
     }
     // Add banner image
     if (emailLayout.banner.bannerImage) {
-      attachments.push({
-        path: emailLayout.banner.bannerImage,
-        cid: 'bannerImage',
-      });
+      const bannerImageElement = baseElement.getElementById('bannerImage');
+      if (bannerImageElement) {
+        bannerImageElement.setAttribute('src', emailLayout.banner.bannerImage);
+      }
     }
     const emailTable = Buffer.from(baseElement.toString()).toString('base64');
     res.send({
