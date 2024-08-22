@@ -17,11 +17,16 @@ export const getColumnsFromMeta = (
     if (field && field.name && typeof field.name === 'string') {
       // To get reference data fields
       const name = field.graphQLFieldName || field.name;
-      const label =
-        fields.find((data) => {
-          const item = data.name.split('.');
-          return item[item.length - 1] === field.name;
-        })?.label || field.name;
+      const label = fields.find((data) => {
+        const splitField = data.name.split('.');
+        const fieldParts = field.name.split('.');
+        if (splitField.length === fieldParts.length) {
+          return splitField.every(
+            (part: any, index: string | number) => part === fieldParts[index]
+          );
+        }
+        return false;
+      })?.label;
       // Classic field
       columns.push({
         name: prefix ? `${prefix}.${name}` : name,
@@ -49,7 +54,11 @@ export const getColumnsFromMeta = (
       } else {
         // Single related object
         columns = columns.concat(
-          getColumnsFromMeta(field, fields, prefix ? `${prefix}.${key}` : key)
+          getColumnsFromMeta(
+            field,
+            queryField.fields,
+            prefix ? `${prefix}.${key}` : key
+          )
         );
       }
     }
