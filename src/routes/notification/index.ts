@@ -21,6 +21,7 @@ import { baseTemplate } from '@const/notification';
 import i18next from 'i18next';
 import { sendEmail } from '@utils/email/sendEmail';
 import parse from 'node-html-parser';
+import { validateEmail } from '@utils/validators/validateEmail';
 
 /**
  * Limit of records to be fetched for each dataset in email notification
@@ -215,8 +216,36 @@ router.post('/preview-distribution-lists/', async (req, res) => {
       req,
       res
     );
+    const individualEmailQueries: DatasetPreviewArgs[] = config.datasets
+      .filter((dataset) => dataset.individualEmail)
+      .map((dataset) => {
+        return {
+          name: dataset.name,
+          query: {
+            name: dataset?.query?.name,
+            fields: dataset?.individualEmailFields || [],
+            filter: dataset?.query?.filter,
+          },
+          resource: dataset.resource,
+          individualEmail: dataset.individualEmail,
+        };
+      });
+    let individualEmails: ProcessedDataset[] = [];
+    individualEmails = await fetchDatasets(individualEmailQueries, req, res);
+    const individualEmailList = individualEmails?.map((data) => ({
+      name: data.name,
+      emails: data.records
+        .flatMap((record) =>
+          Object.values(record).flatMap((email: string) =>
+            email ? email.split(',') : []
+          )
+        )
+        .filter(validateEmail),
+    }));
+
     res.send({
       ...emails,
+      individualEmailList,
       name: config.emailDistributionList.name,
     });
   } catch (err) {
@@ -297,8 +326,29 @@ router.post('/validate-dataset', async (req, res) => {
 router.post('/send-individual-email/:configId', async (req, res) => {
   try {
     const config = await EmailNotification.findById(req.params.configId).exec();
+    const sendSeparateFields = [];
+    // fields which are common in send separate and query fields
+    const commonFields = [];
     const datasetQueries: DatasetPreviewArgs[] = config.datasets.map(
       (dataset) => {
+        if (dataset.individualEmail) {
+          const flattenIndividualFields = getFlatFields(
+            dataset.individualEmailFields
+          );
+          const flattenFields = getFlatFields(dataset?.query?.fields);
+          commonFields.push({
+            name: dataset.name,
+            emailFields: flattenIndividualFields
+              .filter((emailField) =>
+                flattenFields.some((field) => field.name === emailField.name)
+              )
+              .map(({ name }) => name),
+          });
+          sendSeparateFields.push({
+            name: dataset.name,
+            emailFields: flattenIndividualFields?.map(({ name }) => name),
+          });
+        }
         return {
           name: dataset.name,
           query: {
@@ -327,8 +377,6 @@ router.post('/send-individual-email/:configId', async (req, res) => {
 
     const baseElement = parse(baseTemplate);
     const mainTableElement = baseElement.getElementById('mainTable');
-
-    console.log(datasets);
 
     // Add banner if available
     if (config.emailLayout.banner.bannerImage) {
@@ -434,17 +482,62 @@ router.post('/send-individual-email/:configId', async (req, res) => {
 
     for (const dataset of datasets) {
       if (dataset.individualEmail) {
+        const selectedEmailFieldName =
+          sendSeparateFields.find((field) => field.name === dataset.name)
+            ?.emailFields || [];
+        const selectedCommonFieldName =
+          commonFields.find((field) => field.name === dataset.name)
+            ?.emailFields || [];
+        // remove individual email fields from column
+        dataset.columns = dataset.columns?.filter(
+          (column) =>
+            !selectedEmailFieldName.includes(column.name) ||
+            selectedCommonFieldName.includes(column.name)
+        );
+        //get all emails from selected individual email fields and add it in new key - individualEmails
+        dataset.records = dataset.records.map((record) => {
+          const individualEmails = [];
+          selectedEmailFieldName.forEach((field) => {
+            if (record[field])
+              individualEmails.push(
+                ...(record[field] as string)?.split(',').filter(validateEmail)
+              );
+            // delete individual email fields from records
+            if (!selectedCommonFieldName.includes(field)) delete record[field];
+          });
+          return {
+            ...record,
+            individualEmails,
+          };
+        });
+      } else {
+        //filter individual emails from to-emails
+        commonBlockEmails = config
+          .get('emailDistributionList')
+          ?.to?.inputEmails?.filter(
+            (email) => !individualEmail?.includes(email)
+          );
+      }
+    }
+
+    for (const dataset of datasets) {
+      if (dataset.individualEmail) {
         // Individual email format
         dataset.records.forEach((record) => {
-          const email = record.email as string;
-          processedIndividualRecords.push({
-            records: [record],
-            name: dataset.name,
-            columns: dataset.columns,
-            individualEmail: true,
-            email,
-          });
-          individualEmail.push(email);
+          const emails = record.individualEmails as Array<string>;
+          delete record.individualEmails;
+          if (emails.length) {
+            emails?.forEach((email) => {
+              processedIndividualRecords.push({
+                records: [record],
+                name: dataset.name,
+                columns: dataset.columns,
+                individualEmail: true,
+                email,
+              });
+              individualEmail.push(email);
+            });
+          }
         });
       } else {
         // Block email format
@@ -461,18 +554,8 @@ router.post('/send-individual-email/:configId', async (req, res) => {
         });
       }
     }
-    for (const dataset of datasets) {
-      if (!dataset.individualEmail) {
-        //filter individual emails from to-emails
-        commonBlockEmails = config
-          .get('emailDistributionList')
-          ?.to?.inputEmails?.filter(
-            (email) => !individualEmail?.includes(email)
-          );
-      }
-    }
 
-    const isEmailSend = { commonBlockEmails: false };
+    let isEmailSend = false;
     const commonBlocks = [];
 
     for (const block of processedIndividualRecords) {
@@ -490,7 +573,6 @@ router.post('/send-individual-email/:configId', async (req, res) => {
       bodyElement.appendChild(bodyBlock);
       // send emails separately for each email
       if (block.individualEmail) {
-        isEmailSend[block.email] = false;
         const emailParams = {
           message: {
             to: block.email ?? [], // Recipient's email address
@@ -503,7 +585,7 @@ router.post('/send-individual-email/:configId', async (req, res) => {
         };
         // Send email
         await sendEmail(emailParams);
-        isEmailSend[block.email] = true;
+        isEmailSend = true;
       } else {
         commonBlocks.push(block);
       }
@@ -535,12 +617,10 @@ router.post('/send-individual-email/:configId', async (req, res) => {
       };
       // Send email
       await sendEmail(emailParams);
-      isEmailSend.commonBlockEmails = true;
+      isEmailSend = true;
     }
 
-    const isSend = Object.values(isEmailSend).every((val) => val === true);
-
-    if (isSend) {
+    if (isEmailSend) {
       res.status(200).json({ message: 'Email sent successfully' });
     } else {
       res.status(400).json({ message: 'No emails were sent' });
