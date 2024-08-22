@@ -169,7 +169,12 @@ export const flattenObject = (
         obj[key] !== null &&
         !Array.isArray(obj[key])
       ) {
-        flattenObject(obj[key], columns, newKey, result);
+        if (key === 'geospatial') {
+          const countryName = obj[key]?.properties?.countryName;
+          if (countryName) {
+            result[key] = `${countryName}`;
+          }
+        } else flattenObject(obj[key], columns, newKey, result);
       } else if (columns?.length) {
         if (columns.includes(newKey.toLowerCase())) result[newKey] = obj[key];
       } else {

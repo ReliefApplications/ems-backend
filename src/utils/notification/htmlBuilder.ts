@@ -66,7 +66,7 @@ export const replaceHeader = (header: {
   if (header.headerLogo) {
     headerString += `<td style="padding: 10px;">
           <a href="" style="display: block; border-style: none !important; text-align: center; border: 0 !important;">
-              <img width="120" data-imagetype="DataUri"  src="cid:headerImage" style="padding: 10px;">
+              <img width="120" data-imagetype="DataUri"  src="cid:headerImage" style="padding: 10px;" id="headerImage">
           </a>
       </td>
     `;
@@ -136,7 +136,7 @@ export const replaceHeader = (header: {
       .join('</tr><tr>'); // Join each table cell and add a table row between them
 
     headerString += `<td>
-      <table border="0" cellpadding="0" cellspacing="0" width="760">
+      <table cellpadding="0" cellspacing="0" width="760">
         <tbody>
           <tr>
             ${headerText}
@@ -224,9 +224,9 @@ export const buildTable = (
       for (const record of dataset.records) {
         table += '<tr>';
         // Create a new cell for each field in the record
-        for (const value of Object.values(record)) {
+        for (const column of dataset.columns) {
           table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
-        ${formatDates(value)}</td>`;
+        ${formatDates(record[column.name])}</td>`;
         }
         table += '</tr>';
       }
@@ -291,7 +291,7 @@ export const replaceFooter = (footer: {
   };
   footerLogoStyle: string;
 }): string => {
-  let footerString = `<table border="0" cellpadding="0" cellspacing="0">
+  let footerString = `<table border="0" cellpadding="0" cellspacing="0" width="100%">
     <tbody>
     <tr>`;
 
@@ -301,7 +301,7 @@ export const replaceFooter = (footer: {
     footerString += `
       <td style="padding: 10px;">
           <a href="" style="display: block; border-style: none !important; text-align: center; border: 0 !important;">
-              <img width="120" data-imagetype="DataUri"  src="cid:footerImage" style="padding: 10px; background-color: white;">
+              <img width="120" data-imagetype="DataUri"  src="cid:footerImage" style="padding: 10px; background-color: white;" id="footerImage">
           </a>
       </td>
       `;
@@ -354,7 +354,7 @@ export const buildEmail = async (
       `<tr bgcolor="#fff" align="center">
           <td>
             <a href="#" style="display: block; border-style: none !important; border: 0 !important;">
-                <img width="100%" data-imagetype="DataUri" src="cid:bannerImage" alt="logo">
+                <img width="100%" data-imagetype="DataUri" src="cid:bannerImage" alt="logo" id="bannerImage">
             </a>
           </td>
        </tr>`
