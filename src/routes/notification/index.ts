@@ -654,7 +654,7 @@ router.post('/send-quick-email', async (req, res) => {
     await buildEmail(emailLayout, mainTableElement, tableInfo);
 
     // Replace subject placeholders
-    const subjectRecords = tableInfo[0].records;
+    const subjectRecords = tableInfo.length ? tableInfo[0].records : [];
 
     const emailSubject = replaceSubject(emailLayout.subject, subjectRecords);
 
@@ -731,7 +731,7 @@ router.post('/preview-quick-email', async (req, res) => {
     await buildEmail(emailLayout, mainTableElement, tableInfo);
 
     // Replace subject placeholders
-    const subjectRecords = tableInfo[0].records;
+    const subjectRecords = tableInfo.length ? tableInfo[0].records : [];
 
     const emailSubject = replaceSubject(emailLayout.subject, subjectRecords);
     // Add header logo

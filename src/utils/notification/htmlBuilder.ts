@@ -321,7 +321,7 @@ export const replaceFooter = (footer: {
       .join('</tr><tr>');
 
     footerString += `<td>
-    <table>
+    <table width="100%">
       <tbody>
         <tr>
           ${footerText}
