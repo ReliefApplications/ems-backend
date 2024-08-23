@@ -15,7 +15,7 @@ import Backend from 'i18next-node-fs-backend';
 import i18nextMiddleware from 'i18next-http-middleware';
 import { logger } from '../services/logger.service';
 import { winstonLogger } from './middlewares/winston';
-import { Form, ReferenceData, Resource } from '@models';
+import { Application, Form, Record, ReferenceData, Resource } from '@models';
 import buildSchema from '@utils/schema/buildSchema';
 import { GraphQLSchema } from 'graphql';
 import context, { Context } from './apollo/context';
@@ -29,6 +29,9 @@ import {
 } from './apollo/queries/introspection.query';
 import { pluralize } from 'inflection';
 import config from 'config';
+import getTriggerFilter from '@utils/customNotification/getTriggerFilter';
+import { isEqual } from 'lodash';
+import processCustomNotification from '@utils/customNotification/processCustomNotification';
 
 /** List of user fields */
 const USER_FIELDS = ['id', 'name', 'username'];
@@ -118,6 +121,63 @@ class SafeServer {
           )
         ) {
           this.update();
+        }
+      }
+    });
+
+    // Watch records creation and updates to see if should emit trigger notification
+    Record.watch().on('change', async (data) => {
+      const recordId = data.documentKey._id;
+      const record = await Record.findById(recordId);
+
+      const type =
+        data.operationType === 'update' ? 'onRecordUpdate' : 'onRecordCreation';
+      // Get all applications with custom notifications for the record resource
+      const applications = await Application.find({
+        customNotifications: {
+          $exists: true,
+          $type: 'array',
+          $ne: [],
+          $elemMatch: {
+            applicationTrigger: true,
+            status: 'active',
+            resource: record.resource,
+            ...(type === 'onRecordUpdate' && { onRecordUpdate: true }),
+            ...(type === 'onRecordCreation' && { onRecordCreation: true }),
+          },
+        },
+      }).populate({
+        path: 'customNotifications',
+        model: 'CustomNotification',
+      });
+
+      if (applications) {
+        // Get record resource details
+        const resource = await Resource.findById(record.resource);
+        // Get the triggers and filters of each application, to check if exists and if should send trigger notification/email
+        for (const application of applications) {
+          const triggers = application.customNotifications.filter(
+            (trigger) =>
+              trigger.applicationTrigger &&
+              trigger[type] &&
+              isEqual(trigger.resource, record.resource)
+          );
+          for (const trigger of triggers) {
+            // For each triggers, get trigger filter
+            const mongooseFilter = getTriggerFilter(trigger, resource);
+            // And see if record that triggered watch() should emit notification
+            const recordFiltered = await Record.find({
+              $and: [mongooseFilter, { _id: recordId }],
+            });
+            if (recordFiltered.length) {
+              processCustomNotification(
+                trigger,
+                application,
+                resource,
+                recordFiltered
+              );
+            }
+          }
         }
       }
     });
