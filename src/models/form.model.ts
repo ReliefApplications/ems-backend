@@ -35,7 +35,7 @@ interface FormDocument extends Document {
     canDeleteRecords?: any[];
     recordsUnicity?: any[];
   };
-  fields?: any[];
+  fields?: Field[];
   resource?: any;
   versions?: any[];
   channel?: any;
@@ -48,6 +48,39 @@ interface FormDocument extends Document {
     apiConfiguration: ApiConfiguration;
   };
 }
+
+type Field = {
+  type: string;
+  name: string;
+  unique?: boolean;
+  isRequired?: boolean;
+  showOnXlsxTemplate?: boolean;
+  readOnly?: boolean;
+  isCore?: boolean;
+  kobo?: {
+    type: string;
+  };
+  defaultValue?: any;
+  resource?: string;
+  displayField?: string;
+  relatedName?: string;
+  displayAsGrid?: boolean;
+  canAddNew?: boolean;
+  addTemplate?: any;
+  gridFieldsSettings?: any;
+  items?: any;
+  rows?: any;
+  columns?: any;
+  choices?: any;
+  applications?: any;
+  geometry?: string;
+  choicesByUrl?: any;
+  referenceData?: any;
+  hasOther?: boolean;
+  otherText?: string;
+  otherPlaceHolder?: string;
+  generated?: boolean;
+};
 
 /** Interface of form */
 export type Form = FormDocument;

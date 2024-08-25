@@ -16,7 +16,7 @@ const validators = (question: any) => {
             ? question.constraint_message
             : question.constraint_message[0]
           : '',
-        expression: mapKoboExpression(question.constraint, question.$autoname),
+        expression: mapKoboExpression(question.constraint, question.$xpath),
       },
     ],
     validateOnValueChange: true,
@@ -41,9 +41,9 @@ export const commonProperties = (
   return {
     index,
     type,
-    name: question.$autoname,
-    title: title ?? (question.label ? question.label[0] : question.$autoname),
-    valueName: question.$autoname,
+    name: question.$xpath,
+    title: title ?? (question.label ? question.label[0] : question.$xpath),
+    valueName: question.$xpath,
     isRequired: question.required,
     ...(question.hint && { description: question.hint[0] }),
     ...(question.default && {
@@ -53,5 +53,8 @@ export const commonProperties = (
       visibleIf: mapKoboExpression(question.relevant),
     }),
     ...(question.constraint && validators(question)),
+    kobo: {
+      type: question.type,
+    },
   };
 };

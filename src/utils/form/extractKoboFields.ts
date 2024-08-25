@@ -250,7 +250,7 @@ export const extractKoboFields = (
         }
         case 'score__row': {
           newRateQuestion.rows.push({
-            value: question.$autoname,
+            value: question.$xpath,
             text: question.label[0],
           });
           break;
@@ -272,7 +272,7 @@ export const extractKoboFields = (
           break;
         }
         case 'rank__level': {
-          rakingItems.push(question.$autoname);
+          rakingItems.push(question.$xpath);
 
           const newQuestion = {
             ...commonProperties(index, question, 'dropdown'),
@@ -302,7 +302,7 @@ export const extractKoboFields = (
               .map((item) => ({
                 type: 'expression',
                 text: `Value can't be the same as ${item.title ?? item.name}`,
-                expression: `{${item.name}} <> {${rakingQuestion.name}} and {${rakingQuestion.name}} notempty`,
+                expression: `{${item.name}} <> {${rakingQuestion.name}} or {${rakingQuestion.name}} empty`,
               }));
           });
 
@@ -482,6 +482,5 @@ export const extractKoboFields = (
     a.index > b.index ? 1 : -1
   );
 
-  console.log('survey', JSON.stringify(survey));
   return survey;
 };

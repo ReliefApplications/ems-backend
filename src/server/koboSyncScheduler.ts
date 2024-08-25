@@ -3,7 +3,7 @@ import { logger } from '../services/logger.service';
 import { CronJob } from 'cron';
 import { get } from 'lodash';
 import * as cronValidator from 'cron-validator';
-import { addRecordsFromKobo } from '@utils/form/kobo/addRecordsFromKobo';
+import { KoboDataExtractor } from '@utils/form/kobo/KoboDataExtractor';
 
 /** A map with the task ids as keys and the scheduled tasks as values */
 const taskMap: Record<string, CronJob> = {};
@@ -17,7 +17,7 @@ const koboSyncScheduler = async () => {
       { 'kobo.cronSchedule': { $ne: null } },
       { 'kobo.cronSchedule': { $ne: '' } },
     ],
-  });
+  }).populate('kobo.apiConfiguration');
   for (const form of forms) {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     scheduleKoboSync(form);
@@ -66,10 +66,9 @@ export const scheduleKoboSync = async (form: Form) => {
           async () => {
             // call addRecordsFromKobo.mutation
             try {
-              const addedRecords = await addRecordsFromKobo(
-                form,
-                form.kobo.apiConfiguration
-              );
+              const koboExtractor = new KoboDataExtractor(form);
+              const { added, updated } = await koboExtractor.sync();
+              const addedRecords = added + updated > 0;
 
               if (addedRecords) {
                 logger.info(
