@@ -10,6 +10,7 @@ import { getNextId } from '../getNextId';
 import pubsub from '../../../server/pubsub';
 import * as CryptoJS from 'crypto-js';
 import { BlobServiceClient } from '@azure/storage-blob';
+import { v4 } from 'uuid';
 
 type Field = Form['fields'][number];
 type Submission = {
@@ -326,13 +327,11 @@ export class KoboDataExtractor {
    * Upload a buffer to Azure Blob Storage
    *
    * @param buffer buffer to upload
-   * @param filename name of the blob
    * @returns path to the blob, or null if the upload failed for any reason
    */
-  private async uploadBufferToBlobStorage(
-    buffer: Buffer,
-    filename: string
-  ): Promise<string> {
+  private async uploadBufferToBlobStorage(buffer: Buffer): Promise<string> {
+    const filename = `${this.form._id.toString()}/${v4()}`;
+
     const blobServiceClient = BlobServiceClient.fromConnectionString(
       config.get('blobStorage.connectionString')
     );
@@ -342,6 +341,7 @@ export class KoboDataExtractor {
     }
     const blockBlobClient = containerClient.getBlockBlobClient(filename);
     await blockBlobClient.uploadData(buffer);
+
     return filename;
   }
 
@@ -478,7 +478,7 @@ export class KoboDataExtractor {
         }
 
         const buffer = await this.downloadKoboFile(downloadUrl);
-        const path = await this.uploadBufferToBlobStorage(buffer, field.name);
+        const path = await this.uploadBufferToBlobStorage(buffer);
 
         return [
           {
