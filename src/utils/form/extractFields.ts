@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql/error';
 import { getFieldType } from './getFieldType';
 import i18next from 'i18next';
 import { validateGraphQLFieldName } from '@utils/validators';
+import { Form } from '@models';
 
 /**
  * Push in fields array all detected fields in the json structure of object.
@@ -27,7 +28,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
         }
         validateGraphQLFieldName(element.valueName, i18next);
         const type = await getFieldType(element);
-        const field = {
+        const field: Form['fields'][number] = {
           type,
           name: element.valueName,
           unique: !!element.unique,
@@ -35,6 +36,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
           showOnXlsxTemplate: !element.omitOnXlsxTemplate,
           readOnly: !!element.readOnly,
           isCore: core,
+          kobo: element.kobo,
           ...(element.hasOwnProperty('defaultValue')
             ? { defaultValue: element.defaultValue }
             : {}),
@@ -226,6 +228,12 @@ export const extractFields = async (object, fields, core): Promise<void> => {
         // ** Users **
         if (field.type === 'users') {
           Object.assign(field, { applications: element.applications });
+        }
+        // ** Geospatial **
+        if (field.type === 'geospatial') {
+          Object.assign(field, {
+            geometry: element.geometry ?? 'Point',
+          });
         }
         fields.push(field);
       }

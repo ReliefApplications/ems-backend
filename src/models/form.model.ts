@@ -10,6 +10,8 @@ import { getGraphQLTypeName } from '@utils/validators';
 import { deleteFolder } from '@utils/files/deleteFolder';
 import { logger } from '@services/logger.service';
 import { DEFAULT_IMPORT_FIELD } from './resource.model';
+import { ApiConfiguration } from './apiConfiguration.model';
+import { unscheduleKoboSync } from '@server/koboSyncScheduler';
 
 /** Form documents interface declaration */
 interface FormDocument extends Document {
@@ -33,12 +35,52 @@ interface FormDocument extends Document {
     canDeleteRecords?: any[];
     recordsUnicity?: any[];
   };
-  fields?: any[];
+  fields?: Field[];
   resource?: any;
   versions?: any[];
   channel?: any;
   layouts?: any;
+  kobo?: {
+    id: string;
+    deployedVersionId: string;
+    dataFromDeployedVersion: boolean;
+    cronSchedule?: string;
+    apiConfiguration: ApiConfiguration;
+  };
 }
+
+type Field = {
+  type: string;
+  name: string;
+  unique?: boolean;
+  isRequired?: boolean;
+  showOnXlsxTemplate?: boolean;
+  readOnly?: boolean;
+  isCore?: boolean;
+  kobo?: {
+    type: string;
+  };
+  defaultValue?: any;
+  resource?: string;
+  displayField?: string;
+  relatedName?: string;
+  displayAsGrid?: boolean;
+  canAddNew?: boolean;
+  addTemplate?: any;
+  gridFieldsSettings?: any;
+  items?: any;
+  rows?: any;
+  columns?: any;
+  choices?: any;
+  applications?: any;
+  geometry?: string;
+  choicesByUrl?: any;
+  referenceData?: any;
+  hasOther?: boolean;
+  otherText?: string;
+  otherPlaceHolder?: string;
+  generated?: boolean;
+};
 
 /** Interface of form */
 export type Form = FormDocument;
@@ -67,6 +109,16 @@ const schema = new Schema<Form>(
     status: {
       type: String,
       enum: Object.values(status),
+    },
+    kobo: {
+      id: String,
+      deployedVersionId: String,
+      dataFromDeployedVersion: { type: Boolean, default: false },
+      cronSchedule: String,
+      apiConfiguration: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'ApiConfiguration',
+      },
     },
     permissions: {
       canSee: [
@@ -179,6 +231,10 @@ schema.statics.hasDuplicate = function (
 addOnBeforeDeleteMany(schema, async (forms) => {
   try {
     for (const form of forms) {
+      // If form was created from Kobo, check if should delete a scheduled synchronization
+      if (form.kobo.id) {
+        unscheduleKoboSync(form);
+      }
       await deleteFolder('forms', form.id);
       logger.info(`Files from form ${form.id} successfully removed.`);
     }

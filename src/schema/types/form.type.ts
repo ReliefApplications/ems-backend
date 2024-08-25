@@ -28,6 +28,7 @@ import extendAbilityForContent from '@security/extendAbilityForContent';
 import { getMetaData } from '@utils/form/metadata.helper';
 import { getAccessibleFields } from '@utils/form';
 import { accessibleBy } from '@casl/mongoose';
+import { KoboFormType } from './koboForm.type';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
@@ -49,6 +50,7 @@ export const FormType = new GraphQLObjectType({
     structure: { type: GraphQLJSON },
     status: { type: StatusEnumType },
     allowUploadRecords: { type: GraphQLBoolean },
+    kobo: { type: KoboFormType },
     permissions: {
       type: AccessType,
       async resolve(parent, args, context) {

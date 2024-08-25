@@ -7,6 +7,7 @@ import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
+import { unscheduleKoboSync } from '@server/koboSyncScheduler';
 
 /** Arguments for the deleteForm mutation */
 type DeleteFormArgs = {
@@ -45,6 +46,10 @@ export default {
         await Resource.deleteOne({ _id: form.resource });
       } else {
         await form.deleteOne();
+      }
+      // If form was created from Kobo, check if should delete a scheduled synchronization
+      if (form.kobo.id) {
+        unscheduleKoboSync(form);
       }
       return form;
     } catch (err) {

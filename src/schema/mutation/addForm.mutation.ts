@@ -5,7 +5,19 @@ import {
   GraphQLError,
 } from 'graphql';
 import { validateGraphQLTypeName } from '@utils/validators';
-import { Resource, Form, Role, ReferenceData } from '@models';
+import {
+  extractFields,
+  extractKoboFields,
+  findDuplicateFields,
+} from '@utils/form';
+import {
+  Resource,
+  Form,
+  Role,
+  ReferenceData,
+  ApiConfiguration,
+  Version,
+} from '@models';
 import { FormType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { status } from '@const/enumTypes';
@@ -13,12 +25,18 @@ import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
+import axios from 'axios';
+import config from 'config';
+import * as CryptoJS from 'crypto-js';
+import checkDefaultFields from '@utils/form/checkDefaultFields';
 
 /** Arguments for the addForm mutation */
 type AddFormArgs = {
   name: string;
   resource?: string | Types.ObjectId;
   template?: string | Types.ObjectId;
+  apiConfiguration?: string | Types.ObjectId;
+  kobo?: string;
 };
 
 /**
@@ -31,6 +49,8 @@ export default {
     name: { type: new GraphQLNonNull(GraphQLString) },
     resource: { type: GraphQLID },
     template: { type: GraphQLID },
+    apiConfiguration: { type: GraphQLID },
+    kobo: { type: GraphQLString },
   },
   async resolve(parent, args: AddFormArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -72,6 +92,83 @@ export default {
         canUpdateRecords: [],
         canDeleteRecords: [],
       };
+      try {
+        if (args.apiConfiguration) {
+          const apiConfiguration = await ApiConfiguration.findById(
+            args.apiConfiguration
+          );
+          const url =
+            apiConfiguration.endpoint + `assets/${args.kobo}?format=json`;
+          const settings = JSON.parse(
+            CryptoJS.AES.decrypt(
+              apiConfiguration.settings,
+              config.get('encryption.key')
+            ).toString(CryptoJS.enc.Utf8)
+          );
+          // get kobo form data
+          const response = await axios.get(url, {
+            headers: {
+              Authorization: `${settings.tokenPrefix} ${settings.token}`,
+            },
+          });
+          const survey = response.data.content.survey;
+          const choices = response.data.content.choices;
+          const title = response.data.name;
+          const deployedVersionId = response.data.deployed_version_id;
+
+          // Get structure from the kobo form
+          const structure = JSON.stringify(
+            extractKoboFields(survey, title, choices)
+          );
+
+          // Extract fields
+          const fields = [];
+          const structureObj = JSON.parse(structure);
+          for (const page of structureObj.pages) {
+            await extractFields(page, fields, true);
+            findDuplicateFields(fields);
+          }
+          // Check if default fields are used
+          checkDefaultFields(fields);
+
+          // Create version with structure
+          const version = new Version({
+            data: structure,
+          });
+          await version.save();
+
+          // create resource and form
+          const resource = new Resource({
+            name: args.name,
+            permissions: defaultResourcePermissions,
+            fields,
+          });
+          await resource.save();
+          const form = new Form({
+            name: args.name,
+            graphQLTypeName,
+            status: status.pending,
+            resource,
+            core: true,
+            permissions: defaultFormPermissions,
+            structure,
+            fields,
+            versions: [version._id],
+            kobo: {
+              id: args.kobo,
+              deployedVersionId,
+              apiConfiguration: args.apiConfiguration,
+            },
+          });
+          await form.save();
+          return form;
+        }
+      } catch (err) {
+        logger.error(err.message, { stack: err.stack });
+        throw new GraphQLError(
+          context.i18next.t('mutations.form.add.errors.koboForm')
+        );
+      }
       try {
         if (!args.resource) {
           // Check permission to create resource

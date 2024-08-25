@@ -3,6 +3,7 @@ import {
   GraphQLID,
   GraphQLString,
   GraphQLError,
+  GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Form, Resource, Version, Channel, ReferenceData } from '@models';
@@ -22,11 +23,12 @@ import isEqual from 'lodash/isEqual';
 import differenceWith from 'lodash/differenceWith';
 import unionWith from 'lodash/unionWith';
 import i18next from 'i18next';
-import { get, isArray } from 'lodash';
+import { get, isArray, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
 import checkDefaultFields from '@utils/form/checkDefaultFields';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
+import { scheduleKoboSync } from '@server/koboSyncScheduler';
 
 /**
  * List of keys of the structure's object which we want to inherit to the children forms when they are modified on the core form
@@ -73,7 +75,9 @@ type EditFormArgs = {
   structure?: any;
   status?: StatusType;
   name?: string;
+  cronSchedule?: string;
   permissions?: any;
+  dataFromDeployedVersion?: boolean;
 };
 
 /**
@@ -87,7 +91,9 @@ export default {
     structure: { type: GraphQLJSON },
     status: { type: StatusEnumType },
     name: { type: GraphQLString },
+    cronSchedule: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
+    dataFromDeployedVersion: { type: GraphQLBoolean },
   },
   async resolve(parent, args: EditFormArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -206,6 +212,17 @@ export default {
             }
           }
         }
+      }
+
+      // Update kobo info
+      if (!isNil(args.dataFromDeployedVersion) || !isNil(args.cronSchedule)) {
+        update.kobo = {
+          ...form.kobo,
+          ...(!isNil(args.cronSchedule) && {
+            dataFromDeployedVersion: args.dataFromDeployedVersion,
+          }),
+          ...(!isNil(args.cronSchedule) && { cronSchedule: args.cronSchedule }),
+        };
       }
 
       // Update fields and structure, check that structure is different
@@ -528,6 +545,11 @@ export default {
       const resForm = await Form.findByIdAndUpdate(args.id, update, {
         new: true,
       });
+
+      // If form was created from Kobo, check if update should stop/update possible scheduled synchronization
+      if (resForm.kobo.id) {
+        scheduleKoboSync(resForm);
+      }
 
       // Return updated form
       return resForm;

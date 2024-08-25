@@ -89,6 +89,7 @@ import restorePage from './restorePage.mutation';
 import addDraftRecord from './addDraftRecord.mutation';
 import deleteDraftRecord from './deleteDraftRecord.mutation';
 import editDraftRecord from './editDraftRecord.mutation';
+import addRecordsFromKobo from './addRecordsFromKobo.mutation';
 
 /** GraphQL mutation definition */
 const Mutation = new GraphQLObjectType({
@@ -184,6 +185,7 @@ const Mutation = new GraphQLObjectType({
     addDraftRecord,
     deleteDraftRecord,
     editDraftRecord,
+    addRecordsFromKobo,
   },
 });
 

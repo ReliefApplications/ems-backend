@@ -66,7 +66,9 @@ const proxyAPIRequest = async (
         url,
         method: req.method,
         headers: {
-          Authorization: `Bearer ${token}`,
+          // if user-to-service token may contain prefix so it's get directly in getToken
+          Authorization:
+            api.authType == 'user-to-service' ? token : `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         maxRedirects: 35,

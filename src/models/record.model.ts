@@ -26,6 +26,7 @@ export interface Record extends AccessibleFieldsDocument {
   modifiedAt: Date;
   archived: boolean;
   data: any;
+  koboId?: string;
   versions: any;
   permissions: {
     canSee?: any[];
@@ -59,6 +60,7 @@ const recordSchema = new Schema<Record>(
       type: mongoose.Schema.Types.Mixed,
       required: true,
     },
+    koboId: String,
     lastUpdateForm: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Form',
