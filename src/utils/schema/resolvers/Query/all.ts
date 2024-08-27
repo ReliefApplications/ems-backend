@@ -533,6 +533,32 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         }
         return arr;
       }, []);
+
+      fields.forEach((field) => {
+        if (field.type === 'radiogroup' || field.type === 'checkbox') {
+          items.forEach((item) => {
+            const fieldData = item.data[field.name];
+            if (field?.choices?.length && fieldData) {
+              const values = [];
+              if (Array.isArray(fieldData)) {
+                fieldData.forEach((data) => {
+                  const value = field.choices.find(
+                    (choice) => choice.value === data
+                  )?.text;
+                  if (value) values.push(value);
+                });
+                if (values.length) {
+                  item.data[field.name] = values;
+                }
+              } else if (typeof fieldData === 'string') {
+                item.data[field.name] =
+                  field.choices.find((choice) => choice.value === fieldData)
+                    ?.text ?? fieldData;
+              }
+            }
+          });
+        }
+      });
       // Deal with resource/resources questions on OTHER forms if any
       let relatedFields = [];
       if (queryFields.filter((x) => x.fields).length - resourcesFields.length) {

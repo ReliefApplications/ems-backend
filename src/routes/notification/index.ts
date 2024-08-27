@@ -14,6 +14,7 @@ import {
   fetchDatasets,
   fetchDistributionList,
   flattenObject,
+  formatDate,
   getFlatFields,
   removeWhitespace,
 } from '@utils/notification/util';
@@ -724,6 +725,23 @@ router.post('/preview-quick-email', async (req, res) => {
       tableData.records = tableData.records?.map((record) =>
         flattenObject(record, columns)
       );
+    });
+
+    tableInfo.forEach((tableData) => {
+      for (const record of tableData.records) {
+        for (const column of tableData.columns) {
+          if (column.type === 'Date') {
+            const date = formatDate(record[column.name], 'MM/DD/YY');
+            record[column.name] = date;
+          } else if (column.type === 'DateTime') {
+            const date = formatDate(record[column.name], 'MM/DD/YY HH:mmA');
+            record[column.name] = date;
+          } else if (column.type === 'Time') {
+            const date = formatDate(record[column.name], 'HH:mmA');
+            record[column.name] = date;
+          }
+        }
+      }
     });
     // Generate main html structure
     const baseElement = parse(baseTemplate);

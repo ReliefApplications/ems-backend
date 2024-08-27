@@ -186,6 +186,57 @@ export const flattenObject = (
 };
 
 /**
+ * Formats a given date into a specified string format.
+ *
+ * @param {Date|string|number} date - The date to format. Can be a Date object, a date string, or a timestamp.
+ * @param {string} format - The format string containing tokens to replace with date parts.
+ *                          Supported tokens:
+ *                          - YYYY: Full year (e.g., 2024)
+ *                          - YY: Last two digits of the year (e.g., 24)
+ *                          - MM: Month (01-12)
+ *                          - DD: Day of the month (01-31)
+ *                          - HH: Hour in 12-hour format (01-12)
+ *                          - mm: Minutes (00-59)
+ *                          - ss: Seconds (00-59)
+ *                          - A: AM or PM
+ * @returns {string|null|undefined} - The formatted date string. If the date is invalid or not provided, returns null or undefined.
+ *
+ */
+export const formatDate = (date, format) => {
+  if (date) {
+    date = new Date(date);
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    let hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const seconds = date.getSeconds().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+
+    hours = hours % 12 || 12; // Convert to 12-hour format
+    const formattedHours = hours.toString();
+    const shortYear = year.toString().slice(-2); // Get last two digits of the year
+
+    const formatMap = {
+      YYYY: year,
+      YY: shortYear,
+      MM: month,
+      DD: day,
+      HH: formattedHours,
+      mm: minutes,
+      ss: seconds,
+      A: ampm,
+    };
+
+    return format.replace(
+      /YYYY|YY|MM|DD|HH|mm|ss|A/g,
+      (match) => formatMap[match]
+    );
+  }
+  return date;
+};
+
+/**
  * Replaces datetime macros in email template with datetimes
  *
  * @param textElement Email template section with date macros to replace
