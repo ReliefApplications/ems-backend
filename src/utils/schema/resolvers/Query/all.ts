@@ -537,10 +537,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       const promises = fields.map(async (field) => {
         if (
-          field.type === 'radiogroup' ||
-          field.type === 'checkbox' ||
-          field.type === 'tagbox' ||
-          field.type === 'dropdown'
+          ['radiogroup', 'checkbox', 'tagbox', 'dropdown'].includes(field.type)
         ) {
           let choices = [];
           if (field?.choices?.length) {
