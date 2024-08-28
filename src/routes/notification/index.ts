@@ -650,6 +650,28 @@ router.post('/send-quick-email', async (req, res) => {
         flattenObject(record, columns)
       );
     });
+    tableInfo.forEach((tableData) => {
+      for (const record of tableData.records) {
+        for (const column of tableData.columns) {
+          switch (column.type) {
+            case 'Date':
+              record[column.name] = formatDate(record[column.name], 'MM/DD/YY');
+              break;
+            case 'DateTime':
+              record[column.name] = formatDate(
+                record[column.name],
+                'MM/DD/YY HH:mmA'
+              );
+              break;
+            case 'Time':
+              record[column.name] = formatDate(record[column.name], 'HH:mmA');
+              break;
+            default:
+              break;
+          }
+        }
+      }
+    });
     const baseElement = parse(baseTemplate);
     const mainTableElement = baseElement.getElementById('mainTable');
     await buildEmail(emailLayout, mainTableElement, tableInfo);
