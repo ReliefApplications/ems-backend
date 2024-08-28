@@ -730,15 +730,19 @@ router.post('/preview-quick-email', async (req, res) => {
     tableInfo.forEach((tableData) => {
       for (const record of tableData.records) {
         for (const column of tableData.columns) {
-          if (column.type === 'Date') {
-            const date = formatDate(record[column.name], 'MM/DD/YY');
-            record[column.name] = date;
-          } else if (column.type === 'DateTime') {
-            const date = formatDate(record[column.name], 'MM/DD/YY HH:mmA');
-            record[column.name] = date;
-          } else if (column.type === 'Time') {
-            const date = formatDate(record[column.name], 'HH:mmA');
-            record[column.name] = date;
+          switch (column.type) {
+            case 'Date':
+              record[column.name] = formatDate(record[column.name], 'MM/DD/YY');
+              break;
+            case 'DateTime':
+              record[column.name] = formatDate(
+                record[column.name],
+                'MM/DD/YY HH:mmA'
+              );
+              break;
+            case 'Time':
+              record[column.name] = formatDate(record[column.name], 'HH:mmA');
+              break;
           }
         }
       }
