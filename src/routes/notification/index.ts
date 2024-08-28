@@ -743,6 +743,8 @@ router.post('/preview-quick-email', async (req, res) => {
             case 'Time':
               record[column.name] = formatDate(record[column.name], 'HH:mmA');
               break;
+            default:
+              break;
           }
         }
       }
