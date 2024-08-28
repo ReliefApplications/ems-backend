@@ -64,7 +64,7 @@ export default {
 
       const filters: any[] = [
         {
-          isDeleted: { $ne: 1 },
+          // isDeleted: { $ne: 1 },
           applicationId: args.applicationId,
         },
         abilityFilters,
