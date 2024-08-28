@@ -21,6 +21,7 @@ import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import NodeCache from 'node-cache';
 import { AppAbility } from '@security/defineUserAbility';
+import { getChoices } from '@utils/proxy';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -534,15 +535,27 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         return arr;
       }, []);
 
-      fields.forEach((field) => {
-        if (field.type === 'radiogroup' || field.type === 'checkbox') {
+      const promises = fields.map(async (field) => {
+        if (
+          field.type === 'radiogroup' ||
+          field.type === 'checkbox' ||
+          field.type === 'tagbox' ||
+          field.type === 'dropdown'
+        ) {
+          let choices = [];
+          if (field?.choices?.length) {
+            choices = field.choices;
+          } else if (field?.choicesByUrl || field?.choicesByGraphQL) {
+            choices = await getChoices(field, context.token);
+          }
+
           items.forEach((item) => {
             const fieldData = item.data[field.name];
-            if (field?.choices?.length && fieldData) {
+            if (choices?.length && fieldData) {
               const values = [];
               if (Array.isArray(fieldData)) {
                 fieldData.forEach((data) => {
-                  const value = field.choices.find(
+                  const value = choices.find(
                     (choice) => choice.value === data
                   )?.text;
                   if (value) values.push(value);
@@ -550,15 +563,19 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
                 if (values.length) {
                   item.data[field.name] = values;
                 }
-              } else if (typeof fieldData === 'string') {
+              } else if (
+                typeof fieldData === 'string' ||
+                typeof fieldData === 'number'
+              ) {
                 item.data[field.name] =
-                  field.choices.find((choice) => choice.value === fieldData)
-                    ?.text ?? fieldData;
+                  choices.find((choice) => choice.value == fieldData)?.text ??
+                  fieldData;
               }
             }
           });
         }
       });
+      await Promise.all(promises);
       // Deal with resource/resources questions on OTHER forms if any
       let relatedFields = [];
       if (queryFields.filter((x) => x.fields).length - resourcesFields.length) {
