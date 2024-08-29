@@ -217,32 +217,35 @@ router.post('/preview-distribution-lists/', async (req, res) => {
       req,
       res
     );
-    const individualEmailQueries: DatasetPreviewArgs[] = config.datasets
-      .filter((dataset) => dataset.individualEmail)
-      .map((dataset) => {
-        return {
-          name: dataset.name,
-          query: {
-            name: dataset?.query?.name,
-            fields: dataset?.individualEmailFields || [],
-            filter: dataset?.query?.filter,
-          },
-          resource: dataset.resource,
-          individualEmail: dataset.individualEmail,
-        };
-      });
-    let individualEmails: ProcessedDataset[] = [];
-    individualEmails = await fetchDatasets(individualEmailQueries, req, res);
-    const individualEmailList = individualEmails?.map((data) => ({
-      name: data.name,
-      emails: data.records
-        .flatMap((record) =>
-          Object.values(record).flatMap((email: string) =>
-            email ? email.split(',') : []
+    let individualEmailList = [];
+    if (config?.datasets) {
+      const individualEmailQueries: DatasetPreviewArgs[] = config.datasets
+        ?.filter((dataset) => dataset.individualEmail)
+        ?.map((dataset) => {
+          return {
+            name: dataset.name,
+            query: {
+              name: dataset?.query?.name,
+              fields: dataset?.individualEmailFields || [],
+              filter: dataset?.query?.filter,
+            },
+            resource: dataset.resource,
+            individualEmail: dataset.individualEmail,
+          };
+        });
+      let individualEmails: ProcessedDataset[] = [];
+      individualEmails = await fetchDatasets(individualEmailQueries, req, res);
+      individualEmailList = individualEmails?.map((data) => ({
+        name: data.name,
+        emails: data.records
+          .flatMap((record) =>
+            Object.values(record).flatMap((email: string) =>
+              email ? email.split(',') : []
+            )
           )
-        )
-        .filter(validateEmail),
-    }));
+          .filter(validateEmail),
+      }));
+    }
 
     res.send({
       ...emails,
