@@ -29,7 +29,7 @@ jobs:
           token: '${{ github.token }}'
           environment-url: ${{ vars.DEPLOYMENT_URL }}
           environment: ${{ github.event.client_payload.environment }}
-          auto-inactive: false
+          # auto-inactive: false
 
   deploy:
     name: Deploy 🚀
