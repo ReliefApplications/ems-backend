@@ -35,6 +35,7 @@ jobs:
     name: Deploy 🚀
     runs-on: ubuntu-latest
     environment: ${{ github.event.client_payload.environment }}
+    needs: create_deployment
 
     steps:
       - name: Checkout
