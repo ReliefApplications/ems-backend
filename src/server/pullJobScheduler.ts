@@ -148,66 +148,25 @@ const fetchRecordsServiceToService = (
   token: string
 ): void => {
   const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
-  // Hard coded for EIOS due to specific behavior
-  const EIOS_ORIGIN = 'https://portal.who.int/eios/';
-  // === HARD CODED ENDPOINTS ===
   const headers: any = {
     Authorization: 'Bearer ' + token,
   };
-  // Hardcoded specific behavior for EIOS
-  if (apiConfiguration.endpoint.startsWith(EIOS_ORIGIN)) {
-    // === HARD CODED ENDPOINTS ===
-    const boardsUrl = 'GetBoards?tags=signal+app';
-    const articlesUrl = 'GetPinnedArticles';
-    axios({
-      url: apiConfiguration.endpoint + boardsUrl,
-      method: 'get',
-      headers,
+  // Generic case
+  axios({
+    url: apiConfiguration.endpoint + pullJob.url,
+    method: 'get',
+    headers,
+  })
+    .then(({ data }) => {
+      const records = pullJob.path ? get(data, pullJob.path) : data;
+      if (records) {
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        insertRecords(records, pullJob, false, false);
+      }
     })
-      .then(({ data }) => {
-        if (data && data.result) {
-          const boardIds = data.result.map((x) => x.id);
-          axios({
-            url: `${apiConfiguration.endpoint}${articlesUrl}?boardIds=${boardIds}`,
-            method: 'get',
-            headers,
-          })
-            .then(({ data: data2 }) => {
-              if (data2 && data2.result) {
-                // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                insertRecords(data2.result, pullJob, true, false);
-              }
-            })
-            .catch((err) => {
-              logger.error(
-                `Job ${pullJob.name} : Failed to get pinned articles : ${err}`
-              );
-            });
-        }
-      })
-      .catch((err) => {
-        logger.error(
-          `Job ${pullJob.name} : Failed to get signal app boards : ${err}`
-        );
-      });
-  } else {
-    // Generic case
-    axios({
-      url: apiConfiguration.endpoint + pullJob.url,
-      method: 'get',
-      headers,
-    })
-      .then(({ data }) => {
-        const records = pullJob.path ? get(data, pullJob.path) : data;
-        if (records) {
-          // eslint-disable-next-line @typescript-eslint/no-use-before-define
-          insertRecords(records, pullJob, false, false);
-        }
-      })
-      .catch((err) => {
-        logger.error(`Job ${pullJob.name} : Failed to fetch data : ${err}`);
-      });
-  }
+    .catch((err) => {
+      logger.error(`Job ${pullJob.name} : Failed to fetch data : ${err}`);
+    });
 };
 
 /**

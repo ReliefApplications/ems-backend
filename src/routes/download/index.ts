@@ -450,8 +450,8 @@ router.post('/records', async (req, res) => {
       await sendEmail({
         message: {
           to: req.context.user.username,
-          subject: `${params.application} - Your data export is completed - ${params.fileName}`, // TODO : put in config for 1.3
-          html: 'Dear colleague,\n\nPlease find attached to this e-mail the requested data export.\n\nFor any issues with the data export, please contact ems2@who.int\n\n Best regards,\nems2@who.int', // TODO : put in config for 1.3
+          subject: `${params.application} - Your data export is completed - ${params.fileName}`,
+          html: 'Dear colleague,\n\nPlease find attached to this e-mail the requested data export.\n\nFor any issues with the data export, please contact your manager.',
           attachments,
         },
       });
