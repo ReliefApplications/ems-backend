@@ -101,7 +101,7 @@ export default {
       // Create update
       const update = {
         ...(args.name && { name: args.name }),
-        ...(args.icon && { icon: args.icon }),
+        ...(!isNil(args.icon) && { icon: args.icon }),
         ...(args.type && { type: args.type }),
         ...(args.content && { content: args.content }),
         ...(!isNil(args.nextStepOnSave) && {

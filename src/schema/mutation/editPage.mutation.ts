@@ -85,7 +85,7 @@ export default {
       // Create update
       const update = {
         ...(args.name && { name: args.name }),
-        ...(args.icon && { icon: args.icon }),
+        ...(!isNil(args.icon) && { icon: args.icon }),
       };
 
       // Updating permissions
