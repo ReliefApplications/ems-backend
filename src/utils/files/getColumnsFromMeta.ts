@@ -39,17 +39,16 @@ export const getColumnsFromMeta = (
       });
     } else {
       const queryField = fields.find((x) => x.name === key);
-      if (queryField && queryField.subFields) {
+      if ((queryField && queryField.subFields) || queryField?.kind === 'LIST') {
         // List of related objects
         const fullName = prefix ? `${prefix}.${key}` : key;
+        const subFields = queryField.subFields || queryField.fields;
         columns.push({
           name: fullName,
           field: fullName,
           type: 'resources',
           subColumns:
-            queryField.subFields.length > 0
-              ? getColumnsFromMeta(field, queryField.subFields)
-              : [],
+            subFields.length > 0 ? getColumnsFromMeta(field, subFields) : [],
         });
       } else {
         // Single related object

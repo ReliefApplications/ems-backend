@@ -164,7 +164,7 @@ export default class Exporter {
             const temp = {};
             for (const column of this.columns) {
               if (column.subColumns) {
-                temp[column.name] = (get(row, column.name) || []).length;
+                temp[column.name] = get(row, column.name) || [];
               } else {
                 temp[column.name] = get(row, column.name, null);
               }

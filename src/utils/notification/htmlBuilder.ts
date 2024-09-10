@@ -152,6 +152,98 @@ export const replaceHeader = (header: {
 };
 
 /**
+ *  Function to calculate the maximum depth of subcolumns in a given set of columns.
+ *
+ * @param columns - An array of columns, where each column may have nested subcolumns.
+ * @returns The maximum depth of nested subcolumns within the provided columns.
+ */
+const getMaxSubColumnDepth = (columns: any[]) => {
+  let maxDepth = 1; // Start with depth 1 (top-level columns)
+  let currentColumns = columns; // Start with the top-level columns
+
+  while (currentColumns.some((column) => column.subColumns?.length)) {
+    maxDepth += 1; // Increase the depth as we found subcolumns
+    // Collect all subColumns at the current level
+    currentColumns = currentColumns.flatMap(
+      (column) => column.subColumns || []
+    );
+  }
+
+  return maxDepth;
+};
+
+/**
+ * Function to calculate the rowspan needed for a set of columns, considering the maximum depth of subcolumns.
+ *
+ * @param columns - An array of column objects, where each column may have nested subcolumns.
+ * @param maxRowSpan - The maximum rowspan (depth) determined by the outermost function.
+ * @returns The rowspan value for the columns, which indicates how many rows a top-level column should span.
+ *
+ */
+const getRowSpan = (columns, maxRowSpan) => {
+  let rowSpan = maxRowSpan - 1;
+  let currentColumns = columns;
+  while (currentColumns.some((column) => column.subColumns?.length)) {
+    rowSpan -= 1;
+    currentColumns = currentColumns?.flatMap(
+      (column) => column.subColumns || []
+    );
+  }
+  return rowSpan;
+};
+
+/**
+ * Function to calculate the colspan needed for a set of columns.
+ *
+ * @param columns - An array of column objects, where each column may have nested subcolumns.
+ * @returns The colspan value, which indicates how many columns a top-level column should span.
+ *
+ */
+const getColSpan = (columns) => {
+  let colSpan = columns?.length || 1;
+  let currentColumns = columns;
+  while (currentColumns.some((column) => column.subColumns?.length)) {
+    for (const column of currentColumns) {
+      if (column.subColumns?.length) {
+        colSpan += column.subColumns.length - 1; // Add the subcolumns, minus 1 for the main column
+      }
+    }
+    currentColumns = currentColumns?.flatMap(
+      (column) => column.subColumns || []
+    );
+  }
+  return colSpan;
+};
+
+/**
+ * Function to calculate the maximum record length in a given dataset.
+ *
+ * @param record - A record object, which may contain nested arrays of data.
+ * @param maxRecordsLength - The initial maximum record length.
+ * @returns The maximum length of records, including nested arrays.
+ *
+ */
+const getMaxRecordLength = (record, maxRecordsLength) => {
+  for (const value of Object.values(record)) {
+    if (Array.isArray(value)) {
+      maxRecordsLength = Math.max(maxRecordsLength, value.length);
+      let max = 0;
+      value.forEach((data) => {
+        for (const val of Object.values(data)) {
+          if (Array.isArray(val)) {
+            max += getMaxRecordLength(data, 0);
+          } else {
+            // maxRecordsLength = Math.max(maxRecordsLength, value.length);
+          }
+        }
+      });
+      maxRecordsLength = Math.max(maxRecordsLength, max);
+    }
+  }
+  return maxRecordsLength;
+};
+
+/**
  * Converts a JSON array of records and a block name to a formatted HTML representation
  *
  * @param dataset dataset records
@@ -183,8 +275,7 @@ export const buildTable = (
     let table = '';
     // //Checks if data is undefined
     if (!dataset.records[0]) {
-      table = `
-    <table  border="0" width="760" align="center" cellpadding="0" cellspacing="0" bgcolor="ffffff" >
+      table = `<table  border="0" width="760" align="center" cellpadding="0" cellspacing="0" bgcolor="ffffff" >
       <tbody>
         <tr bgcolor="#00205c">
             <td mc:edit="title1" height="40" style="color: #fff; font-size: 15px; font-weight: 700; font-family: 'Roboto', Arial, sans-serif; padding-left: 10px;">
@@ -210,25 +301,121 @@ export const buildTable = (
         '<table bgcolor="ffffff" border="0" width="760" align="center" cellpadding="0" cellspacing="0" style="margin: 0 auto; border: 1px solid black;">';
       table += '<thead>';
       table += '<tr bgcolor="#00205c">';
+      const maxRowSpan = getMaxSubColumnDepth(dataset.columns);
+      const subColumns = Array.from({ length: maxRowSpan }, () => []);
       dataset.columns.forEach((field) => {
-        table += `<th align="left" style="color: #fff; font-size: 14px; font-family: 'Roboto', Arial, sans-serif; padding-left: 10px">${titleCase(
+        const rowSpan = field?.subColumns?.length
+          ? getRowSpan(field.subColumns, maxRowSpan)
+          : maxRowSpan;
+        const colSpan = field?.subColumns?.length
+          ? getColSpan(field.subColumns)
+          : 1;
+        table += `<th rowspan="${rowSpan}" colspan="${colSpan}" style="color: #fff; font-size: 14px;  font-family: 'Roboto', Arial, sans-serif; padding-left: 10px">${titleCase(
           replaceUnderscores(
-            `${field.label ?? (typeof field === 'string' ? field : field.name)}`
+            field.label ?? (typeof field === 'string' ? field : field.name)
           )
         )}</th>`;
+        if (field?.subColumns?.length) {
+          const addSubColumn = (columns, index, rowspan, maxRowspan) => {
+            columns.forEach((column) => {
+              if (column?.subColumns?.length) {
+                const currentRowSpan = getRowSpan(
+                  column?.subColumns,
+                  maxRowspan - rowspan
+                );
+                const currentColSpan = getColSpan(column?.subColumns);
+                subColumns[index].push(
+                  `<th  rowspan="${currentRowSpan}" colspan="${currentColSpan}" style="color: #fff; font-size: 14px; font-family: 'Roboto', Arial, sans-serif; padding-left: 10px">${titleCase(
+                    replaceUnderscores(
+                      column.label ??
+                        (typeof column === 'string' ? column : column.name)
+                    )
+                  )}</th>`
+                );
+                addSubColumn(
+                  column?.subColumns,
+                  Math.max(index, currentRowSpan) + 1,
+                  currentRowSpan,
+                  maxRowspan - 1
+                );
+              } else {
+                subColumns[index].push(
+                  `<th  rowspan="${
+                    maxRowspan - rowspan
+                  }" colspan="${1}" style="color: #fff; font-size: 14px; font-family: 'Roboto', Arial, sans-serif; padding-left: 10px">${titleCase(
+                    replaceUnderscores(
+                      column.label ??
+                        (typeof column === 'string' ? column : column.name)
+                    )
+                  )}</th>`
+                );
+              }
+            });
+          };
+
+          addSubColumn(field?.subColumns, rowSpan, rowSpan, maxRowSpan);
+        }
       });
+      if (subColumns.length) {
+        subColumns.forEach((field) => {
+          if (field.length) {
+            table += '</tr><tr bgcolor="#00205c">';
+            for (const column of field) {
+              table += column;
+            }
+          }
+        });
+      }
 
       table += '</tr></thead>';
       table += '<tbody>';
       // Iterate over each record
       for (const record of dataset.records) {
         table += '<tr>';
+        let maxRecordsLength = 1;
+        maxRecordsLength = getMaxRecordLength(record, maxRecordsLength);
+        const subRows = Array.from({ length: maxRecordsLength }, () => []);
         // Create a new cell for each field in the record
+
         for (const column of dataset.columns) {
-          table += `<td  style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
-        ${formatDates(record[column.name])}</td>`;
+          const columnData = record[column.name] as any;
+          if (Array.isArray(columnData) && columnData?.length) {
+            for (let i = 0; i < maxRecordsLength; i++) {
+              if (columnData[i]) {
+                for (const data of Object.values(columnData[i])) {
+                  subRows[i]
+                    .push(`<td rowspan="${1}" style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
+          ${formatDates(data)}</td>`);
+                }
+              } else {
+                subRows[i].push(
+                  `<td colspan="${
+                    Object.values(columnData[0]).length
+                  }" style = "color: #000;  font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
+            </td>`
+                );
+              }
+            }
+          } else {
+            subRows[0].push(`<td rowspan="${
+              maxRecordsLength > 0 ? maxRecordsLength : 1
+            }" colspan="${
+              column?.subColumns?.length || 1
+            }" style = "color: #000;  font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
+          ${formatDates(columnData)}</td>`);
+          }
         }
         table += '</tr>';
+        // table += '</tr>';
+        if (subRows.length) {
+          for (const subrow of subRows) {
+            table += '<tr>';
+            for (const row of subrow) {
+              table += row;
+            }
+            table += '</tr>';
+          }
+        }
       }
       table += '</tbody>';
       table += '</table>';

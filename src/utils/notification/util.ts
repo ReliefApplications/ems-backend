@@ -31,6 +31,7 @@ export interface ProcessedDataset {
   name: string;
   records: { [field: string]: unknown }[];
   columns: {
+    subColumns?: [];
     field: string;
     name: string;
     type: string;
