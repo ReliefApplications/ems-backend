@@ -236,10 +236,10 @@ export const up = async () => {
     updateFormCallbacks.push(updateStructure);
   }
 
-  // sleep for 5 seconds
-  logger.info('Sleeping for 5 seconds');
-  await new Promise((resolve) => setTimeout(resolve, 5000));
-  logger.info('Waking up');
+  // sleep for 5 seconds, so the server can restart
+  logger.info('Sleeping for one minute...');
+  await new Promise((resolve) => setTimeout(resolve, 60000));
+  logger.info('Waking up...');
 
   // Duplicate the application
   const res: any = await new Promise((resolve) => {
