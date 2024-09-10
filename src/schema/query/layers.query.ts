@@ -1,7 +1,7 @@
 import { GraphQLError, GraphQLList, GraphQLString, GraphQLID } from 'graphql';
 import { LayerType } from '../types';
 import { Layer } from '@models';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import getFilter from '@utils/filter/getFilter';
 import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';

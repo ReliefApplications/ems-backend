@@ -9,7 +9,7 @@ import mongoose from 'mongoose';
 import { Context } from '@server/apollo/context';
 import { graphQLAuthCheck } from '@schema/shared';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { KoboDataExtractor } from '@utils/form/kobo/KoboDataExtractor';
 
 /** Arguments for the addRecordsFromKobo mutation */

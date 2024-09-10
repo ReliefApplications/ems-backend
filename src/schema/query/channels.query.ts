@@ -1,7 +1,7 @@
 import { GraphQLError, GraphQLID, GraphQLList } from 'graphql';
 import { Channel } from '@models';
 import { ChannelType } from '../types';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';

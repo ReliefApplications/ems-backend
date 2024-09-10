@@ -5,7 +5,7 @@ import jsonpath from 'jsonpath';
 import fetch from 'node-fetch';
 import config from 'config';
 import { GroupListSettings } from './userManagement';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 
 /**
  * Fetches groups from external API and returns them.

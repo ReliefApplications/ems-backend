@@ -25,7 +25,7 @@ import sanitize from 'sanitize-filename';
 import mongoose from 'mongoose';
 import i18next from 'i18next';
 import { RecordHistory } from '@utils/history';
-import { logger } from '../../services/logger.service';
+import logger from '@lib/logger';
 import { getAccessibleFields } from '@utils/form';
 import { formatFilename } from '@utils/files/format.helper';
 import { sendEmail } from '@utils/email';

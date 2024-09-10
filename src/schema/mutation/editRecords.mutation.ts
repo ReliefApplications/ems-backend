@@ -15,7 +15,7 @@ import {
 } from '@utils/form';
 import { RecordType } from '../types';
 import { inaccessibleFields } from './editRecord.mutation';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';

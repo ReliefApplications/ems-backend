@@ -1,7 +1,7 @@
 import { GraphQLList, GraphQLBoolean, GraphQLError } from 'graphql';
 import { Permission } from '@models';
 import { PermissionType } from '../types';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 

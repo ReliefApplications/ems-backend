@@ -3,7 +3,7 @@ import { Form, Record } from '@models';
 import { RecordType } from '../types';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { getAccessibleFields } from '@utils/form';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';

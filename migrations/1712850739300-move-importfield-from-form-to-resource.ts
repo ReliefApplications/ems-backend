@@ -1,6 +1,6 @@
 import { DEFAULT_IMPORT_FIELD, Form, Resource } from '@models';
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { isEqual } from 'lodash';
 
 type FormWithImportField = Form & { importField: Resource['importField'] };

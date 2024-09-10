@@ -1,6 +1,6 @@
 import permissions from '@const/permissions';
 import { Permission } from '@models';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 
 /**

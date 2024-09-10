@@ -4,7 +4,7 @@ import { Application, Channel, Notification } from '@models';
 import pubsub from '../../server/pubsub';
 import channels from '@const/channels';
 import { AppAbility } from '@security/defineUserAbility';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';

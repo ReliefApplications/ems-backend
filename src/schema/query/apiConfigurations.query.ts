@@ -9,7 +9,7 @@ import getFilter from '@utils/filter/getFilter';
 import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 import { ApiConfiguration } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';

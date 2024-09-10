@@ -4,7 +4,7 @@ import { ApiConfigurationType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { authType, status } from '@const/enumTypes';
 import { validateApi } from '@utils/validators/validateApi';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 

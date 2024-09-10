@@ -2,7 +2,7 @@
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 import { Dashboard, Resource, PullJob, ReferenceData } from '../src/models';
 import { Placeholder } from '../src/const/placeholders';
-import { logger } from '../src/services/logger.service';
+import { logger } from '../src/lib/logger';
 import get from 'lodash/get';
 
 /** Regex for the pattern "today()+[number of days to add]" */

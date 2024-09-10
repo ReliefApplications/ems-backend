@@ -1,7 +1,7 @@
 import { GraphQLError } from 'graphql';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { Form, Resource } from '@models';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import merge from 'lodash/merge';
 import { graphQLAuthCheck } from '@schema/shared';
 

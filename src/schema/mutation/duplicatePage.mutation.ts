@@ -3,7 +3,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { PageType } from '../types';
 import { Application, Page, Role, Step, Workflow } from '@models';
 import { duplicatePage } from '../../services/page.service';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';

@@ -2,7 +2,7 @@ import { GraphQLNonNull, GraphQLString, GraphQLError } from 'graphql';
 import { Dashboard } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { DashboardType } from '../types';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 

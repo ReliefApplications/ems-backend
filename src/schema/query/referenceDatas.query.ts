@@ -6,7 +6,7 @@ import {
 } from '../types';
 import { ReferenceData } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import GraphQLJSON from 'graphql-type-json';
 import getFilter from '@utils/filter/getFilter';

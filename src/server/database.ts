@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { Permission, Role, Channel } from '@models';
 import config from 'config';
-import { logger } from '../services/logger.service';
+import logger from '@lib/logger';
 
 /**
  * Build the MongoDB url according to the environment parameters

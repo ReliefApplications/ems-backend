@@ -31,3 +31,6 @@ config/local.js
 
 # Files
 files/*
+
+# Logs
+logs/

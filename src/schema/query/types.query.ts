@@ -1,5 +1,5 @@
 import { GraphQLError, GraphQLObjectType } from 'graphql';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 import GraphQLJSON from 'graphql-type-json';

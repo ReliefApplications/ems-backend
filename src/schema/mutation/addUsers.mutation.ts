@@ -6,7 +6,7 @@ import permissions from '@const/permissions';
 import { validateEmail } from '@utils/validators';
 import { sendAppInvitation, sendCreateAccountInvitation } from '@utils/user';
 import config from 'config';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import { UserArgs, UserInputType } from '@schema/inputs/user.input';
 import { Types } from 'mongoose';

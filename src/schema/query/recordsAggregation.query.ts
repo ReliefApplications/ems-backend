@@ -24,7 +24,7 @@ import {
   defaultRecordFields,
   selectableDefaultRecordFieldsFlat,
 } from '@const/defaultRecordFields';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import buildCalculatedFieldPipeline from '../../utils/aggregation/buildCalculatedFieldPipeline';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { accessibleBy } from '@casl/mongoose';

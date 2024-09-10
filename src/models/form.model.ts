@@ -8,7 +8,7 @@ import { Version } from './version.model';
 import { Record } from './record.model';
 import { getGraphQLTypeName } from '@utils/validators';
 import { deleteFolder } from '@utils/files/deleteFolder';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { DEFAULT_IMPORT_FIELD } from './resource.model';
 import { ApiConfiguration } from './apiConfiguration.model';
 import { unscheduleKoboSync } from '@server/koboSyncScheduler';

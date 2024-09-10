@@ -18,7 +18,7 @@ import {
 } from '@utils/form/metadata.helper';
 import { referenceDataType } from '@const/enumTypes';
 import { CustomAPI } from '@server/apollo/dataSources';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 
 /** GraphQL field metadata type definition */
 export const FieldMetaDataType = new GraphQLObjectType({

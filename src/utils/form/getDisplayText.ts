@@ -1,7 +1,7 @@
 import { Context } from '../../server/apollo/context';
 import { CustomAPI } from '../../server/apollo/dataSources';
 import config from 'config';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 
 /**
  * Gets display text from choice value.

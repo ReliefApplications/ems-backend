@@ -10,7 +10,7 @@ import getDisplayText from '../../../form/getDisplayText';
 import { NameExtension } from '../../introspection/getFieldName';
 import getReferenceDataResolver from './getReferenceDataResolver';
 import get from 'lodash/get';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { subject } from '@casl/ability';
 import { SortOrder } from 'mongoose';
 

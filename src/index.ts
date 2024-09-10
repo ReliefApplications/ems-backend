@@ -4,7 +4,7 @@ import pullJobScheduler from './server/pullJobScheduler';
 import customNotificationScheduler from './server/customNotificationScheduler';
 import { startDatabase } from './server/database';
 import config from 'config';
-import { logger } from './services/logger.service';
+import logger from '@lib/logger';
 import { checkConfig } from '@utils/server/checkConfig.util';
 import buildSchema from '@utils/schema/buildSchema';
 import koboSyncScheduler from './server/koboSyncScheduler';

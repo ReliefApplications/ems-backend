@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 import { Resource } from '@models';
 import { cloneDeep, isEqual } from 'lodash';

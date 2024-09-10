@@ -3,7 +3,7 @@ import { Resource, Form } from '@models';
 import { LayoutType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
 import { LayoutInputType, LayoutArgs } from '../../schema/inputs/layout.input';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';

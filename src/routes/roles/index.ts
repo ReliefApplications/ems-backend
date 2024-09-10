@@ -4,7 +4,7 @@ import get from 'lodash/get';
 import i18next from 'i18next';
 import defineUserAbility, { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForPage from '@security/extendAbilityForPage';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { accessibleBy } from '@casl/mongoose';
 
 /** Routes for roles */

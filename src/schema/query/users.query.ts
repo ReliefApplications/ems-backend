@@ -3,7 +3,7 @@ import { Role, User } from '@models';
 import { UserConnectionType, decodeCursor, encodeCursor } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import mongoose, { Types } from 'mongoose';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 import { CompositeFilterDescriptor } from '@const/compositeFilter';

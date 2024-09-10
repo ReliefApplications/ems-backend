@@ -1,6 +1,6 @@
 import { startDatabaseForMigration } from '@utils/migrations/database.helper';
 import { Application, Dashboard, Page, Workflow } from '@models';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { contentType } from '@const/enumTypes';
 
 /**

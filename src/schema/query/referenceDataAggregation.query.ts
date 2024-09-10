@@ -7,7 +7,7 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { DataTransformer, ReferenceData } from '@models';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import {
   head,

@@ -1,5 +1,5 @@
 import redis from '../../server/redis';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import axios from 'axios';
 import config from 'config';
 import { parse } from 'wellknown';

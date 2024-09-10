@@ -1,6 +1,6 @@
 import { DEFAULT_INCREMENTAL_ID_SHAPE, Form, Resource } from '@models';
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { isEqual } from 'lodash';
 import { updateIncrementalIds } from '@utils/form';
 

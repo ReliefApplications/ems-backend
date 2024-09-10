@@ -4,7 +4,7 @@ import * as CryptoJS from 'crypto-js';
 import NodeCache from 'node-cache';
 import config from 'config';
 import axios from 'axios';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 
 /**
  * Create a cache instance to store authentication tokens for ApiConfigurations.

@@ -3,7 +3,7 @@ import { status, referenceDataType } from '@const/enumTypes';
 import { ApiConfiguration, ReferenceData } from '@models';
 import { getToken } from '@utils/proxy';
 import { get, memoize, set } from 'lodash';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import jsonpath from 'jsonpath';
 import { ApolloServer } from '@apollo/server';
 import { Context } from './context';

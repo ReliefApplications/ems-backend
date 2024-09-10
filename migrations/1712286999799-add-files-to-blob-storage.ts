@@ -1,6 +1,6 @@
 import { Form, Record } from '@models';
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { BlobServiceClient } from '@azure/storage-blob';
 import config from 'config';
 import { v4 as uuidv4 } from 'uuid';

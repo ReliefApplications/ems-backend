@@ -17,7 +17,7 @@ import {
   validateGraphQLFieldName,
   validateGraphQLTypeName,
 } from '@utils/validators';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';

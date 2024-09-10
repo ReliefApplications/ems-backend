@@ -10,7 +10,7 @@ import { DashboardType } from '../types';
 import { Dashboard, Page, Step } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
 import { isEmpty } from 'lodash';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import ButtonActionInputType from '@schema/inputs/button-action.input';
 import StateInputType from '@schema/inputs/state.input';
 import { graphQLAuthCheck } from '@schema/shared';

@@ -5,7 +5,7 @@ import { referenceDataType } from '@const/enumTypes';
 import { MULTISELECT_TYPES } from '@const/fieldTypes';
 import get from 'lodash/get';
 import { isArray, isEqual, isObject } from 'lodash';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 
 /**
  * Return reference data field resolver.

@@ -3,7 +3,7 @@ import { PullJobType } from '../types';
 import { PullJob } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { unscheduleJob } from '../../server/pullJobScheduler';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';

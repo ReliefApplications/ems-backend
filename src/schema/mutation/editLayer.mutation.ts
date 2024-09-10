@@ -4,7 +4,7 @@ import { LayerType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
 import LayerInputType from '@schema/inputs/layer.input';
 import { graphQLAuthCheck } from '@schema/shared';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 
 /**
  * Edit new layer.

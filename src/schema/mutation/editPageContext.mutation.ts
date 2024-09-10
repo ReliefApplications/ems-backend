@@ -4,7 +4,7 @@ import { Dashboard, Page, Resource, Workflow } from '@models';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { PageContextArgs, PageContextInputType } from '@schema/inputs';
 import { Types } from 'mongoose';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 

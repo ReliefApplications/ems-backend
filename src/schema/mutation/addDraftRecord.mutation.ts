@@ -2,7 +2,7 @@ import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { transformRecord, getOwnership } from '@utils/form';
 import { GraphQLID, GraphQLNonNull, GraphQLError } from 'graphql';
 import { DraftRecordType } from '../types';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 import GraphQLJSON from 'graphql-type-json';

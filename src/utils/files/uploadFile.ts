@@ -5,7 +5,7 @@ import { GraphQLError } from 'graphql';
 import i18next from 'i18next';
 import config from 'config';
 import get from 'lodash/get';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 
 /** Azure storage connection string */
 const AZURE_STORAGE_CONNECTION_STRING: string = config.get(

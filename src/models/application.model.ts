@@ -15,7 +15,7 @@ import {
   distributionListSchema,
 } from './distributionList.model';
 import { deleteFolder } from '@utils/files/deleteFolder';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 
 /** Application documents interface declaration */
 export interface Application extends Document {

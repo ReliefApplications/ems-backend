@@ -1,6 +1,6 @@
 import { Dashboard, Form, Resource } from '@models';
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { isEqual } from 'lodash';
 
 /** Updates layouts to work with new sort structure */

@@ -2,7 +2,7 @@ import { GraphQLError, GraphQLNonNull, GraphQLID } from 'graphql';
 import { LayerType } from '../types';
 import { Layer } from '@models';
 import { graphQLAuthCheck } from '@schema/shared';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 
 /**
  * List all layers.

@@ -4,7 +4,7 @@ import { Application, Workflow, Dashboard, Form, Page, Role } from '@models';
 import { PageType } from '../types';
 import { ContentEnumType } from '@const/enumTypes';
 import extendAbilityForPage from '@security/extendAbilityForPage';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import GraphQLJSON from 'graphql-type-json';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';

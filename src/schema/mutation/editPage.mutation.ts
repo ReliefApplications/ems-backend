@@ -11,7 +11,7 @@ import { PageType } from '../types';
 import { Page, Workflow, Dashboard, Form } from '@models';
 import { cloneDeep, isArray, isEmpty, isNil, omit } from 'lodash';
 import extendAbilityForPage from '@security/extendAbilityForPage';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';

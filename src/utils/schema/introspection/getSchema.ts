@@ -26,7 +26,7 @@ import getConnectionTypes, {
 import GraphQLJSON from 'graphql-type-json';
 import { ReferenceData } from '@models';
 import { NameExtension } from './getFieldName';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { GraphQLDate } from 'graphql-scalars';
 
 /**

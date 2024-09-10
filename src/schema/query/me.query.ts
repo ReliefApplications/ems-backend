@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { UserType } from '../types';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 

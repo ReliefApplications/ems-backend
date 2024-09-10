@@ -1,5 +1,5 @@
 import { ApiConfiguration, Form } from '@models';
-import { logger } from '../services/logger.service';
+import logger from '@lib/logger';
 import { CronJob } from 'cron';
 import { get } from 'lodash';
 import * as cronValidator from 'cron-validator';

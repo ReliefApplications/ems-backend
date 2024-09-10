@@ -1,5 +1,5 @@
 import { Query, Schema } from 'mongoose';
-import { logger } from '../../services/logger.service';
+import logger from '@lib/logger';
 
 /**
  * Add a callback function on a schema to be called before every deletion.

@@ -2,7 +2,7 @@ import { GraphQLError, GraphQLID, GraphQLList, GraphQLNonNull } from 'graphql';
 import { User } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { PositionAttributeType } from '../types';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';

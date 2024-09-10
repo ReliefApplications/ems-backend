@@ -4,7 +4,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { GroupType } from '../types';
 import config from 'config';
 import { fetchGroups } from '@utils/user';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';

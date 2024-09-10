@@ -8,7 +8,7 @@ import {
 import i18next from 'i18next';
 import { isEqual } from 'lodash';
 import { Types } from 'mongoose';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import NodeCache from 'node-cache';
 
 /** Maps each available variable to its template */

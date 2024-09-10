@@ -17,7 +17,7 @@ import {
 import { StepType } from '../types';
 import mongoose from 'mongoose';
 import { AppAbility } from '@security/defineUserAbility';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 

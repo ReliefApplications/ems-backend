@@ -1,7 +1,7 @@
 import { Resource } from '@models';
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 import mongoose from 'mongoose';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 
 /**
  * Convert a value ( string or mongo object id ) to mongo object id.

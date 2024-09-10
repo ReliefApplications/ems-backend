@@ -8,7 +8,7 @@ import { ApplicationType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import pubsub from '../../server/pubsub';
 import { Application } from '@models';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';

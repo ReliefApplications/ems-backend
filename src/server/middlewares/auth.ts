@@ -12,7 +12,7 @@ import { updateUser, userAuthCallback } from '@utils/user';
 import config from 'config';
 import session from 'express-session';
 import { v4 as uuidv4 } from 'uuid';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 
 /** Express application for the authorization middleware */
 const authMiddleware = express();

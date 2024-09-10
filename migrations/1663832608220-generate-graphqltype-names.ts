@@ -1,6 +1,6 @@
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 import { Form, ReferenceData } from '../src/models';
-import { logger } from '../src/services/logger.service';
+import { logger } from '../src/lib/logger';
 
 /**
  * Use to graphqltypenames migrate up.

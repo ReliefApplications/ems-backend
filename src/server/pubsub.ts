@@ -1,4 +1,4 @@
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import config from 'config';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
 import Redis from 'ioredis';

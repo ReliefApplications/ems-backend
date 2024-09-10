@@ -1,5 +1,5 @@
 import { BlobServiceClient } from '@azure/storage-blob';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import config from 'config';
 import fs from 'fs';
 

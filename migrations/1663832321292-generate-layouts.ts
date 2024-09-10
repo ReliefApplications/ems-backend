@@ -10,7 +10,7 @@ import {
   Form,
   Resource,
 } from '../src/models';
-import { logger } from '../src/services/logger.service';
+import { logger } from '../src/lib/logger';
 
 /**
  * Updates the layout for each of the dashboard's widgets

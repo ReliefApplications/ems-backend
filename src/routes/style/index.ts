@@ -2,7 +2,7 @@ import express from 'express';
 import { AppAbility } from '@security/defineUserAbility';
 import { Application } from '@models';
 import i18next from 'i18next';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { downloadFile } from '@utils/files';
 import fs from 'fs';
 import sanitize from 'sanitize-filename';

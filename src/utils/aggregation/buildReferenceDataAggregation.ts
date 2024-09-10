@@ -2,7 +2,7 @@ import { referenceDataType } from '@const/enumTypes';
 import { ReferenceData } from '@models';
 import { MULTISELECT_TYPES } from '@const/fieldTypes';
 import { CustomAPI } from '../../server/apollo/dataSources';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 
 /**
  * Builds a ReferenceData aggregation to populate the corresponding field.

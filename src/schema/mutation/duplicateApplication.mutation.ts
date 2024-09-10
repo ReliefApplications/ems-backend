@@ -21,7 +21,7 @@ import { duplicatePages } from '../../services/page.service';
 import { AppAbility } from '@security/defineUserAbility';
 import { status } from '@const/enumTypes';
 import { copyFolder } from '@utils/files/copyFolder';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import { accessibleBy } from '@casl/mongoose';
 import { Types } from 'mongoose';

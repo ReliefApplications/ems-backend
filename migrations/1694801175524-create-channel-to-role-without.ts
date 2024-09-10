@@ -1,6 +1,6 @@
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 import { Role, Channel } from '@models';
-import { logger } from '../src/services/logger.service';
+import { logger } from '../src/lib/logger';
 
 /** Create channel to each role that doesn't have a channel yet */
 const createChannel = async () => {

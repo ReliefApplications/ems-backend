@@ -17,7 +17,7 @@ import { RecordType } from '../types';
 import { Types } from 'mongoose';
 import { AppAbility } from 'security/defineUserAbility';
 import { filter, isEqual, keys, union, has, get } from 'lodash';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 import { logEvent } from '@utils/events/logEvent';

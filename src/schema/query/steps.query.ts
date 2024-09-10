@@ -2,7 +2,7 @@ import { GraphQLError, GraphQLList } from 'graphql';
 import { StepType } from '../types';
 import { Step } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';

@@ -1,6 +1,6 @@
 import express from 'express';
 import config from 'config';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 
 /**
  * Routes for permissions

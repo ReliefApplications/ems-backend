@@ -3,7 +3,7 @@ import { Group } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { GroupType } from '../types';
 import config from 'config';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 

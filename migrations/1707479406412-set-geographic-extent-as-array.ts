@@ -1,7 +1,7 @@
 import { Dashboard } from '@models';
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 import { get, isArray, set } from 'lodash';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 
 /**
  * Update dashboard, by changing geographic extent of map widgets as arrays

@@ -2,7 +2,7 @@ import express from 'express';
 import { AppAbility } from '../../security/defineUserAbility';
 import { Dashboard } from '../../models';
 import get from 'lodash/get';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { accessibleBy } from '@casl/mongoose';
 
 /**

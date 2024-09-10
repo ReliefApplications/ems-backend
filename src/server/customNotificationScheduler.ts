@@ -6,7 +6,7 @@ import {
   User,
 } from '@models';
 import { CronJob } from 'cron';
-import { logger } from '../services/logger.service';
+import logger from '@lib/logger';
 import * as cronValidator from 'cron-validator';
 import get from 'lodash/get';
 import { sendEmail, preprocess } from '@utils/email';

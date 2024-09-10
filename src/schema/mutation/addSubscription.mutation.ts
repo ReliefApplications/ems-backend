@@ -8,7 +8,7 @@ import mongoose from 'mongoose';
 import { Application, Channel, Form } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { SubscriptionType } from '../types/subscription.type';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';

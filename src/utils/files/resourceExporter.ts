@@ -5,7 +5,7 @@ import { Workbook, Worksheet, stream } from 'exceljs';
 import get from 'lodash/get';
 import { getColumnsFromMeta } from './getColumnsFromMeta';
 import axios from 'axios';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { Parser } from 'json2csv';
 import { DataTransformer, Record, Resource } from '@models';
 import mongoose from 'mongoose';

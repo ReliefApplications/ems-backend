@@ -17,7 +17,7 @@ import {
 import * as CryptoJS from 'crypto-js';
 import { validateApi } from '@utils/validators/validateApi';
 import config from 'config';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { cloneDeep, isEmpty, omit } from 'lodash';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';

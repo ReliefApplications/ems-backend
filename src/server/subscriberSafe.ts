@@ -2,7 +2,7 @@
 // import { getNextId } from '@utils/form';
 // import pubsub from './pubsub';
 // import config from 'config';
-// import { logger } from '../services/logger.service';
+// import logger from '@lib/logger';
 
 /** Exchange used for the subscriptions to records */
 // const EXCHANGE = 'safe_subscriptions';

@@ -1,7 +1,7 @@
 import { Form, Record, Resource } from '@models';
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 import { deleteFolder } from '@utils/files/deleteFolder';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 
 /** This migration removes forms that are not linked to any resources */
 export const up = async () => {

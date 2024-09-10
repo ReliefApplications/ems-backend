@@ -3,7 +3,7 @@ import { Form, ReferenceData } from '@models';
 import { ReferenceDataType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { validateGraphQLTypeName } from '@utils/validators';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 

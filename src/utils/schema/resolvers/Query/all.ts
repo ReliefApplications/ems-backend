@@ -13,7 +13,7 @@ import mongoose from 'mongoose';
 import buildReferenceDataAggregation from '@utils/aggregation/buildReferenceDataAggregation';
 import { getAccessibleFields } from '@utils/form';
 import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { flatten, get, isArray, set } from 'lodash';
 import { accessibleBy } from '@casl/mongoose';

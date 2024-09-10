@@ -7,7 +7,7 @@ import {
 import { DashboardType } from '../types';
 import { Dashboard, Page } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 import { Types } from 'mongoose';

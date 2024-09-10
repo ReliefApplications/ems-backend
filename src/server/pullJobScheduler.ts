@@ -18,7 +18,7 @@ import { CronJob } from 'cron';
 import mongoose from 'mongoose';
 import { getToken } from '@utils/proxy';
 import { getNextId, transformRecord } from '@utils/form';
-import { logger } from '../services/logger.service';
+import logger from '@lib/logger';
 import * as cronValidator from 'cron-validator';
 import get from 'lodash/get';
 import axios from 'axios';

@@ -2,7 +2,7 @@ import { GraphQLList, GraphQLBoolean, GraphQLError } from 'graphql';
 import { contentType } from '@const/enumTypes';
 import { Page, Step, Dashboard } from '@models';
 import { DashboardType } from '../types';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 

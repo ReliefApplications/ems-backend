@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import { Dashboard, Form, Resource } from '@models';
 import { isArray } from 'lodash';
 import { startDatabase } from '../server/database';
-import { logger } from '../services/logger.service';
+import logger from '@lib/logger';
 
 /**
  * Remove layouts in dashboard

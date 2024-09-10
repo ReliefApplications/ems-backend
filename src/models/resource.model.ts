@@ -6,7 +6,7 @@ import { layoutSchema } from './layout.model';
 import { aggregationSchema } from './aggregation.model';
 import { Record } from './record.model';
 import { deleteFolder } from '@utils/files/deleteFolder';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { unscheduleKoboSync } from '@server/koboSyncScheduler';
 
 /** The type of the shape of the incrementalId field */

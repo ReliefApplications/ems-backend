@@ -10,7 +10,7 @@ import {
   Page,
   Workflow,
 } from '../src/models';
-import { logger } from '../src/services/logger.service';
+import { logger } from '../src/lib/logger';
 
 /**
  * Get parent application from dashboard. Including dashboard in step.

@@ -4,7 +4,7 @@ import schema from '../../schema';
 import { GraphQLSchema } from 'graphql';
 import { getStructures, getReferenceDatas } from './getStructures';
 import { Form } from '@models';
-import { logger } from '../../services/logger.service';
+import logger from '@lib/logger';
 import buildTypes from './buildTypes';
 
 /**

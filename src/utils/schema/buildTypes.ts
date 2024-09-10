@@ -1,7 +1,7 @@
 import { printSchema } from 'graphql';
 import { getSchema } from './introspection/getSchema';
 import { getReferenceDatas, getStructures } from './getStructures';
-import { logger } from '../../services/logger.service';
+import logger from '@lib/logger';
 
 /**
  * Build GraphQL types from the active resources / forms stored in the database.

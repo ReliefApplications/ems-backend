@@ -3,7 +3,7 @@ import { ResourceType } from '../types';
 import { Resource } from '@models';
 import { Form } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { accessibleBy } from '@casl/mongoose';
 
 /** Maps field related names when duplicating */

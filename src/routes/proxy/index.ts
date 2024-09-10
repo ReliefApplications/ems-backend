@@ -3,7 +3,7 @@ import { ApiConfiguration } from '@models';
 import { getToken } from '@utils/proxy';
 import { get, isEmpty, lowerCase } from 'lodash';
 import i18next from 'i18next';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import config from 'config';
 import * as CryptoJS from 'crypto-js';
 import axios from 'axios';

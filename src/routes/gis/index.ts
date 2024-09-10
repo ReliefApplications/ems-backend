@@ -9,7 +9,7 @@ import { buildQuery } from '@utils/query/queryBuilder';
 import config from 'config';
 import i18next from 'i18next';
 import mongoose from 'mongoose';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import axios from 'axios';
 import { isEqual, get, omit } from 'lodash';
 import turf, { Feature, booleanPointInPolygon } from '@turf/turf';

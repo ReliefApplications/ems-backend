@@ -1,5 +1,5 @@
 import express from 'express';
-import { logger } from '../../services/logger.service';
+import logger from '@lib/logger';
 import { Event } from '@utils/events/event.model';
 import { logEvent } from '@utils/events/logEvent';
 

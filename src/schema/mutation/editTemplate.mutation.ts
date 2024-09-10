@@ -4,7 +4,7 @@ import { TemplateType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { TemplateInputType, TemplateArgs } from '../inputs/template.input';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';

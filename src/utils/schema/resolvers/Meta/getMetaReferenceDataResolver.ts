@@ -3,7 +3,7 @@ import { ReferenceData } from '@models';
 import { Field } from '../../introspection/getFieldType';
 import { referenceDataType } from '@const/enumTypes';
 import get from 'lodash/get';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 
 /**
  * Return reference data meta field resolver.

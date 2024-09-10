@@ -4,7 +4,7 @@ import { Channel, Role, User, Notification } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { UserType } from '../types';
 import { PositionAttributeInputType, PositionAttributeArgs } from '../inputs';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';

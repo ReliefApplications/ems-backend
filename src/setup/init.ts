@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { initDatabase, startDatabase } from '../server/database';
-import { logger } from '../services/logger.service';
+import logger from '@lib/logger';
 
 // Start database and init, uploading default records
 startDatabase();

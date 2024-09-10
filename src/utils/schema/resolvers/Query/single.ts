@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { Record } from '@models';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 
 /**

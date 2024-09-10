@@ -13,7 +13,7 @@ import { Application } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { StatusEnumType, StatusType } from '@const/enumTypes';
 import { isEmpty, isNil } from 'lodash';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';

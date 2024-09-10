@@ -16,7 +16,7 @@ import {
 import { DefaultIncrementalIdShapeT, Resource } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { get, has, isArray, isEqual, isNil } from 'lodash';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 import { IdShapeType } from '@schema/inputs/id-shape.input';

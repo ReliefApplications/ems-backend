@@ -8,7 +8,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { NotificationType } from '../types';
 import { Notification } from '@models';
 import pubsub from '../../server/pubsub';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 

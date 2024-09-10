@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import i18next from 'i18next';
 import sanitize from 'sanitize-filename';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 
 /** File size limit, in bytes  */
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;

@@ -6,7 +6,7 @@ import {
 import { getColumnsFromMeta, getRowsFromMeta } from '.';
 import config from 'config';
 import axios from 'axios';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 
 /**
  * Grid extraction parameters

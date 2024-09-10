@@ -13,7 +13,7 @@ import EventEmitter from 'events';
 import i18next from 'i18next';
 import Backend from 'i18next-node-fs-backend';
 import i18nextMiddleware from 'i18next-http-middleware';
-import { logger } from '../services/logger.service';
+import logger from '@lib/logger';
 import { winstonLogger } from './middlewares/winston';
 import { Form, ReferenceData, Resource } from '@models';
 import buildSchema from '@utils/schema/buildSchema';

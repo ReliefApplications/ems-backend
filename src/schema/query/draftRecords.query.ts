@@ -1,5 +1,5 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLList } from 'graphql';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 import { DraftRecordType } from '../types';

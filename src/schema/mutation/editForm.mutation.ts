@@ -24,7 +24,7 @@ import differenceWith from 'lodash/differenceWith';
 import unionWith from 'lodash/unionWith';
 import i18next from 'i18next';
 import { get, isArray, isNil } from 'lodash';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import checkDefaultFields from '@utils/form/checkDefaultFields';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
