@@ -74,11 +74,12 @@ export default {
 
         if (
           !(args.notification.isDraft || args.notification.isDeleted === 1) &&
-          (!args.notification.emailDistributionList.name ||
-            (!args.notification.emailDistributionList.to.resource &&
-              args.notification.emailDistributionList.to.inputEmails.length ===
-                0)) &&
-          !allSeparate
+          // (!args.notification.emailDistributionList.name ||
+          //   (!args.notification.emailDistributionList.to.resource &&
+          //     args.notification.emailDistributionList.to.inputEmails.length ===
+          //       0)) &&
+          !allSeparate &&
+          !args.notification.emailDistributionList
         ) {
           throw new GraphQLError(
             context.i18next.t('common.errors.dataNotFound')

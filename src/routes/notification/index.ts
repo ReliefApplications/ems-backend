@@ -1,6 +1,6 @@
 import express from 'express';
 import { logger } from '@services/logger.service';
-import { EmailNotification } from '@models';
+import { EmailDistributionList, EmailNotification } from '@models';
 import {
   buildEmail,
   buildTable,
@@ -64,7 +64,9 @@ const router = express.Router();
 
 router.post('/send-email/:configId', async (req, res) => {
   try {
-    const config = await EmailNotification.findById(req.params.configId).exec();
+    const config = await EmailNotification.findById(req.params.configId)
+      .populate('EmailDistributionList')
+      .exec();
     const datasetQueries: DatasetPreviewArgs[] = config.datasets.map(
       (dataset) => {
         return {
@@ -130,7 +132,7 @@ router.post('/send-email/:configId', async (req, res) => {
     }
 
     const emails = await fetchDistributionList(
-      config.emailDistributionList,
+      config?.emailDistributionList as EmailDistributionList,
       req,
       res,
       config.subscriptionList
@@ -212,11 +214,14 @@ router.post('/preview-distribution-lists/', async (req, res) => {
     if (!config.emailDistributionList) {
       return res.status(400).send(req.t('common.errors.internalServerError'));
     }
-    const emails = await fetchDistributionList(
-      config.emailDistributionList,
-      req,
-      res
-    );
+    let distributionList =
+      config?.emailDistributionList as EmailDistributionList;
+    if (typeof config?.emailDistributionList === 'string') {
+      distributionList = await EmailDistributionList.findById(
+        config?.emailDistributionList
+      ).exec();
+    }
+    const emails = await fetchDistributionList(distributionList, req, res);
     let individualEmailList = [];
     if (config?.datasets) {
       const individualEmailQueries: DatasetPreviewArgs[] = config.datasets
@@ -250,7 +255,6 @@ router.post('/preview-distribution-lists/', async (req, res) => {
     res.send({
       ...emails,
       individualEmailList,
-      name: config.emailDistributionList.name,
     });
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
@@ -329,7 +333,9 @@ router.post('/validate-dataset', async (req, res) => {
  */
 router.post('/send-individual-email/:configId', async (req, res) => {
   try {
-    const config = await EmailNotification.findById(req.params.configId).exec();
+    const config = await EmailNotification.findById(req.params.configId)
+      .populate('emailDistributionList')
+      .exec();
     const sendSeparateFields = [];
     // fields which are common in send separate and query fields
     const commonFields = [];
@@ -457,9 +463,11 @@ router.post('/send-individual-email/:configId', async (req, res) => {
     ]);
 
     const bodyElement = mainTableElement.getElementById('body');
-
-    const cc = config.get('emailDistributionList')?.cc?.inputEmails;
-    const bcc = config.get('emailDistributionList')?.bcc?.inputEmails;
+    const distributionList = config.get(
+      'emailDistributionList'
+    ) as EmailDistributionList;
+    const cc = distributionList?.cc?.inputEmails;
+    const bcc = distributionList?.bcc?.inputEmails;
     const attachments: { path: string; cid: string }[] = [];
     // Use base64 encoded images as path for CID attachments
     // This is required for images to render in the body on legacy clients
@@ -516,11 +524,9 @@ router.post('/send-individual-email/:configId', async (req, res) => {
         });
       } else {
         //filter individual emails from to-emails
-        commonBlockEmails = config
-          .get('emailDistributionList')
-          ?.to?.inputEmails?.filter(
-            (email) => !individualEmail?.includes(email)
-          );
+        commonBlockEmails = distributionList?.to?.inputEmails?.filter(
+          (email) => !individualEmail?.includes(email)
+        );
       }
     }
 
@@ -685,9 +691,9 @@ router.post('/send-quick-email', async (req, res) => {
     const emailSubject = replaceSubject(emailLayout.subject, subjectRecords);
 
     // Get recipients
-    const to = emailDistributionList.To;
-    const cc = emailDistributionList.Cc;
-    const bcc = emailDistributionList.Bcc;
+    const to = emailDistributionList.to;
+    const cc = emailDistributionList.cc;
+    const bcc = emailDistributionList.bcc;
 
     // Add attachments
     const attachments: { path: string; cid: string }[] = [];

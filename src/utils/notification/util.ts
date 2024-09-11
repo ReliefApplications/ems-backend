@@ -1,5 +1,5 @@
 import { dateLocale, dateTimeLocale, timeLocale } from '@const/locale';
-import { EmailDistributionListQuery, Resource } from '@models';
+import { EmailDistributionList, Resource } from '@models';
 import { DatasetPreviewArgs } from '@routes/notification';
 import { logger } from '@services/logger.service';
 import Exporter from '@utils/files/resourceExporter';
@@ -322,17 +322,17 @@ export const fetchDatasets = async (
 /**
  * Given query descriptors and static emails, fetches and returns the complete distribution list
  *
- * @param emailDistributionList Distribution list object containing to, cc, and bcc elements with their query and input emails
+ * @param emailDistributionList Distribution list id/object
  * @param req User request
  * @param res User reponse
  * @param subscriptionList List of emails that are subscribed to the notification
  */
 export const fetchDistributionList = async (
-  emailDistributionList: EmailDistributionListQuery,
+  emailDistributionList: EmailDistributionList,
   req: Request<any, any>,
   res: Response<any, any>,
   subscriptionList?: string[]
-): Promise<{ to: string[]; cc: string[]; bcc: string[] }> => {
+): Promise<{ to: string[]; cc: string[]; bcc: string[]; name: string }> => {
   const toEmails = new Set<string>();
   const ccEmails = new Set<string>();
   const bccEmails = new Set<string>();
@@ -421,5 +421,6 @@ export const fetchDistributionList = async (
     to: Array.from(toEmails),
     cc: Array.from(ccEmails),
     bcc: Array.from(bccEmails),
+    name: emailDistributionList.name,
   };
 };

@@ -2,13 +2,26 @@
 import { AccessibleRecordModel } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
+/**
+ * Interface representing either a filter definition used to fetch emails, a static list of emails, or both
+ */
+export interface DistributionListSource {
+  resource?: string;
+  query?: {
+    name: string;
+    filter: any;
+    fields: any[];
+  };
+  inputEmails?: string[];
+}
+
 /** distribution list documents interface declaration */
 export interface EmailDistributionList extends Document {
   kind: 'EmailDistributionList';
-  distributionListName: string;
-  To: string[];
-  Cc: string[];
-  Bcc: string[];
+  name: string;
+  to: DistributionListSource;
+  cc: DistributionListSource;
+  bcc: DistributionListSource;
   createdBy: { name: string; email: string };
   isDeleted: number;
   applicationId?: mongoose.Schema.Types.ObjectId;
@@ -17,10 +30,34 @@ export interface EmailDistributionList extends Document {
 /** Mongoose distribution list schema declaration */
 export const emailDistributionListSchema = new Schema<EmailDistributionList>(
   {
-    distributionListName: String,
-    To: [{ type: String }],
-    Cc: [{ type: String }],
-    Bcc: [{ type: String }],
+    name: String,
+    to: {
+      resource: String,
+      query: {
+        name: String,
+        filter: { type: mongoose.Schema.Types.Mixed },
+        fields: [{ type: mongoose.Schema.Types.Mixed }],
+      },
+      inputEmails: { type: [String] },
+    },
+    cc: {
+      resource: String,
+      query: {
+        name: String,
+        filter: { type: mongoose.Schema.Types.Mixed },
+        fields: [{ type: mongoose.Schema.Types.Mixed }],
+      },
+      inputEmails: { type: [String] },
+    },
+    bcc: {
+      resource: String,
+      query: {
+        name: String,
+        filter: { type: mongoose.Schema.Types.Mixed },
+        fields: [{ type: mongoose.Schema.Types.Mixed }],
+      },
+      inputEmails: { type: [String] },
+    },
     createdBy: {
       name: String,
       email: String,
@@ -39,7 +76,7 @@ export const emailDistributionListSchema = new Schema<EmailDistributionList>(
 );
 
 emailDistributionListSchema.index(
-  { distributionListName: 1, applicationId: 1 },
+  { name: 1, applicationId: 1 },
   { unique: true }
 );
 

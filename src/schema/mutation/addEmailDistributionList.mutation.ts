@@ -18,11 +18,18 @@ export default {
   async resolve(_, args, context: Context) {
     graphQLAuthCheck(context);
     try {
+      if (
+        !args.distributionList.name ||
+        (!args.distributionList.to.resource &&
+          args.distributionList.to.inputEmails.length === 0)
+      ) {
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
       const update = {
-        distributionListName: args.distributionList.distributionListName,
-        To: args.distributionList.To,
-        Bcc: args.distributionList.Bcc,
-        Cc: args.distributionList.Cc,
+        name: args.distributionList.name,
+        to: args.distributionList.to,
+        bcc: args.distributionList.bcc,
+        cc: args.distributionList.cc,
         createdBy: { name: context.user.name, email: context.user.username },
         ...(args.applicationId && { applicationId: args.applicationId }),
       };

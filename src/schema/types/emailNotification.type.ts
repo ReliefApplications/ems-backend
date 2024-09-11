@@ -14,7 +14,7 @@ import { EmailNotification } from '@models';
  *
  */
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const QueryType = new GraphQLObjectType({
+export const QueryType = new GraphQLObjectType({
   name: 'DatasetQuery',
   fields: () => ({
     name: { type: GraphQLString },
@@ -44,18 +44,6 @@ export const DatasetType = new GraphQLObjectType({
 });
 
 /**
- * Defines filter used as part of distribution list.
- */
-export const DistributionListSource = new GraphQLObjectType({
-  name: 'DistributionListSource',
-  fields: () => ({
-    resource: { type: GraphQLString },
-    query: { type: QueryType },
-    inputEmails: { type: new GraphQLList(GraphQLString) },
-  }),
-});
-
-/**
  * GraphQL EmailLayout type.
  */
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -67,19 +55,6 @@ const EmailLayoutType = new GraphQLObjectType({
     body: { type: GraphQLJSON },
     banner: { type: GraphQLJSON },
     footer: { type: GraphQLJSON },
-  }),
-});
-
-/**
- * GraphQL Recipients type. (new schema, for general case)
- */
-export const EmailDistributionListType = new GraphQLObjectType({
-  name: 'EmailDistributionList',
-  fields: () => ({
-    name: { type: GraphQLString },
-    to: { type: DistributionListSource },
-    cc: { type: DistributionListSource },
-    bcc: { type: DistributionListSource },
   }),
 });
 
@@ -102,7 +77,7 @@ export const EmailNotificationType = new GraphQLObjectType({
     notificationType: { type: GraphQLString },
     datasets: { type: new GraphQLList(DatasetType) },
     emailLayout: { type: EmailLayoutType },
-    emailDistributionList: { type: EmailDistributionListType },
+    emailDistributionList: { type: GraphQLID },
     userSubscribed: { type: GraphQLBoolean },
     subscriptionList: { type: new GraphQLList(GraphQLString) },
     restrictSubscription: { type: GraphQLBoolean },

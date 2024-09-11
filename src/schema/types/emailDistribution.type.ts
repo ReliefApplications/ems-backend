@@ -7,6 +7,20 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Connection } from './pagination.type';
+import { QueryType } from './emailNotification.type';
+
+/**
+ * Defines filter used as part of distribution list.
+ */
+export const DistributionListSource = new GraphQLObjectType({
+  name: 'DistributionListSource',
+  fields: () => ({
+    resource: { type: GraphQLString },
+    query: { type: QueryType },
+    inputEmails: { type: new GraphQLList(GraphQLString) },
+  }),
+});
+
 /**
  * GraphQL DistributionList type.
  */
@@ -20,10 +34,9 @@ export const EmailDistributionListType = new GraphQLObjectType({
       },
     },
     name: { type: GraphQLString },
-    distributionListName: { type: GraphQLString },
-    To: { type: new GraphQLList(GraphQLString) },
-    Cc: { type: new GraphQLList(GraphQLString) },
-    Bcc: { type: new GraphQLList(GraphQLString) },
+    to: { type: DistributionListSource },
+    cc: { type: DistributionListSource },
+    bcc: { type: DistributionListSource },
     isDeleted: { type: GraphQLInt },
     createdBy: { type: GraphQLJSON },
     applicationId: { type: GraphQLID },

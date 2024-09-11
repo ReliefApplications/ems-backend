@@ -1,6 +1,6 @@
 import { graphQLAuthCheck } from '@schema/shared';
 import { logger } from '@services/logger.service';
-import { GraphQLError, GraphQLID, GraphQLInt, GraphQLString } from 'graphql';
+import { GraphQLError, GraphQLID, GraphQLInt } from 'graphql';
 import { Context } from '@server/apollo/context';
 import { EmailDistributionList } from '@models';
 import { decodeCursor, encodeCursor } from '@schema/types';
@@ -39,7 +39,7 @@ export default {
   args: {
     limit: { type: GraphQLInt, defaultValue: 0 },
     skip: { type: GraphQLInt, defaultValue: 0 },
-    id: { type: GraphQLString, defaultValue: '' },
+    id: { type: GraphQLID, defaultValue: '' },
     applicationId: { type: GraphQLID },
   },
   async resolve(_, args, context: Context) {
