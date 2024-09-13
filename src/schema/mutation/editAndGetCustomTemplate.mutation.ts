@@ -46,6 +46,12 @@ export default {
 
       if (err instanceof GraphQLError) {
         throw err;
+      } else if (err?.code === 11000) {
+        throw new GraphQLError(
+          context.i18next.t(
+            'mutations.customTemplate.errors.customTemplateNameExist'
+          )
+        );
       }
 
       throw new GraphQLError(

@@ -44,21 +44,6 @@ export const DatasetType = new GraphQLObjectType({
 });
 
 /**
- * GraphQL EmailLayout type.
- */
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const EmailLayoutType = new GraphQLObjectType({
-  name: 'EmailLayout',
-  fields: () => ({
-    subject: { type: GraphQLString },
-    header: { type: GraphQLJSON },
-    body: { type: GraphQLJSON },
-    banner: { type: GraphQLJSON },
-    footer: { type: GraphQLJSON },
-  }),
-});
-
-/**
  * GraphQL EmailNotification type.
  */
 export const EmailNotificationType = new GraphQLObjectType({
@@ -76,7 +61,7 @@ export const EmailNotificationType = new GraphQLObjectType({
     schedule: { type: GraphQLString },
     notificationType: { type: GraphQLString },
     datasets: { type: new GraphQLList(DatasetType) },
-    emailLayout: { type: EmailLayoutType },
+    emailLayout: { type: GraphQLID },
     emailDistributionList: { type: GraphQLID },
     userSubscribed: { type: GraphQLBoolean },
     subscriptionList: { type: new GraphQLList(GraphQLString) },

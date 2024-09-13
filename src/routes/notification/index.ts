@@ -24,6 +24,7 @@ import i18next from 'i18next';
 import { sendEmail } from '@utils/email/sendEmail';
 import parse from 'node-html-parser';
 import { validateEmail } from '@utils/validators/validateEmail';
+import { CustomTemplate, ICustomTemplate } from '@models/customTemplate.model';
 import axios from 'axios';
 import config from 'config';
 
@@ -90,6 +91,7 @@ router.post('/send-email/:configId', async (req, res) => {
     }
     const baseElement = parse(baseTemplate);
     const mainTableElement = baseElement.getElementById('mainTable');
+    notification.emailLayout = notification.emailLayout as ICustomTemplate;
     await buildEmail(notification.emailLayout, mainTableElement, datasets);
 
     // TODO: Phase 2 - allow records from any table not just first
@@ -98,7 +100,7 @@ router.post('/send-email/:configId', async (req, res) => {
     )?.records;
 
     const emailSubject = replaceSubject(
-      notification.get('emailLayout').subject,
+      notification?.emailLayout?.subject,
       subjectRecords
     );
 
@@ -210,6 +212,12 @@ router.post('/preview-email', async (req, res) => {
     const subjectRecords = datasets.find(
       (dataset) => dataset.name === notification.datasets[0]?.name
     )?.records;
+    if (typeof notification?.emailLayout === 'string') {
+      notification.emailLayout = await CustomTemplate.findById(
+        notification.emailLayout
+      ).exec();
+    }
+    notification.emailLayout = notification.emailLayout as ICustomTemplate;
     const emailSubject = replaceSubject(
       notification?.emailLayout?.subject,
       subjectRecords
@@ -353,6 +361,7 @@ router.post('/send-individual-email/:configId', async (req, res) => {
   try {
     const notification = await EmailNotification.findById(req.params.configId)
       .populate('emailDistributionList')
+      .populate('emailLayout')
       .exec();
     const sendSeparateFields = [];
     // fields which are common in send separate and query fields
@@ -405,7 +414,7 @@ router.post('/send-individual-email/:configId', async (req, res) => {
 
     const baseElement = parse(baseTemplate);
     const mainTableElement = baseElement.getElementById('mainTable');
-
+    notification.emailLayout = notification.emailLayout as ICustomTemplate;
     // Add banner if available
     if (notification.emailLayout.banner.bannerImage) {
       const bannerElement = parse(
@@ -476,10 +485,9 @@ router.post('/send-individual-email/:configId', async (req, res) => {
       (dataset) => dataset.name === notification.datasets[0].name
     ).records;
 
-    const emailSubject = replaceSubject(
-      notification.get('emailLayout').subject,
-      [subjectRecords]
-    );
+    const emailSubject = replaceSubject(notification?.emailLayout?.subject, [
+      subjectRecords,
+    ]);
 
     const bodyElement = mainTableElement.getElementById('body');
     const distributionList = notification.get(

@@ -6,7 +6,8 @@ import {
   notificationsType,
 } from '@const/enumTypes';
 import { AccessibleRecordModel } from '@casl/mongoose';
-import { EmailDistributionList } from './emailDistributionlists.model';
+import { EmailDistributionList } from '@models/emailDistributionlists.model';
+import { ICustomTemplate } from '@models/customTemplate.model';
 
 /**
  *DataSet interface
@@ -36,17 +37,6 @@ export interface Dataset {
   individualEmailFields?: any[];
 }
 
-/**
- *EmailLayout interface
- */
-export interface EmailLayout {
-  subject: string;
-  header?: any;
-  body?: any;
-  banner?: any;
-  footer?: any;
-}
-
 /** custom notification documents interface declaration */
 export interface EmailNotification extends Document {
   kind: 'EmailNotification';
@@ -60,7 +50,7 @@ export interface EmailNotification extends Document {
   emailDistributionList: mongoose.Schema.Types.ObjectId | EmailDistributionList; // Reference to EmailDistributionList
   subscriptionList: string[];
   restrictSubscription: boolean;
-  emailLayout: EmailLayout;
+  emailLayout: mongoose.Schema.Types.ObjectId | ICustomTemplate; // Reference to CustomTemplate;
   recipientsType: string;
   status: string;
   lastExecution?: Date;
@@ -124,15 +114,8 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
       default: false,
     },
     emailLayout: {
-      subject: String,
-      header: {
-        type: mongoose.Schema.Types.Mixed,
-      },
-      body: { type: mongoose.Schema.Types.Mixed },
-      banner: { type: mongoose.Schema.Types.Mixed },
-      footer: {
-        type: mongoose.Schema.Types.Mixed,
-      },
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'CustomTemplate', // Reference to CustomTemplate collection
     },
     recipientsType: {
       type: String,

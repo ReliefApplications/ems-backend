@@ -108,6 +108,11 @@
 				}
 			}
 		},
+		"customTemplate": {
+			"errors": {
+				"customTemplateNameExist": "******"
+			}
+		},
 		"dashboard": {
 			"add": {
 				"errors": {
@@ -126,6 +131,11 @@
 				"errors": {
 					"invalidArguments": "******"
 				}
+			}
+		},
+		"emailDistributionList": {
+			"errors": {
+				"emailDistributionListNameExist": "******"
 			}
 		},
 		"form": {

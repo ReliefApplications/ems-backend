@@ -36,7 +36,7 @@ customTemplateSchema.index({ name: 1, applicationId: 1 }, { unique: true });
 /**
  *
  */
-interface ICustomTemplate extends Document {
+export interface ICustomTemplate extends Document {
   kind: 'customTemplate';
   subject: string;
   header?: any;

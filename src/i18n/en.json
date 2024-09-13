@@ -108,6 +108,11 @@
 				}
 			}
 		},
+		"customTemplate": {
+			"errors": {
+				"customTemplateNameExist": "Custom template title already exist"
+			}
+		},
 		"dashboard": {
 			"add": {
 				"errors": {
@@ -126,6 +131,11 @@
 				"errors": {
 					"invalidArguments": "Either name or structure must be provided."
 				}
+			}
+		},
+		"emailDistributionList": {
+			"errors": {
+				"emailDistributionListNameExist": "Email distribution list title already exist"
 			}
 		},
 		"form": {

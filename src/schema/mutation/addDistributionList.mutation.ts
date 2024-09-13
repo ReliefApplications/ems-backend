@@ -70,6 +70,12 @@ export default {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
+      } else if (err?.code === 11000) {
+        throw new GraphQLError(
+          context.i18next.t(
+            'mutations.emailDistributionList.errors.emailDistributionListNameExist'
+          )
+        );
       }
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
