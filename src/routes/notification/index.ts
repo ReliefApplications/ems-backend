@@ -11,6 +11,7 @@ import {
 import {
   ProcessedDataset,
   ValidateDataset,
+  azureFunctionHeaders,
   fetchDatasets,
   fetchDistributionList,
   flattenObject,
@@ -23,6 +24,8 @@ import i18next from 'i18next';
 import { sendEmail } from '@utils/email/sendEmail';
 import parse from 'node-html-parser';
 import { validateEmail } from '@utils/validators/validateEmail';
+import axios from 'axios';
+import config from 'config';
 
 /**
  * Limit of records to be fetched for each dataset in email notification
@@ -64,10 +67,10 @@ const router = express.Router();
 
 router.post('/send-email/:configId', async (req, res) => {
   try {
-    const config = await EmailNotification.findById(req.params.configId)
+    const notification = await EmailNotification.findById(req.params.configId)
       .populate('EmailDistributionList')
       .exec();
-    const datasetQueries: DatasetPreviewArgs[] = config.datasets.map(
+    const datasetQueries: DatasetPreviewArgs[] = notification.datasets.map(
       (dataset) => {
         return {
           name: dataset.name,
@@ -87,15 +90,15 @@ router.post('/send-email/:configId', async (req, res) => {
     }
     const baseElement = parse(baseTemplate);
     const mainTableElement = baseElement.getElementById('mainTable');
-    await buildEmail(config.emailLayout, mainTableElement, datasets);
+    await buildEmail(notification.emailLayout, mainTableElement, datasets);
 
     // TODO: Phase 2 - allow records from any table not just first
     const subjectRecords = datasets.find(
-      (dataset) => dataset.name === config.datasets[0]?.name
+      (dataset) => dataset.name === notification.datasets[0]?.name
     )?.records;
 
     const emailSubject = replaceSubject(
-      config.get('emailLayout').subject,
+      notification.get('emailLayout').subject,
       subjectRecords
     );
 
@@ -105,37 +108,37 @@ router.post('/send-email/:configId', async (req, res) => {
     const attachments: { path: string; cid: string }[] = [];
 
     // Add header logo
-    if (config.emailLayout.header.headerLogo) {
+    if (notification.emailLayout.header.headerLogo) {
       attachments.push({
-        path: config.emailLayout.header.headerLogo,
+        path: notification.emailLayout.header.headerLogo,
         cid: 'headerImage',
       });
     }
     // Add footer logo
-    if (config.emailLayout.footer.footerLogo) {
+    if (notification.emailLayout.footer.footerLogo) {
       attachments.push({
-        path: config.emailLayout.footer.footerLogo,
+        path: notification.emailLayout.footer.footerLogo,
         cid: 'footerImage',
       });
     }
     // Add banner image
-    if (config.emailLayout.banner.bannerImage) {
+    if (notification.emailLayout.banner.bannerImage) {
       attachments.push({
-        path: config.emailLayout.banner.bannerImage,
+        path: notification.emailLayout.banner.bannerImage,
         cid: 'bannerImage',
       });
     }
 
     // Enforces clear if restrict is true
-    if (config.restrictSubscription === true) {
-      config.subscriptionList = [];
+    if (notification.restrictSubscription === true) {
+      notification.subscriptionList = [];
     }
 
     const emails = await fetchDistributionList(
-      config?.emailDistributionList as EmailDistributionList,
+      notification?.emailDistributionList as EmailDistributionList,
       req,
       res,
-      config.subscriptionList
+      notification.subscriptionList
     );
 
     // Build email
@@ -160,10 +163,25 @@ router.post('/send-email/:configId', async (req, res) => {
   }
 });
 
+router.post('/send-email-azure/:configId', async (req, res) => {
+  try {
+    await axios({
+      url: `${config.get('mail.serverless.url')}/api/sendEmail/${
+        req.params.configId
+      }`,
+      method: 'GET',
+      headers: azureFunctionHeaders(req),
+    });
+    res.sendStatus(200);
+  } catch (err) {
+    res.sendStatus(500);
+  }
+});
+
 router.post('/preview-email', async (req, res) => {
   try {
-    const config = req.body as EmailNotification;
-    const datasetQueries: DatasetPreviewArgs[] = config.datasets.map(
+    const notification = req.body as EmailNotification;
+    const datasetQueries: DatasetPreviewArgs[] = notification.datasets.map(
       (dataset) => {
         return {
           name: dataset.name,
@@ -190,13 +208,13 @@ router.post('/preview-email', async (req, res) => {
     const baseElement = parse(baseTemplate);
     const mainTableElement = baseElement.getElementById('mainTable');
     const subjectRecords = datasets.find(
-      (dataset) => dataset.name === config.datasets[0]?.name
+      (dataset) => dataset.name === notification.datasets[0]?.name
     )?.records;
     const emailSubject = replaceSubject(
-      config?.emailLayout?.subject,
+      notification?.emailLayout?.subject,
       subjectRecords
     );
-    await buildEmail(config.emailLayout, mainTableElement, datasets);
+    await buildEmail(notification.emailLayout, mainTableElement, datasets);
     const emailTable = Buffer.from(baseElement.toString()).toString('base64');
     res.send({
       html: emailTable,
@@ -210,21 +228,21 @@ router.post('/preview-email', async (req, res) => {
 
 router.post('/preview-distribution-lists/', async (req, res) => {
   try {
-    const config = req.body as EmailNotification;
-    if (!config.emailDistributionList) {
+    const notification = req.body as EmailNotification;
+    if (!notification.emailDistributionList) {
       return res.status(400).send(req.t('common.errors.internalServerError'));
     }
     let distributionList =
-      config?.emailDistributionList as EmailDistributionList;
-    if (typeof config?.emailDistributionList === 'string') {
+      notification?.emailDistributionList as EmailDistributionList;
+    if (typeof notification?.emailDistributionList === 'string') {
       distributionList = await EmailDistributionList.findById(
-        config?.emailDistributionList
+        notification?.emailDistributionList
       ).exec();
     }
     const emails = await fetchDistributionList(distributionList, req, res);
     let individualEmailList = [];
-    if (config?.datasets) {
-      const individualEmailQueries: DatasetPreviewArgs[] = config.datasets
+    if (notification?.datasets) {
+      const individualEmailQueries: DatasetPreviewArgs[] = notification.datasets
         ?.filter((dataset) => dataset.individualEmail)
         ?.map((dataset) => {
           return {
@@ -264,13 +282,13 @@ router.post('/preview-distribution-lists/', async (req, res) => {
 
 router.post('/preview-dataset', async (req, res) => {
   try {
-    const config = req.body as DatasetPreviewArgs;
+    const notification = req.body as DatasetPreviewArgs;
     let dataset: ProcessedDataset;
     try {
-      if (!config.limit) {
-        config.limit = Number.MAX_SAFE_INTEGER;
+      if (!notification.limit) {
+        notification.limit = Number.MAX_SAFE_INTEGER;
       }
-      dataset = (await fetchDatasets([config], req, res))[0];
+      dataset = (await fetchDatasets([notification], req, res))[0];
       if (dataset.records.length <= DATASET_COUNT_LIMIT) {
         const resultCount = dataset.records.length;
         const table = parse(buildTable(dataset));
@@ -298,15 +316,15 @@ router.post('/preview-dataset', async (req, res) => {
 
 router.post('/validate-dataset', async (req, res) => {
   try {
-    const config = req.body as DatasetPreviewArgs[];
+    const notification = req.body as DatasetPreviewArgs[];
     let datasetArray: ValidateDataset[];
     try {
-      config.forEach((dataset) => {
+      notification.forEach((dataset) => {
         if (!dataset.limit) {
           dataset.limit = Number.MAX_SAFE_INTEGER;
         }
       });
-      datasetArray = await fetchDatasets(config, req, res, true);
+      datasetArray = await fetchDatasets(notification, req, res, true);
       const inValidDataSets = datasetArray
         .filter((dataset) => dataset?.recordsCount > DATASET_COUNT_LIMIT)
         .map((dataset) => ({
@@ -333,13 +351,13 @@ router.post('/validate-dataset', async (req, res) => {
  */
 router.post('/send-individual-email/:configId', async (req, res) => {
   try {
-    const config = await EmailNotification.findById(req.params.configId)
+    const notification = await EmailNotification.findById(req.params.configId)
       .populate('emailDistributionList')
       .exec();
     const sendSeparateFields = [];
     // fields which are common in send separate and query fields
     const commonFields = [];
-    const datasetQueries: DatasetPreviewArgs[] = config.datasets.map(
+    const datasetQueries: DatasetPreviewArgs[] = notification.datasets.map(
       (dataset) => {
         if (dataset.individualEmail) {
           const flattenIndividualFields = getFlatFields(
@@ -389,7 +407,7 @@ router.post('/send-individual-email/:configId', async (req, res) => {
     const mainTableElement = baseElement.getElementById('mainTable');
 
     // Add banner if available
-    if (config.emailLayout.banner.bannerImage) {
+    if (notification.emailLayout.banner.bannerImage) {
       const bannerElement = parse(
         `<tr bgcolor="#fff" align="center">
             <td>
@@ -403,10 +421,10 @@ router.post('/send-individual-email/:configId', async (req, res) => {
     }
 
     // Add header if available
-    if (config.emailLayout.header) {
-      const headerElement = replaceHeader(config.emailLayout.header);
+    if (notification.emailLayout.header) {
+      const headerElement = replaceHeader(notification.emailLayout.header);
       const backgroundColor =
-        config.emailLayout.header.headerBackgroundColor || '#00205c';
+        notification.emailLayout.header.headerBackgroundColor || '#00205c';
       mainTableElement.appendChild(
         parse(
           `<tr bgcolor = ${backgroundColor}><td style="font-size: 13px; font-family: Helvetica, Arial, sans-serif;">${headerElement}</td></tr>`
@@ -426,13 +444,13 @@ router.post('/send-individual-email/:configId', async (req, res) => {
     );
     mainTableElement.appendChild(bodyDiv);
 
-    let bodyString = config.emailLayout.body.bodyHtml;
+    let bodyString = notification.emailLayout.body.bodyHtml;
 
     // Add footer if available
-    if (config.emailLayout.footer) {
-      const footerElement = replaceFooter(config.emailLayout.footer);
+    if (notification.emailLayout.footer) {
+      const footerElement = replaceFooter(notification.emailLayout.footer);
       const backgroundColor =
-        config.emailLayout.footer.footerBackgroundColor || '#ffffff';
+        notification.emailLayout.footer.footerBackgroundColor || '#ffffff';
       mainTableElement.appendChild(
         parse(
           `<tr bgcolor= ${backgroundColor}><td style="font-size: 13px; font-family: Helvetica, Arial, sans-serif;">${footerElement}</td></tr>`
@@ -455,15 +473,16 @@ router.post('/send-individual-email/:configId', async (req, res) => {
     // TODO: Phase 2 - allow records from any table not just first
 
     subjectRecords = datasets.find(
-      (dataset) => dataset.name === config.datasets[0].name
+      (dataset) => dataset.name === notification.datasets[0].name
     ).records;
 
-    const emailSubject = replaceSubject(config.get('emailLayout').subject, [
-      subjectRecords,
-    ]);
+    const emailSubject = replaceSubject(
+      notification.get('emailLayout').subject,
+      [subjectRecords]
+    );
 
     const bodyElement = mainTableElement.getElementById('body');
-    const distributionList = config.get(
+    const distributionList = notification.get(
       'emailDistributionList'
     ) as EmailDistributionList;
     const cc = distributionList?.cc?.inputEmails;
@@ -471,21 +490,21 @@ router.post('/send-individual-email/:configId', async (req, res) => {
     const attachments: { path: string; cid: string }[] = [];
     // Use base64 encoded images as path for CID attachments
     // This is required for images to render in the body on legacy clients
-    if (config.emailLayout.header.headerLogo) {
+    if (notification.emailLayout.header.headerLogo) {
       attachments.push({
-        path: config.emailLayout.header.headerLogo,
+        path: notification.emailLayout.header.headerLogo,
         cid: 'headerImage',
       });
     }
-    if (config.emailLayout.footer.footerLogo) {
+    if (notification.emailLayout.footer.footerLogo) {
       attachments.push({
-        path: config.emailLayout.footer.footerLogo,
+        path: notification.emailLayout.footer.footerLogo,
         cid: 'footerImage',
       });
     }
-    if (config.emailLayout.banner.bannerImage) {
+    if (notification.emailLayout.banner.bannerImage) {
       attachments.push({
-        path: config.emailLayout.banner.bannerImage,
+        path: notification.emailLayout.banner.bannerImage,
         cid: 'bannerImage',
       });
     }

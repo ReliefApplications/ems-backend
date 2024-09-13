@@ -8,6 +8,7 @@ import { Response } from 'express';
 import { Request } from 'express-serve-static-core';
 import { map } from 'lodash';
 import { mongo } from 'mongoose';
+import config from 'config';
 
 /**
  * Interface validate dataset count
@@ -57,7 +58,6 @@ export const replaceUnderscores = (userValue: string): string => {
  *
  * @param {string} input - The input string from which whitespace will be removed.
  * @returns {string} - The string with all whitespace characters removed.
- *
  */
 export const removeWhitespace = (input: string): string => {
   // Use a regular expression to replace all whitespace characters with an empty string
@@ -152,7 +152,6 @@ export const getFlatFields = (fields: any, path = ''): any => {
  *                             If the array is empty, no filtering will be applied.
  * @param {string} [parentKey=''] - The base key to which nested keys will be appended. It starts as an empty string and accumulates key names during recursion to form dot-separated keys.
  * @param {Object} [result={}] - The resulting flattened object. This object accumulates key-value pairs where the keys are dot-separated strings representing the nested structure.
- *
  * @returns {Object} - The flattened object with dot-separated keys.
  */
 export const flattenObject = (
@@ -201,7 +200,6 @@ export const flattenObject = (
  *                          - ss: Seconds (00-59)
  *                          - A: AM or PM
  * @returns {string|null|undefined} - The formatted date string. If the date is invalid or not provided, returns null or undefined.
- *
  */
 export const formatDate = (date, format) => {
   if (date) {
@@ -422,5 +420,22 @@ export const fetchDistributionList = async (
     cc: Array.from(ccEmails),
     bcc: Array.from(bccEmails),
     name: emailDistributionList.name,
+  };
+};
+
+/**
+ * Returns headers required for Azure Function
+ *
+ * @param req Caller's express request
+ * @returns headers
+ */
+export const azureFunctionHeaders = (req: any) => {
+  return {
+    'x-function-key': config.get('mail.serverless.key') as string,
+    Authorization: req.headers.authorization,
+    'Content-Type': 'application/json',
+    ...(req.headers.accesstoken && {
+      accesstoken: req.headers.accesstoken,
+    }),
   };
 };
