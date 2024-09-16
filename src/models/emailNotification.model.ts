@@ -115,7 +115,7 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
     },
     emailLayout: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'CustomTemplate', // Reference to CustomTemplate collection
+      ref: 'customTemplate', // Reference to CustomTemplate collection
     },
     recipientsType: {
       type: String,

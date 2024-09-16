@@ -69,7 +69,8 @@ const router = express.Router();
 router.post('/send-email/:configId', async (req, res) => {
   try {
     const notification = await EmailNotification.findById(req.params.configId)
-      .populate('EmailDistributionList')
+      .populate('emailDistributionList')
+      .populate('emailLayout')
       .exec();
     const datasetQueries: DatasetPreviewArgs[] = notification.datasets.map(
       (dataset) => {
