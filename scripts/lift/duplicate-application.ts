@@ -23,7 +23,7 @@ import { getGraphQLTypeName } from '@utils/validators';
 /**
  * Command:
  * - Typescript: npx ts-node -r tsconfig-paths/register -r dotenv/config scripts/lift/duplicate-application.ts --app=<BASE_APP_ID> --country=<COUNTRY_NAME> --token=<BEARER_TOKEN>
- * - Javascript: node duplicateBaseApp.ts --app=<BASE_APP_ID> --country=<COUNTRY_NAME> --token=<BEARER_TOKEN>
+ * - Javascript: node build/scripts/lift/duplicate-application --app=<BASE_APP_ID> --country=<COUNTRY_NAME> --token=<BEARER_TOKEN>
  * Arguments:
  * --app ( optional ), shortcut: -a
  * --country ( required ), shortcut: -c
