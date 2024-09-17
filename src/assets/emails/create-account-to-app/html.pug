@@ -11,28 +11,22 @@ html
     div.frame.large
       div.center: img.head(src="https://doc.oortcloud.tech/img/logo.png" alt="Oort - Data management system")
 
-      h3.head
-        | #{t('createAccountToApp.sharedBy', { senderName: senderName })}
-        span.oort-color #{appName} 
-        | #{t('createAccountToApp.sharedApp')}
+      h3.head: !=t('createAccountToApp.title', { senderName: senderName, appName: appName })
 
       p #{t('createAccountToApp.accessInfo')}
       ol 
-        li: span
-          | #{t('createAccountToApp.goTo')}
-          a(href=platformUrl) here
-          |  #{t('createAccountToApp.clickOn')}
-        li: span #{t('createAccountToApp.validateEmail')}
-        li: span #{t('createAccountToApp.openApplication')}
+        li: span!=t('createAccountToApp.accessSteps.1', { url: registerUrl })
+        li: span #{t('createAccountToApp.accessSteps.2')}
+        li: span!=t('createAccountToApp.accessSteps.3', { url: url })
   
-      p.center: a.button(href=url target="_blank") #{t('createAccountToApp.accessButton')}
+      p.center: a.button(href=registerUrl target="_blank") #{t('createAccountToApp.registerButton')}
 
       p
         strong #{t('createAccountToApp.noteTitle')}
         | #{t('createAccountToApp.noteContent')}
       p
-        | #{t('createAccountToApp.accessDirectly')}
-        a(href=url) #{url}
+        | #{t('createAccountToApp.registerDirectly')}
+        a(href=registerUrl) #{registerUrl}
         | .
 
       p.footer.center
