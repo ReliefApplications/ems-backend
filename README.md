@@ -34,6 +34,18 @@ It is also possible to run tests on a single file, by passing it as a parameter:
 docker-compose -f docker-compose.test.yml run test-server npm run test -- <path_to_file>
 ```
 
+## Scripts
+
+You can execute scripts from a deployed instance, or locally.
+Scripts are located under the **scripts** folder, and should be written in typescript.
+
+They can be run using javascript on deployed environments.
+
+On deployed environments, you should enter the container to run the script.
+
+Explanations about each script should be written in the script itself.
+
+
 # RabbitMQ
 
 If management platform is not reachable at 15672, you can use this command ( while containers are running ):

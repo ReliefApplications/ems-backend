@@ -40,6 +40,7 @@
     "@azure/storage-blob": "^12.5.0",
     "@casl/ability": "^6.5.0",
     "@casl/mongoose": "^7.2.1",
+    "@faker-js/faker": "^7.6.0",
     "@graphql-tools/schema": "^10.0.0",
     "@turf/helpers": "^6.5.0",
     "@turf/turf": "^6.5.0",
@@ -82,6 +83,7 @@
     "lodash": "^4.17.21",
     "migrate": "^1.8.0",
     "mime-types": "^2.1.33",
+    "minimist": "^1.2.8",
     "mongoose": "^7.4.3",
     "node-cache": "^5.1.2",
     "node-fetch": "^2.6.1",
@@ -101,8 +103,7 @@
     "winston": "^3.8.2",
     "winston-daily-rotate-file": "^4.7.1",
     "ws": "^8.13.0",
-    "xhr2": "^0.2.1",
-    "@faker-js/faker": "^7.6.0"
+    "xhr2": "^0.2.1"
   },
   "devDependencies": {
     "@azure/msal-node": "^1.15.0",
