@@ -59,6 +59,7 @@ export interface DatasetPreviewArgs {
   };
   individualEmail?: boolean;
   limit?: number;
+  reference?: string;
 }
 
 /**
@@ -78,6 +79,7 @@ router.post('/send-email/:configId', async (req, res) => {
           name: dataset.name,
           query: dataset.query,
           resource: dataset.resource,
+          reference: dataset.reference,
           limit: DATASET_COUNT_LIMIT,
         };
       }
@@ -191,6 +193,7 @@ router.post('/preview-email', async (req, res) => {
           query: dataset.query,
           resource: dataset.resource,
           limit: DATASET_COUNT_LIMIT,
+          reference: dataset.reference,
         };
       }
     );
@@ -262,6 +265,7 @@ router.post('/preview-distribution-lists/', async (req, res) => {
               filter: dataset?.query?.filter,
             },
             resource: dataset.resource,
+            reference: dataset.reference,
             individualEmail: dataset.individualEmail,
           };
         });

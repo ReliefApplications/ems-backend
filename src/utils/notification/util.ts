@@ -1,6 +1,12 @@
 import { dateLocale, dateTimeLocale, timeLocale } from '@const/locale';
-import { EmailDistributionList, Resource } from '@models';
+import {
+  ApiConfiguration,
+  EmailDistributionList,
+  ReferenceData,
+  Resource,
+} from '@models';
 import { DatasetPreviewArgs } from '@routes/notification';
+import { buildDataSource, CustomAPI } from '@server/apollo/dataSources';
 import { logger } from '@services/logger.service';
 import Exporter from '@utils/files/resourceExporter';
 import { validateEmail } from '@utils/validators/validateEmail';
@@ -277,36 +283,77 @@ export const fetchDatasets = async (
   try {
     const processedDatasets = await Promise.all(
       datasets.map(async (dataset): Promise<any> => {
-        if (!dataset.resource) {
-          return;
+        if (dataset.resource) {
+          const resource = await Resource.findById(dataset.resource).exec();
+          if (!resource) throw new Error('common.errors.dataNotFound');
+
+          const resourceExporter = new Exporter(req, res, resource, {
+            query: dataset.query,
+            timeZone: 'UTC',
+            format: 'email',
+            // Temp
+            fields: getFlatFields(dataset.query.fields),
+            filter: dataset.query.filter,
+            limit: dataset.limit || Number.MAX_SAFE_INTEGER,
+          });
+
+          if (isValidate) {
+            const records = await resourceExporter.getRecordsCount(true);
+            const recordsCount = records?.[0]?.totalCount?.[0]?.count ?? 0;
+            return {
+              recordsCount,
+              name: dataset.name,
+            };
+          } else {
+            const records = await resourceExporter.export();
+            return {
+              ...records,
+              name: dataset.name,
+              individualEmail: dataset.individualEmail,
+            };
+          }
         }
-        const resource = await Resource.findById(dataset.resource).exec();
-        if (!resource) throw new Error('common.errors.dataNotFound');
 
-        const resourceExporter = new Exporter(req, res, resource, {
-          query: dataset.query,
-          timeZone: 'UTC',
-          format: 'email',
-          // Temp
-          fields: getFlatFields(dataset.query.fields),
-          filter: dataset.query.filter,
-          limit: dataset.limit || Number.MAX_SAFE_INTEGER,
-        });
+        if (dataset.reference) {
+          const reference = await ReferenceData.findById(
+            dataset.reference
+          ).exec();
 
-        if (isValidate) {
-          const records = await resourceExporter.getRecordsCount(true);
-          const recordsCount = records?.[0]?.totalCount?.[0]?.count ?? 0;
-          return {
-            recordsCount,
-            name: dataset.name,
-          };
-        } else {
-          const records = await resourceExporter.export();
-          return {
-            ...records,
-            name: dataset.name,
-            individualEmail: dataset.individualEmail,
-          };
+          const apiConfiguration = await ApiConfiguration.findById(
+            reference.apiConfiguration
+          );
+
+          const contextDataSource = (
+            await buildDataSource(apiConfiguration.name, {
+              req: req,
+            } as any)
+          )();
+
+          const dataSource = contextDataSource[
+            apiConfiguration.name
+          ] as CustomAPI;
+          const data: any =
+            (await dataSource.getReferenceDataItems(
+              reference,
+              apiConfiguration,
+              dataset.query
+            )) || [];
+
+          if (isValidate) {
+            const recordsCount = data.length ?? 0;
+            return {
+              recordsCount,
+              name: dataset.name,
+            };
+          } else {
+            const records = data;
+            return {
+              columns: dataset.query.fields,
+              records: records,
+              name: dataset.name,
+              individualEmail: dataset.individualEmail,
+            };
+          }
         }
       })
     );
@@ -335,10 +382,15 @@ export const fetchDistributionList = async (
   const ccEmails = new Set<string>();
   const bccEmails = new Set<string>();
 
-  if (emailDistributionList.to?.resource && emailDistributionList.to?.query) {
+  if (
+    (emailDistributionList.to?.resource ||
+      emailDistributionList.to?.reference) &&
+    emailDistributionList.to?.query
+  ) {
     const toQuery = {
       query: emailDistributionList.to.query,
       resource: emailDistributionList.to.resource,
+      reference: emailDistributionList.to.reference,
     };
     const toRecords = (await fetchDatasets([toQuery], req, res))[0].records;
     toRecords.forEach((record) => {
@@ -355,10 +407,15 @@ export const fetchDistributionList = async (
       });
     });
   }
-  if (emailDistributionList.cc?.resource && emailDistributionList.cc?.query) {
+  if (
+    (emailDistributionList.cc?.resource ||
+      emailDistributionList.cc?.reference) &&
+    emailDistributionList.cc?.query
+  ) {
     const ccQuery = {
       query: emailDistributionList.cc.query,
       resource: emailDistributionList.cc.resource,
+      reference: emailDistributionList.cc.reference,
     };
     const ccRecords = (await fetchDatasets([ccQuery], req, res))[0].records;
     ccRecords.forEach((record) => {
@@ -375,10 +432,15 @@ export const fetchDistributionList = async (
       });
     });
   }
-  if (emailDistributionList.bcc?.resource && emailDistributionList.bcc?.query) {
+  if (
+    (emailDistributionList.bcc?.resource ||
+      emailDistributionList.bcc?.reference) &&
+    emailDistributionList.bcc?.query
+  ) {
     const bccQuery = {
       query: emailDistributionList.bcc.query,
       resource: emailDistributionList.bcc.resource,
+      reference: emailDistributionList.bcc.reference,
     };
     const bccRecords = (await fetchDatasets([bccQuery], req, res))[0].records;
     bccRecords.forEach((record) => {

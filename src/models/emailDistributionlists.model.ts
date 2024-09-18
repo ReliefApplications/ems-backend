@@ -6,6 +6,7 @@ import mongoose, { Schema, Document } from 'mongoose';
  * Interface representing either a filter definition used to fetch emails, a static list of emails, or both
  */
 export interface DistributionListSource {
+  reference?: string;
   resource?: string;
   query?: {
     name: string;

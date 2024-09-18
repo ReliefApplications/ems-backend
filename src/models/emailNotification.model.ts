@@ -15,6 +15,7 @@ import { ICustomTemplate } from '@models/customTemplate.model';
 export interface Dataset {
   name: string;
   resource: string;
+  reference?: string;
   query: {
     name: string;
     filter: any;
