@@ -33,6 +33,13 @@ export const PageType = new GraphQLObjectType({
         return isNil(parent.visible) ? true : parent.visible;
       },
     },
+    showName: {
+      type: GraphQLBoolean,
+      resolve(parent) {
+        const defaultShowName = parent.type === 'workflow' ? true : false;
+        return isNil(parent.showName) ? defaultShowName : parent.showName;
+      },
+    },
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     type: { type: ContentEnumType },
