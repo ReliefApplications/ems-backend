@@ -10,6 +10,7 @@ import { Workflow } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForStep from '@security/extendAbilityForStep';
 import { accessibleBy } from '@casl/mongoose';
+import isNil from 'lodash/isNil';
 
 /** GraphQL Step type definition */
 export const StepType = new GraphQLObjectType({
@@ -23,6 +24,13 @@ export const StepType = new GraphQLObjectType({
     },
     name: { type: GraphQLString },
     icon: { type: GraphQLString },
+    showName: {
+      type: GraphQLBoolean,
+      resolve(parent) {
+        const defaultShowName = false;
+        return isNil(parent.showName) ? defaultShowName : parent.showName;
+      },
+    },
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     type: { type: ContentEnumType },
