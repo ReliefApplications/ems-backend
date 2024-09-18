@@ -407,7 +407,6 @@ router.post('/send-individual-email/:configId', async (req, res) => {
     );
 
     let datasets: ProcessedDataset[];
-    const processedIndividualRecords: ProcessedDataset[] = [];
 
     try {
       datasets = await fetchDatasets(datasetQueries, req, res);
@@ -554,13 +553,11 @@ router.post('/send-individual-email/:configId', async (req, res) => {
             individualEmails,
           };
         });
-      } else {
-        //filter individual emails from to-emails
-        commonBlockEmails = distributionList?.to?.inputEmails?.filter(
-          (email) => !individualEmail?.includes(email)
-        );
       }
     }
+    // group dataset by emails
+    const groupByEmail = {};
+    const commonBlocks = [];
 
     for (const dataset of datasets) {
       if (dataset.individualEmail) {
@@ -570,13 +567,34 @@ router.post('/send-individual-email/:configId', async (req, res) => {
           delete record.individualEmails;
           if (emails.length) {
             emails?.forEach((email) => {
-              processedIndividualRecords.push({
-                records: [record],
-                name: dataset.name,
-                columns: dataset.columns,
-                individualEmail: true,
-                email,
-              });
+              // Check if the email and dataset name already exist in groupByEmail
+              const groupEmail = groupByEmail[email]?.find(
+                (rec) => rec.email === email && rec.name === dataset.name
+              );
+              if (groupEmail) {
+                // If the email and dataset combination exists, push the record into the corresponding array
+                groupEmail?.records?.push(record);
+              } else if (groupByEmail[email]) {
+                // If the email exists in groupByEmail but not the dataset, push a new dataset entry for the email
+                groupByEmail[email].push({
+                  records: [record],
+                  name: dataset.name,
+                  columns: dataset.columns,
+                  individualEmail: true,
+                  email,
+                });
+              } else {
+                // If the email doesn't exist in groupByEmail, create a new entry with the dataset records for the email
+                groupByEmail[email] = [
+                  {
+                    records: [record],
+                    name: dataset.name,
+                    columns: dataset.columns,
+                    individualEmail: true,
+                    email,
+                  },
+                ];
+              }
               individualEmail.push(email);
             });
           }
@@ -589,7 +607,7 @@ router.post('/send-individual-email/:configId', async (req, res) => {
             buildTable(dataset)
           );
         }
-        processedIndividualRecords.push({
+        commonBlocks.push({
           records: [...dataset.records],
           name: dataset.name,
           columns: dataset.columns,
@@ -598,13 +616,18 @@ router.post('/send-individual-email/:configId', async (req, res) => {
     }
 
     let isEmailSend = false;
-    const commonBlocks = [];
-
-    for (const block of processedIndividualRecords) {
-      // let bodyHtml = config.emailLayout.body.bodyHtml;
+    commonBlockEmails = distributionList?.to?.inputEmails?.filter(
+      (email) => !individualEmail?.includes(email)
+    );
+    for (const email in groupByEmail) {
       const bodyStringCopy = bodyString;
-      if (bodyString.includes(`{{${block.name}}}`)) {
-        bodyString = bodyString.replace(`{{${block.name}}}`, buildTable(block));
+      for (const block of groupByEmail[email]) {
+        if (bodyString.includes(`{{${block.name}}}`)) {
+          bodyString = bodyString.replace(
+            `{{${block.name}}}`,
+            buildTable(block)
+          );
+        }
       }
 
       const bodyBlock = parse(`<tr><td>${bodyString}</td></tr>`);
@@ -614,23 +637,19 @@ router.post('/send-individual-email/:configId', async (req, res) => {
 
       bodyElement.appendChild(bodyBlock);
       // send emails separately for each email
-      if (block.individualEmail) {
-        const emailParams = {
-          message: {
-            to: block.email ?? [], // Recipient's email address
-            cc: cc ?? [],
-            bcc: bcc ?? [],
-            subject: emailSubject,
-            html: mainTableElement.toString().replaceAll(blockNameRegex, ''),
-            attachments: attachments,
-          },
-        };
-        // Send email
-        await sendEmail(emailParams);
-        isEmailSend = true;
-      } else {
-        commonBlocks.push(block);
-      }
+      const emailParams = {
+        message: {
+          to: [email] ?? [], // Recipient's email address
+          cc: cc ?? [],
+          bcc: bcc ?? [],
+          subject: emailSubject,
+          html: mainTableElement.toString().replaceAll(blockNameRegex, ''),
+          attachments: attachments,
+        },
+      };
+      // Send email
+      await sendEmail(emailParams);
+      isEmailSend = true;
       bodyElement.removeChild(bodyBlock);
       bodyString = bodyStringCopy;
     }
