@@ -275,9 +275,13 @@ router.post('/preview-distribution-lists/', async (req, res) => {
         name: data.name,
         emails: data.records
           .flatMap((record) =>
-            Object.values(record).flatMap((email: string) =>
-              email ? email.split(',') : []
-            )
+            Object.values(record).flatMap((email: string) => {
+              // if its a list type data
+              if (Array.isArray(email)) {
+                return email?.flatMap((rec) => Object.values(rec));
+              }
+              return email ? email.split(',') : [];
+            })
           )
           .filter(validateEmail),
       }));
@@ -541,16 +545,24 @@ router.post('/send-individual-email/:configId', async (req, res) => {
         dataset.records = dataset.records.map((record) => {
           const individualEmails = [];
           selectedEmailFieldName.forEach((field) => {
-            if (record[field])
-              individualEmails.push(
-                ...(record[field] as string)?.split(',').filter(validateEmail)
-              );
+            if (record[field]) {
+              const emails = Array.isArray(record[field])
+                ? (record[field] as Array<any>)
+                    .flatMap(Object.values) // Flatten if it's a list-type data
+                    .filter(validateEmail)
+                : (record[field] as string)?.split(',').filter(validateEmail); // Handle string-type data
+
+              if (emails && emails.length) {
+                individualEmails.push(...emails); // Add valid emails
+              }
+            }
+
             // delete individual email fields from records
             if (!selectedCommonFieldName.includes(field)) delete record[field];
           });
           return {
             ...record,
-            individualEmails,
+            individualEmails: Array.from(new Set(individualEmails)),
           };
         });
       }
@@ -616,9 +628,10 @@ router.post('/send-individual-email/:configId', async (req, res) => {
     }
 
     let isEmailSend = false;
-    commonBlockEmails = distributionList?.to?.inputEmails?.filter(
-      (email) => !individualEmail?.includes(email)
-    );
+    commonBlockEmails =
+      distributionList?.to?.inputEmails?.filter(
+        (email) => !individualEmail?.includes(email)
+      ) || [];
     for (const email in groupByEmail) {
       const bodyStringCopy = bodyString;
       for (const block of groupByEmail[email]) {
