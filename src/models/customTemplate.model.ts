@@ -25,6 +25,10 @@ export const customTemplateSchema = new Schema(
     applicationId: {
       type: mongoose.Schema.Types.ObjectId,
     },
+    isFromEmailNotification: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },

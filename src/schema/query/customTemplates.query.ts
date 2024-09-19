@@ -1,6 +1,6 @@
 import { graphQLAuthCheck } from '@schema/shared';
 import { logger } from '@services/logger.service';
-import { GraphQLError, GraphQLID, GraphQLInt } from 'graphql';
+import { GraphQLBoolean, GraphQLError, GraphQLID, GraphQLInt } from 'graphql';
 import { Context } from '@server/apollo/context';
 import { decodeCursor, encodeCursor } from '@schema/types';
 import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
@@ -40,6 +40,7 @@ export default {
     applicationId: { type: GraphQLID },
     limit: { type: GraphQLInt, defaultValue: 0 },
     skip: { type: GraphQLInt, defaultValue: 0 },
+    isFromEmailNotification: { type: GraphQLBoolean },
   },
   async resolve(_, args, context: Context) {
     graphQLAuthCheck(context);
@@ -47,6 +48,9 @@ export default {
       const customTemplates = await CustomTemplate.find({
         isDeleted: { $ne: 1 },
         ...(args.applicationId && { applicationId: args.applicationId }),
+        ...(!args.isFromEmailNotification && {
+          isFromEmailNotification: { $ne: true },
+        }),
       })
         .sort(SORT_FIELDS[0].sort('desc'))
         .skip(args.skip)

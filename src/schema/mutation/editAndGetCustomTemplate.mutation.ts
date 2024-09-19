@@ -28,6 +28,8 @@ export default {
           footer: args.customTemplate.footer,
           createdBy: { name: context.user.name, email: context.user.username },
           isDeleted: args.customTemplate.isDeleted,
+          isFromEmailNotification:
+            args?.customTemplate?.isFromEmailNotification || false,
         };
 
         const updatedData = await CustomTemplate.findByIdAndUpdate(

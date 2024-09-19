@@ -3,6 +3,7 @@ import {
   GraphQLObjectType,
   GraphQLString,
   GraphQLInt,
+  GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Connection } from './pagination.type';
@@ -27,6 +28,7 @@ export const CustomTemplateType = new GraphQLObjectType({
     isDeleted: { type: GraphQLInt },
     createdBy: { type: GraphQLJSON },
     applicationId: { type: GraphQLID },
+    isFromEmailNotification: { type: GraphQLBoolean },
   }),
 });
 

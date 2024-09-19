@@ -26,6 +26,8 @@ export default {
         banner: args.customTemplate.banner,
         footer: args.customTemplate.footer,
         createdBy: { name: context.user.name, email: context.user.username },
+        isFromEmailNotification:
+          args.customTemplate.isFromEmailNotification || false,
       };
 
       console.log(customTemplateData);
