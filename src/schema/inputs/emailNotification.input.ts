@@ -49,6 +49,8 @@ export const DatasetInputType = new GraphQLInputObjectType({
   name: 'DatasetInput',
   fields: () => ({
     resource: { type: GraphQLString },
+    reference: { type: GraphQLString },
+    dataType: { type: GraphQLString },
     name: { type: GraphQLString },
     query: { type: QueryInputType },
     tableStyle: { type: GraphQLJSON },
