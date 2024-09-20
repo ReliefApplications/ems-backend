@@ -46,7 +46,10 @@ export default {
       // Individual email count
       let individualCount = 0;
       for (const dataset of args.notification.datasets) {
-        if (dataset.resource && dataset.individualEmail) {
+        if (
+          (dataset.resource || dataset.reference) &&
+          dataset.individualEmail
+        ) {
           individualCount += 1;
         }
       }

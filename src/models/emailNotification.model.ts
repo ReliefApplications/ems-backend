@@ -89,6 +89,7 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
       {
         name: String,
         resource: String,
+        reference: String,
         query: {
           name: String,
           fields: [{ type: mongoose.Schema.Types.Mixed }],
