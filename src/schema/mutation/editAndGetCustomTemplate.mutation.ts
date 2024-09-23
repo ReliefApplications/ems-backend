@@ -5,6 +5,7 @@ import { Context } from '@server/apollo/context';
 import GraphQLJSON from 'graphql-type-json';
 import { CustomTemplateType } from '@schema/types/customTemplate.type';
 import { CustomTemplate } from '@models/customTemplate.model';
+import { blobStorageUpload } from '@utils/notification/blobStorage';
 
 /**
  * Mutation to update an existing custom notification.
@@ -31,6 +32,36 @@ export default {
           isFromEmailNotification:
             args?.customTemplate?.isFromEmailNotification || false,
         };
+
+        if (args.customTemplate.header.headerLogo) {
+          const base64data = args.customTemplate.header.headerLogo;
+          const fileName = await blobStorageUpload(
+            base64data,
+            'header',
+            args.id.toString()
+          );
+          customTemplateData.header.headerLogo = fileName;
+        }
+
+        if (args.customTemplate.footer.footerLogo) {
+          const base64data = args.customTemplate.footer.footerLogo;
+          const fileName = await blobStorageUpload(
+            base64data,
+            'footer',
+            args.id.toString()
+          );
+          customTemplateData.footer.footerLogo = fileName;
+        }
+
+        if (args.customTemplate.banner.bannerImage) {
+          const base64data = args.customTemplate.footer.footerLogo;
+          const fileName = await blobStorageUpload(
+            base64data,
+            'banner',
+            args.id.toString()
+          );
+          customTemplateData.banner.bannerImage = fileName;
+        }
 
         const updatedData = await CustomTemplate.findByIdAndUpdate(
           args.id,

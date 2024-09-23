@@ -66,7 +66,7 @@ export const replaceHeader = (header: {
   if (header.headerLogo) {
     headerString += `<td style="padding: 10px;">
           <a href="" style="display: block; border-style: none !important; text-align: center; border: 0 !important;">
-              <img width="120" data-imagetype="DataUri"  src="cid:headerImage" style="padding: 10px;" id="headerImage">
+              <img width="120" src="${header.headerLogo}" style="padding: 10px;" id="headerImage">
           </a>
       </td>
     `;
@@ -178,7 +178,6 @@ const getMaxSubColumnDepth = (columns: any[]) => {
  * @param columns - An array of column objects, where each column may have nested subcolumns.
  * @param maxRowSpan - The maximum rowspan (depth) determined by the outermost function.
  * @returns The rowspan value for the columns, which indicates how many rows a top-level column should span.
- *
  */
 const getRowSpan = (columns, maxRowSpan) => {
   let rowSpan = maxRowSpan - 1;
@@ -197,7 +196,6 @@ const getRowSpan = (columns, maxRowSpan) => {
  *
  * @param columns - An array of column objects, where each column may have nested subcolumns.
  * @returns The colspan value, which indicates how many columns a top-level column should span.
- *
  */
 const getColSpan = (columns) => {
   let colSpan = columns?.length || 1;
@@ -221,7 +219,6 @@ const getColSpan = (columns) => {
  * @param record - A record object, which may contain nested arrays of data.
  * @param maxRecordsLength - The initial maximum record length.
  * @returns The maximum length of records, including nested arrays.
- *
  */
 const getMaxRecordLength = (record, maxRecordsLength) => {
   for (const value of Object.values(record)) {
@@ -499,7 +496,7 @@ export const replaceFooter = (footer: {
     footerString += `
       <td style="padding: 10px;">
           <a href="" style="display: block; border-style: none !important; text-align: center; border: 0 !important;">
-              <img width="120" data-imagetype="DataUri"  src="cid:footerImage" style="padding: 10px; background-color: white;" id="footerImage">
+              <img width="120" src="${footer.footerLogo}" style="padding: 10px;" id="headerImage">
           </a>
       </td>
       `;
@@ -552,7 +549,7 @@ export const buildEmail = async (
       `<tr bgcolor="#fff" align="center">
           <td>
             <a href="#" style="display: block; border-style: none !important; border: 0 !important;">
-                <img width="100%" data-imagetype="DataUri" src="cid:bannerImage" alt="logo" id="bannerImage">
+              <img width="120" src="${emailLayout.banner.bannerImage}" style="padding: 10px;" id="headerImage">
             </a>
           </td>
        </tr>`

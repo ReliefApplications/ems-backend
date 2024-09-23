@@ -131,33 +131,6 @@ router.post('/send-email/:configId', async (req, res) => {
       subjectRecords
     );
 
-    // Add attachments
-    // Use base64 encoded images as path for CID attachments
-    // This is required for images to render in the body on legacy clients
-    const attachments: { path: string; cid: string }[] = [];
-
-    // Add header logo
-    if (notification.emailLayout.header.headerLogo) {
-      attachments.push({
-        path: notification.emailLayout.header.headerLogo,
-        cid: 'headerImage',
-      });
-    }
-    // Add footer logo
-    if (notification.emailLayout.footer.footerLogo) {
-      attachments.push({
-        path: notification.emailLayout.footer.footerLogo,
-        cid: 'footerImage',
-      });
-    }
-    // Add banner image
-    if (notification.emailLayout.banner.bannerImage) {
-      attachments.push({
-        path: notification.emailLayout.banner.bannerImage,
-        cid: 'bannerImage',
-      });
-    }
-
     // Enforces clear if restrict is true
     if (notification.restrictSubscription === true) {
       notification.subscriptionList = [];
@@ -176,7 +149,6 @@ router.post('/send-email/:configId', async (req, res) => {
         ...emails,
         subject: emailSubject,
         html: baseElement.toString(),
-        attachments: attachments,
       },
     };
     // Send email
@@ -537,27 +509,6 @@ router.post('/send-individual-email/:configId', async (req, res) => {
       notification.subscriptionList
     );
 
-    const attachments: { path: string; cid: string }[] = [];
-    // Use base64 encoded images as path for CID attachments
-    // This is required for images to render in the body on legacy clients
-    if (notification.emailLayout.header.headerLogo) {
-      attachments.push({
-        path: notification.emailLayout.header.headerLogo,
-        cid: 'headerImage',
-      });
-    }
-    if (notification.emailLayout.footer.footerLogo) {
-      attachments.push({
-        path: notification.emailLayout.footer.footerLogo,
-        cid: 'footerImage',
-      });
-    }
-    if (notification.emailLayout.banner.bannerImage) {
-      attachments.push({
-        path: notification.emailLayout.banner.bannerImage,
-        cid: 'bannerImage',
-      });
-    }
     const individualEmail = [];
     let commonBlockEmails = [];
 
@@ -702,7 +653,6 @@ router.post('/send-individual-email/:configId', async (req, res) => {
           bcc: bcc ?? [],
           subject: emailSubject,
           html: mainTableElement.toString().replaceAll(blockNameRegex, ''),
-          attachments: attachments,
         },
       };
       // Send email
@@ -731,7 +681,6 @@ router.post('/send-individual-email/:configId', async (req, res) => {
           bcc: bcc ?? [],
           subject: emailSubject,
           html: mainTableElement.toString().replaceAll(blockNameRegex, ''),
-          attachments: attachments,
         },
       };
       // Send email

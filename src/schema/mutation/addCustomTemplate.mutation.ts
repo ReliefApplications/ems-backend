@@ -5,6 +5,8 @@ import { Context } from '@server/apollo/context';
 import GraphQLJSON from 'graphql-type-json';
 import { CustomTemplate } from '@models/customTemplate.model';
 import { CustomTemplateType } from '@schema/types/customTemplate.type';
+import { blobStorageUpload } from '@utils/notification/blobStorage';
+import { ObjectId } from 'bson';
 
 /**
  * Mutation to add a new custom template list.
@@ -18,6 +20,7 @@ export default {
     graphQLAuthCheck(context);
     try {
       const customTemplateData = {
+        _id: new ObjectId(),
         applicationId: args.customTemplate.applicationId,
         name: args.customTemplate.name,
         subject: args.customTemplate.subject,
@@ -29,6 +32,36 @@ export default {
         isFromEmailNotification:
           args.customTemplate.isFromEmailNotification || false,
       };
+
+      if (args.customTemplate.header.headerLogo) {
+        const base64data = args.customTemplate.header.headerLogo;
+        const fileName = await blobStorageUpload(
+          base64data,
+          'header',
+          customTemplateData._id.toString()
+        );
+        customTemplateData.header.headerLogo = fileName;
+      }
+
+      if (args.customTemplate.footer.footerLogo) {
+        const base64data = args.customTemplate.footer.footerLogo;
+        const fileName = await blobStorageUpload(
+          base64data,
+          'footer',
+          customTemplateData._id.toString()
+        );
+        customTemplateData.footer.footerLogo = fileName;
+      }
+
+      if (args.customTemplate.banner.bannerImage) {
+        const base64data = args.customTemplate.footer.footerLogo;
+        const fileName = await blobStorageUpload(
+          base64data,
+          'banner',
+          customTemplateData._id.toString()
+        );
+        customTemplateData.banner.bannerImage = fileName;
+      }
 
       console.log(customTemplateData);
 
