@@ -13,11 +13,12 @@ import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
+import extendAbilityForApplications from '@security/extendAbilityForApplication';
 
 /** Arguments for the deleteEmailNotification mutation */
 type DeleteEmailNotificationArgs = {
   id: string | Types.ObjectId;
-  applicationId: string | Types.ObjectId;
+  applicationId: string;
 };
 
 /** Response type for the deleteEmailNotification mutation */
@@ -44,7 +45,10 @@ export default {
     graphQLAuthCheck(context);
 
     try {
-      const ability: AppAbility = context.user.ability;
+      const ability: AppAbility = extendAbilityForApplications(
+        context.user,
+        args.applicationId
+      );
       let emailNotification = null;
 
       logger.info(`Attempting to delete EmailNotification with ID: ${args.id}`);
