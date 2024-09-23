@@ -401,6 +401,17 @@ export const fetchDistributionList = async (
           value.forEach((item) => {
             if (typeof item === 'string' && validateEmail(item)) {
               toEmails.add(item);
+            } else if (typeof item === 'object') {
+              const key = Object.keys(item)[0];
+              const objValue = item[key];
+              if (typeof objValue === 'string') {
+                const emails = objValue.split(',').map((email) => email.trim());
+                emails.forEach((email) => {
+                  if (validateEmail(email)) {
+                    toEmails.add(email);
+                  }
+                });
+              }
             }
           });
         }
@@ -426,6 +437,17 @@ export const fetchDistributionList = async (
           value.forEach((item) => {
             if (typeof item === 'string' && validateEmail(item)) {
               ccEmails.add(item);
+            } else if (typeof item === 'object') {
+              const key = Object.keys(item)[0];
+              const objValue = item[key];
+              if (typeof objValue === 'string') {
+                const emails = objValue.split(',').map((email) => email.trim());
+                emails.forEach((email) => {
+                  if (validateEmail(email)) {
+                    ccEmails.add(email);
+                  }
+                });
+              }
             }
           });
         }
@@ -451,6 +473,17 @@ export const fetchDistributionList = async (
           value.forEach((item) => {
             if (typeof item === 'string' && validateEmail(item)) {
               bccEmails.add(item);
+            } else if (typeof item === 'object') {
+              const key = Object.keys(item)[0];
+              const objValue = item[key];
+              if (typeof objValue === 'string') {
+                const emails = objValue.split(',').map((email) => email.trim());
+                emails.forEach((email) => {
+                  if (validateEmail(email)) {
+                    bccEmails.add(email);
+                  }
+                });
+              }
             }
           });
         }
