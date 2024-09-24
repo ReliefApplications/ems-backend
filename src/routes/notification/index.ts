@@ -167,15 +167,16 @@ router.post('/send-email/:configId', async (req, res) => {
 router.post('/send-email-azure/:configId', async (req, res) => {
   try {
     await axios({
-      url: `${config.get('mail.serverless.url')}/api/sendEmail/${
+      url: `${config.get('emailAzure.serverlessUrl')}/api/sendEmail/${
         req.params.configId
       }`,
       method: 'GET',
       headers: azureFunctionHeaders(req),
     });
-    res.sendStatus(200);
+    res.status(200).send({ status: 'OK' });
   } catch (err) {
-    res.sendStatus(500);
+    logger.error(err.message, { stack: err.stack });
+    res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
