@@ -14,7 +14,6 @@ import { Response } from 'express';
 import { Request } from 'express-serve-static-core';
 import { map } from 'lodash';
 import { mongo } from 'mongoose';
-import config from 'config';
 
 /**
  * Interface validate dataset count
@@ -497,7 +496,6 @@ export const fetchDistributionList = async (
  */
 export const azureFunctionHeaders = (req: any) => {
   return {
-    'x-function-key': config.get('emailAzure.serverlessKey') as string,
     Authorization: req.headers.authorization,
     'Content-Type': 'application/json',
     ...(req.headers.accesstoken && {

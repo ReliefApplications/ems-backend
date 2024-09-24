@@ -172,6 +172,9 @@ router.post('/send-email-azure/:configId', async (req, res) => {
       }`,
       method: 'GET',
       headers: azureFunctionHeaders(req),
+      params: {
+        code: config.get('emailAzure.serverlessKey'),
+      },
     });
     res.status(200).send({ status: 'OK' });
   } catch (err) {
