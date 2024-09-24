@@ -1,3 +1,10 @@
+## [2.11.1](https://github.com/ReliefApplications/ems-backend/compare/v2.11.0...v2.11.1) (2024-09-24)
+
+
+### Bug Fixes
+
+* record validation preventing some valid records to be updated ([#1117](https://github.com/ReliefApplications/ems-backend/issues/1117)) ([0a9b117](https://github.com/ReliefApplications/ems-backend/commit/0a9b117641f3835c0b70ec5b665777e50d47e9eb)), closes [AB#103766](https://github.com/AB/issues/103766)
+
 # [2.11.0](https://github.com/ReliefApplications/ems-backend/compare/v2.10.3...v2.11.0) (2024-06-21)
 
 
