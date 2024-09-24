@@ -14,6 +14,7 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
+import { CustomTemplate } from '@models/customTemplate.model';
 
 /** Arguments for the deleteEmailNotification mutation */
 type DeleteEmailNotificationArgs = {
@@ -82,6 +83,13 @@ export default {
       }
 
       logger.info(`EmailNotification with ID: ${args.id} successfully deleted`);
+      // delete custom template mapped to this email notification
+      if (emailNotification.emailLayout) {
+        await CustomTemplate.findOneAndDelete({
+          _id: emailNotification.emailLayout,
+          applicationId: args.applicationId,
+        });
+      }
       return {
         success: true,
         message: 'Email notification deleted successfully.',
