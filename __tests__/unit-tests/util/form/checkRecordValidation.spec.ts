@@ -14,7 +14,7 @@ beforeEach(() => {
   updatedRecordData = {};
 });
 
-describe('CheckRecordValidation', () => {
+describe('Check record validation', () => {
   it('Should return an error if a question has an error', () => {
     form.structure =
       '{\n "logoPosition": "right",\n "pages": [\n  {\n   "name": "page1",\n   "elements": [\n    {\n     "type": "text",\n     "name": "question1",\n     "isRequired": true\n    }\n   ]\n  }\n ],\n "showQuestionNumbers": "off"\n}';
@@ -117,5 +117,62 @@ describe('CheckRecordValidation', () => {
         errors: ['Response required.'],
       },
     ]);
+  });
+
+  it('Should return empty list if reference data question contains data', () => {
+    form.structure =
+      '{\n "logoPosition": "right",\n "pages": [\n  {\n   "name": "page1",\n   "elements": [\n    {\n     "type": "tagbox",\n     "name": "tagbox",\n     "title": "tagbox",\n     "valueName": "tagbox",\n     "isRequired": true,\n     "showOtherItem": true,\n     "referenceData": "656f095471299fd0be2482bd",\n     "referenceDataDisplayField": "name"\n    }\n   ]\n  }\n ],\n "showQuestionNumbers": "off"\n}';
+    record.data = {
+      tagbox: ['IN'],
+    };
+    updatedRecordData = {};
+    expect(
+      checkRecordValidation(record, updatedRecordData, form, undefined)
+    ).toEqual([]);
+
+    record.data = {};
+    updatedRecordData = {
+      tagbox: ['IN'],
+    };
+    expect(
+      checkRecordValidation(record, updatedRecordData, form, undefined)
+    ).toEqual([]);
+  });
+
+  it("Should return an error if reference data question doesn't contain data", () => {
+    form.structure =
+      '{\n "logoPosition": "right",\n "pages": [\n  {\n   "name": "page1",\n   "elements": [\n    {\n     "type": "tagbox",\n     "name": "tagbox",\n     "title": "tagbox",\n     "valueName": "tagbox",\n     "isRequired": true,\n     "showOtherItem": true,\n     "referenceData": "656f095471299fd0be2482bd",\n     "referenceDataDisplayField": "name"\n    }\n   ]\n  }\n ],\n "showQuestionNumbers": "off"\n}';
+    expect(
+      checkRecordValidation(record, updatedRecordData, form, undefined)
+    ).toEqual([
+      {
+        question: 'tagbox',
+        errors: ['Response required.'],
+      },
+    ]);
+  });
+
+  it('Should return an error if validation happens at completion time and question has error', () => {
+    form.structure =
+      '{\n "logoPosition": "right",\n "pages": [\n  {\n   "name": "page1",\n   "elements": [\n    {\n     "type": "text",\n     "name": "question1",\n     "isRequired": true\n    }\n   ]\n  },\n  {\n   "name": "page2",\n   "elements": [\n    {\n     "type": "text",\n     "name": "question2"\n    }\n   ]\n  }\n ],\n "showQuestionNumbers": "off",\n "checkErrorsMode": "onComplete"\n}';
+    expect(
+      checkRecordValidation(record, updatedRecordData, form, undefined)
+    ).toEqual([
+      {
+        question: 'question1',
+        errors: ['Response required.'],
+      },
+    ]);
+  });
+
+  it('Should not return an error if validation happens at completion time and question has no error', () => {
+    form.structure =
+      '{\n "logoPosition": "right",\n "pages": [\n  {\n   "name": "page1",\n   "elements": [\n    {\n     "type": "text",\n     "name": "question1",\n     "isRequired": true\n    }\n   ]\n  },\n  {\n   "name": "page2",\n   "elements": [\n    {\n     "type": "text",\n     "name": "question2"\n    }\n   ]\n  }\n ],\n "showQuestionNumbers": "off",\n "checkErrorsMode": "onComplete"\n}';
+    updatedRecordData = {
+      question1: 'test',
+    };
+    expect(
+      checkRecordValidation(record, updatedRecordData, form, undefined)
+    ).toEqual([]);
   });
 });
