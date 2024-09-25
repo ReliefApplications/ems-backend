@@ -3,9 +3,10 @@ import {
   GraphQLID,
   GraphQLString,
   GraphQLError,
+  GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { cloneDeep, isArray, isEmpty, omit } from 'lodash';
+import { cloneDeep, has, isArray, isEmpty, omit } from 'lodash';
 import { contentType } from '@const/enumTypes';
 import { StepType } from '../types';
 import { Dashboard, Form, Step } from '@models';
@@ -34,6 +35,7 @@ type PermissionChange = {
 type EditStepArgs = {
   id: string | Types.ObjectId;
   name?: string;
+  showName?: boolean;
   type?: string;
   content?: string | Types.ObjectId;
   permissions?: any;
@@ -49,6 +51,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     name: { type: GraphQLString },
+    showName: { type: GraphQLBoolean },
     icon: { type: GraphQLString },
     type: { type: GraphQLString },
     content: { type: GraphQLID },
@@ -101,6 +104,7 @@ export default {
         ...(args.icon && { icon: args.icon }),
         ...(args.type && { type: args.type }),
         ...(args.content && { content: args.content }),
+        ...(has(args, 'showName') && { showName: args.showName }),
       };
       // Updating permissions
       const permissionsUpdate: any = {};

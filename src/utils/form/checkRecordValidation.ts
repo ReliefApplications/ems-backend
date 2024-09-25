@@ -61,47 +61,45 @@ export const checkRecordValidation = (
   survey.data = { ...record.data, ...newData };
   // validate the record
   survey.completeLastPage();
+  // If error detected, filter out questions based on criteria, and send back the issues
   if (survey.hasErrors()) {
-    // get all the errors in a array of string format
-    // @todo: check if we can do it better
-    const questions = survey.getAllQuestions().filter((q) => {
-      const isSelectType = Survey.Serializer.isDescendantOf(
-        q.getType(),
-        'selectbase'
-      );
+    // Filter questions based on our criteria
+    const filteredQuestions = survey.getAllQuestions().filter((question) => {
+      if (question.hasErrors()) {
+        const isSelectType = Survey.Serializer.isDescendantOf(
+          question.getType(),
+          'selectbase'
+        );
+        // eslint-disable-next-line @typescript-eslint/dot-notation
+        const jsonObj = { ...question['jsonObj'] };
+        if (!isSelectType) {
+          return true;
+        } else {
+          // if it has choices coming from reference data, and has data, skip validation
+          if (
+            jsonObj.referenceData &&
+            { ...record.data, ...newData }[question.name]
+          ) {
+            return false;
+          }
 
-      if (!isSelectType || !q.hasErrors()) return true;
+          // if it has choices coming from graphql, and has data, skip validation
+          if (jsonObj.gqlUrl && { ...record.data, ...newData }[question.name]) {
+            return false;
+          }
 
-      let flatQuestions = structure.pages.map((page) => page.elements).flat();
-      const hasPanels = (qs: any[]) => qs.find((q2) => q2.type === 'panel');
-      while (hasPanels(flatQuestions)) {
-        flatQuestions = flatQuestions
-          .map((q2) => (q2.type === 'panel' ? q2.elements : q2))
-          .flat();
-      }
-
-      // find the question from the structure
-      const question = flatQuestions.find((q2) => q2.name === q.name);
-
-      // if it has choices coming from reference data, and has data, skip validation
-      if (question.referenceData && { ...record.data, ...newData }[q.name]) {
+          return true;
+        }
+      } else {
         return false;
       }
-
-      // if it has choices coming from graphql, and has data, skip validation
-      if (question.gqlUrl && { ...record.data, ...newData }[q.name]) {
-        return false;
-      }
-
-      return true;
     });
 
-    const errors = questions
-      .filter((q) => q.hasErrors())
-      .map((q) => ({
-        question: q.title || q.name,
-        errors: q.getAllErrors().map((err) => err.getText()),
-      }));
+    // Get all errors in an array
+    const errors = filteredQuestions.map((question) => ({
+      question: question.title || question.name,
+      errors: question.getAllErrors().map((error) => error.getText()),
+    }));
     return errors;
   }
   return [];
