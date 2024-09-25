@@ -498,11 +498,19 @@ router.post('/send-individual-email/:configId', async (req, res) => {
     ]);
 
     const bodyElement = mainTableElement.getElementById('body');
-    const distributionList = notification.get(
-      'emailDistributionList'
-    ) as EmailDistributionList;
-    const cc = distributionList?.cc?.inputEmails;
-    const bcc = distributionList?.bcc?.inputEmails;
+
+    // Enforces clear if restrict is true
+    if (notification.restrictSubscription === true) {
+      notification.subscriptionList = [];
+    }
+
+    const { to, cc, bcc } = await fetchDistributionList(
+      notification?.emailDistributionList as EmailDistributionList,
+      req,
+      res,
+      notification.subscriptionList
+    );
+
     const attachments: { path: string; cid: string }[] = [];
     // Use base64 encoded images as path for CID attachments
     // This is required for images to render in the body on legacy clients
@@ -629,9 +637,7 @@ router.post('/send-individual-email/:configId', async (req, res) => {
 
     let isEmailSend = false;
     commonBlockEmails =
-      distributionList?.to?.inputEmails?.filter(
-        (email) => !individualEmail?.includes(email)
-      ) || [];
+      to?.filter((email) => !individualEmail?.includes(email)) || [];
     for (const email in groupByEmail) {
       const bodyStringCopy = bodyString;
       for (const block of groupByEmail[email]) {
