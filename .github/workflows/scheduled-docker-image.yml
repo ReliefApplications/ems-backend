@@ -17,7 +17,7 @@ jobs:
           - ref: alpha
     steps:
       - name: Dispatch DOCKER Event
-        uses: peter-evans/repository-dispatch@v2
+        uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.CD_ACCESS_TOKEN }}
           event-type: DOCKER
