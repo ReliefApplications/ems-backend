@@ -349,7 +349,15 @@ export const fetchDatasets = async (
               name: dataset.name,
             };
           } else {
-            const records = data;
+            //temporary fix to show first 50 records
+            //once reference data filter implemented we'll remove this code
+            let records = [];
+            const DATASET_COUNT_LIMIT = 50;
+            if (data.length <= DATASET_COUNT_LIMIT) {
+              records = data;
+            } else {
+              records = data.slice(0, DATASET_COUNT_LIMIT);
+            }
             return {
               columns: dataset.query.fields,
               records: records,
