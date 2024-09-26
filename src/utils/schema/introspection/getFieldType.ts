@@ -125,6 +125,9 @@ const getFieldType = (
     case 'geospatial': {
       return GraphQLJSON;
     }
+    case 'editor': {
+      return GraphQLString;
+    }
     default: {
       return GraphQLString;
     }
