@@ -139,9 +139,12 @@ export const getFlatFields = (fields: any, path = ''): any => {
     if (field.kind === 'OBJECT') {
       flatFields.push(...getFlatFields(field.fields, path + field.name + '.'));
     } else if (field.kind === 'LIST') {
-      flatFields.push(
-        ...getFlatFields(field.fields, path + field.name + '.[0].')
-      );
+      const subFields = field.fields;
+      delete field.fields;
+      flatFields.push({
+        ...field,
+        subColumns: getFlatFields(subFields),
+      });
     }
   });
 

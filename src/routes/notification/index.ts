@@ -67,6 +67,30 @@ export interface DatasetPreviewArgs {
  */
 const router = express.Router();
 
+/**
+ * Filters columns and their subColumns recursively, removing any column that has fields.
+ *
+ * @param columns - The array of columns to filter. Each column may contain nested subColumns.
+ * @returns The filtered array of columns, where columns with fields are removed, but
+ *          columns with subColumns are retained if they contain at least one valid subColumn.
+ */
+const filterColumns = (columns: any[]): any[] => {
+  return columns
+    .map((column) => {
+      // If the column has subColumns, apply the filterColumns function recursively
+      if (column.subColumns && column.subColumns.length > 0) {
+        column.subColumns = filterColumns(column.subColumns);
+      }
+      return column;
+    })
+    .filter(
+      (column) =>
+        // Filter out columns that have fields or empty subColumns
+        !column.fields?.length &&
+        (!column.subColumns || column.subColumns.length > 0)
+    );
+};
+
 router.post('/send-email/:configId', async (req, res) => {
   try {
     const notification = await EmailNotification.findById(req.params.configId)
@@ -719,9 +743,7 @@ router.post('/send-quick-email', async (req, res) => {
   try {
     const { emailDistributionList, emailLayout, tableInfo } = req.body;
     tableInfo.forEach((tableData) => {
-      tableData.columns = getFlatFields(tableData.columns).filter(
-        (column) => !column?.fields?.length
-      );
+      tableData.columns = filterColumns(getFlatFields(tableData.columns));
       const columns = tableData.columns?.map((column) =>
         removeWhitespace(column.name?.toLowerCase())
       );
@@ -817,9 +839,7 @@ router.post('/preview-quick-email', async (req, res) => {
   try {
     const { emailLayout, tableInfo } = req.body;
     tableInfo.forEach((tableData) => {
-      tableData.columns = getFlatFields(tableData.columns).filter(
-        (column) => !column?.fields?.length
-      );
+      tableData.columns = filterColumns(getFlatFields(tableData.columns));
       const columns = tableData.columns?.map((column) =>
         removeWhitespace(column.name?.toLowerCase())
       );

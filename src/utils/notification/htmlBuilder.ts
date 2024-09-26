@@ -225,12 +225,18 @@ const getColSpan = (columns) => {
  */
 const getMaxRecordLength = (record, maxRecordsLength) => {
   for (const value of Object.values(record)) {
-    if (Array.isArray(value)) {
+    if (
+      Array.isArray(value) &&
+      value.every((item) => typeof item === 'object')
+    ) {
       maxRecordsLength = Math.max(maxRecordsLength, value.length);
       let max = 0;
       value.forEach((data) => {
         for (const val of Object.values(data)) {
-          if (Array.isArray(val)) {
+          if (
+            Array.isArray(val) &&
+            val.every((item) => typeof item === 'object')
+          ) {
             max += getMaxRecordLength(data, 0);
           } else {
             // maxRecordsLength = Math.max(maxRecordsLength, value.length);
@@ -379,10 +385,15 @@ export const buildTable = (
 
         for (const column of dataset.columns) {
           const columnData = record[column.name] as any;
-          if (Array.isArray(columnData) && columnData?.length) {
+          if (
+            Array.isArray(columnData) &&
+            columnData?.length &&
+            columnData.every((item) => typeof item === 'object')
+          ) {
             for (let i = 0; i < maxRecordsLength; i++) {
               if (columnData[i]) {
-                for (const data of Object.values(columnData[i])) {
+                for (const subColumn of column?.subColumns) {
+                  const data = columnData[i][(subColumn as any)?.name];
                   subRows[i]
                     .push(`<td rowspan="${1}" style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
           ${formatDates(data)}</td>`);
