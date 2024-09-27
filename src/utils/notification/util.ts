@@ -376,6 +376,28 @@ export const fetchDatasets = async (
 };
 
 /**
+ * @param obj Records to check
+ * @param propertySet toEmails/ccEmails/bccEmails
+ */
+export const extractEmailsFromObject = (obj, propertySet) => {
+  Object.values(obj).forEach((value) => {
+    if (typeof value === 'string' && validateEmail(value)) {
+      propertySet.add(value);
+    } else if (Array.isArray(value)) {
+      value.forEach((item) => {
+        if (typeof item === 'string' && validateEmail(item)) {
+          propertySet.add(item);
+        } else if (typeof item === 'object') {
+          extractEmailsFromObject(item, propertySet);
+        }
+      });
+    } else if (typeof value === 'object') {
+      extractEmailsFromObject(value, propertySet);
+    }
+  });
+};
+
+/**
  * Given query descriptors and static emails, fetches and returns the complete distribution list
  *
  * @param emailDistributionList Distribution list id/object
@@ -405,30 +427,7 @@ export const fetchDistributionList = async (
       };
       const toRecords = (await fetchDatasets([toQuery], req, res))[0].records;
       toRecords.forEach((record) => {
-        Object.values(record).forEach((value) => {
-          if (typeof value === 'string' && validateEmail(value)) {
-            toEmails.add(value);
-          } else if (Array.isArray(value)) {
-            value.forEach((item) => {
-              if (typeof item === 'string' && validateEmail(item)) {
-                toEmails.add(item);
-              } else if (typeof item === 'object') {
-                const key = Object.keys(item)[0];
-                const objValue = item[key];
-                if (typeof objValue === 'string') {
-                  const emails = objValue
-                    .split(',')
-                    .map((email) => email.trim());
-                  emails.forEach((email) => {
-                    if (validateEmail(email)) {
-                      toEmails.add(email);
-                    }
-                  });
-                }
-              }
-            });
-          }
-        });
+        extractEmailsFromObject(record, toEmails);
       });
     }
     if (
@@ -443,30 +442,7 @@ export const fetchDistributionList = async (
       };
       const ccRecords = (await fetchDatasets([ccQuery], req, res))[0].records;
       ccRecords.forEach((record) => {
-        Object.values(record).forEach((value) => {
-          if (typeof value === 'string' && validateEmail(value)) {
-            ccEmails.add(value);
-          } else if (Array.isArray(value)) {
-            value.forEach((item) => {
-              if (typeof item === 'string' && validateEmail(item)) {
-                ccEmails.add(item);
-              } else if (typeof item === 'object') {
-                const key = Object.keys(item)[0];
-                const objValue = item[key];
-                if (typeof objValue === 'string') {
-                  const emails = objValue
-                    .split(',')
-                    .map((email) => email.trim());
-                  emails.forEach((email) => {
-                    if (validateEmail(email)) {
-                      ccEmails.add(email);
-                    }
-                  });
-                }
-              }
-            });
-          }
-        });
+        extractEmailsFromObject(record, ccEmails);
       });
     }
     if (
@@ -481,30 +457,7 @@ export const fetchDistributionList = async (
       };
       const bccRecords = (await fetchDatasets([bccQuery], req, res))[0].records;
       bccRecords.forEach((record) => {
-        Object.values(record).forEach((value) => {
-          if (typeof value === 'string' && validateEmail(value)) {
-            bccEmails.add(value);
-          } else if (Array.isArray(value)) {
-            value.forEach((item) => {
-              if (typeof item === 'string' && validateEmail(item)) {
-                bccEmails.add(item);
-              } else if (typeof item === 'object') {
-                const key = Object.keys(item)[0];
-                const objValue = item[key];
-                if (typeof objValue === 'string') {
-                  const emails = objValue
-                    .split(',')
-                    .map((email) => email.trim());
-                  emails.forEach((email) => {
-                    if (validateEmail(email)) {
-                      bccEmails.add(email);
-                    }
-                  });
-                }
-              }
-            });
-          }
-        });
+        extractEmailsFromObject(record, bccEmails);
       });
     }
     if (emailDistributionList.to?.inputEmails) {
