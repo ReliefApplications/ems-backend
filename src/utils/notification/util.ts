@@ -392,140 +392,147 @@ export const fetchDistributionList = async (
   const toEmails = new Set<string>();
   const ccEmails = new Set<string>();
   const bccEmails = new Set<string>();
-
-  if (
-    (emailDistributionList.to?.resource ||
-      emailDistributionList.to?.reference) &&
-    emailDistributionList.to?.query
-  ) {
-    const toQuery = {
-      query: emailDistributionList.to.query,
-      resource: emailDistributionList.to.resource,
-      reference: emailDistributionList.to.reference,
-    };
-    const toRecords = (await fetchDatasets([toQuery], req, res))[0].records;
-    toRecords.forEach((record) => {
-      Object.values(record).forEach((value) => {
-        if (typeof value === 'string' && validateEmail(value)) {
-          toEmails.add(value);
-        } else if (Array.isArray(value)) {
-          value.forEach((item) => {
-            if (typeof item === 'string' && validateEmail(item)) {
-              toEmails.add(item);
-            } else if (typeof item === 'object') {
-              const key = Object.keys(item)[0];
-              const objValue = item[key];
-              if (typeof objValue === 'string') {
-                const emails = objValue.split(',').map((email) => email.trim());
-                emails.forEach((email) => {
-                  if (validateEmail(email)) {
-                    toEmails.add(email);
-                  }
-                });
+  if (emailDistributionList) {
+    if (
+      (emailDistributionList.to?.resource ||
+        emailDistributionList.to?.reference) &&
+      emailDistributionList.to?.query
+    ) {
+      const toQuery = {
+        query: emailDistributionList.to.query,
+        resource: emailDistributionList.to.resource,
+        reference: emailDistributionList.to.reference,
+      };
+      const toRecords = (await fetchDatasets([toQuery], req, res))[0].records;
+      toRecords.forEach((record) => {
+        Object.values(record).forEach((value) => {
+          if (typeof value === 'string' && validateEmail(value)) {
+            toEmails.add(value);
+          } else if (Array.isArray(value)) {
+            value.forEach((item) => {
+              if (typeof item === 'string' && validateEmail(item)) {
+                toEmails.add(item);
+              } else if (typeof item === 'object') {
+                const key = Object.keys(item)[0];
+                const objValue = item[key];
+                if (typeof objValue === 'string') {
+                  const emails = objValue
+                    .split(',')
+                    .map((email) => email.trim());
+                  emails.forEach((email) => {
+                    if (validateEmail(email)) {
+                      toEmails.add(email);
+                    }
+                  });
+                }
               }
-            }
-          });
-        }
+            });
+          }
+        });
       });
-    });
-  }
-  if (
-    (emailDistributionList.cc?.resource ||
-      emailDistributionList.cc?.reference) &&
-    emailDistributionList.cc?.query
-  ) {
-    const ccQuery = {
-      query: emailDistributionList.cc.query,
-      resource: emailDistributionList.cc.resource,
-      reference: emailDistributionList.cc.reference,
-    };
-    const ccRecords = (await fetchDatasets([ccQuery], req, res))[0].records;
-    ccRecords.forEach((record) => {
-      Object.values(record).forEach((value) => {
-        if (typeof value === 'string' && validateEmail(value)) {
-          ccEmails.add(value);
-        } else if (Array.isArray(value)) {
-          value.forEach((item) => {
-            if (typeof item === 'string' && validateEmail(item)) {
-              ccEmails.add(item);
-            } else if (typeof item === 'object') {
-              const key = Object.keys(item)[0];
-              const objValue = item[key];
-              if (typeof objValue === 'string') {
-                const emails = objValue.split(',').map((email) => email.trim());
-                emails.forEach((email) => {
-                  if (validateEmail(email)) {
-                    ccEmails.add(email);
-                  }
-                });
+    }
+    if (
+      (emailDistributionList.cc?.resource ||
+        emailDistributionList.cc?.reference) &&
+      emailDistributionList.cc?.query
+    ) {
+      const ccQuery = {
+        query: emailDistributionList.cc.query,
+        resource: emailDistributionList.cc.resource,
+        reference: emailDistributionList.cc.reference,
+      };
+      const ccRecords = (await fetchDatasets([ccQuery], req, res))[0].records;
+      ccRecords.forEach((record) => {
+        Object.values(record).forEach((value) => {
+          if (typeof value === 'string' && validateEmail(value)) {
+            ccEmails.add(value);
+          } else if (Array.isArray(value)) {
+            value.forEach((item) => {
+              if (typeof item === 'string' && validateEmail(item)) {
+                ccEmails.add(item);
+              } else if (typeof item === 'object') {
+                const key = Object.keys(item)[0];
+                const objValue = item[key];
+                if (typeof objValue === 'string') {
+                  const emails = objValue
+                    .split(',')
+                    .map((email) => email.trim());
+                  emails.forEach((email) => {
+                    if (validateEmail(email)) {
+                      ccEmails.add(email);
+                    }
+                  });
+                }
               }
-            }
-          });
-        }
+            });
+          }
+        });
       });
-    });
-  }
-  if (
-    (emailDistributionList.bcc?.resource ||
-      emailDistributionList.bcc?.reference) &&
-    emailDistributionList.bcc?.query
-  ) {
-    const bccQuery = {
-      query: emailDistributionList.bcc.query,
-      resource: emailDistributionList.bcc.resource,
-      reference: emailDistributionList.bcc.reference,
-    };
-    const bccRecords = (await fetchDatasets([bccQuery], req, res))[0].records;
-    bccRecords.forEach((record) => {
-      Object.values(record).forEach((value) => {
-        if (typeof value === 'string' && validateEmail(value)) {
-          bccEmails.add(value);
-        } else if (Array.isArray(value)) {
-          value.forEach((item) => {
-            if (typeof item === 'string' && validateEmail(item)) {
-              bccEmails.add(item);
-            } else if (typeof item === 'object') {
-              const key = Object.keys(item)[0];
-              const objValue = item[key];
-              if (typeof objValue === 'string') {
-                const emails = objValue.split(',').map((email) => email.trim());
-                emails.forEach((email) => {
-                  if (validateEmail(email)) {
-                    bccEmails.add(email);
-                  }
-                });
+    }
+    if (
+      (emailDistributionList.bcc?.resource ||
+        emailDistributionList.bcc?.reference) &&
+      emailDistributionList.bcc?.query
+    ) {
+      const bccQuery = {
+        query: emailDistributionList.bcc.query,
+        resource: emailDistributionList.bcc.resource,
+        reference: emailDistributionList.bcc.reference,
+      };
+      const bccRecords = (await fetchDatasets([bccQuery], req, res))[0].records;
+      bccRecords.forEach((record) => {
+        Object.values(record).forEach((value) => {
+          if (typeof value === 'string' && validateEmail(value)) {
+            bccEmails.add(value);
+          } else if (Array.isArray(value)) {
+            value.forEach((item) => {
+              if (typeof item === 'string' && validateEmail(item)) {
+                bccEmails.add(item);
+              } else if (typeof item === 'object') {
+                const key = Object.keys(item)[0];
+                const objValue = item[key];
+                if (typeof objValue === 'string') {
+                  const emails = objValue
+                    .split(',')
+                    .map((email) => email.trim());
+                  emails.forEach((email) => {
+                    if (validateEmail(email)) {
+                      bccEmails.add(email);
+                    }
+                  });
+                }
               }
-            }
-          });
-        }
+            });
+          }
+        });
       });
-    });
-  }
-  if (emailDistributionList.to?.inputEmails) {
-    emailDistributionList.to.inputEmails.forEach((email) => {
-      toEmails.add(email);
-    });
-  }
-  if (subscriptionList) {
-    subscriptionList.forEach((email) => {
-      toEmails.add(email);
-    });
-  }
-  if (emailDistributionList.cc?.inputEmails) {
-    emailDistributionList.cc.inputEmails.forEach((email) => {
-      ccEmails.add(email);
-    });
-  }
-  if (emailDistributionList.bcc?.inputEmails) {
-    emailDistributionList.bcc.inputEmails.forEach((email) => {
-      bccEmails.add(email);
-    });
+    }
+    if (emailDistributionList.to?.inputEmails) {
+      emailDistributionList.to.inputEmails.forEach((email) => {
+        toEmails.add(email);
+      });
+    }
+    if (subscriptionList) {
+      subscriptionList.forEach((email) => {
+        toEmails.add(email);
+      });
+    }
+    if (emailDistributionList.cc?.inputEmails) {
+      emailDistributionList.cc.inputEmails.forEach((email) => {
+        ccEmails.add(email);
+      });
+    }
+    if (emailDistributionList.bcc?.inputEmails) {
+      emailDistributionList.bcc.inputEmails.forEach((email) => {
+        bccEmails.add(email);
+      });
+    }
   }
   return {
     to: Array.from(toEmails),
     cc: Array.from(ccEmails),
     bcc: Array.from(bccEmails),
-    name: emailDistributionList.name,
+    name: emailDistributionList?.name || '',
   };
 };
 

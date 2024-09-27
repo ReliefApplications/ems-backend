@@ -299,14 +299,16 @@ router.post('/preview-distribution-lists/', async (req, res) => {
         name: data.name,
         emails: data.records
           .flatMap((record) =>
-            Object.values(record).flatMap((email: string) => {
-              // if its a list type data
-              if (Array.isArray(email)) {
-                return email?.flatMap((rec) => Object.values(rec));
-              }
-              return email ? email.split(',') : [];
+            Object.values(record).flatMap((email: string | string[]) => {
+              // Flatten and split by commas, handle both array and string types
+              return Array.isArray(email)
+                ? email?.flatMap((rec) =>
+                    Object.values(rec)?.flatMap((val) => val?.split(','))
+                  )
+                : email?.split(',');
             })
           )
+          .map((rec) => rec.trim())
           .filter(validateEmail),
       }));
     }
@@ -578,14 +580,27 @@ router.post('/send-individual-email/:configId', async (req, res) => {
           const individualEmails = [];
           selectedEmailFieldName.forEach((field) => {
             if (record[field]) {
-              const emails = Array.isArray(record[field])
-                ? (record[field] as Array<any>)
-                    .flatMap(Object.values) // Flatten if it's a list-type data
-                    .filter(validateEmail)
-                : (record[field] as string)?.split(',').filter(validateEmail); // Handle string-type data
+              let emails: string[] = [];
 
-              if (emails && emails.length) {
-                individualEmails.push(...emails); // Add valid emails
+              if (Array.isArray(record[field])) {
+                emails = (record[field] as Array<any>)
+                  ?.flatMap(Object.values)
+                  ?.flatMap(
+                    (email) =>
+                      email
+                        ?.split(',')
+                        ?.map((rec) => rec.trim())
+                        ?.filter(validateEmail) || []
+                  ); // Flatten and process list-type data
+              } else {
+                emails = (record[field] as string)
+                  ?.split(',')
+                  ?.map((rec) => rec.trim())
+                  ?.filter(validateEmail); // Process string-type data
+              }
+
+              if (emails?.length) {
+                individualEmails.push(...emails); // Add valid emails if any
               }
             }
 
