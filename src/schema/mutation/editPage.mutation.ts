@@ -15,6 +15,10 @@ import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
+import {
+  PageGeographicContextArgs,
+  PageGeographicContextInputType,
+} from '@schema/inputs/pageGeographicContext.input';
 
 /** Simple form permission change type */
 type SimplePermissionChange =
@@ -38,6 +42,7 @@ type EditPageArgs = {
   permissions?: any;
   icon?: string;
   visible?: boolean;
+  geographicContext?: PageGeographicContextArgs;
 };
 
 /**
@@ -53,6 +58,7 @@ export default {
     icon: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
     visible: { type: GraphQLBoolean },
+    geographicContext: { type: PageGeographicContextInputType },
   },
   async resolve(parent, args: EditPageArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -124,6 +130,17 @@ export default {
 
       // Update visibility
       Object.assign(update, !isNil(args.visible) && { visible: args.visible });
+
+      // Update geographic context
+      if (!isNil(args.geographicContext)) {
+        const geographicContext = page.geographicContext;
+        Object.assign(update, {
+          geographicContext: {
+            ...geographicContext,
+            ...args.geographicContext,
+          },
+        });
+      }
 
       // apply the update
       page = await Page.findByIdAndUpdate(

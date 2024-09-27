@@ -54,6 +54,14 @@ export const PageType = new GraphQLObjectType({
         return null;
       },
     },
+    geographicContext: {
+      type: GraphQLJSON,
+      async resolve(parent, args, context) {
+        const ability = await extendAbilityForPage(context.user, parent);
+        if (ability.can('read', parent)) return parent.geographicContext;
+        return null;
+      },
+    },
     permissions: {
       type: AccessType,
       async resolve(parent, args, context) {

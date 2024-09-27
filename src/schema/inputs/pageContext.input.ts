@@ -6,7 +6,7 @@ import {
 } from 'graphql';
 import { Types } from 'mongoose';
 
-/** Aggregation type for queries/mutations argument */
+/** Page context type for queries/mutations argument */
 export type PageContextArgs = {
   refData?: string | Types.ObjectId;
   resource: Types.ObjectId;
