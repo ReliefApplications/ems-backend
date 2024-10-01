@@ -397,6 +397,27 @@ export const extractEmailsFromObject = (obj, propertySet) => {
 };
 
 /**
+ * Recursively traversing through objects or arrays
+ *
+ * @param data
+ */
+export const extractEmails = (data: any): string[] => {
+  if (typeof data === 'string' && data.includes('@')) {
+    return data.split(',');
+  }
+
+  if (Array.isArray(data)) {
+    return data.flatMap(extractEmails);
+  }
+
+  if (typeof data === 'object' && data !== null) {
+    return Object.values(data).flatMap(extractEmails);
+  }
+
+  return [];
+};
+
+/**
  * Given query descriptors and static emails, fetches and returns the complete distribution list
  *
  * @param emailDistributionList Distribution list id/object

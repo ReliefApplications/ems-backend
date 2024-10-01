@@ -12,6 +12,7 @@ import {
   ProcessedDataset,
   ValidateDataset,
   azureFunctionHeaders,
+  extractEmails,
   fetchDatasets,
   fetchDistributionList,
   flattenObject,
@@ -274,17 +275,8 @@ router.post('/preview-distribution-lists/', async (req, res) => {
       individualEmailList = individualEmails?.map((data) => ({
         name: data.name,
         emails: data.records
-          .flatMap((record) =>
-            Object.values(record).flatMap((email: string | string[]) => {
-              // Flatten and split by commas, handle both array and string types
-              return Array.isArray(email)
-                ? email?.flatMap((rec) =>
-                    Object.values(rec)?.flatMap((val) => val?.split(','))
-                  )
-                : email?.split(',');
-            })
-          )
-          .map((rec) => rec.trim())
+          .flatMap((record) => extractEmails(record))
+          .map((email) => email.trim())
           .filter(validateEmail),
       }));
     }
