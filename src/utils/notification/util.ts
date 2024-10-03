@@ -12,7 +12,7 @@ import Exporter from '@utils/files/resourceExporter';
 import { validateEmail } from '@utils/validators/validateEmail';
 import { Response } from 'express';
 import { Request } from 'express-serve-static-core';
-import { map } from 'lodash';
+import { cloneDeep, map } from 'lodash';
 import { mongo } from 'mongoose';
 
 /**
@@ -294,7 +294,7 @@ export const fetchDatasets = async (
             timeZone: 'UTC',
             format: 'email',
             // Temp
-            fields: getFlatFields(dataset.query.fields),
+            fields: getFlatFields(cloneDeep(dataset.query.fields)),
             filter: dataset.query.filter,
             limit: dataset.limit || Number.MAX_SAFE_INTEGER,
           });
@@ -379,21 +379,33 @@ export const fetchDatasets = async (
  * @param propertySet toEmails/ccEmails/bccEmails
  */
 export const extractEmailsFromObject = (obj, propertySet) => {
-  Object.values(obj).forEach((value) => {
-    if (typeof value === 'string' && validateEmail(value)) {
-      propertySet.add(value);
-    } else if (Array.isArray(value)) {
-      value.forEach((item) => {
-        if (typeof item === 'string' && validateEmail(item)) {
-          propertySet.add(item);
-        } else if (typeof item === 'object') {
-          extractEmailsFromObject(item, propertySet);
-        }
-      });
-    } else if (typeof value === 'object') {
-      extractEmailsFromObject(value, propertySet);
-    }
-  });
+  if (obj) {
+    Object.values(obj).forEach((value) => {
+      if (typeof value === 'string') {
+        const validEmails = value?.split(',').map((email) => email.trim());
+        validEmails.forEach((email) => {
+          if (validateEmail(email)) {
+            propertySet.add(email);
+          }
+        });
+      } else if (Array.isArray(value)) {
+        value.forEach((item) => {
+          if (typeof item === 'string') {
+            const validEmails = item?.split(',').map((email) => email.trim());
+            validEmails.forEach((email) => {
+              if (validateEmail(email)) {
+                propertySet.add(email);
+              }
+            });
+          } else if (typeof item === 'object') {
+            extractEmailsFromObject(item, propertySet);
+          }
+        });
+      } else if (typeof value === 'object') {
+        extractEmailsFromObject(value, propertySet);
+      }
+    });
+  }
 };
 
 /**
