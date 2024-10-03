@@ -390,7 +390,9 @@ export const buildTable = (
             for (let i = 0; i < maxRecordsLength; i++) {
               if (columnData[i]) {
                 for (const subColumn of column?.subColumns) {
-                  const data = columnData[i][(subColumn as any)?.name];
+                  const data = (subColumn as any)?.name
+                    ?.split('.')
+                    ?.reduce((acc, key) => acc && acc[key], columnData[i]);
                   subRows[i]
                     .push(`<td rowspan="${1}" style = "color: #000; font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
           ${formatDates(data)}</td>`);
