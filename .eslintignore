@@ -1,2 +1,4 @@
 node_modules
 src/utils/migrations/template.ts
+logs
+__tests__/old
