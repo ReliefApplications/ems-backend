@@ -58,7 +58,7 @@ export default {
         if (args.notification.datasets) {
           const datasetsCount =
             cloneDeep(args.notification.datasets)?.filter(
-              ({ resource }) => resource
+              ({ resource, reference }) => resource || reference
             ).length ?? 0;
           // Individual email count
           let individualCount = 0;
