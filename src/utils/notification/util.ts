@@ -415,7 +415,7 @@ export const extractEmailsFromObject = (obj, propertySet) => {
  */
 export const extractEmails = (data: any): string[] => {
   if (typeof data === 'string' && data.includes('@')) {
-    return data.split(',');
+    return data.split(',').map((email) => email.trim());
   }
 
   if (Array.isArray(data)) {
