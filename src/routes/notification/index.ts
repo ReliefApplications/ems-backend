@@ -527,25 +527,7 @@ router.post('/send-individual-email/:configId', async (req, res) => {
           const individualEmails = [];
           selectedEmailFieldName.forEach((field) => {
             if (record[field]) {
-              let emails: string[] = [];
-
-              if (Array.isArray(record[field])) {
-                emails = (record[field] as Array<any>)
-                  ?.flatMap(Object.values)
-                  ?.flatMap(
-                    (email) =>
-                      email
-                        ?.split(',')
-                        ?.map((rec) => rec.trim())
-                        ?.filter(validateEmail) || []
-                  ); // Flatten and process list-type data
-              } else {
-                emails = (record[field] as string)
-                  ?.split(',')
-                  ?.map((rec) => rec.trim())
-                  ?.filter(validateEmail); // Process string-type data
-              }
-
+              const emails = extractEmails(record[field]).filter(validateEmail);
               if (emails?.length) {
                 individualEmails.push(...emails); // Add valid emails if any
               }
