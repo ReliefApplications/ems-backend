@@ -400,7 +400,7 @@ export const buildTable = (
               } else {
                 subRows[i].push(
                   `<td colspan="${
-                    Object.values(columnData[0]).length
+                    column?.subColumns?.length || 1
                   }" style = "color: #000;  font-size: 15px; font-family: 'Roboto', Arial, sans-serif; padding-left: 20px; padding-top: 8px;padding-bottom: 8px; border-bottom:1px solid #d1d5db;">
             </td>`
                 );
