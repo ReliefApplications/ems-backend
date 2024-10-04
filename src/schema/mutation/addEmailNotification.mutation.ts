@@ -106,7 +106,7 @@ export default {
       }
 
       update.datasets = update.datasets.filter(
-        (block) => block.resource !== null
+        (block) => block.resource !== null || block.reference !== null
       );
       const emailNotification = new EmailNotification(update);
       await emailNotification.save();
