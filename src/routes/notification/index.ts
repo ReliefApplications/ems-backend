@@ -18,6 +18,7 @@ import {
   flattenObject,
   formatDate,
   getFlatFields,
+  getNestedFields,
   removeWhitespace,
 } from '@utils/notification/util';
 import { baseTemplate } from '@const/notification';
@@ -373,10 +374,10 @@ router.post('/send-individual-email/:configId', async (req, res) => {
     const datasetQueries: DatasetPreviewArgs[] = notification.datasets.map(
       (dataset) => {
         if (dataset.individualEmail) {
-          const flattenIndividualFields = getFlatFields(
+          const flattenIndividualFields = getNestedFields(
             cloneDeep(dataset.individualEmailFields)
           );
-          const flattenFields = getFlatFields(
+          const flattenFields = getNestedFields(
             cloneDeep(dataset?.query?.fields)
           );
           commonFields.push({

@@ -151,6 +151,41 @@ export const getFlatFields = (fields: any, path = ''): any => {
 };
 
 /**
+ * Flattens the fields array, to also include the subfields of objects.
+ *
+ * @param fields Fields to flatten
+ * @param path Current path to the field
+ * @returns The flattened fields array
+ */
+export const getNestedFields = (fields: any, path = ''): any => {
+  const flatFields: any = [];
+
+  // Check if fields is an array
+  if (!Array.isArray(fields)) {
+    return flatFields; // Return an empty array if fields is not an array
+  }
+
+  fields.forEach((field: any) => {
+    // Construct the full name for the field
+    const fieldName = path + field.name;
+
+    // Push the current field with the constructed name
+    flatFields.push({
+      ...field,
+      name: fieldName,
+    });
+
+    // Recursively handle subfields for OBJECT and LIST kinds
+    if (field.kind === 'OBJECT' || field.kind === 'LIST') {
+      const subFields = field.fields || []; // Ensure subFields is an array
+      flatFields.push(...getNestedFields(subFields, fieldName + '.'));
+    }
+  });
+
+  return flatFields;
+};
+
+/**
  * Recursively flattens a nested object, converting nested keys into dot-separated strings
  * and filters the keys based on the provided columns.
  *
