@@ -352,26 +352,34 @@ export default class Exporter {
           // Link is defined in currently exported resource
           const columnValue = get(record, column.field) || null;
           if (columnValue) {
-            relatedResourcePromises.push(
-              Record.aggregate(
-                this.buildPipeline(
-                  column.subColumns,
-                  isArray(columnValue)
-                    ? Array.from(new Set(columnValue)).map(
-                        (id: any) => new mongoose.Types.ObjectId(id)
-                      )
-                    : [new mongoose.Types.ObjectId(columnValue)]
-                )
-              ).then((relatedRecords) => {
-                if (relatedRecords.length > 0) {
-                  if (isArray(columnValue)) {
-                    set(record, column.field, relatedRecords);
-                  } else {
-                    set(record, column.field, relatedRecords[0]);
+            if (
+              (isArray(columnValue) &&
+                columnValue.every((id) =>
+                  mongoose.Types.ObjectId.isValid(id)
+                )) ||
+              mongoose.Types.ObjectId.isValid(columnValue)
+            ) {
+              relatedResourcePromises.push(
+                Record.aggregate(
+                  this.buildPipeline(
+                    column.subColumns,
+                    isArray(columnValue)
+                      ? Array.from(new Set(columnValue)).map(
+                          (id: any) => new mongoose.Types.ObjectId(id)
+                        )
+                      : [new mongoose.Types.ObjectId(columnValue)]
+                  )
+                ).then((relatedRecords) => {
+                  if (relatedRecords.length > 0) {
+                    if (isArray(columnValue)) {
+                      set(record, column.field, relatedRecords);
+                    } else {
+                      set(record, column.field, relatedRecords[0]);
+                    }
                   }
-                }
-              })
-            );
+                })
+              );
+            }
           }
         }
       }
@@ -956,7 +964,8 @@ export default class Exporter {
         return isArray(recordValue)
           ? recordValue.reduce((acc, choice) => {
               const dataRow = data.find(
-                (obj) => obj[referenceData.valueField] === choice
+                (obj) =>
+                  obj[referenceData.valueField] === (choice.text || choice)
               );
               if (dataRow) {
                 const transformer = new DataTransformer(
@@ -964,15 +973,16 @@ export default class Exporter {
                   cloneDeep([dataRow])
                 );
                 const transformedObject = transformer.transformData()[0];
-                Object.keys(transformedObject).forEach((key) => {
-                  if (!acc[key]) {
-                    acc[key] = [];
-                  }
-                  acc[key].push(transformedObject[key]);
-                });
+                // Object.keys(transformedObject).forEach((key) => {
+                //   if (!acc[key]) {
+                //     acc[key] = [];
+                //   }
+                //   acc[key].push(transformedObject[key]);
+                // });
+                acc.push(transformedObject);
               }
               return acc;
-            }, {})
+            }, [])
           : data.find(
               (obj) => obj[referenceData.valueField] === recordValue //affecting all row, not optimal but gets the job done
             );

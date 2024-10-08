@@ -28,6 +28,7 @@ import { validateEmail } from '@utils/validators/validateEmail';
 import { CustomTemplate, ICustomTemplate } from '@models/customTemplate.model';
 import axios from 'axios';
 import config from 'config';
+import { cloneDeep } from 'lodash';
 
 /**
  * Limit of records to be fetched for each dataset in email notification
@@ -373,9 +374,11 @@ router.post('/send-individual-email/:configId', async (req, res) => {
       (dataset) => {
         if (dataset.individualEmail) {
           const flattenIndividualFields = getFlatFields(
-            dataset.individualEmailFields
+            cloneDeep(dataset.individualEmailFields)
           );
-          const flattenFields = getFlatFields(dataset?.query?.fields);
+          const flattenFields = getFlatFields(
+            cloneDeep(dataset?.query?.fields)
+          );
           commonFields.push({
             name: dataset.name,
             emailFields: flattenIndividualFields
