@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { filterOperator } from 'types';
 
 /** The default fields */
 const DEFAULT_FIELDS = [
@@ -217,7 +218,7 @@ const buildMongoFilter = (
         // const field = fields.find(x => x.name === filter.field);
         const value = filter.value;
         switch (filter.operator) {
-          case 'contains': {
+          case filterOperator.CONTAINS: {
             if (fieldName.includes('id')) {
               return;
             }
@@ -256,7 +257,7 @@ const buildMongoFilter = (
             }
             return;
           }
-          case 'startswith': {
+          case filterOperator.STARTS_WITH: {
             if (fieldName.includes('id')) {
               return;
             }
@@ -269,7 +270,7 @@ const buildMongoFilter = (
             });
             return;
           }
-          case 'endswith': {
+          case filterOperator.ENDS_WITH: {
             if (fieldName.includes('id')) {
               return;
             }
