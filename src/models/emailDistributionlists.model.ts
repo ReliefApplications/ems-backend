@@ -34,6 +34,7 @@ export const emailDistributionListSchema = new Schema<EmailDistributionList>(
     name: String,
     to: {
       resource: String,
+      reference: String,
       query: {
         name: String,
         filter: { type: mongoose.Schema.Types.Mixed },
@@ -43,6 +44,7 @@ export const emailDistributionListSchema = new Schema<EmailDistributionList>(
     },
     cc: {
       resource: String,
+      reference: String,
       query: {
         name: String,
         filter: { type: mongoose.Schema.Types.Mixed },
@@ -52,6 +54,7 @@ export const emailDistributionListSchema = new Schema<EmailDistributionList>(
     },
     bcc: {
       resource: String,
+      reference: String,
       query: {
         name: String,
         filter: { type: mongoose.Schema.Types.Mixed },

@@ -20,7 +20,10 @@ export default {
       graphQLAuthCheck(context);
       if (
         !args.distributionList.name ||
-        (!args.distributionList.to.resource &&
+        (!(
+          args.distributionList.to.resource ||
+          args.distributionList.to.reference
+        ) &&
           args.distributionList.to.inputEmails.length === 0)
       ) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
