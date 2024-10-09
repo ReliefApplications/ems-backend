@@ -36,7 +36,7 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { CustomAPI } from '@server/apollo/dataSources';
 import { GraphQLDate } from 'graphql-scalars';
 import mongoose from 'mongoose';
-import { CompositeFilterDescriptor } from '@const/compositeFilter';
+import { CompositeFilterDescriptor } from '../../types/filter';
 
 /**
  * Apply the filter provided to the specified field

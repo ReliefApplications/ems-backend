@@ -36,7 +36,7 @@ import {
   Layer,
   EmailNotification,
 } from '@models';
-import { resourcePermission } from '@types';
+import { resourcePermission } from '../types/permission';
 
 /** Define available permissions on objects */
 export type ObjectPermissions = keyof (ApiConfiguration['permissions'] &
