@@ -37,7 +37,7 @@ const setMultiselectRow = (column: any, data: any, row: any) => {
  *
  * @param columns definition of export columns.
  * @param records list of records.
- * @param isEmail
+ * @param isEmail boolean to account for email behaviour
  * @returns list of export rows.
  */
 export const getRowsFromMeta = (

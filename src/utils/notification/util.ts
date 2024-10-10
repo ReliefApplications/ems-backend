@@ -410,6 +410,8 @@ export const fetchDatasets = async (
 };
 
 /**
+ * Extracts emails from records into a set of unique emails for to|cc|bcc.
+ *
  * @param obj Records to check
  * @param propertySet toEmails/ccEmails/bccEmails
  */
@@ -446,7 +448,8 @@ export const extractEmailsFromObject = (obj, propertySet) => {
 /**
  * Recursively traversing through objects or arrays
  *
- * @param data
+ * @param data Record to extract emails from
+ * @returns Array of flattened emails
  */
 export const extractEmails = (data: any): string[] => {
   if (typeof data === 'string' && data.includes('@')) {
