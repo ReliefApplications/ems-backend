@@ -34,6 +34,14 @@ const FILTER_FIELDS: { name: string; type: string }[] = [
     name: 'name',
     type: 'text',
   },
+  {
+    name: 'shortcut',
+    type: 'text',
+  },
+  {
+    name: 'id',
+    type: 'text',
+  },
 ];
 
 /** Available sort fields */
