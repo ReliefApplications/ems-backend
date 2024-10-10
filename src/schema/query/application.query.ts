@@ -1,17 +1,22 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import { ApplicationType } from '../types';
-import mongoose from 'mongoose';
-import { Application, Page } from '@models';
-import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { Application, Page } from '@models';
 import { graphQLAuthCheck } from '@schema/shared';
-import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
+import { logger } from '@services/logger.service';
+import {
+  GraphQLBoolean,
+  GraphQLError,
+  GraphQLID,
+  GraphQLNonNull,
+} from 'graphql';
+import mongoose, { Types } from 'mongoose';
+import { ApplicationType } from '../types';
 
 /** Arguments for the application query */
 type ApplicationArgs = {
   id: string | Types.ObjectId;
   asRole?: string | Types.ObjectId;
+  isFrontOfficeModule?: boolean;
 };
 
 /**
@@ -24,6 +29,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     asRole: { type: GraphQLID },
+    isFrontOfficeModule: { type: GraphQLBoolean },
   },
   async resolve(parent, args: ApplicationArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -33,13 +39,17 @@ export default {
         .where({ _id: args.id })
         .getFilter();
       const application = await Application.findOne(filters);
-      if (application && args.asRole) {
-        const pages: Page[] = await Page.aggregate([
+      if (application && (args.isFrontOfficeModule || args.asRole)) {
+        const aggregateOptions: mongoose.PipelineStage[] = [
           {
             $match: {
-              'permissions.canSee': {
-                $elemMatch: { $eq: new mongoose.Types.ObjectId(args.asRole) },
-              },
+              ...(args.asRole && {
+                'permissions.canSee': {
+                  $elemMatch: { $eq: new mongoose.Types.ObjectId(args.asRole) },
+                },
+              }),
+              /** Include only visible pages for front office module */
+              ...(args.isFrontOfficeModule && { visible: true }),
               _id: { $in: application.pages },
             },
           },
@@ -49,7 +59,8 @@ export default {
             },
           },
           { $sort: { __order: 1 } },
-        ]);
+        ];
+        const pages: Page[] = await Page.aggregate(aggregateOptions);
         application.pages = pages.map((x) => x._id);
       }
       if (!application) {
