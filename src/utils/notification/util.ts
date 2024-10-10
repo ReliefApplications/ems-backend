@@ -190,7 +190,7 @@ export const getNestedFields = (fields: any, path = ''): any => {
  * and filters the keys based on the provided columns.
  *
  * @param {Object} obj - The object to be flattened. This object can contain nested objects.
- * @param {string[]} columns -  An array of column names (keys) that should be included in the flattened result.
+ * @param {Object[]} columnsObjects -  An array of column names (keys) that should be included in the flattened result.
  *                             If provided, only keys that match these columns will be included in the output.
  *                             If the array is empty, no filtering will be applied.
  * @param {string} [parentKey=''] - The base key to which nested keys will be appended. It starts as an empty string and accumulates key names during recursion to form dot-separated keys.
@@ -199,10 +199,13 @@ export const getNestedFields = (fields: any, path = ''): any => {
  */
 export const flattenObject = (
   obj,
-  columns = [],
+  columnsObjects = [],
   parentKey = '',
   result = {}
 ) => {
+  const columns = columnsObjects?.map((column) =>
+    removeWhitespace(column.name?.toLowerCase())
+  );
   for (const key in obj) {
     if (obj.hasOwnProperty(key)) {
       const newKey = parentKey ? `${parentKey}.${key}` : key;
@@ -217,7 +220,13 @@ export const flattenObject = (
           if (countryName) {
             result[key] = `${countryName}`;
           }
-        } else flattenObject(obj[key], columns, newKey, result);
+        } // Check for 'SCALAR' kind condition
+        else if (
+          columnsObjects.find((column) => column?.name === newKey.toLowerCase())
+            ?.kind === 'SCALAR'
+        ) {
+          result[newKey] = obj[key];
+        } else flattenObject(obj[key], columnsObjects, newKey, result);
       } else if (columns?.length) {
         if (columns.includes(newKey.toLowerCase())) result[newKey] = obj[key];
       } else {

@@ -19,7 +19,6 @@ import {
   formatDate,
   getFlatFields,
   getNestedFields,
-  removeWhitespace,
 } from '@utils/notification/util';
 import { baseTemplate } from '@const/notification';
 import i18next from 'i18next';
@@ -690,11 +689,8 @@ router.post('/send-quick-email', async (req, res) => {
     const { emailDistributionList, emailLayout, tableInfo } = req.body;
     tableInfo.forEach((tableData) => {
       tableData.columns = filterColumns(getFlatFields(tableData.columns));
-      const columns = tableData.columns?.map((column) =>
-        removeWhitespace(column.name?.toLowerCase())
-      );
       tableData.records = tableData.records?.map((record) =>
-        flattenObject(record, columns)
+        flattenObject(record, tableData.columns)
       );
     });
     tableInfo.forEach((tableData) => {
@@ -786,11 +782,8 @@ router.post('/preview-quick-email', async (req, res) => {
     const { emailLayout, tableInfo } = req.body;
     tableInfo.forEach((tableData) => {
       tableData.columns = filterColumns(getFlatFields(tableData.columns));
-      const columns = tableData.columns?.map((column) =>
-        removeWhitespace(column.name?.toLowerCase())
-      );
       tableData.records = tableData.records?.map((record) =>
-        flattenObject(record, columns)
+        flattenObject(record, tableData.columns)
       );
     });
 
