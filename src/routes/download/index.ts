@@ -79,9 +79,9 @@ const buildUserExport = (req, res, users) => {
  */
 const templateExport = (res) => {
   const columns = [
-    { name: 'to', title: 'to', field: 'To' },
-    { name: 'cc', title: 'cc', field: 'Cc' },
-    { name: 'bcc', title: 'bcc', field: 'Bcc' },
+    { name: 'to', title: 'to', field: 'to' },
+    { name: 'cc', title: 'cc', field: 'cc' },
+    { name: 'bcc', title: 'bcc', field: 'bcc' },
   ];
   return fileBuilder(res, 'distributionList', columns, [], 'xlsx');
 };

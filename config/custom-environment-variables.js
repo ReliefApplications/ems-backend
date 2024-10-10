@@ -72,4 +72,12 @@ module.exports = {
   publicStorage: {
     url: 'PUBLIC_STORAGE_URL',
   },
+  emailAzure: {
+    blobStorageUrl: 'MAIL_BLOB_STORAGE_URL',
+    blobStorageKey: 'MAIL_BLOB_STORAGE_KEY',
+    blobStorageName: 'MAIL_BLOB_STORAGE_NAME',
+    blobStorageContainer: 'MAIL_BLOB_STORAGE_CONTAINER',
+    serverlessUrl: 'MAIL_SERVERLESS_URL',
+    serverlessKey: 'MAIL_SERVERLESS_KEY',
+  },
 };

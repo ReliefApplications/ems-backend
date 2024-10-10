@@ -31,3 +31,6 @@ config/local.js
 
 # Files
 files/*
+
+__blobstorage__/*
+__azurite_db_blob*
