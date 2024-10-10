@@ -9,6 +9,8 @@
  * `"lte"` (less than or equal to)
  * `"gt"` (greater than)
  * `"gte"` (greater than or equal to)
+ * `"in"` (in)
+ * `"notin"` (not in)
  *
  * The following operators are supported for string fields only:
  * `"startswith"`
@@ -18,7 +20,7 @@
  * `"isempty"`
  * `"isnotempty"`
  */
-export declare enum filterOperator {
+export enum filterOperator {
   CONTAINS = 'contains',
   DOES_NOT_CONTAIN = 'doesnotcontain',
   DOES_NOT_END_WITH = 'doesnotendwith',
@@ -35,6 +37,8 @@ export declare enum filterOperator {
   LESS_THAN_OR_EQUAL = 'lte',
   NOT_EQUAL_TO = 'neq',
   STARTS_WITH = 'startswith',
+  IN = 'in',
+  NOT_IN = 'notin',
 }
 
 /**

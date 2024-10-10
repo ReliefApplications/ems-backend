@@ -119,7 +119,7 @@ const applyFilters = (data: any, filter: any): boolean => {
         } else {
           return isNil(value) || !value.includes(filter.value);
         }
-      case 'in':
+      case filterOperator.IN:
         if (isString(value)) {
           if (isArray(filter.value)) {
             return !isNil(filter.value) && filter.value.includes(value);
@@ -130,7 +130,7 @@ const applyFilters = (data: any, filter: any): boolean => {
         } else {
           return !isNil(filter.value) && filter.value.includes(value);
         }
-      case 'notin':
+      case filterOperator.NOT_IN:
         if (isString(value)) {
           if (isArray(filter.value)) {
             return isNil(filter.value) || !filter.value.includes(value);

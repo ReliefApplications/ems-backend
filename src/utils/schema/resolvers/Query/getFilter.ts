@@ -8,7 +8,7 @@ import {
 } from '@const/fieldTypes';
 import { isNumber } from 'lodash';
 import { isUsingTodayPlaceholder } from '@const/placeholders';
-import { filterOperator } from 'types';
+import { filterOperator } from '../../../../types';
 
 /** The default fields */
 const DEFAULT_FIELDS = [
@@ -431,17 +431,22 @@ const buildMongoFilter = (
               };
             }
           }
-          case 'in': {
+          case filterOperator.IN: {
             if (isAttributeFilter) {
               return {
                 [fieldName]: { $regex: attrValue, $options: 'i' },
               };
             } else {
               value = Array.isArray(value) ? value : [value];
-              return { [fieldName]: { $in: value } };
+              console.log(value);
+              return {
+                [fieldName]: {
+                  $in: value.map((x) => new mongoose.Types.ObjectId(x)),
+                },
+              };
             }
           }
-          case 'notin': {
+          case filterOperator.NOT_IN: {
             if (isAttributeFilter) {
               return {
                 [fieldName]: { $not: { $regex: attrValue, $options: 'i' } },
@@ -559,9 +564,11 @@ export default (
   context?: any,
   prefix = 'data.'
 ) => {
+  console.log(JSON.stringify(filter));
   const expandedFields = fields.concat(DEFAULT_FIELDS);
   const mongooseFilter =
     buildMongoFilter(filter, expandedFields, context, prefix) || {};
 
+  console.log(JSON.stringify(mongooseFilter));
   return mongooseFilter;
 };

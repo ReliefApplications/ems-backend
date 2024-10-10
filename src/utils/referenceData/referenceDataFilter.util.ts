@@ -1,5 +1,5 @@
 import { eq, get, isArray, isNil, isString } from 'lodash';
-import { filterOperator } from 'types';
+import { filterOperator } from '../../types';
 
 /**
  * Apply filter on item
@@ -81,7 +81,7 @@ export const filterReferenceData = (item: any, filter: any) => {
           } else {
             return isNil(value) || !value.includes(filter.value);
           }
-        case 'in':
+        case filterOperator.IN:
           if (isString(value)) {
             if (isArray(filter.value)) {
               return !isNil(filter.value) && filter.value.includes(value);
@@ -92,7 +92,7 @@ export const filterReferenceData = (item: any, filter: any) => {
           } else {
             return !isNil(filter.value) && filter.value.includes(value);
           }
-        case 'notin':
+        case filterOperator.NOT_IN:
           if (isString(value)) {
             if (isArray(filter.value)) {
               return isNil(filter.value) || !filter.value.includes(value);

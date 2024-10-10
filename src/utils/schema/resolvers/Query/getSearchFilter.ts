@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { filterOperator } from 'types';
+import { filterOperator } from '../../../../types';
 
 /** The default fields */
 const DEFAULT_FIELDS = [

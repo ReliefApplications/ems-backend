@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import { sortBy } from 'lodash';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { accessibleBy } from '@casl/mongoose';
-import { filterOperator } from 'types';
+import { filterOperator } from '../../types';
 
 export type Metadata = {
   automated?: boolean;

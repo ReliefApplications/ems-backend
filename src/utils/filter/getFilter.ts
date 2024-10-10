@@ -7,7 +7,7 @@ import {
   DATETIME_TYPES,
 } from '@const/fieldTypes';
 import { isUsingTodayPlaceholder } from '@const/placeholders';
-import { filterOperator } from 'types';
+import { filterOperator } from '../../types';
 
 /**
  * Transforms query filter into mongo filter.

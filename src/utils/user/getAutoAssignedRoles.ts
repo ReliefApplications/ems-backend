@@ -5,7 +5,7 @@ import axios from 'axios';
 import { logger } from '@services/logger.service';
 import { AttributeSettings } from './userManagement';
 import jsonpath from 'jsonpath';
-import { filterOperator } from 'types';
+import { filterOperator } from '../../types/filter';
 
 /**
  * Generate a new access token for Microsoft graph, on behalf of the user.

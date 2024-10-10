@@ -1,4 +1,4 @@
-import { filterOperator } from 'types';
+import { filterOperator } from '../../types';
 
 /** Authorized filter type names */
 const AUTHORIZED_FILTER_TYPES = [
