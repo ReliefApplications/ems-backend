@@ -30,6 +30,7 @@ type EditApplicationArgs = {
   pages?: string[] | Types.ObjectId[];
   settings?: any;
   permissions?: any;
+  shortcut?: string;
 };
 
 /**
@@ -48,6 +49,7 @@ export default {
     pages: { type: new GraphQLList(GraphQLID) },
     settings: { type: GraphQLJSON },
     permissions: { type: GraphQLJSON },
+    shortcut: { type: GraphQLString },
   },
   async resolve(parent, args: EditApplicationArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -82,6 +84,17 @@ export default {
       const update = {
         // lockedBy: user._id,
       };
+      // Check if the applied shortcut is already in use
+      if (!isNil(args.shortcut)) {
+        const existsShortcut = await Application.findOne({
+          shortcut: args.shortcut,
+        });
+        if (existsShortcut && existsShortcut.id !== args.id) {
+          throw new GraphQLError(
+            'Current shortcut for given application is already in use.'
+          );
+        }
+      }
       Object.assign(
         update,
         args.name && { name: args.name },
@@ -91,7 +104,8 @@ export default {
         args.settings && { settings: args.settings },
         args.permissions && { permissions: args.permissions },
         !isNil(args.sideMenu) && { sideMenu: args.sideMenu },
-        !isNil(args.hideMenu) && { hideMenu: args.hideMenu }
+        !isNil(args.hideMenu) && { hideMenu: args.hideMenu },
+        !isNil(args.shortcut) && { shortcut: args.shortcut }
       );
       application = await Application.findOneAndUpdate(filters, update, {
         new: true,

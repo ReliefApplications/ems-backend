@@ -573,6 +573,7 @@ export const ApplicationType = new GraphQLObjectType({
         };
       },
     },
+    shortcut: { type: GraphQLString },
   }),
 });
 
