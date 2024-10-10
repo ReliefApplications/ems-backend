@@ -90,10 +90,9 @@ export default {
             const data = { ...args.data };
             let fields = record.form.fields;
 
-            const template = await Form.findById(
-              args.template,
-              'fields resource _id name'
-            );
+            const template = args.template
+              ? await Form.findById(args.template, 'fields resource _id name')
+              : record.form;
 
             if (args.template && record.form.resource) {
               if (!template.resource.equals(record.form.resource)) {
