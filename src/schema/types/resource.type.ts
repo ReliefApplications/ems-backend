@@ -28,7 +28,7 @@ import { getMetaData } from '@utils/form/metadata.helper';
 import { getAccessibleFields } from '@utils/form';
 import { get, indexOf } from 'lodash';
 import { accessibleBy } from '@casl/mongoose';
-import { resourcePermission } from '@types';
+import { resourcePermission } from '../../types/permission.type';
 
 /**
  * Resolve single permission

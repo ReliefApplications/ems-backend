@@ -144,6 +144,7 @@ addOnBeforeDeleteMany(applicationSchema, async (applications) => {
 });
 
 applicationSchema.index({ name: 1 }, { unique: true });
+applicationSchema.index({ shortcut: 1 }, { unique: true });
 applicationSchema.plugin(accessibleRecordsPlugin);
 
 /** Mongoose application model definition */

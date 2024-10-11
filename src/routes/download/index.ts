@@ -34,7 +34,7 @@ import { sendEmail } from '@utils/email';
 import { accessibleBy } from '@casl/mongoose';
 import dataSources from '@server/apollo/dataSources';
 import Exporter from '@utils/files/resourceExporter';
-import { resourcePermission } from '@types';
+import { resourcePermission } from '../../types/permission.type';
 
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwise

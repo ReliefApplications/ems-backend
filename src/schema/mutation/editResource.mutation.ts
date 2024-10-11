@@ -13,7 +13,7 @@ import { get, has, isArray, isEqual, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
-import { resourcePermission } from '@types';
+import { resourcePermission } from '../../types/permission.type';
 
 /** Simple resource permission change type */
 type SimplePermissionChange =
