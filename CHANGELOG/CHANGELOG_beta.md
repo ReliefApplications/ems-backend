@@ -1,3 +1,10 @@
+# [2.12.0-beta.3](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.2...v2.12.0-beta.3) (2024-10-11)
+
+
+### Bug Fixes
+
+* edit records mutation failing when no template selected in grid ([#1125](https://github.com/ReliefApplications/ems-backend/issues/1125)) ([656efa9](https://github.com/ReliefApplications/ems-backend/commit/656efa9f96132db2f5e3a38d0f7dc23dfe6cdac5)), closes [AB#104347](https://github.com/AB/issues/104347)
+
 # [2.12.0-beta.2](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.1...v2.12.0-beta.2) (2024-10-03)
 
 
