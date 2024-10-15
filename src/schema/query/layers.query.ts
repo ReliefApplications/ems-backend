@@ -5,7 +5,7 @@ import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import getFilter from '@utils/filter/getFilter';
 import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
-import { CompositeFilterDescriptor } from '@const/compositeFilter';
+import { CompositeFilterDescriptor } from '../../types/filter';
 import { GraphQLJSON } from 'graphql-type-json';
 import { Context } from '@server/apollo/context';
 

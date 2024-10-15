@@ -9,7 +9,7 @@ import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
-import { CompositeFilterDescriptor } from '@const/compositeFilter';
+import { CompositeFilterDescriptor } from '../../types/filter';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 
