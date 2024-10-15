@@ -1,3 +1,10 @@
+# [2.12.0-beta.4](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.3...v2.12.0-beta.4) (2024-10-15)
+
+
+### Features
+
+* add in / notin operators in records query ([#1127](https://github.com/ReliefApplications/ems-backend/issues/1127)) ([830214e](https://github.com/ReliefApplications/ems-backend/commit/830214e8540dd34dcfa6b1a8d2465353f2d5a6c6)), closes [Ab#104295](https://github.com/Ab/issues/104295)
+
 # [2.12.0-beta.3](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.2...v2.12.0-beta.3) (2024-10-11)
 
 
