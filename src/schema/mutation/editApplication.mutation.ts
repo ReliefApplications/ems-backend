@@ -44,7 +44,7 @@ export const validateShortcut = async (
   shortcut: string
 ) => {
   const applicationWithShortcut = await Application.findOne({
-    id: { $ne: id },
+    _id: { $ne: id },
     shortcut,
   }).select('shortcut');
   if (applicationWithShortcut) {

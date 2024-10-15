@@ -23,7 +23,7 @@ describe('validateShortcut', () => {
 
     await expect(validateShortcut(mockId, mockShortcut)).resolves.not.toThrow();
     expect(Application.findOne).toHaveBeenCalledWith({
-      id: { $ne: mockId },
+      _id: { $ne: mockId },
       shortcut: mockShortcut,
     });
   });
@@ -37,7 +37,7 @@ describe('validateShortcut', () => {
       new GraphQLError('Shortcut is already used by another application.')
     );
     expect(Application.findOne).toHaveBeenCalledWith({
-      id: { $ne: mockId },
+      _id: { $ne: mockId },
       shortcut: mockShortcut,
     });
   });
