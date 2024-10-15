@@ -1,3 +1,5 @@
+import { filterOperator } from '../../types';
+
 /** Authorized filter type names */
 const AUTHORIZED_FILTER_TYPES = [
   'text',
@@ -88,7 +90,7 @@ export const getFormFilter = (filters: any, fields: any[]): any => {
             break;
         }
         switch (filter.operator) {
-          case 'contains':
+          case filterOperator.CONTAINS:
             if (field.type === 'tagbox' || typeof value === 'object') {
               mongooseFilters[getKey(filter.field)] = { $in: value };
             } else {

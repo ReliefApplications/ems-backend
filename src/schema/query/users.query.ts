@@ -6,12 +6,12 @@ import mongoose, { Types } from 'mongoose';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
-import { CompositeFilterDescriptor } from '@const/compositeFilter';
 import GraphQLJSON from 'graphql-type-json';
 import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { accessibleBy } from '@casl/mongoose';
 import getFilter from '@utils/filter/getFilter';
+import { CompositeFilterDescriptor } from '../../types/filter';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;

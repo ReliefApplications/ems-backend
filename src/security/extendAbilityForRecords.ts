@@ -13,7 +13,7 @@ import {
 import { getFormPermissionFilter } from '@utils/filter';
 import { Form, Role, User, Resource } from '@models';
 import { Types } from 'mongoose';
-import { resourcePermission } from '@types';
+import { resourcePermission } from '../types/permission';
 
 /** Application ability class */
 // eslint-disable-next-line deprecation/deprecation

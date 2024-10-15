@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import { sortBy } from 'lodash';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { accessibleBy } from '@casl/mongoose';
+import { filterOperator } from '../../types';
 
 export type Metadata = {
   automated?: boolean;
@@ -169,7 +170,13 @@ export const getMetaData = async (
       type: 'text',
       editor: 'text',
       filter: {
-        operators: ['eq', 'neq', 'contains', 'doesnotcontain', 'startswith'],
+        operators: [
+          filterOperator.EQUAL_TO,
+          filterOperator.NOT_EQUAL_TO,
+          filterOperator.CONTAINS,
+          'doesnotcontain',
+          filterOperator.STARTS_WITH,
+        ],
       },
       canUpdate: false,
     });
@@ -182,8 +189,8 @@ export const getMetaData = async (
       name: fieldName,
       editor: 'select',
       filter: {
-        defaultOperator: 'eq',
-        operators: ['eq', 'neq'],
+        defaultOperator: filterOperator.EQUAL_TO,
+        operators: [filterOperator.EQUAL_TO, filterOperator.NOT_EQUAL_TO],
       },
       canUpdate: false,
     });
@@ -203,11 +210,11 @@ export const getMetaData = async (
           editor: 'text',
           filter: {
             operators: [
-              'eq',
-              'neq',
-              'contains',
-              'doesnotcontain',
-              'startswith',
+              filterOperator.EQUAL_TO,
+              filterOperator.NOT_EQUAL_TO,
+              filterOperator.CONTAINS,
+              filterOperator.DOES_NOT_CONTAIN,
+              filterOperator.STARTS_WITH,
             ],
           },
         },
@@ -311,8 +318,8 @@ export const getMetaData = async (
       }
       case 'file': {
         fieldMeta.filter = {
-          defaultOperator: 'isnotnull',
-          operators: ['isnull', 'isnotnull'],
+          defaultOperator: filterOperator.IS_NOT_NULL,
+          operators: [filterOperator.IS_NULL, filterOperator.IS_NOT_NULL],
         };
         break;
       }
@@ -329,7 +336,9 @@ export const getMetaData = async (
         break;
       }
       case 'editor': {
-        fieldMeta.filter = { operators: ['isnull', 'isnotnull'] };
+        fieldMeta.filter = {
+          operators: [filterOperator.IS_NULL, filterOperator.IS_NOT_NULL],
+        };
       }
       default: {
         break;
