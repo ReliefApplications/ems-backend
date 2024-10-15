@@ -437,8 +437,15 @@ const buildMongoFilter = (
                 [fieldName]: { $regex: attrValue, $options: 'i' },
               };
             } else {
+              // Allow values to be passed as string separated with ','
+              if (typeof value === 'string') {
+                value = value.split(',').map((x) => x.trim());
+              }
               value = Array.isArray(value) ? value : [value];
-              console.log(value);
+              // Use _id field for objectId filtering
+              if (fieldName === 'id') {
+                fieldName = '_id';
+              }
               return {
                 [fieldName]: {
                   $in: value.map((x) => new mongoose.Types.ObjectId(x)),
@@ -452,7 +459,15 @@ const buildMongoFilter = (
                 [fieldName]: { $not: { $regex: attrValue, $options: 'i' } },
               };
             } else {
+              // Allow values to be passed as string separated with ','
+              if (typeof value === 'string') {
+                value = value.split(',').map((x) => x.trim());
+              }
               value = Array.isArray(value) ? value : [value];
+              // Use _id field for objectId filtering
+              if (fieldName === 'id') {
+                fieldName = '_id';
+              }
               return { [fieldName]: { $nin: value } };
             }
           }
@@ -564,11 +579,9 @@ export default (
   context?: any,
   prefix = 'data.'
 ) => {
-  console.log(JSON.stringify(filter));
   const expandedFields = fields.concat(DEFAULT_FIELDS);
   const mongooseFilter =
     buildMongoFilter(filter, expandedFields, context, prefix) || {};
 
-  console.log(JSON.stringify(mongooseFilter));
   return mongooseFilter;
 };
