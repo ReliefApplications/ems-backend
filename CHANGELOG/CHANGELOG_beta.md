@@ -1,3 +1,10 @@
+# [2.12.0-beta.5](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.4...v2.12.0-beta.5) (2024-10-16)
+
+
+### Features
+
+* can set application shortcut ([#1123](https://github.com/ReliefApplications/ems-backend/issues/1123)) ([287001d](https://github.com/ReliefApplications/ems-backend/commit/287001d7d98d2a62c96e6346e2d77f3342db213f)), closes [AB#104315](https://github.com/AB/issues/104315)
+
 # [2.12.0-beta.4](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.3...v2.12.0-beta.4) (2024-10-15)
 
 
