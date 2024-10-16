@@ -1,16 +1,21 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import { ApplicationType } from '../types';
-import mongoose from 'mongoose';
-import { Application, Page } from '@models';
-import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { Application, Page } from '@models';
 import { graphQLAuthCheck } from '@schema/shared';
-import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
+import { logger } from '@services/logger.service';
+import {
+  GraphQLError,
+  GraphQLID,
+  GraphQLNonNull,
+  GraphQLString,
+} from 'graphql';
+import mongoose, { Types } from 'mongoose';
+import { ApplicationType } from '../types';
 
 /** Arguments for the application query */
 type ApplicationArgs = {
   id: string | Types.ObjectId;
+  shortcut: string;
   asRole?: string | Types.ObjectId;
 };
 
@@ -23,6 +28,7 @@ export default {
   type: ApplicationType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
+    shortcut: { type: GraphQLString },
     asRole: { type: GraphQLID },
   },
   async resolve(parent, args: ApplicationArgs, context: Context) {
@@ -30,7 +36,11 @@ export default {
     try {
       const ability = context.user.ability;
       const filters = Application.find(accessibleBy(ability).Application)
-        .where({ _id: args.id })
+        .where({
+          $or: mongoose.isValidObjectId(args.id)
+            ? [{ _id: args.id }, { shortcut: args.shortcut }]
+            : [{ shortcut: args.shortcut }],
+        })
         .getFilter();
       const application = await Application.findOne(filters);
       if (application && args.asRole) {
