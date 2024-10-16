@@ -34,6 +34,25 @@ type EditApplicationArgs = {
 };
 
 /**
+ * Validate shortcut
+ *
+ * @param id application id
+ * @param shortcut application shortcut
+ */
+export const validateShortcut = async (
+  id: string | Types.ObjectId,
+  shortcut: string
+) => {
+  const applicationWithShortcut = await Application.findOne({
+    _id: { $ne: id },
+    shortcut,
+  }).select('shortcut');
+  if (applicationWithShortcut) {
+    throw new GraphQLError('Shortcut is already used by another application.');
+  }
+};
+
+/**
  * Find application from its id and update it, if user is authorized.
  * Throw an error if not logged or authorized, or arguments are invalid.
  */
@@ -86,14 +105,7 @@ export default {
       };
       // Check if the applied shortcut is already in use
       if (!isNil(args.shortcut)) {
-        const existsShortcut = await Application.findOne({
-          shortcut: args.shortcut,
-        });
-        if (existsShortcut && existsShortcut.id !== args.id) {
-          throw new GraphQLError(
-            'Current shortcut for given application is already in use.'
-          );
-        }
+        await validateShortcut(args.id, args.shortcut);
       }
       Object.assign(
         update,

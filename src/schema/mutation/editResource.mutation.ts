@@ -1,19 +1,19 @@
-import mongoose from 'mongoose';
-import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from 'graphql';
-import GraphQLJSON from 'graphql-type-json';
-import { ResourceType } from '../types';
-import { findDuplicateFields } from '@utils/form';
+import { Resource } from '@models';
+import { graphQLAuthCheck } from '@schema/shared';
+import { AppAbility } from '@security/defineUserAbility';
+import { Context } from '@server/apollo/context';
+import { logger } from '@services/logger.service';
 import {
   getExpressionFromString,
   OperationTypeMap,
 } from '@utils/aggregation/expressionFromString';
-import { Resource } from '@models';
-import { AppAbility } from '@security/defineUserAbility';
+import { findDuplicateFields } from '@utils/form';
+import { GraphQLError, GraphQLID, GraphQLList, GraphQLNonNull } from 'graphql';
+import GraphQLJSON from 'graphql-type-json';
 import { get, has, isArray, isEqual, isNil } from 'lodash';
-import { logger } from '@services/logger.service';
-import { graphQLAuthCheck } from '@schema/shared';
-import { Context } from '@server/apollo/context';
+import mongoose from 'mongoose';
 import { resourcePermission } from '../../types/permission';
+import { ResourceType } from '../types';
 
 /** Simple resource permission change type */
 type SimplePermissionChange =
