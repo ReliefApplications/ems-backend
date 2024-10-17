@@ -30,6 +30,26 @@ type EditApplicationArgs = {
   pages?: string[] | Types.ObjectId[];
   settings?: any;
   permissions?: any;
+  shortcut?: string;
+};
+
+/**
+ * Validate shortcut
+ *
+ * @param id application id
+ * @param shortcut application shortcut
+ */
+export const validateShortcut = async (
+  id: string | Types.ObjectId,
+  shortcut: string
+) => {
+  const applicationWithShortcut = await Application.findOne({
+    _id: { $ne: id },
+    shortcut,
+  }).select('shortcut');
+  if (applicationWithShortcut) {
+    throw new GraphQLError('Shortcut is already used by another application.');
+  }
 };
 
 /**
@@ -48,6 +68,7 @@ export default {
     pages: { type: new GraphQLList(GraphQLID) },
     settings: { type: GraphQLJSON },
     permissions: { type: GraphQLJSON },
+    shortcut: { type: GraphQLString },
   },
   async resolve(parent, args: EditApplicationArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -82,6 +103,10 @@ export default {
       const update = {
         // lockedBy: user._id,
       };
+      // Check if the applied shortcut is already in use
+      if (!isNil(args.shortcut)) {
+        await validateShortcut(args.id, args.shortcut);
+      }
       Object.assign(
         update,
         args.name && { name: args.name },
@@ -91,7 +116,8 @@ export default {
         args.settings && { settings: args.settings },
         args.permissions && { permissions: args.permissions },
         !isNil(args.sideMenu) && { sideMenu: args.sideMenu },
-        !isNil(args.hideMenu) && { hideMenu: args.hideMenu }
+        !isNil(args.hideMenu) && { hideMenu: args.hideMenu },
+        !isNil(args.shortcut) && { shortcut: args.shortcut }
       );
       application = await Application.findOneAndUpdate(filters, update, {
         new: true,

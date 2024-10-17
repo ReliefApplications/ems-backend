@@ -1,3 +1,56 @@
+# [2.12.0-beta.5](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.4...v2.12.0-beta.5) (2024-10-16)
+
+
+### Features
+
+* can set application shortcut ([#1123](https://github.com/ReliefApplications/ems-backend/issues/1123)) ([287001d](https://github.com/ReliefApplications/ems-backend/commit/287001d7d98d2a62c96e6346e2d77f3342db213f)), closes [AB#104315](https://github.com/AB/issues/104315)
+
+# [2.12.0-beta.4](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.3...v2.12.0-beta.4) (2024-10-15)
+
+
+### Features
+
+* add in / notin operators in records query ([#1127](https://github.com/ReliefApplications/ems-backend/issues/1127)) ([830214e](https://github.com/ReliefApplications/ems-backend/commit/830214e8540dd34dcfa6b1a8d2465353f2d5a6c6)), closes [Ab#104295](https://github.com/Ab/issues/104295)
+
+# [2.12.0-beta.3](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.2...v2.12.0-beta.3) (2024-10-11)
+
+
+### Bug Fixes
+
+* edit records mutation failing when no template selected in grid ([#1125](https://github.com/ReliefApplications/ems-backend/issues/1125)) ([656efa9](https://github.com/ReliefApplications/ems-backend/commit/656efa9f96132db2f5e3a38d0f7dc23dfe6cdac5)), closes [AB#104347](https://github.com/AB/issues/104347)
+
+# [2.12.0-beta.2](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.1...v2.12.0-beta.2) (2024-10-03)
+
+
+### Bug Fixes
+
+* record validation preventing some valid records to be updated ([#1117](https://github.com/ReliefApplications/ems-backend/issues/1117)) ([0a9b117](https://github.com/ReliefApplications/ems-backend/commit/0a9b117641f3835c0b70ec5b665777e50d47e9eb)), closes [AB#103766](https://github.com/AB/issues/103766)
+
+
+### Features
+
+* add possibility to show or hide page / step name ([#1116](https://github.com/ReliefApplications/ems-backend/issues/1116)) ([b044b24](https://github.com/ReliefApplications/ems-backend/commit/b044b244c4c657aa765066bddc9fec6ef58dd9bd)), closes [AB#102826](https://github.com/AB/issues/102826)
+
+# [2.12.0-beta.1](https://github.com/ReliefApplications/ems-backend/compare/v2.11.0...v2.12.0-beta.1) (2024-07-04)
+
+
+### Bug Fixes
+
+* add better handling for file upload AB[#64764](https://github.com/ReliefApplications/ems-backend/issues/64764) ([85279df](https://github.com/ReliefApplications/ems-backend/commit/85279df8faee69f3645ddc1cebd6cd01fa999c02))
+* types path breaking the build ([8bde904](https://github.com/ReliefApplications/ems-backend/commit/8bde9048a1e8e0b35b70c9be786a3ea0b762a6bd))
+
+
+### Features
+
+* add canDownloadRecords permission ([#1095](https://github.com/ReliefApplications/ems-backend/issues/1095)) ([abc3e05](https://github.com/ReliefApplications/ems-backend/commit/abc3e05fea50edee6e3ed4b7cc00bc83f6f9de71))
+* html question ([#1046](https://github.com/ReliefApplications/ems-backend/issues/1046)) ([712ef3d](https://github.com/ReliefApplications/ems-backend/commit/712ef3d1409654c7652e8d05997b7a87cb4c1c53))
+
+
+### Reverts
+
+* Revert "Revert "revert changes AB#91806 (#1055)" (#1056)" (#1057) ([b6c7ec7](https://github.com/ReliefApplications/ems-backend/commit/b6c7ec7b62e50fc529abf2965214fac90a048598)), closes [AB#91806](https://github.com/AB/issues/91806) [#1055](https://github.com/ReliefApplications/ems-backend/issues/1055) [#1056](https://github.com/ReliefApplications/ems-backend/issues/1056) [#1057](https://github.com/ReliefApplications/ems-backend/issues/1057)
+* Revert "revert changes AB#91806 (#1055)" (#1056) ([4235d2c](https://github.com/ReliefApplications/ems-backend/commit/4235d2c90f9090b04124351c37f183da45392e3c)), closes [AB#91806](https://github.com/AB/issues/91806) [#1055](https://github.com/ReliefApplications/ems-backend/issues/1055) [#1056](https://github.com/ReliefApplications/ems-backend/issues/1056)
+
 # [2.11.0-beta.2](https://github.com/ReliefApplications/ems-backend/compare/v2.11.0-beta.1...v2.11.0-beta.2) (2024-06-17)
 
 

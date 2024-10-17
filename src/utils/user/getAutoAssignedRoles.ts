@@ -5,6 +5,7 @@ import axios from 'axios';
 import { logger } from '@services/logger.service';
 import { AttributeSettings } from './userManagement';
 import jsonpath from 'jsonpath';
+import { filterOperator } from '../../types/filter';
 
 /**
  * Generate a new access token for Microsoft graph, on behalf of the user.
@@ -96,13 +97,13 @@ export const checkIfRoleIsAssigned = (user: User, filter: any): boolean => {
       // todo: check other versions of the code
       const value = (filter.value || []).filter((x) => x !== null);
       switch (filter.operator) {
-        case 'eq': {
+        case filterOperator.EQUAL_TO: {
           return isEqual(
             groupIds.map((x) => x.toString()),
             value.map((x) => x.toString())
           );
         }
-        case 'contains': {
+        case filterOperator.CONTAINS: {
           return (
             difference(
               value.map((x) => x.toString()),
@@ -119,24 +120,24 @@ export const checkIfRoleIsAssigned = (user: User, filter: any): boolean => {
       const value = user.username || '';
       if (value) {
         switch (filter.operator) {
-          case 'eq': {
+          case filterOperator.EQUAL_TO: {
             return eq(value, String(filter.value));
           }
-          case 'neq': {
+          case filterOperator.NOT_EQUAL_TO: {
             return !eq(value, String(filter.value));
           }
-          case 'contains': {
+          case filterOperator.CONTAINS: {
             const regex = new RegExp(filter.value, 'i');
             return regex.test(value);
           }
-          case 'doesnotcontain': {
+          case filterOperator.DOES_NOT_CONTAIN: {
             const regex = new RegExp(filter.value, 'i');
             return !regex.test(value);
           }
-          case 'startswith': {
+          case filterOperator.STARTS_WITH: {
             return value.startsWith(filter.value);
           }
-          case 'endswith': {
+          case filterOperator.ENDS_WITH: {
             return value.endsWith(filter.value);
           }
           default:
@@ -150,10 +151,10 @@ export const checkIfRoleIsAssigned = (user: User, filter: any): boolean => {
       const value = get(user, 'graphData.userType') || '';
       if (value) {
         switch (filter.operator) {
-          case 'eq': {
+          case filterOperator.EQUAL_TO: {
             return eq(value, String(filter.value));
           }
-          case 'neq': {
+          case filterOperator.NOT_EQUAL_TO: {
             return !eq(value, String(filter.value));
           }
         }
@@ -176,7 +177,7 @@ export const checkIfRoleIsAssigned = (user: User, filter: any): boolean => {
       const attribute = attributes.find((x) => x.field === filter.field);
       if (attribute) {
         switch (filter.operator) {
-          case 'eq': {
+          case filterOperator.EQUAL_TO: {
             return isEqual(userAttr[attribute.value], filter.value);
           }
           default: {

@@ -14,7 +14,7 @@ import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
-import { CompositeFilterDescriptor } from '@const/compositeFilter';
+import { CompositeFilterDescriptor } from '../../types/filter';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
