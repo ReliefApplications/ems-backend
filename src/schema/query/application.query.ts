@@ -35,12 +35,20 @@ export default {
     graphQLAuthCheck(context);
     try {
       const ability = context.user.ability;
-      const filters = Application.find(accessibleBy(ability).Application)
-        .where({
-          $or: mongoose.isValidObjectId(args.id)
-            ? [{ _id: args.id }, { shortcut: args.shortcut }]
-            : [{ shortcut: args.shortcut }],
-        })
+      let filters = {};
+      if (mongoose.isValidObjectId(args.id)) {
+        if (args.shortcut) {
+          filters = {
+            $or: [{ _id: args.id }, { shortcut: args.shortcut }],
+          };
+        } else {
+          filters = { _id: args.id };
+        }
+      } else {
+        filters = { shortcut: args.shortcut };
+      }
+      filters = Application.find(accessibleBy(ability).Application)
+        .where(filters)
         .getFilter();
       const application = await Application.findOne(filters);
       if (application && args.asRole) {
