@@ -446,11 +446,29 @@ const buildMongoFilter = (
               if (fieldName === 'id') {
                 fieldName = '_id';
               }
-              return {
-                [fieldName]: {
-                  $in: value.map((x) => new mongoose.Types.ObjectId(x)),
-                },
-              };
+              // Try to cast values as object ids if possible
+              try {
+                return {
+                  $or: [
+                    {
+                      [fieldName]: {
+                        $in: value.map((x) => new mongoose.Types.ObjectId(x)),
+                      },
+                    },
+                    {
+                      [fieldName]: {
+                        $in: value,
+                      },
+                    },
+                  ],
+                };
+              } catch {
+                return {
+                  [fieldName]: {
+                    $in: value,
+                  },
+                };
+              }
             }
           }
           case filterOperator.NOT_IN: {
@@ -468,7 +486,29 @@ const buildMongoFilter = (
               if (fieldName === 'id') {
                 fieldName = '_id';
               }
-              return { [fieldName]: { $nin: value } };
+              // Try to cast values as object ids if possible
+              try {
+                return {
+                  $and: [
+                    {
+                      [fieldName]: {
+                        $nin: value.map((x) => new mongoose.Types.ObjectId(x)),
+                      },
+                    },
+                    {
+                      [fieldName]: {
+                        $nin: value,
+                      },
+                    },
+                  ],
+                };
+              } catch {
+                return {
+                  [fieldName]: {
+                    $nin: value,
+                  },
+                };
+              }
             }
           }
           case filterOperator.IS_EMPTY: {
