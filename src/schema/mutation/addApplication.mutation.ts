@@ -65,7 +65,7 @@ export default {
               x.permissions.some(
                 (y) => y.type === permissions.canCreateApplications
               )
-          )?.id;
+          )?._id;
           application.permissions = {
             canSee: [firstAdminRole],
             canUpdate: [firstAdminRole],

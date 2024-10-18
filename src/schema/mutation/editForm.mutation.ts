@@ -283,6 +283,11 @@ export default {
               const newField: any = Object.assign({}, field); // Create a copy of the form's field
               newField.isRequired =
                 form.core && field.isRequired ? true : false; // If it's a core form and the field isRequired, copy this property
+              // Set default permissions based on access to the resource
+              newField.permissions = {
+                canSee: resource.permissions.canSee,
+                canUpdate: resource.permissions.canSee,
+              };
               oldFields.push(newField); // Add this field to the list of the resource's fields
             } else {
               // Check if field can be updated
