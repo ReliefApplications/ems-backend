@@ -70,7 +70,7 @@ async function convertUrlToBase64(text: any): Promise<any> {
         text = text.replace(url, dataURI);
       }
     } catch (error) {
-      console.log('Error fetching image:', error);
+      logger.error('Error fetching image:', error);
     }
   }
   return text;
@@ -120,10 +120,14 @@ export default {
       } = {};
 
       // Update URL to base64 file
-      for (const [index, struct] of args.structure.entries()) {
-        if (struct && struct.settings && struct.settings.text) {
+      /**
+       * Update URL to base64 file
+       * Important for dashboard export, as urls cannot be correctly converted otherwise to images.
+       */
+      for (const [index, widget] of args.structure.entries()) {
+        if (widget && widget.settings && widget.settings.text) {
           args.structure[index].settings.text = await convertUrlToBase64(
-            struct.settings.text
+            widget.settings.text
           );
         }
       }
