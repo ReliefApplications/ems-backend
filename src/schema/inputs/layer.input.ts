@@ -1,12 +1,12 @@
 import {
+  GraphQLBoolean,
+  GraphQLFloat,
   GraphQLID,
   GraphQLInputObjectType,
+  GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
   GraphQLString,
-  GraphQLBoolean,
-  GraphQLInt,
-  GraphQLFloat,
 } from 'graphql';
 
 /** GraphQL Layer Symbol outline input type definition */
@@ -38,6 +38,18 @@ const LayerUniqueValueInfoInputType = new GraphQLInputObjectType({
   fields: () => ({
     label: { type: new GraphQLNonNull(GraphQLString) },
     value: { type: new GraphQLNonNull(GraphQLString) },
+    multiple: { type: new GraphQLNonNull(GraphQLBoolean) },
+    symbol: { type: new GraphQLNonNull(LayerSymbolInputType) },
+  }),
+});
+
+/** GraphQL Layer Class Break Value Info input type definition */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const LayerClassBreakInfoInputType = new GraphQLInputObjectType({
+  name: 'LayerClassBreakInfoInputType',
+  fields: () => ({
+    label: { type: new GraphQLNonNull(GraphQLString) },
+    maxValue: { type: new GraphQLNonNull(GraphQLString) },
     symbol: { type: new GraphQLNonNull(LayerSymbolInputType) },
   }),
 });
@@ -70,8 +82,12 @@ const LayerDrawingInfoInputType = new GraphQLInputObjectType({
           defaultLabel: { type: GraphQLString },
           defaultSymbol: { type: LayerSymbolInputType },
           field1: { type: GraphQLString },
+          minValue: { type: GraphQLString },
           uniqueValueInfos: {
             type: new GraphQLList(LayerUniqueValueInfoInputType),
+          },
+          classBreakInfos: {
+            type: new GraphQLList(LayerClassBreakInfoInputType),
           },
         }),
       }),
