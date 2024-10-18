@@ -6,8 +6,8 @@ import {
   notificationsType,
 } from '@const/enumTypes';
 import { AccessibleRecordModel } from '@casl/mongoose';
-import { EmailDistributionList } from '@models/emailDistributionlists.model';
-import { ICustomTemplate } from '@models/customTemplate.model';
+import { EmailDistributionList } from '@models/emailDistributionList.model';
+import { CustomTemplate } from '@models/customTemplate.model';
 
 /**
  *DataSet interface
@@ -51,7 +51,7 @@ export interface EmailNotification extends Document {
   emailDistributionList: mongoose.Schema.Types.ObjectId | EmailDistributionList; // Reference to EmailDistributionList
   subscriptionList: string[];
   restrictSubscription: boolean;
-  emailLayout: mongoose.Schema.Types.ObjectId | ICustomTemplate; // Reference to CustomTemplate;
+  emailLayout: mongoose.Schema.Types.ObjectId | CustomTemplate; // Reference to CustomTemplate;
   recipientsType: string;
   status: string;
   lastExecution?: Date;
@@ -157,9 +157,7 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
 
 emailNotificationSchema.index({ name: 1, applicationId: 1 }, { unique: true });
 
-/**
- *
- */
+/** Mongoose email notification model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const EmailNotification = mongoose.model<
   EmailNotification,

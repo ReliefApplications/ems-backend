@@ -1,8 +1,25 @@
 import { AccessibleRecordModel } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
+/**
+ *
+ */
+export interface CustomTemplate extends Document {
+  kind: 'customTemplate';
+  name: string;
+  subject: string;
+  header?: any;
+  body?: any;
+  banner?: any;
+  footer?: any;
+  createdBy: { name: string; email: string };
+  isDeleted: number;
+  applicationId?: mongoose.Schema.Types.ObjectId;
+  isFromEmailNotification: boolean;
+}
+
 /** Mongoose distribution list schema declaration */
-export const customTemplateSchema = new Schema(
+export const customTemplateSchema = new Schema<CustomTemplate>(
   {
     name: String,
     subject: String,
@@ -37,25 +54,9 @@ export const customTemplateSchema = new Schema(
 
 customTemplateSchema.index({ name: 1, applicationId: 1 }, { unique: true });
 
-/**
- *
- */
-export interface ICustomTemplate extends Document {
-  kind: 'customTemplate';
-  subject: string;
-  header?: any;
-  body?: any;
-  banner?: any;
-  footer?: any;
-  isDeleted: number;
-  applicationId?: mongoose.Schema.Types.ObjectId;
-}
-
-/**
- *
- */
+/** Mongoose custom template model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CustomTemplate = mongoose.model<
-  ICustomTemplate,
-  AccessibleRecordModel<ICustomTemplate>
+  CustomTemplate,
+  AccessibleRecordModel<CustomTemplate>
 >('customTemplate', customTemplateSchema);

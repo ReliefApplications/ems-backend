@@ -84,9 +84,7 @@ emailDistributionListSchema.index(
   { unique: true }
 );
 
-/**
- *
- */
+/** Mongoose distribution list model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const EmailDistributionList = mongoose.model<
   EmailDistributionList,

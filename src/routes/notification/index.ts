@@ -23,7 +23,7 @@ import { baseTemplate } from '@const/notification';
 import i18next from 'i18next';
 import { sendEmail } from '@utils/email/sendEmail';
 import parse from 'node-html-parser';
-import { CustomTemplate, ICustomTemplate } from '@models/customTemplate.model';
+import { CustomTemplate } from '@models/customTemplate.model';
 import { cloneDeep } from 'lodash';
 import * as EmailValidator from 'email-validator';
 
@@ -117,7 +117,7 @@ router.post('/send-email/:configId', async (req, res) => {
     }
     const baseElement = parse(baseTemplate);
     const mainTableElement = baseElement.getElementById('mainTable');
-    notification.emailLayout = notification.emailLayout as ICustomTemplate;
+    notification.emailLayout = notification.emailLayout as CustomTemplate;
     await buildEmail(notification.emailLayout, mainTableElement, datasets);
 
     // TODO: Phase 2 - allow records from any table not just first
@@ -201,7 +201,7 @@ router.post('/preview-email', async (req, res) => {
         notification.emailLayout
       ).exec();
     }
-    notification.emailLayout = notification.emailLayout as ICustomTemplate;
+    notification.emailLayout = notification.emailLayout as CustomTemplate;
     const emailSubject = replaceSubject(
       notification?.emailLayout?.subject,
       subjectRecords
@@ -397,7 +397,7 @@ router.post('/send-individual-email/:configId', async (req, res) => {
 
     const baseElement = parse(baseTemplate);
     const mainTableElement = baseElement.getElementById('mainTable');
-    notification.emailLayout = notification.emailLayout as ICustomTemplate;
+    notification.emailLayout = notification.emailLayout as CustomTemplate;
     // Add banner if available
     if (notification.emailLayout.banner.bannerImage) {
       const bannerElement = parse(

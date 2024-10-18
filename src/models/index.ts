@@ -28,4 +28,4 @@ export * from './customNotification.model';
 export * from './layer.model';
 export * from './draftRecord.model';
 export * from './emailNotification.model';
-export * from './emailDistributionlists.model';
+export * from './emailDistributionList.model';

@@ -1,5 +1,5 @@
 import { inthelastDateLocale, timeLocale } from '@const/locale';
-import { ICustomTemplate } from '@models/customTemplate.model';
+import { CustomTemplate } from '@models/customTemplate.model';
 import {
   formatDates,
   titleCase,
@@ -541,7 +541,7 @@ export const replaceFooter = (footer: {
  * @param records Fetched records to insert into email
  */
 export const buildEmail = async (
-  emailLayout: ICustomTemplate,
+  emailLayout: CustomTemplate,
   mainTableElement: HTMLElement,
   records: any[]
 ): Promise<HTMLElement> => {
