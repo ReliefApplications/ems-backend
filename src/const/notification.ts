@@ -1,7 +1,8 @@
 /**
- *
+ * Base Template used by email notifications.
  */
-export const baseTemplate = `<!DOCTYPE HTML>
+export const baseTemplate = `
+<!DOCTYPE HTML>
     <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 
     <head>
@@ -26,5 +27,4 @@ export const baseTemplate = `<!DOCTYPE HTML>
             </tr>
         </table>
     </body>
-
-    </html>`;
+</html>`;

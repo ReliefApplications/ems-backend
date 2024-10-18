@@ -23,9 +23,9 @@ import { baseTemplate } from '@const/notification';
 import i18next from 'i18next';
 import { sendEmail } from '@utils/email/sendEmail';
 import parse from 'node-html-parser';
-import { validateEmail } from '@utils/validators/validateEmail';
 import { CustomTemplate, ICustomTemplate } from '@models/customTemplate.model';
 import { cloneDeep } from 'lodash';
+import * as EmailValidator from 'email-validator';
 
 /**
  * Limit of records to be fetched for each dataset in email notification
@@ -256,7 +256,7 @@ router.post('/preview-distribution-lists/', async (req, res) => {
         emails: data.records
           .flatMap((record) => extractEmails(record))
           .map((email) => email.trim())
-          .filter(validateEmail),
+          .filter(EmailValidator.validate),
       }));
     }
 
@@ -508,7 +508,9 @@ router.post('/send-individual-email/:configId', async (req, res) => {
           const individualEmails = [];
           selectedEmailFieldName.forEach((field) => {
             if (record[field]) {
-              const emails = extractEmails(record[field]).filter(validateEmail);
+              const emails = extractEmails(record[field]).filter(
+                EmailValidator.validate
+              );
               if (emails?.length) {
                 individualEmails.push(...emails); // Add valid emails if any
               }
@@ -607,7 +609,7 @@ router.post('/send-individual-email/:configId', async (req, res) => {
       // send emails separately for each email
       const emailParams = {
         message: {
-          to: [email] ?? [], // Recipient's email address
+          to: email ? [email] : [], // Recipient's email address
           cc: cc ?? [],
           bcc: bcc ?? [],
           subject: emailSubject,

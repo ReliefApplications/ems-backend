@@ -9,11 +9,11 @@ import { DatasetPreviewArgs } from '@routes/notification';
 import { buildDataSource, CustomAPI } from '@server/apollo/dataSources';
 import { logger } from '@services/logger.service';
 import Exporter from '@utils/files/resourceExporter';
-import { validateEmail } from '@utils/validators/validateEmail';
 import { Response } from 'express';
 import { Request } from 'express-serve-static-core';
 import { cloneDeep, map } from 'lodash';
 import { mongo } from 'mongoose';
+import * as EmailValidator from 'email-validator';
 
 /**
  * Interface validate dataset count
@@ -430,7 +430,7 @@ export const extractEmailsFromObject = (obj, propertySet) => {
       if (typeof value === 'string') {
         const validEmails = value?.split(',').map((email) => email.trim());
         validEmails.forEach((email) => {
-          if (validateEmail(email)) {
+          if (EmailValidator.validate(email)) {
             propertySet.add(email);
           }
         });
@@ -439,7 +439,7 @@ export const extractEmailsFromObject = (obj, propertySet) => {
           if (typeof item === 'string') {
             const validEmails = item?.split(',').map((email) => email.trim());
             validEmails.forEach((email) => {
-              if (validateEmail(email)) {
+              if (EmailValidator.validate(email)) {
                 propertySet.add(email);
               }
             });
