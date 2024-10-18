@@ -16,6 +16,7 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 import { DashboardFilterInputType } from '@schema/inputs/dashboard-filter.input';
+import axios from 'axios';
 
 type DashboardFilterArgs = {
   variant?: string;
@@ -34,6 +35,46 @@ type EditDashboardArgs = {
   gridOptions?: any;
   filter?: DashboardFilterArgs;
 };
+
+/**
+ * Convert the URL to base64 file
+ *
+ * @param text Argument for find the URL & base64
+ * @returns Base64 string as promise
+ */
+async function convertUrlToBase64(text: any): Promise<any> {
+  // Regex for Separate the url and base64 images
+  const imageUrlRegex = /<img src="([^"]+)"[^>]*>/g;
+  // Find the urls using Regex
+  const urls = Array.from(
+    text.matchAll(imageUrlRegex),
+    (match: any) => match[1]
+  );
+  // Verify and change the image format
+  for (const url of urls) {
+    if (url.startsWith('data:image')) {
+      continue; // Skip if already a data URL
+    }
+
+    try {
+      // Fetch the image data
+      const response = await axios.get(url, { responseType: 'arraybuffer' });
+      if (response && response.data) {
+        // Read the response body as buffer
+        const base64String = Buffer.from(response.data, 'binary').toString(
+          'base64'
+        );
+        // Create the data URI
+        const mimeType = response.headers['content-type'];
+        const dataURI = `data:${mimeType};base64,${base64String}`;
+        text = text.replace(url, dataURI);
+      }
+    } catch (error) {
+      logger.error('Error fetching image:', error);
+    }
+  }
+  return text;
+}
 
 /**
  * Find dashboard from its id and update it, if user is authorized.
@@ -77,6 +118,20 @@ export default {
         buttons?: any;
         gridOptions?: any;
       } = {};
+
+      // Update URL to base64 file
+      /**
+       * Update URL to base64 file
+       * Important for dashboard export, as urls cannot be correctly converted otherwise to images.
+       */
+      for (const [index, widget] of args.structure.entries()) {
+        if (widget && widget.settings && widget.settings.text) {
+          args.structure[index].settings.text = await convertUrlToBase64(
+            widget.settings.text
+          );
+        }
+      }
+
       Object.assign(
         updateDashboard,
         args.structure && { structure: args.structure },
