@@ -38,7 +38,6 @@ const LayerUniqueValueInfoInputType = new GraphQLInputObjectType({
   fields: () => ({
     label: { type: new GraphQLNonNull(GraphQLString) },
     value: { type: new GraphQLNonNull(GraphQLString) },
-    multiple: { type: new GraphQLNonNull(GraphQLBoolean) },
     symbol: { type: new GraphQLNonNull(LayerSymbolInputType) },
   }),
 });
