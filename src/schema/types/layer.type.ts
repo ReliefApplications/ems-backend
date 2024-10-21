@@ -79,7 +79,7 @@ const LayerClassBreakInfo = new GraphQLObjectType({
   name: 'LayerClassBreakInfo',
   fields: () => ({
     label: { type: new GraphQLNonNull(GraphQLString) },
-    maxValue: { type: new GraphQLNonNull(GraphQLFloat) },
+    maxValue: { type: GraphQLFloat },
     symbol: { type: new GraphQLNonNull(LayerSymbol) },
   }),
 });
