@@ -49,7 +49,7 @@ const LayerClassBreakInfoInputType = new GraphQLInputObjectType({
   name: 'LayerClassBreakInfoInputType',
   fields: () => ({
     label: { type: new GraphQLNonNull(GraphQLString) },
-    maxValue: { type: new GraphQLNonNull(GraphQLString) },
+    maxValue: { type: new GraphQLNonNull(GraphQLFloat) },
     symbol: { type: new GraphQLNonNull(LayerSymbolInputType) },
   }),
 });
@@ -82,7 +82,7 @@ const LayerDrawingInfoInputType = new GraphQLInputObjectType({
           defaultLabel: { type: GraphQLString },
           defaultSymbol: { type: LayerSymbolInputType },
           field1: { type: GraphQLString },
-          minValue: { type: GraphQLString },
+          minValue: { type: GraphQLFloat },
           uniqueValueInfos: {
             type: new GraphQLList(LayerUniqueValueInfoInputType),
           },
