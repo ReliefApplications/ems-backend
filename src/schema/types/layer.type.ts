@@ -73,18 +73,6 @@ const LayerUniqueValueInfo = new GraphQLObjectType({
 });
 
 /**
- * GraphQL LayerClassBreak Info type.
- */
-const LayerClassBreakInfo = new GraphQLObjectType({
-  name: 'LayerClassBreakInfo',
-  fields: () => ({
-    label: { type: new GraphQLNonNull(GraphQLString) },
-    maxValue: { type: new GraphQLNonNull(GraphQLFloat) },
-    symbol: { type: new GraphQLNonNull(LayerSymbol) },
-  }),
-});
-
-/**
  * GraphQL LayerDrawingInfo type.
  */
 const LayerDrawingInfo = new GraphQLObjectType({
@@ -103,12 +91,8 @@ const LayerDrawingInfo = new GraphQLObjectType({
           defaultLabel: { type: GraphQLString },
           defaultSymbol: { type: LayerSymbol },
           field1: { type: GraphQLString },
-          minValue: { type: GraphQLFloat },
           uniqueValueInfos: {
             type: new GraphQLList(LayerUniqueValueInfo),
-          },
-          classBreakInfos: {
-            type: new GraphQLList(LayerClassBreakInfo),
           },
         }),
       }),
