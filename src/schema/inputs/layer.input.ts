@@ -1,12 +1,12 @@
 import {
+  GraphQLBoolean,
+  GraphQLFloat,
   GraphQLID,
   GraphQLInputObjectType,
+  GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
   GraphQLString,
-  GraphQLBoolean,
-  GraphQLInt,
-  GraphQLFloat,
 } from 'graphql';
 
 /** GraphQL Layer Symbol outline input type definition */
@@ -42,6 +42,17 @@ const LayerUniqueValueInfoInputType = new GraphQLInputObjectType({
   }),
 });
 
+/** GraphQL Layer Class Break Value Info input type definition */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const LayerClassBreakInfoInputType = new GraphQLInputObjectType({
+  name: 'LayerClassBreakInfoInputType',
+  fields: () => ({
+    label: { type: new GraphQLNonNull(GraphQLString) },
+    maxValue: { type: new GraphQLNonNull(GraphQLFloat) },
+    symbol: { type: new GraphQLNonNull(LayerSymbolInputType) },
+  }),
+});
+
 /** GraphQL Layer Gradient step input type definition (for heatmap) */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const LayerGradientStepInputType = new GraphQLInputObjectType({
@@ -70,8 +81,12 @@ const LayerDrawingInfoInputType = new GraphQLInputObjectType({
           defaultLabel: { type: GraphQLString },
           defaultSymbol: { type: LayerSymbolInputType },
           field1: { type: GraphQLString },
+          minValue: { type: GraphQLFloat },
           uniqueValueInfos: {
             type: new GraphQLList(LayerUniqueValueInfoInputType),
+          },
+          classBreakInfos: {
+            type: new GraphQLList(LayerClassBreakInfoInputType),
           },
         }),
       }),
