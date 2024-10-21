@@ -3,31 +3,13 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 /** Mongoose button interface declaration */
 export interface Button {
-  general: {
-    buttonText: string;
-    hasRoleRestriction: boolean;
-    roles: string[];
-    category: string;
-    variant: string;
-  };
-  action: {
-    navigateTo: {
-      enabled: boolean;
-      previousPage: boolean;
-      targetUrl: {
-        enabled: boolean;
-        href: string;
-        openInNewTab: boolean;
-      };
-    };
-    editRecord: {
-      enabled: boolean;
-      template: string;
-    };
-    addRecord: boolean;
-    suscribeToNotification: boolean;
-    sendNotification: boolean;
-  };
+  text: string;
+  href: string;
+  hasRoleRestriction: boolean;
+  roles: Array<string>;
+  variant: string;
+  category: string;
+  openInNewTab: boolean;
 }
 
 /** Dashboard filter interface declaration */
@@ -58,31 +40,13 @@ export interface Dashboard extends Document {
 /** Mongoose button schema declaration */
 const buttonSchema = new Schema<Button>(
   {
-    general: {
-      buttonText: String,
-      hasRoleRestriction: Boolean,
-      roles: Array<string>,
-      category: String,
-      variant: String,
-    },
-    action: {
-      navigateTo: {
-        enabled: Boolean,
-        previousPage: Boolean,
-        targetUrl: {
-          enabled: Boolean,
-          href: String,
-          openInNewTab: Boolean,
-        },
-      },
-      editRecord: {
-        enabled: Boolean,
-        template: String,
-      },
-      addRecord: Boolean,
-      suscribeToNotification: Boolean,
-      sendNotification: Boolean,
-    },
+    text: String,
+    href: String,
+    hasRoleRestriction: Boolean,
+    roles: Array<string>,
+    variant: String,
+    category: String,
+    openInNewTab: Boolean,
   },
   { _id: false }
 );
