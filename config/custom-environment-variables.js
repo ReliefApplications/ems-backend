@@ -31,6 +31,10 @@ module.exports = {
     port: 'MAIL_PORT',
     user: 'MAIL_USER',
     pass: 'MAIL_PASS',
+    blobStorage: {
+      connectionString: 'MAIL_BLOB_STORAGE_CONNECTION_STRING',
+      container: 'MAIL_BLOB_STORAGE_CONTAINER',
+    },
   },
   auth: {
     provider: 'AUTH_PROVIDER',
@@ -71,11 +75,5 @@ module.exports = {
   },
   publicStorage: {
     url: 'PUBLIC_STORAGE_URL',
-  },
-  emailAzure: {
-    blobStorageUrl: 'MAIL_BLOB_STORAGE_URL',
-    blobStorageKey: 'MAIL_BLOB_STORAGE_KEY',
-    blobStorageName: 'MAIL_BLOB_STORAGE_NAME',
-    blobStorageContainer: 'MAIL_BLOB_STORAGE_CONTAINER',
   },
 };

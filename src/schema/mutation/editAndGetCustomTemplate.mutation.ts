@@ -54,7 +54,7 @@ export default {
         }
 
         if (args.customTemplate.banner?.bannerImage) {
-          const base64data = args.customTemplate.footer.footerLogo;
+          const base64data = args.customTemplate.banner.bannerImage;
           const fileName = await blobStorageUpload(
             base64data,
             'banner',

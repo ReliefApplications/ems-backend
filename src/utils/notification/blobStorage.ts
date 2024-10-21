@@ -1,10 +1,11 @@
-import {
-  BlobServiceClient,
-  BlockBlobClient,
-  StorageSharedKeyCredential,
-} from '@azure/storage-blob';
+import { BlobServiceClient, BlockBlobClient } from '@azure/storage-blob';
 import { logger } from '@services/logger.service';
 import config from 'config';
+
+/** Azure storage connection string */
+const AZURE_STORAGE_CONNECTION_STRING: string = config.get(
+  'email.blobStorage.connectionString'
+);
 
 /**
  * Uploads image to blob storage for email notification
@@ -21,6 +22,8 @@ export async function blobStorageUpload(
 ): Promise<string> {
   let blobClient: BlockBlobClient;
 
+  console.log(imgBase64);
+
   const mimedata = imgBase64.split(',')[0]; //data:image/png;base64
   let fileType = mimedata.split('/')[1]; //png;base64
   fileType = fileType.split(';')[0]; //png
@@ -30,22 +33,15 @@ export async function blobStorageUpload(
   const base64Raw = imgBase64.split(',')[1];
 
   try {
-    /**
-     * Blob storage client boilerplate
-     */
-    const blobServiceClient = new BlobServiceClient(
-      config.get('emailAzure.blobStorageUrl'),
-      new StorageSharedKeyCredential(
-        config.get('emailAzure.blobStorageName'),
-        config.get('emailAzure.blobStorageKey')
-      )
+    // Azure Blob Storage API : Create the blob client
+    const blobServiceClient = BlobServiceClient.fromConnectionString(
+      AZURE_STORAGE_CONNECTION_STRING
     );
-    /**
-     * Client for the images container
-     */
+    // Client for images
     const containerClient = blobServiceClient.getContainerClient(
-      config.get('emailAzure.blobStorageContainer')
+      config.get('email.blobStorage.container')
     );
+    // Create the client if it doesn't exist
     await containerClient.createIfNotExists();
     blobClient = containerClient.getBlockBlobClient(fileName);
   } catch (err) {
