@@ -1,3 +1,16 @@
+# [2.12.0-beta.6](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.5...v2.12.0-beta.6) (2024-10-18)
+
+
+### Bug Fixes
+
+*  operator would break in many cases due to object id transformation ([98cc979](https://github.com/ReliefApplications/ems-backend/commit/98cc9794f1c6bb9d2bfeee231bf540f8cdede5f3))
+* application query could get wrong application if shortcut not provided ([7504ed5](https://github.com/ReliefApplications/ems-backend/commit/7504ed51eda7dc1a1b43a8b5fd0c726dcd25f104))
+
+
+### Features
+
+* dashboard export ([#1128](https://github.com/ReliefApplications/ems-backend/issues/1128)) ([f4ea223](https://github.com/ReliefApplications/ems-backend/commit/f4ea223248005cd85f2c603235cb2699e876a3d4)), closes [Ab#104302](https://github.com/Ab/issues/104302)
+
 # [2.12.0-beta.5](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.4...v2.12.0-beta.5) (2024-10-16)
 
 

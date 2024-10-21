@@ -119,16 +119,17 @@ export default {
         gridOptions?: any;
       } = {};
 
-      // Update URL to base64 file
-      /**
-       * Update URL to base64 file
-       * Important for dashboard export, as urls cannot be correctly converted otherwise to images.
-       */
-      for (const [index, widget] of args.structure.entries()) {
-        if (widget && widget.settings && widget.settings.text) {
-          args.structure[index].settings.text = await convertUrlToBase64(
-            widget.settings.text
-          );
+      if (args.structure) {
+        /**
+         * Update URL to base64 file
+         * Important for dashboard export, as urls cannot be correctly converted otherwise to images.
+         */
+        for (const [index, widget] of args.structure.entries()) {
+          if (widget && widget.settings && widget.settings.text) {
+            args.structure[index].settings.text = await convertUrlToBase64(
+              widget.settings.text
+            );
+          }
         }
       }
 
