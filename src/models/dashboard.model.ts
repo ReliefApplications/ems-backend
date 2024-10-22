@@ -6,7 +6,7 @@ export interface Button {
   text: string;
   href: string;
   hasRoleRestriction: boolean;
-  roles: Array<string>;
+  roles: string[];
   variant: string;
   category: string;
   openInNewTab: boolean;
