@@ -92,9 +92,9 @@ import deleteDashboardTemplates from './deleteDashboardTemplates.mutation';
 import addEmailNotification from './addEmailNotification.mutation';
 import editEmailNotification from './editEmailNotification.mutation';
 import addEmailDistributionList from './addEmailDistributionList.mutation';
-import editAndGetDistributionList from './editAndGetDistributionList.mutation';
+import editEmailDistributionList from './editEmailDistributionList.mutation';
 import addCustomTemplate from './addCustomTemplate.mutation';
-import editAndGetCustomTemplate from './editAndGetCustomTemplate.mutation';
+import editCustomTemplate from './editCustomTemplate.mutation';
 import deleteEmailNotification from './deleteEmailNotification.mutation';
 
 /** GraphQL mutation definition */
@@ -192,11 +192,11 @@ const Mutation = new GraphQLObjectType({
     deleteDraftRecord,
     editDraftRecord,
     addEmailDistributionList,
-    editAndGetDistributionList,
+    editEmailDistributionList,
     addCustomTemplate,
     addDashboardTemplate,
     deleteDashboardTemplates,
-    editAndGetCustomTemplate,
+    editCustomTemplate,
     deleteEmailNotification,
   },
 });
