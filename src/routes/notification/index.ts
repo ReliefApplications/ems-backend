@@ -11,6 +11,7 @@ import {
 import {
   ProcessedDataset,
   ValidateDataset,
+  azureFunctionHeaders,
   extractEmails,
   fetchDatasets,
   fetchDistributionList,
@@ -24,6 +25,8 @@ import i18next from 'i18next';
 import { sendEmail } from '@utils/email/sendEmail';
 import parse from 'node-html-parser';
 import { CustomTemplate } from '@models/customTemplate.model';
+import axios from 'axios';
+import config from 'config';
 import { cloneDeep } from 'lodash';
 import * as EmailValidator from 'email-validator';
 
@@ -159,6 +162,25 @@ router.post('/send-email/:configId', async (req, res) => {
       { stack: err.stack }
     );
     return res.status(500).send(req.t('common.errors.internalServerError'));
+  }
+});
+
+router.post('/send-email-azure/:configId', async (req, res) => {
+  try {
+    await axios({
+      url: `${config.get('emailAzure.serverlessUrl')}/api/sendEmail/${
+        req.params.configId
+      }`,
+      method: 'GET',
+      headers: azureFunctionHeaders(req),
+      params: {
+        code: config.get('emailAzure.serverlessKey'),
+      },
+    });
+    res.status(200).send({ status: 'OK' });
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
