@@ -11,7 +11,7 @@ import { Connection } from './pagination.type';
 import { EmailNotification } from '@models';
 
 /**
- *
+ * Dataset Query type - used to define a query for a dataset.
  */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const QueryType = new GraphQLObjectType({
@@ -24,7 +24,7 @@ export const QueryType = new GraphQLObjectType({
 });
 
 /**
- * GraphQL DataSet type.
+ * GraphQL Dataset type. Represents a data block in the email.
  */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const DatasetType = new GraphQLObjectType({
@@ -84,7 +84,8 @@ export const EmailNotificationConnectionType = Connection(
 );
 
 /**
- * Graphql return type
+ * Return type for EmailNotification queries.
+ * Extended with `userSubscribed` field (inferred at runtime).
  */
 export interface EmailNotificationReturn extends EmailNotification {
   userSubscribed: boolean;

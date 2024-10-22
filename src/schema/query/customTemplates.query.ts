@@ -32,7 +32,7 @@ const SORT_FIELDS = [
 ];
 
 /**
- *
+ * Query to fetch custom templates for email notification layouts.
  */
 export default {
   type: CustomTemplateConnectionType,

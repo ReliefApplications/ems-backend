@@ -46,7 +46,7 @@ export interface TableStyle {
 }
 
 /**
- *
+ * Interface used to define a query for an email's dataset
  */
 export interface DatasetPreviewArgs {
   resource: string;

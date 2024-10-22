@@ -32,7 +32,7 @@ const SORT_FIELDS = [
 ];
 
 /**
- *
+ * Resolver for fetching email notifications
  */
 export default {
   type: EmailDistributionConnectionType,

@@ -31,7 +31,7 @@ export interface ValidateDataset {
 }
 
 /**
- *
+ * Interface for a dataset with its records and columns.
  */
 export interface ProcessedDataset {
   name: string;
