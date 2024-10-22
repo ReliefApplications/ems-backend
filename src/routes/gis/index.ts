@@ -86,13 +86,15 @@ const getFeatureFromItem = (
         if (mapping.adminField) {
           const feature = {
             geometry: geo,
-            properties: { ...omit(item, mapping.geoField) },
+            // properties: { ...omit(item, mapping.geoField) },
+            properties: { ...item },
           };
           features.push(feature);
         } else {
           const feature = {
             ...(typeof geo === 'string' ? JSON.parse(geo) : geo),
-            properties: { ...omit(item, mapping.geoField) },
+            // properties: { ...omit(item, mapping.geoField) },
+            properties: { ...item },
           };
           // Only push if feature is of the same type as layer
           // Get from feature, as geo can be stored as string for some models ( ref data )
