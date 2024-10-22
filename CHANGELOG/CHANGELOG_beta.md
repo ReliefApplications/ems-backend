@@ -1,3 +1,21 @@
+# [2.12.0-beta.7](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.6...v2.12.0-beta.7) (2024-10-22)
+
+
+### Bug Fixes
+
+* edit dashboard mutation broken when no structure update needed ([fd84dc4](https://github.com/ReliefApplications/ems-backend/commit/fd84dc48732f632c888cac31663626460e0cc654))
+
+
+### Features
+
+* add class break layer ([#1131](https://github.com/ReliefApplications/ems-backend/issues/1131)) ([cc1c62f](https://github.com/ReliefApplications/ems-backend/commit/cc1c62f1a7ca14267531b97a6c9a131a045b93b4)), closes [AB#104485](https://github.com/AB/issues/104485)
+* add class break layer ([#1134](https://github.com/ReliefApplications/ems-backend/issues/1134)) ([dd5725a](https://github.com/ReliefApplications/ems-backend/commit/dd5725a1d98e3fb312b13204031bf35d34bc22e2)), closes [AB#104485](https://github.com/AB/issues/104485)
+
+
+### Reverts
+
+* Revert "feat: add class break layer (#1131)" (#1133) ([21122f7](https://github.com/ReliefApplications/ems-backend/commit/21122f7fbc8b2a1320b374835f3ceb401468369a)), closes [#1131](https://github.com/ReliefApplications/ems-backend/issues/1131) [#1133](https://github.com/ReliefApplications/ems-backend/issues/1133)
+
 # [2.12.0-beta.6](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.5...v2.12.0-beta.6) (2024-10-18)
 
 
