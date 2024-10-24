@@ -21,7 +21,7 @@ jest.mock('config', () => {
     }),
     util: {
       getEnv: jest.fn((settings: string) => {
-        return 'development';
+        return settings ? 'development' : 'production';
       }),
     },
   };
@@ -59,7 +59,7 @@ describe('validateShortcut', () => {
     });
   });
 
-  it('should throw an error if shortcut is now allowed by the system', async () => {
+  it('should throw an error if shortcut is not allowed by the system', async () => {
     (Application.findOne().select as jest.Mock).mockResolvedValue({
       shortcut: 'is-protected',
     });
