@@ -1,23 +1,24 @@
+import { accessibleBy } from '@casl/mongoose';
+import { StatusEnumType, StatusType } from '@const/enumTypes';
+import { Application } from '@models';
+import { graphQLAuthCheck } from '@schema/shared';
+import { AppAbility } from '@security/defineUserAbility';
+import { Context } from '@server/apollo/context';
+import { logger } from '@services/logger.service';
+import config from 'config';
 import {
-  GraphQLNonNull,
-  GraphQLID,
-  GraphQLString,
-  GraphQLList,
-  GraphQLError,
   GraphQLBoolean,
+  GraphQLError,
+  GraphQLID,
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLString,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
+import { isEmpty, isNil } from 'lodash';
+import { Types } from 'mongoose';
 import pubsub from '../../server/pubsub';
 import { ApplicationType } from '../types';
-import { Application } from '@models';
-import { AppAbility } from '@security/defineUserAbility';
-import { StatusEnumType, StatusType } from '@const/enumTypes';
-import { isEmpty, isNil } from 'lodash';
-import { logger } from '@services/logger.service';
-import { accessibleBy } from '@casl/mongoose';
-import { graphQLAuthCheck } from '@schema/shared';
-import { Types } from 'mongoose';
-import { Context } from '@server/apollo/context';
 
 /** Arguments for the editApplication mutation */
 type EditApplicationArgs = {
@@ -34,6 +35,11 @@ type EditApplicationArgs = {
 };
 
 /**
+ * Must be stored in config file, as an array of strings
+ */
+const protectedShortcuts: string[] = config.get('server.protectedShortcuts');
+
+/**
  * Validate shortcut
  *
  * @param id application id
@@ -47,8 +53,12 @@ export const validateShortcut = async (
     _id: { $ne: id },
     shortcut,
   }).select('shortcut');
-  if (applicationWithShortcut) {
-    throw new GraphQLError('Shortcut is already used by another application.');
+  if (applicationWithShortcut || protectedShortcuts.includes(shortcut)) {
+    throw new GraphQLError(
+      applicationWithShortcut
+        ? 'Shortcut is already used by another application.'
+        : 'Shortcut not allowed by the system.'
+    );
   }
 };
 
@@ -104,7 +114,7 @@ export default {
         // lockedBy: user._id,
       };
       // Check if the applied shortcut is already in use
-      if (!isNil(args.shortcut)) {
+      if (!isNil(args.shortcut) && args.shortcut !== '') {
         await validateShortcut(args.id, args.shortcut);
       }
       Object.assign(
