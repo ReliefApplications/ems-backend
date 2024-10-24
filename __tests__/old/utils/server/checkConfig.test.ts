@@ -39,6 +39,7 @@ describe('Check config util method', () => {
       server: {
         url: 'mock',
         allowedOrigins: 'mock',
+        protectedShortcuts: ['is-protected', 'and-this-one-too'],
       },
       frontOffice: {
         uri: 'mock',

@@ -6,6 +6,7 @@ module.exports = {
   server: {
     port: 3000,
     allowedOrigins: [],
+    protectedShortcuts: [],
     url: '',
     rateLimit: {
       enable: true,

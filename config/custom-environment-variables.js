@@ -6,6 +6,7 @@ module.exports = {
     port: 'SERVER_PORT',
     url: 'SERVER_URL',
     allowedOrigins: 'SERVER_ALLOWED_ORIGINS',
+    protectedShortcuts: 'SERVER_PROTECTED_SHORTCUTS',
   },
   frontOffice: {
     uri: 'FRONT_OFFICE_URI',
