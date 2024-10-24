@@ -550,7 +550,7 @@ export const buildEmail = async (
       `<tr bgcolor="#fff" align="center">
           <td>
             <a href="#" style="display: block; border-style: none !important; border: 0 !important;">
-              <img width="800px" src="${emailLayout.banner.bannerImage}" style="padding: 10px;" id="bannerImage">
+              <img width="800" src="${emailLayout.banner.bannerImage}" style="padding: 10px;" id="bannerImage">
             </a>
           </td>
        </tr>`
