@@ -10,6 +10,7 @@ export interface Button {
   variant: string;
   category: string;
   openInNewTab: boolean;
+  previousPage: boolean;
 }
 
 /** Dashboard filter interface declaration */
@@ -47,6 +48,7 @@ const buttonSchema = new Schema<Button>(
     variant: String,
     category: String,
     openInNewTab: Boolean,
+    previousPage: Boolean,
   },
   { _id: false }
 );

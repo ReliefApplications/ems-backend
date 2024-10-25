@@ -19,6 +19,7 @@ const ButtonActionInputType = new GraphQLInputObjectType({
     variant: { type: new GraphQLNonNull(GraphQLString) },
     category: { type: new GraphQLNonNull(GraphQLString) },
     openInNewTab: { type: new GraphQLNonNull(GraphQLBoolean) },
+    previousPage: { type: new GraphQLNonNull(GraphQLBoolean) },
   }),
 });
 
