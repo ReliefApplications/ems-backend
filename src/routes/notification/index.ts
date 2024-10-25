@@ -403,7 +403,7 @@ router.post('/send-individual-email/:configId', async (req, res) => {
         `<tr bgcolor="#fff" align="center">
               <td>
                 <a href="#" style="display: block; border-style: none !important; border: 0 !important;">
-                  <img width="120" src="${notification.emailLayout.banner.bannerImage}" style="padding: 10px;" id="bannerImage">
+                  <img width="800px" src="${notification.emailLayout.banner.bannerImage}" style="padding: 10px;" id="bannerImage">
                 </a>
               </td>
            </tr>`
