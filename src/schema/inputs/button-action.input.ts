@@ -20,6 +20,13 @@ const ButtonActionInputType = new GraphQLInputObjectType({
     category: { type: new GraphQLNonNull(GraphQLString) },
     openInNewTab: { type: new GraphQLNonNull(GraphQLBoolean) },
     previousPage: { type: new GraphQLNonNull(GraphQLBoolean) },
+    editRecordTemplate: { type: new GraphQLNonNull(GraphQLString) },
+    addRecordResource: { type: new GraphQLNonNull(GraphQLString) },
+    addRecordTemplate: { type: new GraphQLNonNull(GraphQLString) },
+    editCurrentRecord: { type: new GraphQLNonNull(GraphQLBoolean) },
+    attachNewToCurrentFields: {
+      type: new GraphQLList(GraphQLString),
+    },
   }),
 });
 

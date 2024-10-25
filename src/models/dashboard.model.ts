@@ -11,6 +11,11 @@ export interface Button {
   category: string;
   openInNewTab: boolean;
   previousPage: boolean;
+  editRecordTemplate: string;
+  addRecordResource: string;
+  addRecordTemplate: string;
+  editCurrentRecord: boolean;
+  attachNewToCurrentFields: string[];
 }
 
 /** Dashboard filter interface declaration */
@@ -49,6 +54,11 @@ const buttonSchema = new Schema<Button>(
     category: String,
     openInNewTab: Boolean,
     previousPage: Boolean,
+    editRecordTemplate: String,
+    addRecordResource: String,
+    addRecordTemplate: String,
+    editCurrentRecord: Boolean,
+    attachNewToCurrentFields: Array,
   },
   { _id: false }
 );
