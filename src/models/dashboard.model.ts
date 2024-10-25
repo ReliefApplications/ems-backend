@@ -9,6 +9,7 @@ export interface Button {
   roles: string[];
   variant: string;
   category: string;
+  notification?: string;
   openInNewTab: boolean;
 }
 
@@ -47,6 +48,7 @@ const buttonSchema = new Schema<Button>(
     variant: String,
     category: String,
     openInNewTab: Boolean,
+    notification: String,
   },
   { _id: false }
 );
