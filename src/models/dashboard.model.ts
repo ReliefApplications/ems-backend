@@ -4,12 +4,15 @@ import mongoose, { Schema, Document } from 'mongoose';
 /** Mongoose button interface declaration */
 export interface Button {
   text: string;
-  href: string;
+  href?: string;
   hasRoleRestriction: boolean;
   roles: string[];
   variant: string;
   category: string;
   openInNewTab: boolean;
+  resource?: string;
+  template?: string;
+  recordFields?: string[];
 }
 
 /** Dashboard filter interface declaration */
@@ -47,6 +50,9 @@ const buttonSchema = new Schema<Button>(
     variant: String,
     category: String,
     openInNewTab: Boolean,
+    resource: String,
+    template: String,
+    recordFields: Array<string>,
   },
   { _id: false }
 );
