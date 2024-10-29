@@ -1,21 +1,6 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
-import mongoose, { Schema, Document } from 'mongoose';
-
-/** Mongoose button interface declaration */
-export interface Button {
-  text: string;
-  hasRoleRestriction: boolean;
-  roles: string[];
-  variant: string;
-  category: string;
-  href?: string;
-  openInNewTab?: boolean;
-  previousPage?: boolean;
-  resource?: string;
-  template?: string;
-  recordFields?: string[];
-  notification?: string;
-}
+import mongoose, { Document, Schema } from 'mongoose';
+import { Button, buttonSchema } from './quickActions.model';
 
 /** Dashboard filter interface declaration */
 interface Filter {
@@ -41,25 +26,6 @@ export interface Dashboard extends Document {
   filter?: Filter;
   defaultTemplate?: boolean;
 }
-
-/** Mongoose button schema declaration */
-const buttonSchema = new Schema<Button>(
-  {
-    text: String,
-    hasRoleRestriction: Boolean,
-    roles: Array<string>,
-    variant: String,
-    category: String,
-    href: String,
-    openInNewTab: Boolean,
-    previousPage: Boolean,
-    resource: String,
-    template: String,
-    recordFields: Array<string>,
-    notification: String,
-  },
-  { _id: false }
-);
 
 /** Mongoose filter schema declaration */
 const filterSchema = new Schema<Filter>(

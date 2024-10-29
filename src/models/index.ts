@@ -11,6 +11,7 @@ export * from './permission.model';
 export * from './positionAttribute.model';
 export * from './positionAttributeCategory.model';
 export * from './pullJob.model';
+export * from './quickActions.model';
 export * from './record.model';
 export * from './referenceData.model';
 export * from './resource.model';
