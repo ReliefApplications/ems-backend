@@ -4,12 +4,12 @@ import path from 'path';
 import config from 'config';
 
 /** Sender e-mail */
-const EMAIL_FROM = `${config.get('email.fromPrefix')} <${config.get(
-  'email.from'
-)}>`;
+const EMAIL_FROM = `${config.get(
+  'email.fromPrefix'
+)} <${'ajithkumar.p@adappt.ai'}>`;
 
 /** Reply to e-mail */
-const EMAIL_REPLY_TO = config.get('email.replyTo') || config.get('email.from');
+const EMAIL_REPLY_TO = config.get('email.replyTo') || 'ajithkumar.p@adappt.ai';
 
 /** Maximum number of recipients*/
 const MAX_RECIPIENTS: number = config.get('email.maxRecipients');
