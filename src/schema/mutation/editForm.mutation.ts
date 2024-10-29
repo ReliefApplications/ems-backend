@@ -1,32 +1,41 @@
+import { status, StatusEnumType, StatusType } from '@const/enumTypes';
 import {
-  GraphQLNonNull,
-  GraphQLID,
-  GraphQLString,
+  Button,
+  Channel,
+  Form,
+  ReferenceData,
+  Resource,
+  Version,
+} from '@models';
+import ButtonActionInputType from '@schema/inputs/button-action.input';
+import { graphQLAuthCheck } from '@schema/shared';
+import { AppAbility } from '@security/defineUserAbility';
+import { Context } from '@server/apollo/context';
+import { logger } from '@services/logger.service';
+import {
+  addField,
+  extractFields,
+  findDuplicateFields,
+  removeField,
+  replaceField,
+} from '@utils/form';
+import checkDefaultFields from '@utils/form/checkDefaultFields';
+import { validateGraphQLTypeName } from '@utils/validators';
+import {
   GraphQLError,
+  GraphQLID,
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLString,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { Form, Resource, Version, Channel, ReferenceData } from '@models';
-import {
-  removeField,
-  addField,
-  replaceField,
-  findDuplicateFields,
-  extractFields,
-} from '@utils/form';
-import { FormType } from '../types';
-import { validateGraphQLTypeName } from '@utils/validators';
-import mongoose from 'mongoose';
-import { AppAbility } from '@security/defineUserAbility';
-import { status, StatusEnumType, StatusType } from '@const/enumTypes';
-import isEqual from 'lodash/isEqual';
-import differenceWith from 'lodash/differenceWith';
-import unionWith from 'lodash/unionWith';
 import i18next from 'i18next';
 import { get, isArray } from 'lodash';
-import { logger } from '@services/logger.service';
-import checkDefaultFields from '@utils/form/checkDefaultFields';
-import { graphQLAuthCheck } from '@schema/shared';
-import { Context } from '@server/apollo/context';
+import differenceWith from 'lodash/differenceWith';
+import isEqual from 'lodash/isEqual';
+import unionWith from 'lodash/unionWith';
+import mongoose from 'mongoose';
+import { FormType } from '../types';
 
 /**
  * List of keys of the structure's object which we want to inherit to the children forms when they are modified on the core form
@@ -74,6 +83,7 @@ type EditFormArgs = {
   status?: StatusType;
   name?: string;
   permissions?: any;
+  buttons?: Button[];
 };
 
 /**
@@ -88,6 +98,7 @@ export default {
     status: { type: StatusEnumType },
     name: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
+    buttons: { type: new GraphQLList(ButtonActionInputType) },
   },
   async resolve(parent, args: EditFormArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -107,7 +118,10 @@ export default {
     modifiedAt: new Date(),
   }; */
       const update: any = {};
-
+      // Update buttons
+      if (args.buttons) {
+        update.buttons = args.buttons;
+      }
       // Update name
       if (args.name) {
         const graphQLTypeName = Form.getGraphQLTypeName(args.name);
