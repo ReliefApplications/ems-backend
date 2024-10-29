@@ -63,6 +63,7 @@ type EditRecordArgs = {
   template?: string | Types.ObjectId;
   lang?: string;
   draft?: boolean;
+  skipValidation: boolean;
 };
 
 /**
@@ -78,6 +79,7 @@ export default {
     template: { type: GraphQLID },
     lang: { type: GraphQLString },
     draft: { type: GraphQLBoolean },
+    skipValidation: { type: GraphQLBoolean, defaultValue: false },
   },
   async resolve(parent, args: EditRecordArgs, context: Context) {
     // Authentication check
@@ -138,7 +140,7 @@ export default {
       } catch (err) {
         logger.error(err.message, { stack: err.stack });
       }
-      if (validationErrors && validationErrors.length) {
+      if (validationErrors.length && !args.skipValidation) {
         return Object.assign(oldRecord, { validationErrors });
       }
       // Generate new version, from current data
