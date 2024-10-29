@@ -735,7 +735,7 @@ router.post('/send-quick-email', async (req, res) => {
         cc: cc,
         bcc: bcc,
         subject: emailSubject,
-        html: baseElement.toString(),
+        html: baseElement.toString().replaceAll('Block 1', emailLayout.name),
       },
     };
 
@@ -812,7 +812,10 @@ router.post('/preview-quick-email', async (req, res) => {
         bannerImageElement.setAttribute('src', emailLayout.banner.bannerImage);
       }
     }
-    const emailTable = Buffer.from(baseElement.toString()).toString('base64');
+    const emailHtml = baseElement
+      .toString()
+      .replaceAll('Block 1', emailLayout.name);
+    const emailTable = Buffer.from(emailHtml).toString('base64');
     res.send({
       html: emailTable,
       subject: emailSubject,
