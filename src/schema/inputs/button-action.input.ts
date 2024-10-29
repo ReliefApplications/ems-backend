@@ -11,7 +11,7 @@ const ButtonActionInputType = new GraphQLInputObjectType({
   name: 'ButtonActionInputType',
   fields: () => ({
     text: { type: new GraphQLNonNull(GraphQLString) },
-    href: { type: new GraphQLNonNull(GraphQLString) },
+    href: { type: GraphQLString },
     hasRoleRestriction: { type: new GraphQLNonNull(GraphQLBoolean) },
     roles: {
       type: new GraphQLList(GraphQLString),
@@ -20,13 +20,7 @@ const ButtonActionInputType = new GraphQLInputObjectType({
     category: { type: new GraphQLNonNull(GraphQLString) },
     openInNewTab: { type: new GraphQLNonNull(GraphQLBoolean) },
     previousPage: { type: new GraphQLNonNull(GraphQLBoolean) },
-    editRecordTemplate: { type: new GraphQLNonNull(GraphQLString) },
-    addRecordResource: { type: new GraphQLNonNull(GraphQLString) },
-    addRecordTemplate: { type: new GraphQLNonNull(GraphQLString) },
-    editCurrentRecord: { type: new GraphQLNonNull(GraphQLBoolean) },
-    attachNewToCurrentFields: {
-      type: new GraphQLList(GraphQLString),
-    },
+    template: { type: new GraphQLNonNull(GraphQLString) },
   }),
 });
 
