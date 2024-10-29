@@ -4,16 +4,17 @@ import mongoose, { Schema, Document } from 'mongoose';
 /** Mongoose button interface declaration */
 export interface Button {
   text: string;
-  href?: string;
   hasRoleRestriction: boolean;
   roles: string[];
   variant: string;
   category: string;
+  href?: string;
   openInNewTab?: boolean;
   previousPage?: boolean;
   resource?: string;
   template?: string;
   recordFields?: string[];
+  notification?: string;
 }
 
 /** Dashboard filter interface declaration */
@@ -45,16 +46,17 @@ export interface Dashboard extends Document {
 const buttonSchema = new Schema<Button>(
   {
     text: String,
-    href: String,
     hasRoleRestriction: Boolean,
     roles: Array<string>,
     variant: String,
     category: String,
+    href: String,
     openInNewTab: Boolean,
     previousPage: Boolean,
     resource: String,
     template: String,
     recordFields: Array<string>,
+    notification: String,
   },
   { _id: false }
 );

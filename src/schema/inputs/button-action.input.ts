@@ -17,6 +17,7 @@ const ButtonActionInputType = new GraphQLInputObjectType({
     },
     variant: { type: new GraphQLNonNull(GraphQLString) },
     category: { type: new GraphQLNonNull(GraphQLString) },
+    notification: { type: GraphQLString },
     href: { type: GraphQLString },
     openInNewTab: { type: GraphQLBoolean },
     previousPage: { type: GraphQLBoolean },
