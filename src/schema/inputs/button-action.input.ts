@@ -20,6 +20,9 @@ const ButtonActionInputType = new GraphQLInputObjectType({
     category: { type: new GraphQLNonNull(GraphQLString) },
     openInNewTab: { type: new GraphQLNonNull(GraphQLBoolean) },
     notification: { type: GraphQLString },
+    resource: { type: GraphQLString },
+    template: { type: GraphQLString },
+    recordFields: { type: new GraphQLList(GraphQLString) },
   }),
 });
 
