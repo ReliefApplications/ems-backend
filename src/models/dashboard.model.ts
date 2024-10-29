@@ -9,7 +9,8 @@ export interface Button {
   roles: string[];
   variant: string;
   category: string;
-  openInNewTab: boolean;
+  openInNewTab?: boolean;
+  previousPage?: boolean;
   resource?: string;
   template?: string;
   recordFields?: string[];
@@ -50,6 +51,7 @@ const buttonSchema = new Schema<Button>(
     variant: String,
     category: String,
     openInNewTab: Boolean,
+    previousPage: Boolean,
     resource: String,
     template: String,
     recordFields: Array<string>,
