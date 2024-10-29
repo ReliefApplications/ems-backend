@@ -296,12 +296,12 @@ export const buildTable = (
                     ${dataset.name}</td>
                 </tr>
                 <tr>
-                    <td bgcolor="#fff" height="5"></td>
+                    <td bgcolor="#fff" height="1"></td>
             </tr>
             </tbody>
             </table>`;
       table +=
-        '<table bgcolor="ffffff" border="0" width="760" align="center" cellpadding="0" cellspacing="0" style="margin: 0 auto; border: 1px solid black;">';
+        '<table bgcolor="ffffff" border="0" width="760" align="center" cellpadding="0" cellspacing="0" style="margin: 0 auto 15px; border: 1px solid #d1d5db;">';
       table += '<thead>';
       table += '<tr bgcolor="#00205c">';
       const maxRowSpan = getMaxSubColumnDepth(dataset.columns);
@@ -313,7 +313,7 @@ export const buildTable = (
         const colSpan = field?.subColumns?.length
           ? getColSpan(field.subColumns)
           : 1;
-        table += `<th rowspan="${rowSpan}" colspan="${colSpan}" style="color: #fff; font-size: 14px;  font-family: 'Roboto', Arial, sans-serif; padding-left: 10px">${titleCase(
+        table += `<th rowspan="${rowSpan}" colspan="${colSpan}" style="color: #fff; font-size: 14px;  font-family: 'Roboto', Arial, sans-serif; text-align: left; padding: 10px 20px;">${titleCase(
           replaceUnderscores(
             field.label ?? (typeof field === 'string' ? field : field.name)
           )
@@ -328,7 +328,7 @@ export const buildTable = (
                 );
                 const currentColSpan = getColSpan(column?.subColumns);
                 subColumns[index].push(
-                  `<th  rowspan="${currentRowSpan}" colspan="${currentColSpan}" style="color: #fff; font-size: 14px; font-family: 'Roboto', Arial, sans-serif; padding-left: 10px">${titleCase(
+                  `<th  rowspan="${currentRowSpan}" colspan="${currentColSpan}" style="color: #fff; font-size: 14px; font-family: 'Roboto', Arial, sans-serif; text-align: left; padding: 10px 20px">${titleCase(
                     replaceUnderscores(
                       column.label ??
                         (typeof column === 'string' ? column : column.name)
@@ -345,7 +345,7 @@ export const buildTable = (
                 subColumns[index].push(
                   `<th  rowspan="${
                     maxRowspan - rowspan
-                  }" colspan="${1}" style="color: #fff; font-size: 14px; font-family: 'Roboto', Arial, sans-serif; padding-left: 10px">${titleCase(
+                  }" colspan="${1}" style="color: #fff; font-size: 14px; font-family: 'Roboto', Arial, sans-serif; text-align: left; padding: 10px 20px">${titleCase(
                     replaceUnderscores(
                       column.label ??
                         (typeof column === 'string' ? column : column.name)
@@ -608,7 +608,7 @@ export const buildEmail = async (
   mainTableElement.appendChild(
     parse(/*html*/ `
     <tr bgcolor="#00205c">
-      <td mc:edit="footer1" style="font-size: 12px; color: #fff; font-family: 'Roboto', Arial, sans-serif; text-align: center; padding: 0 10px;">
+      <td mc:edit="footer1" style="font-size: 12px; color: #fff; font-family: 'Roboto', Arial, sans-serif; text-align: center; padding: 10px 10px;">
         ${i18next.t('common.copyright.who')}
       </td>
     </tr>`)
