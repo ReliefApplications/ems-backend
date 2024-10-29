@@ -165,25 +165,6 @@ router.post('/send-email/:configId', async (req, res) => {
   }
 });
 
-router.post('/send-email-azure/:configId', async (req, res) => {
-  try {
-    await axios({
-      url: `${config.get('emailAzure.serverlessUrl')}/api/sendEmail/${
-        req.params.configId
-      }`,
-      method: 'GET',
-      headers: azureFunctionHeaders(req),
-      params: {
-        code: config.get('emailAzure.serverlessKey'),
-      },
-    });
-    res.status(200).send({ status: 'OK' });
-  } catch (err) {
-    logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('common.errors.internalServerError'));
-  }
-});
-
 router.post('/preview-email', async (req, res) => {
   try {
     const notification = req.body as EmailNotification;
@@ -825,6 +806,57 @@ router.post('/preview-quick-email', async (req, res) => {
       stack: err.stack,
     });
     return res.status(500).send(i18next.t('common.errors.internalServerError'));
+  }
+});
+
+router.post('/azure/:functionName/:configId?', async (req, res) => {
+  const { functionName, configId } = req.params;
+
+  const requestConfig = {
+    headers: azureFunctionHeaders(req),
+    params: {
+      code: config.get('emailAzure.serverlessKey'),
+    },
+  };
+
+  try {
+    const response = await axios.post(
+      `${config.get('emailAzure.serverlessUrl')}/api/${functionName}/${
+        configId || ''
+      }`,
+      req.body,
+      requestConfig
+    );
+    res.status(200).send(response.data);
+  } catch (err) {
+    console.error('Error Details:', err);
+    logger.error(err.message, { stack: err.stack });
+    res.status(500).send(req.t('common.errors.internalServerError'));
+  }
+});
+
+router.get('/azure/:functionName/:configId?', async (req, res) => {
+  const { functionName, configId } = req.params;
+
+  const requestConfig = {
+    headers: azureFunctionHeaders(req),
+    params: {
+      code: config.get('emailAzure.serverlessKey'),
+    },
+  };
+
+  try {
+    const response = await axios.get(
+      `${config.get('emailAzure.serverlessUrl')}/api/${functionName}/${
+        configId || ''
+      }`,
+      requestConfig
+    );
+
+    res.status(200).send(response.data);
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
