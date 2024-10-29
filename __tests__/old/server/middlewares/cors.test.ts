@@ -9,6 +9,7 @@ const mockConfig = {
   server: {
     url: 'mock',
     allowedOrigins: [url],
+    protectedShortcuts: ['is-protected', 'and-this-one-too'],
   },
   frontOffice: {
     uri: 'mock',

@@ -90,7 +90,12 @@ import editDraftRecord from './editDraftRecord.mutation';
 import addDashboardTemplate from './addDashboardTemplate.mutation';
 import deleteDashboardTemplates from './deleteDashboardTemplates.mutation';
 import addEmailNotification from './addEmailNotification.mutation';
-import editAndGetEmailNotification from './editAndGetEmailNotification.mutation';
+import editEmailNotification from './editEmailNotification.mutation';
+import addEmailDistributionList from './addEmailDistributionList.mutation';
+import editAndGetDistributionList from './editAndGetDistributionList.mutation';
+import addCustomTemplate from './addCustomTemplate.mutation';
+import editAndGetCustomTemplate from './editAndGetCustomTemplate.mutation';
+import deleteEmailNotification from './deleteEmailNotification.mutation';
 
 /** GraphQL mutation definition */
 const Mutation = new GraphQLObjectType({
@@ -150,7 +155,7 @@ const Mutation = new GraphQLObjectType({
     editPage,
     editPageContext,
     editPositionAttributeCategory,
-    editAndGetEmailNotification,
+    editEmailNotification,
     editPullJob,
     editRecord,
     editRecords,
@@ -186,8 +191,13 @@ const Mutation = new GraphQLObjectType({
     addDraftRecord,
     deleteDraftRecord,
     editDraftRecord,
+    addEmailDistributionList,
+    editAndGetDistributionList,
+    addCustomTemplate,
     addDashboardTemplate,
     deleteDashboardTemplates,
+    editAndGetCustomTemplate,
+    deleteEmailNotification,
   },
 });
 

@@ -7,6 +7,7 @@ const mandatoryConfigKeys = [
   // server
   'server.url',
   'server.allowedOrigins',
+  'server.protectedShortcuts',
   // front-office
   'frontOffice.uri',
   // back-office
