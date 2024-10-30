@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/ReliefApplications/oort-backend/compare/v1.0.1...v1.0.2) (2024-10-30)
+
+
+### Bug Fixes
+
+* remove todo list (test release) ([4742ae7](https://github.com/ReliefApplications/oort-backend/commit/4742ae7b292eda44acd8ef287ac8775affa87104))
+
 ## [2.6.2](https://github.com/ReliefApplications/ems-backend/compare/v2.6.1...v2.6.2) (2024-02-07)
 
 
