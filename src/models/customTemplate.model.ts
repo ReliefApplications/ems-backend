@@ -16,7 +16,12 @@ export interface CustomTemplate extends Document {
   isDeleted: number;
   applicationId?: mongoose.Schema.Types.ObjectId;
   isFromEmailNotification: boolean;
-  includeDetails?: boolean;
+  navigateToPage: boolean;
+  navigateSettings: {
+    field: string;
+    pageUrl: string;
+    title: string;
+  };
 }
 
 /** Mongoose distribution list schema declaration */
@@ -47,9 +52,14 @@ export const customTemplateSchema = new Schema<CustomTemplate>(
       type: Boolean,
       default: false,
     },
-    includeDetails: {
+    navigateToPage: {
       type: Boolean,
       default: false,
+    },
+    navigateSettings: {
+      field: String,
+      pageUrl: String,
+      title: String,
     },
   },
   {

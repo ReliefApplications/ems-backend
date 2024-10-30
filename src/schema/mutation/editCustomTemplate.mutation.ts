@@ -31,7 +31,7 @@ export default {
           isDeleted: args.customTemplate.isDeleted,
           isFromEmailNotification:
             args?.customTemplate?.isFromEmailNotification || false,
-          includeDetails: args.customTemplate.includeDetails || false,
+          navigateToPage: args.customTemplate.navigateToPage || false,
         };
 
         if (args.customTemplate.header?.headerLogo) {
