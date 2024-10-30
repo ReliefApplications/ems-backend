@@ -3,6 +3,10 @@ import { logger } from '@services/logger.service';
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 import { isNil } from 'lodash';
 
+/** Migration description */
+export const description =
+  'Convert static summary card widgets into text widgets';
+
 /** Removes static cards from DB, creates new text widgets instead */
 export const up = async () => {
   await startDatabaseForMigration();

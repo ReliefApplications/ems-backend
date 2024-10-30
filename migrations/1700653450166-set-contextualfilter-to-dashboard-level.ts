@@ -33,6 +33,10 @@ const updateDashboard = async (
   }
 };
 
+/** Migration description */
+export const description =
+  'Move contextual filter from application level to dashboard level';
+
 /**
  * Sample function of up migration
  *

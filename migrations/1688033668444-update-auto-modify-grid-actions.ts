@@ -46,6 +46,9 @@ const updateDashboard = async (
   }
 };
 
+/** Migration description */
+export const description = 'Update auto modify grid actions';
+
 /**
  * Sample function of up migration
  *

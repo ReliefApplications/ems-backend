@@ -2,6 +2,9 @@ import { ReferenceData } from '@models';
 import { logger } from '@services/logger.service';
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 
+/** Migration description */
+export const description = 'Update reference data types';
+
 /**
  * Sample function of up migration
  *

@@ -12,6 +12,9 @@ import {
 } from '../src/models';
 import { logger } from '../src/services/logger.service';
 
+/** Migration description */
+export const description = 'Generate resource models from widgets';
+
 /**
  * Get parent application from dashboard. Including dashboard in step.
  *

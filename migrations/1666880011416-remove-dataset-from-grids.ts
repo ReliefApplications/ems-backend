@@ -10,6 +10,9 @@ import { startDatabaseForMigration } from '../src/utils/migrations/database.help
 import { logger } from '../src/services/logger.service';
 import { contentType } from '@const/enumTypes';
 
+/** Migration description */
+export const description = 'Remove dataset from grid widgets';
+
 /**
  * Update dashboard grid widgets, replacing the template location and removing the query
  *

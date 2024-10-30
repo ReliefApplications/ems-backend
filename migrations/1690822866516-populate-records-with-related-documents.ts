@@ -197,6 +197,10 @@ const updateLastUpdatedBy = async () => {
   logger.info('Update of last updated by done');
 };
 
+/** Migration description */
+export const description =
+  'Update records to add createdBy, form, last update form & last updated by data';
+
 /**
  * Sample function of up migration
  *

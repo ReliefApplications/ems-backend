@@ -12,6 +12,9 @@ import {
 } from '../src/models';
 import { logger } from '../src/services/logger.service';
 
+/** Migration description */
+export const description = 'Generate resource layouts from widgets';
+
 /**
  * Updates the layout for each of the dashboard's widgets
  *

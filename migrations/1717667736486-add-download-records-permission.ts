@@ -3,6 +3,9 @@ import { startDatabaseForMigration } from '../src/utils/migrations/database.help
 import { cloneDeep, omit } from 'lodash';
 import { logger } from '@services/logger.service';
 
+/** Migration description */
+export const description = 'Create new download records permission';
+
 /**
  * Sample function of up migration
  *

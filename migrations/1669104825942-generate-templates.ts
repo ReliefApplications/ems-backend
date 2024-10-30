@@ -13,6 +13,10 @@ interface Template {
   body: string;
 }
 
+/** Migration description */
+export const description =
+  'Generate application notification templates from widgets';
+
 /**
  * Updates the templates for each of the workflow's widgets
  *

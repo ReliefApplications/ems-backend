@@ -40,6 +40,10 @@ const updateDashboard = async (dashboard: Dashboard) => {
   }
 };
 
+/** Migration description */
+export const description =
+  'Transform geographic extent of map widgets into array';
+
 /**
  * Sample function of up migration
  *

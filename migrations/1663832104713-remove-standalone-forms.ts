@@ -3,6 +3,9 @@ import { isArray } from 'lodash';
 import { Form, Resource, Dashboard, Record } from '../src/models';
 import { logger } from '@services/logger.service';
 
+/** Migration description */
+export const description = 'Remove standalone forms ( no resource )';
+
 /**
  * Sample function of up migration
  *

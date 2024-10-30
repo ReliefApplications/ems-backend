@@ -14,6 +14,9 @@ const EMAIL = '({today}|{dataset})';
 /** Regex for email placeholders */
 const REGEX_EMAIL = new RegExp(EMAIL);
 
+/** Migration description */
+export const description = 'Update placeholders in applications';
+
 /**
  * Update value key from passed object by changing placeholder if any to new convention.
  *

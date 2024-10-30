@@ -3,6 +3,9 @@ import { Permission } from '@models';
 import { logger } from '@services/logger.service';
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 
+/** Migration description */
+export const description = 'Add new layer permissions';
+
 /**
  * Sample function of up migration
  *

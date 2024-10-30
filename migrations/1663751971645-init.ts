@@ -1,6 +1,9 @@
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 import { initDatabase } from '../src/server/database';
 
+/** Migration description */
+export const description = 'First migration, to initialize the database.';
+
 /**
  * Use to init migrate up.
  *

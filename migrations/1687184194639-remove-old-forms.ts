@@ -3,6 +3,9 @@ import { startDatabaseForMigration } from '../src/utils/migrations/database.help
 import { deleteFolder } from '@utils/files/deleteFolder';
 import { logger } from '@services/logger.service';
 
+/** Migration description */
+export const description = 'Remove forms not related to any resource';
+
 /** This migration removes forms that are not linked to any resources */
 export const up = async () => {
   await startDatabaseForMigration();

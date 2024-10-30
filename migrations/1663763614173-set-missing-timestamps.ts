@@ -14,6 +14,9 @@ import {
   Version,
 } from '../src/models';
 
+/** Migration description */
+export const description = 'Add missing createdAt / updatedAt to objects';
+
 /**
  * Use to documents date migrate up.
  *

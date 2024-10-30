@@ -4,6 +4,9 @@ import { startDatabaseForMigration } from '../src/utils/migrations/database.help
 import { Resource } from '@models';
 import { cloneDeep, isEqual } from 'lodash';
 
+/** Migration description */
+export const description = 'Transform field permissions into object ids';
+
 /**
  * Checks the canSee / canUpdate permissions of each field on each resource
  * If it is a string, it will be converted to an ObjectId

@@ -12,6 +12,10 @@ interface DistributionList {
   emails: string[];
 }
 
+/** Migration description */
+export const description =
+  'Generate application distribution lists from widgets';
+
 /**
  * Updates the distribution list for each of the workflow's widgets
  *

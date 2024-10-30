@@ -2,6 +2,9 @@ import { startDatabaseForMigration } from '../src/utils/migrations/database.help
 import { logger } from '../src/services/logger.service';
 import { Resource } from '@models';
 
+/** Migration description */
+export const description = 'Convert aggregation group steps into arrays';
+
 /**
  * Sample function of up migration
  *

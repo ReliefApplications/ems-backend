@@ -4,6 +4,9 @@ import { get, isArray } from 'lodash';
 import { logger } from '@services/logger.service';
 import { contentType } from '@const/enumTypes';
 
+/** Migration description */
+export const description = 'Update attach to record actions';
+
 /**
  * Update dashboard grid widgets, replacing the template location and removing the query
  *
