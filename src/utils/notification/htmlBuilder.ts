@@ -271,17 +271,17 @@ export const buildTable = (
   // // //const labelStyle = 'background-color: #00205C; color: white;';
   // // //const tableDivStyle = styles?.tableDivStyle || '';
 
-  // // THE FOLLOWING CSS SELECTORS ARE BANNED:
-  // // overflow, justify, display
+  // THE FOLLOWING CSS SELECTORS ARE BANNED:
+  // overflow, justify, display
 
   try {
     let table = '';
-    // //Checks if data is undefined
+    //Checks if data is undefined
     if (!dataset.records[0]) {
       table = `<table  border="0" width="760" align="center" cellpadding="0" cellspacing="0" bgcolor="ffffff" >
       <tbody>
         <tr bgcolor="#00205c">
-            <td mc:edit="title1" height="40" style="color: #fff; font-size: 15px; font-weight: 700; font-family: 'Roboto', Arial, sans-serif; padding-left: 10px;">
+            <td mc:edit="title1" height="40" style="color: #fff; font-size: 15px; font-weight: 700; font-family: 'Roboto', Arial, sans-serif; padding: 10px 20px;">
             ${dataset.name}</td>
         </tr>
         <tr>
@@ -292,7 +292,7 @@ export const buildTable = (
     } else {
       table += `<table border="0" width="760" align="center" cellpadding="0" cellspacing="0"  >
                 <tbody><tr bgcolor="#00205c">
-                    <td mc:edit="title1" height="40" style="color: #fff; font-size: 15px; font-weight: 700; font-family: 'Roboto', Arial, sans-serif; padding-left: 10px;">
+                    <td mc:edit="title1" height="40" style="color: #fff; font-size: 15px; font-weight: 700; font-family: 'Roboto', Arial, sans-serif; padding: 10px 20px;">
                     ${dataset.name}</td>
                 </tr>
                 <tr>
@@ -608,7 +608,7 @@ export const buildEmail = async (
   mainTableElement.appendChild(
     parse(/*html*/ `
     <tr bgcolor="#00205c">
-      <td mc:edit="footer1" style="font-size: 12px; color: #fff; font-family: 'Roboto', Arial, sans-serif; text-align: center; padding: 10px 10px;">
+      <td mc:edit="footer1" style="font-size: 12px; color: #fff; font-family: 'Roboto', Arial, sans-serif; text-align: center; padding: 8px;">
         ${i18next.t('common.copyright.who')}
       </td>
     </tr>`)
