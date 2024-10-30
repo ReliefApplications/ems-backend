@@ -1,6 +1,6 @@
 {
   "name": "oort-backend",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -151,6 +151,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ReliefApplications/ems-backend.git"
+    "url": "https://github.com/ReliefApplications/oort-backend.git"
   }
 }
