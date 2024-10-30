@@ -40,8 +40,6 @@ const args = minimist(process.argv.slice(2), {
   },
 });
 
-console.log(args);
-
 /** Default application to use for duplication */
 const DEFAULT_APP = '64ccb80356774f7aa3f6861b';
 /** Default resource prefix */

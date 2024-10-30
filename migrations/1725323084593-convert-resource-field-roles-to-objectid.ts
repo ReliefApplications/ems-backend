@@ -23,7 +23,6 @@ const convertToObjectId = (value) => {
  * @returns just migrate data.
  */
 export const up = async () => {
-  console.log('oua oua');
   await startDatabaseForMigration();
   try {
     // Find resources where fields.permissions.canSee or fields.permissions.canUpdate contain strings
@@ -45,10 +44,6 @@ export const up = async () => {
       // Iterate through the fields array
       // eslint-disable-next-line @typescript-eslint/no-loop-func
       resource.fields = resource.fields.map((field) => {
-        if (field.name === 'campaign') {
-          // eslint-disable-next-line @typescript-eslint/no-loop-func
-          console.log(field);
-        }
         if (field.permissions) {
           // Check and convert canSee strings to ObjectIds
           if (field.permissions.canSee) {
@@ -69,10 +64,6 @@ export const up = async () => {
               }
             );
           }
-        }
-        if (field.name === 'campaign') {
-          // eslint-disable-next-line @typescript-eslint/no-loop-func
-          console.log(field);
         }
         return field;
       });
