@@ -16,6 +16,7 @@ export interface CustomTemplate extends Document {
   isDeleted: number;
   applicationId?: mongoose.Schema.Types.ObjectId;
   isFromEmailNotification: boolean;
+  includeDetails?: boolean;
 }
 
 /** Mongoose distribution list schema declaration */
@@ -43,6 +44,10 @@ export const customTemplateSchema = new Schema<CustomTemplate>(
       type: mongoose.Schema.Types.ObjectId,
     },
     isFromEmailNotification: {
+      type: Boolean,
+      default: false,
+    },
+    includeDetails: {
       type: Boolean,
       default: false,
     },

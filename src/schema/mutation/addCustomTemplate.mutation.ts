@@ -31,6 +31,7 @@ export default {
         createdBy: { name: context.user.name, email: context.user.username },
         isFromEmailNotification:
           args.customTemplate.isFromEmailNotification || false,
+        includeDetails: args.customTemplate.includeDetails || false,
       };
 
       if (args.customTemplate.header?.headerLogo) {
