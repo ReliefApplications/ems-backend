@@ -1,6 +1,6 @@
+import { startDatabase } from '@server/database';
 import dotenv from 'dotenv';
 dotenv.config();
-import { startDatabase } from '../../server/database';
 
 /**
  * Use to create database connection.

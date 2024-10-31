@@ -1,5 +1,5 @@
 import { Application, Dashboard, Step, Workflow, Page } from '@models';
-import { startDatabaseForMigration } from '@utils/migrations/database.helper';
+import { startDatabaseForMigration } from '../src/migrations/database.helper';
 import { isArray, cloneDeep } from 'lodash';
 import { contentType } from '@const/enumTypes';
 import { logger } from '@services/logger.service';
@@ -12,6 +12,10 @@ interface Template {
   subject: string;
   body: string;
 }
+
+/** Migration description */
+export const description =
+  'Generate application notification templates from widgets';
 
 /**
  * Updates the templates for each of the workflow's widgets
