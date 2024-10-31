@@ -28,6 +28,11 @@ export interface Button {
   subscribeToNotification?: {
     notification?: string;
   };
+  sendNotification?: {
+    distributionList?: string;
+    template?: string;
+    fieldsForUpdate?: Array<string>;
+  };
 }
 
 /** Dashboard filter interface declaration */
@@ -96,6 +101,17 @@ const buttonSchema = new Schema<Button>(
       type: new Schema(
         {
           notification: String,
+        },
+        { _id: false }
+      ),
+      default: null,
+    },
+    sendNotification: {
+      type: new Schema(
+        {
+          distributionList: String,
+          template: String,
+          fieldsForUpdate: { type: [String], default: [] },
         },
         { _id: false }
       ),

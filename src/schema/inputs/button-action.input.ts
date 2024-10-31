@@ -49,6 +49,14 @@ const ButtonActionInputType = new GraphQLInputObjectType({
         name: 'subscribeToNotificationInputType',
         fields: {
           notification: { type: GraphQLString },
+        },
+      }),
+    },
+    sendNotification: {
+      type: new GraphQLInputObjectType({
+        name: 'sendNotificationInputType',
+        fields: {
+          distributionList: { type: GraphQLString },
           template: { type: GraphQLString },
           fieldsForUpdate: { type: new GraphQLList(GraphQLString) },
         },
