@@ -1,4 +1,4 @@
-import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
+import { startDatabaseForMigration } from '../src/migrations/database.helper';
 import get from 'lodash/get';
 import set from 'lodash/set';
 import {
@@ -11,6 +11,9 @@ import {
   Workflow,
 } from '../src/models';
 import { logger } from '../src/services/logger.service';
+
+/** Migration description */
+export const description = 'Generate resource models from widgets';
 
 /**
  * Get parent application from dashboard. Including dashboard in step.

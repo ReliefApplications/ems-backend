@@ -7,7 +7,7 @@
     "node_modules",
     "build",
     // there's a wrong link in this file, needed for migration
-    "src/utils/migrations/template.ts",
+    "src/migrations/template.ts",
     // exclude test files
     "jest.config.ts",
     "__tests__/**/*"

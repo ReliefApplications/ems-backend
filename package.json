@@ -11,11 +11,11 @@
     "test": "jest --coverage",
     "prepare": "husky install",
     "check-i18n": "node .scripts/check-i18n",
-    "migrate": "migrate --migrations-dir=\"./migrations\" --compiler=\"ts:./src/utils/migrations/ts-compiler.js\"",
-    "migrate:create": "migrate create --template-file ./src/utils/migrations/template.ts --migrations-dir=\"./migrations\" --compiler=\"ts:./src/utils/migrations/ts-compiler.js\"",
-    "migrate:up": "migrate --migrations-dir=\"./migrations\" --compiler=\"ts:./src/utils/migrations/ts-compiler.js\" up",
-    "migrate:down": "migrate --migrations-dir=\"./migrations\" --compiler=\"ts:./src/utils/migrations/ts-compiler.js\" down",
-    "migrate:list": "migrate --migrations-dir=\"./migrations\" --compiler=\"ts:./src/utils/migrations/ts-compiler.js\" list",
+    "migrate": "ts-node -r tsconfig-paths/register -r dotenv/config ./src/migrations/index.ts", 
+    "migrate:create": "migrate create --template-file ./src/migrations/template.ts --migrations-dir=\"./migrations\" --compiler=\"ts:./src/migrations/ts-compiler.js\"",
+    "migrate:up": "ts-node -r tsconfig-paths/register -r dotenv/config ./src/migrations/index.ts up",
+    "migrate:down": "ts-node -r tsconfig-paths/register -r dotenv/config ./src/migrations/index.ts down",
+    "migrate:list": "migrate --migrations-dir=\"./migrations\" --compiler=\"ts:./src/migrations/ts-compiler.js\" list",
     "semantic-release": "semantic-release"
   },
   "nodemonConfig": {
