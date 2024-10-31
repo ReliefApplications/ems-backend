@@ -11,10 +11,10 @@
     "test": "jest --coverage",
     "prepare": "husky install",
     "check-i18n": "node .scripts/check-i18n",
-    "migrate": "ts-node -r tsconfig-paths/register -r dotenv/config migrateScript.ts", 
+    "migrate": "ts-node -r tsconfig-paths/register -r dotenv/config ./src/migrations/index.ts", 
     "migrate:create": "migrate create --template-file ./src/migrations/template.ts --migrations-dir=\"./migrations\" --compiler=\"ts:./src/migrations/ts-compiler.js\"",
-    "migrate:up": "ts-node -r tsconfig-paths/register -r dotenv/config migrateScript.ts up",
-    "migrate:down": "ts-node -r tsconfig-paths/register -r dotenv/config migrateScript.ts down",
+    "migrate:up": "ts-node -r tsconfig-paths/register -r dotenv/config ./src/migrations/index.ts up",
+    "migrate:down": "ts-node -r tsconfig-paths/register -r dotenv/config ./src/migrations/index.ts down",
     "migrate:list": "migrate --migrations-dir=\"./migrations\" --compiler=\"ts:./src/migrations/ts-compiler.js\" list",
     "semantic-release": "semantic-release"
   },
