@@ -30,8 +30,8 @@ export interface Button {
   };
   sendNotification?: {
     distributionList?: string;
-    template?: string;
-    fieldsForUpdate?: Array<string>;
+    templates?: Array<string>;
+    fields?: Array<string>;
   };
 }
 
@@ -110,8 +110,8 @@ const buttonSchema = new Schema<Button>(
       type: new Schema(
         {
           distributionList: String,
-          template: String,
-          fieldsForUpdate: { type: [String], default: [] },
+          templates: { type: [String], default: [] },
+          fields: { type: [String], default: [] },
         },
         { _id: false }
       ),
