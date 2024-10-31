@@ -1,5 +1,5 @@
 import { Application, Dashboard, Step, Workflow, Page } from '@models';
-import { startDatabaseForMigration } from '@utils/migrations/database.helper';
+import { startDatabaseForMigration } from '../src/migrations/database.helper';
 import { isArray, cloneDeep } from 'lodash';
 import { contentType } from '@const/enumTypes';
 import { logger } from '@services/logger.service';

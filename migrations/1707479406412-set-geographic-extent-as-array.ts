@@ -1,5 +1,5 @@
 import { Dashboard } from '@models';
-import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
+import { startDatabaseForMigration } from '../src/migrations/database.helper';
 import { get, isArray, set } from 'lodash';
 import { logger } from '@services/logger.service';
 

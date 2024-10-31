@@ -1,4 +1,4 @@
-import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
+import { startDatabaseForMigration } from '../src/migrations/database.helper';
 import get from 'lodash/get';
 import set from 'lodash/set';
 import {

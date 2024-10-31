@@ -1,4 +1,4 @@
-import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
+import { startDatabaseForMigration } from '../src/migrations/database.helper';
 import { isArray } from 'lodash';
 import { Form, Resource, Dashboard, Record } from '../src/models';
 import { logger } from '@services/logger.service';

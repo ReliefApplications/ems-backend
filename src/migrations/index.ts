@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import MongoStorage from './mongoStorage';
+import MongoStorage from './stateStore';
 import { load } from 'migrate';
 import { startDatabase } from '@server/database';
 

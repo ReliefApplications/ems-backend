@@ -1,4 +1,4 @@
-import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
+import { startDatabaseForMigration } from '../src/migrations/database.helper';
 import { logger } from '../src/services/logger.service';
 import { Resource } from '@models';
 

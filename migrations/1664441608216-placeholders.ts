@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-loop-func */
-import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
+import { startDatabaseForMigration } from '../src/migrations/database.helper';
 import { Dashboard, Resource, PullJob, ReferenceData } from '../src/models';
 import { Placeholder } from '../src/const/placeholders';
 import { logger } from '../src/services/logger.service';

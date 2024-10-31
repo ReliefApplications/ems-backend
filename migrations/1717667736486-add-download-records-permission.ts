@@ -1,5 +1,5 @@
 import { Resource } from '@models/resource.model';
-import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
+import { startDatabaseForMigration } from '../src/migrations/database.helper';
 import { cloneDeep, omit } from 'lodash';
 import { logger } from '@services/logger.service';
 

@@ -1,6 +1,6 @@
 import { Permission } from '@models/permission.model';
 import { logger } from '@services/logger.service';
-import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
+import { startDatabaseForMigration } from '../src/migrations/database.helper';
 
 /** Migration description */
 export const description = 'Add new notification permissions';

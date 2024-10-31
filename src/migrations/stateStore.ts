@@ -1,5 +1,5 @@
 import { CallbackError, MigrationSet } from 'migrate';
-import { Migration } from './src/models/migration.model';
+import { Migration } from '../models/migration.model';
 
 /** Migration store interface */
 interface Store {
