@@ -17,7 +17,7 @@ build/
 .idea/
 coverage/
 
-# Migration
+# Migration, not used anymore, but should remain until merged in main
 .migrate
 logs/
 config/local.js
