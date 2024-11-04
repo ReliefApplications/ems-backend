@@ -54,8 +54,6 @@ export const DatasetType = new GraphQLObjectType({
               delete obj.data;
             }
           }
-          // console.log('type resolver');
-          // console.log(parent.records);
           return parent.records;
         } catch (error) {
           logger.error('Failed to resolved dataset', error.message, {

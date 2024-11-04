@@ -1,8 +1,11 @@
 import { Types } from 'mongoose';
 import { logger } from '@services/logger.service';
-import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
+import { startDatabaseForMigration } from '../src/migrations/database.helper';
 import { Resource } from '@models';
 import { cloneDeep, isEqual } from 'lodash';
+
+/** Migration description */
+export const description = 'Transform field permissions into object ids';
 
 /**
  * Checks the canSee / canUpdate permissions of each field on each resource

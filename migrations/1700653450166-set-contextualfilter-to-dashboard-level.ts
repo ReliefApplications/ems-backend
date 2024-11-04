@@ -1,4 +1,4 @@
-import { startDatabaseForMigration } from '@utils/migrations/database.helper';
+import { startDatabaseForMigration } from '../src/migrations/database.helper';
 import { Application, Dashboard, Page, Workflow } from '@models';
 import { logger } from '@services/logger.service';
 import { contentType } from '@const/enumTypes';
@@ -32,6 +32,10 @@ const updateDashboard = async (
     return;
   }
 };
+
+/** Migration description */
+export const description =
+  'Move contextual filter from application level to dashboard level';
 
 /**
  * Sample function of up migration
