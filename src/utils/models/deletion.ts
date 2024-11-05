@@ -45,7 +45,6 @@ export const addOnBeforeDeleteMany = <DocType>(
     { document: false, query: true },
     async function () {
       try {
-        console.log('delete many');
         const docs = await this.clone().find();
         if (!docs.length) return logger.error('No documents found');
         await callback(docs);
