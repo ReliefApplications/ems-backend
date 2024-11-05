@@ -29,6 +29,7 @@ const ButtonActionInputType = new GraphQLInputObjectType({
         name: 'EditRecordInputType',
         fields: {
           template: { type: GraphQLString },
+          reloadDashboard: { type: GraphQLBoolean },
         },
       }),
     },
@@ -40,6 +41,7 @@ const ButtonActionInputType = new GraphQLInputObjectType({
           resource: { type: GraphQLString },
           template: { type: GraphQLString },
           fieldsForUpdate: { type: new GraphQLList(GraphQLString) },
+          reloadDashboard: { type: GraphQLBoolean },
         },
       }),
     },
