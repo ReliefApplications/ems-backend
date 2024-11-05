@@ -34,7 +34,7 @@ export interface Button {
     resource?: string;
     template?: string;
     fieldsForUpdate?: Array<string>;
-    mapping?: Array<{ name: string; value: string }>;
+    mapping?: Array<any>;
   };
   // Notifications
   subscribeToNotification?: {
@@ -46,15 +46,6 @@ export interface Button {
     fields?: Array<Field>;
   };
 }
-
-/** Add record action mapping schema */
-const addRecordsMappingSchema = new Schema(
-  {
-    name: String,
-    value: String,
-  },
-  { _id: false }
-);
 
 /** Dashboard filter interface declaration */
 interface Filter {
@@ -133,7 +124,7 @@ const buttonSchema = new Schema<Button>(
           resource: String,
           template: String,
           fieldsForUpdate: { type: [String], default: [] },
-          mapping: { type: [addRecordsMappingSchema], default: [] },
+          mapping: JSON,
         },
         { _id: false }
       ),
