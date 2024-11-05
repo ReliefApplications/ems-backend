@@ -1,10 +1,12 @@
 import {
   GraphQLBoolean,
   GraphQLInputObjectType,
+  GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
   GraphQLString,
 } from 'graphql';
+import GraphQLJSON from 'graphql-type-json';
 
 /** GraphQL Input Type of ButtonAction */
 const ButtonActionInputType = new GraphQLInputObjectType({
@@ -58,7 +60,21 @@ const ButtonActionInputType = new GraphQLInputObjectType({
         fields: {
           distributionList: { type: GraphQLString },
           templates: { type: new GraphQLList(GraphQLString) },
-          fields: { type: new GraphQLList(GraphQLString) },
+          fields: {
+            type: new GraphQLList(
+              new GraphQLInputObjectType({
+                name: 'sendNotificationFieldsInputType',
+                fields: {
+                  format: { type: GraphQLJSON },
+                  type: { type: GraphQLString },
+                  name: { type: GraphQLString },
+                  kind: { type: GraphQLString },
+                  label: { type: GraphQLString },
+                  width: { type: GraphQLInt },
+                },
+              })
+            ),
+          },
         },
       }),
     },
