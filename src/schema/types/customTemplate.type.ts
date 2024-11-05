@@ -29,7 +29,6 @@ export const CustomTemplateType = new GraphQLObjectType({
     createdBy: { type: GraphQLJSON },
     applicationId: { type: GraphQLID },
     isFromEmailNotification: { type: GraphQLBoolean },
-    navigateToPage: { type: GraphQLBoolean, defaultValue: false },
   }),
 });
 
