@@ -1,6 +1,17 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
+/** Field interface, for sendNotification action */
+interface Field {
+  format: any;
+  name: string;
+  type: string;
+  kind: string;
+  label: string;
+  width: number;
+  fields?: Array<Field>;
+}
+
 /** Mongoose button interface declaration */
 export interface Button {
   text: string;
@@ -28,6 +39,11 @@ export interface Button {
   // Notifications
   subscribeToNotification?: {
     notification?: string;
+  };
+  sendNotification?: {
+    distributionList?: string;
+    templates?: Array<string>;
+    fields?: Array<Field>;
   };
 }
 
@@ -64,6 +80,27 @@ export interface Dashboard extends Document {
   filter?: Filter;
   defaultTemplate?: boolean;
 }
+
+/** Send notification action field schema */
+const sendNotificationFieldSchema = new Schema(
+  {
+    format: Schema.Types.Mixed,
+    name: String,
+    type: String,
+    kind: String,
+    label: String,
+    width: Number,
+    filter: Schema.Types.Mixed,
+    sort: Schema.Types.Mixed,
+    first: Number,
+  },
+  { _id: false }
+);
+
+// Add the recursive fields, after schema creation, otherwise, it may break
+sendNotificationFieldSchema.add({
+  fields: { type: [sendNotificationFieldSchema], default: [] },
+});
 
 /** Mongoose button schema declaration */
 const buttonSchema = new Schema<Button>(
@@ -107,6 +144,20 @@ const buttonSchema = new Schema<Button>(
       type: new Schema(
         {
           notification: String,
+        },
+        { _id: false }
+      ),
+      default: null,
+    },
+    sendNotification: {
+      type: new Schema(
+        {
+          distributionList: String,
+          templates: { type: [String], default: [] },
+          fields: {
+            type: [sendNotificationFieldSchema],
+            default: [],
+          },
         },
         { _id: false }
       ),
