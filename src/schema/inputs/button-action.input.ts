@@ -6,6 +6,18 @@ import {
   GraphQLString,
 } from 'graphql';
 
+/**
+ * Add record action mapping input type.
+ */
+const addRecordMappingInputType = new GraphQLInputObjectType({
+  name: 'addRecordMappingInputType',
+  fields: () => ({
+    // using () => syntax allow recursive mode
+    name: { type: GraphQLString },
+    value: { type: GraphQLString },
+  }),
+});
+
 /** GraphQL Input Type of ButtonAction */
 const ButtonActionInputType = new GraphQLInputObjectType({
   name: 'ButtonActionInputType',
@@ -40,6 +52,7 @@ const ButtonActionInputType = new GraphQLInputObjectType({
           resource: { type: GraphQLString },
           template: { type: GraphQLString },
           fieldsForUpdate: { type: new GraphQLList(GraphQLString) },
+          mapping: { type: new GraphQLList(addRecordMappingInputType) },
         },
       }),
     },
