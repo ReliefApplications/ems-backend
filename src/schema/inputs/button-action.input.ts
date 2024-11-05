@@ -8,6 +8,26 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 
+/**
+ * Send notification action field input type.
+ */
+const sendNotificationFieldInputType = new GraphQLInputObjectType({
+  name: 'sendNotificationFieldInputType',
+  fields: () => ({
+    // using () => syntax allow recursive mode
+    format: { type: GraphQLJSON },
+    type: { type: GraphQLString },
+    name: { type: GraphQLString },
+    kind: { type: GraphQLString },
+    label: { type: GraphQLString },
+    width: { type: GraphQLInt },
+    fields: { type: new GraphQLList(sendNotificationFieldInputType) },
+    filter: { type: GraphQLJSON },
+    sort: { type: GraphQLJSON },
+    first: { type: GraphQLInt },
+  }),
+});
+
 /** GraphQL Input Type of ButtonAction */
 const ButtonActionInputType = new GraphQLInputObjectType({
   name: 'ButtonActionInputType',
@@ -61,19 +81,7 @@ const ButtonActionInputType = new GraphQLInputObjectType({
           distributionList: { type: GraphQLString },
           templates: { type: new GraphQLList(GraphQLString) },
           fields: {
-            type: new GraphQLList(
-              new GraphQLInputObjectType({
-                name: 'sendNotificationFieldsInputType',
-                fields: {
-                  format: { type: GraphQLJSON },
-                  type: { type: GraphQLString },
-                  name: { type: GraphQLString },
-                  kind: { type: GraphQLString },
-                  label: { type: GraphQLString },
-                  width: { type: GraphQLInt },
-                },
-              })
-            ),
+            type: new GraphQLList(sendNotificationFieldInputType),
           },
         },
       }),
