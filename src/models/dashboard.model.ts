@@ -28,12 +28,14 @@ export interface Button {
   // Edit Record
   editRecord?: {
     template?: string;
+    autoReload?: boolean;
   };
   // Add Record
   addRecord?: {
     resource?: string;
     template?: string;
     fieldsForUpdate?: Array<string>;
+    autoReload?: boolean;
     mapping?: any;
   };
   // Notifications
@@ -112,6 +114,7 @@ const buttonSchema = new Schema<Button>(
       type: new Schema(
         {
           template: String,
+          autoReload: Boolean,
         },
         { _id: false }
       ),
@@ -123,6 +126,7 @@ const buttonSchema = new Schema<Button>(
         {
           resource: String,
           template: String,
+          autoReload: Boolean,
           fieldsForUpdate: { type: [String], default: [] },
           mapping: Schema.Types.Mixed,
         },
