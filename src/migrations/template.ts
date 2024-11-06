@@ -1,4 +1,7 @@
-import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
+import { startDatabaseForMigration } from '../src/migrations/database.helper';
+
+/** Migration description */
+export const description = '***';
 
 /**
  * Sample function of up migration

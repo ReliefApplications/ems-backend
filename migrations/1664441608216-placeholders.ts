@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-loop-func */
-import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
+import { startDatabaseForMigration } from '../src/migrations/database.helper';
 import { Dashboard, Resource, PullJob, ReferenceData } from '../src/models';
 import { Placeholder } from '../src/const/placeholders';
 import { logger } from '../src/services/logger.service';
@@ -13,6 +13,9 @@ const REGEX_MINUS = new RegExp('today\\(\\)\\-\\d+');
 const EMAIL = '({today}|{dataset})';
 /** Regex for email placeholders */
 const REGEX_EMAIL = new RegExp(EMAIL);
+
+/** Migration description */
+export const description = 'Update placeholders in applications';
 
 /**
  * Update value key from passed object by changing placeholder if any to new convention.
