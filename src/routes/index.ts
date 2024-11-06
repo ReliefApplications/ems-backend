@@ -11,6 +11,7 @@ import roles from './roles';
 import gis from './gis';
 import style from './style';
 import notification from './notification';
+import activity from './activity';
 import config from 'config';
 
 /** Express router instance */
@@ -31,5 +32,6 @@ router.use('/roles', roles);
 router.use('/gis', gis);
 router.use('/style', style);
 router.use('/notification', notification);
+router.use('/activity', activity);
 
 export { router };
