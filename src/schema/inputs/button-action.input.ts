@@ -62,6 +62,7 @@ const ButtonActionInputType = new GraphQLInputObjectType({
           resource: { type: GraphQLString },
           template: { type: GraphQLString },
           fieldsForUpdate: { type: new GraphQLList(GraphQLString) },
+          mapping: { type: GraphQLJSON },
         },
       }),
     },
