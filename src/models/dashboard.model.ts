@@ -34,6 +34,7 @@ export interface Button {
     resource?: string;
     template?: string;
     fieldsForUpdate?: Array<string>;
+    mapping?: any;
   };
   // Notifications
   subscribeToNotification?: {
@@ -123,6 +124,7 @@ const buttonSchema = new Schema<Button>(
           resource: String,
           template: String,
           fieldsForUpdate: { type: [String], default: [] },
+          mapping: Schema.Types.Mixed,
         },
         { _id: false }
       ),
