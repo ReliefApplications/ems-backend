@@ -4,17 +4,19 @@ import {
   GraphQLString,
   GraphQLError,
   GraphQLBoolean,
+  GraphQLList,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { cloneDeep, has, isArray, isEmpty, omit } from 'lodash';
 import { contentType } from '@const/enumTypes';
 import { StepType } from '../types';
-import { Dashboard, Form, Step } from '@models';
+import { Button, Dashboard, Form, Step } from '@models';
 import extendAbilityForStep from '@security/extendAbilityForStep';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
+import ButtonActionInputType from '@schema/inputs/button-action.input';
 
 /** Simple form permission change type */
 type SimplePermissionChange =
@@ -40,6 +42,7 @@ type EditStepArgs = {
   content?: string | Types.ObjectId;
   permissions?: any;
   icon?: string;
+  buttons?: Button[];
 };
 
 /**
@@ -56,6 +59,7 @@ export default {
     type: { type: GraphQLString },
     content: { type: GraphQLID },
     permissions: { type: GraphQLJSON },
+    buttons: { type: new GraphQLList(ButtonActionInputType) },
   },
   async resolve(parent, args: EditStepArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -105,7 +109,11 @@ export default {
         ...(args.type && { type: args.type }),
         ...(args.content && { content: args.content }),
         ...(has(args, 'showName') && { showName: args.showName }),
-      };
+      } as any;
+      // Update buttons
+      if (args.buttons) {
+        update.buttons = args.buttons;
+      }
       // Updating permissions
       const permissionsUpdate: any = {};
       if (args.permissions) {

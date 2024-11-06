@@ -7,7 +7,6 @@ import { getGraphQLTypeName } from '@utils/validators';
 import mongoose, { Document, Schema } from 'mongoose';
 import { Channel } from './channel.model';
 import { layoutSchema } from './layout.model';
-import { Button, buttonSchema } from './quickActions.model';
 import { Record } from './record.model';
 import { Version } from './version.model';
 
@@ -36,7 +35,6 @@ interface FormDocument extends Document {
   versions?: any[];
   channel?: any;
   layouts?: any;
-  buttons?: Button[];
 }
 
 /** Interface of form */
@@ -142,7 +140,6 @@ const schema = new Schema<Form>(
       ref: 'Channel',
     },
     layouts: [layoutSchema],
-    buttons: [buttonSchema],
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },

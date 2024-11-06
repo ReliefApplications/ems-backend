@@ -1,13 +1,5 @@
 import { status, StatusEnumType, StatusType } from '@const/enumTypes';
-import {
-  Button,
-  Channel,
-  Form,
-  ReferenceData,
-  Resource,
-  Version,
-} from '@models';
-import ButtonActionInputType from '@schema/inputs/button-action.input';
+import { Channel, Form, ReferenceData, Resource, Version } from '@models';
 import { graphQLAuthCheck } from '@schema/shared';
 import { AppAbility } from '@security/defineUserAbility';
 import { Context } from '@server/apollo/context';
@@ -24,7 +16,6 @@ import { validateGraphQLTypeName } from '@utils/validators';
 import {
   GraphQLError,
   GraphQLID,
-  GraphQLList,
   GraphQLNonNull,
   GraphQLString,
 } from 'graphql';
@@ -83,7 +74,6 @@ type EditFormArgs = {
   status?: StatusType;
   name?: string;
   permissions?: any;
-  buttons?: Button[];
 };
 
 /**
@@ -98,7 +88,6 @@ export default {
     status: { type: StatusEnumType },
     name: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
-    buttons: { type: new GraphQLList(ButtonActionInputType) },
   },
   async resolve(parent, args: EditFormArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -118,10 +107,7 @@ export default {
     modifiedAt: new Date(),
   }; */
       const update: any = {};
-      // Update buttons
-      if (args.buttons) {
-        update.buttons = args.buttons;
-      }
+
       // Update name
       if (args.name) {
         const graphQLTypeName = Form.getGraphQLTypeName(args.name);
