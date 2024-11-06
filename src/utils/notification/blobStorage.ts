@@ -22,8 +22,6 @@ export async function blobStorageUpload(
 ): Promise<string> {
   let blobClient: BlockBlobClient;
 
-  console.log(imgBase64);
-
   const mimedata = imgBase64.split(',')[0]; //data:image/png;base64
   let fileType = mimedata.split('/')[1]; //png;base64
   fileType = fileType.split(';')[0]; //png
