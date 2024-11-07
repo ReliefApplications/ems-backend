@@ -1,6 +1,6 @@
 import addApplication from '@schema/mutation/addApplication.mutation';
 import mongoose from 'mongoose';
-import { Application, Channel } from '@models';
+import { Application, Channel, Notification } from '@models';
 import pubsub from '@server/pubsub';
 import { DatabaseHelpers } from '../../../helpers/database-helpers';
 
@@ -107,13 +107,24 @@ describe('addApplication Resolver', () => {
     });
 
     it('should set permissions correctly if user has limited access', async () => {
-      // Test implementation
+      context.user.ability.can.mockReturnValue(false);
+      context.user.ability.can.mockReturnValueOnce(true);
+      const result = await addApplication.resolve(null, {}, context);
+      expect(result.permissions.canSee).toEqual([
+        expect.any(mongoose.Types.ObjectId),
+        expect.any(mongoose.Types.ObjectId),
+        expect.any(mongoose.Types.ObjectId),
+      ]);
     });
   });
 
   describe('Notification Logic', () => {
     it('should create and save notification after application creation', async () => {
-      // Test implementation
+      await addApplication.resolve(null, {}, context);
+      const notification = await Notification.findOne({
+        action: 'Application created',
+      });
+      expect(notification).toBeTruthy();
     });
 
     it('should publish notification to appropriate channel', async () => {
