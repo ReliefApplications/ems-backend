@@ -31,8 +31,6 @@ export default {
           isDeleted: args.customTemplate.isDeleted,
           isFromEmailNotification:
             args?.customTemplate?.isFromEmailNotification || false,
-          navigateToPage: args.customTemplate.navigateToPage || false,
-          navigateSettings: args.customTemplate?.navigateSettings,
         };
 
         if (args.customTemplate.header?.headerLogo) {

@@ -31,8 +31,6 @@ export default {
         createdBy: { name: context.user.name, email: context.user.username },
         isFromEmailNotification:
           args.customTemplate.isFromEmailNotification || false,
-        navigateToPage: args.customTemplate.navigateToPage || false,
-        navigateSettings: args.customTemplate?.navigateSettings,
       };
 
       if (args.customTemplate.header?.headerLogo) {
