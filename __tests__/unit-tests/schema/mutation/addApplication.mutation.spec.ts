@@ -4,6 +4,7 @@ import { Application, Channel, Notification } from '@models';
 import pubsub from '@server/pubsub';
 import { DatabaseHelpers } from '../../../helpers/database-helpers';
 import { GraphQLError } from 'graphql';
+import { Context } from '@server/apollo/context';
 
 jest.mock('@server/pubsub', () =>
   jest.fn(async () => ({ publish: jest.fn() }))
@@ -34,7 +35,8 @@ describe('addApplication Resolver', () => {
         roles: [],
       },
       i18next: { t: jest.fn() },
-    };
+      timeZone: 'UTC',
+    } as unknown as Context;
 
     // context.user.ability.can.mockReturnValue(true);
     jest.spyOn(Channel, 'findOne').mockResolvedValue({
