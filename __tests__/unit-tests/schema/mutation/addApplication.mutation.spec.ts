@@ -2,7 +2,7 @@ import addApplication from '@schema/mutation/addApplication.mutation';
 import mongoose from 'mongoose';
 import { Application, Channel } from '@models';
 import pubsub from '@server/pubsub';
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { DatabaseHelpers } from '../../../helpers/database-helpers';
 
 jest.mock('@server/pubsub', () =>
   jest.fn(async () => ({ publish: jest.fn() }))
@@ -10,18 +10,15 @@ jest.mock('@server/pubsub', () =>
 
 describe('addApplication Resolver', () => {
   let context;
-  let mongoServer;
+  let databaseHelpers: DatabaseHelpers;
 
   beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create();
-    const uri = mongoServer.getUri();
-    await mongoose.connect(uri);
+    databaseHelpers = new DatabaseHelpers();
+    await databaseHelpers.connect();
   });
 
   afterAll(async () => {
-    await mongoose.connection.dropDatabase();
-    await mongoose.connection.close();
-    await mongoServer.stop();
+    await databaseHelpers.disconnect();
   });
 
   beforeEach(async () => {
