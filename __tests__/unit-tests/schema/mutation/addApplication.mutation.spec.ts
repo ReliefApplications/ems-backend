@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import { Application, Channel, Notification } from '@models';
 import pubsub from '@server/pubsub';
 import { DatabaseHelpers } from '../../../helpers/database-helpers';
+import { GraphQLError } from 'graphql';
 
 jest.mock('@server/pubsub', () =>
   jest.fn(async () => ({ publish: jest.fn() }))
@@ -32,7 +33,7 @@ describe('addApplication Resolver', () => {
         ability: { can: jest.fn().mockReturnValue(true), cannot: jest.fn() },
         roles: [],
       },
-      i18next: { t: jest.fn().mockReturnValue('Error Message') },
+      i18next: { t: jest.fn() },
     };
 
     // context.user.ability.can.mockReturnValue(true);
@@ -56,13 +57,19 @@ describe('addApplication Resolver', () => {
         {},
         { ...context, user: null }
       );
-      await expect(result).rejects.toThrow('Error Message');
+      await expect(result).rejects.toThrow(GraphQLError);
+      expect(context.i18next.t).toHaveBeenCalledWith(
+        'common.errors.userNotLogged'
+      );
     });
 
     it('should throw an error if the user is not authorized to create an application', async () => {
       context.user.ability.can.mockReturnValue(false);
       const result = addApplication.resolve(null, {}, context);
-      await expect(result).rejects.toThrow('Error Message');
+      await expect(result).rejects.toThrow(GraphQLError);
+      expect(context.i18next.t).toHaveBeenCalledWith(
+        'common.errors.permissionNotGranted'
+      );
     });
   });
 
