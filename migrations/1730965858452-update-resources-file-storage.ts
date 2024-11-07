@@ -2,8 +2,8 @@ import { Record } from '@models';
 import { Resource } from '@models/resource.model';
 import { logger } from '@services/logger.service';
 import { downloadFile } from '@utils/files/downloadFile';
-import { getToken } from '@utils/gis/getCountryPolygons';
 import axios from 'axios';
+import config from 'config';
 import fs from 'fs';
 import { isNil } from 'lodash';
 import sanitize from 'sanitize-filename';
@@ -16,6 +16,44 @@ const temporalLinks = [];
 export const description =
   'Update resources files storage from blob storage to the document management system';
 
+/**
+ * Get token for common services API.
+ *
+ * @returns token
+ */
+export const getToken = async () => {
+  const details: any = {
+    grant_type: 'client_credentials',
+    client_id: config.get('commonServices.clientId'),
+    client_secret: config.get('commonServices.clientSecret'),
+    scope: config.get('commonServices.scope'),
+  };
+  const formBody = [];
+  for (const property in details) {
+    const encodedKey = encodeURIComponent(property);
+    const encodedValue = encodeURIComponent(details[property]);
+    formBody.push(encodedKey + '=' + encodedValue);
+  }
+  const body = formBody.join('&');
+  return (
+    await axios({
+      url: config.get('commonServices.tokenEndpoint'),
+      method: 'post',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Length': `${body.length}`,
+      },
+      maxRedirects: 35,
+      data: body,
+    })
+  ).data.access_token;
+};
+
+/**
+ * Get default drive id
+ *
+ * @returns default drive id
+ */
 async function getDriveId() {
   const token = await getToken();
   const { data } = await axios({
@@ -27,17 +65,25 @@ async function getDriveId() {
     },
     data: {
       query: `
-          query {
-            storagedrive(drivetype: 2) {
-               driveid
-            }
-         }
-        `,
+            query {
+              storagedrive(drivetype: 2) {
+                 driveid
+              }
+           }
+          `,
     },
   });
   return data.storagedrive.driveid;
 }
 
+/**
+ * Upload given file to the document management system
+ *
+ * @param fileStream File data
+ * @param fileName File name
+ * @param driveId drive id
+ * @returns response data
+ */
 async function uploadFile(
   fileStream: string,
   fileName: string,
@@ -60,6 +106,12 @@ async function uploadFile(
   return response;
 }
 
+/**
+ * Prepare given file for upload to the document management api
+ *
+ * @param file File
+ * @returns File content ready to be pushed to the document management api
+ */
 async function handleFile(file) {
   let fileData = null;
   if (/^data:/i.test(file.content)) {
@@ -126,30 +178,42 @@ export const up = async () => {
     resourceName: resource.name,
     fieldNames: resource.fieldNames,
   }));
+
   let totalFiles = 0;
   let migratedFiles = 0;
   try {
     const driveId = await getDriveId();
     // For each resource, get all records for that resource id and that in their data property, at least the file type field exists
-    resources.forEach(async ({ resourceId, resourceName, fieldNames }) => {
-      const query = {
-        resource: resourceId,
-        $or: fieldNames.map((fieldName) => ({
-          [`data.${fieldName}`]: { $ne: null }, // Field exists and is not null
-        })),
-      };
-      const records = await Record.find(query);
-      const numberOfRecords = records.length;
-      records.forEach((r, index) => {
-        let filesToUpload = 0;
-        if (index == 0) {
-          fieldNames.forEach(async (field) => {
-            /** Check which of the file fields exists in the given resource */
-            if (r.data[field]) {
-              if (Array.isArray(r.data[field])) {
-                filesToUpload = r.data[field].length;
-                const newFieldFile = r.data[field].map(
-                  async (file, fileIndex) => {
+    await new Promise((resolve) => {
+      resources.forEach(
+        async ({ resourceId, resourceName, fieldNames }, indexResource) => {
+          const query = {
+            resource: resourceId,
+            $or: fieldNames.map((fieldName) => ({
+              [`data.${fieldName}`]: { $ne: null }, // Field exists and is not null
+            })),
+          };
+          const records = await Record.find(query);
+          const numberOfRecords = records.length;
+          for (const [index, r] of records.entries()) {
+            let filesToUpload = 0;
+            for (
+              let indexField = 0;
+              indexField < fieldNames.length;
+              indexField++
+            ) {
+              const field = fieldNames[indexField];
+              /** Check which of the file fields exists in the given resource */
+              if (r.data[field]) {
+                if (Array.isArray(r.data[field])) {
+                  const newFileField = [];
+                  filesToUpload = r.data[field].length;
+                  for (
+                    let indexFile = 0;
+                    indexFile < r.data[field].length;
+                    indexFile++
+                  ) {
+                    let file = r.data[field][indexFile];
                     const fileData = await handleFile(file);
                     if (!isNil(fileData)) {
                       const { itemId } = await uploadFile(
@@ -163,49 +227,52 @@ export const up = async () => {
                       };
                       logger.info(
                         `Uploaded file ${
-                          fileIndex + 1
+                          indexFile + 1
                         } of ${filesToUpload} for the record ${
                           index + 1
                         } of ${numberOfRecords} in ${resourceName}`
                       );
                       migratedFiles++;
                     }
-                    return file;
+                    newFileField.push(file);
                   }
-                );
-                r.data[field] = newFieldFile;
-              } else {
-                filesToUpload = 1;
-                const fileData = await handleFile(r.data[field]);
-                if (!isNil(fileData)) {
-                  const { itemId } = await uploadFile(
-                    fileData,
-                    r.data[field].name,
-                    driveId
-                  );
-                  r.data[field] = {
-                    ...r.data[field],
-                    content: { itemId, driveId },
-                  };
-                  logger.info(
-                    `Uploaded file ${filesToUpload} of ${filesToUpload} for the record ${
-                      index + 1
-                    } of ${numberOfRecords} in ${resourceName}`
-                  );
-                  migratedFiles++;
+                  r.data[field] = newFileField;
+                } else {
+                  filesToUpload = 1;
+                  const fileData = await handleFile(r.data[field]);
+                  if (!isNil(fileData)) {
+                    // const { itemId } = await uploadFile(
+                    //   fileData,
+                    //   r.data[field].name,
+                    //   driveId
+                    // );
+                    // r.data[field] = {
+                    //   ...r.data[field],
+                    //   content: { itemId, driveId },
+                    // };
+                    logger.info(
+                      `Uploaded file ${filesToUpload} of ${filesToUpload} for the record ${
+                        index + 1
+                      } of ${numberOfRecords} in ${resourceName}`
+                    );
+                    migratedFiles++;
+                  }
                 }
               }
             }
-          });
-          totalFiles += filesToUpload;
-          r.save();
-          logger.info(
-            `Updated record ${
-              index + 1
-            } of ${numberOfRecords} in ${resourceName}`
-          );
+            totalFiles += filesToUpload;
+            r.save();
+            logger.info(
+              `Updated record ${
+                index + 1
+              } of ${numberOfRecords} in ${resourceName}`
+            );
+          }
+          if (indexResource === resources.length - 1) {
+            resolve(true);
+          }
         }
-      });
+      );
     });
   } catch (error) {
     logger.error(
