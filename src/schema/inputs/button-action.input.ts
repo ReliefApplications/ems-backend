@@ -77,6 +77,14 @@ const ActionButtonInputType = new GraphQLInputObjectType({
         },
       }),
     },
+    unsubscribeFromNotification: {
+      type: new GraphQLInputObjectType({
+        name: 'unsubscribeFromNotificationInputType',
+        fields: {
+          notification: { type: GraphQLString },
+        },
+      }),
+    },
     sendNotification: {
       type: new GraphQLInputObjectType({
         name: 'sendNotificationInputType',
