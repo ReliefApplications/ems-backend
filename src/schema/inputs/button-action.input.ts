@@ -28,9 +28,9 @@ const sendNotificationFieldInputType = new GraphQLInputObjectType({
   }),
 });
 
-/** GraphQL Input Type of ButtonAction */
-const ButtonActionInputType = new GraphQLInputObjectType({
-  name: 'ButtonActionInputType',
+/** GraphQL Input Type of Action Button */
+const ActionButtonInputType = new GraphQLInputObjectType({
+  name: 'ActionButtonInputType',
   fields: () => ({
     text: { type: new GraphQLNonNull(GraphQLString) },
     // Display
@@ -92,4 +92,4 @@ const ButtonActionInputType = new GraphQLInputObjectType({
   }),
 });
 
-export default ButtonActionInputType;
+export default ActionButtonInputType;
