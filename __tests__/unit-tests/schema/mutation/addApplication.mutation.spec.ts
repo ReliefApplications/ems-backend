@@ -1,14 +1,11 @@
 import addApplication from '@schema/mutation/addApplication.mutation';
 import mongoose from 'mongoose';
-import { Application, Channel, Notification } from '@models';
+import { Application, Channel, Notification, Role } from '@models';
 import pubsub from '@server/pubsub';
 import { DatabaseHelpers } from '../../../helpers/database-helpers';
 import { GraphQLError } from 'graphql';
 import { Context } from '@server/apollo/context';
-
-jest.mock('@server/pubsub', () =>
-  jest.fn(async () => ({ publish: jest.fn() }))
-);
+import { logger } from '@services/logger.service';
 
 describe('addApplication Resolver', () => {
   let context;
@@ -137,27 +134,55 @@ describe('addApplication Resolver', () => {
     });
 
     it('should publish notification to appropriate channel', async () => {
-      // Test implementation
+      await addApplication.resolve(null, {}, context);
+      expect((await pubsub()).publish).toHaveBeenCalledWith(
+        expect.any(mongoose.Types.ObjectId),
+        expect.objectContaining({ notification: expect.any(Object) })
+      );
     });
   });
 
   describe('Channel and Role Creation', () => {
     it('should create main channel for the new application', async () => {
-      // Test implementation
+      const result = await addApplication.resolve(null, {}, context);
+      const mainChannel = await Channel.findOne({
+        title: 'main',
+        application: result._id,
+      });
+      expect(mainChannel).toBeTruthy();
     });
 
     it('should create default roles and associate them with the new application', async () => {
-      // Test implementation
+      const result = await addApplication.resolve(null, {}, context);
+      const roles = await Role.find({ application: result._id });
+      expect(roles).toHaveLength(3);
+      expect(roles).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ title: 'Editor' }),
+          expect.objectContaining({ title: 'Manager' }),
+          expect.objectContaining({ title: 'Guest' }),
+        ])
+      );
     });
   });
 
   describe('Error Handling', () => {
     it('should log error and throw GraphQLError if an error occurs during creation process', async () => {
-      // Test implementation
+      jest.spyOn(logger, 'error');
+      jest.spyOn(Application.prototype, 'save').mockRejectedValue(new Error());
+      const result = addApplication.resolve(null, {}, context);
+      await expect(result).rejects.toThrow(GraphQLError);
+      expect(logger.error).toHaveBeenCalled();
     });
 
     it('should return translated error message if a GraphQLError is thrown', async () => {
-      // Test implementation
+      // common.errors.userNotLogged    "You must be connected."
+      jest
+        .spyOn(Application.prototype, 'save')
+        .mockRejectedValue(new GraphQLError('common.errors.userNotLogged'));
+
+      const result = addApplication.resolve(null, {}, context);
+      expect(result).rejects.toThrow('common.errors.userNotLogged');
     });
   });
 });
