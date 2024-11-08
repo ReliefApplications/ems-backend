@@ -10,7 +10,7 @@ import { filterOperator } from '../../types/filter';
 /**
  * Generate a new access token for Microsoft graph, on behalf of the user.
  */
-const getGraphAccessToken = async () => {
+export const getGraphAccessToken = async () => {
   const form = new FormData();
   const formAsJson = {
     grant_type: 'client_credentials',
@@ -43,7 +43,7 @@ const getGraphAccessToken = async () => {
  *
  * @param user current user
  */
-const getUserGraphInfo = async (user: User) => {
+export const getUserGraphInfo = async (user: User) => {
   const graphToken = await getGraphAccessToken();
   const oid = user.oid;
   if (graphToken && oid) {
@@ -118,48 +118,40 @@ export const checkIfRoleIsAssigned = (user: User, filter: any): boolean => {
     }
     case '{{email}}': {
       const value = user.username || '';
-      if (value) {
-        switch (filter.operator) {
-          case filterOperator.EQUAL_TO: {
-            return eq(value, String(filter.value));
-          }
-          case filterOperator.NOT_EQUAL_TO: {
-            return !eq(value, String(filter.value));
-          }
-          case filterOperator.CONTAINS: {
-            const regex = new RegExp(filter.value, 'i');
-            return regex.test(value);
-          }
-          case filterOperator.DOES_NOT_CONTAIN: {
-            const regex = new RegExp(filter.value, 'i');
-            return !regex.test(value);
-          }
-          case filterOperator.STARTS_WITH: {
-            return value.startsWith(filter.value);
-          }
-          case filterOperator.ENDS_WITH: {
-            return value.endsWith(filter.value);
-          }
-          default:
-            return false;
+      switch (filter.operator) {
+        case filterOperator.EQUAL_TO: {
+          return eq(value, String(filter.value));
         }
-      } else {
-        return false;
+        case filterOperator.NOT_EQUAL_TO: {
+          return !eq(value, String(filter.value));
+        }
+        case filterOperator.CONTAINS: {
+          const regex = new RegExp(filter.value, 'i');
+          return regex.test(value);
+        }
+        case filterOperator.DOES_NOT_CONTAIN: {
+          const regex = new RegExp(filter.value, 'i');
+          return !regex.test(value);
+        }
+        case filterOperator.STARTS_WITH: {
+          return value.startsWith(filter.value);
+        }
+        case filterOperator.ENDS_WITH: {
+          return value.endsWith(filter.value);
+        }
+        default:
+          return false;
       }
     }
     case '{{userType}}': {
       const value = get(user, 'graphData.userType') || '';
-      if (value) {
-        switch (filter.operator) {
-          case filterOperator.EQUAL_TO: {
-            return eq(value, String(filter.value));
-          }
-          case filterOperator.NOT_EQUAL_TO: {
-            return !eq(value, String(filter.value));
-          }
+      switch (filter.operator) {
+        case filterOperator.EQUAL_TO: {
+          return eq(value, String(filter.value));
         }
-      } else {
-        return false;
+        case filterOperator.NOT_EQUAL_TO: {
+          return !eq(value, String(filter.value));
+        }
       }
     }
     default: {
@@ -204,7 +196,7 @@ export const getAutoAssignedRoles = async (user: User): Promise<Role[]> => {
     if (graphData) {
       user.graphData = graphData;
       const settings: AttributeSettings = config.get('user.attributes');
-      if (settings.mapping) {
+      if (settings && settings.mapping) {
         const prevAttributes = clone(get(user, 'attributes'));
         // Map them to user attributes
         for (const mapping of settings.mapping) {
