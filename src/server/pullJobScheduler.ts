@@ -317,12 +317,14 @@ const getUserRoleFiltersFromApp = (appName: string): any => {
  * @param pullJob pull job configuration
  * @param isEIOS is EIOS pulljob or not
  * @param fromRoute tells if the insertion is done from pull-job or route
+ * @param evaluateExpressions ask the backend to evaluate record expressions like defaultValueExpression
  */
 export const insertRecords = async (
   data: any[],
   pullJob: PullJob,
   isEIOS = false,
-  fromRoute?: boolean
+  fromRoute = false,
+  evaluateExpressions = false
 ): Promise<string> => {
   const form = await Form.findById(pullJob.convertTo);
   if (!form) {
@@ -557,10 +559,12 @@ export const insertRecords = async (
       // eslint-disable-next-line @typescript-eslint/no-use-before-define
       record = await setSpecialFields(record);
 
-      // Force the activation of form's fields triggers
-      const updatedRecord = checkRecordExpressions(record, survey);
+      if (evaluateExpressions) {
+        // Force the activation of form's fields expressions
+        record = checkRecordExpressions(record, survey);
+      }
 
-      records.push(updatedRecord);
+      records.push(record);
     }
   }
   let insertReportMessage = '';
