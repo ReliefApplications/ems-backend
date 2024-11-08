@@ -42,6 +42,9 @@ export interface Button {
   subscribeToNotification?: {
     notification?: string;
   };
+  unsubscribeFromNotification?: {
+    notification?: string;
+  };
   sendNotification?: {
     distributionList?: string;
     templates?: Array<string>;
@@ -136,6 +139,15 @@ const buttonSchema = new Schema<Button>(
     },
     // Notifications
     subscribeToNotification: {
+      type: new Schema(
+        {
+          notification: String,
+        },
+        { _id: false }
+      ),
+      default: null,
+    },
+    unsubscribeFromNotification: {
       type: new Schema(
         {
           notification: String,
