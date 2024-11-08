@@ -20,9 +20,9 @@ describe('addApplication Resolver', () => {
     await databaseHelpers.disconnect();
   });
 
-  beforeEach(async () => {
-    await Application.deleteMany({});
-  });
+  // beforeEach(async () => {
+  //   await Application.deleteMany({});
+  // });
 
   beforeEach(async () => {
     context = {
@@ -74,19 +74,21 @@ describe('addApplication Resolver', () => {
 
   describe('Application Naming Logic', () => {
     it("should set application name to 'Untitled application 0' if no existing applications found", async () => {
+      await Application.deleteMany({});
+
       const result = await addApplication.resolve(null, {}, context);
       expect(result.name).toBe('Untitled application 0');
     });
 
     it('should generate unique name for new application based on highest existing application number', async () => {
       const existingApplications = [
-        { name: 'Untitled application 0' },
         { name: 'Untitled application 1' },
         { name: 'Untitled application 2' },
+        { name: 'Untitled application 3' },
       ];
       await Application.create(existingApplications);
       const result = await addApplication.resolve(null, {}, context);
-      expect(result.name).toBe('Untitled application 3');
+      expect(result.name).toBe('Untitled application 4');
     });
   });
 
@@ -95,7 +97,7 @@ describe('addApplication Resolver', () => {
       const result = await addApplication.resolve(null, {}, context);
       expect(result).toEqual(
         expect.objectContaining({
-          name: 'Untitled application 0',
+          name: 'Untitled application 5',
           _id: expect.any(mongoose.Types.ObjectId),
           status: 'pending',
           createdBy: context.user._id,
