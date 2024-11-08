@@ -102,10 +102,9 @@ export const getColumnsFromMeta = (
         });
       } else {
         // Single related object
-        if (field)
-          columns = columns.concat(
-            getColumnsFromMeta(field, fields, prefix ? `${prefix}.${key}` : key)
-          );
+        columns = columns.concat(
+          getColumnsFromMeta(field, fields, prefix ? `${prefix}.${key}` : key)
+        );
       }
     }
   }

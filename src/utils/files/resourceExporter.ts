@@ -316,7 +316,7 @@ export default class Exporter {
               const relatedPromises = Record.aggregate(
                 this.buildPipeline(
                   subColumns,
-                  Array.isArray(columnValue)
+                  isArray(columnValue)
                     ? Array.from(new Set(columnValue)).map(
                         (id: any) => new mongoose.Types.ObjectId(id)
                       )
@@ -327,9 +327,7 @@ export default class Exporter {
                   set(
                     record,
                     field,
-                    Array.isArray(columnValue)
-                      ? relatedRecords
-                      : relatedRecords[0]
+                    isArray(columnValue) ? relatedRecords : relatedRecords[0]
                   );
                   for (let i = 0; i < columnValue.length; i++) {
                     await Promise.all(
