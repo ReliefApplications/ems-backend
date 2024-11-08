@@ -17,12 +17,17 @@ import { CronJob } from 'cron';
 // import * as CryptoJS from 'crypto-js';
 import mongoose from 'mongoose';
 import { getToken } from '@utils/proxy';
-import { getNextId, transformRecord } from '@utils/form';
+import {
+  getNextId,
+  transformRecord,
+  checkRecordExpressions,
+} from '@utils/form';
 import { logger } from '../services/logger.service';
 import * as cronValidator from 'cron-validator';
 import get from 'lodash/get';
 import axios from 'axios';
 import { ownershipMappingJSON } from './EIOSOwnernshipMapping';
+import * as Survey from 'survey-knockout';
 
 /** A map with the task ids as keys and the scheduled tasks as values */
 const taskMap: Record<string, CronJob> = {};
@@ -312,12 +317,14 @@ const getUserRoleFiltersFromApp = (appName: string): any => {
  * @param pullJob pull job configuration
  * @param isEIOS is EIOS pulljob or not
  * @param fromRoute tells if the insertion is done from pull-job or route
+ * @param evaluateExpressions ask the backend to evaluate record expressions like defaultValueExpression
  */
 export const insertRecords = async (
   data: any[],
   pullJob: PullJob,
   isEIOS = false,
-  fromRoute?: boolean
+  fromRoute = false,
+  evaluateExpressions = false
 ): Promise<string> => {
   const form = await Form.findById(pullJob.convertTo);
   if (!form) {
@@ -462,6 +469,9 @@ export const insertRecords = async (
     }
   }
 
+  // Instantiate survey from form before looping since it's the same for all elements
+  const survey = new Survey.Model(form.structure);
+
   for (const element of data) {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     const mappedElement = mapData(
@@ -548,6 +558,12 @@ export const insertRecords = async (
       }) as RecordModel;
       // eslint-disable-next-line @typescript-eslint/no-use-before-define
       record = await setSpecialFields(record);
+
+      if (evaluateExpressions) {
+        // Force the activation of form's fields expressions
+        record = checkRecordExpressions(record, survey);
+      }
+
       records.push(record);
     }
   }
