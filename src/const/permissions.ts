@@ -17,6 +17,11 @@ const permissions = {
   canManageDistributionLists: 'can_manage_distribution_lists',
   canManageLayer: 'can_manage_layer',
   canSeeLayer: 'can_see_layer',
+  canManageCustomNotifications: 'can_manage_custom_notifications', // Deprecated
+  canSeeEmailNotifications: 'can_see_email_notifications',
+  canUpdateEmailNotifications: 'can_update_email_notifications',
+  canManageEmailNotifications: 'can_manage_email_notifications',
+  canCreateEmailNotifications: 'can_create_email_notifications',
 };
 
 export default permissions;

@@ -9,7 +9,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { contentType } from '@const/enumTypes';
 import { PageType } from '../types';
 import { Page, Workflow, Dashboard, Form } from '@models';
-import { cloneDeep, isArray, isEmpty, isNil, omit } from 'lodash';
+import { cloneDeep, has, isArray, isEmpty, isNil, omit } from 'lodash';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
@@ -35,6 +35,7 @@ type PermissionChange = {
 type EditPageArgs = {
   id: string | Types.ObjectId;
   name?: string;
+  showName?: boolean;
   permissions?: any;
   icon?: string;
   visible?: boolean;
@@ -50,6 +51,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     name: { type: GraphQLString },
+    showName: { type: GraphQLBoolean },
     icon: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
     visible: { type: GraphQLBoolean },
@@ -86,6 +88,7 @@ export default {
       const update = {
         ...(args.name && { name: args.name }),
         ...(args.icon && { icon: args.icon }),
+        ...(has(args, 'showName') && { showName: args.showName }),
       };
 
       // Updating permissions

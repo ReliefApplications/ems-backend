@@ -1,8 +1,11 @@
-import { startDatabaseForMigration } from '@utils/migrations/database.helper';
+import { startDatabaseForMigration } from '../src/migrations/database.helper';
 import { Application, Dashboard, Page, Workflow, Form } from '@models';
 import { get, isArray } from 'lodash';
 import { logger } from '@services/logger.service';
 import { contentType } from '@const/enumTypes';
+
+/** Migration description */
+export const description = 'Update attach to record actions';
 
 /**
  * Update dashboard grid widgets, replacing the template location and removing the query

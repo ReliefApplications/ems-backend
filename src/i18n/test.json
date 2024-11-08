@@ -1,5 +1,8 @@
 {
 	"common": {
+		"copyright": {
+			"who": "******"
+		},
 		"errors": {
 			"authenticationTokenNotFound": "******",
 			"dataNotFound": "******",
@@ -105,6 +108,11 @@
 				}
 			}
 		},
+		"customTemplate": {
+			"errors": {
+				"customTemplateNameExist": "******"
+			}
+		},
 		"dashboard": {
 			"add": {
 				"errors": {
@@ -123,6 +131,11 @@
 				"errors": {
 					"invalidArguments": "******"
 				}
+			}
+		},
+		"emailDistributionList": {
+			"errors": {
+				"emailDistributionListNameExist": "******"
 			}
 		},
 		"form": {
@@ -297,6 +310,18 @@
 		"email": {
 			"errors": {
 				"missingFile": "******"
+			},
+			"subscription": {
+				"alerts": {
+					"dataNotFound": "****** {{type}} ******",
+					"restricted": "******",
+					"success": "****** {{notificationName}} ******",
+					"unsubscribe": {
+						"success": "****** {{notificationName}} ******"
+					},
+					"userAlreadyExists": "****** {{notificationName}} ******",
+					"userNotSubscribed": "****** {{notificationName}}"
+				}
 			}
 		},
 		"gis": {

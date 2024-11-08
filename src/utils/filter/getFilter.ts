@@ -7,6 +7,7 @@ import {
   DATETIME_TYPES,
 } from '@const/fieldTypes';
 import { isUsingTodayPlaceholder } from '@const/placeholders';
+import { filterOperator } from '../../types';
 
 /**
  * Transforms query filter into mongo filter.
@@ -87,7 +88,7 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
             }
         }
         switch (filter.operator) {
-          case 'eq': {
+          case filterOperator.EQUAL_TO: {
             if (MULTISELECT_TYPES.includes(field.type)) {
               return { [fieldName]: { $size: value.length, $all: value } };
             } else if (DATETIME_TYPES.includes(field.type)) {
@@ -111,7 +112,7 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
               }
             }
           }
-          case 'neq': {
+          case filterOperator.NOT_EQUAL_TO: {
             if (MULTISELECT_TYPES.includes(field.type)) {
               return {
                 [fieldName]: { $not: { $size: value.length, $all: value } },
@@ -141,7 +142,7 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
               }
             }
           }
-          case 'isnull': {
+          case filterOperator.IS_NULL: {
             return {
               $or: [
                 { [fieldName]: { $exists: false } },
@@ -149,10 +150,10 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
               ],
             };
           }
-          case 'isnotnull': {
+          case filterOperator.IS_NOT_NULL: {
             return { [fieldName]: { $exists: true, $ne: null } };
           }
-          case 'lt': {
+          case filterOperator.LESS_THAN: {
             if (DATE_TYPES.includes(field.type)) {
               return { [fieldName]: { $lt: value } };
             } else if (DATETIME_TYPES.includes(field.type)) {
@@ -168,7 +169,7 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
               };
             }
           }
-          case 'lte': {
+          case filterOperator.LESS_THAN_OR_EQUAL: {
             if (DATE_TYPES.includes(field.type)) {
               return { [fieldName]: { $lte: endDate } };
             } else if (DATETIME_TYPES.includes(field.type)) {
@@ -184,7 +185,7 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
               };
             }
           }
-          case 'gt': {
+          case filterOperator.GREATER_THAN: {
             if (DATE_TYPES.includes(field.type)) {
               return { [fieldName]: { $gt: endDate } };
             } else if (DATETIME_TYPES.includes(field.type)) {
@@ -200,7 +201,7 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
               };
             }
           }
-          case 'gte': {
+          case filterOperator.GREATER_THAN_OR_EQUAL: {
             if (DATE_TYPES.includes(field.type)) {
               return { [fieldName]: { $gte: value } };
             } else if (DATETIME_TYPES.includes(field.type)) {
@@ -216,13 +217,13 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
               };
             }
           }
-          case 'startswith': {
+          case filterOperator.STARTS_WITH: {
             return { [fieldName]: { $regex: '^' + value, $options: 'i' } };
           }
-          case 'endswith': {
+          case filterOperator.ENDS_WITH: {
             return { [fieldName]: { $regex: value + '$', $options: 'i' } };
           }
-          case 'contains': {
+          case filterOperator.CONTAINS: {
             if (MULTISELECT_TYPES.includes(field.type)) {
               const v = Array.isArray(value) ? value : [value];
               return {
@@ -239,7 +240,7 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
               return { [fieldName]: { $regex: value, $options: 'i' } };
             }
           }
-          case 'doesnotcontain': {
+          case filterOperator.DOES_NOT_CONTAIN: {
             if (MULTISELECT_TYPES.includes(field.type)) {
               return { [fieldName]: { $not: { $in: value } } };
             } else {
@@ -248,7 +249,7 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
               };
             }
           }
-          case 'isempty': {
+          case filterOperator.IS_EMPTY: {
             if (MULTISELECT_TYPES.includes(field.type)) {
               return {
                 $or: [
@@ -261,7 +262,7 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
               return { [fieldName]: { $exists: true, $eq: '' } };
             }
           }
-          case 'isnotempty': {
+          case filterOperator.IS_NOT_EMPTY: {
             if (MULTISELECT_TYPES.includes(field.type)) {
               return { [fieldName]: { $exists: true, $ne: [] } };
             } else {

@@ -1,5 +1,8 @@
 {
 	"common": {
+		"copyright": {
+			"who": "Copyright &copy; World Health Organization 2024."
+		},
 		"errors": {
 			"authenticationTokenNotFound": "Missing bearer token.",
 			"dataNotFound": "Data not found",
@@ -105,6 +108,11 @@
 				}
 			}
 		},
+		"customTemplate": {
+			"errors": {
+				"customTemplateNameExist": "Custom template title already exist"
+			}
+		},
 		"dashboard": {
 			"add": {
 				"errors": {
@@ -123,6 +131,11 @@
 				"errors": {
 					"invalidArguments": "Either name or structure must be provided."
 				}
+			}
+		},
+		"emailDistributionList": {
+			"errors": {
+				"emailDistributionListNameExist": "Email distribution list title already exist"
 			}
 		},
 		"form": {
@@ -297,6 +310,18 @@
 		"email": {
 			"errors": {
 				"missingFile": "No file detected."
+			},
+			"subscription": {
+				"alerts": {
+					"dataNotFound": "Failed to {{type}}. Error: Data not found!",
+					"restricted": "Subscriptions to this Email notification are not permitted!",
+					"success": "Subscribed to email notification: {{notificationName}}.",
+					"unsubscribe": {
+						"success": "Unsubscribed from email notification: {{notificationName}}."
+					},
+					"userAlreadyExists": "User email address already exists in distribution list for: {{notificationName}}.",
+					"userNotSubscribed": "User not currently subscribed to {{notificationName}}"
+				}
 			}
 		},
 		"gis": {

@@ -38,7 +38,10 @@ import layers from './layers.query';
 import layer from './layer.query';
 import draftRecords from './draftRecords.query';
 import referenceDataAggregation from './referenceDataAggregation.query';
+import emailNotifications from './emailNotifications.query';
 import types from './types.query';
+import emailDistributionLists from './emailDistributionList.query';
+import customTemplates from './customTemplates.query';
 
 /** GraphQL query type definition */
 const Query = new GraphQLObjectType({
@@ -51,6 +54,7 @@ const Query = new GraphQLObjectType({
     channels,
     dashboard,
     dashboards,
+    emailNotifications,
     form,
     forms,
     group,
@@ -84,6 +88,8 @@ const Query = new GraphQLObjectType({
     layers,
     layer,
     draftRecords,
+    emailDistributionLists,
+    customTemplates,
   },
 });
 

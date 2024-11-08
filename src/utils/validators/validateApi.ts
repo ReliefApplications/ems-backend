@@ -3,6 +3,7 @@ import i18next from 'i18next';
 
 /**
  * Checks that API name is valid.
+ * API name should only consist of alphanumeric characters.
  *
  * @param name value to test
  */
