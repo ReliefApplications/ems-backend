@@ -1,3 +1,11 @@
+# [2.12.0-alpha.2](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-alpha.1...v2.12.0-alpha.2) (2024-11-08)
+
+
+### Features
+
+* Add option to evaluate records expressions when inserted via webjob ([#1151](https://github.com/ReliefApplications/ems-backend/issues/1151)) ([3f14acb](https://github.com/ReliefApplications/ems-backend/commit/3f14acb4504889c55c1defe6cdb4c29443a04c90)), closes [AB#104943](https://github.com/AB/issues/104943)
+* add unsubscribe from notification action in custom action buttons ([#1153](https://github.com/ReliefApplications/ems-backend/issues/1153)) ([906cb62](https://github.com/ReliefApplications/ems-backend/commit/906cb624755819386479077a0aa09cf000e2c7ee)), closes [AB#105519](https://github.com/AB/issues/105519)
+
 # [2.12.0-alpha.1](https://github.com/ReliefApplications/ems-backend/compare/v2.11.1...v2.12.0-alpha.1) (2024-11-08)
 
 
