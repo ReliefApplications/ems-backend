@@ -130,11 +130,10 @@ export default class Exporter {
           for (const row of records) {
             const temp = {};
             for (const column of this.columns) {
-              if (column.subColumns) {
-                temp[column.name] = (get(row, column.name) || []).length;
-              } else {
-                temp[column.name] = get(row, column.name, null);
-              }
+              const columnValue = get(row, column.name, null);
+              temp[column.name] = isArray(columnValue)
+                ? columnValue.length
+                : columnValue;
             }
             csvData.push(temp);
           }
