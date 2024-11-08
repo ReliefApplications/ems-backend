@@ -2,6 +2,7 @@ import { isArray } from 'lodash';
 import get from 'lodash/get';
 import set from 'lodash/set';
 import { getText } from '../form/getDisplayText';
+import { Column } from './getColumnsFromMeta';
 
 /**
  * Set a row for multiselect type, handle specific behavior with ReferenceData
@@ -39,7 +40,7 @@ const setMultiselectRow = (column: any, data: any, row: any) => {
  * @param records list of records.
  * @returns list of export rows.
  */
-export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
+export const getRowsFromMeta = (columns: Column[], records: any[]): any[] => {
   const rows = [];
   for (const record of records) {
     const row = {};
@@ -114,6 +115,19 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
               const subRows = getRowsFromMeta(column.subColumns, value);
               set(row, column.name, subRows);
             }
+          } else if (column.displayField) {
+            const subRows = getRowsFromMeta([column.displayField], value);
+            const separator = column.displayField.separator;
+            set(
+              row,
+              column.name,
+              subRows
+                .map((subRow) => subRow[column.displayField.field])
+                .filter(
+                  (item) => item !== null && item !== undefined && item !== ''
+                )
+                .join(separator + ' ')
+            );
           } else {
             if (value.length > 0) {
               set(row, column.name, `${value.length} items`);
@@ -177,6 +191,29 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
             set(row, column.name, value);
           }
           break;
+        }
+      }
+      if (column.name.includes('.')) {
+        const field = column.field.split('.')[0];
+        const value: any = get(record, field) || [];
+        if (column.displayField) {
+          const separator = column.displayField.separator;
+          set(
+            row,
+            column.name,
+            value
+              .map((subValue) => subValue[column.displayField.field])
+              .filter(
+                (item) => item !== null && item !== undefined && item !== ''
+              )
+              .join(separator + ' ')
+          );
+        } else {
+          if (value.length > 0) {
+            set(row, column.name, `${value.length} items`);
+          } else {
+            set(row, column.name, '');
+          }
         }
       }
     }
