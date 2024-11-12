@@ -66,7 +66,7 @@ export const replaceHeader = (header: {
   if (header.headerLogo) {
     headerString += `<td style="padding: 10px;">
           <a href="" style="display: block; border-style: none !important; text-align: center; border: 0 !important;">
-              <img width="120" src="${header.headerLogo}" style="padding: 10px;" id="headerImage">
+              <img width="120" src="${header.headerLogo}" style="padding: 10px;max-width:unset" id="headerImage">
           </a>
       </td>
     `;
@@ -497,7 +497,7 @@ export const replaceFooter = (footer: {
     footerString += `
       <td style="padding: 10px;">
           <a href="" style="display: block; border-style: none !important; text-align: center; border: 0 !important;">
-              <img width="120" src="${footer.footerLogo}" style="padding: 10px;" id="headerImage">
+              <img width="120" src="${footer.footerLogo}" style="padding: 10px;" id="footerImage">
           </a>
       </td>
       `;
@@ -550,7 +550,7 @@ export const buildEmail = async (
       `<tr bgcolor="#fff" align="center">
           <td>
             <a href="#" style="display: block; border-style: none !important; border: 0 !important;">
-              <img width="120" src="${emailLayout.banner.bannerImage}" style="padding: 10px;" id="headerImage">
+              <img width="800px" src="${emailLayout.banner.bannerImage}" style="padding: 10px;" id="bannerImage">
             </a>
           </td>
        </tr>`

@@ -2,7 +2,7 @@ import { AccessibleRecordModel } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
 /**
- *
+ * CustomTemplate interface representing an email's layout
  */
 export interface CustomTemplate extends Document {
   kind: 'customTemplate';

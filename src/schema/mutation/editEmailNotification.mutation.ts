@@ -15,7 +15,8 @@ import { EmailNotificationReturn } from '@schema/types/emailNotification.type';
 import { cloneDeep } from 'lodash';
 
 /**
- *
+ * Interface for the arguments required to update a custom notification.
+ * Represents the notification data, parent application, and notification ID.
  */
 interface AddCustomNotificationArgs {
   notification: EmailNotificationArgs;

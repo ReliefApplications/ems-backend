@@ -7,7 +7,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { EmailDistributionListType } from '@schema/types/emailDistribution.type';
 
 /**
- * Mutation to update an existing custom notification.
+ * Mutation to update an existing distribution list.
  */
 export default {
   type: EmailDistributionListType,

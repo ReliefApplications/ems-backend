@@ -8,7 +8,7 @@ import { CustomTemplate } from '@models/customTemplate.model';
 import { blobStorageUpload } from '@utils/notification/blobStorage';
 
 /**
- * Mutation to update an existing custom notification.
+ * Mutation to update an existing custom template.
  */
 export default {
   type: CustomTemplateType,

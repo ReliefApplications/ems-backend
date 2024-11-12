@@ -31,7 +31,7 @@ export interface ValidateDataset {
 }
 
 /**
- *
+ * Interface for a dataset with its records and columns.
  */
 export interface ProcessedDataset {
   name: string;
@@ -378,6 +378,7 @@ export const fetchDatasets = async (
           const dataSource = contextDataSource[
             apiConfiguration.name
           ] as CustomAPI;
+          const datasetFields = dataset.query.fields.map((field) => field.name);
           const data: any =
             (await dataSource.getReferenceDataItems(
               reference,
@@ -401,6 +402,15 @@ export const fetchDatasets = async (
             } else {
               records = data.slice(0, DATASET_COUNT_LIMIT);
             }
+            // Remove all keys except those in datasetFields
+            records = records.map((record) => {
+              return Object.keys(record)
+                .filter((key) => datasetFields.includes(key)) // Keep only the specified fields
+                .reduce((obj, key) => {
+                  obj[key] = record[key]; // Build a new object with the allowed keys
+                  return obj;
+                }, {});
+            });
             return {
               columns: dataset.query.fields,
               records: records,
