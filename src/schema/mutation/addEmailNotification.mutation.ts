@@ -70,10 +70,6 @@ export default {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
 
-      const userIsSubscribed = args.notification.subscriptionList.includes(
-        context.user.username
-      );
-
       const update = {
         name: args.notification.name,
         schedule: args.notification.schedule,
@@ -111,7 +107,6 @@ export default {
       const emailNotification = new EmailNotification(update);
       await emailNotification.save();
       const response = emailNotification as EmailNotificationReturn;
-      response.userSubscribed = userIsSubscribed;
       return response;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

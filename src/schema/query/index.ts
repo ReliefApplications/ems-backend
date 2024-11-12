@@ -38,6 +38,7 @@ import layers from './layers.query';
 import layer from './layer.query';
 import draftRecords from './draftRecords.query';
 import referenceDataAggregation from './referenceDataAggregation.query';
+import emailNotification from './emailNotification.query';
 import emailNotifications from './emailNotifications.query';
 import types from './types.query';
 import emailDistributionLists from './emailDistributionList.query';
@@ -54,6 +55,7 @@ const Query = new GraphQLObjectType({
     channels,
     dashboard,
     dashboards,
+    emailNotification,
     emailNotifications,
     form,
     forms,

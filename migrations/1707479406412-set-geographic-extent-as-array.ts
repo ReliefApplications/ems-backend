@@ -1,5 +1,5 @@
 import { Dashboard } from '@models';
-import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
+import { startDatabaseForMigration } from '../src/migrations/database.helper';
 import { get, isArray, set } from 'lodash';
 import { logger } from '@services/logger.service';
 
@@ -39,6 +39,10 @@ const updateDashboard = async (dashboard: Dashboard) => {
     }
   }
 };
+
+/** Migration description */
+export const description =
+  'Transform geographic extent of map widgets into array';
 
 /**
  * Sample function of up migration

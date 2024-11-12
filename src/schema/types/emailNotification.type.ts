@@ -64,7 +64,12 @@ export const EmailNotificationType = new GraphQLObjectType({
     datasets: { type: new GraphQLList(DatasetType) },
     emailLayout: { type: GraphQLID },
     emailDistributionList: { type: GraphQLID },
-    userSubscribed: { type: GraphQLBoolean },
+    userSubscribed: {
+      type: GraphQLBoolean,
+      resolve(parent, _, context) {
+        return parent.subscriptionList.includes(context.user.username);
+      },
+    },
     subscriptionList: { type: new GraphQLList(GraphQLString) },
     restrictSubscription: { type: GraphQLBoolean },
     lastExecution: { type: GraphQLString },

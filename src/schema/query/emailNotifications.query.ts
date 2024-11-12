@@ -78,7 +78,6 @@ export default {
         .limit(args.limit);
 
       const edges = (items as Array<EmailNotificationReturn>).map((r) => {
-        r.userSubscribed = r.subscriptionList.includes(context.user.username);
         return {
           cursor: encodeCursor(SORT_FIELDS[0].cursorId(r)),
           node: r,

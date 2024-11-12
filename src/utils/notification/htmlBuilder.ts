@@ -433,7 +433,6 @@ export const buildTable = (
     // TODO: Replace overflow
     return table;
   } catch (error) {
-    console.log(error);
     return '<table><tr><td>Error while generating table - Please contact support</td></tr></table>';
   }
 };

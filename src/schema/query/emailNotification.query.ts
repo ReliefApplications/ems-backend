@@ -8,7 +8,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 
 /**
- * Resolves the email notifications flow.
+ * Email notification query resolver.
  */
 export default {
   type: EmailNotificationType,

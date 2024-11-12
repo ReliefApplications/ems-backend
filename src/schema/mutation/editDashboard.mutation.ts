@@ -11,7 +11,7 @@ import { Button, Dashboard, Page, Step } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
 import { isEmpty } from 'lodash';
 import { logger } from '@services/logger.service';
-import ButtonActionInputType from '@schema/inputs/button-action.input';
+import ActionButtonInputType from '@schema/inputs/button-action.input';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
@@ -86,7 +86,7 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     structure: { type: GraphQLJSON },
     name: { type: GraphQLString },
-    buttons: { type: new GraphQLList(ButtonActionInputType) },
+    buttons: { type: new GraphQLList(ActionButtonInputType) },
     gridOptions: { type: GraphQLJSON },
     filter: { type: DashboardFilterInputType },
   },

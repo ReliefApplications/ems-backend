@@ -1,4 +1,4 @@
-import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
+import { startDatabaseForMigration } from '../src/migrations/database.helper';
 import { Form, Record, User } from '@models';
 import { logger } from '@services/logger.service';
 import isEqual from 'lodash/isEqual';
@@ -196,6 +196,10 @@ const updateLastUpdatedBy = async () => {
   }
   logger.info('Update of last updated by done');
 };
+
+/** Migration description */
+export const description =
+  'Update records to add createdBy, form, last update form & last updated by data';
 
 /**
  * Sample function of up migration
