@@ -1,3 +1,4 @@
+export * from './actionButton.model';
 export * from './apiConfiguration.model';
 export * from './application.model';
 export * from './channel.model';
