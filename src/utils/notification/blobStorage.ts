@@ -20,6 +20,9 @@ export async function blobStorageUpload(
   position: 'header' | 'footer' | 'banner',
   configId: string
 ): Promise<string> {
+  if (imgBase64.startsWith('http://') || imgBase64.startsWith('https://')) {
+    return imgBase64;
+  }
   let blobClient: BlockBlobClient;
 
   const mimedata = imgBase64.split(',')[0]; //data:image/png;base64

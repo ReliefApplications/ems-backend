@@ -46,7 +46,7 @@ export interface TableStyle {
 }
 
 /**
- *
+ * Interface used to define a query for an email's dataset
  */
 export interface DatasetPreviewArgs {
   resource: string;
@@ -120,7 +120,6 @@ router.post('/send-email/:configId', async (req, res) => {
     notification.emailLayout = notification.emailLayout as CustomTemplate;
     await buildEmail(notification.emailLayout, mainTableElement, datasets);
 
-    // TODO: Phase 2 - allow records from any table not just first
     const subjectRecords = datasets.find(
       (dataset) => dataset.name === notification.datasets[0]?.name
     )?.records;
@@ -402,12 +401,12 @@ router.post('/send-individual-email/:configId', async (req, res) => {
     if (notification.emailLayout.banner.bannerImage) {
       const bannerElement = parse(
         `<tr bgcolor="#fff" align="center">
-            <td>
-              <a href="#" style="display: block; border-style: none !important; border: 0 !important;">
-                  <img width="100%" data-imagetype="DataUri" src="cid:bannerImage" alt="logo">
-              </a>
-            </td>
-         </tr>`
+              <td>
+                <a href="#" style="display: block; border-style: none !important; border: 0 !important;">
+                  <img width="800px" src="${notification.emailLayout.banner.bannerImage}" style="padding: 10px;" id="bannerImage">
+                </a>
+              </td>
+           </tr>`
       );
       mainTableElement.appendChild(bannerElement);
     }
@@ -461,8 +460,6 @@ router.post('/send-individual-email/:configId', async (req, res) => {
     );
 
     let subjectRecords = {};
-
-    // TODO: Phase 2 - allow records from any table not just first
 
     subjectRecords = datasets.find(
       (dataset) => dataset.name === notification.datasets[0].name
@@ -709,31 +706,6 @@ router.post('/send-quick-email', async (req, res) => {
     const cc = emailDistributionList.cc;
     const bcc = emailDistributionList.bcc;
 
-    // Add attachments
-    const attachments: { path: string; cid: string }[] = [];
-
-    // Add header logo
-    if (emailLayout.header.headerLogo) {
-      attachments.push({
-        path: emailLayout.header.headerLogo,
-        cid: 'headerImage',
-      });
-    }
-    // Add footer logo
-    if (emailLayout.footer.footerLogo) {
-      attachments.push({
-        path: emailLayout.footer.footerLogo,
-        cid: 'footerImage',
-      });
-    }
-    // Add banner image
-    if (emailLayout.banner.bannerImage) {
-      attachments.push({
-        path: emailLayout.banner.bannerImage,
-        cid: 'bannerImage',
-      });
-    }
-
     // Build email
     const emailParams = {
       message: {
@@ -742,7 +714,6 @@ router.post('/send-quick-email', async (req, res) => {
         bcc: bcc,
         subject: emailSubject,
         html: baseElement.toString(),
-        attachments: attachments,
       },
     };
 

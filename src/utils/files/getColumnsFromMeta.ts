@@ -17,7 +17,7 @@ export const getColumnsFromMeta = (
     if (field && field.name && typeof field.name === 'string') {
       // To get reference data fields
       const name = field.graphQLFieldName || field.name;
-      const label = fields.find((data) => {
+      const label = fields?.find((data) => {
         const splitField = data.name.split('.');
         const fieldParts = field.name.split('.');
         if (splitField.length === fieldParts.length) {
@@ -55,7 +55,7 @@ export const getColumnsFromMeta = (
         columns = columns.concat(
           getColumnsFromMeta(
             field,
-            queryField.fields,
+            queryField?.fields,
             prefix ? `${prefix}.${key}` : key
           )
         );
