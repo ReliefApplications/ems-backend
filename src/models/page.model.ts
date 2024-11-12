@@ -6,7 +6,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 import { Application } from './application.model';
 import { Dashboard } from './dashboard.model';
 import { Form } from './form.model';
-import { Button, buttonSchema } from './quickActions.model';
+import { Button, buttonSchema } from './actionButton.model';
 import { Record } from './record.model';
 import { ReferenceData } from './referenceData.model';
 import { Resource } from './resource.model';

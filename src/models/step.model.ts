@@ -3,7 +3,7 @@ import { contentType } from '@const/enumTypes';
 import { addOnBeforeDeleteMany } from '@utils/models/deletion';
 import mongoose, { Document, Schema } from 'mongoose';
 import { Dashboard } from './dashboard.model';
-import { Button, buttonSchema } from './quickActions.model';
+import { Button, buttonSchema } from './actionButton.model';
 import { Workflow } from './workflow.model';
 
 /** Step documents interface definition */

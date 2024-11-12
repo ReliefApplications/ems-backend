@@ -1,6 +1,6 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Document, Schema } from 'mongoose';
-import { Button, buttonSchema } from './quickActions.model';
+import { Button, buttonSchema } from './actionButton.model';
 
 /** Dashboard filter interface declaration */
 interface Filter {
