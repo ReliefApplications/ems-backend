@@ -1,6 +1,6 @@
 import { contentType } from '@const/enumTypes';
 import { Button, Dashboard, Form, Page, Workflow } from '@models';
-import ButtonActionInputType from '@schema/inputs/button-action.input';
+import ActionButtonInputType from '@schema/inputs/button-action.input';
 import { graphQLAuthCheck } from '@schema/shared';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { Context } from '@server/apollo/context';
@@ -58,7 +58,7 @@ export default {
     icon: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
     visible: { type: GraphQLBoolean },
-    buttons: { type: new GraphQLList(ButtonActionInputType) },
+    buttons: { type: new GraphQLList(ActionButtonInputType) },
   },
   async resolve(parent, args: EditPageArgs, context: Context) {
     graphQLAuthCheck(context);

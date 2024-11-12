@@ -27,16 +27,21 @@ export interface Button {
   // Edit Record
   editRecord?: {
     template?: string;
+    autoReload?: boolean;
   };
   // Add Record
   addRecord?: {
     resource?: string;
     template?: string;
     fieldsForUpdate?: Array<string>;
+    autoReload?: boolean;
     mapping?: any;
   };
   // Notifications
   subscribeToNotification?: {
+    notification?: string;
+  };
+  unsubscribeFromNotification?: {
     notification?: string;
   };
   sendNotification?: {
@@ -86,6 +91,7 @@ export const buttonSchema = new Schema<Button>(
       type: new Schema(
         {
           template: String,
+          autoReload: Boolean,
         },
         { _id: false }
       ),
@@ -97,6 +103,7 @@ export const buttonSchema = new Schema<Button>(
         {
           resource: String,
           template: String,
+          autoReload: Boolean,
           fieldsForUpdate: { type: [String], default: [] },
           mapping: Schema.Types.Mixed,
         },
@@ -106,6 +113,15 @@ export const buttonSchema = new Schema<Button>(
     },
     // Notifications
     subscribeToNotification: {
+      type: new Schema(
+        {
+          notification: String,
+        },
+        { _id: false }
+      ),
+      default: null,
+    },
+    unsubscribeFromNotification: {
       type: new Schema(
         {
           notification: String,
