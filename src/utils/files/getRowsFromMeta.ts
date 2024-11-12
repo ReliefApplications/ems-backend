@@ -167,8 +167,10 @@ export const getRowsFromMeta = (
           break;
         }
         case 'file': {
-          const value = get(record, `${column.field}.[0].name`);
-          set(row, column.name, value);
+          const value = (get(record, `${column.field}`) || []).map(
+            (x) => x.name
+          );
+          set(row, column.name, value.join(','));
           break;
         }
         case 'radiogroup': {

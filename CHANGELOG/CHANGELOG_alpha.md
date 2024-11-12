@@ -1,3 +1,49 @@
+# [2.12.0-alpha.2](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-alpha.1...v2.12.0-alpha.2) (2024-11-08)
+
+
+### Features
+
+* Add option to evaluate records expressions when inserted via webjob ([#1151](https://github.com/ReliefApplications/ems-backend/issues/1151)) ([3f14acb](https://github.com/ReliefApplications/ems-backend/commit/3f14acb4504889c55c1defe6cdb4c29443a04c90)), closes [AB#104943](https://github.com/AB/issues/104943)
+* add unsubscribe from notification action in custom action buttons ([#1153](https://github.com/ReliefApplications/ems-backend/issues/1153)) ([906cb62](https://github.com/ReliefApplications/ems-backend/commit/906cb624755819386479077a0aa09cf000e2c7ee)), closes [AB#105519](https://github.com/AB/issues/105519)
+
+# [2.12.0-alpha.1](https://github.com/ReliefApplications/ems-backend/compare/v2.11.1...v2.12.0-alpha.1) (2024-11-08)
+
+
+### Bug Fixes
+
+*  operator would break in many cases due to object id transformation ([98cc979](https://github.com/ReliefApplications/ems-backend/commit/98cc9794f1c6bb9d2bfeee231bf540f8cdede5f3))
+* add better handling for file upload AB[#64764](https://github.com/ReliefApplications/ems-backend/issues/64764) ([85279df](https://github.com/ReliefApplications/ems-backend/commit/85279df8faee69f3645ddc1cebd6cd01fa999c02))
+* application query could get wrong application if shortcut not provided ([7504ed5](https://github.com/ReliefApplications/ems-backend/commit/7504ed51eda7dc1a1b43a8b5fd0c726dcd25f104))
+* edit dashboard mutation broken when no structure update needed ([fd84dc4](https://github.com/ReliefApplications/ems-backend/commit/fd84dc48732f632c888cac31663626460e0cc654))
+* edit records mutation failing when no template selected in grid ([#1125](https://github.com/ReliefApplications/ems-backend/issues/1125)) ([656efa9](https://github.com/ReliefApplications/ems-backend/commit/656efa9f96132db2f5e3a38d0f7dc23dfe6cdac5)), closes [AB#104347](https://github.com/AB/issues/104347)
+* types path breaking the build ([8bde904](https://github.com/ReliefApplications/ems-backend/commit/8bde9048a1e8e0b35b70c9be786a3ea0b762a6bd))
+
+
+### Features
+
+* add addRecord action in custom action buttons of dashboards ([#1139](https://github.com/ReliefApplications/ems-backend/issues/1139)) ([62826d2](https://github.com/ReliefApplications/ems-backend/commit/62826d24a824de820806d3641e153f5513f2462c)), closes [AB#104270](https://github.com/AB/issues/104270)
+* add canDownloadRecords permission ([#1095](https://github.com/ReliefApplications/ems-backend/issues/1095)) ([abc3e05](https://github.com/ReliefApplications/ems-backend/commit/abc3e05fea50edee6e3ed4b7cc00bc83f6f9de71))
+* add class break layer ([#1131](https://github.com/ReliefApplications/ems-backend/issues/1131)) ([cc1c62f](https://github.com/ReliefApplications/ems-backend/commit/cc1c62f1a7ca14267531b97a6c9a131a045b93b4)), closes [AB#104485](https://github.com/AB/issues/104485)
+* add class break layer ([#1134](https://github.com/ReliefApplications/ems-backend/issues/1134)) ([dd5725a](https://github.com/ReliefApplications/ems-backend/commit/dd5725a1d98e3fb312b13204031bf35d34bc22e2)), closes [AB#104485](https://github.com/AB/issues/104485)
+* add EditRecord & goToPreviousPage actions in custom action button of dashboard ([#1136](https://github.com/ReliefApplications/ems-backend/issues/1136)) ([ebb6a3f](https://github.com/ReliefApplications/ems-backend/commit/ebb6a3ff180d5e5b310016daccd732e519881e80)), closes [AB#104621](https://github.com/AB/issues/104621)
+* add in / notin operators in records query ([#1127](https://github.com/ReliefApplications/ems-backend/issues/1127)) ([830214e](https://github.com/ReliefApplications/ems-backend/commit/830214e8540dd34dcfa6b1a8d2465353f2d5a6c6)), closes [Ab#104295](https://github.com/Ab/issues/104295)
+* add possibility to auto reload dashboard when using editRecord / addRecord actions ([#1144](https://github.com/ReliefApplications/ems-backend/issues/1144)) ([6c1ef41](https://github.com/ReliefApplications/ems-backend/commit/6c1ef41aa169e5403c316abfab10eb9b808ceb69)), closes [AB#104882](https://github.com/AB/issues/104882)
+* add possibility to show or hide page / step name ([#1116](https://github.com/ReliefApplications/ems-backend/issues/1116)) ([b044b24](https://github.com/ReliefApplications/ems-backend/commit/b044b244c4c657aa765066bddc9fec6ef58dd9bd)), closes [AB#102826](https://github.com/AB/issues/102826)
+* add send notification action to custom action buttons ([#1142](https://github.com/ReliefApplications/ems-backend/issues/1142)) ([c742b3f](https://github.com/ReliefApplications/ems-backend/commit/c742b3f0563cc3d151aef75c0e0871735f60561c)), closes [AB#104883](https://github.com/AB/issues/104883)
+* add subscribeToNotification action in custom action buttons of dashboard ([#1137](https://github.com/ReliefApplications/ems-backend/issues/1137)) ([a21b5e1](https://github.com/ReliefApplications/ems-backend/commit/a21b5e153029f742cd5ca671dca64995f7230c89)), closes [AB#104719](https://github.com/AB/issues/104719)
+* allow mapping between fields custom action button ([#1143](https://github.com/ReliefApplications/ems-backend/issues/1143)) ([06333a1](https://github.com/ReliefApplications/ems-backend/commit/06333a1dbd6df13e0e8be9b4f0d0eaf8adff21cc)), closes [AB#105315](https://github.com/AB/issues/105315)
+* can set application shortcut ([#1123](https://github.com/ReliefApplications/ems-backend/issues/1123)) ([287001d](https://github.com/ReliefApplications/ems-backend/commit/287001d7d98d2a62c96e6346e2d77f3342db213f)), closes [AB#104315](https://github.com/AB/issues/104315)
+* dashboard export ([#1128](https://github.com/ReliefApplications/ems-backend/issues/1128)) ([f4ea223](https://github.com/ReliefApplications/ems-backend/commit/f4ea223248005cd85f2c603235cb2699e876a3d4)), closes [Ab#104302](https://github.com/Ab/issues/104302)
+* html question ([#1046](https://github.com/ReliefApplications/ems-backend/issues/1046)) ([712ef3d](https://github.com/ReliefApplications/ems-backend/commit/712ef3d1409654c7652e8d05997b7a87cb4c1c53))
+* improvements on email feature ([#1129](https://github.com/ReliefApplications/ems-backend/issues/1129)) ([8beaed7](https://github.com/ReliefApplications/ems-backend/commit/8beaed73f5cb6568dd6d49fc95a29fa52decf137)), closes [Ab#104469](https://github.com/Ab/issues/104469)
+
+
+### Reverts
+
+* Revert "feat: add class break layer (#1131)" (#1133) ([21122f7](https://github.com/ReliefApplications/ems-backend/commit/21122f7fbc8b2a1320b374835f3ceb401468369a)), closes [#1131](https://github.com/ReliefApplications/ems-backend/issues/1131) [#1133](https://github.com/ReliefApplications/ems-backend/issues/1133)
+* Revert "Revert "revert changes AB#91806 (#1055)" (#1056)" (#1057) ([b6c7ec7](https://github.com/ReliefApplications/ems-backend/commit/b6c7ec7b62e50fc529abf2965214fac90a048598)), closes [AB#91806](https://github.com/AB/issues/91806) [#1055](https://github.com/ReliefApplications/ems-backend/issues/1055) [#1056](https://github.com/ReliefApplications/ems-backend/issues/1056) [#1057](https://github.com/ReliefApplications/ems-backend/issues/1057)
+* Revert "revert changes AB#91806 (#1055)" (#1056) ([4235d2c](https://github.com/ReliefApplications/ems-backend/commit/4235d2c90f9090b04124351c37f183da45392e3c)), closes [AB#91806](https://github.com/AB/issues/91806) [#1055](https://github.com/ReliefApplications/ems-backend/issues/1055) [#1056](https://github.com/ReliefApplications/ems-backend/issues/1056)
+
 # [2.2.0-alpha.3](https://github.com/ReliefApplications/ems-backend/compare/v2.2.0-alpha.2...v2.2.0-alpha.3) (2023-12-07)
 
 

@@ -1,3 +1,10 @@
+# [2.12.0-beta.8](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.7...v2.12.0-beta.8) (2024-11-08)
+
+
+### Features
+
+* Add option to evaluate records expressions when inserted via webjob ([#1151](https://github.com/ReliefApplications/ems-backend/issues/1151)) ([3f14acb](https://github.com/ReliefApplications/ems-backend/commit/3f14acb4504889c55c1defe6cdb4c29443a04c90)), closes [AB#104943](https://github.com/AB/issues/104943)
+
 # [2.12.0-beta.7](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.6...v2.12.0-beta.7) (2024-10-22)
 
 

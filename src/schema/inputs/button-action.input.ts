@@ -28,9 +28,9 @@ const sendNotificationFieldInputType = new GraphQLInputObjectType({
   }),
 });
 
-/** GraphQL Input Type of ButtonAction */
-const ButtonActionInputType = new GraphQLInputObjectType({
-  name: 'ButtonActionInputType',
+/** GraphQL Input Type of Action Button */
+const ActionButtonInputType = new GraphQLInputObjectType({
+  name: 'ActionButtonInputType',
   fields: () => ({
     text: { type: new GraphQLNonNull(GraphQLString) },
     // Display
@@ -51,6 +51,7 @@ const ButtonActionInputType = new GraphQLInputObjectType({
         name: 'EditRecordInputType',
         fields: {
           template: { type: GraphQLString },
+          autoReload: { type: GraphQLBoolean },
         },
       }),
     },
@@ -62,6 +63,7 @@ const ButtonActionInputType = new GraphQLInputObjectType({
           resource: { type: GraphQLString },
           template: { type: GraphQLString },
           fieldsForUpdate: { type: new GraphQLList(GraphQLString) },
+          autoReload: { type: GraphQLBoolean },
           mapping: { type: GraphQLJSON },
         },
       }),
@@ -70,6 +72,14 @@ const ButtonActionInputType = new GraphQLInputObjectType({
     subscribeToNotification: {
       type: new GraphQLInputObjectType({
         name: 'subscribeToNotificationInputType',
+        fields: {
+          notification: { type: GraphQLString },
+        },
+      }),
+    },
+    unsubscribeFromNotification: {
+      type: new GraphQLInputObjectType({
+        name: 'unsubscribeFromNotificationInputType',
         fields: {
           notification: { type: GraphQLString },
         },
@@ -90,4 +100,4 @@ const ButtonActionInputType = new GraphQLInputObjectType({
   }),
 });
 
-export default ButtonActionInputType;
+export default ActionButtonInputType;
