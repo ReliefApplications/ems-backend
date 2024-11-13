@@ -1,3 +1,15 @@
+# [2.12.0-alpha.3](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-alpha.2...v2.12.0-alpha.3) (2024-11-13)
+
+
+### Bug Fixes
+
+* check record expression not working for all fields ([8739c8e](https://github.com/ReliefApplications/ems-backend/commit/8739c8ef59171ab1cc595cbada4916c08ab93c1e))
+
+
+### Features
+
+* form quick action buttons ([#1140](https://github.com/ReliefApplications/ems-backend/issues/1140)) ([7785278](https://github.com/ReliefApplications/ems-backend/commit/77852782b95ee3ab496369ed095ca1bc1bad32be)), closes [AB#104815](https://github.com/AB/issues/104815)
+
 # [2.12.0-alpha.2](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-alpha.1...v2.12.0-alpha.2) (2024-11-08)
 
 
