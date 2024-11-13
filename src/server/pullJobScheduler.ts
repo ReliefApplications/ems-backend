@@ -27,7 +27,6 @@ import * as cronValidator from 'cron-validator';
 import get from 'lodash/get';
 import axios from 'axios';
 import { ownershipMappingJSON } from './EIOSOwnernshipMapping';
-import * as Survey from 'survey-knockout';
 
 /** A map with the task ids as keys and the scheduled tasks as values */
 const taskMap: Record<string, CronJob> = {};
@@ -469,9 +468,6 @@ export const insertRecords = async (
     }
   }
 
-  // Instantiate survey from form before looping since it's the same for all elements
-  const survey = new Survey.Model(form.structure);
-
   for (const element of data) {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     const mappedElement = mapData(
@@ -561,7 +557,7 @@ export const insertRecords = async (
 
       if (evaluateExpressions) {
         // Force the activation of form's fields expressions
-        record = checkRecordExpressions(record, survey);
+        record = checkRecordExpressions(form, record);
       }
 
       records.push(record);

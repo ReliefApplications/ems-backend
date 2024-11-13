@@ -1,3 +1,10 @@
+# [2.12.0-beta.9](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.8...v2.12.0-beta.9) (2024-11-13)
+
+
+### Bug Fixes
+
+* check record expression not working for all fields ([8739c8e](https://github.com/ReliefApplications/ems-backend/commit/8739c8ef59171ab1cc595cbada4916c08ab93c1e))
+
 # [2.12.0-beta.8](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.7...v2.12.0-beta.8) (2024-11-08)
 
 
