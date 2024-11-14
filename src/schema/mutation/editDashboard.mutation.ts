@@ -148,7 +148,7 @@ export default {
       });
       // update the related page or step
       const update = {
-        modifiedAt: dashboard.modifiedAt,
+        modifiedAt: dashboard.modifiedAt, //todo: remove?
         name: dashboard.name,
         gridOptions: dashboard.gridOptions,
       };
