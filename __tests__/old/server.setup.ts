@@ -164,7 +164,6 @@ class SafeTestServer {
     this.httpServer.removeListener('request', this.app);
     this.httpServer.close();
     this.apolloServer.stop().then(() => {
-      console.log('🔁 Reloading server');
       this.start(schema);
     });
   }
