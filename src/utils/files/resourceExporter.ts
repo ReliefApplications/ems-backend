@@ -302,49 +302,9 @@ export default class Exporter {
             )
           );
         } else {
-          const getResourceFields = (field, col: Column) => {
-            const columnValue = get(record, field) || null;
-            const subColumns = col.displayField
-              ? [col.displayField]
-              : col.subColumns;
-            const subColumnsWithDisplay = col.displayField
-              ? []
-              : col.subColumns.filter((subColumn) => !!subColumn.displayField);
-
-            if (columnValue) {
-              const relatedPromises = Record.aggregate(
-                this.buildPipeline(
-                  subColumns,
-                  isArray(columnValue)
-                    ? Array.from(new Set(columnValue)).map(
-                        (id: any) => new mongoose.Types.ObjectId(id)
-                      )
-                    : [new mongoose.Types.ObjectId(columnValue)]
-                )
-              ).then(async (relatedRecords) => {
-                if (relatedRecords.length > 0) {
-                  set(
-                    record,
-                    field,
-                    isArray(columnValue) ? relatedRecords : relatedRecords[0]
-                  );
-                  for (let i = 0; i < columnValue.length; i++) {
-                    await Promise.all(
-                      subColumnsWithDisplay.map((subColumn) =>
-                        getResourceFields(
-                          `${col.field}[${i}].${subColumn.field.split('.')[0]}`,
-                          subColumn
-                        )
-                      )
-                    );
-                  }
-                }
-              });
-              relatedResourcePromises.push(relatedPromises);
-              return relatedPromises;
-            }
-          };
-          getResourceFields(column.field, column);
+          relatedResourcePromises.push(
+            this.getResourceFields(column, column.field, record)
+          );
         }
       }
       promises.push(Promise.all(relatedResourcePromises));
@@ -516,9 +476,16 @@ export default class Exporter {
     const permissionFilters = Record.find(
       accessibleBy(this.req.context.user.ability, 'read').Record
     ).getFilter();
+    // Extract subColumns directly from column, or create it from displayField
+    const subColumns =
+      Array.isArray(column.subColumns) && column.subColumns.length > 0
+        ? column.subColumns
+        : column.displayField
+        ? [column.displayField]
+        : [];
     const projectStep = {
       $project: {
-        ...column.subColumns.reduce((acc, col) => {
+        ...subColumns.reduce((acc, col) => {
           const field = defaultRecordFields.find(
             (f) => f.field === col.field.split('.')[0]
           );
@@ -552,7 +519,7 @@ export default class Exporter {
       },
       projectStep,
     ];
-    column.subColumns
+    subColumns
       .filter((col) => col.meta?.field?.isCalculated)
       .forEach((col) =>
         pipeline.unshift(
@@ -1010,5 +977,60 @@ export default class Exporter {
       });
     });
     return resourceResourcesColumns;
+  };
+
+  /**
+   * Get resource fields
+   *
+   * @param column Current column
+   * @param fieldName Current field name ( can be different from the one set in column )
+   * @param record Current record
+   * @returns Promise
+   */
+  private getResourceFields = (
+    column: Column,
+    fieldName: string,
+    record: any
+  ) => {
+    const columnValue = get(record, fieldName) || null;
+    const subColumns = column.displayField
+      ? [column.displayField]
+      : column.subColumns;
+    const subColumnsWithDisplay = column.displayField
+      ? []
+      : column.subColumns.filter((subColumn) => !!subColumn.displayField);
+
+    if (columnValue) {
+      const relatedPromises = Record.aggregate(
+        this.buildPipeline(
+          subColumns,
+          isArray(columnValue)
+            ? Array.from(new Set(columnValue)).map(
+                (id: any) => new mongoose.Types.ObjectId(id)
+              )
+            : [new mongoose.Types.ObjectId(columnValue)]
+        )
+      ).then(async (relatedRecords) => {
+        if (relatedRecords.length > 0) {
+          set(
+            record,
+            fieldName,
+            isArray(columnValue) ? relatedRecords : relatedRecords[0]
+          );
+          for (let i = 0; i < columnValue.length; i++) {
+            await Promise.all(
+              subColumnsWithDisplay.map((subColumn) =>
+                this.getResourceFields(
+                  subColumn,
+                  `${fieldName}[${i}].${subColumn.field.split('.')[0]}`,
+                  record
+                )
+              )
+            );
+          }
+        }
+      });
+      return relatedPromises;
+    }
   };
 }

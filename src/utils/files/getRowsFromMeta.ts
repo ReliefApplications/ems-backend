@@ -130,7 +130,11 @@ export const getRowsFromMeta = (columns: Column[], records: any[]): any[] => {
             );
           } else {
             if (value.length > 0) {
-              set(row, column.name, `${value.length} items`);
+              set(
+                row,
+                column.name,
+                `${value.length} item${value.length > 1 ? 's' : ''}`
+              );
             } else {
               set(row, column.name, '');
             }
@@ -210,7 +214,11 @@ export const getRowsFromMeta = (columns: Column[], records: any[]): any[] => {
           );
         } else {
           if (value.length > 0) {
-            set(row, column.name, `${value.length} items`);
+            set(
+              row,
+              column.name,
+              `${value.length} item${value.length > 1 ? 's' : ''}`
+            );
           } else {
             set(row, column.name, '');
           }
