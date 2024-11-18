@@ -234,7 +234,7 @@ export default class Exporter {
                       const subQueryField = queryField.subFields.find(
                         (z) => z.name === `${column.name}.${subColumn.name}`
                       );
-                      subColumn.title = subQueryField.title;
+                      subColumn.title = subQueryField?.title;
                     });
                   }
                 }
