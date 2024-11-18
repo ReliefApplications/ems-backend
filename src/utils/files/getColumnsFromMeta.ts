@@ -93,23 +93,21 @@ export const getColumnsFromMeta = (
             : null,
           subColumns:
             subFields.length > 0
-              ? getColumnsFromMeta(field, subFields).map(
-                  (subColumn) => {
-                    const subField = subFields.find(
-                      (_) => _.name === key + '.' + subColumn.name.split('.')[0]
-                    );
-                    return {
-                      ...subColumn,
-                      ...(subField?.displayField && {
-                        displayField: {
-                          ...subColumn.meta.field,
-                          field: subColumn.meta.field.name,
-                          separator: subField.separator,
-                        },
-                      }),
-                    };
-                  }
-                )
+              ? getColumnsFromMeta(field, subFields).map((subColumn) => {
+                  const subField = subFields.find(
+                    (_) => _.name === key + '.' + subColumn.name.split('.')[0]
+                  );
+                  return {
+                    ...subColumn,
+                    ...(subField?.displayField && {
+                      displayField: {
+                        ...subColumn.meta.field,
+                        field: subColumn.meta.field.name,
+                        separator: subField.separator,
+                      },
+                    }),
+                  };
+                })
               : [],
         });
       } else {
