@@ -4,8 +4,16 @@ import { Request, Response } from 'express';
 import xlsBuilder from '@utils/files/xlsBuilder';
 import { ActivityLog } from '@models';
 
+/** Express router to mount activity related functions on. */
 const router = express.Router();
 
+/**
+ * Export activities to an XLSX file
+ *
+ * @param req Request object
+ * @param res Response object
+ * @returns void
+ */
 const exportActivitiesToXlsx = async (req: Request, res: Response) => {
   // Fetch activities from the database
   const activities: ActivityLog[] = await ActivityLog.find();
