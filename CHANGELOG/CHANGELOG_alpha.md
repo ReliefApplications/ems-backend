@@ -1,3 +1,15 @@
+# [2.12.0-alpha.4](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-alpha.3...v2.12.0-alpha.4) (2024-11-18)
+
+
+### Bug Fixes
+
+* createdBy / lastUpdatedBy fields not correctly updated ([d46e62f](https://github.com/ReliefApplications/ems-backend/commit/d46e62fd0f10f92a30b3b21cd95a9eb265fa7999))
+
+
+### Features
+
+* add option to use a display field for records elements of queries ([#1152](https://github.com/ReliefApplications/ems-backend/issues/1152)) ([c6bf553](https://github.com/ReliefApplications/ems-backend/commit/c6bf55356fffcb625148f0c6bfa75edf9ffa8282)), closes [Ab#103431](https://github.com/Ab/issues/103431)
+
 # [2.12.0-alpha.3](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-alpha.2...v2.12.0-alpha.3) (2024-11-13)
 
 
