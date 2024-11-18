@@ -2,13 +2,13 @@ import { logger } from '@services/logger.service';
 import express from 'express';
 import { Request, Response } from 'express';
 import xlsBuilder from '@utils/files/xlsBuilder';
-import { Activity } from '@models/activity.model';
+import { ActivityLog } from '@models';
 
 const router = express.Router();
 
 const exportActivitiesToXlsx = async (req: Request, res: Response) => {
   // Fetch activities from the database
-  const activities: Activity[] = await Activity.find();
+  const activities: ActivityLog[] = await ActivityLog.find();
   // Define the columns to be included in the XLSX file
   const columns = ['userId', 'eventType', 'metadata'];
   // Define the file name
@@ -24,7 +24,7 @@ router.post('/', async (req, res) => {
   try {
     const user = req.context.user;
     const body = req.body;
-    const activity = new Activity({
+    const activity = new ActivityLog({
       userId: user.id,
       eventType: body.eventType,
       metadata: body.metadata,

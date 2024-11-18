@@ -41,7 +41,8 @@ import referenceDataAggregation from './referenceDataAggregation.query';
 import dataset from './dataset.query';
 import emailNotifications from './emailNotifications.query';
 import types from './types.query';
-import activity from './activity.query';
+import activityLog from './activityLog.query';
+import activityLogs from './activityLogs.query';
 
 /** GraphQL query type definition */
 const Query = new GraphQLObjectType({
@@ -89,7 +90,8 @@ const Query = new GraphQLObjectType({
     layers,
     layer,
     draftRecords,
-    activity,
+    activityLog,
+    activityLogs,
   },
 });
 

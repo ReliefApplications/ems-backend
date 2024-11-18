@@ -8,7 +8,7 @@ import {
 /**
  * GraphQL type definition for an Activity Log entry.
  */
-export const ActivityType = new GraphQLObjectType({
+export const ActivityLogType = new GraphQLObjectType({
   name: 'Activity',
   description: 'Represents a single activity log entry.',
   fields: () => ({
@@ -27,14 +27,22 @@ export const ActivityType = new GraphQLObjectType({
     url: {
       type: GraphQLString,
       description: 'The URL associated with the activity, if applicable.',
+      resolve: ({ metadata }) => {
+        try {
+          const parsedMetadata =
+            typeof metadata === 'string' ? JSON.parse(metadata) : metadata;
+          return parsedMetadata?.url || '';
+        } catch {
+          return '';
+        }
+      },
     },
     metadata: {
       type: GraphQLString,
       description:
         'Additional metadata related to the activity in JSON string format.',
-      resolve: (activity) => {
-        return JSON.stringify(activity.metadata);
-      },
+      resolve: ({ metadata }) =>
+        typeof metadata === 'string' ? metadata : JSON.stringify(metadata),
     },
   }),
 });

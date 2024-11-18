@@ -1,8 +1,8 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
-export interface Activity extends Document {
-  kind: 'Activity';
+export interface ActivityLog extends Document {
+  kind: 'ActivityLog';
   userId: string;
   eventType: string;
   metadata: any;
@@ -10,7 +10,7 @@ export interface Activity extends Document {
 
 // export interface ActivityLogModel extends AccessibleRecordModel<ActivityLog> {}
 
-const schema = new Schema<Activity>(
+const schema = new Schema<ActivityLog>(
   {
     userId: String,
     eventType: String,
@@ -24,7 +24,7 @@ const schema = new Schema<Activity>(
 schema.plugin(accessibleRecordsPlugin);
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const Activity = mongoose.model<
-  Activity,
-  AccessibleRecordModel<Activity>
+export const ActivityLog = mongoose.model<
+  ActivityLog,
+  AccessibleRecordModel<ActivityLog>
 >('ActivityLog', schema);
