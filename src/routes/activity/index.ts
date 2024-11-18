@@ -33,7 +33,7 @@ router.post('/', async (req, res) => {
     const user = req.context.user;
     const body = req.body;
     const activity = new ActivityLog({
-      userId: user.id,
+      userId: user._id,
       eventType: body.eventType,
       metadata: body.metadata,
     });

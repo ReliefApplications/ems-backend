@@ -4,7 +4,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 /** Mongoose activity log schema declaration */
 export interface ActivityLog extends Document {
   kind: 'ActivityLog';
-  userId: string;
+  userId: mongoose.Types.ObjectId;
   eventType: string;
   metadata: any;
 }
@@ -12,7 +12,7 @@ export interface ActivityLog extends Document {
 /** Activity log documents interface declaration */
 const schema = new Schema<ActivityLog>(
   {
-    userId: String,
+    userId: Schema.Types.ObjectId,
     eventType: String,
     metadata: Schema.Types.Mixed,
   },
