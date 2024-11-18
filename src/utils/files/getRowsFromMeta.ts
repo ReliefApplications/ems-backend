@@ -229,33 +229,6 @@ export const getRowsFromMeta = (
           break;
         }
       }
-      if (column.name.includes('.')) {
-        const field = column.field.split('.')[0];
-        const value: any = get(record, field) || [];
-        if (column.displayField) {
-          const separator = column.displayField.separator;
-          set(
-            row,
-            column.name,
-            value
-              .map((subValue) => subValue[column.displayField.field])
-              .filter(
-                (item) => item !== null && item !== undefined && item !== ''
-              )
-              .join(separator + ' ')
-          );
-        } else {
-          if (value.length > 0) {
-            set(
-              row,
-              column.name,
-              `${value.length} item${value.length > 1 ? 's' : ''}`
-            );
-          } else {
-            set(row, column.name, '');
-          }
-        }
-      }
     }
     rows.push(row);
   }
