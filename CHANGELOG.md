@@ -1,3 +1,22 @@
+# [2.12.0-rc.2](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-rc.1...v2.12.0-rc.2) (2024-10-03)
+
+
+### Bug Fixes
+
+* record validation preventing some valid records to be updated ([#1117](https://github.com/ReliefApplications/ems-backend/issues/1117)) ([0a9b117](https://github.com/ReliefApplications/ems-backend/commit/0a9b117641f3835c0b70ec5b665777e50d47e9eb)), closes [AB#103766](https://github.com/AB/issues/103766)
+
+
+### Features
+
+* add possibility to show or hide page / step name ([#1116](https://github.com/ReliefApplications/ems-backend/issues/1116)) ([b044b24](https://github.com/ReliefApplications/ems-backend/commit/b044b244c4c657aa765066bddc9fec6ef58dd9bd)), closes [AB#102826](https://github.com/AB/issues/102826)
+
+## [2.11.1](https://github.com/ReliefApplications/ems-backend/compare/v2.11.0...v2.11.1) (2024-09-24)
+
+
+### Bug Fixes
+
+* record validation preventing some valid records to be updated ([#1117](https://github.com/ReliefApplications/ems-backend/issues/1117)) ([0a9b117](https://github.com/ReliefApplications/ems-backend/commit/0a9b117641f3835c0b70ec5b665777e50d47e9eb)), closes [AB#103766](https://github.com/AB/issues/103766)
+
 # [2.12.0-rc.1](https://github.com/ReliefApplications/ems-backend/compare/v2.11.0...v2.12.0-rc.1) (2024-06-24)
 
 
