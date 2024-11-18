@@ -38,7 +38,10 @@ const setDisplayText = async (
     const formField = lookAt.find((field: any) => {
       return (
         lookFor === field.name &&
-        (field.choices || field.choicesByUrl || field.choicesByGraphQL)
+        (field.choices ||
+          field.choicesByUrl ||
+          field.choicesByGraphQL ||
+          ['people', 'singlepeople'].includes(field.type))
       );
     });
     if (formField) {
@@ -47,10 +50,14 @@ const setDisplayText = async (
       return { ...(await acc) };
     }
   };
-  const fieldWithChoices = await mappedFields.reduce(reducer, {});
-  for (const [key, field] of Object.entries(fieldWithChoices)) {
+  const fieldWithChoices: any = await mappedFields.reduce(reducer, {});
+  for (const [key, field] of Object.entries<any>(fieldWithChoices)) {
     // Fetch choices from source ( static / rest / graphql )
-    const choices = await getFullChoices(field, context);
+    let peopleIds = [];
+    if (['people', 'singlepeople'].includes(field.type)) {
+      peopleIds = items.map((item) => item[key]);
+    }
+    const choices = await getFullChoices(field, context, peopleIds);
     for (const item of items) {
       const fieldValue = get(item, key, null);
       if (fieldValue) {

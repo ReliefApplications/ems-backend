@@ -12,7 +12,7 @@ import getStyle from './getStyle';
 import getSortAggregation from './getSortAggregation';
 import mongoose from 'mongoose';
 import buildReferenceDataAggregation from '@utils/aggregation/buildReferenceDataAggregation';
-import { getAccessibleFields } from '@utils/form';
+import { getAccessibleFields, getFullChoices } from '@utils/form';
 import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
 import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
@@ -191,8 +191,13 @@ const getQueryFields = (
  *
  * @param records Records array to be sorted
  * @param sortArgs Sort arguments
+ * @param sortArgs.sortField sort field
+ * @param sortArgs.sortOrder sort order
  */
-const sortRecords = (records: any[], sortArgs: any): void => {
+const sortRecords = (
+  records: any[],
+  sortArgs: { sortField: string; sortOrder: 'asc' | 'desc' }
+): void => {
   if (sortArgs.sortField && sortArgs.sortOrder) {
     const sortField = FLAT_DEFAULT_FIELDS.includes(sortArgs.sortField)
       ? sortArgs.sortField
@@ -512,6 +517,32 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         const aggregation = await Record.aggregate(pipeline);
         items = aggregation[0].items;
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
+      }
+
+      const fullSortField = fields.find((field) => field.name === sortField);
+      if (
+        fullSortField &&
+        ['people', 'singlepeople'].includes(fullSortField.type)
+      ) {
+        const peopleIds = items.map((item) => item.data[sortField]);
+        const choices = await getFullChoices(fullSortField, context, peopleIds);
+
+        // Assuming choices is an array of objects like [{text, value}]
+        const choicesMap = new Map(
+          (choices as { value: string; text: string }[]).map((choice) => [
+            choice.value as string,
+            choice.text as string,
+          ])
+        );
+
+        // Sort the items based on the corresponding text field in choices
+        items.sort((a, b) => {
+          const textA = choicesMap.get(a.data[sortField]);
+          const textB = choicesMap.get(b.data[sortField]);
+          return sortOrder === 'asc'
+            ? textA.localeCompare(textB)
+            : -textA.localeCompare(textB);
+        });
       }
 
       // Deal with resource/resources questions on THIS form
