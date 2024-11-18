@@ -1,3 +1,10 @@
+# [2.12.0-beta.11](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.10...v2.12.0-beta.11) (2024-11-18)
+
+
+### Bug Fixes
+
+* createdBy / lastUpdatedBy fields not correctly updated ([d46e62f](https://github.com/ReliefApplications/ems-backend/commit/d46e62fd0f10f92a30b3b21cd95a9eb265fa7999))
+
 # [2.12.0-beta.10](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.9...v2.12.0-beta.10) (2024-11-18)
 
 
