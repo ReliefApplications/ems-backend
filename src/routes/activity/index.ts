@@ -17,13 +17,28 @@ const router = express.Router();
 const exportActivitiesToXlsx = async (req: Request, res: Response) => {
   // Fetch activities from the database
   const activities: ActivityLog[] = await ActivityLog.find();
+
   // Define the columns to be included in the XLSX file
-  const columns = ['userId', 'eventType', 'metadata'];
-  // Define the file name
+  const columns = [
+    { name: 'userId', title: 'User ID', field: 'userId' },
+    { name: 'eventType', title: 'Event Type', field: 'eventType' },
+    { name: 'metadata', title: 'metadata', field: 'metadata' },
+  ];
+
+  const formattedData = activities.map((activity) => ({
+    userId: activity.userId.toString(),
+    eventType: activity.eventType,
+    metadata: JSON.stringify(activity.metadata),
+  }));
+  console.log('formattedData', formattedData);
+
+  // Define the name of the file
   const fileName = 'activities.xlsx';
-  // Generate the XLSX file
-  const file = await xlsBuilder(fileName, columns, activities);
-  // Send the file as a response
+
+  // Build the XLSX file
+  const file = await xlsBuilder(fileName, columns, formattedData);
+
+  // Send the file as an attachment
   res.attachment(fileName);
   res.send(file);
 };
