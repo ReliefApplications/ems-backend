@@ -1,3 +1,37 @@
+import { Resource } from '@models';
+
+export type Field = {
+  name: string;
+  title: string;
+  graphQLFieldName: string;
+  choicesByUrl: boolean;
+  choicesByGraphQL: boolean;
+  isCalculated: boolean;
+  expression: string;
+  choices: { text: string; value: string }[];
+};
+
+export type FlatColumn = {
+  name: string;
+  title: string;
+  field: string;
+  index: number;
+  subName?: string;
+  subTitle?: string;
+  subField?: string;
+};
+
+export type Column = {
+  name?: string;
+  title?: string;
+  field: string;
+  type?: string;
+  parent?: Resource;
+  displayField?: Column & { separator: string };
+  subColumns: Column[];
+  meta?: { field: Field };
+};
+
 /**
  * Gets export columns from meta query
  *
@@ -10,7 +44,7 @@ export const getColumnsFromMeta = (
   meta: any,
   fields: any[],
   prefix?: string
-): any[] => {
+): Column[] => {
   let columns = [];
   for (const key in meta) {
     const field = meta[key];
@@ -47,8 +81,36 @@ export const getColumnsFromMeta = (
           name: fullName,
           field: fullName,
           type: 'resources',
+          displayField: queryField.displayField
+            ? {
+                ...getColumnsFromMeta(field, [
+                  {
+                    name: queryField.displayField,
+                  },
+                ]).find((column) => column.name === queryField.displayField),
+                separator: queryField.separator,
+              }
+            : null,
           subColumns:
-            subFields.length > 0 ? getColumnsFromMeta(field, subFields) : [],
+            subFields.length > 0
+              ? getColumnsFromMeta(field, subFields).map(
+                  (subColumn) => {
+                    const subField = subFields.find(
+                      (_) => _.name === key + '.' + subColumn.name.split('.')[0]
+                    );
+                    return {
+                      ...subColumn,
+                      ...(subField?.displayField && {
+                        displayField: {
+                          ...subColumn.meta.field,
+                          field: subColumn.meta.field.name,
+                          separator: subField.separator,
+                        },
+                      }),
+                    };
+                  }
+                )
+              : [],
         });
       } else {
         // Single related object
