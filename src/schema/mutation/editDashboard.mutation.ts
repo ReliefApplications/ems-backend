@@ -9,7 +9,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { DashboardType } from '../types';
 import { Button, Dashboard, Page, Step } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
-import { isEmpty } from 'lodash';
+import { isEmpty, isEqual } from 'lodash';
 import { logger } from '@services/logger.service';
 import ButtonActionInputType from '@schema/inputs/button-action.input';
 import { graphQLAuthCheck } from '@schema/shared';
@@ -68,6 +68,107 @@ export default {
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
+      // Has the ids of the widgets that have been deleted from the dashboard
+      const removedWidgets: string[] = (dashboard.structure || [])
+        .filter(
+          (w: any) =>
+            !(args.structure || []).find((widget) => widget.id === w.id)
+        )
+        .map((w) => w.id);
+
+      // Gets the page that contains the dashboard
+      const page = await Page.findOne({
+        $or: [
+          {
+            contentWithContext: {
+              $elemMatch: {
+                content: dashboard.id,
+              },
+            },
+          },
+          { content: dashboard.id },
+        ],
+      });
+
+      // If editing a template, the content would be in the contentWithContext array
+      // otherwise, it would be in the content field
+      const isEditingTemplate = page.content.toString() !== args.id.toString();
+
+      // If editing a template, we mark the widgets that changed as modified
+      // to prevent them from being updated when the main dashboard is updated
+      if (isEditingTemplate) {
+        args.structure.forEach((widget: any) => {
+          // Get the old widget by id
+          const oldWidget = dashboard.structure.find(
+            (w: any) => w.id === widget.id
+          );
+
+          if (!widget.modified) {
+            widget.modified = !isEqual(oldWidget?.settings, widget.settings);
+          }
+        });
+      } else {
+        // If editing the main dashboard, we update all the templates that inherit from it
+        const templateDashboards = await Dashboard.find({
+          _id: {
+            $in: page.contentWithContext.map((cc) => cc.content),
+          },
+        });
+
+        templateDashboards.forEach((template) => {
+          if (
+            !Array.isArray(template.structure) ||
+            !Array.isArray(args.structure)
+          ) {
+            return;
+          }
+          args.structure.forEach((widget) => {
+            const widgetIdx = template.structure.findIndex(
+              (w) => w.id === widget.id
+            );
+
+            const templateWidget =
+              widgetIdx !== -1 ? template.structure[widgetIdx] : null;
+
+            // If not found, it means the widget was just added to the main dashboard
+            // We should also add it to the template
+            if (
+              !templateWidget &&
+              !template.deletedWidgets.includes(widget.id)
+            ) {
+              template.structure.push(widget);
+              template.markModified('structure');
+              return;
+            } else if (!templateWidget) {
+              return;
+            }
+
+            // Only update widgets that haven't been modified from the template
+            if (!templateWidget.modified) {
+              template.structure[widgetIdx] = widget;
+              template.markModified('structure');
+            }
+          });
+
+          // Remove widgets that were removed from the main dashboard, if not modified
+          removedWidgets.forEach((id) => {
+            const widgetIdx = template.structure.findIndex((w) => w.id === id);
+            if (widgetIdx !== -1 && !template.structure[widgetIdx].modified) {
+              template.structure.splice(widgetIdx, 1);
+              template.markModified('structure');
+            }
+          });
+        });
+
+        // Save the templates
+        await Dashboard.bulkSave(templateDashboards);
+      }
+
+      // update the deletedWidgets array with the id of the widgets that have been just removed
+      const updatedDeletedWidgets = [
+        ...new Set([...dashboard.deletedWidgets, ...removedWidgets]),
+      ];
+
       // do the update on dashboard
       const updateDashboard: {
         //modifiedAt?: Date;
@@ -85,7 +186,8 @@ export default {
           filter: { ...dashboard.toObject().filter, ...args.filter },
         },
         args.buttons && { buttons: args.buttons },
-        args.gridOptions && { gridOptions: args.gridOptions }
+        args.gridOptions && { gridOptions: args.gridOptions },
+        isEditingTemplate && { deletedWidgets: updatedDeletedWidgets }
       );
       dashboard = await Dashboard.findByIdAndUpdate(args.id, updateDashboard, {
         new: true,
