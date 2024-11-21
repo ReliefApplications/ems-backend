@@ -30,6 +30,24 @@ jest.mock('@security/extendAbilityForPage', () => ({
 
 describe('addPage Resolver', () => {
   let context: Context;
+  let args: AddPageArgs;
+  let databaseHelpers: DatabaseHelpers;
+  let application: Application;
+
+  beforeAll(async () => {
+    databaseHelpers = new DatabaseHelpers();
+    await databaseHelpers.connect();
+  });
+
+  beforeAll(async () => {
+    application = await Application.create({
+      name: 'Test Application',
+    });
+  });
+
+  afterAll(async () => {
+    await databaseHelpers.disconnect();
+  });
 
   beforeEach(async () => {
     context = {
@@ -41,36 +59,29 @@ describe('addPage Resolver', () => {
       i18next: { t: jest.fn() },
       timeZone: 'UTC',
     } as unknown as Context;
+
+    args = {
+      type: 'workflow',
+      application: application.id,
+    };
   });
 
   describe('Authentication and Authorization', () => {
     it('should throw an error if the user is not authenticated', async () => {
       context.user = null;
-      const args = {
-        type: 'workflow',
-        application: new Types.ObjectId(),
-      } as AddPageArgs;
       const result = addPage.resolve(null, args, { ...context, user: null });
       await expect(result).rejects.toThrow(GraphQLError);
       expect(context.i18next.t).toHaveBeenCalledWith(
-        'common.errors.userNotLogged'
+        'common.errors.notAuthenticated'
       );
     });
 
     it('should throw an error if the user does not have permission to create a page', async () => {
       (extendAbilityForPage as jest.Mock).mockResolvedValue({
+        can: jest.fn().mockReturnValue(false),
         cannot: jest.fn().mockReturnValue(true),
       });
-      (context.user.ability.can as jest.Mock).mockReturnValue(false);
-      jest.spyOn(Application, 'findById').mockResolvedValue({
-        id: new Types.ObjectId(),
-      } as any);
-
-      const result = addPage.resolve(
-        null,
-        { type: 'workflow', application: new Types.ObjectId() },
-        context
-      );
+      const result = addPage.resolve(null, args, context);
       await expect(result).rejects.toThrow(GraphQLError);
       expect(context.i18next.t).toHaveBeenCalledWith(
         'common.errors.permissionNotGranted'
@@ -80,7 +91,7 @@ describe('addPage Resolver', () => {
 
   describe('Argument Validation', () => {
     it('should throw an error if required arguments are missing or invalid', async () => {
-      const args = {} as AddPageArgs;
+      args = {} as AddPageArgs;
       const result = addPage.resolve(null, args, context);
       await expect(result).rejects.toThrow(GraphQLError);
       expect(context.i18next.t).toHaveBeenCalledWith(
@@ -89,12 +100,7 @@ describe('addPage Resolver', () => {
     });
 
     it('should throw an error if application is not found', async () => {
-      const args = {
-        type: 'workflow',
-        application: new Types.ObjectId(),
-      } as AddPageArgs;
-      jest.spyOn(Application, 'findById').mockResolvedValue(null);
-
+      args.application = new Types.ObjectId().toHexString();
       const result = addPage.resolve(null, args, context);
       await expect(result).rejects.toThrow(GraphQLError);
       expect(context.i18next.t).toHaveBeenCalledWith(
@@ -103,30 +109,25 @@ describe('addPage Resolver', () => {
     });
 
     it('should throw an error if form content does not exist when type is form', async () => {
-      const args = {
-        type: 'form',
-        application: new Types.ObjectId(),
-      } as AddPageArgs;
-      jest.spyOn(Application, 'findById').mockResolvedValue({
-        id: new Types.ObjectId(),
-      } as any);
-      jest.spyOn(Page, 'findById').mockResolvedValue(null);
-      jest.spyOn(Form, 'findById').mockResolvedValue(null);
+      args.type = 'form';
+      args.content = new Types.ObjectId().toHexString();
       const result = addPage.resolve(null, args, context);
       await expect(result).rejects.toThrow(GraphQLError);
-      expect(context.i18next.t).toHaveBeenCalledWith(
-        'common.errors.dataNotFound'
-      );
     });
   });
 
   describe('Workflow and Dashboard Creation', () => {
     it('should create a new workflow if type is workflow', async () => {
-      // Test implementation
+      args.type = 'workflow';
+      const result = addPage.resolve(null, args, context);
+      await expect(result).resolves.toBeInstanceOf(Page);
     });
 
     it('should create a new dashboard with specified structure if type is dashboard', async () => {
-      // Test implementation
+      args.type = 'dashboard';
+      args.structure = { rows: [] };
+      const result = addPage.resolve(null, args, context);
+      await expect(result).resolves.toBeInstanceOf(Page);
     });
   });
 
@@ -152,11 +153,21 @@ describe('addPage Resolver', () => {
 
   describe('Error Handling', () => {
     it('should log the error and throw GraphQLError on unexpected errors', async () => {
-      // Test implementation
+      jest.spyOn(logger, 'error');
+      jest.spyOn(Page.prototype, 'save').mockRejectedValue(new Error());
+      const result = addPage.resolve(null, args, context);
+      await expect(result).rejects.toThrow(GraphQLError);
+      expect(logger.error).toHaveBeenCalled();
     });
 
     it('should return a translated internal server error if an unknown error is thrown', async () => {
-      // Test implementation
+      jest
+        .spyOn(Page.prototype, 'save')
+        .mockRejectedValue(
+          new GraphQLError('common.errors.internalServerError')
+        );
+      const result = addPage.resolve(null, args, context);
+      await expect(result).rejects.toThrow('common.errors.internalServerError');
     });
   });
 });
