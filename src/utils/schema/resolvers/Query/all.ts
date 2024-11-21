@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { Record, ReferenceData, User } from '@models';
+import { Record, ReferenceData, User, Form } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { decodeCursor, encodeCursor } from '@schema/types';
 import getReversedFields from '../../introspection/getReversedFields';
@@ -706,14 +706,46 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         }
       }
 
+      // List of non-primitive reference data questions
+      const primitiveReferenceDataFields = [];
+      // Retrieve the form to get the complete structure
+      const form = await Form.findOne({
+        resource: id,
+        graphQLTypeName: entityName,
+      });
+      const formStructure = form?.structure && JSON.parse(form.structure);
+      if (formStructure) {
+        // Flatten the structure into a single-level array of questions
+        const flatElements = formStructure.pages.flatMap(
+          (page) => page.elements
+        );
+        // Find the non-primitive questions
+        fields.forEach((field) => {
+          const element = flatElements.find(
+            (el) => el.name === field.name && el.isPrimitiveValue === false
+          );
+          if (element) {
+            primitiveReferenceDataFields.push(element);
+          }
+        });
+      }
+
       // === CONSTRUCT OUTPUT + RETURN ===
       const edges = items.map((r) => {
         const record = getAccessibleFields(r, ability);
         Object.assign(record, { id: record._id });
+        const node = display ? { ...record, display, fields } : record;
+        // Change the non-primitive questions format to make it reusable
+        primitiveReferenceDataFields.forEach((field) => {
+          const fieldValue = node.data[field.name]?.value;
+          if (fieldValue?.id) {
+            node.data[field.name] = fieldValue.id;
+          }
+        });
 
         return {
           cursor: encodeCursor(record.id.toString()),
-          node: display ? Object.assign(record, { display, fields }) : record,
+          node: node,
           meta: {
             style: getStyle(r, styleRules),
             raw: record.data,
