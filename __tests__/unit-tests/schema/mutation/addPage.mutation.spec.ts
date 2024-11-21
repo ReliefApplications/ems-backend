@@ -9,6 +9,7 @@ import { DatabaseHelpers } from '../../../helpers/database-helpers';
 import { GraphQLError } from 'graphql';
 import { Context } from '@server/apollo/context';
 import { logger } from '@services/logger.service';
+import extendAbilityForPage from '@security/extendAbilityForPage';
 
 type AddPageArgs = {
   type: ContentType;
@@ -21,9 +22,7 @@ type AddPageArgs = {
 // Mock the entire module
 jest.mock('@security/extendAbilityForPage', () => ({
   __esModule: true,
-  default: jest.fn().mockResolvedValue({
-    cannot: jest.fn().mockReturnValue(true),
-  }),
+  default: jest.fn(),
 }));
 
 describe('addPage Resolver', () => {
@@ -56,6 +55,9 @@ describe('addPage Resolver', () => {
     });
 
     it('should throw an error if the user does not have permission to create a page', async () => {
+      (extendAbilityForPage as jest.Mock).mockResolvedValue({
+        cannot: jest.fn().mockReturnValue(true),
+      });
       (context.user.ability.can as jest.Mock).mockReturnValue(false);
       jest.spyOn(Application, 'findById').mockResolvedValue({
         id: new Types.ObjectId(),
@@ -98,7 +100,20 @@ describe('addPage Resolver', () => {
     });
 
     it('should throw an error if form content does not exist when type is form', async () => {
-      // Test implementation
+      const args = {
+        type: 'form',
+        application: new Types.ObjectId(),
+      } as AddPageArgs;
+      jest.spyOn(Application, 'findById').mockResolvedValue({
+        id: new Types.ObjectId(),
+      } as any);
+      jest.spyOn(Page, 'findById').mockResolvedValue(null);
+
+      const result = addPage.resolve(null, args, context);
+      await expect(result).rejects.toThrow(GraphQLError);
+      expect(context.i18next.t).toHaveBeenCalledWith(
+        'common.errors.dataNotFound'
+      );
     });
   });
 
