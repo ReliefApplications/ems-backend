@@ -84,7 +84,17 @@ describe('addPage Resolver', () => {
     });
 
     it('should throw an error if application is not found', async () => {
-      // Test implementation
+      const args = {
+        type: 'workflow',
+        application: new Types.ObjectId(),
+      } as AddPageArgs;
+      jest.spyOn(Application, 'findById').mockResolvedValue(null);
+
+      const result = addPage.resolve(null, args, context);
+      await expect(result).rejects.toThrow(GraphQLError);
+      expect(context.i18next.t).toHaveBeenCalledWith(
+        'common.errors.dataNotFound'
+      );
     });
 
     it('should throw an error if form content does not exist when type is form', async () => {
