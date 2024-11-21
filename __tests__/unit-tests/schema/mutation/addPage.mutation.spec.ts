@@ -166,14 +166,19 @@ describe('addPage Resolver', () => {
       const page = await result;
       expect(page.name).toBe('Workflow');
       expect(page.type).toBe('workflow');
-      // expect(page.application.toString()).toBe(application.id);
       expect(page.permissions.canSee).toEqual([]);
       expect(page.permissions.canUpdate).toEqual([]);
       expect(page.permissions.canDelete).toEqual([]);
     });
 
     it('should associate the newly created page with the application', async () => {
-      // Test implementation
+      const result = addPage.resolve(null, args, context);
+      await expect(result).resolves.toBeInstanceOf(Page);
+      // the application should now have the new page id in its pages array
+      const updatedApplication = await Application.findById(application.id);
+      expect(updatedApplication.pages.map((page) => page.toString())).toContain(
+        (await result)._id.toString()
+      );
     });
   });
 
