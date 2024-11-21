@@ -72,7 +72,7 @@ describe('addPage Resolver', () => {
       const result = addPage.resolve(null, args, { ...context, user: null });
       await expect(result).rejects.toThrow(GraphQLError);
       expect(context.i18next.t).toHaveBeenCalledWith(
-        'common.errors.notAuthenticated'
+        'common.errors.userNotLogged'
       );
     });
 
@@ -155,7 +155,15 @@ describe('addPage Resolver', () => {
 
   describe('Page Creation', () => {
     it('should create a new page with appropriate permissions based on roles', async () => {
-      // Test implementation
+      const result = addPage.resolve(null, args, context);
+      await expect(result).resolves.toBeInstanceOf(Page);
+      const page = await result;
+      expect(page.name).toBe('Workflow');
+      expect(page.type).toBe('workflow');
+      // expect(page.application.toString()).toBe(application.id);
+      expect(page.permissions.canSee).toEqual([]);
+      expect(page.permissions.canUpdate).toEqual([]);
+      expect(page.permissions.canDelete).toEqual([]);
     });
 
     it('should associate the newly created page with the application', async () => {
