@@ -35,6 +35,7 @@ export const loadRow = (
           } else {
             data[column.field] = false;
           }
+          break;
         }
         case 'checkbox':
         case 'tagbox': {
