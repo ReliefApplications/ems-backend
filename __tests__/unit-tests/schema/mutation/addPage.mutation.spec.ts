@@ -18,6 +18,14 @@ type AddPageArgs = {
   structure?: any;
 };
 
+// Mock the entire module
+jest.mock('@security/extendAbilityForPage', () => ({
+  __esModule: true,
+  default: jest.fn().mockResolvedValue({
+    cannot: jest.fn().mockReturnValue(true),
+  }),
+}));
+
 describe('addPage Resolver', () => {
   let context: Context;
 
@@ -45,20 +53,34 @@ describe('addPage Resolver', () => {
       expect(context.i18next.t).toHaveBeenCalledWith(
         'common.errors.userNotLogged'
       );
-describe('addPage Resolver', () => {
-  describe('Authentication and Authorization', () => {
-    it('should throw an error if the user is not authenticated', async () => {
-      // Test implementation
     });
 
     it('should throw an error if the user does not have permission to create a page', async () => {
-      // Test implementation
+      (context.user.ability.can as jest.Mock).mockReturnValue(false);
+      jest.spyOn(Application, 'findById').mockResolvedValue({
+        id: new Types.ObjectId(),
+      } as any);
+
+      const result = addPage.resolve(
+        null,
+        { type: 'workflow', application: new Types.ObjectId() },
+        context
+      );
+      await expect(result).rejects.toThrow(GraphQLError);
+      expect(context.i18next.t).toHaveBeenCalledWith(
+        'common.errors.permissionNotGranted'
+      );
     });
   });
 
   describe('Argument Validation', () => {
     it('should throw an error if required arguments are missing or invalid', async () => {
-      // Test implementation
+      const args = {} as AddPageArgs;
+      const result = addPage.resolve(null, args, context);
+      await expect(result).rejects.toThrow(GraphQLError);
+      expect(context.i18next.t).toHaveBeenCalledWith(
+        'mutations.page.add.errors.invalidArguments'
+      );
     });
 
     it('should throw an error if application is not found', async () => {
