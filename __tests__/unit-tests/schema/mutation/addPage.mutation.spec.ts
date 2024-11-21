@@ -3,7 +3,7 @@ import addPage from '@schema/mutation/addPage.mutation';
 import { ContentType, contentType } from '@const/enumTypes';
 import { Types } from 'mongoose';
 import addApplication from '@schema/mutation/addApplication.mutation';
-import { Application, Channel, Notification, Role } from '@models';
+import { Application, Channel, Notification, Role, Form } from '@models';
 import pubsub from '@server/pubsub';
 import { DatabaseHelpers } from '../../../helpers/database-helpers';
 import { GraphQLError } from 'graphql';
@@ -133,11 +133,23 @@ describe('addPage Resolver', () => {
 
   describe('Form Handling', () => {
     it('should find and use existing form if type is form', async () => {
-      // Test implementation
+      const form = await Form.create({
+        name: 'Test Form',
+      });
+      args.type = 'form';
+      args.content = form.id;
+      const result = addPage.resolve(null, args, context);
+      await expect(result).resolves.toBeInstanceOf(Page);
+      const page = await result;
+      expect(page.name).toBe(form.name);
+      expect(page.content.toString()).toBe(form.id);
     });
 
     it('should throw an error if form is not found when type is form', async () => {
-      // Test implementation
+      args.type = 'form';
+      args.content = new Types.ObjectId().toHexString();
+      const result = addPage.resolve(null, args, context);
+      await expect(result).rejects.toThrow(GraphQLError);
     });
   });
 
