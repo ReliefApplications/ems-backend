@@ -22,7 +22,10 @@ type AddPageArgs = {
 // Mock the entire module
 jest.mock('@security/extendAbilityForPage', () => ({
   __esModule: true,
-  default: jest.fn(),
+  default: jest.fn().mockResolvedValue({
+    can: jest.fn().mockReturnValue(true),
+    cannot: jest.fn().mockReturnValue(false),
+  }),
 }));
 
 describe('addPage Resolver', () => {
@@ -108,7 +111,7 @@ describe('addPage Resolver', () => {
         id: new Types.ObjectId(),
       } as any);
       jest.spyOn(Page, 'findById').mockResolvedValue(null);
-
+      jest.spyOn(Form, 'findById').mockResolvedValue(null);
       const result = addPage.resolve(null, args, context);
       await expect(result).rejects.toThrow(GraphQLError);
       expect(context.i18next.t).toHaveBeenCalledWith(
