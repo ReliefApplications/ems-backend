@@ -113,7 +113,13 @@ class SafeServer {
         const updatedDocFields = Object.keys(
           data.updateDescription.updatedFields
         );
+        // Permissions update on the fields should not be considered as a change of the schema
+        const updatePermissions = Object.hasOwn(
+          data.updateDescription.updatedFields,
+          'permissions'
+        );
         if (
+          !updatePermissions &&
           updatedDocFields.some(
             (f) =>
               fieldsThatRequireSchemaUpdate.includes(f) &&
