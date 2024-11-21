@@ -19,7 +19,7 @@ type AddPageArgs = {
   structure?: any;
 };
 
-// Mock the entire module
+// Mock the extendAbilityForPage function
 jest.mock('@security/extendAbilityForPage', () => ({
   __esModule: true,
   default: jest.fn().mockResolvedValue({
@@ -65,6 +65,7 @@ describe('addPage Resolver', () => {
       application: application.id,
     };
 
+    // Reset the mock implementation extendAbilityForPage
     (extendAbilityForPage as jest.Mock).mockResolvedValue({
       can: jest.fn().mockReturnValue(true),
       cannot: jest.fn().mockReturnValue(false),
