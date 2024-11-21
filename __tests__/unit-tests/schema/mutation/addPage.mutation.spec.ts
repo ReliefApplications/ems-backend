@@ -64,6 +64,11 @@ describe('addPage Resolver', () => {
       type: 'workflow',
       application: application.id,
     };
+
+    (extendAbilityForPage as jest.Mock).mockResolvedValue({
+      can: jest.fn().mockReturnValue(true),
+      cannot: jest.fn().mockReturnValue(false),
+    });
   });
 
   describe('Authentication and Authorization', () => {
