@@ -30,6 +30,20 @@ jest.mock('@security/extendAbilityForPage', () => ({
   }),
 }));
 
+// this returns the id of the object as a string
+function normalizeObjectIds(objId: any) {
+  if (typeof objId === 'string') {
+    return objId;
+  }
+  if (Array.isArray(objId)) {
+    return objId.map((id) => id.toString());
+  }
+  return Object.keys(objId).reduce((acc, key) => {
+    acc[key] = normalizeObjectIds(objId[key]);
+    return acc;
+  }, {});
+}
+
 describe('editPage Resolver', () => {
   let context: Context;
   let args: EditPageArgs;
@@ -153,7 +167,19 @@ describe('editPage Resolver', () => {
 
   describe('Permission Update Logic', () => {
     it('should replace existing permission roles with new roles if an array is provided', async () => {
-      // Test implementation
+      args.permissions = {
+        canSee: [new Types.ObjectId()],
+        canUpdate: [new Types.ObjectId()],
+        canDelete: [new Types.ObjectId()],
+      };
+
+      const result = await editPage.resolve(null, args, context);
+
+      // Normalize permissions
+      const expectedPermissions = normalizeObjectIds(args.permissions);
+      const resultPermissions = normalizeObjectIds(result.permissions);
+      // Assertions to check if permissions have been replaced
+      expect(resultPermissions).toEqual(expectedPermissions);
     });
 
     it('should add roles to existing permissions if "add" is specified', async () => {
