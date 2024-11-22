@@ -175,19 +175,57 @@ describe('editPage Resolver', () => {
 
       const result = await editPage.resolve(null, args, context);
 
-      // Normalize permissions
       const expectedPermissions = normalizeObjectIds(args.permissions);
       const resultPermissions = normalizeObjectIds(result.permissions);
-      // Assertions to check if permissions have been replaced
       expect(resultPermissions).toEqual(expectedPermissions);
     });
 
     it('should add roles to existing permissions if "add" is specified', async () => {
-      // Test implementation
+      args.permissions = {
+        canSee: { add: [new Types.ObjectId()] },
+        canUpdate: { add: [new Types.ObjectId()] },
+        canDelete: { add: [new Types.ObjectId()] },
+      };
+
+      const result = await editPage.resolve(null, args, context);
+
+      const expectedPermissions = {
+        canSee: [...page.permissions.canSee, ...args.permissions.canSee.add],
+        canUpdate: [
+          ...page.permissions.canUpdate,
+          ...args.permissions.canUpdate.add,
+        ],
+        canDelete: [
+          ...page.permissions.canDelete,
+          ...args.permissions.canDelete.add,
+        ],
+      };
+      console.log('expectedPermissions', expectedPermissions);
+      console.log('result.permissions', result.permissions);  
+      const resultPermissions = normalizeObjectIds(result.permissions);
+      expect(resultPermissions).toEqual(
+        normalizeObjectIds(expectedPermissions)
+      );
     });
 
     it('should remove roles from existing permissions if "remove" is specified', async () => {
-      // Test implementation
+      args.permissions = {
+        canSee: { remove: [page.permissions.canSee[0]] },
+        canUpdate: { remove: [page.permissions.canUpdate[0]] },
+        canDelete: { remove: [page.permissions.canDelete[0]] },
+      };
+
+      const result = await editPage.resolve(null, args, context);
+
+      const expectedPermissions = {
+        canSee: page.permissions.canSee.slice(1),
+        canUpdate: page.permissions.canUpdate.slice(1),
+        canDelete: page.permissions.canDelete.slice(1),
+      };
+      const resultPermissions = normalizeObjectIds(result.permissions);
+      expect(resultPermissions).toEqual(
+        normalizeObjectIds(expectedPermissions)
+      );
     });
   });
 
