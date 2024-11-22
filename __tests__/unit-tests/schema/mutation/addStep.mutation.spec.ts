@@ -72,7 +72,7 @@ describe('addStep Resolver', () => {
 
     args = {
       type: 'workflow',
-      // workflow: workflowPage.content,
+      workflow: workflowPage.content,
       content: workflowPage.content,
     } as AddStepArgs;
 
