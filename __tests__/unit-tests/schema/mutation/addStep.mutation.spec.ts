@@ -137,15 +137,39 @@ describe('addStep Resolver', () => {
     });
 
     it('should throw an error if the application linked to the page does not exist', async () => {
-      // Test implementation
+      jest.spyOn(Page, 'findOne').mockResolvedValue({
+        _id: new Types.ObjectId(),
+        application: new Types.ObjectId(),
+      });
+      const result = addStep.resolve(null, args, context);
+      await expect(result).rejects.toThrow(GraphQLError);
+      expect(context.i18next.t).toHaveBeenCalledWith(
+        'common.errors.dataNotFound'
+      );
     });
 
     it('should throw an error if the workflow associated with the workflow ID does not exist', async () => {
-      // Test implementation
+      jest.spyOn(Workflow, 'findById').mockResolvedValue(null);
+      const result = addStep.resolve(null, args, context);
+      await expect(result).rejects.toThrow(GraphQLError);
+      expect(context.i18next.t).toHaveBeenCalledWith(
+        'common.errors.dataNotFound'
+      );
     });
 
     it('should throw an error if the form linked to the content ID does not exist (when type is not "dashboard")', async () => {
-      // Test implementation
+      // args.type = 'form';
+      // args.content = new Types.ObjectId().toHexString();
+      const newArgs = {
+        ...args,
+        type: 'form',
+        content: new Types.ObjectId().toHexString(),
+      };
+      const result = addStep.resolve(null, newArgs, context);
+      await expect(result).rejects.toThrow(GraphQLError);
+      expect(context.i18next.t).toHaveBeenCalledWith(
+        'common.errors.dataNotFound'
+      );
     });
   });
 
