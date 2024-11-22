@@ -1,4 +1,4 @@
-import { Page } from '@models';
+import { Page, Step } from '@models';
 import addStep from '@schema/mutation/addStep.mutation';
 import { ContentType, contentType } from '@const/enumTypes';
 import { Types } from 'mongoose';
@@ -14,6 +14,7 @@ import extendAbilityForPage from '@security/extendAbilityForPage';
 import editPage from '@schema/mutation/editPage.mutation';
 import addPage from '@schema/mutation/addPage.mutation';
 import { Workflow, Dashboard } from '@models';
+import stepsQuery from '@schema/query/steps.query';
 
 type AddStepArgs = {
   type: ContentType;
@@ -125,7 +126,12 @@ describe('addStep Resolver', () => {
 
   describe('Data Retrieval Logic', () => {
     it('should throw an error if the page linked to the workflow does not exist', async () => {
-      // Test implementation
+      args.workflow = new Types.ObjectId().toHexString();
+      const result = addStep.resolve(null, args, context);
+      await expect(result).rejects.toThrow(GraphQLError);
+      expect(context.i18next.t).toHaveBeenCalledWith(
+        'common.errors.dataNotFound'
+      );
     });
 
     it('should throw an error if the application linked to the page does not exist', async () => {
@@ -142,9 +148,7 @@ describe('addStep Resolver', () => {
   });
 
   describe('Step Creation Logic', () => {
-    it('should create a linked Dashboard if type is "dashboard"', async () => {
-      // Test implementation
-    });
+    it('should create a linked Dashboard if type is "dashboard"', async () => {});
 
     it('should set the step name to the form name if type is not "dashboard"', async () => {
       // Test implementation
@@ -167,11 +171,19 @@ describe('addStep Resolver', () => {
 
   describe('Error Handling', () => {
     it('should log an error and throw a GraphQLError if an unexpected error occurs', async () => {
-      // Test implementation
+      jest.spyOn(logger, 'error');
+      jest.spyOn(Page, 'findOne').mockRejectedValue(new Error('Test error'));
+      const result = addStep.resolve(null, args, context);
+      await expect(result).rejects.toThrow(GraphQLError);
+      expect(logger.error).toHaveBeenCalled();
     });
 
     it('should return a translated error message if a GraphQLError is thrown', async () => {
-      // Test implementation
+      jest
+        .spyOn(Page, 'findOne')
+        .mockRejectedValue(new GraphQLError('common.errors.dataNotFound'));
+      const result = addStep.resolve(null, args, context);
+      await expect(result).rejects.toThrow('common.errors.dataNotFound');
     });
   });
 });
