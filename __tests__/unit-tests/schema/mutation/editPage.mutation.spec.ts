@@ -197,23 +197,26 @@ describe('editPage Resolver', () => {
         canUpdate: { add: [new Types.ObjectId()] },
         canDelete: { add: [new Types.ObjectId()] },
       };
-      
+
+      // get the page with the current permissions
+      const currentPageState = await Page.findById(args.id);
 
       const result = await editPage.resolve(null, args, context);
 
       const expectedPermissions = {
-        canSee: [...page.permissions.canSee, ...args.permissions.canSee.add],
+        canSee: [
+          ...currentPageState.permissions.canSee,
+          ...args.permissions.canSee.add,
+        ],
         canUpdate: [
-          ...page.permissions.canUpdate,
+          ...currentPageState.permissions.canUpdate,
           ...args.permissions.canUpdate.add,
         ],
         canDelete: [
-          ...page.permissions.canDelete,
+          ...currentPageState.permissions.canDelete,
           ...args.permissions.canDelete.add,
         ],
       };
-      console.log('expectedPermissions', expectedPermissions);
-      console.log('result.permissions', result.permissions);
       const resultPermissions = normalizeObjectIds(result.permissions);
       expect(resultPermissions).toEqual(
         normalizeObjectIds(expectedPermissions)
@@ -222,17 +225,26 @@ describe('editPage Resolver', () => {
 
     it('should remove roles from existing permissions if "remove" is specified', async () => {
       args.permissions = {
-        canSee: { remove: [page.permissions.canSee[0]] },
-        canUpdate: { remove: [page.permissions.canUpdate[0]] },
-        canDelete: { remove: [page.permissions.canDelete[0]] },
+        canSee: { remove: [args.permissions.canSee[0]] },
+        canUpdate: { remove: [args.permissions.canUpdate[0]] },
+        canDelete: { remove: [args.permissions.canDelete[0]] },
       };
+
+      // get the page with the current permissions
+      const currentPageState = await Page.findById(args.id);
 
       const result = await editPage.resolve(null, args, context);
 
       const expectedPermissions = {
-        canSee: page.permissions.canSee.slice(1),
-        canUpdate: page.permissions.canUpdate.slice(1),
-        canDelete: page.permissions.canDelete.slice(1),
+        canSee: currentPageState.permissions.canSee.filter(
+          (id) => id.toString() !== args.permissions.canSee.remove[0]
+        ),
+        canUpdate: currentPageState.permissions.canUpdate.filter(
+          (id) => id.toString() !== args.permissions.canUpdate.remove[0]
+        ),
+        canDelete: currentPageState.permissions.canDelete.filter(
+          (id) => id.toString() !== args.permissions.canDelete.remove[0]
+        ),
       };
       const resultPermissions = normalizeObjectIds(result.permissions);
       expect(resultPermissions).toEqual(
