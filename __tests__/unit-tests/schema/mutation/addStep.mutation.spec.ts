@@ -165,7 +165,12 @@ describe('addStep Resolver', () => {
 
   describe('Authorization', () => {
     it('should throw an error if the user does not have permission to update the application', async () => {
-      // Test implementation
+      (context.user.ability.can as jest.Mock).mockReturnValue(false);
+      const result = addStep.resolve(null, args, context);
+      await expect(result).rejects.toThrow(GraphQLError);
+      expect(context.i18next.t).toHaveBeenCalledWith(
+        'common.errors.permissionNotGranted'
+      );
     });
   });
 
