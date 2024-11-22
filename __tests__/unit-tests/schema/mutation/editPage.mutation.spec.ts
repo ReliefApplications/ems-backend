@@ -113,6 +113,9 @@ describe('editPage Resolver', () => {
       can: jest.fn().mockReturnValue(true),
       cannot: jest.fn().mockReturnValue(false),
     });
+
+    // reset all mock functions
+    // jest.clearAllMocks();
   });
   describe('Authentication and Authorization', () => {
     it('should throw an error if the user is not authenticated', async () => {
@@ -194,6 +197,7 @@ describe('editPage Resolver', () => {
         canUpdate: { add: [new Types.ObjectId()] },
         canDelete: { add: [new Types.ObjectId()] },
       };
+      
 
       const result = await editPage.resolve(null, args, context);
 
@@ -287,10 +291,6 @@ describe('editPage Resolver', () => {
       expect(result.name).toBe(updatedArgs.name);
       expect(updatedDashboard.name).toBe(updatedArgs.name);
     });
-
-    it('should update only allowed properties for form pages', async () => {
-      // Test implementation
-    });
   });
 
   describe('Error Handling', () => {
@@ -311,7 +311,11 @@ describe('editPage Resolver', () => {
     });
 
     it('should throw an error if permissions update logic fails', async () => {
-      // Test implementation
+      args.permissions = {
+        canSee: { add: 'invalid' },
+      };
+      const result = editPage.resolve(null, args, context);
+      await expect(result).rejects.toThrow(GraphQLError);
     });
   });
 });
