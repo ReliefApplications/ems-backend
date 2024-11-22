@@ -114,7 +114,12 @@ describe('addStep Resolver', () => {
     });
 
     it('should throw an error if type is not in the valid content types', async () => {
-      // Test implementation
+      const newArgs = { ...args, type: 'invalid' } as unknown as AddStepArgs;
+      const result = addStep.resolve(null, newArgs, context);
+      await expect(result).rejects.toThrow(GraphQLError);
+      expect(context.i18next.t).toHaveBeenCalledWith(
+        'mutations.step.add.errors.invalidArguments'
+      );
     });
   });
 
