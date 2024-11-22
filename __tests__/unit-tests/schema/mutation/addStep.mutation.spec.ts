@@ -135,7 +135,12 @@ describe('addStep Resolver', () => {
     });
 
     it('should throw an error if the application linked to the page does not exist', async () => {
-      // Test implementation
+      args.workflow = new Types.ObjectId().toHexString();
+      const result = addStep.resolve(null, args, context);
+      await expect(result).rejects.toThrow(GraphQLError);
+      expect(context.i18next.t).toHaveBeenCalledWith(
+        'common.errors.dataNotFound'
+      );
     });
 
     it('should throw an error if the workflow associated with the workflow ID does not exist', async () => {
