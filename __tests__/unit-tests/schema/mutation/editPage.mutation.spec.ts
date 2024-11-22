@@ -264,7 +264,28 @@ describe('editPage Resolver', () => {
     });
 
     it('should update the content name and properties for dashboard pages', async () => {
-      // Test implementation
+      // create new page with dashboard content
+      const newPage = await Page.create({
+        name: 'Dashboard Page',
+        application: application.id,
+        type: contentType.dashboard,
+        content: await Dashboard.create({
+          name: 'Test Dashboard',
+        }),
+      });
+
+      const updatedArgs = {
+        ...args,
+        id: newPage.id,
+        name: 'Updated Dashboard Page',
+      };
+
+      const result = await editPage.resolve(null, updatedArgs, context);
+      // get the dashboard content
+      const updatedDashboard = await Dashboard.findById(newPage.content);
+      // check if the page name and dashboard name are updated
+      expect(result.name).toBe(updatedArgs.name);
+      expect(updatedDashboard.name).toBe(updatedArgs.name);
     });
 
     it('should update only allowed properties for form pages', async () => {
