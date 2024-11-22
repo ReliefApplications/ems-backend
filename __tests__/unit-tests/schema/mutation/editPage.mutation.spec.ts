@@ -4,7 +4,15 @@ import addPage from '@schema/mutation/addPage.mutation';
 import { ContentType, contentType } from '@const/enumTypes';
 import { Types } from 'mongoose';
 import addApplication from '@schema/mutation/addApplication.mutation';
-import { Application, Channel, Notification, Role, Form } from '@models';
+import {
+  Application,
+  Channel,
+  Notification,
+  Role,
+  Form,
+  Workflow,
+  Dashboard,
+} from '@models';
 import pubsub from '@server/pubsub';
 import { DatabaseHelpers } from '../../../helpers/database-helpers';
 import { GraphQLError } from 'graphql';
@@ -201,7 +209,7 @@ describe('editPage Resolver', () => {
         ],
       };
       console.log('expectedPermissions', expectedPermissions);
-      console.log('result.permissions', result.permissions);  
+      console.log('result.permissions', result.permissions);
       const resultPermissions = normalizeObjectIds(result.permissions);
       expect(resultPermissions).toEqual(
         normalizeObjectIds(expectedPermissions)
@@ -231,7 +239,28 @@ describe('editPage Resolver', () => {
 
   describe('Content Update Logic', () => {
     it('should update the content and properties for workflow pages', async () => {
-      // Test implementation
+      // create new page with workflow content
+      const newPage = await Page.create({
+        name: 'Workflow Page',
+        application: application.id,
+        type: contentType.workflow,
+        content: await Workflow.create({
+          name: 'Test Workflow',
+        }),
+      });
+
+      const updatedArgs = {
+        ...args,
+        id: newPage.id,
+        name: 'Updated Workflow Page',
+      };
+
+      const result = await editPage.resolve(null, updatedArgs, context);
+      // get the workflow content
+      const updatedWorkflow = await Workflow.findById(newPage.content);
+      // check if the page name and workflow name are updated
+      expect(result.name).toBe(updatedArgs.name);
+      expect(updatedWorkflow.name).toBe(updatedArgs.name);
     });
 
     it('should update the content name and properties for dashboard pages', async () => {
