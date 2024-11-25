@@ -9,7 +9,6 @@ import * as Survey from 'survey-knockout';
  * @returns Updated record data
  */
 export const checkRecordExpressions = (form: Form, record: Record): Record => {
-  console.log(record.data);
   // Instantiate survey from form
   const survey = new Survey.Model(form.structure);
 

@@ -32,6 +32,10 @@ module.exports = {
     port: 'MAIL_PORT',
     user: 'MAIL_USER',
     pass: 'MAIL_PASS',
+    blobStorage: {
+      connectionString: 'MAIL_BLOB_STORAGE_CONNECTION_STRING',
+      container: 'MAIL_BLOB_STORAGE_CONTAINER',
+    },
   },
   auth: {
     provider: 'AUTH_PROVIDER',

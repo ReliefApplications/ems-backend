@@ -38,9 +38,14 @@ const setMultiselectRow = (column: any, data: any, row: any) => {
  *
  * @param columns definition of export columns.
  * @param records list of records.
+ * @param isEmail boolean to account for email behaviour
  * @returns list of export rows.
  */
-export const getRowsFromMeta = (columns: Column[], records: any[]): any[] => {
+export const getRowsFromMeta = (
+  columns: Column[],
+  records: any[],
+  isEmail = false
+): any[] => {
   const rows = [];
   for (const record of records) {
     const row = {};
@@ -180,9 +185,36 @@ export const getRowsFromMeta = (columns: Column[], records: any[]): any[] => {
           break;
         }
         case 'file': {
-          const value = get(record, `${column.field}.[0].name`);
-          set(row, column.name, value);
+          const value = (get(record, `${column.field}`) || []).map(
+            (x) => x.name
+          );
+          set(row, column.name, value.join(','));
           break;
+        }
+        case 'radiogroup': {
+          if (isEmail) {
+            const radioValue = get(record, column.field);
+            const choices = column?.meta?.field?.choices || [];
+            const text = choices?.length ? getText(choices, radioValue) : '';
+            set(row, column.name, text || radioValue);
+            break;
+          }
+        }
+        case 'geospatial': {
+          if (isEmail) {
+            const geoValue = get(record, `${column.field}.properties`);
+            const lat = geoValue?.coordinates.lat;
+            const lng = geoValue?.coordinates.lng;
+            const countryName = geoValue?.countryName;
+            if (lat && countryName) {
+              set(row, column.name, `${countryName}: ${lat}, ${lng}`);
+            } else if (lat) {
+              set(row, column.name, `${lat}, ${lng}`);
+            } else if (countryName) {
+              set(row, column.name, `${countryName}`);
+            }
+            break;
+          }
         }
         default: {
           const value = get(record, column.field);

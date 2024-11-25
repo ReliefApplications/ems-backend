@@ -533,6 +533,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         }
         return arr;
       }, []);
+
       // Deal with resource/resources questions on OTHER forms if any
       let relatedFields = [];
       if (queryFields.filter((x) => x.fields).length - resourcesFields.length) {
