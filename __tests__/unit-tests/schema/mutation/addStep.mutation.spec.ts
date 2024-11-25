@@ -136,7 +136,6 @@ describe('addStep Resolver', () => {
 
   describe('Data Retrieval Logic', () => {
     it('should throw an error if the page linked to the workflow does not exist', async () => {
-      // args.workflow = new Types.ObjectId().toHexString();
       const newArgs = { ...args, workflow: new Types.ObjectId().toHexString() };
       const result = addStep.resolve(null, newArgs, context);
       await expect(result).rejects.toThrow(GraphQLError);
@@ -146,10 +145,7 @@ describe('addStep Resolver', () => {
     });
 
     it('should throw an error if the application linked to the page does not exist', async () => {
-      jest.spyOn(Page, 'findOne').mockResolvedValue({
-        _id: new Types.ObjectId(),
-        application: new Types.ObjectId(),
-      });
+      jest.spyOn(Page, 'findOne').mockResolvedValue(null);
       const result = addStep.resolve(null, args, context);
       await expect(result).rejects.toThrow(GraphQLError);
       expect(context.i18next.t).toHaveBeenCalledWith(
@@ -167,8 +163,6 @@ describe('addStep Resolver', () => {
     });
 
     it('should throw an error if the form linked to the content ID does not exist (when type is not "dashboard")', async () => {
-      // args.type = 'form';
-      // args.content = new Types.ObjectId().toHexString();
       const newArgs = {
         ...args,
         type: 'form',
@@ -203,11 +197,32 @@ describe('addStep Resolver', () => {
     });
 
     it('should create a new step with correct default permissions', async () => {
-      // Test implementation
+      const form = await Form.create({
+        name: 'Test Form',
+        application: application._id,
+      });
+
+      const newArgs = { ...args, type: 'form', content: form._id };
+      jest.spyOn(Role, 'find').mockResolvedValue([]);
+      const result = addStep.resolve(null, newArgs, context);
+      //check permissions {"canDelete": [], "canSee": [], "canUpdate": []}
+      await expect(result).resolves.toHaveProperty('permissions', {
+        canDelete: [],
+        canSee: [],
+        canUpdate: [],
+      });
     });
 
     it('should link the new step to the workflow by updating the workflow document', async () => {
-      // Test implementation
+      const form = await Form.create({
+        name: 'Test Form',
+        application: application._id,
+      });
+
+      const newArgs = { ...args, type: 'form', content: form._id };
+      jest.spyOn(Role, 'find').mockResolvedValue([]);
+      const result = addStep.resolve(null, newArgs, context);
+      await expect(result).resolves.toHaveProperty('workflow', workflow._id);
     });
   });
 
