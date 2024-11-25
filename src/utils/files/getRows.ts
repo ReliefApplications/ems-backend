@@ -65,7 +65,11 @@ export const getRows = async (
         case 'resources': {
           const value = get(data, column.field) || [];
           if (value.length > 0) {
-            set(row, column.name, `${value.length} items`);
+            set(
+              row,
+              column.name,
+              `${value.length} item${value.length > 1 ? 's' : ''}`
+            );
           } else {
             set(row, column.name, '');
           }

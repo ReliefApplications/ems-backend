@@ -229,13 +229,17 @@ router.post('/resource/insert', async (req: any, res) => {
     const authToken = req.headers.authorization.split(' ')[1];
     const decodedToken = jwtDecode(authToken) as any;
 
+    const evaluateExpressions =
+      req.body.parameters.evaluateExpressions || false;
+
     // Block if connected with user to Service
     if (!decodedToken.email && !decodedToken.name) {
       const insertRecordsMessage = await insertRecordsPulljob(
         req.body.records,
         req.body.parameters,
         true,
-        true
+        true,
+        evaluateExpressions
       );
       return res.status(200).send(insertRecordsMessage);
     }
