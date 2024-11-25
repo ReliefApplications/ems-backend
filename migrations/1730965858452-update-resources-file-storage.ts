@@ -1,4 +1,4 @@
-import { Record } from '@models';
+import { Form, Record } from '@models';
 import { Resource } from '@models/resource.model';
 import { logger } from '@services/logger.service';
 import { downloadFile } from '@utils/files/downloadFile';
@@ -15,6 +15,25 @@ const temporalLinks = [];
 /** Migration description */
 export const description =
   'Update resources files storage from blob storage to the document management system';
+
+/**
+ * Available properties from the CS API Documentation
+ */
+export const CS_DOCUMENTS_PROPERTIES = [
+  'Aetiology',
+  'InformationConfidentiality',
+  'Country',
+  'DiseaseCond',
+  'DocumentType',
+  'Hazard',
+  'IhrCommunication',
+  'AssignmentFunction',
+  'Language',
+  'OccurrenceType',
+  'Region',
+  'SourceOfInformation',
+  'Syndrome',
+];
 
 /**
  * Get token for common services API.
@@ -82,16 +101,26 @@ async function getDriveId() {
  * @param fileStream File data
  * @param fileName File name
  * @param driveId drive id
+ * @param uploadContextData upload context data
  * @returns response data
  */
 async function uploadFile(
   fileStream: string,
   fileName: string,
-  driveId: string
+  driveId: string,
+  uploadContextData: any
 ) {
+  uploadContextData = {
+    ...uploadContextData,
+    /** Default information confidentiality context is Internal and Partners => id 3 */
+    ...(!('InformationConfidentiality' in uploadContextData) && {
+      InformationConfidentiality: [3],
+    }),
+  };
   const body = {
     FileStream: fileStream,
     FileName: fileName,
+    ...uploadContextData,
   };
   const token = await getToken();
   const { data: response } = await axios({
@@ -146,7 +175,7 @@ async function handleFile(file) {
 export const up = async () => {
   await startDatabaseForMigration();
   // Get all the resources that contain at least a field of type file, and extract the field names and resource id
-  const resources = (
+  let resources = (
     await Resource.aggregate([
       {
         $match: {
@@ -178,7 +207,56 @@ export const up = async () => {
     resourceName: resource.name,
     fieldNames: resource.fieldNames,
   }));
-
+  const resourcesIds = resources.map((res) => res.resourceId);
+  /** Get related form structure to extract any existing upload context data */
+  const formsMap = {};
+  (
+    await Form.aggregate([
+      {
+        $match: {
+          resource: { $in: resourcesIds },
+        },
+      },
+      {
+        $project: {
+          resource: 1,
+          structure: 1,
+        },
+      },
+    ])
+  ).forEach((form) => {
+    Object.assign(formsMap, {
+      [form.resource]: form.structure,
+    });
+  });
+  /** Update current resources with the context data found in the related form structures if exists */
+  resources = resources.map((resource) => {
+    return {
+      ...resource,
+      uploadContexts: [
+        ...(
+          JSON.parse(formsMap[resource.resourceId].structure || '{}')?.pages ||
+          []
+        ).map((page) => {
+          const fileQuestions = (page.elements || []).filter(
+            (el) => el.type === 'file'
+          );
+          const fileQuestionsMap = [];
+          fileQuestions.forEach((fq) => {
+            const questionObj = { [fq.name]: {} };
+            Object.keys(fq)
+              .filter((key) => CS_DOCUMENTS_PROPERTIES.includes(key))
+              .forEach((key) => {
+                Object.assign(questionObj[fq.name], { [key]: fq[key] });
+              });
+            fileQuestionsMap.push(questionObj);
+          });
+          return fileQuestionsMap;
+        }),
+      ],
+    };
+  });
+  console.log(resources[0]);
   let totalFiles = 0;
   let migratedFiles = 0;
   try {
@@ -216,15 +294,15 @@ export const up = async () => {
                     let file = r.data[field][indexFile];
                     const fileData = await handleFile(file);
                     if (!isNil(fileData)) {
-                      const { itemId } = await uploadFile(
-                        fileData,
-                        file.name,
-                        driveId
-                      );
-                      file = {
-                        ...file,
-                        content: { itemId, driveId },
-                      };
+                      // const { itemId } = await uploadFile(
+                      //   fileData,
+                      //   file.name,
+                      //   driveId
+                      // );
+                      // file = {
+                      //   ...file,
+                      //   content: { itemId, driveId },
+                      // };
                       logger.info(
                         `Uploaded file ${
                           indexFile + 1
