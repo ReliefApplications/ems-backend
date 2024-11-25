@@ -1,10 +1,8 @@
 import { Page } from '@models';
 import addPage from '@schema/mutation/addPage.mutation';
-import { ContentType, contentType } from '@const/enumTypes';
+import { ContentType } from '@const/enumTypes';
 import { Types } from 'mongoose';
-import addApplication from '@schema/mutation/addApplication.mutation';
-import { Application, Channel, Notification, Role, Form } from '@models';
-import pubsub from '@server/pubsub';
+import { Application, Form } from '@models';
 import { DatabaseHelpers } from '../../../helpers/database-helpers';
 import { GraphQLError } from 'graphql';
 import { Context } from '@server/apollo/context';

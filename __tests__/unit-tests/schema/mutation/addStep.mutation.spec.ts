@@ -1,20 +1,14 @@
-import { Page, Step } from '@models';
+import { Page } from '@models';
 import addStep from '@schema/mutation/addStep.mutation';
 import { ContentType, contentType } from '@const/enumTypes';
 import { Types } from 'mongoose';
-import addApplication from '@schema/mutation/addApplication.mutation';
-import { Application, Channel, Notification, Role, Form } from '@models';
-import pubsub from '@server/pubsub';
+import { Application, Role, Form } from '@models';
 import { DatabaseHelpers } from '../../../helpers/database-helpers';
 import { GraphQLError } from 'graphql';
 import { Context } from '@server/apollo/context';
 import { logger } from '@services/logger.service';
 import extendAbilityForPage from '@security/extendAbilityForPage';
-
-import editPage from '@schema/mutation/editPage.mutation';
-import addPage from '@schema/mutation/addPage.mutation';
-import { Workflow, Dashboard } from '@models';
-import stepsQuery from '@schema/query/steps.query';
+import { Workflow } from '@models';
 
 type AddStepArgs = {
   type: ContentType;
@@ -114,7 +108,6 @@ describe('addStep Resolver', () => {
 
   describe('Argument Validation', () => {
     it('should throw an error if workflow ID is not provided or invalid', async () => {
-      // args.workflow = null;
       const newArgs = { ...args, workflow: null };
       const result = addStep.resolve(null, newArgs, context);
       await expect(result).rejects.toThrow(GraphQLError);

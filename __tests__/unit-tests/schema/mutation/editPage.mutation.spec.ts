@@ -1,19 +1,8 @@
 import editPage from '@schema/mutation/editPage.mutation';
 import { Page } from '@models';
-import addPage from '@schema/mutation/addPage.mutation';
-import { ContentType, contentType } from '@const/enumTypes';
+import { contentType } from '@const/enumTypes';
 import { Types } from 'mongoose';
-import addApplication from '@schema/mutation/addApplication.mutation';
-import {
-  Application,
-  Channel,
-  Notification,
-  Role,
-  Form,
-  Workflow,
-  Dashboard,
-} from '@models';
-import pubsub from '@server/pubsub';
+import { Application, Workflow, Dashboard } from '@models';
 import { DatabaseHelpers } from '../../../helpers/database-helpers';
 import { GraphQLError } from 'graphql';
 import { Context } from '@server/apollo/context';
@@ -38,7 +27,11 @@ jest.mock('@security/extendAbilityForPage', () => ({
   }),
 }));
 
-// this returns the id of the object as a string
+/**
+ * Normalize the object IDs to strings
+ * @param objId
+ * @returns
+ */
 function normalizeObjectIds(objId: any) {
   if (typeof objId === 'string') {
     return objId;
