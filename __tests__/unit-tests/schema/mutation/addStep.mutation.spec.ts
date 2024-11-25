@@ -83,7 +83,6 @@ describe('addStep Resolver', () => {
     args = {
       type: 'dashboard',
       workflow: workflow._id,
-      // content: workflowPage.content,
     } as AddStepArgs;
 
     // Reset the mock implementation extendAbilityForPage
