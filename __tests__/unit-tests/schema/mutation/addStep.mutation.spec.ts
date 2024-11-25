@@ -37,6 +37,7 @@ describe('addStep Resolver', () => {
   let databaseHelpers: DatabaseHelpers;
   let application: Application;
   let workflowPage: Page;
+  let workflow: Workflow;
 
   beforeAll(async () => {
     databaseHelpers = new DatabaseHelpers();
@@ -48,11 +49,20 @@ describe('addStep Resolver', () => {
       name: 'Test Application',
     });
 
+    workflow = await Workflow.create({
+      name: 'Test Workflow',
+      application: application._id,
+      steps: [],
+    });
+
     workflowPage = await Page.create({
       application: application._id,
       type: contentType.workflow,
-      content: new Types.ObjectId(),
+      content: workflow._id,
     });
+
+    application.pages.push(workflowPage._id);
+    await application.save();
   });
 
   afterAll(async () => {
@@ -71,9 +81,9 @@ describe('addStep Resolver', () => {
     } as unknown as Context;
 
     args = {
-      type: 'workflow',
-      workflow: workflowPage.content,
-      content: workflowPage.content,
+      type: 'dashboard',
+      workflow: workflow._id,
+      // content: workflowPage.content,
     } as AddStepArgs;
 
     // Reset the mock implementation extendAbilityForPage
@@ -94,7 +104,6 @@ describe('addStep Resolver', () => {
     });
 
     it('should throw an error if the user is not authorized to create a step', async () => {
-      console.log('workflowPage', workflowPage._id);
       (context.user.ability.can as jest.Mock).mockReturnValue(false);
       const result = addStep.resolve(null, args, context);
       await expect(result).rejects.toThrow(GraphQLError);
@@ -175,11 +184,22 @@ describe('addStep Resolver', () => {
 
   describe('Step Creation Logic', () => {
     it('should create a linked Dashboard if type is "dashboard"', async () => {
-      // Test implementation
+      const newArgs = { ...args, type: 'dashboard' } as unknown as AddStepArgs;
+      jest.spyOn(Role, 'find').mockResolvedValue([]);
+      const result = addStep.resolve(null, newArgs, context);
+      await expect(result).resolves.toHaveProperty('name', 'Dashboard');
     });
 
     it('should set the step name to the form name if type is not "dashboard"', async () => {
-      // Test implementation
+      const form = await Form.create({
+        name: 'Test Form',
+        application: application._id,
+      });
+
+      const newArgs = { ...args, type: 'form', content: form._id };
+      jest.spyOn(Role, 'find').mockResolvedValue([]);
+      const result = addStep.resolve(null, newArgs, context);
+      await expect(result).resolves.toHaveProperty('name', form.name);
     });
 
     it('should create a new step with correct default permissions', async () => {
