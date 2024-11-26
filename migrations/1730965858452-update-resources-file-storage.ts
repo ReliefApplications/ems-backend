@@ -19,7 +19,7 @@ export const description =
 /**
  * Available properties from the CS API Documentation
  */
-export const CS_DOCUMENTS_PROPERTIES = [
+export const CSDocumentsProperties = [
   'Aetiology',
   'InformationConfidentiality',
   'Country',
@@ -246,7 +246,7 @@ export const up = async () => {
     totalFileQuestions.forEach((fq) => {
       Object.assign(uploadContexts, { [fq.name]: {} });
       Object.keys(fq)
-        .filter((key) => CS_DOCUMENTS_PROPERTIES.includes(key.trim()))
+        .filter((key) => CSDocumentsProperties.includes(key.trim()))
         .forEach((key) => {
           Object.assign(uploadContexts[fq.name], { [key]: fq[key] });
         });
