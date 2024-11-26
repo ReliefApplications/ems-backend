@@ -1,4 +1,4 @@
-import editPage from '@schema/mutation/editPage.mutation';
+import editPage, { EditPageArgs } from '@schema/mutation/editPage.mutation';
 import { Page } from '@models';
 import { contentType } from '@const/enumTypes';
 import { Types } from 'mongoose';
@@ -8,15 +8,6 @@ import { GraphQLError } from 'graphql';
 import { Context } from '@server/apollo/context';
 import { logger } from '@services/logger.service';
 import extendAbilityForPage from '@security/extendAbilityForPage';
-
-type EditPageArgs = {
-  id: string | Types.ObjectId;
-  name: string;
-  showName: boolean;
-  icon: string;
-  permissions: any;
-  visible: boolean;
-};
 
 // Mock the extendAbilityForPage function
 jest.mock('@security/extendAbilityForPage', () => ({
@@ -29,8 +20,9 @@ jest.mock('@security/extendAbilityForPage', () => ({
 
 /**
  * Normalize the object IDs to strings
- * @param objId
- * @returns
+ *
+ * @param objId object, either id, string, or array
+ * @returns normalize object ids
  */
 function normalizeObjectIds(objId: any) {
   if (typeof objId === 'string') {

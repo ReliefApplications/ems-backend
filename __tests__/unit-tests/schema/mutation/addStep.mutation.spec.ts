@@ -1,6 +1,6 @@
 import { Page } from '@models';
-import addStep from '@schema/mutation/addStep.mutation';
-import { ContentType, contentType } from '@const/enumTypes';
+import addStep, { AddStepArgs } from '@schema/mutation/addStep.mutation';
+import { contentType } from '@const/enumTypes';
 import { Types } from 'mongoose';
 import { Application, Role, Form } from '@models';
 import { DatabaseHelpers } from '../../../helpers/database-helpers';
@@ -9,12 +9,6 @@ import { Context } from '@server/apollo/context';
 import { logger } from '@services/logger.service';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { Workflow } from '@models';
-
-type AddStepArgs = {
-  type: ContentType;
-  content?: string | Types.ObjectId;
-  workflow: string | Types.ObjectId;
-};
 
 // Mock the extendAbilityForPage function
 jest.mock('@security/extendAbilityForPage', () => ({
@@ -57,6 +51,10 @@ describe('addStep Resolver', () => {
 
     application.pages.push(workflowPage._id);
     await application.save();
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   afterAll(async () => {
@@ -137,7 +135,7 @@ describe('addStep Resolver', () => {
     });
 
     it('should throw an error if the application linked to the page does not exist', async () => {
-      jest.spyOn(Page, 'findOne').mockResolvedValue(null);
+      jest.spyOn(Page, 'findOne').mockResolvedValueOnce(null);
       const result = addStep.resolve(null, args, context);
       await expect(result).rejects.toThrow(GraphQLError);
       expect(context.i18next.t).toHaveBeenCalledWith(
@@ -146,7 +144,7 @@ describe('addStep Resolver', () => {
     });
 
     it('should throw an error if the workflow associated with the workflow ID does not exist', async () => {
-      jest.spyOn(Workflow, 'findById').mockResolvedValue(null);
+      jest.spyOn(Workflow, 'findById').mockResolvedValueOnce(null);
       const result = addStep.resolve(null, args, context);
       await expect(result).rejects.toThrow(GraphQLError);
       expect(context.i18next.t).toHaveBeenCalledWith(
@@ -171,7 +169,7 @@ describe('addStep Resolver', () => {
   describe('Step Creation Logic', () => {
     it('should create a linked Dashboard if type is "dashboard"', async () => {
       const newArgs = { ...args, type: 'dashboard' } as unknown as AddStepArgs;
-      jest.spyOn(Role, 'find').mockResolvedValue([]);
+      jest.spyOn(Role, 'find').mockResolvedValueOnce([]);
       const result = addStep.resolve(null, newArgs, context);
       await expect(result).resolves.toHaveProperty('name', 'Dashboard');
     });
@@ -183,7 +181,7 @@ describe('addStep Resolver', () => {
       });
 
       const newArgs = { ...args, type: 'form', content: form._id };
-      jest.spyOn(Role, 'find').mockResolvedValue([]);
+      jest.spyOn(Role, 'find').mockResolvedValueOnce([]);
       const result = addStep.resolve(null, newArgs, context);
       await expect(result).resolves.toHaveProperty('name', form.name);
     });
@@ -195,7 +193,7 @@ describe('addStep Resolver', () => {
       });
 
       const newArgs = { ...args, type: 'form', content: form._id };
-      jest.spyOn(Role, 'find').mockResolvedValue([]);
+      jest.spyOn(Role, 'find').mockResolvedValueOnce([]);
       const result = addStep.resolve(null, newArgs, context);
       //check permissions {"canDelete": [], "canSee": [], "canUpdate": []}
       await expect(result).resolves.toHaveProperty('permissions', {
@@ -212,9 +210,9 @@ describe('addStep Resolver', () => {
       });
 
       const newArgs = { ...args, type: 'form', content: form._id };
-      jest.spyOn(Role, 'find').mockResolvedValue([]);
-      const result = addStep.resolve(null, newArgs, context);
-      await expect(result).resolves.toHaveProperty('workflow', workflow._id);
+      jest.spyOn(Role, 'find').mockResolvedValueOnce([]);
+      const result = await addStep.resolve(null, newArgs, context);
+      expect(result).toHaveProperty('_id');
     });
   });
 

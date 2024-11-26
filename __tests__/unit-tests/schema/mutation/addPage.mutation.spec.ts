@@ -1,6 +1,5 @@
 import { Page } from '@models';
-import addPage from '@schema/mutation/addPage.mutation';
-import { ContentType } from '@const/enumTypes';
+import addPage, { AddPageArgs } from '@schema/mutation/addPage.mutation';
 import { Types } from 'mongoose';
 import { Application, Form } from '@models';
 import { DatabaseHelpers } from '../../../helpers/database-helpers';
@@ -8,14 +7,6 @@ import { GraphQLError } from 'graphql';
 import { Context } from '@server/apollo/context';
 import { logger } from '@services/logger.service';
 import extendAbilityForPage from '@security/extendAbilityForPage';
-
-type AddPageArgs = {
-  type: ContentType;
-  content?: string | Types.ObjectId;
-  application: string | Types.ObjectId;
-  duplicate?: string | Types.ObjectId;
-  structure?: any;
-};
 
 // Mock the extendAbilityForPage function
 jest.mock('@security/extendAbilityForPage', () => ({
