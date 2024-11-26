@@ -178,6 +178,7 @@ describe('addStep Resolver', () => {
       const form = await Form.create({
         name: 'Test Form',
         application: application._id,
+        graphQLTypeName: 'testForm',
       });
 
       const newArgs = { ...args, type: 'form', content: form._id };
@@ -190,6 +191,7 @@ describe('addStep Resolver', () => {
       const form = await Form.create({
         name: 'Test Form',
         application: application._id,
+        graphQLTypeName: 'testFormTwo',
       });
 
       const newArgs = { ...args, type: 'form', content: form._id };
@@ -207,6 +209,7 @@ describe('addStep Resolver', () => {
       const form = await Form.create({
         name: 'Test Form',
         application: application._id,
+        graphQLTypeName: 'testFormThree',
       });
 
       const newArgs = { ...args, type: 'form', content: form._id };
