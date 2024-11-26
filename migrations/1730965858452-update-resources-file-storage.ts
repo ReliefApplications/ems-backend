@@ -206,7 +206,7 @@ export const up = async () => {
     resourceId: resource._id,
     resourceName: resource.name,
     fieldNames: resource.fieldNames,
-  }));
+  })) as any;
   const resourcesIds = resources.map((res) => res.resourceId);
   /** Get related form structure to extract any existing upload context data */
   const formsMap = {};
@@ -225,132 +225,139 @@ export const up = async () => {
       },
     ])
   ).forEach((form) => {
+    const formStructure = JSON.parse(form.structure || '{}');
     Object.assign(formsMap, {
-      [form.resource]: form.structure,
+      [form.resource]: formStructure?.pages || [],
     });
   });
   /** Update current resources with the context data found in the related form structures if exists */
   resources = resources.map((resource) => {
+    /** Get form pages */
+    const formPages = formsMap[resource.resourceId];
+    const totalFileQuestions = [];
+    /** Extract all file questions of file type from the given pages */
+    formPages.forEach((page) => {
+      const fileQuestions = (page.elements || []).filter(
+        (el) => el.type === 'file'
+      );
+      totalFileQuestions.push(...fileQuestions);
+    });
+    const uploadContexts = {};
+    totalFileQuestions.forEach((fq) => {
+      Object.assign(uploadContexts, { [fq.name]: {} });
+      Object.keys(fq)
+        .filter((key) => CS_DOCUMENTS_PROPERTIES.includes(key.trim()))
+        .forEach((key) => {
+          Object.assign(uploadContexts[fq.name], { [key]: fq[key] });
+        });
+    });
     return {
       ...resource,
-      uploadContexts: [
-        ...(
-          JSON.parse(formsMap[resource.resourceId].structure || '{}')?.pages ||
-          []
-        ).map((page) => {
-          const fileQuestions = (page.elements || []).filter(
-            (el) => el.type === 'file'
-          );
-          const fileQuestionsMap = [];
-          fileQuestions.forEach((fq) => {
-            const questionObj = { [fq.name]: {} };
-            Object.keys(fq)
-              .filter((key) => CS_DOCUMENTS_PROPERTIES.includes(key))
-              .forEach((key) => {
-                Object.assign(questionObj[fq.name], { [key]: fq[key] });
-              });
-            fileQuestionsMap.push(questionObj);
-          });
-          return fileQuestionsMap;
-        }),
-      ],
+      uploadContexts,
     };
   });
-  console.log(resources[0]);
   let totalFiles = 0;
   let migratedFiles = 0;
   try {
     const driveId = await getDriveId();
     // For each resource, get all records for that resource id and that in their data property, at least the file type field exists
-    await new Promise((resolve) => {
-      resources.forEach(
-        async ({ resourceId, resourceName, fieldNames }, indexResource) => {
-          const query = {
-            resource: resourceId,
-            $or: fieldNames.map((fieldName) => ({
-              [`data.${fieldName}`]: { $ne: null }, // Field exists and is not null
-            })),
-          };
-          const records = await Record.find(query);
-          const numberOfRecords = records.length;
-          for (const [index, r] of records.entries()) {
-            let filesToUpload = 0;
-            for (
-              let indexField = 0;
-              indexField < fieldNames.length;
-              indexField++
-            ) {
-              const field = fieldNames[indexField];
-              /** Check which of the file fields exists in the given resource */
-              if (r.data[field]) {
-                if (Array.isArray(r.data[field])) {
-                  const newFileField = [];
-                  filesToUpload = r.data[field].length;
-                  for (
-                    let indexFile = 0;
-                    indexFile < r.data[field].length;
-                    indexFile++
-                  ) {
-                    let file = r.data[field][indexFile];
-                    const fileData = await handleFile(file);
-                    if (!isNil(fileData)) {
-                      // const { itemId } = await uploadFile(
-                      //   fileData,
-                      //   file.name,
-                      //   driveId
-                      // );
-                      // file = {
-                      //   ...file,
-                      //   content: { itemId, driveId },
-                      // };
-                      logger.info(
-                        `Uploaded file ${
-                          indexFile + 1
-                        } of ${filesToUpload} for the record ${
-                          index + 1
-                        } of ${numberOfRecords} in ${resourceName}`
-                      );
-                      migratedFiles++;
-                    }
-                    newFileField.push(file);
-                  }
-                  r.data[field] = newFileField;
-                } else {
-                  filesToUpload = 1;
-                  const fileData = await handleFile(r.data[field]);
+    await new Promise(async (resolve) => {
+      for (
+        let indexResource = 0;
+        indexResource < resources.length;
+        indexResource++
+      ) {
+        const { resourceId, resourceName, fieldNames, uploadContexts } =
+          resources[indexResource];
+        const query = {
+          resource: resourceId,
+          $or: fieldNames.map((fieldName) => ({
+            [`data.${fieldName}`]: { $ne: null }, // Field exists and is not null
+          })),
+        };
+        const records = await Record.find(query);
+        const numberOfRecords = records.length;
+        for (const [index, r] of records.entries()) {
+          let filesToUpload = 0;
+          for (
+            let indexField = 0;
+            indexField < fieldNames.length;
+            indexField++
+          ) {
+            const field = fieldNames[indexField];
+            /** Get the upload context of current question/field */
+            const uploadContextsForField = uploadContexts[field];
+            /** Check which of the file fields exists in the given resource */
+            if (r.data[field]) {
+              if (Array.isArray(r.data[field])) {
+                const newFileField = [];
+                filesToUpload = r.data[field].length;
+                for (
+                  let indexFile = 0;
+                  indexFile < r.data[field].length;
+                  indexFile++
+                ) {
+                  let file = r.data[field][indexFile];
+                  const fileData = await handleFile(file);
                   if (!isNil(fileData)) {
-                    // const { itemId } = await uploadFile(
-                    //   fileData,
-                    //   r.data[field].name,
-                    //   driveId
-                    // );
-                    // r.data[field] = {
-                    //   ...r.data[field],
-                    //   content: { itemId, driveId },
-                    // };
+                    const { itemId } = await uploadFile(
+                      fileData,
+                      file.name,
+                      driveId,
+                      uploadContextsForField
+                    );
+                    file = {
+                      ...file,
+                      content: { itemId, driveId },
+                    };
                     logger.info(
-                      `Uploaded file ${filesToUpload} of ${filesToUpload} for the record ${
+                      `Uploaded file ${
+                        indexFile + 1
+                      } of ${filesToUpload} for the record ${
                         index + 1
                       } of ${numberOfRecords} in ${resourceName}`
                     );
                     migratedFiles++;
                   }
+                  newFileField.push(file);
+                }
+                r.data[field] = newFileField;
+              } else {
+                filesToUpload = 1;
+                const fileData = await handleFile(r.data[field]);
+                if (!isNil(fileData)) {
+                  const { itemId } = await uploadFile(
+                    fileData,
+                    r.data[field].name,
+                    driveId,
+                    uploadContextsForField
+                  );
+                  r.data[field] = {
+                    ...r.data[field],
+                    content: { itemId, driveId },
+                  };
+                  logger.info(
+                    `Uploaded file ${filesToUpload} of ${filesToUpload} for the record ${
+                      index + 1
+                    } of ${numberOfRecords} in ${resourceName}`
+                  );
+                  migratedFiles++;
                 }
               }
             }
-            totalFiles += filesToUpload;
-            r.save();
-            logger.info(
-              `Updated record ${
-                index + 1
-              } of ${numberOfRecords} in ${resourceName}`
-            );
           }
-          if (indexResource === resources.length - 1) {
-            resolve(true);
-          }
+          totalFiles += filesToUpload;
+          r.save();
+          logger.info(
+            `Updated record ${
+              index + 1
+            } of ${numberOfRecords} in ${resourceName}`
+          );
         }
-      );
+        if (indexResource === resources.length - 1) {
+          resolve(true);
+        }
+      }
     });
   } catch (error) {
     logger.error(
