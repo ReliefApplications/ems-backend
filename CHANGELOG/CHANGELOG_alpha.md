@@ -1,3 +1,10 @@
+# [2.12.0-alpha.5](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-alpha.4...v2.12.0-alpha.5) (2024-11-26)
+
+
+### Bug Fixes
+
+* issue with load row of upload feature, which would break in some cases due to missing break in switch ([b899d84](https://github.com/ReliefApplications/ems-backend/commit/b899d8494693e766c8b12cabb25e5fa0ed5e23de))
+
 # [2.12.0-alpha.4](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-alpha.3...v2.12.0-alpha.4) (2024-11-18)
 
 
