@@ -34,7 +34,7 @@ type PermissionChange = {
 };
 
 /** Arguments for the editPage mutation */
-type EditPageArgs = {
+export type EditPageArgs = {
   id: string | Types.ObjectId;
   name?: string;
   showName?: boolean;
