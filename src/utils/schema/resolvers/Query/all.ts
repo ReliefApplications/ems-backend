@@ -459,15 +459,11 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           ...defaultRecordAggregation,
           ...calculatedFieldsAggregation,
           { $match: filters },
-          ...projectAggregation,
-          ...sort,
         ];
         const aggregation = await Record.aggregate(pipeline).facet({
           items: [
-            // ...linkedRecordsAggregation,
-            // ...linkedReferenceDataAggregation,
-            // ...sort,
-            // ...projectAggregation,
+            ...projectAggregation,
+            ...sort,
             { $skip: skip },
             { $limit: first + 1 },
           ],
