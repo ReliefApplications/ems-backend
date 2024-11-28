@@ -197,6 +197,8 @@ const buildMongoFilter = (
               return;
             }
           } else {
+            // Search on nested resource does not work, as related resources are not accessible when we execute the search
+            return;
             // Recreate the field name in order to match with aggregation
             // Logic is: _resource_name.data.field, if not default field, else _resource_name.field
             if (FLAT_DEFAULT_FIELDS.includes(filter.field.split('.')[1])) {

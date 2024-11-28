@@ -132,9 +132,7 @@ const getAtAggregation = (at: Date) => {
   ];
 };
 
-/**
- *
- */
+/** Default aggregation common to all records to make lookups for default fields. */
 const defaultRecordAggregation = [
   { $addFields: { id: { $toString: '$_id' } } },
   {
@@ -436,7 +434,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // Finally putting all filters together
       const filters = {
-        $and: [basicFilters, mongooseFilter, permissionFilters],
+        $and: [mongooseFilter, permissionFilters],
       };
 
       const searchFilter = getSearchFilter(filter, fields, context);
@@ -455,17 +453,18 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         );
         const pipeline = [
           ...(searchFilter ? [searchFilter] : []),
-          ...calculatedFieldsAggregation,
-          ...defaultRecordAggregation,
-          { $match: filters },
+          { $match: basicFilters },
           ...(at ? getAtAggregation(new Date(at)) : []),
+          ...linkedRecordsAggregation,
+          ...linkedReferenceDataAggregation,
+          ...defaultRecordAggregation,
+          ...calculatedFieldsAggregation,
+          { $match: filters },
         ];
         const aggregation = await Record.aggregate(pipeline).facet({
           items: [
-            ...linkedRecordsAggregation,
-            ...linkedReferenceDataAggregation,
-            ...sort,
             ...projectAggregation,
+            ...sort,
             { $skip: skip },
             { $limit: first + 1 },
           ],
