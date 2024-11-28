@@ -1,8 +1,7 @@
+import { ActivityLog, User } from '@models';
 import { logger } from '@services/logger.service';
-import express from 'express';
-import { Request, Response } from 'express';
 import xlsBuilder from '@utils/files/xlsBuilder';
-import { ActivityLog } from '@models';
+import express, { Request, Response } from 'express';
 
 /** Express router to mount activity related functions on. */
 const router = express.Router();
@@ -23,12 +22,22 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
     { name: 'userId', title: 'User ID', field: 'userId' },
     { name: 'eventType', title: 'Event Type', field: 'eventType' },
     { name: 'metadata', title: 'metadata', field: 'metadata' },
+    { name: 'username', title: 'username', field: 'username' },
   ];
 
+  // Get related usernames of given activities by their related userId
+  const userIds = activities.map((activity) => activity.userId);
+  const usernames = await User.find()
+    .where({
+      $and: [{ _id: { $in: userIds } }],
+    })
+    .select('username');
   const formattedData = activities.map((activity) => ({
-    userId: activity.userId.toString(),
+    userId: activity.userId?.toString(),
     eventType: activity.eventType,
     metadata: JSON.stringify(activity.metadata),
+    username: usernames.find((user) => activity.userId?.equals(user._id))
+      ?.username,
   }));
   console.log('formattedData', formattedData);
 

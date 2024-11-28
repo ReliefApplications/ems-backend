@@ -1,8 +1,9 @@
+import { User } from '@models';
 import {
+  GraphQLID,
+  GraphQLNonNull,
   GraphQLObjectType,
   GraphQLString,
-  GraphQLNonNull,
-  GraphQLID,
 } from 'graphql';
 
 /**
@@ -43,6 +44,18 @@ export const ActivityLogType = new GraphQLObjectType({
         'Additional metadata related to the activity in JSON string format.',
       resolve: ({ metadata }) =>
         typeof metadata === 'string' ? metadata : JSON.stringify(metadata),
+    },
+    username: {
+      type: GraphQLString,
+      description: 'The email of the associated userId',
+      resolve: async ({ userId }) => {
+        try {
+          const { username } = await User.findById(userId).select('username');
+          return username || '';
+        } catch {
+          return '';
+        }
+      },
     },
   }),
 });

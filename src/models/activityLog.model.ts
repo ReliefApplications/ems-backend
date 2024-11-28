@@ -7,6 +7,7 @@ export interface ActivityLog extends Document {
   userId: mongoose.Types.ObjectId;
   eventType: string;
   metadata: any;
+  username: string;
 }
 
 /** Activity log documents interface declaration */
@@ -14,6 +15,7 @@ const schema = new Schema<ActivityLog>(
   {
     userId: Schema.Types.ObjectId,
     eventType: String,
+    username: String,
     metadata: Schema.Types.Mixed,
   },
   {
