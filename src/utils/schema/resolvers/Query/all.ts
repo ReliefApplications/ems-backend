@@ -21,7 +21,6 @@ import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import NodeCache from 'node-cache';
 import { AppAbility } from '@security/defineUserAbility';
-// import { getChoices } from '@utils/proxy';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -534,45 +533,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         return arr;
       }, []);
 
-      // const promises = fields.map(async (field) => {
-      //   if (
-      //     ['radiogroup', 'checkbox', 'tagbox', 'dropdown'].includes(field.type)
-      //   ) {
-      //     let choices = [];
-      //     if (field?.choices?.length) {
-      //       choices = field.choices;
-      //     } else if (field?.choicesByUrl || field?.choicesByGraphQL) {
-      //       choices = await getChoices(field, context.token);
-      //     }
-
-      //     items.forEach((item) => {
-      //       const fieldData = item.data[field.name];
-      //       console.log(field.name);
-      //       if (choices?.length && fieldData) {
-      //         const values = [];
-      //         if (Array.isArray(fieldData)) {
-      //           fieldData.forEach((data) => {
-      //             const value = choices.find(
-      //               (choice) => choice.value === data
-      //             )?.text;
-      //             if (value) values.push(value);
-      //           });
-      //           if (values.length) {
-      //             item.data[field.name] = values;
-      //           }
-      //         } else if (
-      //           typeof fieldData === 'string' ||
-      //           typeof fieldData === 'number'
-      //         ) {
-      //           item.data[field.name] =
-      //             choices.find((choice) => choice.value == fieldData)?.text ??
-      //             fieldData;
-      //         }
-      //       }
-      //     });
-      //   }
-      // });
-      // await Promise.all(promises);
       // Deal with resource/resources questions on OTHER forms if any
       let relatedFields = [];
       if (queryFields.filter((x) => x.fields).length - resourcesFields.length) {
