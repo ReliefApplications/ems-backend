@@ -37,6 +37,10 @@ export const ActivityLogType = new GraphQLObjectType({
         }
       },
     },
+    applicationId: {
+      type: GraphQLString,
+      description: 'The application where the activity was performed.',
+    },
     metadata: {
       type: GraphQLString,
       description:

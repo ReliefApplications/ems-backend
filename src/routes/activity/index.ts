@@ -3,6 +3,7 @@ import express from 'express';
 import { Request, Response } from 'express';
 import xlsBuilder from '@utils/files/xlsBuilder';
 import { ActivityLog } from '@models';
+import { Types } from 'mongoose';
 
 /** Express router to mount activity related functions on. */
 const router = express.Router();
@@ -46,12 +47,21 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
 router.post('/', async (req, res) => {
   try {
     const user = req.context.user;
+    // const application = req.context.application;
     const body = req.body;
+    console.log('body', body);
+    // const applicationId: Types.ObjectId = new Types.ObjectId(
+    //   body.metadata.applicationId
+    // );
     const activity = new ActivityLog({
       userId: user._id,
       eventType: body.eventType,
+      applicationId:
+        body.metadata.applicationId ??
+        new Types.ObjectId(body.metadata.applicationId),
       metadata: body.metadata,
     });
+    console.log('activity', activity);
     await activity.save();
     res.status(200).send(activity);
   } catch (err) {

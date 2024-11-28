@@ -5,6 +5,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface ActivityLog extends Document {
   kind: 'ActivityLog';
   userId: mongoose.Types.ObjectId;
+  applicationId: mongoose.Types.ObjectId;
   eventType: string;
   metadata: any;
 }
@@ -13,6 +14,7 @@ export interface ActivityLog extends Document {
 const schema = new Schema<ActivityLog>(
   {
     userId: Schema.Types.ObjectId,
+    applicationId: Schema.Types.ObjectId,
     eventType: String,
     metadata: Schema.Types.Mixed,
   },
