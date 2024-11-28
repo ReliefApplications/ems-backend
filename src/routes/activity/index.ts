@@ -26,7 +26,7 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
   ];
 
   const formattedData = activities.map((activity) => ({
-    userId: activity.userId.toString(),
+    userId: activity.userId?.toString(),
     eventType: activity.eventType,
     metadata: JSON.stringify(activity.metadata),
   }));
