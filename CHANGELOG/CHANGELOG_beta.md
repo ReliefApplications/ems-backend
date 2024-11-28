@@ -1,3 +1,38 @@
+# [2.12.0-beta.12](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.11...v2.12.0-beta.12) (2024-11-21)
+
+
+### Bug Fixes
+
+* issue with load row of upload feature, which would break in some cases due to missing break in switch ([b899d84](https://github.com/ReliefApplications/ems-backend/commit/b899d8494693e766c8b12cabb25e5fa0ed5e23de))
+
+# [2.12.0-beta.11](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.10...v2.12.0-beta.11) (2024-11-18)
+
+
+### Bug Fixes
+
+* createdBy / lastUpdatedBy fields not correctly updated ([d46e62f](https://github.com/ReliefApplications/ems-backend/commit/d46e62fd0f10f92a30b3b21cd95a9eb265fa7999))
+
+# [2.12.0-beta.10](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.9...v2.12.0-beta.10) (2024-11-18)
+
+
+### Features
+
+* add option to use a display field for records elements of queries ([#1152](https://github.com/ReliefApplications/ems-backend/issues/1152)) ([c6bf553](https://github.com/ReliefApplications/ems-backend/commit/c6bf55356fffcb625148f0c6bfa75edf9ffa8282)), closes [Ab#103431](https://github.com/Ab/issues/103431)
+
+# [2.12.0-beta.9](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.8...v2.12.0-beta.9) (2024-11-13)
+
+
+### Bug Fixes
+
+* check record expression not working for all fields ([8739c8e](https://github.com/ReliefApplications/ems-backend/commit/8739c8ef59171ab1cc595cbada4916c08ab93c1e))
+
+# [2.12.0-beta.8](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.7...v2.12.0-beta.8) (2024-11-08)
+
+
+### Features
+
+* Add option to evaluate records expressions when inserted via webjob ([#1151](https://github.com/ReliefApplications/ems-backend/issues/1151)) ([3f14acb](https://github.com/ReliefApplications/ems-backend/commit/3f14acb4504889c55c1defe6cdb4c29443a04c90)), closes [AB#104943](https://github.com/AB/issues/104943)
+
 # [2.12.0-beta.7](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.6...v2.12.0-beta.7) (2024-10-22)
 
 

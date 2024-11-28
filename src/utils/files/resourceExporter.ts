@@ -3,7 +3,7 @@ import { buildMetaQuery } from '@utils/query/queryBuilder';
 import config from 'config';
 import { Workbook, Worksheet, stream } from 'exceljs';
 import get from 'lodash/get';
-import { getColumnsFromMeta } from './getColumnsFromMeta';
+import { Column, FlatColumn, getColumnsFromMeta } from './getColumnsFromMeta';
 import axios from 'axios';
 import { logger } from '@services/logger.service';
 import { Parser } from 'json2csv';
@@ -52,7 +52,7 @@ export default class Exporter {
 
   private params: ExportBatchParams;
 
-  private columns: any[];
+  private columns: Column[];
 
   /**
    * Resource exporter class.
@@ -130,11 +130,10 @@ export default class Exporter {
           for (const row of records) {
             const temp = {};
             for (const column of this.columns) {
-              if (column.subColumns) {
-                temp[column.name] = (get(row, column.name) || []).length;
-              } else {
-                temp[column.name] = get(row, column.name, null);
-              }
+              const columnValue = get(row, column.name, null);
+              temp[column.name] = isArray(columnValue)
+                ? columnValue.length
+                : columnValue;
             }
             csvData.push(temp);
           }
@@ -177,6 +176,9 @@ export default class Exporter {
                 (f) => f.name === column.name
               );
               column.title = queryField.title;
+              if (column.displayField) {
+                column.displayField.title = column.displayField.name;
+              }
               if (column.subColumns) {
                 // Field does not exist in the template
                 if (!this.resource.fields.find((f) => f.name === column.name)) {
@@ -197,7 +199,7 @@ export default class Exporter {
                     const subQueryField = queryField.subFields.find(
                       (z) => z.name === `${column.name}.${subColumn.name}`
                     );
-                    subColumn.title = subQueryField.title;
+                    subColumn.title = subQueryField?.title;
                   });
                 }
               }
@@ -300,30 +302,9 @@ export default class Exporter {
             )
           );
         } else {
-          // Link is defined in currently exported resource
-          const columnValue = get(record, column.field) || null;
-          if (columnValue) {
-            relatedResourcePromises.push(
-              Record.aggregate(
-                this.buildPipeline(
-                  column.subColumns,
-                  isArray(columnValue)
-                    ? Array.from(new Set(columnValue)).map(
-                        (id: any) => new mongoose.Types.ObjectId(id)
-                      )
-                    : [new mongoose.Types.ObjectId(columnValue)]
-                )
-              ).then((relatedRecords) => {
-                if (relatedRecords.length > 0) {
-                  if (isArray(columnValue)) {
-                    set(record, column.field, relatedRecords);
-                  } else {
-                    set(record, column.field, relatedRecords[0]);
-                  }
-                }
-              })
-            );
-          }
+          relatedResourcePromises.push(
+            this.getResourceFields(column, column.field, record)
+          );
         }
       }
       promises.push(Promise.all(relatedResourcePromises));
@@ -411,7 +392,10 @@ export default class Exporter {
    * @param ids list of ids, used in the case of subcolumns (resource and resources)
    * @returns a built pipeline
    */
-  private buildPipeline = (columns: any[], ids: mongoose.Types.ObjectId[]) => {
+  private buildPipeline = (
+    columns: Column[],
+    ids: mongoose.Types.ObjectId[]
+  ) => {
     const permissionFilters = Record.find(
       accessibleBy(this.req.context.user.ability, 'read').Record
     ).getFilter();
@@ -485,16 +469,23 @@ export default class Exporter {
    * @param record current record
    * @returns reversed pipeline
    */
-  private buildReversedPipeline = (column: any, record: any) => {
+  private buildReversedPipeline = (column: Column, record: any) => {
     const relatedFieldName = column.parent.fields.find(
       (field) => field.relatedName === column.field
     )?.name;
     const permissionFilters = Record.find(
       accessibleBy(this.req.context.user.ability, 'read').Record
     ).getFilter();
+    // Extract subColumns directly from column, or create it from displayField
+    const subColumns =
+      Array.isArray(column.subColumns) && column.subColumns.length > 0
+        ? column.subColumns
+        : column.displayField
+        ? [column.displayField]
+        : [];
     const projectStep = {
       $project: {
-        ...column.subColumns.reduce((acc, col) => {
+        ...subColumns.reduce((acc, col) => {
           const field = defaultRecordFields.find(
             (f) => f.field === col.field.split('.')[0]
           );
@@ -528,7 +519,7 @@ export default class Exporter {
       },
       projectStep,
     ];
-    column.subColumns
+    subColumns
       .filter((col) => col.meta?.field?.isCalculated)
       .forEach((col) =>
         pipeline.unshift(
@@ -550,7 +541,7 @@ export default class Exporter {
   private setHeaders = (worksheet: Worksheet) => {
     const columns = this.getFlatColumns();
     // Create header row, and style it
-    const headerRow = worksheet.addRow(columns.map((x: any) => x.title));
+    const headerRow = worksheet.addRow(columns.map((x) => x.title));
     worksheet.columns = columns.map(() => ({ width: 15 }));
     headerRow.font = {
       color: { argb: 'FFFFFFFF' },
@@ -592,7 +583,7 @@ export default class Exporter {
     }
 
     // Create subheader row and style it
-    const subHeaderColumns = columns.map((x: any) => x.subTitle || '');
+    const subHeaderColumns = columns.map((x) => x.subTitle || '');
     if (subHeaderColumns.filter((x: string) => x).length > 0) {
       const subHeaderRow = worksheet.addRow(subHeaderColumns);
       subHeaderRow.font = {
@@ -632,7 +623,7 @@ export default class Exporter {
    *
    * @returns flat columns
    */
-  private getFlatColumns = () => {
+  private getFlatColumns = (): FlatColumn[] => {
     let index = -1;
     return this.columns.reduce((acc, value) => {
       if (value.subColumns) {
@@ -736,7 +727,7 @@ export default class Exporter {
    *
    * @param choicesByAPIColumns columns with choices by url / graphql
    */
-  private getChoicesByAPI = async (choicesByAPIColumns: any) => {
+  private getChoicesByAPI = async (choicesByAPIColumns: Column[]) => {
     for (const column of choicesByAPIColumns) {
       const choices = await getChoices(
         column.meta.field,
@@ -986,5 +977,60 @@ export default class Exporter {
       });
     });
     return resourceResourcesColumns;
+  };
+
+  /**
+   * Get resource fields
+   *
+   * @param column Current column
+   * @param fieldName Current field name ( can be different from the one set in column )
+   * @param record Current record
+   * @returns Promise
+   */
+  private getResourceFields = (
+    column: Column,
+    fieldName: string,
+    record: any
+  ) => {
+    const columnValue = get(record, fieldName) || null;
+    const subColumns = column.displayField
+      ? [column.displayField]
+      : column.subColumns;
+    const subColumnsWithDisplay = column.displayField
+      ? []
+      : column.subColumns.filter((subColumn) => !!subColumn.displayField);
+
+    if (columnValue) {
+      const relatedPromises = Record.aggregate(
+        this.buildPipeline(
+          subColumns,
+          isArray(columnValue)
+            ? Array.from(new Set(columnValue)).map(
+                (id: any) => new mongoose.Types.ObjectId(id)
+              )
+            : [new mongoose.Types.ObjectId(columnValue)]
+        )
+      ).then(async (relatedRecords) => {
+        if (relatedRecords.length > 0) {
+          set(
+            record,
+            fieldName,
+            isArray(columnValue) ? relatedRecords : relatedRecords[0]
+          );
+          for (let i = 0; i < columnValue.length; i++) {
+            await Promise.all(
+              subColumnsWithDisplay.map((subColumn) =>
+                this.getResourceFields(
+                  subColumn,
+                  `${fieldName}[${i}].${subColumn.field.split('.')[0]}`,
+                  record
+                )
+              )
+            );
+          }
+        }
+      });
+      return relatedPromises;
+    }
   };
 }
