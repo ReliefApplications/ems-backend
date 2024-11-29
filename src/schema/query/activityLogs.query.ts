@@ -19,12 +19,10 @@ export default {
       const queryConditions: { [key: string]: string | undefined } = {};
       if (userId) queryConditions.userId = userId;
       if (applicationId) queryConditions.applicationId = applicationId;
-      console.log('queryConditions', queryConditions);
-      console.log('args', args);
-      console.log('userId', userId);
-      console.log('applicationId', applicationId);
 
-      const activities = await ActivityLog.find(queryConditions);
+      const activities = await ActivityLog.find(queryConditions).sort({
+        createdAt: -1,
+      });
       return activities;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
