@@ -38,6 +38,10 @@ module.exports = {
       container: '',
     },
   },
+  emailAzure: {
+    serverlessUrl: '',
+    serverlessKey: '',
+  },
   database: {
     provider: '',
     prefix: '',
