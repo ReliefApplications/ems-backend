@@ -8,6 +8,7 @@ export interface ActivityLog extends Document {
   eventType: string;
   metadata: any;
   username: string;
+  attributes: any;
 }
 
 /** Activity log documents interface declaration */
@@ -17,6 +18,7 @@ const schema = new Schema<ActivityLog>(
     eventType: String,
     username: String,
     metadata: Schema.Types.Mixed,
+    attributes: Schema.Types.Mixed,
   },
   {
     timestamps: { createdAt: 'createdAt' },

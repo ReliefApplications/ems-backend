@@ -23,6 +23,8 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
     { name: 'eventType', title: 'Event Type', field: 'eventType' },
     { name: 'metadata', title: 'metadata', field: 'metadata' },
     { name: 'username', title: 'username', field: 'username' },
+    { name: 'country', title: 'country', field: 'attributes.country' },
+    { name: 'region', title: 'region', field: 'attributes.region' },
   ];
 
   // Get related usernames of given activities by their related userId
@@ -38,6 +40,7 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
     metadata: JSON.stringify(activity.metadata),
     username: usernames.find((user) => activity.userId?.equals(user._id))
       ?.username,
+    attributes: activity.attributes,
   }));
   console.log('formattedData', formattedData);
 
@@ -60,6 +63,7 @@ router.post('/', async (req, res) => {
       userId: user._id,
       eventType: body.eventType,
       metadata: body.metadata,
+      attributes: req.context.user.attributes,
     });
     await activity.save();
     res.status(200).send(activity);

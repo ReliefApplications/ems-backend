@@ -5,6 +5,7 @@ import {
   GraphQLObjectType,
   GraphQLString,
 } from 'graphql';
+import GraphQLJSON from 'graphql-type-json';
 
 /**
  * GraphQL type definition for an Activity Log entry.
@@ -56,6 +57,10 @@ export const ActivityLogType = new GraphQLObjectType({
           return '';
         }
       },
+    },
+    attributes: {
+      type: GraphQLJSON,
+      description: 'User attributes',
     },
   }),
 });
