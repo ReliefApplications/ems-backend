@@ -1,5 +1,5 @@
-import { Application, EmailDistributionList } from '@models';
-import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
+import { Application, DistributionList, EmailDistributionList } from '@models';
+import { startDatabaseForMigration } from 'migrations/database.helper';
 
 /**
  * Sample function of up migration
@@ -17,9 +17,12 @@ export const up = async () => {
 
   // Migrate all templates to CustomTemplates collection
   for (const application of applications) {
-    for (const distributionList of application.distributionLists) {
+    for (const distributionList of application.distributionLists as unknown as DistributionList[]) {
+      const regex = new RegExp(
+        `^${distributionList.name}(_new)?( \([0-9]+\))?(_[0-9]+)?$`
+      );
       const conflictingDLs = await EmailDistributionList.find({
-        name: distributionList.name,
+        name: { $regex: regex },
         applicationId: application._id,
       });
       // Rename conflicting CTs to ${name}_new
@@ -37,6 +40,7 @@ export const up = async () => {
         });
       }
       const newDL = new EmailDistributionList({
+        _id: distributionList._id,
         name: distributionList.name,
         to: {
           inputEmails: distributionList.emails,
@@ -66,14 +70,30 @@ export const up = async () => {
     }
   }
   try {
-    await EmailDistributionList.bulkWrite(conflictUpdates);
-    try {
-      await EmailDistributionList.bulkSave(applicationDLs);
-    } catch (error) {
-      console.error('Error during migration:', error);
-    }
+    // First try: attempt to save all conflict updates.
+    // Mongo may try to rename "test" to "test_new", while "test_new" already exists and is due to be renamed to "test_new_new"
+    await EmailDistributionList.bulkWrite(conflictUpdates, { ordered: false });
   } catch (error) {
-    console.error('Error during conflict resolution:', error);
+    try {
+      // Second try: find the documents that previously failed and attempt to save them again, since the conflicts have been updated
+      const failedIds = error.writeErrors.map((err) => err.err.op.q._id);
+      const failedDLs = conflictUpdates.filter((update) =>
+        failedIds.includes(update._id)
+      );
+      await EmailDistributionList.bulkWrite(failedDLs);
+    } catch (error2) {
+      console.error('Error during conflict resolution:', error2);
+      console.error(error2.writeErrors);
+      throw error2;
+    }
+  }
+  // Save new templates and remove templates from Application.
+  try {
+    await EmailDistributionList.bulkSave(applicationDLs);
+    await Application.updateMany({ $unset: { distributionLists: 1 } });
+  } catch (error) {
+    console.error('Error during migration:', error);
+    throw error;
   }
 };
 
