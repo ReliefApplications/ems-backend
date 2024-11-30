@@ -16,8 +16,15 @@ const router = express.Router();
  * @returns void
  */
 const exportActivitiesToXlsx = async (req: Request, res: Response) => {
+  const { userId, applicationId } = req.query;
+
+  // Build the query to fetch activities
+  const query: Record<string, string> = {};
+  if (userId) query.userId = userId as string;
+  if (applicationId) query.applicationId = applicationId as string;
+
   // Fetch activities from the database
-  const activities: ActivityLog[] = await ActivityLog.find();
+  const activities: ActivityLog[] = await ActivityLog.find(query);
 
   // Define the columns to be included in the XLSX file
   const columns = [
