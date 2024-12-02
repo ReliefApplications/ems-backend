@@ -18,15 +18,13 @@ const router = express.Router();
 const exportActivitiesToXlsx = async (req: Request, res: Response) => {
   const { userId, applicationId } = req.query;
 
-  // Build the query to fetch activities
   const query: Record<string, string> = {};
   if (userId) query.userId = userId as string;
   if (applicationId) query.applicationId = applicationId as string;
 
-  // Fetch activities from the database
   const activities: ActivityLog[] = await ActivityLog.find(query);
 
-  // Define the columns to be included in the XLSX file
+  // Columns to be included in the XLSX file
   const columns = [
     { name: 'userId', title: 'User ID', field: 'userId' },
     { name: 'eventType', title: 'Event Type', field: 'eventType' },
@@ -40,13 +38,9 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
   }));
   console.log('formattedData', formattedData);
 
-  // Define the name of the file
   const fileName = 'activities.xlsx';
-
-  // Build the XLSX file
   const file = await xlsBuilder(fileName, columns, formattedData);
 
-  // Send the file as an attachment
   res.attachment(fileName);
   res.send(file);
 };
@@ -54,12 +48,7 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
 router.post('/', async (req, res) => {
   try {
     const user = req.context.user;
-    // const application = req.context.application;
     const body = req.body;
-    console.log('body', body);
-    // const applicationId: Types.ObjectId = new Types.ObjectId(
-    //   body.metadata.applicationId
-    // );
     const activity = new ActivityLog({
       userId: user._id,
       eventType: body.eventType,
