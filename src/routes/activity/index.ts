@@ -2,6 +2,7 @@ import { ActivityLog, User } from '@models';
 import { logger } from '@services/logger.service';
 import xlsBuilder from '@utils/files/xlsBuilder';
 import express, { Request, Response } from 'express';
+import config from 'config';
 
 /** Express router to mount activity related functions on. */
 const router = express.Router();
@@ -14,17 +15,26 @@ const router = express.Router();
  * @returns void
  */
 const exportActivitiesToXlsx = async (req: Request, res: Response) => {
+  // Define the name of the file
+  const fileName = 'activities.xlsx';
   // Fetch activities from the database
   const activities: ActivityLog[] = await ActivityLog.find();
+  // List of user attributes
+  const attributes: any[] = config.get('user.attributes.list') || [];
 
   // Define the columns to be included in the XLSX file
   const columns = [
     { name: 'userId', title: 'User ID', field: 'userId' },
+    { name: 'username', title: 'username', field: 'username' },
+    ...attributes.map((x) => {
+      return {
+        name: x.text,
+        title: x.text,
+        field: `attributes.${x.value}`,
+      };
+    }),
     { name: 'eventType', title: 'Event Type', field: 'eventType' },
     { name: 'metadata', title: 'metadata', field: 'metadata' },
-    { name: 'username', title: 'username', field: 'username' },
-    { name: 'country', title: 'country', field: 'attributes.country' },
-    { name: 'region', title: 'region', field: 'attributes.region' },
   ];
 
   // Get related usernames of given activities by their related userId
@@ -42,10 +52,6 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
       ?.username,
     attributes: activity.attributes,
   }));
-  console.log('formattedData', formattedData);
-
-  // Define the name of the file
-  const fileName = 'activities.xlsx';
 
   // Build the XLSX file
   const file = await xlsBuilder(fileName, columns, formattedData);

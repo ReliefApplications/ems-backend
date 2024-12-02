@@ -20,7 +20,7 @@ export const ActivityLogType = new GraphQLObjectType({
     },
     userId: {
       type: GraphQLString,
-      description: 'The ID of the user who performed the activity.',
+      description: 'Id of user',
     },
     eventType: {
       type: GraphQLString,
@@ -48,7 +48,7 @@ export const ActivityLogType = new GraphQLObjectType({
     },
     username: {
       type: GraphQLString,
-      description: 'The email of the associated userId',
+      description: 'Email of user',
       resolve: async ({ userId }) => {
         try {
           const { username } = await User.findById(userId).select('username');
