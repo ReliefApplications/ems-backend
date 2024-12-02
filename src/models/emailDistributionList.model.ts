@@ -3,11 +3,29 @@ import { AccessibleRecordModel } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
 /**
+ * Interface representing a filter descriptor for common services users
+ */
+interface CommonServiceFilter {
+  field: string;
+  operator: string;
+  value: any;
+}
+
+/**
+ * Interface representing the frontend common services filter
+ */
+export interface CommonServicePayload {
+  filters: CommonServiceFilter[];
+  logic: string;
+}
+
+/**
  * Interface representing either a filter definition used to fetch emails, a static list of emails, or both
  */
 export interface DistributionListSource {
   reference?: string;
   resource?: string;
+  commonServiceFilter?: CommonServicePayload;
   query?: {
     name: string;
     filter: any;
@@ -35,6 +53,16 @@ export const emailDistributionListSchema = new Schema<EmailDistributionList>(
     to: {
       resource: String,
       reference: String,
+      commonServiceFilter: {
+        logic: String,
+        filters: [
+          {
+            field: String,
+            operator: String,
+            value: { type: mongoose.Schema.Types.Mixed },
+          },
+        ],
+      },
       query: {
         name: String,
         filter: { type: mongoose.Schema.Types.Mixed },
@@ -45,6 +73,16 @@ export const emailDistributionListSchema = new Schema<EmailDistributionList>(
     cc: {
       resource: String,
       reference: String,
+      commonServiceFilter: {
+        logic: String,
+        filters: [
+          {
+            field: String,
+            operator: String,
+            value: { type: mongoose.Schema.Types.Mixed },
+          },
+        ],
+      },
       query: {
         name: String,
         filter: { type: mongoose.Schema.Types.Mixed },
@@ -55,6 +93,16 @@ export const emailDistributionListSchema = new Schema<EmailDistributionList>(
     bcc: {
       resource: String,
       reference: String,
+      commonServiceFilter: {
+        logic: String,
+        filters: [
+          {
+            field: String,
+            operator: String,
+            value: { type: mongoose.Schema.Types.Mixed },
+          },
+        ],
+      },
       query: {
         name: String,
         filter: { type: mongoose.Schema.Types.Mixed },

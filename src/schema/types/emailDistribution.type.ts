@@ -10,6 +10,29 @@ import { Connection } from './pagination.type';
 import { QueryType } from './emailNotification.type';
 
 /**
+ * Defines filter to use when fetching user data from common services
+ */
+export const CommonServiceFilterType = new GraphQLObjectType({
+  name: 'CommonServiceFilter',
+  fields: () => ({
+    field: { type: GraphQLString },
+    operator: { type: GraphQLString },
+    value: { type: GraphQLJSON },
+  }),
+});
+
+/**
+ * Defines filter to use when fetching user data from common services
+ */
+export const CommonServicePayloadType = new GraphQLObjectType({
+  name: 'CommonServicePayload',
+  fields: () => ({
+    logic: { type: GraphQLString },
+    filters: { type: new GraphQLList(CommonServiceFilterType) },
+  }),
+});
+
+/**
  * Defines filter used as part of distribution list.
  */
 export const DistributionListSource = new GraphQLObjectType({
@@ -17,6 +40,7 @@ export const DistributionListSource = new GraphQLObjectType({
   fields: () => ({
     resource: { type: GraphQLString },
     reference: { type: GraphQLString },
+    commonServiceFilter: { type: CommonServicePayloadType },
     query: { type: QueryType },
     inputEmails: { type: new GraphQLList(GraphQLString) },
   }),
