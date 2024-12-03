@@ -1,8 +1,10 @@
 import { ActivityLog, User } from '@models';
 import { logger } from '@services/logger.service';
 import xlsBuilder from '@utils/files/xlsBuilder';
-import express, { Request, Response } from 'express';
+import getFilter from '@utils/filter/getFilter';
 import config from 'config';
+import express, { Request, Response } from 'express';
+import isNil from 'lodash/isNil';
 
 /** Express router to mount activity related functions on. */
 const router = express.Router();
@@ -17,8 +19,20 @@ const router = express.Router();
 const exportActivitiesToXlsx = async (req: Request, res: Response) => {
   // Define the name of the file
   const fileName = 'activities.xlsx';
+  const filters: any[] = [];
+  if (!isNil(req.body.filter)) {
+    const queryFilters = getFilter(req.body.filter, [
+      {
+        name: 'createdAt',
+        type: 'date',
+      },
+    ]);
+    filters.push(queryFilters);
+  }
   // Fetch activities from the database
-  const activities: ActivityLog[] = await ActivityLog.find();
+  const activities: ActivityLog[] = await ActivityLog.find({
+    $and: [...filters],
+  }).sort({ createdAt: 'desc' }); // dynamic based on query sort field
   // List of user attributes
   const attributes: any[] = config.get('user.attributes.list') || [];
 
@@ -79,7 +93,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.get('/download-activities', async (req, res) => {
+router.post('/download-activities', async (req, res) => {
   try {
     exportActivitiesToXlsx(req, res);
   } catch (err) {

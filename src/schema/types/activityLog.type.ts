@@ -6,6 +6,7 @@ import {
   GraphQLString,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
+import { Connection } from './pagination.type';
 
 /**
  * GraphQL type definition for an Activity Log entry.
@@ -64,3 +65,6 @@ export const ActivityLogType = new GraphQLObjectType({
     },
   }),
 });
+
+/** GraphQL activity log connection type definition */
+export const ActivityLogConnectionType = Connection(ActivityLogType);
