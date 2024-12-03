@@ -32,7 +32,7 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
   // Fetch activities from the database
   const activities: ActivityLog[] = await ActivityLog.find({
     $and: [...filters],
-  });
+  }).sort({ createdAt: 'desc' }); // dynamic based on query sort field
   // List of user attributes
   const attributes: any[] = config.get('user.attributes.list') || [];
 

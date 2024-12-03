@@ -11,6 +11,7 @@ import {
   decodeCursor,
   encodeCursor,
 } from '../types';
+import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
@@ -34,6 +35,11 @@ const SORT_FIELDS = [
         createdAt: {
           [operator]: decodeCursor(cursor),
         },
+      };
+    },
+    sort: (sortOrder: string) => {
+      return {
+        createdAt: getSortOrder(sortOrder),
       };
     },
   },
@@ -65,13 +71,17 @@ export default {
       const filters: any[] = [queryFilters];
 
       const afterCursor = args.afterCursor;
+      const sortField = SORT_FIELDS[0];
+      const sortOrder = 'desc';
       const cursorFilters = afterCursor
-        ? SORT_FIELDS[0].cursorFilter(afterCursor, 'asc')
+        ? sortField.cursorFilter(afterCursor, sortOrder)
         : {};
 
       let activities = await ActivityLog.find({
         $and: [cursorFilters, ...filters],
-      }).limit(first + 1);
+      })
+        .sort(sortField.sort(sortOrder))
+        .limit(first + 1);
 
       const hasNextPage = activities.length > first;
       if (hasNextPage) {
@@ -79,7 +89,7 @@ export default {
       }
 
       const edges = activities.map((r) => ({
-        cursor: encodeCursor(SORT_FIELDS[0].cursorId(r)),
+        cursor: encodeCursor(sortField.cursorId(r)),
         node: r,
       }));
 
