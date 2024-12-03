@@ -92,7 +92,7 @@ export default {
         cursor: encodeCursor(sortField.cursorId(r)),
         node: r,
       }));
-
+      console.log(activities, edges);
       return {
         pageInfo: {
           hasNextPage,

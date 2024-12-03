@@ -38,6 +38,7 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
 
   // Define the columns to be included in the XLSX file
   const columns = [
+    { name: 'createdAt', title: 'Created at', field: 'createdAt' },
     { name: 'userId', title: 'User ID', field: 'userId' },
     { name: 'username', title: 'username', field: 'username' },
     ...attributes.map((x) => {
@@ -59,6 +60,7 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
     })
     .select('username');
   const formattedData = activities.map((activity) => ({
+    createdAt: activity.createdAt,
     userId: activity.userId?.toString(),
     eventType: activity.eventType,
     metadata: JSON.stringify(activity.metadata),
