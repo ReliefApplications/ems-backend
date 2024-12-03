@@ -15,6 +15,7 @@ export class DatabaseHelpers {
     const uri = this.server.getUri();
 
     await mongoose.connect(uri);
+    await mongoose.connection.syncIndexes();
   }
 
   /**

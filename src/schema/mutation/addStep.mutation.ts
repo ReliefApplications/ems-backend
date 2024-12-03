@@ -22,7 +22,7 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 
 /** Arguments for the addStep mutation */
-type AddStepArgs = {
+export type AddStepArgs = {
   type: string;
   content?: string | mongoose.Types.ObjectId;
   workflow: string | mongoose.Types.ObjectId;
