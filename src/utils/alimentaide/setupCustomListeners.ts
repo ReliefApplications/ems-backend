@@ -1,6 +1,6 @@
 import { Schema, Types } from 'mongoose';
 import config from 'config';
-import onStructureAdded from './onStructureAdded';
+// import onStructureAdded from './onStructureAdded';
 import onFamilyTransfer from './onFamilyTransfer';
 import onFamilyUpdated from './onFamilyEdited';
 import onFamilyAdded from './onFamilyAdded';
@@ -38,7 +38,7 @@ export const setupCustomAlimentaideListeners = <DocType>(
   schema.post('save', async function (doc) {
     const rec = doc as any;
     if (STRUCTURE_FORM_ID.equals(rec.form)) {
-      await onStructureAdded(rec);
+      // await onStructureAdded(rec);
     } else if (FAMILY_TRANSFER_FORM_ID.equals(rec.form)) {
       await onFamilyTransfer(rec);
     }
