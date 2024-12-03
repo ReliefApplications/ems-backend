@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/ReliefApplications/oort-backend/compare/v1.0.2...v1.0.3) (2024-12-03)
+
+
+### Bug Fixes
+
+* remove onStructureAdded callback for alimentaide ([6a5e63f](https://github.com/ReliefApplications/oort-backend/commit/6a5e63faab23257aa695ba71a589eba35eb491f5))
+
 ## [1.0.2](https://github.com/ReliefApplications/oort-backend/compare/v1.0.1...v1.0.2) (2024-10-30)
 
 
