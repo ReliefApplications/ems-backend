@@ -2,13 +2,12 @@ import { ActivityLog } from '@models';
 import { logger } from '@services/logger.service';
 import getFilter from '@utils/filter/getFilter';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
-import { GraphQLError, GraphQLID, GraphQLInt, GraphQLString, GraphQLList } from 'graphql';
+import { GraphQLError, GraphQLID, GraphQLInt, GraphQLString } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Types } from 'mongoose';
 import { CompositeFilterDescriptor } from 'types/filter';
 import {
   ActivityLogConnectionType,
-  ActivityLogType,
   decodeCursor,
   encodeCursor,
 } from '../types';
@@ -65,17 +64,25 @@ export default {
     userId: { type: GraphQLString },
     applicationId: { type: GraphQLString },
   },
-  async resolve(parent, args: ActivityLogsArgs & { userId?: string; applicationId?: string }) {
+  async resolve(
+    parent,
+    args: ActivityLogsArgs & { userId?: string; applicationId?: string }
+  ) {
     const first = args.first || DEFAULT_FIRST;
     checkPageSize(first);
 
     try {
       const queryConditions: { [key: string]: string | undefined } = {};
       if (args.userId) queryConditions.userId = args.userId;
-      if (args.applicationId) queryConditions.applicationId = args.applicationId;
+      if (args.applicationId)
+        queryConditions.applicationId = args.applicationId;
 
       const queryFilters = getFilter(args.filter, FILTER_FIELDS);
-      const filters: any[] = [queryFilters];
+
+      // Ensure queryFilters is an object or valid array
+      const filters: any[] = Array.isArray(queryFilters)
+        ? queryFilters
+        : [queryFilters];
 
       const afterCursor = args.afterCursor;
       const sortField = SORT_FIELDS[0];
@@ -84,9 +91,16 @@ export default {
         ? sortField.cursorFilter(afterCursor, sortOrder)
         : {};
 
-      let activities = await ActivityLog.find({
-        $and: [cursorFilters, ...filters, queryConditions],
-      })
+      // Construct conditions and avoid empty $and
+      const andConditions = [cursorFilters, ...filters, queryConditions].filter(
+        (condition) => condition && Object.keys(condition).length > 0
+      );
+
+      // If no conditions are present, match all documents
+      const mongoQuery =
+        andConditions.length > 0 ? { $and: andConditions } : {};
+
+      let activities = await ActivityLog.find(mongoQuery)
         .sort(sortField.sort(sortOrder))
         .limit(first + 1);
 
@@ -107,9 +121,7 @@ export default {
           endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
         },
         edges,
-        totalCount: await ActivityLog.countDocuments({
-          $and: [filters, queryConditions],
-        }),
+        totalCount: await ActivityLog.countDocuments(mongoQuery),
       };
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
