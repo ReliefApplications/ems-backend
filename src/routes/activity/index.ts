@@ -1,4 +1,6 @@
 import { ActivityLog, User } from '@models';
+import { AppAbility } from '@security/defineUserAbility';
+import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { logger } from '@services/logger.service';
 import xlsBuilder from '@utils/files/xlsBuilder';
 import getFilter from '@utils/filter/getFilter';
@@ -17,6 +19,7 @@ const router = express.Router();
  * @returns void
  */
 const exportActivitiesToXlsx = async (req: Request, res: Response) => {
+  const ability: AppAbility = req.context.user.ability;
   // Define the name of the file
   const fileName = 'activities.xlsx';
   const filters: any[] = [];
@@ -58,14 +61,25 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
       $and: [{ _id: { $in: userIds } }],
     })
     .select('username');
-  const formattedData = activities.map((activity) => ({
-    userId: activity.userId?.toString(),
-    eventType: activity.eventType,
-    metadata: JSON.stringify(activity.metadata),
-    username: usernames.find((user) => activity.userId?.equals(user._id))
-      ?.username,
-    attributes: activity.attributes,
-  }));
+  const formattedData = activities
+    .filter((activity) => {
+      const appAbility: AppAbility = extendAbilityForApplications(
+        req.context.user,
+        activity.metadata.applicationId
+      );
+      if (appAbility.can('read', 'User') || ability.can('read', 'User')) {
+        return true;
+      }
+      return false;
+    })
+    .map((activity) => ({
+      userId: activity.userId?.toString(),
+      eventType: activity.eventType,
+      metadata: JSON.stringify(activity.metadata),
+      username: usernames.find((user) => activity.userId?.equals(user._id))
+        ?.username,
+      attributes: activity.attributes,
+    }));
 
   // Build the XLSX file
   const file = await xlsBuilder(fileName, columns, formattedData);
