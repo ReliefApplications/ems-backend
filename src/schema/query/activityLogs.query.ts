@@ -53,7 +53,7 @@ type ActivityLogsArgs = {
 };
 
 /**
- * GraphQL query to list all activitiesLogs.
+ * GraphQL query to list all activity logs.
  */
 export default {
   type: ActivityLogConnectionType,
@@ -72,10 +72,10 @@ export default {
     checkPageSize(first);
 
     try {
-      const queryConditions: { [key: string]: string | undefined } = {};
+      const queryConditions: { [key: string]: any } = {};
       if (args.userId) queryConditions.userId = args.userId;
       if (args.applicationId)
-        queryConditions.applicationId = args.applicationId;
+        queryConditions['metadata.applicationId'] = args.applicationId;
 
       const queryFilters = getFilter(args.filter, FILTER_FIELDS);
 

@@ -22,8 +22,9 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
 
     const query: Record<string, any> = {};
     if (userId) query.userId = new Types.ObjectId(userId);
-    if (applicationId) query.applicationId = new Types.ObjectId(applicationId);
+    if (applicationId) query['metadata.applicationId'] = applicationId;
 
+    console.log('query11111:', query);
     if (filter?.length) {
       filter.forEach((f) => {
         if (f.field === 'createdAt' && f.operator && f.value) {
@@ -32,8 +33,10 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
         }
       });
     }
+    console.log('query222222:', query);
 
     const activities = await ActivityLog.find(query).sort({ createdAt: -1 });
+    console.log('activities:', activities);
     const attributes: { text: string; value: string }[] =
       config.get('user.attributes.list') || [];
     const columns = [
