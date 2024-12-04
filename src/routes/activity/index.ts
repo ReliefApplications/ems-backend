@@ -75,7 +75,8 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
 /** Log new activity */
 router.post('/', async (req, res) => {
   try {
-    const { user, body } = req.context;
+    const user = req.context.user;
+    const body = req.body;
     const activity = new ActivityLog({
       userId: user._id,
       eventType: body.eventType,
