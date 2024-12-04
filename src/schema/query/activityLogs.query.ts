@@ -98,41 +98,45 @@ export default {
     const first = args.first || DEFAULT_FIRST;
     checkPageSize(first);
     try {
-      const userAttributes = Object.keys(context.user.attributes || {});
-      const attributesSortFields = userAttributes.map((attribute) => {
-        return {
-          name: attribute,
-          cursorId: (node: any) =>
-            (node.attributes?.[attribute] || '') +
-            ';;' +
-            node.createdAt.getTime().toString(),
-          cursorFilter: (cursor: any, sortOrder: string) => {
-            const operator = sortOrder === 'asc' ? '$gt' : '$lt';
-            const value = decodeCursor(cursor).split(';;')[0];
-            const date = decodeCursor(cursor).split(';;')[1];
-            return {
-              $or: [
-                {
-                  [`attributes.${attribute}`]: {
-                    [operator]: value,
+      let attributesSortFields = [];
+      if (args.sortField) {
+        /** Include attributes sort fields */
+        const userAttributes = Object.keys(context.user.attributes || {});
+        attributesSortFields = userAttributes.map((attribute) => {
+          return {
+            name: attribute,
+            cursorId: (node: any) =>
+              (node.attributes?.[attribute] || '') +
+              ';;' +
+              node.createdAt.getTime().toString(),
+            cursorFilter: (cursor: any, sortOrder: string) => {
+              const operator = sortOrder === 'asc' ? '$gt' : '$lt';
+              const value = decodeCursor(cursor).split(';;')[0];
+              const date = decodeCursor(cursor).split(';;')[1];
+              return {
+                $or: [
+                  {
+                    [`attributes.${attribute}`]: {
+                      [operator]: value,
+                    },
                   },
-                },
-                {
-                  [`attributes.${attribute}`]: {
-                    $eq: value,
+                  {
+                    [`attributes.${attribute}`]: {
+                      $eq: value,
+                    },
+                    createdAt: { [operator]: date },
                   },
-                  createdAt: { [operator]: date },
-                },
-              ],
-            };
-          },
-          sort: (sortOrder: string) => {
-            return {
-              [`attributes.${attribute}`]: getSortOrder(sortOrder),
-            };
-          },
-        };
-      });
+                ],
+              };
+            },
+            sort: (sortOrder: string) => {
+              return {
+                [`attributes.${attribute}`]: getSortOrder(sortOrder),
+              };
+            },
+          };
+        });
+      }
       const queryFilters = getFilter(args.filter, FILTER_FIELDS);
       const filters: any[] = [queryFilters];
       const SORT_FIELDS_WITH_ATTRIBUTES = [
