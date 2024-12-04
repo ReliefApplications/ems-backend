@@ -60,7 +60,9 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
     })
     .select('username');
   const formattedData = activities.map((activity) => ({
-    createdAt: activity.createdAt,
+    createdAt: activity.createdAt.toLocaleDateString(
+      req.query.dateLocale.toString()
+    ),
     userId: activity.userId?.toString(),
     eventType: activity.eventType,
     metadata: JSON.stringify(activity.metadata),
