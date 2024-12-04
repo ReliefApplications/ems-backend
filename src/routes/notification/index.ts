@@ -11,17 +11,20 @@ import config from 'config';
  */
 const router = express.Router();
 
-router.post('/azure/:functionName/:configId?', async (req, res) => {
-  const { functionName, configId } = req.params;
-
-  const requestConfig = {
-    headers: azureFunctionHeaders(req),
-    params: {
-      code: config.get('email.serverless.key'),
-    },
-  };
-
+/**
+ * Redirect POST request to Azure function
+ */
+router.post('/:functionName/:configId?', async (req, res) => {
   try {
+    const { functionName, configId } = req.params;
+
+    const requestConfig = {
+      headers: azureFunctionHeaders(req),
+      params: {
+        code: config.get('email.serverless.key'),
+      },
+    };
+
     const response = await axios.post(
       `${config.get('email.serverless.url')}/api/${functionName}/${
         configId || ''
@@ -31,23 +34,25 @@ router.post('/azure/:functionName/:configId?', async (req, res) => {
     );
     res.status(200).send(response.data);
   } catch (err) {
-    console.error('Error Details:', err);
     logger.error(err.message, { stack: err.stack });
     res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
-router.get('/azure/:functionName/:configId?', async (req, res) => {
-  const { functionName, configId } = req.params;
-
-  const requestConfig = {
-    headers: azureFunctionHeaders(req),
-    params: {
-      code: config.get('email.serverless.key'),
-    },
-  };
-
+/**
+ * Redirect GET request to Azure function
+ */
+router.get('/:functionName/:configId?', async (req, res) => {
   try {
+    const { functionName, configId } = req.params;
+
+    const requestConfig = {
+      headers: azureFunctionHeaders(req),
+      params: {
+        code: config.get('email.serverless.key'),
+      },
+    };
+
     const response = await axios.get(
       `${config.get('email.serverless.url')}/api/${functionName}/${
         configId || ''
