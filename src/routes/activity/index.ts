@@ -1,10 +1,12 @@
 import { ActivityLog, User } from '@models';
+import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import xlsBuilder from '@utils/files/xlsBuilder';
 import getFilter from '@utils/filter/getFilter';
 import config from 'config';
 import express, { Request, Response } from 'express';
 import isNil from 'lodash/isNil';
+import { accessibleBy } from '@casl/mongoose';
 
 /** Express router to mount activity related functions on. */
 const router = express.Router();
@@ -17,6 +19,7 @@ const router = express.Router();
  * @returns void
  */
 const exportActivitiesToXlsx = async (req: Request, res: Response) => {
+  const ability: AppAbility = req.context.user.ability;
   // Define the name of the file
   const fileName = 'activities.xlsx';
   const filters: any[] = [];
@@ -53,19 +56,25 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
 
   // Get related usernames of given activities by their related userId
   const userIds = activities.map((activity) => activity.userId);
-  const usernames = await User.find()
+  const usernames = await User.find(accessibleBy(ability, 'read').User)
     .where({
       $and: [{ _id: { $in: userIds } }],
     })
     .select('username');
-  const formattedData = activities.map((activity) => ({
-    userId: activity.userId?.toString(),
-    eventType: activity.eventType,
-    metadata: JSON.stringify(activity.metadata),
-    username: usernames.find((user) => activity.userId?.equals(user._id))
-      ?.username,
-    attributes: activity.attributes,
-  }));
+  const formattedData = activities
+    .filter(
+      (activity) =>
+        isNil(activity.userId) ||
+        usernames.find((u) => u._id === activity.userId)
+    )
+    .map((activity) => ({
+      userId: activity.userId?.toString(),
+      eventType: activity.eventType,
+      metadata: JSON.stringify(activity.metadata),
+      username: usernames.find((user) => activity.userId?.equals(user._id))
+        ?.username,
+      attributes: activity.attributes,
+    }));
 
   // Build the XLSX file
   const file = await xlsBuilder(fileName, columns, formattedData);

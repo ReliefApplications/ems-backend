@@ -1,7 +1,10 @@
 import { ActivityLog } from '@models';
+import { AppAbility } from '@security/defineUserAbility';
+import { Context } from '@server/apollo/context';
 import { logger } from '@services/logger.service';
 import getFilter from '@utils/filter/getFilter';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
+import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 import { GraphQLError, GraphQLID, GraphQLInt } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Types } from 'mongoose';
@@ -11,7 +14,6 @@ import {
   decodeCursor,
   encodeCursor,
 } from '../types';
-import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
@@ -62,11 +64,17 @@ export default {
     afterCursor: { type: GraphQLID },
     filter: { type: GraphQLJSON },
   },
-  async resolve(parent, args: ActivityLogsArgs) {
+  async resolve(parent, args: ActivityLogsArgs, context: Context) {
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
     checkPageSize(first);
     try {
+      const ability: AppAbility = context.user.ability;
+      if (!ability.can('read', 'User')) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
+      }
       const queryFilters = getFilter(args.filter, FILTER_FIELDS);
       const filters: any[] = [queryFilters];
 
