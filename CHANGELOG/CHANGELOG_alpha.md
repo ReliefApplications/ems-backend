@@ -1,3 +1,10 @@
+# [2.12.0-alpha.7](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-alpha.6...v2.12.0-alpha.7) (2024-12-04)
+
+
+### Features
+
+* Email functions hosted on serverless function ([#1160](https://github.com/ReliefApplications/ems-backend/issues/1160)) ([a3fb432](https://github.com/ReliefApplications/ems-backend/commit/a3fb432db876eff2f09660b15b0dc7e1ea46f89b))
+
 # [2.12.0-alpha.6](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-alpha.5...v2.12.0-alpha.6) (2024-12-02)
 
 
