@@ -37,6 +37,10 @@ module.exports = {
       connectionString: '',
       container: '',
     },
+    serverless: {
+      url: '',
+      key: '',
+    },
   },
   database: {
     provider: '',
