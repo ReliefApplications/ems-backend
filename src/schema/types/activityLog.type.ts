@@ -50,14 +50,6 @@ export const ActivityLogType = new GraphQLObjectType({
     username: {
       type: GraphQLString,
       description: 'Email of user',
-      resolve: async ({ userId }) => {
-        try {
-          const { username } = await User.findById(userId).select('username');
-          return username || '';
-        } catch {
-          return '';
-        }
-      },
     },
     attributes: {
       type: GraphQLJSON,

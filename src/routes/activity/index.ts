@@ -1,4 +1,4 @@
-import { ActivityLog, User } from '@models';
+import { ActivityLog } from '@models';
 import { logger } from '@services/logger.service';
 import xlsBuilder from '@utils/files/xlsBuilder';
 import getFilter from '@utils/filter/getFilter';
@@ -51,19 +51,11 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
     { name: 'metadata', title: 'metadata', field: 'metadata' },
   ];
 
-  // Get related usernames of given activities by their related userId
-  const userIds = activities.map((activity) => activity.userId);
-  const usernames = await User.find()
-    .where({
-      $and: [{ _id: { $in: userIds } }],
-    })
-    .select('username');
   const formattedData = activities.map((activity) => ({
     userId: activity.userId?.toString(),
     eventType: activity.eventType,
     metadata: JSON.stringify(activity.metadata),
-    username: usernames.find((user) => activity.userId?.equals(user._id))
-      ?.username,
+    username: activity.username,
     attributes: activity.attributes,
   }));
 
@@ -81,6 +73,7 @@ router.post('/', async (req, res) => {
     const body = req.body;
     const activity = new ActivityLog({
       userId: user._id,
+      username: user.username,
       eventType: body.eventType,
       metadata: body.metadata,
       attributes: req.context.user.attributes,

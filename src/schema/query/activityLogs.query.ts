@@ -1,8 +1,10 @@
-import { ActivityLog } from '@models';
+import { ActivityLog, User } from '@models';
+import { Context } from '@server/apollo/context';
 import { logger } from '@services/logger.service';
 import getFilter from '@utils/filter/getFilter';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
-import { GraphQLError, GraphQLID, GraphQLInt } from 'graphql';
+import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
+import { GraphQLError, GraphQLID, GraphQLInt, GraphQLString } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Types } from 'mongoose';
 import { CompositeFilterDescriptor } from 'types/filter';
@@ -11,7 +13,6 @@ import {
   decodeCursor,
   encodeCursor,
 } from '../types';
-import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
@@ -26,6 +27,32 @@ const FILTER_FIELDS: { name: string; type: string }[] = [
 
 /** Available sort fields */
 const SORT_FIELDS = [
+  {
+    name: 'username',
+    cursorId: (node: any) =>
+      (node.username || '') + ';;' + node.createdAt.getTime().toString(),
+    cursorFilter: (cursor: any, sortOrder: string) => {
+      const operator = sortOrder === 'asc' ? '$gt' : '$lt';
+      const value = decodeCursor(cursor).split(';;')[0];
+      const date = decodeCursor(cursor).split(';;')[1];
+      return {
+        $or: [
+          {
+            username: { [operator]: value },
+          },
+          {
+            username: { $eq: value },
+            createdAt: { [operator]: date },
+          },
+        ],
+      };
+    },
+    sort: (sortOrder: string) => {
+      return {
+        username: getSortOrder(sortOrder),
+      };
+    },
+  },
   {
     name: 'createdAt',
     cursorId: (node: any) => node.createdAt.getTime().toString(),
@@ -50,6 +77,8 @@ type ActivityLogsArgs = {
   first?: number;
   afterCursor?: string | Types.ObjectId;
   filter?: CompositeFilterDescriptor;
+  sortField?: string;
+  sortOrder?: string;
 };
 
 /**
@@ -61,18 +90,60 @@ export default {
     first: { type: GraphQLInt },
     afterCursor: { type: GraphQLID },
     filter: { type: GraphQLJSON },
+    sortField: { type: GraphQLString },
+    sortOrder: { type: GraphQLString },
   },
-  async resolve(parent, args: ActivityLogsArgs) {
+  async resolve(parent, args: ActivityLogsArgs, context: Context) {
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
     checkPageSize(first);
     try {
+      const userAttributes = Object.keys(context.user.attributes || {});
+      const attributesSortFields = userAttributes.map((attribute) => {
+        return {
+          name: attribute,
+          cursorId: (node: any) =>
+            (node.attributes?.[attribute] || '') +
+            ';;' +
+            node.createdAt.getTime().toString(),
+          cursorFilter: (cursor: any, sortOrder: string) => {
+            const operator = sortOrder === 'asc' ? '$gt' : '$lt';
+            const value = decodeCursor(cursor).split(';;')[0];
+            const date = decodeCursor(cursor).split(';;')[1];
+            return {
+              $or: [
+                {
+                  [`attributes.${attribute}`]: {
+                    [operator]: value,
+                  },
+                },
+                {
+                  [`attributes.${attribute}`]: {
+                    $eq: value,
+                  },
+                  createdAt: { [operator]: date },
+                },
+              ],
+            };
+          },
+          sort: (sortOrder: string) => {
+            return {
+              [`attributes.${attribute}`]: getSortOrder(sortOrder),
+            };
+          },
+        };
+      });
       const queryFilters = getFilter(args.filter, FILTER_FIELDS);
       const filters: any[] = [queryFilters];
-
+      const SORT_FIELDS_WITH_ATTRIBUTES = [
+        ...SORT_FIELDS,
+        ...attributesSortFields,
+      ];
+      const sortField =
+        SORT_FIELDS_WITH_ATTRIBUTES.find((x) => x.name === args.sortField) ||
+        SORT_FIELDS.find((x) => x.name === 'createdAt');
+      const sortOrder = args.sortOrder || 'desc';
       const afterCursor = args.afterCursor;
-      const sortField = SORT_FIELDS[0];
-      const sortOrder = 'desc';
       const cursorFilters = afterCursor
         ? sortField.cursorFilter(afterCursor, sortOrder)
         : {};
@@ -88,10 +159,12 @@ export default {
         activities = activities.slice(0, activities.length - 1);
       }
 
-      const edges = activities.map((r) => ({
-        cursor: encodeCursor(sortField.cursorId(r)),
-        node: r,
-      }));
+      const edges = activities.map((r) => {
+        return {
+          cursor: encodeCursor(sortField.cursorId(r)),
+          node: r,
+        };
+      });
 
       return {
         pageInfo: {
