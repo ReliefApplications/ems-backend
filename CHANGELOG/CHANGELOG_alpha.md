@@ -1,3 +1,10 @@
+# [2.12.0-alpha.6](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-alpha.5...v2.12.0-alpha.6) (2024-12-02)
+
+
+### Bug Fixes
+
+* search index breaking filtering on associated resource & reference data ([#1161](https://github.com/ReliefApplications/ems-backend/issues/1161)) ([f4ce20e](https://github.com/ReliefApplications/ems-backend/commit/f4ce20ef13665e3433b2cfc12bcade8752492b6c))
+
 # [2.12.0-alpha.5](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-alpha.4...v2.12.0-alpha.5) (2024-11-26)
 
 
