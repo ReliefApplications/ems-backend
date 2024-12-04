@@ -33,6 +33,10 @@ module.exports = {
     port: '',
     user: '',
     pass: '',
+    blobStorage: {
+      connectionString: '',
+      container: '',
+    },
   },
   database: {
     provider: '',

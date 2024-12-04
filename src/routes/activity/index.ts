@@ -1,8 +1,10 @@
+import { ActivityLog, User } from '@models';
 import { logger } from '@services/logger.service';
-import express from 'express';
-import { Request, Response } from 'express';
 import xlsBuilder from '@utils/files/xlsBuilder';
-import { ActivityLog } from '@models';
+import getFilter from '@utils/filter/getFilter';
+import config from 'config';
+import express, { Request, Response } from 'express';
+import isNil from 'lodash/isNil';
 import { Types } from 'mongoose';
 
 /** Express router to mount activity related functions on. */
@@ -18,27 +20,62 @@ const router = express.Router();
 const exportActivitiesToXlsx = async (req: Request, res: Response) => {
   const { userId, applicationId } = req.query;
 
+  // Define the name of the file
+  const fileName = 'activities.xlsx';
+  const filters: any[] = [];
+  if (!isNil(req.body.filter)) {
+    const queryFilters = getFilter(req.body.filter, [
+      {
+        name: 'createdAt',
+        type: 'date',
+      },
+    ]);
+    filters.push(queryFilters);
+  }
+
+  // Construct query
   const query: Record<string, string> = {};
   if (userId) query.userId = userId as string;
   if (applicationId) query.applicationId = applicationId as string;
 
-  const activities: ActivityLog[] = await ActivityLog.find(query);
+  const activities: ActivityLog[] = await ActivityLog.find({
+    $and: [...filters, query],
+  }).sort({ createdAt: 'desc' });
+
+  // List of user attributes
+  const attributes: any[] = config.get('user.attributes.list') || [];
 
   // Columns to be included in the XLSX file
   const columns = [
     { name: 'userId', title: 'User ID', field: 'userId' },
+    { name: 'username', title: 'Username', field: 'username' },
+    ...attributes.map((x) => ({
+      name: x.text,
+      title: x.text,
+      field: `attributes.${x.value}`,
+    })),
     { name: 'eventType', title: 'Event Type', field: 'eventType' },
-    { name: 'metadata', title: 'metadata', field: 'metadata' },
+    { name: 'metadata', title: 'Metadata', field: 'metadata' },
   ];
+
+  // Get related usernames of given activities by their related userId
+  const userIds = activities.map((activity) => activity.userId);
+  const usernames = await User.find()
+    .where({
+      $and: [{ _id: { $in: userIds } }],
+    })
+    .select('username');
 
   const formattedData = activities.map((activity) => ({
     userId: activity.userId?.toString(),
     eventType: activity.eventType,
     metadata: JSON.stringify(activity.metadata),
+    username: usernames.find((user) => activity.userId?.equals(user._id))
+      ?.username,
+    attributes: activity.attributes,
   }));
-  console.log('formattedData', formattedData);
 
-  const fileName = 'activities.xlsx';
+  // Build the XLSX file
   const file = await xlsBuilder(fileName, columns, formattedData);
 
   res.attachment(fileName);
@@ -56,6 +93,7 @@ router.post('/', async (req, res) => {
         body.metadata.applicationId ??
         new Types.ObjectId(body.metadata.applicationId),
       metadata: body.metadata,
+      attributes: req.context.user.attributes,
     });
     console.log('activity', activity);
     await activity.save();
@@ -66,7 +104,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.get('/download-activities', async (req, res) => {
+router.post('/download-activities', async (req, res) => {
   try {
     exportActivitiesToXlsx(req, res);
   } catch (err) {

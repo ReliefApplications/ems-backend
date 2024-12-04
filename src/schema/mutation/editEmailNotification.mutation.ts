@@ -11,9 +11,12 @@ import {
 import { Types } from 'mongoose';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { AppAbility } from '@security/defineUserAbility';
+import { EmailNotificationReturn } from '@schema/types/emailNotification.type';
+import { cloneDeep } from 'lodash';
 
 /**
- *
+ * Interface for the arguments required to update a custom notification.
+ * Represents the notification data, parent application, and notification ID.
  */
 interface AddCustomNotificationArgs {
   notification: EmailNotificationArgs;
@@ -50,6 +53,47 @@ export default {
       //   }
       // }
       if (args.notification) {
+        // Can't do this type of type check on type level
+        let allSeparate = false;
+        // Only count as a dataset if it has a resource
+        if (args.notification.datasets) {
+          const datasetsCount =
+            cloneDeep(args.notification.datasets)?.filter(
+              ({ resource, reference }) => resource || reference
+            ).length ?? 0;
+          // Individual email count
+          let individualCount = 0;
+          for (const dataset of args.notification.datasets) {
+            if (
+              (dataset.resource || dataset.reference) &&
+              dataset.individualEmail
+            ) {
+              individualCount += 1;
+            }
+          }
+          if (datasetsCount === individualCount) {
+            allSeparate = true;
+          }
+        }
+
+        if (
+          !(args.notification.isDraft || args.notification.isDeleted === 1) &&
+          // (!args.notification.emailDistributionList.name ||
+          //   (!args.notification.emailDistributionList.to.resource &&
+          //     args.notification.emailDistributionList.to.inputEmails.length ===
+          //       0)) &&
+          !allSeparate &&
+          !args.notification.emailDistributionList
+        ) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
+        }
+
+        // Check if user is subscribed to the notification
+        const userIsSubscribed = args.notification.subscriptionList?.includes(
+          context.user.username
+        );
         const updateFields = {
           name: args.notification.name,
           schedule: args.notification.schedule,
@@ -62,6 +106,8 @@ export default {
           datasets: args.notification.datasets,
           emailLayout: args.notification.emailLayout,
           emailDistributionList: args.notification.emailDistributionList,
+          subscriptionList: args.notification.subscriptionList,
+          restrictSubscription: args.notification.restrictSubscription,
           status: args.notification.status,
           recipientsType: args.notification.recipientsType,
           lastExecution: args.notification.lastExecution,
@@ -83,8 +129,9 @@ export default {
           { $set: updateFields },
           { new: true } // Return the modified document
         );
-
-        return updatedData;
+        const response = updatedData as EmailNotificationReturn;
+        response.userSubscribed = userIsSubscribed;
+        return response;
       } else {
         const emailNotification = await EmailNotification.findById(args.id);
         return emailNotification;

@@ -1,9 +1,12 @@
+import { User } from '@models';
 import {
+  GraphQLID,
+  GraphQLNonNull,
   GraphQLObjectType,
   GraphQLString,
-  GraphQLNonNull,
-  GraphQLID,
 } from 'graphql';
+import GraphQLJSON from 'graphql-type-json';
+import { Connection } from './pagination.type';
 
 /**
  * GraphQL type definition for an Activity Log entry.
@@ -18,7 +21,7 @@ export const ActivityLogType = new GraphQLObjectType({
     },
     userId: {
       type: GraphQLString,
-      description: 'The ID of the user who performed the activity.',
+      description: 'Id of user',
     },
     eventType: {
       type: GraphQLString,
@@ -48,5 +51,24 @@ export const ActivityLogType = new GraphQLObjectType({
       resolve: ({ metadata }) =>
         typeof metadata === 'string' ? metadata : JSON.stringify(metadata),
     },
+    username: {
+      type: GraphQLString,
+      description: 'Email of user',
+      resolve: async ({ userId }) => {
+        try {
+          const { username } = await User.findById(userId).select('username');
+          return username || '';
+        } catch {
+          return '';
+        }
+      },
+    },
+    attributes: {
+      type: GraphQLJSON,
+      description: 'User attributes',
+    },
   }),
 });
+
+/** GraphQL activity log connection type definition */
+export const ActivityLogConnectionType = Connection(ActivityLogType);

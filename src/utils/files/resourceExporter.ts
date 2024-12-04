@@ -30,13 +30,14 @@ import dataSources from '@server/apollo/dataSources';
 interface ExportBatchParams {
   fields?: any[];
   filter?: any;
-  format: 'csv' | 'xlsx';
+  format: 'csv' | 'xlsx' | 'email';
   query: any;
   sortField?: string;
   sortOrder?: 'asc' | 'desc';
   resource?: string;
   timeZone: string;
-  fileName: string;
+  fileName?: string;
+  limit?: number;
 }
 
 /**
@@ -84,12 +85,13 @@ export default class Exporter {
     // Get total count and columns
     // todo: replace with resource fields
     await this.getColumns();
-    const records: Record[] = getRowsFromMeta(
-      this.columns,
-      await this.getRecords()
-    );
+
     switch (this.params.format) {
       case 'xlsx': {
+        const records: Record[] = getRowsFromMeta(
+          this.columns,
+          await this.getRecords()
+        );
         let workbook: Workbook | stream.xlsx.WorkbookWriter;
         // Create a new instance of a Workbook class
         if (this.res.closed) {
@@ -118,6 +120,10 @@ export default class Exporter {
         }
       }
       case 'csv': {
+        const records: Record[] = getRowsFromMeta(
+          this.columns,
+          await this.getRecords()
+        );
         // Create a string array with the columns' labels or names as fallback, then construct the parser from it
         const fields = this.columns.flatMap((x) => ({
           label: x.title,
@@ -144,6 +150,32 @@ export default class Exporter {
         const csv = json2csv.parse(csvData);
         return csv;
       }
+      case 'email': {
+        const records: Record[] = getRowsFromMeta(
+          this.columns,
+          await this.getRecords(),
+          true
+        );
+        // Generate csv, by parsing the data
+        const csvData = [];
+        try {
+          for (const row of records) {
+            const temp = {};
+            for (const column of this.columns) {
+              if (column.subColumns) {
+                temp[column.name] = get(row, column.name) || [];
+              } else {
+                temp[column.name] = get(row, column.name, null);
+              }
+            }
+            csvData.push(temp);
+          }
+        } catch (err) {
+          logger.error(err.message);
+        }
+        // Generate the file by parsing the data, set the response parameters and send it
+        return { records: csvData, columns: this.columns };
+      }
     }
   }
 
@@ -154,7 +186,7 @@ export default class Exporter {
    */
   private getColumns = (): Promise<void> => {
     const metaQuery = buildMetaQuery(this.params.query);
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       axios({
         url: `${config.get('server.url')}/graphql`,
         method: 'POST',
@@ -162,62 +194,68 @@ export default class Exporter {
         data: {
           query: metaQuery,
         },
-      }).then(async ({ data }) => {
-        for (const field in data.data) {
-          if (Object.prototype.hasOwnProperty.call(data.data, field)) {
-            const meta = data.data[field];
-            const rawColumns = getColumnsFromMeta(meta, this.params.fields);
-            const columns = rawColumns.filter((x) =>
-              this.params.fields.find((f) => f.name === x.name)
-            );
-            // Edits the column to match with the fields
-            for (const column of columns) {
-              const queryField = this.params.fields.find(
-                (f) => f.name === column.name
+      })
+        .then(async ({ data }) => {
+          for (const field in data.data) {
+            if (Object.prototype.hasOwnProperty.call(data.data, field)) {
+              const meta = data.data[field];
+              const rawColumns = getColumnsFromMeta(meta, this.params.fields);
+              const columns = rawColumns.filter((x) =>
+                this.params.fields.find((f) => f.name === x.name)
               );
-              column.title = queryField.title;
-              if (column.displayField) {
-                column.displayField.title = column.displayField.name;
-              }
-              if (column.subColumns) {
-                // Field does not exist in the template
-                if (!this.resource.fields.find((f) => f.name === column.name)) {
-                  const relatedResource = await Resource.findOne({
-                    fields: {
-                      $elemMatch: {
-                        resource: this.resource._id.toString(),
-                        relatedName: column.name,
+              // Edits the column to match with the fields
+              for (const column of columns) {
+                const queryField = this.params.fields.find(
+                  (f) => f.name === column.name
+                );
+                column.title = queryField.title;
+                if (column.displayField) {
+                  column.displayField.title = column.displayField.name;
+                }
+                if (column.subColumns) {
+                  // Field does not exist in the template
+                  if (
+                    !this.resource.fields.find((f) => f.name === column.name)
+                  ) {
+                    const relatedResource = await Resource.findOne({
+                      fields: {
+                        $elemMatch: {
+                          resource: this.resource._id.toString(),
+                          relatedName: column.name,
+                        },
                       },
-                    },
-                  }).select('fields');
-                  if (relatedResource) {
-                    column.parent = relatedResource;
+                    }).select('fields');
+                    if (relatedResource) {
+                      column.parent = relatedResource;
+                    }
+                  }
+                  if ((queryField.subFields || []).length > 0) {
+                    column.subColumns.forEach((subColumn) => {
+                      const subQueryField = queryField.subFields.find(
+                        (z) => z.name === `${column.name}.${subColumn.name}`
+                      );
+                      subColumn.title = subQueryField?.title;
+                    });
                   }
                 }
-                if ((queryField.subFields || []).length > 0) {
-                  column.subColumns.forEach((subColumn) => {
-                    const subQueryField = queryField.subFields.find(
-                      (z) => z.name === `${column.name}.${subColumn.name}`
-                    );
-                    subColumn.title = subQueryField?.title;
-                  });
-                }
               }
+              this.columns = columns;
+              resolve();
             }
-            this.columns = columns;
-            resolve();
           }
-        }
-      });
+        })
+        .catch((err) => reject(err));
     });
   };
 
   /**
-   * Get records to put into the file
+   * Get records count
    *
-   * @returns list of data
+   * @param isValidate validate records count
+   * @returns records
    */
-  private getRecords = async () => {
+  public getRecordsCount = async (isValidate?: boolean) => {
+    if (isValidate) await this.getColumns();
     const ability = await extendAbilityForRecords(this.req.context.user);
     set(this.req.context.user, 'ability', ability);
     const contextDataSources = (
@@ -233,9 +271,9 @@ export default class Exporter {
       this.resource.fields,
       this.req.context
     );
-    const countAggregation = await Record.aggregate(
-      await this.recordsPipeline()
-    ).facet({
+    const countAggregation = await Record.aggregate([
+      ...(await this.recordsPipeline()),
+    ]).facet({
       items: [
         ...sort,
         {
@@ -250,8 +288,19 @@ export default class Exporter {
         },
       ],
     });
+
+    return countAggregation;
+  };
+
+  /**
+   * Get records to put into the file
+   *
+   * @returns list of data
+   */
+  private getRecords = async () => {
+    const countAggregation = await this.getRecordsCount();
     // Get total count
-    const totalCount = countAggregation[0].totalCount[0].count;
+    const totalCount = countAggregation?.[0]?.totalCount?.[0]?.count ?? 0;
     // Create a list of all ids
     const ids = countAggregation[0].items.map((x) => x._id);
     // Build an empty list of records
@@ -370,6 +419,7 @@ export default class Exporter {
     const pipeline: any = [
       ...(searchFilter ? [searchFilter] : []),
       { $match: filters },
+      { $limit: this.params.limit || Number.MAX_SAFE_INTEGER },
     ];
     this.columns
       .filter((col) => col.meta?.field?.isCalculated)
@@ -897,7 +947,8 @@ export default class Exporter {
         return isArray(recordValue)
           ? recordValue.reduce((acc, choice) => {
               const dataRow = data.find(
-                (obj) => obj[referenceData.valueField] === choice
+                (obj) =>
+                  obj[referenceData.valueField] === (choice.text || choice)
               );
               if (dataRow) {
                 const transformer = new DataTransformer(
@@ -905,15 +956,16 @@ export default class Exporter {
                   cloneDeep([dataRow])
                 );
                 const transformedObject = transformer.transformData()[0];
-                Object.keys(transformedObject).forEach((key) => {
-                  if (!acc[key]) {
-                    acc[key] = [];
-                  }
-                  acc[key].push(transformedObject[key]);
-                });
+                // Object.keys(transformedObject).forEach((key) => {
+                //   if (!acc[key]) {
+                //     acc[key] = [];
+                //   }
+                //   acc[key].push(transformedObject[key]);
+                // });
+                acc.push(transformedObject);
               }
               return acc;
-            }, {})
+            }, [])
           : data.find(
               (obj) => obj[referenceData.valueField] === recordValue //affecting all row, not optimal but gets the job done
             );
@@ -1001,13 +1053,20 @@ export default class Exporter {
       : column.subColumns.filter((subColumn) => !!subColumn.displayField);
 
     if (columnValue) {
+      // if (
+      //   (isArray(columnValue) &&
+      //     columnValue.every((id) =>
+      //       mongoose.Types.ObjectId.isValid(id)
+      //     )) ||
+      //   mongoose.Types.ObjectId.isValid(columnValue)
+      // )
       const relatedPromises = Record.aggregate(
         this.buildPipeline(
           subColumns,
           isArray(columnValue)
-            ? Array.from(new Set(columnValue)).map(
-                (id: any) => new mongoose.Types.ObjectId(id)
-              )
+            ? Array.from(new Set(columnValue))
+                .filter((id: any) => mongoose.Types.ObjectId.isValid(id))
+                .map((id: any) => new mongoose.Types.ObjectId(id))
             : [new mongoose.Types.ObjectId(columnValue)]
         )
       ).then(async (relatedRecords) => {

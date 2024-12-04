@@ -1,24 +1,14 @@
 import { graphQLAuthCheck } from '@schema/shared';
 import { logger } from '@services/logger.service';
-import { GraphQLError, GraphQLID, GraphQLInt, GraphQLNonNull } from 'graphql';
+import { GraphQLError, GraphQLID, GraphQLInt } from 'graphql';
 import { Context } from '@server/apollo/context';
-import { EmailNotification } from '@models';
-import {
-  EmailNotificationConnectionType,
-  decodeCursor,
-  encodeCursor,
-} from '@schema/types';
+import { EmailDistributionList } from '@models';
+import { decodeCursor, encodeCursor } from '@schema/types';
 import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
-import { accessibleBy } from '@casl/mongoose';
-import { AppAbility } from '@security/defineUserAbility';
-import extendAbilityForApplications from '@security/extendAbilityForApplication';
+import { EmailDistributionConnectionType } from '@schema/types/emailDistribution.type';
 
 /** Default page size */
 // const DEFAULT_FIRST = 10;
-
-export interface EmailNotificationReturn extends EmailNotification {
-  userSubscribed: boolean;
-}
 
 /** Available sort fields */
 const SORT_FIELDS = [
@@ -42,47 +32,37 @@ const SORT_FIELDS = [
 ];
 
 /**
- * Resolves the email notifications flow.
+ * Resolver for fetching email notifications
  */
 export default {
-  type: EmailNotificationConnectionType,
+  type: EmailDistributionConnectionType,
   args: {
-    applicationId: { type: new GraphQLNonNull(GraphQLID) },
     limit: { type: GraphQLInt, defaultValue: 0 },
     skip: { type: GraphQLInt, defaultValue: 0 },
+    id: { type: GraphQLID, defaultValue: '' },
+    applicationId: { type: GraphQLID },
   },
   async resolve(_, args, context: Context) {
     graphQLAuthCheck(context);
     try {
-      const ability: AppAbility = extendAbilityForApplications(
-        context.user,
-        args.applicationId
-      );
-      const abilityFilters = EmailNotification.find(
-        accessibleBy(ability, 'read').EmailNotification
-      ).getFilter();
+      const query: any = { isDeleted: { $ne: 1 } };
 
-      const filters: any[] = [
-        {
-          // isDeleted: { $ne: 1 },
-          applicationId: args.applicationId,
-        },
-        abilityFilters,
-      ];
+      if (args?.id.length > 0) {
+        query._id = args.id;
+      }
 
-      const items = await EmailNotification.find({
-        $and: filters,
-      })
+      if (args?.applicationId) {
+        query.applicationId = args.applicationId;
+      }
+
+      const emailDistributionLists = await EmailDistributionList.find(query)
         .sort(SORT_FIELDS[0].sort('desc'))
         .skip(args.skip)
         .limit(args.limit);
-
-      const edges = (items as Array<EmailNotificationReturn>).map((r) => {
-        return {
-          cursor: encodeCursor(SORT_FIELDS[0].cursorId(r)),
-          node: r,
-        };
-      });
+      const edges = emailDistributionLists.map((r) => ({
+        cursor: encodeCursor(SORT_FIELDS[0].cursorId(r)),
+        node: r,
+      }));
 
       return {
         pageInfo: {
@@ -91,7 +71,7 @@ export default {
           endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
         },
         edges,
-        totalCount: await EmailNotification.countDocuments({ $and: filters }),
+        totalCount: await EmailDistributionList.countDocuments(),
       };
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

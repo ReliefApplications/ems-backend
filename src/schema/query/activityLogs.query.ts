@@ -1,32 +1,119 @@
 import { ActivityLog } from '@models';
-import { ActivityLogType } from '../types';
-import { GraphQLError, GraphQLList, GraphQLString } from 'graphql';
 import { logger } from '@services/logger.service';
+import getFilter from '@utils/filter/getFilter';
+import checkPageSize from '@utils/schema/errors/checkPageSize.util';
+import { GraphQLError, GraphQLID, GraphQLInt, GraphQLString, GraphQLList } from 'graphql';
+import GraphQLJSON from 'graphql-type-json';
+import { Types } from 'mongoose';
+import { CompositeFilterDescriptor } from 'types/filter';
+import {
+  ActivityLogConnectionType,
+  ActivityLogType,
+  decodeCursor,
+  encodeCursor,
+} from '../types';
+import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
+
+/** Default page size */
+const DEFAULT_FIRST = 10;
+
+/** Available filter fields */
+const FILTER_FIELDS: { name: string; type: string }[] = [
+  {
+    name: 'createdAt',
+    type: 'date',
+  },
+];
+
+/** Available sort fields */
+const SORT_FIELDS = [
+  {
+    name: 'createdAt',
+    cursorId: (node: any) => node.createdAt.getTime().toString(),
+    cursorFilter: (cursor: any, sortOrder: string) => {
+      const operator = sortOrder === 'asc' ? '$gt' : '$lt';
+      return {
+        createdAt: {
+          [operator]: decodeCursor(cursor),
+        },
+      };
+    },
+    sort: (sortOrder: string) => {
+      return {
+        createdAt: getSortOrder(sortOrder),
+      };
+    },
+  },
+];
+
+/** Arguments for the activity logs query */
+type ActivityLogsArgs = {
+  first?: number;
+  afterCursor?: string | Types.ObjectId;
+  filter?: CompositeFilterDescriptor;
+};
 
 /**
  * GraphQL query to list all activitiesLogs.
  */
 export default {
-  type: new GraphQLList(ActivityLogType),
+  type: ActivityLogConnectionType,
   args: {
+    first: { type: GraphQLInt },
+    afterCursor: { type: GraphQLID },
+    filter: { type: GraphQLJSON },
     userId: { type: GraphQLString },
     applicationId: { type: GraphQLString },
   },
-  async resolve(_, args) {
+  async resolve(parent, args: ActivityLogsArgs & { userId?: string; applicationId?: string }) {
+    const first = args.first || DEFAULT_FIRST;
+    checkPageSize(first);
+
     try {
-      const { userId, applicationId } = args;
-
       const queryConditions: { [key: string]: string | undefined } = {};
-      if (userId) queryConditions.userId = userId;
-      if (applicationId) queryConditions.applicationId = applicationId;
+      if (args.userId) queryConditions.userId = args.userId;
+      if (args.applicationId) queryConditions.applicationId = args.applicationId;
 
-      const activities = await ActivityLog.find(queryConditions).sort({
-        createdAt: -1,
-      });
-      return activities;
+      const queryFilters = getFilter(args.filter, FILTER_FIELDS);
+      const filters: any[] = [queryFilters];
+
+      const afterCursor = args.afterCursor;
+      const sortField = SORT_FIELDS[0];
+      const sortOrder = 'desc';
+      const cursorFilters = afterCursor
+        ? sortField.cursorFilter(afterCursor, sortOrder)
+        : {};
+
+      let activities = await ActivityLog.find({
+        $and: [cursorFilters, ...filters, queryConditions],
+      })
+        .sort(sortField.sort(sortOrder))
+        .limit(first + 1);
+
+      const hasNextPage = activities.length > first;
+      if (hasNextPage) {
+        activities = activities.slice(0, activities.length - 1);
+      }
+
+      const edges = activities.map((r) => ({
+        cursor: encodeCursor(sortField.cursorId(r)),
+        node: r,
+      }));
+
+      return {
+        pageInfo: {
+          hasNextPage,
+          startCursor: edges.length > 0 ? edges[0].cursor : null,
+          endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+        },
+        edges,
+        totalCount: await ActivityLog.countDocuments({
+          $and: [filters, queryConditions],
+        }),
+      };
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
-      throw new GraphQLError('Error');
+      throw new GraphQLError(err.message);
     }
   },
 };
