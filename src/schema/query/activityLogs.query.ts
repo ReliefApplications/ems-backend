@@ -1,4 +1,4 @@
-import { ActivityLog, User } from '@models';
+import { ActivityLog } from '@models';
 import { Context } from '@server/apollo/context';
 import { logger } from '@services/logger.service';
 import getFilter from '@utils/filter/getFilter';

@@ -1,4 +1,3 @@
-import { User } from '@models';
 import {
   GraphQLID,
   GraphQLNonNull,
