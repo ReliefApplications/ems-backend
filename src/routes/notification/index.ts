@@ -17,13 +17,13 @@ router.post('/azure/:functionName/:configId?', async (req, res) => {
   const requestConfig = {
     headers: azureFunctionHeaders(req),
     params: {
-      code: config.get('emailAzure.serverlessKey'),
+      code: config.get('email.serverless.key'),
     },
   };
 
   try {
     const response = await axios.post(
-      `${config.get('emailAzure.serverlessUrl')}/api/${functionName}/${
+      `${config.get('email.serverless.url')}/api/${functionName}/${
         configId || ''
       }`,
       req.body,
@@ -43,13 +43,13 @@ router.get('/azure/:functionName/:configId?', async (req, res) => {
   const requestConfig = {
     headers: azureFunctionHeaders(req),
     params: {
-      code: config.get('emailAzure.serverlessKey'),
+      code: config.get('email.serverless.key'),
     },
   };
 
   try {
     const response = await axios.get(
-      `${config.get('emailAzure.serverlessUrl')}/api/${functionName}/${
+      `${config.get('email.serverless.url')}/api/${functionName}/${
         configId || ''
       }`,
       requestConfig

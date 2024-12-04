@@ -37,10 +37,10 @@ module.exports = {
       connectionString: '',
       container: '',
     },
-  },
-  emailAzure: {
-    serverlessUrl: '',
-    serverlessKey: '',
+    serverless: {
+      url: '',
+      key: '',
+    },
   },
   database: {
     provider: '',
