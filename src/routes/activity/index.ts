@@ -1,7 +1,6 @@
 import { ActivityLog, User } from '@models';
 import { logger } from '@services/logger.service';
 import xlsBuilder from '@utils/files/xlsBuilder';
-import getFilter from '@utils/filter/getFilter';
 import config from 'config';
 import express, { Request, Response } from 'express';
 import isNil from 'lodash/isNil';
@@ -18,29 +17,38 @@ const router = express.Router();
  * @returns void
  */
 const exportActivitiesToXlsx = async (req: Request, res: Response) => {
-  const { userId, applicationId } = req.query;
+  const { userId, applicationId, filter } = req.body;
+
+  console.log('req.body', req.body);
+  console.log('userId', userId, 'applicationId', applicationId);
 
   // Define the name of the file
   const fileName = 'activities.xlsx';
-  const filters: any[] = [];
-  if (!isNil(req.body.filter)) {
-    const queryFilters = getFilter(req.body.filter, [
-      {
-        name: 'createdAt',
-        type: 'date',
-      },
-    ]);
-    filters.push(queryFilters);
+
+  // Construct query conditions
+  const query: Record<string, any> = {};
+
+  // Add userId and applicationId to the query
+  if (userId) query.userId = new Types.ObjectId(userId as string);
+  if (applicationId)
+    query.applicationId = new Types.ObjectId(applicationId as string);
+
+  // Process date filters
+  if (filter && Array.isArray(filter)) {
+    filter.forEach((f) => {
+      if (f.field === 'createdAt' && f.operator && f.value) {
+        if (!query.createdAt) query.createdAt = {};
+        query.createdAt[`$${f.operator}`] = new Date(f.value);
+      }
+    });
   }
 
-  // Construct query
-  const query: Record<string, string> = {};
-  if (userId) query.userId = userId as string;
-  if (applicationId) query.applicationId = applicationId as string;
+  console.log('Final Query:', query);
 
-  const activities: ActivityLog[] = await ActivityLog.find({
-    $and: [...filters, query],
-  }).sort({ createdAt: 'desc' });
+  // Fetch activities
+  const activities: ActivityLog[] = await ActivityLog.find(query).sort({
+    createdAt: 'desc',
+  });
 
   // List of user attributes
   const attributes: any[] = config.get('user.attributes.list') || [];
@@ -62,7 +70,7 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
   const userIds = activities.map((activity) => activity.userId);
   const usernames = await User.find()
     .where({
-      $and: [{ _id: { $in: userIds } }],
+      _id: { $in: userIds },
     })
     .select('username');
 
