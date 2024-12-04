@@ -1,5 +1,6 @@
 import { ActivityLog } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
+import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { Context } from '@server/apollo/context';
 import { logger } from '@services/logger.service';
 import getFilter from '@utils/filter/getFilter';
@@ -70,11 +71,7 @@ export default {
     checkPageSize(first);
     try {
       const ability: AppAbility = context.user.ability;
-      if (!ability.can('read', 'User')) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
-      }
+
       const queryFilters = getFilter(args.filter, FILTER_FIELDS);
       const filters: any[] = [queryFilters];
 
@@ -96,10 +93,21 @@ export default {
         activities = activities.slice(0, activities.length - 1);
       }
 
-      const edges = activities.map((r) => ({
-        cursor: encodeCursor(sortField.cursorId(r)),
-        node: r,
-      }));
+      const edges = activities
+        .filter((activity) => {
+          const appAbility: AppAbility = extendAbilityForApplications(
+            context.user,
+            activity.metadata.applicationId
+          );
+          if (appAbility.can('read', 'User') || ability.can('read', 'User')) {
+            return true;
+          }
+          return false;
+        })
+        .map((r) => ({
+          cursor: encodeCursor(sortField.cursorId(r)),
+          node: r,
+        }));
 
       return {
         pageInfo: {

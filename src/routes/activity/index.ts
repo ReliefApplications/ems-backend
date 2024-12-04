@@ -1,12 +1,12 @@
 import { ActivityLog, User } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
+import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { logger } from '@services/logger.service';
 import xlsBuilder from '@utils/files/xlsBuilder';
 import getFilter from '@utils/filter/getFilter';
 import config from 'config';
 import express, { Request, Response } from 'express';
 import isNil from 'lodash/isNil';
-import { accessibleBy } from '@casl/mongoose';
 
 /** Express router to mount activity related functions on. */
 const router = express.Router();
@@ -56,17 +56,22 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
 
   // Get related usernames of given activities by their related userId
   const userIds = activities.map((activity) => activity.userId);
-  const usernames = await User.find(accessibleBy(ability, 'read').User)
+  const usernames = await User.find()
     .where({
       $and: [{ _id: { $in: userIds } }],
     })
     .select('username');
   const formattedData = activities
-    .filter(
-      (activity) =>
-        isNil(activity.userId) ||
-        usernames.find((u) => u._id === activity.userId)
-    )
+    .filter((activity) => {
+      const appAbility: AppAbility = extendAbilityForApplications(
+        req.context.user,
+        activity.metadata.applicationId
+      );
+      if (appAbility.can('read', 'User') || ability.can('read', 'User')) {
+        return true;
+      }
+      return false;
+    })
     .map((activity) => ({
       userId: activity.userId?.toString(),
       eventType: activity.eventType,
