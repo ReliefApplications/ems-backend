@@ -6,11 +6,11 @@ import { Connection } from './pagination.type';
  */
 export const ActivityLogsByUrlType = new GraphQLObjectType({
   name: 'ActivityLogsByUrl',
-  description: 'Represents a single activity log entry.',
+  description: 'Represents how many times an url was accessed.',
   fields: () => ({
     url: {
       type: GraphQLString,
-      description: 'The URL associated with the activity, if applicable.',
+      description: 'The URL associated with the activity',
     },
     count: {
       type: GraphQLInt,
