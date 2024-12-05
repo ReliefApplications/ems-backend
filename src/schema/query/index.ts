@@ -45,6 +45,7 @@ import activityLog from './activityLog.query';
 import activityLogs from './activityLogs.query';
 import emailDistributionLists from './emailDistributionList.query';
 import customTemplates from './customTemplates.query';
+import activityLogsByUrl from './activityLogsByUrl.query';
 
 /** GraphQL query type definition */
 const Query = new GraphQLObjectType({
@@ -94,6 +95,7 @@ const Query = new GraphQLObjectType({
     draftRecords,
     activityLog,
     activityLogs,
+    activityLogsByUrl,
     emailDistributionLists,
     customTemplates,
   },

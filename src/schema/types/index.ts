@@ -31,3 +31,4 @@ export * from './layer.type';
 export * from './draftRecord.type';
 export * from './emailNotification.type';
 export * from './activityLog.type';
+export * from './activityLogsByUrl.type';
