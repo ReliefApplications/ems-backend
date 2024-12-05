@@ -3,6 +3,7 @@ import get from 'lodash/get';
 import set from 'lodash/set';
 import { getText } from '../form/getDisplayText';
 import { Column } from './getColumnsFromMeta';
+import { inputType, questionType } from '@services/form.service';
 
 /**
  * Set a row for multiselect type, handle specific behavior with ReferenceData
@@ -51,7 +52,7 @@ export const getRowsFromMeta = (
     const row = {};
     for (const column of columns) {
       switch (column.type) {
-        case 'owner': {
+        case questionType.OWNER: {
           let value: any = get(record, column.field);
           const choices = column.meta.field.choices || [];
           if (choices.length > 0) {
@@ -64,7 +65,7 @@ export const getRowsFromMeta = (
           set(row, column.name, Array.isArray(value) ? value.join(',') : value);
           break;
         }
-        case 'users': {
+        case questionType.USERS: {
           let value: any = get(record, column.field);
           const choices = column.meta.field.choices || [];
           if (choices.length > 0) {
@@ -77,12 +78,12 @@ export const getRowsFromMeta = (
           set(row, column.name, Array.isArray(value) ? value.join(',') : value);
           break;
         }
-        case 'checkbox':
-        case 'tagbox': {
+        case questionType.CHECKBOX:
+        case questionType.TAGBOX: {
           setMultiselectRow(column, record, row);
           break;
         }
-        case 'dropdown': {
+        case questionType.DROPDOWN: {
           let value: any = get(record, column.field);
           // Only enter if not reference data
           if (!column.meta.field.graphQLFieldName) {
@@ -98,22 +99,22 @@ export const getRowsFromMeta = (
           set(row, column.name, Array.isArray(value) ? value.join(',') : value);
           break;
         }
-        case 'multipletext': {
+        case questionType.MULTIPLE_TEXT: {
           const value = get(record, column.name);
           set(row, column.name, value);
           break;
         }
-        case 'matrix': {
+        case questionType.MATRIX: {
           const value = get(record, column.name);
           set(row, column.name, value);
           break;
         }
-        case 'matrixdropdown': {
+        case questionType.MATRIX_DROPDOWN: {
           const value = get(record, column.name);
           set(row, column.name, value);
           break;
         }
-        case 'resources': {
+        case questionType.RESOURCES: {
           const value = get(record, column.field) || [];
           if ((column.subColumns || []).length > 0) {
             if (value && isArray(value)) {
@@ -146,7 +147,7 @@ export const getRowsFromMeta = (
           }
           break;
         }
-        case 'date': {
+        case inputType.DATE: {
           const value = get(record, column.field);
           if (value) {
             const date = new Date(value);
@@ -156,8 +157,8 @@ export const getRowsFromMeta = (
           }
           break;
         }
-        case 'datetime':
-        case 'datetime-local': {
+        case inputType.DATETIME:
+        case inputType.DATETIME_LOCAL: {
           const value = get(record, column.field);
           if (value) {
             const date = new Date(value);
@@ -174,7 +175,7 @@ export const getRowsFromMeta = (
           }
           break;
         }
-        case 'time': {
+        case inputType.TIME: {
           const value = get(record, column.field);
           if (value) {
             const date = new Date(value);
@@ -184,14 +185,14 @@ export const getRowsFromMeta = (
           }
           break;
         }
-        case 'file': {
+        case questionType.FILE: {
           const value = (get(record, `${column.field}`) || []).map(
             (x) => x.name
           );
           set(row, column.name, value.join(','));
           break;
         }
-        case 'radiogroup': {
+        case questionType.RADIO_GROUP: {
           if (isEmail) {
             const radioValue = get(record, column.field);
             const choices = column?.meta?.field?.choices || [];
@@ -200,7 +201,7 @@ export const getRowsFromMeta = (
             break;
           }
         }
-        case 'geospatial': {
+        case questionType.GEOSPATIAL: {
           if (isEmail) {
             const geoValue = get(record, `${column.field}.properties`);
             const lat = geoValue?.coordinates.lat;

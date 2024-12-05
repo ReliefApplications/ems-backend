@@ -16,6 +16,7 @@ import getMetaFieldResolver from './getMetaFieldResolver';
 import getMetaReferenceDataResolver from './getMetaReferenceDataResolver';
 import { Types } from 'mongoose';
 import { ReferenceData } from '@models';
+import { inputType, questionType } from '@services/form.service';
 
 /**
  * Gets the resolvers for each field of the document for a given resource
@@ -85,7 +86,7 @@ export const getMetaResolver = (
               }, []);
               return {
                 name: 'form',
-                type: 'dropdown',
+                type: questionType.DROPDOWN,
                 choices,
                 readOnly: true,
                 permissions: {
@@ -106,7 +107,7 @@ export const getMetaResolver = (
               }, []);
               return {
                 name: 'lastUpdateForm',
-                type: 'dropdown',
+                type: questionType.DROPDOWN,
                 choices,
                 readOnly: true,
                 permissions: {
@@ -121,7 +122,7 @@ export const getMetaResolver = (
             case 'createdAt': {
               return {
                 name: fieldName,
-                type: 'datetime',
+                type: inputType.DATETIME,
                 readOnly: true,
                 permissions: {
                   canSee: true,
@@ -132,7 +133,7 @@ export const getMetaResolver = (
             case 'modifiedAt': {
               return {
                 name: fieldName,
-                type: 'datetime',
+                type: inputType.DATETIME,
                 readOnly: true,
                 permissions: {
                   canSee: true,

@@ -1,3 +1,5 @@
+import { displayStyle, inputType, questionType } from '@services/form.service';
+
 /**
  * Gets the type of the field from the definition of the question.
  *
@@ -13,80 +15,80 @@ export const getFieldType = async (question: {
   displayStyle?: string;
 }): Promise<string> => {
   switch (question.type) {
-    case 'text':
+    case questionType.TEXT:
       switch (question.inputType) {
-        case 'text':
-          return 'text';
-        case 'number':
-          return 'numeric';
-        case 'color':
-          return 'color';
-        case 'date':
-          return 'date';
-        case 'datetime-local':
-          return 'datetime-local';
-        case 'datetime':
-          return 'datetime';
-        case 'time':
-          return 'time';
-        case 'url':
-          return 'url';
-        case 'tel':
-          return 'tel';
-        case 'email':
-          return 'email';
+        case inputType.TEXT:
+          return inputType.TEXT;
+        case inputType.NUMBER:
+          return inputType.NUMERIC;
+        case inputType.COLOR:
+          return inputType.COLOR;
+        case inputType.DATE:
+          return inputType.DATE;
+        case inputType.DATETIME_LOCAL:
+          return inputType.DATETIME_LOCAL;
+        case inputType.DATETIME:
+          return inputType.DATETIME;
+        case inputType.TIME:
+          return inputType.TIME;
+        case inputType.URL:
+          return inputType.URL;
+        case inputType.TEL:
+          return inputType.TEL;
+        case inputType.EMAIL:
+          return inputType.EMAIL;
         default:
-          return 'text';
+          return inputType.TEXT;
       }
-    case 'file':
-      return 'file';
-    case 'expression':
+    case questionType.FILE:
+      return questionType.FILE;
+    case questionType.EXPRESSION:
       switch (question.displayStyle) {
-        case 'date':
-          return 'date';
-        case 'decimal':
-          return 'decimal';
-        case 'currency':
-          return 'decimal';
-        case 'percent':
-          return 'decimal';
-        case 'number':
-          return 'numeric';
+        case displayStyle.DATE:
+          return inputType.DATE;
+        case displayStyle.DECIMAL:
+          return inputType.DECIMAL;
+        case displayStyle.CURRENCY:
+          return inputType.DECIMAL;
+        case displayStyle.PERCENT:
+          return inputType.DECIMAL;
+        case displayStyle.NUMBER:
+          return inputType.NUMERIC;
         default:
-          return 'text';
+          return questionType.TEXT;
       }
-    case 'checkbox':
-      return 'checkbox';
-    case 'radiogroup':
-      return 'radiogroup';
-    case 'dropdown':
-      return 'dropdown';
-    case 'multipletext':
-      return 'multipletext';
-    case 'matrix':
-      return 'matrix';
-    case 'matrixdropdown':
-      return 'matrixdropdown';
-    case 'matrixdynamic':
-      return 'matrixdynamic';
-    case 'boolean':
-      return 'boolean';
-    case 'resource':
-      return 'resource';
-    case 'resources':
-      return 'resources';
-    case 'tagbox':
-      return 'tagbox';
-    case 'users':
-      return 'users';
-    case 'owner':
-      return 'owner';
-    case 'geospatial':
-      return 'geospatial';
-    case 'editor': {
-      return 'editor';
+    case questionType.CHECKBOX:
+      return questionType.CHECKBOX;
+    case questionType.RADIO_GROUP:
+      return questionType.RADIO_GROUP;
+    case questionType.DROPDOWN:
+      return questionType.DROPDOWN;
+    case questionType.MULTIPLE_TEXT:
+      return questionType.MULTIPLE_TEXT;
+    case questionType.MATRIX:
+      return questionType.MATRIX;
+    case questionType.MATRIX_DROPDOWN:
+      return questionType.MATRIX_DROPDOWN;
+    case questionType.MATRIX_DYNAMIC:
+      return questionType.MATRIX_DYNAMIC;
+    case questionType.BOOLEAN:
+      return questionType.BOOLEAN;
+    case questionType.RESOURCE:
+      return questionType.RESOURCE;
+    case questionType.RESOURCES:
+      return questionType.RESOURCES;
+    case questionType.TAGBOX:
+      return questionType.TAGBOX;
+    case questionType.USERS:
+      return questionType.USERS;
+    case questionType.OWNER:
+      return questionType.OWNER;
+    case questionType.GEOSPATIAL:
+      return questionType.GEOSPATIAL;
+    case questionType.EDITOR: {
+      return questionType.EDITOR;
     }
     default:
-      return 'text';
+      return questionType.TEXT;
   }
 };

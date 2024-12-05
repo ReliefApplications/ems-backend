@@ -1,3 +1,4 @@
+import { inputType, questionType } from '@services/form.service';
 import { MULTISELECT_TYPES } from '@const/fieldTypes';
 import {
   GraphQLBoolean,
@@ -47,85 +48,85 @@ const getFieldType = (
     return GraphQLID;
   }
   switch (field.type) {
-    case 'resource': {
+    case questionType.RESOURCE: {
       return GraphQLID;
     }
-    case 'resources': {
+    case questionType.RESOURCES: {
       return filter ? new GraphQLList(GraphQLID) : [GraphQLID];
     }
-    case 'text': {
+    case questionType.TEXT: {
       return GraphQLString;
     }
-    case 'url': {
+    case inputType.URL: {
       return GraphQLString;
     }
-    case 'email': {
+    case inputType.EMAIL: {
       return GraphQLString;
     }
-    case 'tel': {
+    case inputType.TEL: {
       return GraphQLString;
     }
-    case 'dropdown': {
+    case questionType.DROPDOWN: {
       return GraphQLString;
     }
-    case 'radiogroup': {
+    case questionType.RADIO_GROUP: {
       return GraphQLString;
     }
-    case 'comment': {
+    case questionType.COMMENT: {
       return GraphQLString;
     }
-    case 'boolean': {
+    case questionType.BOOLEAN: {
       return GraphQLBoolean;
     }
-    case 'numeric': {
+    case inputType.NUMERIC: {
       return GraphQLFloat;
     }
-    case 'decimal': {
+    case inputType.DECIMAL: {
       return GraphQLFloat;
     }
-    case 'date': {
+    case inputType.DATE: {
       return GraphQLDate;
     }
-    case 'datetime': {
+    case inputType.DATETIME: {
       return GraphQLDateTime;
     }
-    case 'datetime-local': {
+    case inputType.DATETIME_LOCAL: {
       return GraphQLDateTime;
     }
-    case 'time': {
+    case inputType.TIME: {
       return GraphQLTime;
     }
-    case 'multipletext': {
+    case questionType.MULTIPLE_TEXT: {
       return GraphQLJSON;
     }
-    case 'matrix': {
+    case questionType.MATRIX: {
       return GraphQLJSON;
     }
-    case 'matrixdropdown': {
+    case questionType.MATRIX_DROPDOWN: {
       return GraphQLJSON;
     }
-    case 'matrixdynamic': {
+    case questionType.MATRIX_DYNAMIC: {
       return GraphQLJSON;
     }
-    case 'checkbox': {
+    case questionType.CHECKBOX: {
       return GraphQLJSON;
     }
-    case 'file': {
+    case questionType.FILE: {
       return GraphQLJSON;
     }
-    case 'tagbox': {
+    case questionType.TAGBOX: {
       return GraphQLJSON;
     }
-    case 'users': {
+    case questionType.USERS: {
       return GraphQLJSON;
     }
-    case 'owner': {
+    case questionType.OWNER: {
       return GraphQLJSON;
     }
-    case 'geospatial': {
+    case questionType.GEOSPATIAL: {
       return GraphQLJSON;
     }
-    case 'editor': {
+    case questionType.EDITOR: {
       return GraphQLString;
     }
     default: {

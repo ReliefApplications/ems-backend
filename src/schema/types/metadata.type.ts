@@ -1,3 +1,4 @@
+import { questionType } from '@services/form.service';
 import { Form, Resource } from '@models';
 import {
   GraphQLObjectType,
@@ -67,7 +68,12 @@ export const FieldMetaDataType = new GraphQLObjectType({
           });
         }
         if (
-          ['radiogroup', 'dropdown', 'checkbox', 'tagbox'].includes(parent.type)
+          [
+            questionType.RADIO_GROUP,
+            questionType.DROPDOWN,
+            questionType.CHECKBOX,
+            questionType.TAGBOX,
+          ].includes(parent.type)
         ) {
           if (parent._field?.choicesByUrl || parent._field?.choicesByGraphQL) {
             return getFullChoices(parent._field, context);
