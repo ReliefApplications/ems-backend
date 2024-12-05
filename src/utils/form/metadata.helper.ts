@@ -1,3 +1,4 @@
+import { inputType, questionType } from '@services/form.service';
 import { Form, Resource, User, Role, ReferenceData } from '@models';
 import mongoose from 'mongoose';
 import { sortBy } from 'lodash';
@@ -258,84 +259,84 @@ export const getMetaData = async (
         .map((form) => form.id),
     };
     switch (field.type) {
-      case 'radiogroup':
-      case 'dropdown': {
+      case questionType.RADIO_GROUP:
+      case questionType.DROPDOWN: {
         fieldMeta.editor = 'select';
         fieldMeta._field = field;
         break;
       }
-      case 'checkbox':
-      case 'tagbox': {
+      case questionType.CHECKBOX:
+      case questionType.TAGBOX: {
         fieldMeta.editor = 'select';
         fieldMeta.multiSelect = true;
         fieldMeta._field = field;
         break;
       }
-      case 'time': {
+      case inputType.TIME: {
         fieldMeta.editor = 'time';
         break;
       }
-      case 'date': {
+      case inputType.DATE: {
         fieldMeta.editor = 'date';
         break;
       }
-      case 'datetime':
-      case 'datetime-local': {
+      case inputType.DATETIME:
+      case inputType.DATETIME_LOCAL: {
         fieldMeta.editor = 'datetime';
         break;
       }
-      case 'email':
-      case 'url':
-      case 'comment':
-      case 'text': {
+      case inputType.EMAIL:
+      case inputType.URL:
+      case questionType.COMMENT:
+      case questionType.TEXT: {
         fieldMeta.editor = 'text';
         break;
       }
-      case 'boolean': {
+      case questionType.BOOLEAN: {
         fieldMeta.editor = 'boolean';
         break;
       }
-      case 'numeric': {
+      case inputType.NUMERIC: {
         fieldMeta.editor = 'numeric';
         break;
       }
-      case 'multipletext': {
+      case questionType.MULTIPLE_TEXT: {
         fieldMeta.editor = 'datetime';
         break;
       }
-      case 'matrix':
-      case 'matrixdropdown':
-      case 'matrixdynamic':
-      case 'multipletext': {
+      case questionType.MATRIX:
+      case questionType.MATRIX_DROPDOWN:
+      case questionType.MATRIX_DYNAMIC:
+      case questionType.MULTIPLE_TEXT: {
         fieldMeta.filterable = false;
         break;
       }
-      case 'resource':
-      case 'resources': {
+      case questionType.RESOURCE:
+      case questionType.RESOURCES: {
         fieldMeta.filterable = root;
         fieldMeta._field = field;
         break;
       }
-      case 'file': {
+      case questionType.FILE: {
         fieldMeta.filter = {
           defaultOperator: filterOperator.IS_NOT_NULL,
           operators: [filterOperator.IS_NULL, filterOperator.IS_NOT_NULL],
         };
         break;
       }
-      case 'users': {
+      case questionType.USERS: {
         fieldMeta.editor = 'select';
         fieldMeta.multiSelect = true;
         fieldMeta._field = field;
         break;
       }
-      case 'owner': {
+      case questionType.OWNER: {
         fieldMeta.editor = 'select';
         fieldMeta.multiSelect = true;
         fieldMeta._field = field;
         break;
       }
-      case 'editor': {
+      case questionType.EDITOR: {
         fieldMeta.filter = {
           operators: [filterOperator.IS_NULL, filterOperator.IS_NOT_NULL],
         };

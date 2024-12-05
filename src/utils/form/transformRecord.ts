@@ -1,3 +1,4 @@
+import { inputType, questionType } from '@services/form.service';
 import mongoose from 'mongoose';
 import { getDateForMongo } from '../filter/getDateForMongo';
 import { getTimeForMongo } from '../filter/getTimeForMongo';
@@ -12,14 +13,14 @@ import isNil from 'lodash/isNil';
  */
 export const formatValue = (field: any, value: any): any => {
   switch (field.type) {
-    case 'date':
-    case 'datetime':
-    case 'datetime-local':
+    case inputType.DATE:
+    case inputType.DATETIME:
+    case inputType.DATETIME_LOCAL:
       if (!isNil(value)) {
         return getDateForMongo(value).startDate;
       }
       break;
-    case 'text':
+    case inputType.TEXT:
       if (!isNil(value)) {
         if (Array.isArray(value)) {
           return value.toString();
@@ -28,22 +29,22 @@ export const formatValue = (field: any, value: any): any => {
         }
       }
       break;
-    case 'time':
+    case inputType.TIME:
       if (!isNil(value) && !(value instanceof Date)) {
         return getTimeForMongo(value);
       }
       break;
-    case 'time':
+    case inputType.TIME:
       if (!isNil(value) && !(value instanceof Date)) {
         return getTimeForMongo(value);
       }
       break;
-    case 'file':
+    case questionType.FILE:
       if (!isNil(value)) {
         return value.map((x) => ({ name: x.name, content: x.content }));
       }
       break;
-    case 'resource':
+    case questionType.RESOURCE:
       if (!isNil(value)) {
         //checks if the id is a valid mongo id
         return new mongoose.Types.ObjectId(value).toString() === value
@@ -52,7 +53,7 @@ export const formatValue = (field: any, value: any): any => {
       }
       break;
 
-    case 'resources':
+    case questionType.RESOURCES:
       if (!isNil(value) && Array.isArray(value)) {
         //returns only valid ids from an array of ids
         return value.filter(

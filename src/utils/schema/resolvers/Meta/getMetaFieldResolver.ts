@@ -4,6 +4,7 @@ import getMetaOwnerResolver from './getMetaOwnerResolver';
 import getMetaUsersResolver from './getMetaUsersResolver';
 import getMetaRadioResolver from './getMetaRadiogroupResolver';
 import getMetaTagboxResolver from './getMetaTagboxResolver';
+import { questionType } from '@services/form.service';
 
 /**
  * Return GraphQL resolver of the field, based on its type.
@@ -13,22 +14,22 @@ import getMetaTagboxResolver from './getMetaTagboxResolver';
  */
 const getMetaFieldResolver = (field: any) => {
   switch (field.type) {
-    case 'dropdown': {
+    case questionType.DROPDOWN: {
       return getMetaDropdownResolver(field);
     }
-    case 'radiogroup': {
+    case questionType.RADIO_GROUP: {
       return getMetaRadioResolver(field);
     }
-    case 'checkbox': {
+    case questionType.CHECKBOX: {
       return getMetaCheckboxResolver(field);
     }
-    case 'tagbox': {
+    case questionType.TAGBOX: {
       return getMetaTagboxResolver(field);
     }
-    case 'users': {
+    case questionType.USERS: {
       return getMetaUsersResolver(field);
     }
-    case 'owner': {
+    case questionType.OWNER: {
       return getMetaOwnerResolver(field);
     }
     default: {

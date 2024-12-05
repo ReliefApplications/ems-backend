@@ -1,3 +1,4 @@
+import { inputType, questionType } from '@services/form.service';
 import { Record, User, Role, ReferenceData } from '@models';
 import {
   Change,
@@ -451,7 +452,7 @@ export class RecordHistory {
         const field = this.fields.find((f) => f.name === change.field);
         if (!field) continue;
         switch (field.type) {
-          case 'boolean':
+          case questionType.BOOLEAN:
             if (change.old !== undefined)
               if (change.old)
                 change.old = field.labelTrue ? field.labelTrue : change.old;
@@ -464,19 +465,19 @@ export class RecordHistory {
               else
                 change.new = field.labelFalse ? field.labelFalse : change.new;
             break;
-          case 'radiogroup':
-          case 'dropdown':
-          case 'tagbox':
-          case 'checkbox':
+          case questionType.RADIO_GROUP:
+          case questionType.DROPDOWN:
+          case questionType.TAGBOX:
+          case questionType.CHECKBOX:
             await formatSelectable(field, change);
             break;
-          case 'file':
+          case questionType.FILE:
             if (!isNil(change.old))
               change.old = change.old.map((file: any) => file.name);
             if (!isNil(change.new))
               change.new = change.new.map((file: any) => file.name);
             break;
-          case 'multipletext':
+          case questionType.MULTIPLE_TEXT:
             ['new', 'old'].forEach((state) => {
               if (change[state] !== undefined) {
                 const keys = Object.keys(change[state]);
@@ -490,7 +491,7 @@ export class RecordHistory {
               }
             });
             break;
-          case 'matrix':
+          case questionType.MATRIX:
             ['new', 'old'].forEach((state) => {
               if (change[state] !== undefined) {
                 for (const key in change[state]) {
@@ -507,7 +508,7 @@ export class RecordHistory {
               }
             });
             break;
-          case 'matrixdropdown':
+          case questionType.MATRIX_DROPDOWN:
             ['new', 'old'].forEach((state) => {
               if (change[state] !== undefined) {
                 const keys = Object.keys(change[state]);
@@ -518,11 +519,11 @@ export class RecordHistory {
                   cols.forEach((col: string, i: number) => {
                     let newVal = change[state][key][i];
                     switch (field.columns[i].cellType) {
-                      case 'radiogroup':
-                      case 'dropdown':
+                      case questionType.RADIO_GROUP:
+                      case questionType.DROPDOWN:
                         newVal = getOptionFromChoices(newVal, field.choices);
                         break;
-                      case 'checkbox':
+                      case questionType.CHECKBOX:
                         newVal = newVal.map((item: string) =>
                           getOptionFromChoices(item, field.choices)
                         );
@@ -536,7 +537,7 @@ export class RecordHistory {
               }
             });
             break;
-          case 'matrixdynamic':
+          case questionType.MATRIX_DYNAMIC:
             ['new', 'old'].forEach((state) => {
               if (change[state] !== undefined) {
                 const formatedState = [];
@@ -565,45 +566,45 @@ export class RecordHistory {
               }
             });
             break;
-          case 'resource':
+          case questionType.RESOURCE:
             if (change.old !== undefined)
               change.old = await getResourcesIncrementalID([change.old]);
             if (change.new !== undefined)
               change.new = await getResourcesIncrementalID([change.new]);
             break;
           // no break for the resources
-          case 'resources':
+          case questionType.RESOURCES:
             if (change.old !== undefined)
               change.old = await getResourcesIncrementalID(change.old);
             if (change.new !== undefined)
               change.new = await getResourcesIncrementalID(change.new);
             break;
-          case 'users':
+          case questionType.USERS:
             if (change.old !== undefined)
               change.old = await getUsersFromID(change.old);
             if (change.new !== undefined)
               change.new = await getUsersFromID(change.new);
             break;
-          case 'owner':
+          case questionType.OWNER:
             if (change.old !== undefined)
               change.old = await getOwner(change.old);
             if (change.new !== undefined)
               change.new = await getOwner(change.new);
             break;
-          case 'date':
+          case inputType.DATE:
             if (change.old !== undefined)
               change.old = new Date(change.old).toLocaleDateString();
             if (change.new !== undefined)
               change.new = new Date(change.new).toLocaleDateString();
             break;
-          case 'datetime':
-          case 'datetime-local':
+          case inputType.DATETIME:
+          case inputType.DATETIME_LOCAL:
             if (change.old !== undefined)
               change.old = new Date(change.old).toLocaleString();
             if (change.new !== undefined)
               change.new = new Date(change.new).toLocaleString();
             break;
-          case 'time':
+          case inputType.TIME:
             if (change.old !== undefined)
               change.old = new Date(change.old).toTimeString();
             if (change.new !== undefined)

@@ -1,3 +1,4 @@
+import { questionType } from '@services/form.service';
 import { getChoices } from '../proxy/getChoices';
 
 /** Default record fields */
@@ -19,8 +20,8 @@ export const getColumns = async (
   const columns = [];
   for (const field of fields) {
     switch (field.type) {
-      case 'checkbox':
-      case 'tagbox': {
+      case questionType.CHECKBOX:
+      case questionType.TAGBOX: {
         if (field.choices && Array.isArray(field.choices) && template) {
           for (const item of field.choices) {
             const name = `${field.name}.${item.value}`;
@@ -66,7 +67,7 @@ export const getColumns = async (
         }
         break;
       }
-      case 'multipletext': {
+      case questionType.MULTIPLE_TEXT: {
         for (const item of field.items) {
           const name = `${field.name}.${item.name}`;
           columns.push({
@@ -79,7 +80,7 @@ export const getColumns = async (
         }
         break;
       }
-      case 'matrix': {
+      case questionType.MATRIX: {
         for (const row of field.rows) {
           const name = `${field.name}.${row.name}`;
           columns.push({
@@ -97,7 +98,7 @@ export const getColumns = async (
         }
         break;
       }
-      case 'matrixdropdown': {
+      case questionType.MATRIX_DROPDOWN: {
         for (const row of field.rows) {
           for (const column of field.columns) {
             const name = `${field.name}.${row.name}.${column.name}`;
@@ -113,7 +114,7 @@ export const getColumns = async (
         }
         break;
       }
-      case 'matrixdynamic': {
+      case questionType.MATRIX_DYNAMIC: {
         for (const column of field.columns) {
           const name = `${field.name}.0.${column.name}`;
           columns.push({
@@ -123,8 +124,8 @@ export const getColumns = async (
         }
         break;
       }
-      case 'dropdown':
-      case 'radiogroup': {
+      case questionType.DROPDOWN:
+      case questionType.RADIO_GROUP: {
         const name = `${field.name}`;
         if (field.choices && Array.isArray(field.choices) && template) {
           const options = field.choices.map((x) => x.value);

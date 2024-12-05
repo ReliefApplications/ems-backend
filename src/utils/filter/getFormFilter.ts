@@ -1,18 +1,19 @@
+import { inputType, questionType } from '@services/form.service';
 import { filterOperator } from '../../types';
 
 /** Authorized filter type names */
 const AUTHORIZED_FILTER_TYPES = [
-  'text',
-  'numeric',
-  'color',
-  'date',
-  'datetime-local',
-  'datetime',
-  'time',
-  'decimal',
-  'dropdown',
-  'tagbox',
-  'boolean',
+  inputType.TEXT,
+  inputType.NUMERIC,
+  inputType.COLOR,
+  inputType.DATE,
+  inputType.DATETIME_LOCAL,
+  inputType.DATETIME,
+  inputType.TIME,
+  inputType.DECIMAL,
+  questionType.DROPDOWN,
+  questionType.TAGBOX,
+  questionType.BOOLEAN,
 ];
 
 /** Default field names */

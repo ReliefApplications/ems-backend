@@ -1,3 +1,4 @@
+import { questionType } from '@services/form.service';
 import { GraphQLError } from 'graphql/error';
 import { getFieldType } from './getFieldType';
 import i18next from 'i18next';
@@ -61,7 +62,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
           }
         }
         // ** Multiple texts **
-        if (field.type === 'multipletext') {
+        if (field.type === questionType.MULTIPLE_TEXT) {
           Object.assign(field, {
             items: element.items.map((x) => {
               return {
@@ -72,7 +73,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
           });
         }
         // ** Dynamic matrix **
-        if (field.type === 'matrixdropdown') {
+        if (field.type === questionType.MATRIX_DROPDOWN) {
           Object.assign(field, {
             rows: element.rows.map((x) => {
               return {
@@ -96,7 +97,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
           });
         }
         // ** Single choice matrix **
-        if (field.type === 'matrix') {
+        if (field.type === questionType.MATRIX) {
           Object.assign(field, {
             rows: element.rows.map((x) => {
               return {
@@ -113,7 +114,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
           });
         }
         // ** Dynamic rows matrix **
-        if (field.type === 'matrixdynamic') {
+        if (field.type === questionType.MATRIX_DYNAMIC) {
           Object.assign(field, {
             columns: element.columns.map((x) => {
               return {
@@ -132,10 +133,10 @@ export const extractFields = async (object, fields, core): Promise<void> => {
         }
         // ** Dropdown / Radio / Checkbox / Tagbox **
         if (
-          field.type === 'dropdown' ||
-          field.type === 'radiogroup' ||
-          field.type === 'checkbox' ||
-          field.type === 'tagbox'
+          field.type === questionType.DROPDOWN ||
+          field.type === questionType.RADIO_GROUP ||
+          field.type === questionType.CHECKBOX ||
+          field.type === questionType.TAGBOX
         ) {
           if (element.choicesByUrl) {
             Object.assign(field, {
@@ -204,7 +205,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
           }
         }
         // ** Owner **
-        if (field.type === 'owner') {
+        if (field.type === questionType.OWNER) {
           Object.assign(field, { applications: element.applications });
         }
         // ** Comments **
@@ -222,7 +223,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
           });
         }
         // ** Users **
-        if (field.type === 'users') {
+        if (field.type === questionType.USERS) {
           Object.assign(field, { applications: element.applications });
         }
         fields.push(field);
