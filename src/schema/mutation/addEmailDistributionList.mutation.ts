@@ -22,7 +22,8 @@ export default {
         !args.distributionList.name ||
         (!(
           args.distributionList.to.resource ||
-          args.distributionList.to.reference
+          args.distributionList.to.reference ||
+          args.distributionList?.to?.commonServiceFilter?.filters?.length > 0
         ) &&
           args.distributionList.to.inputEmails.length === 0)
       ) {
