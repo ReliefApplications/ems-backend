@@ -33,6 +33,14 @@ module.exports = {
     port: '',
     user: '',
     pass: '',
+    blobStorage: {
+      connectionString: '',
+      container: '',
+    },
+    serverless: {
+      url: '',
+      key: '',
+    },
   },
   database: {
     provider: '',
