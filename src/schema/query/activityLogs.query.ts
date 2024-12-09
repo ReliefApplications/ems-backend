@@ -2,7 +2,7 @@ import { ActivityLog } from '@models';
 import { logger } from '@services/logger.service';
 import getFilter from '@utils/filter/getFilter';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
-import { GraphQLError, GraphQLID, GraphQLInt } from 'graphql';
+import { GraphQLError, GraphQLID, GraphQLInt, GraphQLString } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Types } from 'mongoose';
 import { CompositeFilterDescriptor } from 'types/filter';
@@ -12,6 +12,7 @@ import {
   encodeCursor,
 } from '../types';
 import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
+import { isNil } from 'lodash';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
@@ -50,10 +51,12 @@ type ActivityLogsArgs = {
   first?: number;
   afterCursor?: string | Types.ObjectId;
   filter?: CompositeFilterDescriptor;
+  userId?: string;
+  applicationId?: string;
 };
 
 /**
- * GraphQL query to list all activitiesLogs.
+ * GraphQL query to list all activity logs.
  */
 export default {
   type: ActivityLogConnectionType,
@@ -61,14 +64,24 @@ export default {
     first: { type: GraphQLInt },
     afterCursor: { type: GraphQLID },
     filter: { type: GraphQLJSON },
+    userId: { type: GraphQLString },
+    applicationId: { type: GraphQLString },
   },
   async resolve(parent, args: ActivityLogsArgs) {
-    // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
     checkPageSize(first);
+
     try {
-      const queryFilters = getFilter(args.filter, FILTER_FIELDS);
-      const filters: any[] = [queryFilters];
+      const filters: any[] = [
+        ...(args.userId ? [{ userId: new Types.ObjectId(args.userId) }] : []),
+        ...(args.applicationId
+          ? [{ 'metadata.applicationId': args.applicationId }]
+          : []),
+      ];
+      if (!isNil(args.filter)) {
+        const queryFilters = getFilter(args.filter, FILTER_FIELDS);
+        filters.push(queryFilters);
+      }
 
       const afterCursor = args.afterCursor;
       const sortField = SORT_FIELDS[0];

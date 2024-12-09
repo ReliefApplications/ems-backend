@@ -5,6 +5,7 @@ import getFilter from '@utils/filter/getFilter';
 import config from 'config';
 import express, { Request, Response } from 'express';
 import isNil from 'lodash/isNil';
+import { Types } from 'mongoose';
 
 /** Express router to mount activity related functions on. */
 const router = express.Router();
@@ -50,8 +51,12 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
   // Define the name of the file
   const fileName = 'activities.xlsx';
   const timeZone: string = req.body.timeZone || 'UTC';
-  const filters: any[] = [];
-  if (!isNil(req.body.filter)) {
+  const { userId, applicationId, filter } = req.body;
+  const filters: any[] = [
+    ...(userId ? [{ userId: new Types.ObjectId(userId) }] : []),
+    ...(applicationId ? [{ 'metadata.applicationId': applicationId }] : []),
+  ];
+  if (!isNil(filter)) {
     const queryFilters = getFilter(req.body.filter, [
       {
         name: 'createdAt',
@@ -108,6 +113,7 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
   res.send(file);
 };
 
+/** Log new activity */
 router.post('/', async (req, res) => {
   try {
     const user = req.context.user;
@@ -115,17 +121,19 @@ router.post('/', async (req, res) => {
     const activity = new ActivityLog({
       userId: user._id,
       eventType: body.eventType,
+      applicationId: new Types.ObjectId(body.metadata.applicationId),
       metadata: body.metadata,
-      attributes: req.context.user.attributes,
+      attributes: user.attributes,
     });
     await activity.save();
     res.status(200).send(activity);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send('Error');
+    res.status(500).send('Error logging activity');
   }
 });
 
+/** Download activities */
 router.post('/download-activities', async (req, res) => {
   try {
     await exportActivitiesToXlsx(req, res);
