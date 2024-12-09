@@ -12,6 +12,7 @@ import {
   encodeCursor,
 } from '../types';
 import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
+import { isNil } from 'lodash';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
@@ -50,6 +51,8 @@ type ActivityLogsArgs = {
   first?: number;
   afterCursor?: string | Types.ObjectId;
   filter?: CompositeFilterDescriptor;
+  userId?: string;
+  applicationId?: string;
 };
 
 /**
@@ -64,25 +67,21 @@ export default {
     userId: { type: GraphQLString },
     applicationId: { type: GraphQLString },
   },
-  async resolve(
-    parent,
-    args: ActivityLogsArgs & { userId?: string; applicationId?: string }
-  ) {
+  async resolve(parent, args: ActivityLogsArgs) {
     const first = args.first || DEFAULT_FIRST;
     checkPageSize(first);
 
     try {
-      const queryConditions: { [key: string]: any } = {};
-      if (args.userId) queryConditions.userId = args.userId;
-      if (args.applicationId)
-        queryConditions['metadata.applicationId'] = args.applicationId;
-
-      const queryFilters = getFilter(args.filter, FILTER_FIELDS);
-
-      // Ensure queryFilters is an object or valid array
-      const filters: any[] = Array.isArray(queryFilters)
-        ? queryFilters
-        : [queryFilters];
+      const filters: any[] = [
+        ...(args.userId ? [{ userId: new Types.ObjectId(args.userId) }] : []),
+        ...(args.applicationId
+          ? [{ 'metadata.applicationId': args.applicationId }]
+          : []),
+      ];
+      if (!isNil(args.filter)) {
+        const queryFilters = getFilter(args.filter, FILTER_FIELDS);
+        filters.push(queryFilters);
+      }
 
       const afterCursor = args.afterCursor;
       const sortField = SORT_FIELDS[0];
@@ -91,16 +90,9 @@ export default {
         ? sortField.cursorFilter(afterCursor, sortOrder)
         : {};
 
-      // Construct conditions and avoid empty $and
-      const andConditions = [cursorFilters, ...filters, queryConditions].filter(
-        (condition) => condition && Object.keys(condition).length > 0
-      );
-
-      // If no conditions are present, match all documents
-      const mongoQuery =
-        andConditions.length > 0 ? { $and: andConditions } : {};
-
-      let activities = await ActivityLog.find(mongoQuery)
+      let activities = await ActivityLog.find({
+        $and: [cursorFilters, ...filters],
+      })
         .sort(sortField.sort(sortOrder))
         .limit(first + 1);
 
@@ -121,7 +113,7 @@ export default {
           endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
         },
         edges,
-        totalCount: await ActivityLog.countDocuments(mongoQuery),
+        totalCount: await ActivityLog.countDocuments({ $and: filters }),
       };
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
