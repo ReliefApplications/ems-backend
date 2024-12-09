@@ -9,6 +9,36 @@ import isNil from 'lodash/isNil';
 /** Express router to mount activity related functions on. */
 const router = express.Router();
 
+/** Date format options */
+const dateFormatOptions: Intl.DateTimeFormatOptions = {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23', // Ensures 24-hour format
+};
+
+/**
+ * Format date
+ *
+ * @param date Date to format
+ * @param timeZone User timezone
+ * @returns formatted date
+ */
+const formatDate = (date: Date, timeZone: string) => {
+  const formattedParts = new Intl.DateTimeFormat('en-GB', {
+    ...dateFormatOptions,
+    timeZone,
+  })
+    .formatToParts(date) // Breaks down the date into individual parts
+    .reduce(
+      (acc, part) => ({ ...acc, [part.type]: part.value }),
+      {} as Record<string, string>
+    );
+  return `${formattedParts.year}-${formattedParts.month}-${formattedParts.day} ${formattedParts.hour}:${formattedParts.minute}`;
+};
+
 /**
  * Export activities to an XLSX file
  *
@@ -19,6 +49,7 @@ const router = express.Router();
 const exportActivitiesToXlsx = async (req: Request, res: Response) => {
   // Define the name of the file
   const fileName = 'activities.xlsx';
+  const timeZone: string = req.body.timeZone || 'UTC';
   const filters: any[] = [];
   if (!isNil(req.body.filter)) {
     const queryFilters = getFilter(req.body.filter, [
@@ -38,7 +69,7 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
 
   // Define the columns to be included in the XLSX file
   const columns = [
-    { name: 'createdAt', title: 'Created at', field: 'createdAt' },
+    { name: 'timestamp', title: 'Timestamp', field: 'timestamp' },
     { name: 'userId', title: 'User ID', field: 'userId' },
     { name: 'username', title: 'username', field: 'username' },
     ...attributes.map((x) => {
@@ -60,9 +91,7 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
     })
     .select('username');
   const formattedData = activities.map((activity) => ({
-    createdAt: activity.createdAt.toLocaleDateString(
-      req.query.dateLocale.toString()
-    ),
+    timestamp: formatDate(activity.createdAt, timeZone),
     userId: activity.userId?.toString(),
     eventType: activity.eventType,
     metadata: JSON.stringify(activity.metadata),
@@ -99,7 +128,7 @@ router.post('/', async (req, res) => {
 
 router.post('/download-activities', async (req, res) => {
   try {
-    exportActivitiesToXlsx(req, res);
+    await exportActivitiesToXlsx(req, res);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
     res.status(500).send('Error');
