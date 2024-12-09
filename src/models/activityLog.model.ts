@@ -9,6 +9,7 @@ export interface ActivityLog extends Document {
   metadata: any;
   username: string;
   attributes: any;
+  createdAt: Date;
 }
 
 /** Activity log documents interface declaration */

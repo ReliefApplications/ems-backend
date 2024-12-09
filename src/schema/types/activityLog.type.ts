@@ -27,6 +27,7 @@ export const ActivityLogType = new GraphQLObjectType({
       type: GraphQLString,
       description: 'Type of the event (e.g., "login", "logout").',
     },
+    createdAt: { type: GraphQLString, description: 'Date of creation' },
     url: {
       type: GraphQLString,
       description: 'The URL associated with the activity, if applicable.',
