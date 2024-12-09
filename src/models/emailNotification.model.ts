@@ -36,6 +36,12 @@ export interface Dataset {
   sendAsAttachment: boolean;
   individualEmail: boolean;
   individualEmailFields?: any[];
+  navigateToPage: boolean;
+  navigateSettings: {
+    field: string;
+    pageUrl: string;
+    title: string;
+  };
 }
 
 /** custom notification documents interface declaration */
@@ -102,6 +108,15 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
         textStyle: { type: mongoose.Schema.Types.Mixed },
         sendAsAttachment: { type: Boolean, default: false },
         individualEmail: { type: Boolean, default: false },
+        navigateToPage: {
+          type: Boolean,
+          default: false,
+        },
+        navigateSettings: {
+          field: String,
+          pageUrl: String,
+          title: String,
+        },
       },
     ],
     emailDistributionList: {
