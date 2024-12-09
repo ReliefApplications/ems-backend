@@ -53,6 +53,8 @@ type ActivityLogsArgs = {
   filter?: CompositeFilterDescriptor;
   userId?: string;
   applicationId?: string;
+  sortField?: string;
+  sortOrder?: string;
 };
 
 /**
@@ -66,12 +68,21 @@ export default {
     filter: { type: GraphQLJSON },
     userId: { type: GraphQLString },
     applicationId: { type: GraphQLString },
+    sortField: { type: GraphQLString },
+    sortOrder: { type: GraphQLString },
   },
   async resolve(parent, args: ActivityLogsArgs) {
     const first = args.first || DEFAULT_FIRST;
     checkPageSize(first);
 
     try {
+      // Inputs check
+      if (args.sortField) {
+        if (!SORT_FIELDS.map((x) => x.name).includes(args.sortField)) {
+          throw new GraphQLError(`Cannot sort by ${args.sortField} field`);
+        }
+      }
+
       const filters: any[] = [
         ...(args.userId ? [{ userId: new Types.ObjectId(args.userId) }] : []),
         ...(args.applicationId
@@ -84,8 +95,10 @@ export default {
       }
 
       const afterCursor = args.afterCursor;
-      const sortField = SORT_FIELDS[0];
-      const sortOrder = 'desc';
+      const sortField =
+        SORT_FIELDS.find((x) => x.name === args.sortField) ||
+        SORT_FIELDS.find((x) => x.name === 'createdAt');
+      const sortOrder = args.sortOrder || 'desc';
       const cursorFilters = afterCursor
         ? sortField.cursorFilter(afterCursor, sortOrder)
         : {};
