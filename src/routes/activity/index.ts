@@ -86,6 +86,7 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
     }),
     { name: 'eventType', title: 'Event Type', field: 'eventType' },
     { name: 'metadata', title: 'metadata', field: 'metadata' },
+    { name: 'title', title: 'Title', field: 'title' },
   ];
 
   // Get related usernames of given activities by their related userId
@@ -100,6 +101,7 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
     userId: activity.userId?.toString(),
     eventType: activity.eventType,
     metadata: JSON.stringify(activity.metadata),
+    title: activity.metadata?.title || '',
     username: usernames.find((user) => activity.userId?.equals(user._id))
       ?.username,
     attributes: activity.attributes,

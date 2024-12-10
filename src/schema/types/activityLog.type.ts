@@ -41,6 +41,20 @@ export const ActivityLogType = new GraphQLObjectType({
         }
       },
     },
+    title: {
+      type: GraphQLString,
+      description:
+        'The title of the page associated with the activity, if applicable.',
+      resolve: ({ metadata }) => {
+        try {
+          const parsedMetadata =
+            typeof metadata === 'string' ? JSON.parse(metadata) : metadata;
+          return parsedMetadata?.title || '';
+        } catch {
+          return '';
+        }
+      },
+    },
     applicationId: {
       type: GraphQLString,
       description: 'The application where the activity was performed.',
