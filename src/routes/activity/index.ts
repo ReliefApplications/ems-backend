@@ -92,8 +92,7 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
         field: `attributes.${x.value}`,
       };
     }),
-    { name: 'eventType', title: 'Event Type', field: 'eventType' },
-    { name: 'title', title: 'Title', field: 'title' },
+    { name: 'page', title: 'Page', field: 'page' },
   ];
 
   // Get related usernames of given activities by their related userId
@@ -106,8 +105,7 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
   const formattedData = activities.map((activity) => ({
     timestamp: formatDate(activity.createdAt, timeZone),
     userId: activity.userId?.toString(),
-    eventType: activity.eventType,
-    title: activity.metadata?.title || '',
+    page: activity.metadata?.title || '',
     username: usernames.find((user) => activity.userId?.equals(user._id))
       ?.username,
     attributes: activity.attributes,
