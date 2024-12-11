@@ -13,6 +13,14 @@ const FILTER_FIELDS: { name: string; type: string }[] = [
     name: 'createdAt',
     type: 'date',
   },
+  {
+    name: 'username',
+    type: 'text',
+  },
+  ...((config.get('user.attributes.list') || []) as any[]).map((x) => ({
+    name: `attributes.${x.value}`,
+    type: 'text',
+  })),
 ];
 
 /** Express router to mount activity related functions on. */
@@ -338,8 +346,14 @@ router.get('/group-by-user', async (req: Request, res) => {
         : []),
       {
         $group: {
-          _id: '$username',
+          _id: {
+            username: '$username',
+            attributes: {
+              $cond: [{ $not: ['$username'] }, '$attributes', null],
+            },
+          },
           count: { $sum: 1 },
+          attributes: { $last: '$attributes' },
         },
       },
     ])
@@ -347,8 +361,9 @@ router.get('/group-by-user', async (req: Request, res) => {
         items: [
           {
             $project: {
-              username: '$_id',
+              username: '$_id.username',
               count: 1,
+              attributes: 1,
               _id: 0,
             },
           },
@@ -381,6 +396,38 @@ router.get('/group-by-user', async (req: Request, res) => {
       skip,
       take,
     });
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    res.status(500).send('Internal server error');
+  }
+});
+
+router.get('/metadata/:field', async (req: Request, res) => {
+  try {
+    const field = req.params.field;
+    const aggregation = await ActivityLog.aggregate([
+      {
+        $group: {
+          _id: `$${field}`,
+        },
+      },
+      {
+        $match: {
+          _id: { $ne: null },
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+        },
+      },
+      {
+        $sort: {
+          _id: 1,
+        },
+      },
+    ]);
+    res.status(200).json(aggregation.map((x) => x._id));
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
     res.status(500).send('Internal server error');
