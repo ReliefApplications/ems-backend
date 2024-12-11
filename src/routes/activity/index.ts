@@ -135,11 +135,11 @@ router.post('/', async (req, res) => {
     res.status(200).send(activity);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send('Error logging activity');
+    res.status(500).send('Internal server error');
   }
 });
 
-router.post('/group-by-url', async (req: Request, res) => {
+router.get('/', async (req: Request, res) => {
   try {
     const userId = req.query.user_id || '';
     const applicationId = req.query.application_id;
@@ -150,8 +150,79 @@ router.post('/group-by-url', async (req: Request, res) => {
       ...(applicationId ? [{ 'metadata.applicationId': applicationId }] : []),
     ];
 
-    if (!isNil(req.body.filter)) {
-      const queryFilters = getFilter(req.body.filter, FILTER_FIELDS);
+    if (!isNil(req.query.filter)) {
+      const queryFilters = getFilter(
+        JSON.parse(req.query.filter as string),
+        FILTER_FIELDS
+      );
+      filters.push(queryFilters);
+    }
+
+    const aggregation = await ActivityLog.aggregate([
+      // Only add filters if relevant
+      ...(filters.length > 0
+        ? [
+            {
+              $match: {
+                $and: [...filters],
+              },
+            },
+          ]
+        : []),
+      {
+        $sort: { createdAt: -1 },
+      },
+    ])
+      .facet({
+        items: [
+          {
+            $skip: skip,
+          },
+          {
+            $limit: take,
+          },
+        ],
+        totalCount: [
+          {
+            $count: 'count',
+          },
+        ],
+      })
+      .project({
+        items: 1,
+        // So totalCount is 0 if no item found
+        totalCount: {
+          $ifNull: [{ $arrayElemAt: ['$totalCount.count', 0] }, 0],
+        },
+      });
+    res.status(200).send({
+      data: aggregation[0].items,
+      total: aggregation[0].totalCount,
+      skip,
+      take,
+    });
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    res.status(500).send('Internal server error');
+  }
+});
+
+router.get('/group-by-url', async (req: Request, res) => {
+  try {
+    const userId = req.query.user_id || '';
+    const applicationId = req.query.application_id;
+    const skip = Number(req.query.skip || 0);
+    const take = Number(req.query.take || 10);
+    const filters: any[] = [
+      ...(userId ? [{ userId: new Types.ObjectId(userId as string) }] : []),
+      ...(applicationId ? [{ 'metadata.applicationId': applicationId }] : []),
+    ];
+
+    if (!isNil(req.query.filter)) {
+      const queryFilters = getFilter(
+        JSON.parse(req.query.filter as string),
+        FILTER_FIELDS
+      );
       filters.push(queryFilters);
     }
 
@@ -217,7 +288,7 @@ router.post('/group-by-url', async (req: Request, res) => {
   }
 });
 
-router.post('/group-by-user', async (req: Request, res) => {
+router.get('/group-by-user', async (req: Request, res) => {
   try {
     const userId = req.query.user_id || '';
     const applicationId = req.query.application_id;
@@ -228,8 +299,11 @@ router.post('/group-by-user', async (req: Request, res) => {
       ...(applicationId ? [{ 'metadata.applicationId': applicationId }] : []),
     ];
 
-    if (!isNil(req.body.filter)) {
-      const queryFilters = getFilter(req.body.filter, FILTER_FIELDS);
+    if (!isNil(req.query.filter)) {
+      const queryFilters = getFilter(
+        JSON.parse(req.query.filter as string),
+        FILTER_FIELDS
+      );
       filters.push(queryFilters);
     }
 
