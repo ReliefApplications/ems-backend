@@ -145,8 +145,8 @@ router.post('/group-by-url', async (req: Request, res) => {
   try {
     const userId = req.query.user_id || '';
     const applicationId = req.query.application_id;
-    const currentPage = Number(req.query.page || 0);
-    const perPage = Number(req.query.per_page || 10);
+    const skip = Number(req.query.skip || 0);
+    const take = Number(req.query.take || 10);
     const filters: any[] = [
       ...(userId ? [{ userId: new Types.ObjectId(userId as string) }] : []),
       ...(applicationId ? [{ 'metadata.applicationId': applicationId }] : []),
@@ -181,10 +181,10 @@ router.post('/group-by-url', async (req: Request, res) => {
       .facet({
         items: [
           {
-            $skip: currentPage * perPage,
+            $skip: skip,
           },
           {
-            $limit: perPage,
+            $limit: take,
           },
           {
             $project: {
@@ -208,10 +208,10 @@ router.post('/group-by-url', async (req: Request, res) => {
         },
       });
     res.status(200).send({
-      items: aggregation[0].items,
-      totalCount: aggregation[0].totalCount,
-      currentPage: currentPage,
-      perPage: perPage,
+      data: aggregation[0].items,
+      total: aggregation[0].totalCount,
+      skip,
+      take,
     });
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
@@ -223,8 +223,8 @@ router.post('/group-by-user', async (req: Request, res) => {
   try {
     const userId = req.query.user_id || '';
     const applicationId = req.query.application_id;
-    const currentPage = Number(req.query.page || 0);
-    const perPage = Number(req.query.per_page || 10);
+    const skip = Number(req.query.skip || 0);
+    const take = Number(req.query.take || 10);
     const filters: any[] = [
       ...(userId ? [{ userId: new Types.ObjectId(userId as string) }] : []),
       ...(applicationId ? [{ 'metadata.applicationId': applicationId }] : []),
@@ -259,10 +259,10 @@ router.post('/group-by-user', async (req: Request, res) => {
       .facet({
         items: [
           {
-            $skip: currentPage * perPage,
+            $skip: skip,
           },
           {
-            $limit: perPage,
+            $limit: take,
           },
           {
             $project: {
@@ -286,10 +286,10 @@ router.post('/group-by-user', async (req: Request, res) => {
         },
       });
     res.status(200).send({
-      items: aggregation[0].items,
-      totalCount: aggregation[0].totalCount,
-      currentPage: currentPage,
-      perPage: perPage,
+      data: aggregation[0].items,
+      total: aggregation[0].totalCount,
+      skip,
+      take,
     });
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
