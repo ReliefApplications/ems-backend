@@ -126,6 +126,7 @@ router.post('/', async (req, res) => {
     const body = req.body;
     const activity = new ActivityLog({
       userId: user._id,
+      username: user.username,
       eventType: body.eventType,
       applicationId: new Types.ObjectId(body.metadata.applicationId),
       metadata: body.metadata,
@@ -169,6 +170,16 @@ router.get('/', async (req: Request, res) => {
             },
           ]
         : []),
+      {
+        $project: {
+          _id: 1,
+          userId: 1,
+          username: 1,
+          metadata: 1,
+          attributes: 1,
+          createdAt: 1,
+        },
+      },
       {
         $sort: { createdAt: -1 },
       },
@@ -320,7 +331,7 @@ router.get('/group-by-user', async (req: Request, res) => {
         : []),
       {
         $group: {
-          _id: '$userId',
+          _id: '$username',
           count: { $sum: 1 },
         },
       },
