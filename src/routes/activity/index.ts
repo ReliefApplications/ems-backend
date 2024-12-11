@@ -92,7 +92,6 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
         field: `attributes.${x.value}`,
       };
     }),
-    { name: 'eventType', title: 'Event Type', field: 'eventType' },
     { name: 'metadata', title: 'metadata', field: 'metadata' },
   ];
 
@@ -106,7 +105,6 @@ const exportActivitiesToXlsx = async (req: Request, res: Response) => {
   const formattedData = activities.map((activity) => ({
     timestamp: formatDate(activity.createdAt, timeZone),
     userId: activity.userId?.toString(),
-    eventType: activity.eventType,
     metadata: JSON.stringify(activity.metadata),
     username: usernames.find((user) => activity.userId?.equals(user._id))
       ?.username,
