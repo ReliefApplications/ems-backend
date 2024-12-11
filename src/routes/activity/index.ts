@@ -134,7 +134,7 @@ router.post('/', async (req, res) => {
 });
 
 /** Download activities */
-router.post('/download-activities', async (req, res) => {
+router.post('/download', async (req, res) => {
   try {
     await exportActivitiesToXlsx(req, res);
   } catch (err) {
