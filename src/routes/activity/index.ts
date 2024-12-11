@@ -219,6 +219,84 @@ router.post('/group-by-url', async (req: Request, res) => {
   }
 });
 
+router.post('/group-by-user', async (req: Request, res) => {
+  try {
+    const userId = req.query.user_id || '';
+    const applicationId = req.query.application_id;
+    const currentPage = Number(req.query.page || 0);
+    const perPage = Number(req.query.per_page || 10);
+    const filters: any[] = [
+      ...(userId ? [{ userId: new Types.ObjectId(userId as string) }] : []),
+      ...(applicationId ? [{ 'metadata.applicationId': applicationId }] : []),
+    ];
+
+    if (!isNil(req.body.filter)) {
+      const queryFilters = getFilter(req.body.filter, FILTER_FIELDS);
+      filters.push(queryFilters);
+    }
+
+    const aggregation = await ActivityLog.aggregate([
+      // Only add filters if relevant
+      ...(filters.length > 0
+        ? [
+            {
+              $match: {
+                $and: [...filters],
+              },
+            },
+          ]
+        : []),
+      {
+        $group: {
+          _id: '$userId',
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { count: -1 },
+      },
+    ])
+      .facet({
+        items: [
+          {
+            $skip: currentPage * perPage,
+          },
+          {
+            $limit: perPage,
+          },
+          {
+            $project: {
+              username: '$_id',
+              count: 1,
+              _id: 0,
+            },
+          },
+        ],
+        totalCount: [
+          {
+            $count: 'count',
+          },
+        ],
+      })
+      .project({
+        items: 1,
+        // So totalCount is 0 if no item found
+        totalCount: {
+          $ifNull: [{ $arrayElemAt: ['$totalCount.count', 0] }, 0],
+        },
+      });
+    res.status(200).send({
+      items: aggregation[0].items,
+      totalCount: aggregation[0].totalCount,
+      currentPage: currentPage,
+      perPage: perPage,
+    });
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    res.status(500).send('Internal server error');
+  }
+});
+
 /** Download activities */
 router.post('/download', async (req, res) => {
   try {
