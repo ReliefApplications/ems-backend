@@ -13,6 +13,14 @@ const FILTER_FIELDS: { name: string; type: string }[] = [
     name: 'createdAt',
     type: 'date',
   },
+  {
+    name: 'username',
+    type: 'text',
+  },
+  ...((config.get('user.attributes.list') || []) as any[]).map((x) => ({
+    name: `attributes.${x.value}`,
+    type: 'text',
+  })),
 ];
 
 /** Express router to mount activity related functions on. */
@@ -126,6 +134,7 @@ router.post('/', async (req, res) => {
     const body = req.body;
     const activity = new ActivityLog({
       userId: user._id,
+      username: user.username,
       eventType: body.eventType,
       applicationId: new Types.ObjectId(body.metadata.applicationId),
       metadata: body.metadata,
@@ -135,23 +144,109 @@ router.post('/', async (req, res) => {
     res.status(200).send(activity);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send('Error logging activity');
+    res.status(500).send('Internal server error');
   }
 });
 
-router.post('/group-by-url', async (req: Request, res) => {
+/** List activities */
+router.get('/', async (req: Request, res) => {
   try {
     const userId = req.query.user_id || '';
     const applicationId = req.query.application_id;
-    const currentPage = Number(req.query.page || 0);
-    const perPage = Number(req.query.per_page || 10);
+    const skip = Number(req.query.skip || 0);
+    const take = Number(req.query.take || 10);
+    const sortField = (req.query.sortField || 'createdAt') as string;
+    const sortOrder = (req.query.sortOrder || 'desc') as string;
     const filters: any[] = [
       ...(userId ? [{ userId: new Types.ObjectId(userId as string) }] : []),
       ...(applicationId ? [{ 'metadata.applicationId': applicationId }] : []),
     ];
 
-    if (!isNil(req.body.filter)) {
-      const queryFilters = getFilter(req.body.filter, FILTER_FIELDS);
+    if (!isNil(req.query.filter)) {
+      const queryFilters = getFilter(
+        JSON.parse(req.query.filter as string),
+        FILTER_FIELDS
+      );
+      filters.push(queryFilters);
+    }
+
+    const aggregation = await ActivityLog.aggregate([
+      // Only add filters if relevant
+      ...(filters.length > 0
+        ? [
+            {
+              $match: {
+                $and: [...filters],
+              },
+            },
+          ]
+        : []),
+      {
+        $project: {
+          _id: 1,
+          userId: 1,
+          username: 1,
+          metadata: 1,
+          attributes: 1,
+          createdAt: 1,
+        },
+      },
+      {
+        $sort: { [sortField]: sortOrder === 'asc' ? 1 : -1 },
+      },
+    ])
+      .facet({
+        items: [
+          {
+            $skip: skip,
+          },
+          {
+            $limit: take,
+          },
+        ],
+        totalCount: [
+          {
+            $count: 'count',
+          },
+        ],
+      })
+      .project({
+        items: 1,
+        // So totalCount is 0 if no item found
+        totalCount: {
+          $ifNull: [{ $arrayElemAt: ['$totalCount.count', 0] }, 0],
+        },
+      });
+    res.status(200).send({
+      data: aggregation[0].items,
+      total: aggregation[0].totalCount,
+      skip,
+      take,
+    });
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    res.status(500).send('Internal server error');
+  }
+});
+
+router.get('/group-by-url', async (req: Request, res) => {
+  try {
+    const userId = req.query.user_id || '';
+    const applicationId = req.query.application_id;
+    const skip = Number(req.query.skip || 0);
+    const take = Number(req.query.take || 10);
+    const sortField = (req.query.sortField || 'count') as string;
+    const sortOrder = (req.query.sortOrder || 'desc') as string;
+    const filters: any[] = [
+      ...(userId ? [{ userId: new Types.ObjectId(userId as string) }] : []),
+      ...(applicationId ? [{ 'metadata.applicationId': applicationId }] : []),
+    ];
+
+    if (!isNil(req.query.filter)) {
+      const queryFilters = getFilter(
+        JSON.parse(req.query.filter as string),
+        FILTER_FIELDS
+      );
       filters.push(queryFilters);
     }
 
@@ -172,24 +267,24 @@ router.post('/group-by-url', async (req: Request, res) => {
           count: { $sum: 1 },
         },
       },
-      {
-        $sort: { count: -1 },
-      },
     ])
       .facet({
         items: [
-          {
-            $skip: currentPage * perPage,
-          },
-          {
-            $limit: perPage,
-          },
           {
             $project: {
               url: '$_id',
               count: 1,
               _id: 0,
             },
+          },
+          {
+            $sort: { [sortField]: sortOrder === 'asc' ? 1 : -1 },
+          },
+          {
+            $skip: skip,
+          },
+          {
+            $limit: take,
           },
         ],
         totalCount: [
@@ -206,10 +301,10 @@ router.post('/group-by-url', async (req: Request, res) => {
         },
       });
     res.status(200).send({
-      items: aggregation[0].items,
-      totalCount: aggregation[0].totalCount,
-      currentPage: currentPage,
-      perPage: perPage,
+      data: aggregation[0].items,
+      total: aggregation[0].totalCount,
+      skip,
+      take,
     });
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
@@ -217,19 +312,24 @@ router.post('/group-by-url', async (req: Request, res) => {
   }
 });
 
-router.post('/group-by-user', async (req: Request, res) => {
+router.get('/group-by-user', async (req: Request, res) => {
   try {
     const userId = req.query.user_id || '';
     const applicationId = req.query.application_id;
-    const currentPage = Number(req.query.page || 0);
-    const perPage = Number(req.query.per_page || 10);
+    const skip = Number(req.query.skip || 0);
+    const take = Number(req.query.take || 10);
+    const sortField = (req.query.sortField || 'count') as string;
+    const sortOrder = (req.query.sortOrder || 'desc') as string;
     const filters: any[] = [
       ...(userId ? [{ userId: new Types.ObjectId(userId as string) }] : []),
       ...(applicationId ? [{ 'metadata.applicationId': applicationId }] : []),
     ];
 
-    if (!isNil(req.body.filter)) {
-      const queryFilters = getFilter(req.body.filter, FILTER_FIELDS);
+    if (!isNil(req.query.filter)) {
+      const queryFilters = getFilter(
+        JSON.parse(req.query.filter as string),
+        FILTER_FIELDS
+      );
       filters.push(queryFilters);
     }
 
@@ -246,28 +346,35 @@ router.post('/group-by-user', async (req: Request, res) => {
         : []),
       {
         $group: {
-          _id: '$userId',
+          _id: {
+            username: '$username',
+            attributes: {
+              $cond: [{ $not: ['$username'] }, '$attributes', null],
+            },
+          },
           count: { $sum: 1 },
+          attributes: { $last: '$attributes' },
         },
-      },
-      {
-        $sort: { count: -1 },
       },
     ])
       .facet({
         items: [
           {
-            $skip: currentPage * perPage,
-          },
-          {
-            $limit: perPage,
-          },
-          {
             $project: {
-              username: '$_id',
+              username: '$_id.username',
               count: 1,
+              attributes: 1,
               _id: 0,
             },
+          },
+          {
+            $sort: { [sortField]: sortOrder === 'asc' ? 1 : -1 },
+          },
+          {
+            $skip: skip,
+          },
+          {
+            $limit: take,
           },
         ],
         totalCount: [
@@ -284,16 +391,48 @@ router.post('/group-by-user', async (req: Request, res) => {
         },
       });
     res.status(200).send({
-      items: aggregation[0].items,
-      totalCount: aggregation[0].totalCount,
-      currentPage: currentPage,
-      perPage: perPage,
+      data: aggregation[0].items,
+      total: aggregation[0].totalCount,
+      skip,
+      take,
     });
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
     res.status(500).send('Internal server error');
   }
 });
+
+// router.get('/metadata/:field', async (req: Request, res) => {
+//   try {
+//     const field = req.params.field;
+//     const aggregation = await ActivityLog.aggregate([
+//       {
+//         $group: {
+//           _id: `$${field}`,
+//         },
+//       },
+//       {
+//         $match: {
+//           _id: { $ne: null },
+//         },
+//       },
+//       {
+//         $project: {
+//           _id: 1,
+//         },
+//       },
+//       {
+//         $sort: {
+//           _id: 1,
+//         },
+//       },
+//     ]);
+//     res.status(200).json(aggregation.map((x) => x._id));
+//   } catch (err) {
+//     logger.error(err.message, { stack: err.stack });
+//     res.status(500).send('Internal server error');
+//   }
+// });
 
 /** Download activities */
 router.post('/download', async (req, res) => {

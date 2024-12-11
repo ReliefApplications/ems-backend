@@ -41,8 +41,6 @@ import referenceDataAggregation from './referenceDataAggregation.query';
 import emailNotification from './emailNotification.query';
 import emailNotifications from './emailNotifications.query';
 import types from './types.query';
-import activityLog from './activityLog.query';
-import activityLogs from './activityLogs.query';
 import emailDistributionLists from './emailDistributionList.query';
 import customTemplates from './customTemplates.query';
 
@@ -92,8 +90,6 @@ const Query = new GraphQLObjectType({
     layers,
     layer,
     draftRecords,
-    activityLog,
-    activityLogs,
     emailDistributionLists,
     customTemplates,
   },

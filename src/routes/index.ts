@@ -32,6 +32,6 @@ router.use('/roles', roles);
 router.use('/gis', gis);
 router.use('/style', style);
 router.use('/notification', notification);
-router.use('/activity', activity);
+router.use('/activities', activity);
 
 export { router };
