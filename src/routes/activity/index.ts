@@ -140,12 +140,15 @@ router.post('/', async (req, res) => {
   }
 });
 
+/** List activities */
 router.get('/', async (req: Request, res) => {
   try {
     const userId = req.query.user_id || '';
     const applicationId = req.query.application_id;
     const skip = Number(req.query.skip || 0);
     const take = Number(req.query.take || 10);
+    const sortField = (req.query.sortField || 'createdAt') as string;
+    const sortOrder = (req.query.sortOrder || 'desc') as string;
     const filters: any[] = [
       ...(userId ? [{ userId: new Types.ObjectId(userId as string) }] : []),
       ...(applicationId ? [{ 'metadata.applicationId': applicationId }] : []),
@@ -181,7 +184,7 @@ router.get('/', async (req: Request, res) => {
         },
       },
       {
-        $sort: { createdAt: -1 },
+        $sort: { [sortField]: sortOrder === 'asc' ? 1 : -1 },
       },
     ])
       .facet({
@@ -224,6 +227,8 @@ router.get('/group-by-url', async (req: Request, res) => {
     const applicationId = req.query.application_id;
     const skip = Number(req.query.skip || 0);
     const take = Number(req.query.take || 10);
+    const sortField = (req.query.sortField || 'count') as string;
+    const sortOrder = (req.query.sortOrder || 'desc') as string;
     const filters: any[] = [
       ...(userId ? [{ userId: new Types.ObjectId(userId as string) }] : []),
       ...(applicationId ? [{ 'metadata.applicationId': applicationId }] : []),
@@ -254,24 +259,24 @@ router.get('/group-by-url', async (req: Request, res) => {
           count: { $sum: 1 },
         },
       },
-      {
-        $sort: { count: -1 },
-      },
     ])
       .facet({
         items: [
-          {
-            $skip: skip,
-          },
-          {
-            $limit: take,
-          },
           {
             $project: {
               url: '$_id',
               count: 1,
               _id: 0,
             },
+          },
+          {
+            $sort: { [sortField]: sortOrder === 'asc' ? 1 : -1 },
+          },
+          {
+            $skip: skip,
+          },
+          {
+            $limit: take,
           },
         ],
         totalCount: [
@@ -305,6 +310,8 @@ router.get('/group-by-user', async (req: Request, res) => {
     const applicationId = req.query.application_id;
     const skip = Number(req.query.skip || 0);
     const take = Number(req.query.take || 10);
+    const sortField = (req.query.sortField || 'count') as string;
+    const sortOrder = (req.query.sortOrder || 'desc') as string;
     const filters: any[] = [
       ...(userId ? [{ userId: new Types.ObjectId(userId as string) }] : []),
       ...(applicationId ? [{ 'metadata.applicationId': applicationId }] : []),
@@ -335,24 +342,24 @@ router.get('/group-by-user', async (req: Request, res) => {
           count: { $sum: 1 },
         },
       },
-      {
-        $sort: { count: -1 },
-      },
     ])
       .facet({
         items: [
-          {
-            $skip: skip,
-          },
-          {
-            $limit: take,
-          },
           {
             $project: {
               username: '$_id',
               count: 1,
               _id: 0,
             },
+          },
+          {
+            $sort: { [sortField]: sortOrder === 'asc' ? 1 : -1 },
+          },
+          {
+            $skip: skip,
+          },
+          {
+            $limit: take,
           },
         ],
         totalCount: [
