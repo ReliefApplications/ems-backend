@@ -402,37 +402,37 @@ router.get('/group-by-user', async (req: Request, res) => {
   }
 });
 
-router.get('/metadata/:field', async (req: Request, res) => {
-  try {
-    const field = req.params.field;
-    const aggregation = await ActivityLog.aggregate([
-      {
-        $group: {
-          _id: `$${field}`,
-        },
-      },
-      {
-        $match: {
-          _id: { $ne: null },
-        },
-      },
-      {
-        $project: {
-          _id: 1,
-        },
-      },
-      {
-        $sort: {
-          _id: 1,
-        },
-      },
-    ]);
-    res.status(200).json(aggregation.map((x) => x._id));
-  } catch (err) {
-    logger.error(err.message, { stack: err.stack });
-    res.status(500).send('Internal server error');
-  }
-});
+// router.get('/metadata/:field', async (req: Request, res) => {
+//   try {
+//     const field = req.params.field;
+//     const aggregation = await ActivityLog.aggregate([
+//       {
+//         $group: {
+//           _id: `$${field}`,
+//         },
+//       },
+//       {
+//         $match: {
+//           _id: { $ne: null },
+//         },
+//       },
+//       {
+//         $project: {
+//           _id: 1,
+//         },
+//       },
+//       {
+//         $sort: {
+//           _id: 1,
+//         },
+//       },
+//     ]);
+//     res.status(200).json(aggregation.map((x) => x._id));
+//   } catch (err) {
+//     logger.error(err.message, { stack: err.stack });
+//     res.status(500).send('Internal server error');
+//   }
+// });
 
 /** Download activities */
 router.post('/download', async (req, res) => {
