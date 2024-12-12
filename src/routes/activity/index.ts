@@ -21,6 +21,10 @@ const FILTER_FIELDS: { name: string; type: string }[] = [
     name: `attributes.${x.value}`,
     type: 'text',
   })),
+  {
+    name: 'metadata.title',
+    type: 'text',
+  },
 ];
 
 /** Express router to mount activity related functions on. */
@@ -186,12 +190,16 @@ router.get('/', async (req: Request, res) => {
           _id: 1,
           userId: 1,
           username: 1,
-          metadata: 1,
+          metadata: {
+            $mergeObjects: [
+              '$metadata',
+              {
+                title: { $ifNull: ['$metadata.title', '$metadata.url'] },
+              },
+            ],
+          },
           attributes: 1,
           createdAt: 1,
-          title: {
-            $ifNull: ['$metadata.title', '$metadata.url'],
-          },
         },
       },
       {
@@ -278,7 +286,7 @@ router.get('/group-by-url', async (req: Request, res) => {
             $project: {
               count: 1,
               _id: 0,
-              title: {
+              'metadata.title': {
                 $ifNull: ['$title', '$_id'],
               },
             },
