@@ -189,6 +189,9 @@ router.get('/', async (req: Request, res) => {
           metadata: 1,
           attributes: 1,
           createdAt: 1,
+          title: {
+            $ifNull: ['$metadata.title', '$metadata.url'],
+          },
         },
       },
       {
@@ -265,6 +268,7 @@ router.get('/group-by-url', async (req: Request, res) => {
         $group: {
           _id: '$metadata.url',
           count: { $sum: 1 },
+          title: { $last: '$metadata.title' },
         },
       },
     ])
@@ -272,9 +276,11 @@ router.get('/group-by-url', async (req: Request, res) => {
         items: [
           {
             $project: {
-              url: '$_id',
               count: 1,
               _id: 0,
+              title: {
+                $ifNull: ['$title', '$_id'],
+              },
             },
           },
           {
