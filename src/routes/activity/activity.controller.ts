@@ -119,6 +119,9 @@ export default class ActivityController extends BaseController {
         // eslint-disable-next-line @typescript-eslint/naming-convention
         user_id,
       } = req.query;
+      // Check permission
+      this.activity.checkPermission(req.context.user, application_id as string);
+
       const aggregation = await this.activity.list({
         ...(application_id && { applicationId: application_id as string }),
         ...(user_id && { userId: user_id as string }),
@@ -136,6 +139,7 @@ export default class ActivityController extends BaseController {
       };
       this.send(res);
     } catch (err) {
+      console.log(err);
       next(err);
     }
   }
@@ -164,6 +168,9 @@ export default class ActivityController extends BaseController {
         // eslint-disable-next-line @typescript-eslint/naming-convention
         user_id,
       } = req.query;
+      // Check permission
+      this.activity.checkPermission(req.context.user, application_id as string);
+
       const aggregation = await this.activity.groupByUrl({
         ...(application_id && { applicationId: application_id as string }),
         ...(user_id && { userId: user_id as string }),
@@ -209,6 +216,9 @@ export default class ActivityController extends BaseController {
         // eslint-disable-next-line @typescript-eslint/naming-convention
         user_id,
       } = req.query;
+      // Check permission
+      this.activity.checkPermission(req.context.user, application_id as string);
+
       const aggregation = await this.activity.groupByUser({
         ...(application_id && { applicationId: application_id as string }),
         ...(user_id && { userId: user_id as string }),
@@ -253,6 +263,9 @@ export default class ActivityController extends BaseController {
         // eslint-disable-next-line @typescript-eslint/naming-convention
         userId,
       } = req.body;
+      // Check permission
+      this.activity.checkPermission(req.context.user, applicationId as string);
+
       const { fileName, file } = await this.activity.downloadList({
         ...(timeZone && { timeZone: timeZone as string }),
         ...(applicationId && { applicationId: applicationId as string }),
@@ -291,6 +304,9 @@ export default class ActivityController extends BaseController {
         // eslint-disable-next-line @typescript-eslint/naming-convention
         userId,
       } = req.body;
+      // Check permission
+      this.activity.checkPermission(req.context.user, applicationId as string);
+
       const { fileName, file } = await this.activity.downloadGroupByUrl({
         ...(applicationId && { applicationId: applicationId as string }),
         ...(userId && { userId: userId as string }),
@@ -328,6 +344,9 @@ export default class ActivityController extends BaseController {
         // eslint-disable-next-line @typescript-eslint/naming-convention
         userId,
       } = req.body;
+      // Check permission
+      this.activity.checkPermission(req.context.user, applicationId as string);
+
       const { fileName, file } = await this.activity.downloadGroupByUser({
         ...(applicationId && { applicationId: applicationId as string }),
         ...(userId && { userId: userId as string }),

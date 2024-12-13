@@ -6,6 +6,10 @@ import { Types } from 'mongoose';
 import { CompositeFilterDescriptor } from 'types';
 import config from 'config';
 import xlsBuilder from '@utils/files/xlsBuilder';
+import { AppAbility } from '@security/defineUserAbility';
+import ApiError from 'abstractions/api-error';
+import { StatusCodes } from 'http-status-codes';
+import extendAbilityForApplications from '@security/extendAbilityForApplication';
 
 /** Activity creation attributes interface */
 interface ActivityCreationAttributes {
@@ -460,6 +464,26 @@ export class ActivityService {
     } catch (error) {
       logger.error(error.message, { stack: error.stack });
       throw error;
+    }
+  }
+
+  /**
+   * Check permission on ability to see user logs, throw an API error if needed
+   *
+   * @param user User doing the request
+   * @param applicationId Application Id, optional
+   */
+  public checkPermission(user: any, applicationId?: string) {
+    const ability: AppAbility = user.ability;
+    // Check
+    if (ability.cannot('manage', 'User')) {
+      if (applicationId) {
+        const appAbility = extendAbilityForApplications(user, applicationId);
+        if (appAbility.can('manageUsers', 'Application')) {
+          return;
+        }
+      }
+      throw new ApiError('Permission not granted', StatusCodes.FORBIDDEN);
     }
   }
 
