@@ -64,7 +64,13 @@ const attributes: any[] = config.get('user.attributes.list') || [];
  */
 export class ActivityService {
   /** Filename for list export */
-  private listExportFileName = 'activities.xlsx';
+  private listExportFileName = 'recent-hits.xlsx';
+
+  /** Filename for group by url export */
+  private groupByUrlExportFileName = 'group-by-page.xlsx';
+
+  /** Filename for group by user export */
+  private groupByUserExportFileName = 'group-by-user.xlsx';
 
   /** Columns for list export */
   private listExportColumns = [
@@ -79,6 +85,25 @@ export class ActivityService {
       };
     }),
     { name: 'page', title: 'Page', field: 'page' },
+  ];
+
+  /** Columns for group by url export */
+  private groupByUrlExportColumns = [
+    { name: 'count', title: 'Hits', field: 'count' },
+    { name: 'page', title: 'Page', field: 'page' },
+  ];
+
+  /** Columns for group by user export */
+  private groupByUserExportColumns = [
+    { name: 'count', title: 'Hits', field: 'count' },
+    { name: 'username', title: 'username', field: 'username' },
+    ...attributes.map((x) => {
+      return {
+        name: x.text,
+        title: x.text,
+        field: `attributes.${x.value}`,
+      };
+    }),
   ];
 
   /**
@@ -341,6 +366,97 @@ export class ActivityService {
         formattedData
       );
       return { fileName: this.listExportFileName, file };
+    } catch (error) {
+      logger.error(error.message, { stack: error.stack });
+      throw error;
+    }
+  }
+
+  /**
+   * Download group by url activities
+   *
+   * @param query Query options
+   * @returns File buffer
+   */
+  async downloadGroupByUrl(query: QueryOptions) {
+    try {
+      const sortField = (query.sortField || 'count') as string;
+      const sortOrder = (query.sortOrder || 'desc') as string;
+      const filters: any[] = [
+        ...(query.userId
+          ? [{ userId: new Types.ObjectId(query.userId as string) }]
+          : []),
+        ...(query.applicationId
+          ? [{ 'metadata.applicationId': query.applicationId }]
+          : []),
+      ];
+
+      if (!isNil(query.filter)) {
+        const queryFilters = getFilter(query.filter, FILTER_FIELDS);
+        filters.push(queryFilters);
+      }
+
+      const aggregation = await this.groupByUrlAggregation(
+        sortField,
+        sortOrder,
+        filters
+      );
+      const formattedData = aggregation.map((group) => ({
+        count: group.count,
+        page: group.metadata?.title || '',
+      }));
+      const file = await xlsBuilder(
+        this.groupByUrlExportFileName,
+        this.groupByUrlExportColumns,
+        formattedData
+      );
+      return { fileName: this.groupByUrlExportFileName, file };
+    } catch (error) {
+      logger.error(error.message, { stack: error.stack });
+      throw error;
+    }
+  }
+
+  /**
+   * Download group by user activities
+   *
+   * @param query Query options
+   * @returns File buffer
+   */
+  async downloadGroupByUser(query: QueryOptions) {
+    try {
+      const sortField = (query.sortField || 'count') as string;
+      const sortOrder = (query.sortOrder || 'desc') as string;
+      const filters: any[] = [
+        ...(query.userId
+          ? [{ userId: new Types.ObjectId(query.userId as string) }]
+          : []),
+        ...(query.applicationId
+          ? [{ 'metadata.applicationId': query.applicationId }]
+          : []),
+      ];
+
+      if (!isNil(query.filter)) {
+        const queryFilters = getFilter(query.filter, FILTER_FIELDS);
+        filters.push(queryFilters);
+      }
+
+      const aggregation = await this.groupByUserAggregation(
+        sortField,
+        sortOrder,
+        filters
+      );
+      const formattedData = aggregation.map((group) => ({
+        count: group.count,
+        username: group.username,
+        attributes: group.attributes,
+      }));
+      const file = await xlsBuilder(
+        this.groupByUserExportFileName,
+        this.groupByUserExportColumns,
+        formattedData
+      );
+      return { fileName: this.groupByUserExportFileName, file };
     } catch (error) {
       logger.error(error.message, { stack: error.stack });
       throw error;

@@ -38,9 +38,19 @@ export default class ActivityController extends BaseController {
         handler: this.getActivities.bind(this),
       },
       {
+        path: '/download',
+        method: 'post',
+        handler: this.downloadList.bind(this),
+      },
+      {
         path: '/group-by-url',
         method: 'get',
         handler: this.groupByUrl.bind(this),
+      },
+      {
+        path: '/group-by-url/download',
+        method: 'post',
+        handler: this.downloadGroupByUrl.bind(this),
       },
       {
         path: '/group-by-user',
@@ -48,9 +58,9 @@ export default class ActivityController extends BaseController {
         handler: this.groupByUser.bind(this),
       },
       {
-        path: '/download',
+        path: '/group-by-user/download',
         method: 'post',
-        handler: this.downloadList.bind(this),
+        handler: this.downloadGroupByUser.bind(this),
       },
     ];
   }
@@ -245,6 +255,80 @@ export default class ActivityController extends BaseController {
       } = req.body;
       const { fileName, file } = await this.activity.downloadList({
         ...(timeZone && { timeZone: timeZone as string }),
+        ...(applicationId && { applicationId: applicationId as string }),
+        ...(userId && { userId: userId as string }),
+        sortField: sortField as string,
+        sortOrder: sortOrder as string,
+        ...(filter && { filter }),
+      });
+      res.locals.data = file;
+      res.attachment(fileName);
+      this.send(res);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * Download group by url activities
+   *
+   * @param req Express request
+   * @param res Express response
+   * @param next Express next function
+   */
+  public async downloadGroupByUrl(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const {
+        sortField,
+        sortOrder,
+        filter,
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        applicationId,
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        userId,
+      } = req.body;
+      const { fileName, file } = await this.activity.downloadGroupByUrl({
+        ...(applicationId && { applicationId: applicationId as string }),
+        ...(userId && { userId: userId as string }),
+        sortField: sortField as string,
+        sortOrder: sortOrder as string,
+        ...(filter && { filter }),
+      });
+      res.locals.data = file;
+      res.attachment(fileName);
+      this.send(res);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * Download group by user activities
+   *
+   * @param req Express request
+   * @param res Express response
+   * @param next Express next function
+   */
+  public async downloadGroupByUser(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const {
+        sortField,
+        sortOrder,
+        filter,
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        applicationId,
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        userId,
+      } = req.body;
+      const { fileName, file } = await this.activity.downloadGroupByUser({
         ...(applicationId && { applicationId: applicationId as string }),
         ...(userId && { userId: userId as string }),
         sortField: sortField as string,
