@@ -4,9 +4,7 @@ import {
   corsMiddleware,
   authMiddleware,
   graphqlMiddleware,
-  rateLimitMiddleware,
 } from './middlewares';
-import { router } from '../routes';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import EventEmitter from 'events';
@@ -28,8 +26,8 @@ import {
   IntrospectionResult as IntrospectionQueryResult,
 } from './apollo/queries/introspection.query';
 import { pluralize } from 'inflection';
-import config from 'config';
 import { isEqual } from 'lodash';
+import registerRoutes from '@routes/index';
 
 /** List of user fields */
 const USER_FIELDS = ['id', 'name', 'username'];
@@ -157,9 +155,6 @@ class SafeServer {
         fallbackLng: 'en',
         preload: ['en', 'test'],
       });
-    if (config.get('server.rateLimit.enable')) {
-      router.use(rateLimitMiddleware);
-    }
     this.app.use(corsMiddleware);
     this.app.use(authMiddleware);
     this.app.use('/graphql', graphqlMiddleware);
@@ -249,7 +244,8 @@ class SafeServer {
     }
 
     // === REST ===
-    this.app.use(router);
+    const restRouter = registerRoutes();
+    this.app.use(restRouter);
 
     this.status.emit('ready');
   }
