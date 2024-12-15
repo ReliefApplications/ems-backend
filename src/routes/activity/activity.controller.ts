@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import { ActivityService } from './activity.service';
-import ApiError from 'abstractions/api-error';
+import ApiError from '../../abstractions/api-error';
 import BaseController from 'abstractions/base.controller';
 import { RouteDefinition } from 'types/route-definition';
 import { isNil } from 'lodash';

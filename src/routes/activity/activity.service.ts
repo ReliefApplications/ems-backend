@@ -7,7 +7,7 @@ import { CompositeFilterDescriptor } from 'types';
 import config from 'config';
 import xlsBuilder from '@utils/files/xlsBuilder';
 import { AppAbility } from '@security/defineUserAbility';
-import ApiError from 'abstractions/api-error';
+import ApiError from '../../abstractions/api-error';
 import { StatusCodes } from 'http-status-codes';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 
