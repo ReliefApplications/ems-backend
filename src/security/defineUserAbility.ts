@@ -54,6 +54,8 @@ export type Actions =
   | 'update'
   | 'delete'
   | 'manage'
+  // application specific
+  | 'manageUsers'
   | 'download';
 
 /** Define subjects types for casl */
@@ -309,7 +311,7 @@ export default function defineUserAbility(user: User | Client): AppAbility {
     Creation / Access / Edition / Deletion of users
   === */
   if (userGlobalPermissions.includes(permissions.canSeeUsers)) {
-    can(['create', 'read', 'update', 'delete'], 'User');
+    can(['create', 'read', 'update', 'delete', 'manage'], 'User');
   } else {
     can('read', 'User');
     // const applications = [];

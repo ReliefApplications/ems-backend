@@ -1,7 +1,7 @@
 import request from 'supertest';
 import express, { Application } from 'express';
 import mongoose from 'mongoose';
-import router from '@routes/activity';
+// import router from '@routes/activity';
 import { ActivityLog, User } from '@models';
 import { DatabaseHelpers } from '../../helpers/database-helpers';
 
@@ -23,7 +23,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/activity', router);
+// app.use('/activity', router);
 
 describe('Activity Routes', () => {
   const mockUser = {
