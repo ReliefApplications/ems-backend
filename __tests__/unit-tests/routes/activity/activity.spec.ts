@@ -3,7 +3,7 @@ import express, { Application } from 'express';
 import mongoose from 'mongoose';
 // import router from '@routes/activity';
 import { ActivityLog, User } from '@models';
-import { DatabaseHelpers } from '../../helpers/database-helpers';
+import { DatabaseHelpers } from '../../../helpers/database-helpers';
 
 // Set the timeout of the test to 60 seconds
 jest.setTimeout(60000);
