@@ -579,8 +579,29 @@ export class ActivityService {
           ]
         : []),
       {
+        $addFields: {
+          adjustedUrl: {
+            $cond: [
+              {
+                $and: [
+                  { $eq: ['$metadata.module', 'backoffice'] }, // Check if module is 'backoffice'
+                  {
+                    $regexMatch: {
+                      input: '$metadata.url',
+                      regex: /^\/applications\//,
+                    },
+                  }, // Check if url starts with '/applications/'
+                ],
+              },
+              { $substr: ['$metadata.url', 13, -1] }, // Remove '/applications/' prefix
+              '$metadata.url', // Otherwise, keep original value
+            ],
+          },
+        },
+      },
+      {
         $group: {
-          _id: '$metadata.url',
+          _id: '$adjustedUrl',
           count: { $sum: 1 },
           title: { $last: '$metadata.title' },
         },

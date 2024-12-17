@@ -487,8 +487,29 @@ describe('Activity Service', () => {
           },
         },
         {
+          $addFields: {
+            adjustedUrl: {
+              $cond: [
+                {
+                  $and: [
+                    { $eq: ['$metadata.module', 'backoffice'] },
+                    {
+                      $regexMatch: {
+                        input: '$metadata.url',
+                        regex: /^\/applications\//,
+                      },
+                    },
+                  ],
+                },
+                { $substr: ['$metadata.url', 13, -1] },
+                '$metadata.url',
+              ],
+            },
+          },
+        },
+        {
           $group: {
-            _id: '$metadata.url',
+            _id: '$adjustedUrl',
             count: { $sum: 1 },
             title: { $last: '$metadata.title' },
           },
@@ -526,8 +547,29 @@ describe('Activity Service', () => {
       );
       expect(aggregateMock).toHaveBeenCalledWith([
         {
+          $addFields: {
+            adjustedUrl: {
+              $cond: [
+                {
+                  $and: [
+                    { $eq: ['$metadata.module', 'backoffice'] },
+                    {
+                      $regexMatch: {
+                        input: '$metadata.url',
+                        regex: /^\/applications\//,
+                      },
+                    },
+                  ],
+                },
+                { $substr: ['$metadata.url', 13, -1] },
+                '$metadata.url',
+              ],
+            },
+          },
+        },
+        {
           $group: {
-            _id: '$metadata.url',
+            _id: '$adjustedUrl',
             count: { $sum: 1 },
             title: { $last: '$metadata.title' },
           },
