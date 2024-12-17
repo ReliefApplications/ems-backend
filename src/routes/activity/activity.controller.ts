@@ -127,8 +127,8 @@ export default class ActivityController extends BaseController {
         ...(user_id && { userId: user_id as string }),
         ...(!isNil(skip) && { skip: Number(skip) }),
         ...(!isNil(take) && { take: Number(take) }),
-        sortField: sortField as string,
-        sortOrder: sortOrder as string,
+        ...(sortField && { sortField: sortField as string }),
+        ...(sortOrder && { sortOrder: sortOrder as string }),
         ...(filter && { filter: JSON.parse(filter as string) }),
       });
       res.locals.data = {
@@ -139,7 +139,6 @@ export default class ActivityController extends BaseController {
       };
       this.send(res);
     } catch (err) {
-      console.log(err);
       next(err);
     }
   }
@@ -176,8 +175,8 @@ export default class ActivityController extends BaseController {
         ...(user_id && { userId: user_id as string }),
         ...(!isNil(skip) && { skip: Number(skip) }),
         ...(!isNil(take) && { take: Number(take) }),
-        sortField: sortField as string,
-        sortOrder: sortOrder as string,
+        ...(sortField && { sortField: sortField as string }),
+        ...(sortOrder && { sortOrder: sortOrder as string }),
         ...(filter && { filter: JSON.parse(filter as string) }),
       });
       res.locals.data = {
@@ -224,8 +223,8 @@ export default class ActivityController extends BaseController {
         ...(user_id && { userId: user_id as string }),
         ...(!isNil(skip) && { skip: Number(skip) }),
         ...(!isNil(take) && { take: Number(take) }),
-        sortField: sortField as string,
-        sortOrder: sortOrder as string,
+        ...(sortField && { sortField: sortField as string }),
+        ...(sortOrder && { sortOrder: sortOrder as string }),
         ...(filter && { filter: JSON.parse(filter as string) }),
       });
       res.locals.data = {
@@ -270,8 +269,8 @@ export default class ActivityController extends BaseController {
         ...(timeZone && { timeZone: timeZone as string }),
         ...(applicationId && { applicationId: applicationId as string }),
         ...(userId && { userId: userId as string }),
-        sortField: sortField as string,
-        sortOrder: sortOrder as string,
+        ...(sortField && { sortField: sortField as string }),
+        ...(sortOrder && { sortOrder: sortOrder as string }),
         ...(filter && { filter }),
       });
       res.locals.data = file;
@@ -310,8 +309,8 @@ export default class ActivityController extends BaseController {
       const { fileName, file } = await this.activity.downloadGroupByUrl({
         ...(applicationId && { applicationId: applicationId as string }),
         ...(userId && { userId: userId as string }),
-        sortField: sortField as string,
-        sortOrder: sortOrder as string,
+        ...(sortField && { sortField: sortField as string }),
+        ...(sortOrder && { sortOrder: sortOrder as string }),
         ...(filter && { filter }),
       });
       res.locals.data = file;
@@ -350,8 +349,8 @@ export default class ActivityController extends BaseController {
       const { fileName, file } = await this.activity.downloadGroupByUser({
         ...(applicationId && { applicationId: applicationId as string }),
         ...(userId && { userId: userId as string }),
-        sortField: sortField as string,
-        sortOrder: sortOrder as string,
+        ...(sortField && { sortField: sortField as string }),
+        ...(sortOrder && { sortOrder: sortOrder as string }),
         ...(filter && { filter }),
       });
       res.locals.data = file;
