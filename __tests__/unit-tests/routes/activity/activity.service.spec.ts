@@ -7,8 +7,10 @@ import { logger } from '@services/logger.service';
 import ApiError from '../../../../src/abstractions/api-error';
 import { Types } from 'mongoose';
 import { StatusCodes } from 'http-status-codes';
+import * as XLSBuilder from '@utils/files/xlsBuilder';
 
 jest.mock('@services/logger.service');
+jest.mock('@utils/files/xlsBuilder');
 
 describe('Activity Service', () => {
   let service: ActivityService;
@@ -210,6 +212,23 @@ describe('Activity Service', () => {
   });
 
   describe('Download List', () => {
+    it('should execute aggregation and return file', async () => {
+      const query = {};
+      const aggregationResult = [];
+      const listAggregationMock = jest.spyOn(service as any, 'listAggregation');
+      listAggregationMock.mockResolvedValueOnce(aggregationResult);
+
+      const mockFile = Buffer.from('Test content');
+      jest.spyOn(XLSBuilder, 'default').mockResolvedValueOnce(mockFile as any);
+
+      const result = await service.downloadList(query);
+      expect(listAggregationMock).toHaveBeenCalled();
+      expect(result).toEqual({
+        fileName: (service as any).listExportFileName,
+        file: mockFile,
+      });
+    });
+
     it('should handle & log errors', async () => {
       const query = {};
       const error = new Error('Some error occurred');
@@ -228,6 +247,26 @@ describe('Activity Service', () => {
   });
 
   describe('Download Group By Url', () => {
+    it('should execute aggregation and return file', async () => {
+      const query = {};
+      const aggregationResult = [];
+      const groupByUrlAggregationMock = jest.spyOn(
+        service as any,
+        'groupByUrlAggregation'
+      );
+      groupByUrlAggregationMock.mockResolvedValueOnce(aggregationResult);
+
+      const mockFile = Buffer.from('Test content');
+      jest.spyOn(XLSBuilder, 'default').mockResolvedValueOnce(mockFile as any);
+
+      const result = await service.downloadGroupByUrl(query);
+      expect(groupByUrlAggregationMock).toHaveBeenCalled();
+      expect(result).toEqual({
+        fileName: (service as any).groupByUrlExportFileName,
+        file: mockFile,
+      });
+    });
+
     it('should handle & log errors', async () => {
       const query = {};
       const error = new Error('Some error occurred');
@@ -246,6 +285,26 @@ describe('Activity Service', () => {
   });
 
   describe('Download Group By User', () => {
+    it('should execute aggregation and return file', async () => {
+      const query = {};
+      const aggregationResult = [];
+      const groupByUserAggregationMock = jest.spyOn(
+        service as any,
+        'groupByUserAggregation'
+      );
+      groupByUserAggregationMock.mockResolvedValueOnce(aggregationResult);
+
+      const mockFile = Buffer.from('Test content');
+      jest.spyOn(XLSBuilder, 'default').mockResolvedValueOnce(mockFile as any);
+
+      const result = await service.downloadGroupByUser(query);
+      expect(groupByUserAggregationMock).toHaveBeenCalled();
+      expect(result).toEqual({
+        fileName: (service as any).groupByUserExportFileName,
+        file: mockFile,
+      });
+    });
+
     it('should handle & log errors', async () => {
       const query = {};
       const error = new Error('Some error occurred');
