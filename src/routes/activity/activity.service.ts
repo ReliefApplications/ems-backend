@@ -12,14 +12,14 @@ import { StatusCodes } from 'http-status-codes';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 
 /** Activity creation attributes interface */
-interface ActivityCreationAttributes {
+export interface ActivityCreationAttributes {
   user: any;
   eventType: string;
   metadata: any;
 }
 
 /** Activity query options */
-interface QueryOptions {
+export interface QueryOptions {
   skip?: number;
   take?: number;
   sortField?: string;
