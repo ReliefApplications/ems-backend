@@ -13,17 +13,17 @@ module.exports = {
     groups: {
       local: false,
       list: {
-        apiConfiguration: '613b5af515e8c265c982081c',
+        apiConfiguration: '673c74ebb0da7c57471d5474',
         endpoint: '/referenceData/items/SystemPosition',
-        path: '$.value[?(@.ApplicationId==1)]',
+        path: '$.value[?(@.ApplicationId==1 || @.ApplicationId==5)]',
         id: 'Id',
         title: 'Name',
         description: 'Description',
       },
       user: {
-        apiConfiguration: '613b5af515e8c265c982081c',
+        apiConfiguration: '673c74ebb0da7c57471d5474',
         endpoint: '/users/permissions',
-        path: '$.systemRules.Permissions[?(@.Application=="EMS")].ApplicationPositions.*',
+        path: '$.systemRules.Permissions[?(@.Application=="EMS" || @.Application=="EIS")].ApplicationPositions.*',
         id: 'ApplicationPositionId',
       },
     },
@@ -47,7 +47,7 @@ module.exports = {
           text: 'Department',
         },
       ],
-      apiConfiguration: '613b5af515e8c265c982081c',
+      apiConfiguration: '673c74ebb0da7c57471d5474',
       endpoint: '/users/permissions',
       mapping: [
         {
