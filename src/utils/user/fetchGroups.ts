@@ -23,6 +23,13 @@ export const fetchGroups = async () => {
   } = config.get('user.groups.list') as GroupListSettings;
 
   const apiConfiguration = await ApiConfiguration.findById(apiConfigurationID);
+
+  if (!apiConfiguration) {
+    logger.error('API Configuration does not exist');
+    // Throwing an error here so above function can catch and throw GraphQL error.
+    throw new Error();
+  }
+
   let data: any;
 
   // Switch on authTypes supported for fetchGroups
