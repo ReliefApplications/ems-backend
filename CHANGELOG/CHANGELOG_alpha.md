@@ -1,3 +1,10 @@
+# [2.12.0-alpha.10](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-alpha.9...v2.12.0-alpha.10) (2024-12-20)
+
+
+### Bug Fixes
+
+* better group page by url between modules ([4020521](https://github.com/ReliefApplications/ems-backend/commit/4020521bc1fc4c63bfa57f03d36203233c898f20))
+
 # [2.12.0-alpha.9](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-alpha.8...v2.12.0-alpha.9) (2024-12-13)
 
 
