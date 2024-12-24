@@ -85,6 +85,7 @@ export const EmailNotificationType = new GraphQLObjectType({
     isDeleted: { type: GraphQLInt },
     isDraft: { type: GraphQLBoolean },
     draftStepper: { type: GraphQLInt },
+    attachments: { type: GraphQLJSON },
   }),
 });
 
