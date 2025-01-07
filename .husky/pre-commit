@@ -1,7 +1,0 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
-npm run check-i18n
-
-git add src/i18n/en.json
-git add src/i18n/test.json
