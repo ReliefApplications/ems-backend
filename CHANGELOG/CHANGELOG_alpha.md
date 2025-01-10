@@ -1,3 +1,10 @@
+# [2.12.0-alpha.12](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-alpha.11...v2.12.0-alpha.12) (2025-01-10)
+
+
+### Features
+
+* Add direct fetch to CS ([#1181](https://github.com/ReliefApplications/ems-backend/issues/1181)) ([d6c8b74](https://github.com/ReliefApplications/ems-backend/commit/d6c8b74d729ec8217df74a5f989364eb52578a83)), closes [AB#108468](https://github.com/AB/issues/108468)
+
 # [2.12.0-alpha.11](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-alpha.10...v2.12.0-alpha.11) (2025-01-07)
 
 
