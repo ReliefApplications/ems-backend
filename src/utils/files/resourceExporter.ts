@@ -779,10 +779,7 @@ export default class Exporter {
    */
   private getChoicesByAPI = async (choicesByAPIColumns: Column[]) => {
     for (const column of choicesByAPIColumns) {
-      const choices = await getChoices(
-        column.meta.field,
-        this.req.headers.authorization
-      );
+      const choices = await getChoices(this.req, column.meta.field);
       set(column, 'meta.field.choices', choices);
     }
   };
