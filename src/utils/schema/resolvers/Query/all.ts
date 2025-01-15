@@ -440,8 +440,12 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       const form = await Form.findOne({
         $or: [{ _id: id }, { resource: id, core: true }],
       })
-        .select('_id permissions fields')
-        .populate({ path: 'resource', model: 'Resource' });
+        .select('_id')
+        .populate({
+          path: 'resource',
+          model: 'Resource',
+          select: 'fields permissions',
+        });
       const ability = await extendAbilityForRecords(user, form);
       set(context, 'user.ability', ability);
       const permissionFilters = Record.find(

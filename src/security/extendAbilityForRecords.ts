@@ -327,7 +327,8 @@ export default async function extendAbilityForRecords(
       const resource =
         onObject.resource instanceof Resource
           ? onObject.resource
-          : await Resource.findById(onObject.resource);
+          : await Resource.findById(onObject.resource, 'fields permissions');
+
       ability = extendAbilityForRecordsOnForm(
         user,
         onObject as Form,

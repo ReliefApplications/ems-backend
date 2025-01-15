@@ -38,7 +38,10 @@ export default {
       const user = context.user;
 
       // Get the form
-      const form = await Form.findById(args.form);
+      const form = await Form.findById(
+        args.form,
+        'name fields permissions resource'
+      );
       if (!form)
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
 

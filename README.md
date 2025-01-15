@@ -54,3 +54,13 @@ If management platform is not reachable at 15672, you can use this command ( whi
 docker-compose exec rabbitmq rabbitmq-plugins enable rabbitmq_management
 ```
 
+## Debug size of query result
+
+Where <object> must be replace with a mongoose query result.
+
+```
+const jsonString = JSON.stringify(<object>);
+const sizeInBytes = Buffer.byteLength(jsonString, 'utf-8');
+const sizeInMB = sizeInBytes / (1024 * 1024);
+console.log(`Size of the query result: ${sizeInMB.toFixed(2)} MB`);
+```

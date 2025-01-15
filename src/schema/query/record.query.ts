@@ -50,7 +50,7 @@ export default {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
 
-      const form = await Form.findById(record.form);
+      const form = await Form.findById(record.form, 'resource');
 
       // Check ability
       const ability = await extendAbilityForRecords(user, form);
