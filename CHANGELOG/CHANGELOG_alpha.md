@@ -1,3 +1,19 @@
+# [2.12.0-alpha.12](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-alpha.11...v2.12.0-alpha.12) (2025-01-10)
+
+
+### Features
+
+* Add direct fetch to CS ([#1181](https://github.com/ReliefApplications/ems-backend/issues/1181)) ([d6c8b74](https://github.com/ReliefApplications/ems-backend/commit/d6c8b74d729ec8217df74a5f989364eb52578a83)), closes [AB#108468](https://github.com/AB/issues/108468)
+
+# [2.12.0-alpha.11](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-alpha.10...v2.12.0-alpha.11) (2025-01-07)
+
+
+### Bug Fixes
+
+* add ignore-scripts in npm install for Dockerfile   ([#1180](https://github.com/ReliefApplications/ems-backend/issues/1180)) ([fe089b4](https://github.com/ReliefApplications/ems-backend/commit/fe089b441aa6eae2a6dd9aeb242c4a7023d32a6d)), closes [Ab#108318](https://github.com/Ab/issues/108318)
+* better handle duplication error in editRole mutation ([#1178](https://github.com/ReliefApplications/ems-backend/issues/1178)) ([6b2c975](https://github.com/ReliefApplications/ems-backend/commit/6b2c97579bb45acde332e594e809603e384c32bd)), closes [AB#108245](https://github.com/AB/issues/108245)
+* rate limiter correctly configured ([#1177](https://github.com/ReliefApplications/ems-backend/issues/1177)) ([0d5a290](https://github.com/ReliefApplications/ems-backend/commit/0d5a290003f6d549fb32c44ca8e3fbfab0e1ad26)), closes [AB#108296](https://github.com/AB/issues/108296)
+
 # [2.12.0-alpha.10](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-alpha.9...v2.12.0-alpha.10) (2024-12-20)
 
 

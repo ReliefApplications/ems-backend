@@ -1,6 +1,4 @@
 #!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
 NAME=$(git branch | grep '*' | sed 's/* //' | sed 's/^AB//')
 
 if [ $(echo $NAME | grep -E -o '^#[0-9]{5}$') ]

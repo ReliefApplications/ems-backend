@@ -7,8 +7,8 @@ const { server, email, user } = require('./who');
  * Use https://www.npmjs.com/package/config package.
  */
 module.exports = {
-  ...server,
-  ...email,
+  server,
+  email,
   user: {
     groups: {
       local: false,
