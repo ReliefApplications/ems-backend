@@ -515,7 +515,9 @@ export class RecordHistory {
                   const cols = field.columns.map((elem) => elem.label);
 
                   cols.forEach((col: string, i: number) => {
-                    let newVal = change[state][key][i];
+                    let newVal = change[state][key]
+                      ? change[state][key][i]
+                      : undefined;
                     switch (field.columns[i].cellType) {
                       case 'radiogroup':
                       case 'dropdown':
