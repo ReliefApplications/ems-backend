@@ -274,6 +274,19 @@ export default {
             }
           }
         }
+        if (structure.showPercentageProgressBar) {
+          fields.push({
+            type: 'progress',
+            name: 'progress',
+            unique: false,
+            isRequired: false,
+            showOnXlsxTemplate: true,
+            readOnly: true,
+            isCore: form.core,
+            kobo: null,
+            generated: true,
+          });
+        }
         // Check if default fields are used
         checkDefaultFields(fields);
 

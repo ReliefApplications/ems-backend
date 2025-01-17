@@ -2,7 +2,7 @@ import { GraphQLError } from 'graphql/error';
 import { getFieldType } from './getFieldType';
 import i18next from 'i18next';
 import { validateGraphQLFieldName } from '@utils/validators';
-import { Form } from '@models';
+import { Field, Form } from '@models';
 
 /**
  * Push in fields array all detected fields in the json structure of object.
@@ -12,7 +12,11 @@ import { Form } from '@models';
  * @param fields list of fields
  * @param core is the form core ?
  */
-export const extractFields = async (object, fields, core): Promise<void> => {
+export const extractFields = async (
+  object,
+  fields: Field[],
+  core
+): Promise<void> => {
   if (object.elements) {
     for (const element of object.elements) {
       if (element.omitField) {

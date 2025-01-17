@@ -49,7 +49,7 @@ interface FormDocument extends Document {
   };
 }
 
-type Field = {
+export type Field = {
   type: string;
   name: string;
   unique?: boolean;
