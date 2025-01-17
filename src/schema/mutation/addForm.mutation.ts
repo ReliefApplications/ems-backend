@@ -126,8 +126,21 @@ export default {
           const structureObj = JSON.parse(structure);
           for (const page of structureObj.pages) {
             await extractFields(page, fields, true);
-            findDuplicateFields(fields);
           }
+          if (structureObj.showPercentageProgressBar) {
+            fields.push({
+              type: 'progress',
+              name: 'progress',
+              unique: false,
+              isRequired: false,
+              showOnXlsxTemplate: true,
+              readOnly: true,
+              isCore: true,
+              kobo: null,
+              generated: true,
+            });
+          }
+          findDuplicateFields(fields);
           // Check if default fields are used
           checkDefaultFields(fields);
 

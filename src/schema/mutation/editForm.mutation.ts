@@ -236,6 +236,20 @@ export default {
         const fields = [];
         for (const page of structure.pages) {
           await extractFields(page, fields, form.core);
+          if (structure.showPercentageProgressBar) {
+            fields.push({
+              type: 'progress',
+              name: 'progress',
+              unique: false,
+              isRequired: false,
+              showOnXlsxTemplate: true,
+              readOnly: true,
+              isCore: form.core,
+              kobo: null,
+              generated: true,
+            });
+          }
+          console.log(structure.showPercentageProgressBar, structure, fields);
           findDuplicateFields(fields);
           for (const field of fields.filter((x) =>
             ['resource', 'resources'].includes(x.type)
@@ -532,6 +546,7 @@ export default {
             fields: oldFields,
           });
         }
+        console.log(fields);
         update.fields = fields;
         // Update version
         const version = new Version({
