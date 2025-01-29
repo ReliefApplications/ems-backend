@@ -17,6 +17,7 @@ export const DistributionListSource = new GraphQLObjectType({
   fields: () => ({
     resource: { type: GraphQLString },
     reference: { type: GraphQLString },
+    commonServiceFilter: { type: GraphQLJSON },
     query: { type: QueryType },
     inputEmails: { type: new GraphQLList(GraphQLString) },
   }),

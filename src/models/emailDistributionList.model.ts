@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { AccessibleRecordModel } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
+import { CompositeFilterDescriptor } from 'types';
 
 /**
  * Interface representing either a filter definition used to fetch emails, a static list of emails, or both
@@ -8,6 +9,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface DistributionListSource {
   reference?: string;
   resource?: string;
+  commonServiceFilter?: CompositeFilterDescriptor;
   query?: {
     name: string;
     filter: any;
@@ -35,6 +37,7 @@ export const emailDistributionListSchema = new Schema<EmailDistributionList>(
     to: {
       resource: String,
       reference: String,
+      commonServiceFilter: { type: mongoose.Schema.Types.Mixed },
       query: {
         name: String,
         filter: { type: mongoose.Schema.Types.Mixed },
@@ -45,6 +48,7 @@ export const emailDistributionListSchema = new Schema<EmailDistributionList>(
     cc: {
       resource: String,
       reference: String,
+      commonServiceFilter: { type: mongoose.Schema.Types.Mixed },
       query: {
         name: String,
         filter: { type: mongoose.Schema.Types.Mixed },
@@ -55,6 +59,7 @@ export const emailDistributionListSchema = new Schema<EmailDistributionList>(
     bcc: {
       resource: String,
       reference: String,
+      commonServiceFilter: { type: mongoose.Schema.Types.Mixed },
       query: {
         name: String,
         filter: { type: mongoose.Schema.Types.Mixed },
