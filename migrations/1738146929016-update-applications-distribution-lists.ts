@@ -2,7 +2,8 @@ import { Application, EmailDistributionList } from '@models';
 import { startDatabaseForMigration } from '../src/migrations/database.helper';
 
 /** Migration description */
-export const description = '***';
+export const description =
+  'Update email distribution lists stored ine applications, to use new distribution list model.';
 
 /**
  * Sample function of up migration
@@ -14,7 +15,6 @@ export const up = async () => {
   const applications = await Application.find({
     distributionLists: { $exists: true, $ne: [] },
   }).populate('createdBy');
-  console.log(applications.length);
 
   for (const application of applications) {
     for (const distributionList of application.distributionLists) {
