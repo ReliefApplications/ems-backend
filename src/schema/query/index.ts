@@ -85,7 +85,7 @@ const Query = new GraphQLObjectType({
     layers,
     layer,
     draftRecords,
-    comments
+    comments,
   },
 });
 
