@@ -1,3 +1,10 @@
+# [2.12.0-alpha.13](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-alpha.12...v2.12.0-alpha.13) (2025-01-29)
+
+
+### Features
+
+* Distribution lists can be built using common services users ([#1174](https://github.com/ReliefApplications/ems-backend/issues/1174)) ([e77e240](https://github.com/ReliefApplications/ems-backend/commit/e77e24026853ccad10f3889d57a38bc4dc529433))
+
 # [2.12.0-alpha.12](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-alpha.11...v2.12.0-alpha.12) (2025-01-10)
 
 
