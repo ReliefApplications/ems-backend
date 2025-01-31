@@ -138,10 +138,12 @@ router.post('/:functionName/:configId?', async (req, res) => {
       },
     };
 
+    console.log(
+      `${config.get('email.serverless.url')}/${functionName}/${configId || ''}`
+    );
+
     const response = await axios.post(
-      `${config.get('email.serverless.url')}/api/${functionName}/${
-        configId || ''
-      }`,
+      `${config.get('email.serverless.url')}/${functionName}/${configId || ''}`,
       req.body,
       requestConfig
     );
@@ -165,6 +167,10 @@ router.get('/:functionName/:configId?', async (req, res) => {
         code: config.get('email.serverless.key'),
       },
     };
+
+    console.log(
+      `${config.get('email.serverless.url')}/${functionName}/${configId || ''}`
+    );
 
     const response = await axios.get(
       `${config.get('email.serverless.url')}/${functionName}/${configId || ''}`,
