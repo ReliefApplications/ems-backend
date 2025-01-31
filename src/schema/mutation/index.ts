@@ -90,6 +90,8 @@ import addDraftRecord from './addDraftRecord.mutation';
 import deleteDraftRecord from './deleteDraftRecord.mutation';
 import editDraftRecord from './editDraftRecord.mutation';
 import addRecordsFromKobo from './addRecordsFromKobo.mutation';
+import addComment from './addComment.mutation';
+import editComment from './editComment.mutation';
 
 /** GraphQL mutation definition */
 const Mutation = new GraphQLObjectType({
@@ -186,6 +188,8 @@ const Mutation = new GraphQLObjectType({
     deleteDraftRecord,
     editDraftRecord,
     addRecordsFromKobo,
+    addComment,
+    editComment,
   },
 });
 

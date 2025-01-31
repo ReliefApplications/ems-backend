@@ -27,3 +27,4 @@ export * from './distributionList.model';
 export * from './customNotification.model';
 export * from './layer.model';
 export * from './draftRecord.model';
+export * from './comment.model';
