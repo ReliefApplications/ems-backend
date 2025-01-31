@@ -1,4 +1,9 @@
-import { GraphQLID, GraphQLObjectType, GraphQLString } from 'graphql';
+import {
+  GraphQLBoolean,
+  GraphQLID,
+  GraphQLObjectType,
+  GraphQLString,
+} from 'graphql';
 import { UserType } from './user.type';
 import { AppAbility } from '@security/defineUserAbility';
 import { User } from '@models';
@@ -22,6 +27,7 @@ export const CommentType = new GraphQLObjectType({
     record: {
       type: GraphQLID,
     },
+    resolved: { type: GraphQLBoolean },
     questionId: { type: GraphQLString },
     createdBy: {
       type: UserType,

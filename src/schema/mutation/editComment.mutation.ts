@@ -1,9 +1,9 @@
 import {
-  GraphQLError,
-  GraphQLID,
-  GraphQLList,
   GraphQLNonNull,
   GraphQLString,
+  GraphQLID,
+  GraphQLError,
+  GraphQLBoolean,
 } from 'graphql';
 import { Comment } from '@models';
 import { CommentType } from '../types';
@@ -12,29 +12,34 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 
-/** Arguments for the Comment query */
-type CommentArgs = {
+/** Arguments for the addComment mutation */
+type EditCommentArgs = {
+  resolved: boolean;
   record: string | Types.ObjectId;
   questionId: string;
 };
 
 /**
- * Find comments linked to record and question
+ * Create a new comment.
  */
 export default {
-  type: new GraphQLList(CommentType),
+  type: CommentType,
   args: {
+    resolved: { type: GraphQLBoolean },
     record: { type: new GraphQLNonNull(GraphQLID) },
-    questionId: { type: GraphQLString },
+    questionId: { type: new GraphQLNonNull(GraphQLString) },
   },
-  async resolve(parent, args: CommentArgs, context: Context) {
+  async resolve(parent, args: EditCommentArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
-      const comments = await Comment.find({
+      const latestComment = await Comment.findOne({
         record: args.record,
-        ...(args.questionId && { questionId: args.questionId }),
-      }).sort({ createdAt: 1 });
-      return comments;
+        questionId: args.questionId,
+      }).sort({ createdAt: -1 });
+
+      return await Comment.findByIdAndUpdate(latestComment.id, {
+        resolved: args.resolved,
+      });
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {

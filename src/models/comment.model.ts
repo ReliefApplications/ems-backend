@@ -7,6 +7,7 @@ export const CommentSchema = new Schema(
     name: String,
     message: String,
     record: mongoose.Types.ObjectId,
+    resolved: Boolean,
     questionId: String,
     createdBy: {
       user: {
@@ -38,6 +39,7 @@ export interface Comment extends Document {
   kind: 'Comment';
   message?: string;
   record?: mongoose.Types.ObjectId;
+  resolved?: boolean;
   questionId?: string;
   createdBy?: any;
 }
