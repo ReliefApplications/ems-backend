@@ -167,9 +167,7 @@ router.get('/:functionName/:configId?', async (req, res) => {
     };
 
     const response = await axios.get(
-      `${config.get('email.serverless.url')}/api/${functionName}/${
-        configId || ''
-      }`,
+      `${config.get('email.serverless.url')}/${functionName}/${configId || ''}`,
       requestConfig
     );
 
