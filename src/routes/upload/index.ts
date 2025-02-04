@@ -25,7 +25,7 @@ import { cloneDeep, has, isEqual } from 'lodash';
 import { Context } from '@server/apollo/context';
 
 /** File size limit, in bytes  */
-const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
+const FILE_SIZE_LIMIT = 200 * 1024 * 1024;
 
 /** Import data from user-uploaded files */
 const router = express.Router();
@@ -487,8 +487,7 @@ router.post('/application/:id/invite', async (req: any, res) => {
         };
         if (rawUser.email && rawUser.role) {
           user.email = rawUser.email.text || rawUser.email;
-          user.roles =
-            [roles.find((x) => x.title === rawUser.role)._id] || null;
+          user.roles = [roles.find((x) => x.title === rawUser.role)._id];
           for (const attr of attributes) {
             const value = rawUser[attr.title] || null;
             user.positionAttributes.push({
@@ -556,8 +555,7 @@ router.post('/invite', async (req: any, res) => {
         };
         if (rawUser.email && rawUser.role) {
           user.email = rawUser.email.text || rawUser.email;
-          user.roles =
-            [roles.find((x) => x.title === rawUser.role)?._id] || null;
+          user.roles = [roles.find((x) => x.title === rawUser.role)?._id];
         } else {
           return res
             .status(400)
@@ -599,6 +597,39 @@ router.post('/file/:form', async (req, res) => {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
     const path = await uploadFile('forms', formID, file);
+    return res.status(200).send({ path });
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    return res.status(500).send(req.t('common.errors.internalServerError'));
+  }
+});
+
+/** Uploads file from a certain form to azure storage */
+router.post('/chunk-file/:form', async (req, res) => {
+  try {
+    // Check file
+    if (!req.files || Object.keys(req.files).length === 0)
+      return res
+        .status(400)
+        .send(i18next.t('routes.upload.errors.missingFile'));
+    const file = Array.isArray(req.files.file)
+      ? req.files.file[0]
+      : req.files.file;
+
+    // Check file size
+    if (file.size > FILE_SIZE_LIMIT) {
+      return res
+        .status(400)
+        .send(i18next.t('common.errors.fileSizeLimitReached'));
+    }
+
+    // Check form
+    const formID = req.params.form;
+    const form = await Form.exists({ _id: formID });
+    if (!form) {
+      return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    }
+    const path = await uploadFile('forms', formID, file, { chunks: true });
     return res.status(200).send({ path });
   } catch (err) {
     logger.error(err.message, { stack: err.stack });

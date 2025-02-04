@@ -6,6 +6,8 @@ import i18next from 'i18next';
 import config from 'config';
 import get from 'lodash/get';
 import { logger } from '@lib/logger';
+import fileUpload from 'express-fileupload';
+import { Readable } from 'stream';
 
 /** Azure storage connection string */
 const AZURE_STORAGE_CONNECTION_STRING: string = config.get(
@@ -49,26 +51,49 @@ const ALLOWED_EXTENSIONS = [
 ];
 
 /**
- * Upload a file in Azure storage.
+ * Gets the optimal configuration depending on the file size
  *
- * @param containerName main container name
- * @param folder folder name
- * @param file file to store in Azure blob
- * @param options additional options
- * @param options.filename filename to use
- * @param options.allowedExtensions allowed extensions
- * @returns path to the blob.
+ * @param fileSize size of the file to upload
+ * @returns best blob config
+ */
+const getOptimalConfig = (
+  fileSize: number
+): { bufferSize: number; maxBuffers: number } => {
+  if (fileSize < 4 * 1024 * 1024) {
+    // <4MB
+    return { bufferSize: 256 * 1024, maxBuffers: 5 };
+  } else if (fileSize < 100 * 1024 * 1024) {
+    // 4MB - 100MB
+    return { bufferSize: 4 * 1024 * 1024, maxBuffers: 20 };
+  } else {
+    // >100MB
+    return { bufferSize: 8 * 1024 * 1024, maxBuffers: 40 };
+  }
+};
+
+/**
+ * Upload a file to Azure Blob Storage with support for up to 200MB.
+ *
+ * @param containerName - Main container name.
+ * @param folder - Folder name.
+ * @param file - File to store in Azure blob (Express UploadedFile).
+ * @param options - Additional options.
+ * @param options.filename - Filename to use.
+ * @param options.allowedExtensions - Allowed extensions.
+ * @param options.chunks - whether we should chunk upload or not
+ * @returns Path to the blob.
  */
 export const uploadFile = async (
   containerName: string,
   folder: string,
-  file: any,
+  file: fileUpload.UploadedFile,
   options?: {
     filename?: string;
     allowedExtensions?: string[];
+    chunks?: boolean;
   }
 ): Promise<string> => {
-  const contentType = mime.lookup(file.filename || file.name) || '';
+  const contentType = mime.lookup(file.name) || '';
   if (
     !contentType ||
     !ALLOWED_EXTENSIONS.includes(mime.extension(contentType) || '')
@@ -87,7 +112,18 @@ export const uploadFile = async (
     // contains the folder and the blob name.
     const filename = get(options, 'filename', `${folder}/${blobName}`);
     const blockBlobClient = containerClient.getBlockBlobClient(filename);
-    await blockBlobClient.uploadData(file.data);
+    if (options?.chunks) {
+      // Convert buffer to a readable stream
+      const stream = Readable.from(file.data);
+      const blobConfig = getOptimalConfig(file.size);
+      await blockBlobClient.uploadStream(
+        stream,
+        blobConfig.bufferSize,
+        blobConfig.maxBuffers
+      );
+    } else {
+      await blockBlobClient.uploadData(file.data);
+    }
     return filename;
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
