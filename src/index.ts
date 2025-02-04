@@ -8,6 +8,7 @@ import config from 'config';
 import { logger } from './services/logger.service';
 import { checkConfig } from '@utils/server/checkConfig.util';
 import buildSchema from '@utils/schema/buildSchema';
+import { emailNotificationScheduler } from '@server/emailNotificationScheduler';
 
 // Needed for survey.model, as xmlhttprequest is not defined in servers
 global.XMLHttpRequest = require('xhr2');
@@ -53,4 +54,5 @@ mongoose.connection.once('open', () => {
   pullJobScheduler();
   customNotificationScheduler();
   emailEventSubscriber();
+  emailNotificationScheduler();
 });
