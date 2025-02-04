@@ -13,6 +13,7 @@ import extendAbilityForApplications from '@security/extendAbilityForApplication'
 import { AppAbility } from '@security/defineUserAbility';
 import { EmailNotificationReturn } from '@schema/types/emailNotification.type';
 import { cloneDeep } from 'lodash';
+import { createCronJob } from '@server/emailNotificationScheduler';
 
 /**
  * Interface for the arguments required to update a custom notification.
@@ -123,6 +124,17 @@ export default {
           throw new GraphQLError(
             context.i18next.t('common.errors.permissionNotGranted')
           );
+        }
+        const existingNotification = await EmailNotification.findById(args.id);
+
+        if (
+          existingNotification &&
+          existingNotification.schedule !== args.notification.schedule
+        ) {
+          console.log(
+            `Schedule updated from "${existingNotification.schedule}" to "${args.notification.schedule}"`
+          );
+          await createCronJob(args.notification.schedule, args.id);
         }
 
         const updatedData = await EmailNotification.findByIdAndUpdate(

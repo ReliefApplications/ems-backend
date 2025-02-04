@@ -11,6 +11,7 @@ import {
 } from '@schema/inputs/emailNotification.input';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { cloneDeep } from 'lodash';
+import { createCronJob } from '@server/emailNotificationScheduler';
 
 /** Arguments for the addCustomNotification mutation */
 type AddCustomNotificationArgs = {
@@ -107,6 +108,12 @@ export default {
       );
       const emailNotification = new EmailNotification(update);
       await emailNotification.save();
+
+      // If schedule is provided, create cron job
+      if (emailNotification.schedule.length) {
+        createCronJob(emailNotification.schedule, emailNotification._id);
+      }
+
       const response = emailNotification as EmailNotificationReturn;
       return response;
     } catch (err) {
