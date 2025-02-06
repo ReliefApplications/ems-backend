@@ -1,4 +1,4 @@
-import { BlobServiceClient } from '@azure/storage-blob';
+import { BlobServiceClient, ContainerClient } from '@azure/storage-blob';
 import mime from 'mime-types';
 import { GraphQLError } from 'graphql';
 import i18next from 'i18next';
@@ -6,7 +6,7 @@ import config from 'config';
 import get from 'lodash/get';
 import { logger } from '@lib/logger';
 import fileUpload from 'express-fileupload';
-import fs from 'fs';
+import { v4 as uuidv4 } from 'uuid';
 
 /** Azure storage connection string */
 const AZURE_STORAGE_CONNECTION_STRING: string = config.get(
@@ -50,19 +50,28 @@ const ALLOWED_EXTENSIONS = [
 ];
 
 /**
- * Gets the optimal configuration depending on the file size
- *
- * @param fileSize size of the file to upload
- * @returns best blob config
+ * keeps the state of ongoing uploads
  */
-const getOptimalConfig = (fileSize: number) => {
-  if (fileSize < 4 * 1024 * 1024) {
-    return { bufferSize: 256 * 1024, maxBuffers: 5 };
-  } else if (fileSize < 100 * 1024 * 1024) {
-    return { bufferSize: 4 * 1024 * 1024, maxBuffers: 20 };
-  } else {
-    return { bufferSize: 8 * 1024 * 1024, maxBuffers: 40 };
-  }
+const chunkMap: Set<string> = new Set();
+
+/**
+ * Upload one chunk
+ *
+ * @param containerClient container name to upload to
+ * @param blobName Name of the blob
+ * @param chunk Chunk buffer data
+ * @param chunkId chunk id
+ */
+const uploadChunk = async (
+  containerClient: ContainerClient,
+  blobName: string,
+  chunk: Buffer,
+  chunkId: string
+): Promise<void> => {
+  const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+
+  await blockBlobClient.stageBlock(chunkId, chunk, chunk.length);
+  chunkMap.add(chunkId);
 };
 
 /**
@@ -71,40 +80,32 @@ const getOptimalConfig = (fileSize: number) => {
  * @param containerName - Main container name.
  * @param folder - Folder name.
  * @param file - File to store in Azure blob (Express UploadedFile).
+ * @param uploadId - Id of the uploading file
+ * @param chunkList - List of all chunks that should be in the blob
+ * @param chunkId - Id of the current chunk
  * @param options - Additional options.
  * @param options.filename - Filename to use.
  * @param options.allowedExtensions - Allowed extensions.
- * @param options.chunkIndex - Chunk index
- * @param options.totalChunks - total number of chunks
- * @param options.uploadId - Id of the upload
  * @returns Path to the blob.
  */
-export const uploadFile = async (
+export const uploadChunkFile = async (
   containerName: string,
   folder: string,
   file: fileUpload.UploadedFile,
+  uploadId: string,
+  chunkList: string[],
+  chunkId: string,
   options?: {
     filename?: string;
     allowedExtensions?: string[];
-    chunkIndex?: string;
-    totalChunks?: string;
-    uploadId?: string;
   }
 ): Promise<string> => {
-  const { uploadId } = options ?? {};
-  const chunkIndex = Number(options.chunkIndex);
-  const totalChunks = Number(options.totalChunks);
-
   const contentType = mime.lookup(file.name) || '';
   if (
     !contentType ||
     !ALLOWED_EXTENSIONS.includes(mime.extension(contentType) || '')
   ) {
     throw new GraphQLError(i18next.t('common.errors.fileExtensionNotAllowed'));
-  }
-  if (!uploadId || chunkIndex === undefined || !totalChunks) {
-    logger.info(`${uploadId}, ${chunkIndex}, ${totalChunks}`);
-    throw new GraphQLError('Missing chunks information');
   }
   try {
     const blobServiceClient = BlobServiceClient.fromConnectionString(
@@ -116,53 +117,63 @@ export const uploadFile = async (
     }
 
     const filename = get(options, 'filename', `${folder}/${uploadId}`);
-    const tempFilePath = `${uploadId}-${chunkIndex}`;
-    fs.writeFileSync(tempFilePath, file.data as any);
+    await uploadChunk(containerClient, filename, file.data, chunkId);
 
-    logger.info(
-      `Received chunk ${chunkIndex + 1}/${totalChunks} for ${uploadId}`
-    );
-    console.log(file.size, fs.statSync(tempFilePath).size);
-    // If last chunk, merge and upload
-    if (chunkIndex + 1 === totalChunks) {
-      logger.info(`All chunks received for ${uploadId}. Merging...`);
-      const finalFilePath = `${uploadId}-merged`;
-      const writeStream = fs.createWriteStream(finalFilePath);
-
-      for (let i = 0; i < totalChunks; i++) {
-        const chunkPath = `${uploadId}-${i}`;
-        const chunkBuffer = fs.readFileSync(chunkPath);
-        writeStream.write(chunkBuffer);
-        fs.unlink(chunkPath, (err) => {
-          if (err) {
-            logger.error(`Error removing chunk ${chunkPath} ${err}`);
-          }
-        });
-      }
-      await new Promise((res) => writeStream.end(res));
-
-      logger.info(
-        `File merged successfully: ${finalFilePath}, ${writeStream.path}`
-      );
-
-      // Upload to Azure
+    if (chunkList.every((id) => chunkMap.has(id))) {
+      //If every chunk has been uploaded, commit it to azure
       const blockBlobClient = containerClient.getBlockBlobClient(filename);
-      const stream = fs.createReadStream(finalFilePath);
-      const blobConfig = getOptimalConfig(fs.statSync(finalFilePath).size);
-      console.log(fs.statSync(finalFilePath).size, 'size');
-      await blockBlobClient.uploadStream(
-        stream,
-        blobConfig.bufferSize,
-        blobConfig.maxBuffers
-      );
-
-      fs.unlink(finalFilePath, (err) => {
-        if (err) {
-          logger.error(`Error removing final temp file: ${err}`);
-        }
-      });
-      logger.info(`File uploaded to Azure: ${filename}`);
+      await blockBlobClient.commitBlockList(chunkList);
+      chunkList.forEach((id) => chunkMap.delete(id));
+      return filename;
     }
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    throw new GraphQLError(
+      i18next.t('utils.files.uploadFile.errors.fileCannotBeUploaded')
+    );
+  }
+};
+
+/**
+ * Upload a file in Azure storage.
+ *
+ * @param containerName main container name
+ * @param folder folder name
+ * @param file file to store in Azure blob
+ * @param options additional options
+ * @param options.filename filename to use
+ * @param options.allowedExtensions allowed extensions
+ * @returns path to the blob.
+ */
+export const uploadFile = async (
+  containerName: string,
+  folder: string,
+  file: any,
+  options?: {
+    filename?: string;
+    allowedExtensions?: string[];
+  }
+): Promise<string> => {
+  const contentType = mime.lookup(file.filename || file.name) || '';
+  if (
+    !contentType ||
+    !ALLOWED_EXTENSIONS.includes(mime.extension(contentType) || '')
+  ) {
+    throw new GraphQLError(i18next.t('common.errors.fileExtensionNotAllowed'));
+  }
+  try {
+    const blobServiceClient = BlobServiceClient.fromConnectionString(
+      AZURE_STORAGE_CONNECTION_STRING
+    );
+    const containerClient = blobServiceClient.getContainerClient(containerName);
+    if (!(await containerClient.exists())) {
+      await containerClient.create();
+    }
+    const blobName = uuidv4();
+    // contains the folder and the blob name.
+    const filename = get(options, 'filename', `${folder}/${blobName}`);
+    const blockBlobClient = containerClient.getBlockBlobClient(filename);
+    await blockBlobClient.uploadData(file.data);
     return filename;
   } catch (err) {
     logger.error(err.message, { stack: err.stack });

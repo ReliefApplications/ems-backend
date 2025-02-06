@@ -13,7 +13,12 @@ import {
 } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { Types } from 'mongoose';
-import { getUploadColumns, loadRow, uploadFile } from '@utils/files';
+import {
+  getUploadColumns,
+  loadRow,
+  uploadChunkFile,
+  uploadFile,
+} from '@utils/files';
 import { getNextId, getOwnership } from '@utils/form';
 import i18next from 'i18next';
 import get from 'lodash/get';
@@ -592,15 +597,20 @@ router.post('/file/:form', async (req, res) => {
 
     // Check form
     const formID = req.params.form;
+    const { uploadId, chunkId } = req.body;
+    const chunkList = JSON.parse(req.body.chunkList);
     const form = await Form.exists({ _id: formID });
     if (!form) {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
-    const path = await uploadFile('forms', formID, file, {
-      chunkIndex: req.body.chunkIndex,
-      totalChunks: req.body.totalChunks,
-      uploadId: req.body.uploadId,
-    });
+    const path = await uploadChunkFile(
+      'forms',
+      formID,
+      file,
+      uploadId,
+      chunkList,
+      chunkId
+    );
     return res.status(200).send({ path });
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
