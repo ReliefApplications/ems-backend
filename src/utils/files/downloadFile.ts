@@ -32,7 +32,7 @@ export const downloadFile = async (
     const properties = await blockBlobClient.getProperties();
     const blobSize = properties.contentLength;
     const chunkSize = 8 * 1024 * 1024; //8MB chunk size
-    const numChunks = Math.ceil(blobSize / chunkSize);
+    const numChunks = Math.max(Math.ceil(blobSize / chunkSize), 1);
 
     // Ensure the directory exists
     const pathToFile = path.substring(0, path.lastIndexOf('/'));
