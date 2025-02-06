@@ -13,12 +13,7 @@ import {
 } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { Types } from 'mongoose';
-import {
-  getUploadColumns,
-  loadRow,
-  uploadChunkFile,
-  uploadFile,
-} from '@utils/files';
+import { getUploadColumns, loadRow, uploadFile } from '@utils/files';
 import { getNextId, getOwnership } from '@utils/form';
 import i18next from 'i18next';
 import get from 'lodash/get';
@@ -603,7 +598,7 @@ router.post('/file/:form', async (req, res) => {
     if (!form) {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
-    const path = await uploadChunkFile(
+    const path = await uploadFile(
       'forms',
       formID,
       file,
@@ -651,15 +646,21 @@ router.post('/style/:application', async (req, res) => {
       .getFilter();
 
     const application = await Application.findOne(filters);
+    const { uploadId, chunkId } = req.body;
+    const chunkList = JSON.parse(req.body.chunkList);
     if (!application) {
       return res
         .status(403)
         .send(i18next.t('common.errors.permissionNotGranted'));
     }
+    console.log('chien', chunkId, uploadId);
     const path = await uploadFile(
       'applications',
       req.params.application,
       file,
+      uploadId,
+      chunkList,
+      chunkId,
       {
         filename: application.cssFilename,
         allowedExtensions: ['css', 'scss'],
