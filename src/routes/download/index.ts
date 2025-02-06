@@ -79,9 +79,9 @@ const buildUserExport = (req, res, users) => {
  */
 const templateExport = (res) => {
   const columns = [
-    { name: 'to', title: 'to', field: 'To' },
-    { name: 'cc', title: 'cc', field: 'Cc' },
-    { name: 'bcc', title: 'bcc', field: 'Bcc' },
+    { name: 'to', title: 'to', field: 'to' },
+    { name: 'cc', title: 'cc', field: 'cc' },
+    { name: 'bcc', title: 'bcc', field: 'bcc' },
   ];
   return fileBuilder(res, 'distributionList', columns, [], 'xlsx');
 };
@@ -130,8 +130,8 @@ router.get('/form/records/:id', async (req, res) => {
         ...Record.find(accessibleBy(formAbility, 'read').Record).getFilter(),
       };
       const columns = await getColumns(
+        req,
         form.fields,
-        '',
         req.query.template ? true : false
       );
       // If the export is only of a template, build and export it, else build and export a file with the records
@@ -304,8 +304,8 @@ router.get('/resource/records/:id', async (req, res) => {
     const resource = await Resource.findOne(filters);
     if (resource) {
       const columns = await getColumns(
+        req,
         resource.fields,
-        req.headers.authorization,
         req.query.template ? true : false
       );
       if (req.query.template) {

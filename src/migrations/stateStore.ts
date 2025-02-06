@@ -67,7 +67,6 @@ class MongoStorage {
       }
       callback(null);
     } catch (error) {
-      console.error('error while saving', error);
       callback(error);
     }
   }

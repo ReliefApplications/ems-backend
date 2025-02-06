@@ -1,14 +1,14 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
-import mongoose, { Schema, Document } from 'mongoose';
-import { addOnBeforeDeleteMany } from '@utils/models/deletion';
 import { status } from '@const/enumTypes';
+import { logger } from '@services/logger.service';
+import { deleteFolder } from '@utils/files/deleteFolder';
+import { addOnBeforeDeleteMany } from '@utils/models/deletion';
+import { getGraphQLTypeName } from '@utils/validators';
+import mongoose, { Document, Schema } from 'mongoose';
 import { Channel } from './channel.model';
 import { layoutSchema } from './layout.model';
-import { Version } from './version.model';
 import { Record } from './record.model';
-import { getGraphQLTypeName } from '@utils/validators';
-import { deleteFolder } from '@utils/files/deleteFolder';
-import { logger } from '@services/logger.service';
+import { Version } from './version.model';
 
 /** Form documents interface declaration */
 interface FormDocument extends Document {

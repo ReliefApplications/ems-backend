@@ -51,6 +51,16 @@ export const getColumnsFromMeta = (
     if (field && field.name && typeof field.name === 'string') {
       // To get reference data fields
       const name = field.graphQLFieldName || field.name;
+      const label = fields?.find((data) => {
+        const splitField = data.name.split('.');
+        const fieldParts = field.name.split('.');
+        if (splitField.length === fieldParts.length) {
+          return splitField.every(
+            (part: any, index: string | number) => part === fieldParts[index]
+          );
+        }
+        return false;
+      })?.label;
       // Classic field
       columns.push({
         name: prefix ? `${prefix}.${name}` : name,
@@ -59,12 +69,14 @@ export const getColumnsFromMeta = (
         meta: {
           field,
         },
+        label,
       });
     } else {
       const queryField = fields.find((x) => x.name === key);
-      if (queryField && queryField.subFields) {
+      if ((queryField && queryField.subFields) || queryField?.kind === 'LIST') {
         // List of related objects
         const fullName = prefix ? `${prefix}.${key}` : key;
+        const subFields = queryField.subFields || queryField.fields;
         columns.push({
           name: fullName,
           field: fullName,
@@ -80,30 +92,32 @@ export const getColumnsFromMeta = (
               }
             : null,
           subColumns:
-            queryField.subFields.length > 0
-              ? getColumnsFromMeta(field, queryField.subFields).map(
-                  (subColumn) => {
-                    const subField = queryField.subFields.find(
-                      (_) => _.name === key + '.' + subColumn.name.split('.')[0]
-                    );
-                    return {
-                      ...subColumn,
-                      ...(subField?.displayField && {
-                        displayField: {
-                          ...subColumn.meta.field,
-                          field: subColumn.meta.field.name,
-                          separator: subField.separator,
-                        },
-                      }),
-                    };
-                  }
-                )
+            subFields.length > 0
+              ? getColumnsFromMeta(field, subFields).map((subColumn) => {
+                  const subField = subFields.find(
+                    (_) => _.name === key + '.' + subColumn.name.split('.')[0]
+                  );
+                  return {
+                    ...subColumn,
+                    ...(subField?.displayField && {
+                      displayField: {
+                        ...subColumn.meta.field,
+                        field: subColumn.meta.field.name,
+                        separator: subField.separator,
+                      },
+                    }),
+                  };
+                })
               : [],
         });
       } else {
         // Single related object
         columns = columns.concat(
-          getColumnsFromMeta(field, fields, prefix ? `${prefix}.${key}` : key)
+          getColumnsFromMeta(
+            field,
+            queryField?.fields,
+            prefix ? `${prefix}.${key}` : key
+          )
         );
       }
     }

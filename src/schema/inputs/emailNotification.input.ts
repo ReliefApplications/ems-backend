@@ -17,8 +17,10 @@ export type EmailNotificationArgs = {
   notificationType: string;
   applicationId: string | Types.ObjectId;
   datasets: any[];
-  emailLayout: any;
-  emailDistributionList: string;
+  emailLayout: string | Types.ObjectId;
+  emailDistributionList: string | Types.ObjectId;
+  subscriptionList: string[];
+  restrictSubscription: boolean;
   recipientsType: any;
   status: string;
   lastExecution: string;
@@ -27,6 +29,41 @@ export type EmailNotificationArgs = {
   isDraft: boolean;
   draftStepper: number;
 };
+
+/**
+ * Query object representing query executed against DB
+ */
+export const QueryInputType = new GraphQLInputObjectType({
+  name: 'QueryInput',
+  fields: () => ({
+    name: { type: GraphQLString },
+    filter: { type: GraphQLJSON },
+    fields: { type: new GraphQLList(GraphQLJSON) },
+  }),
+});
+
+/**
+ * Dataset object containing resource and query, used to fetch data
+ */
+export const DatasetInputType = new GraphQLInputObjectType({
+  name: 'DatasetInput',
+  fields: () => ({
+    resource: { type: GraphQLString },
+    reference: { type: GraphQLString },
+    dataType: { type: GraphQLString },
+    name: { type: GraphQLString },
+    query: { type: QueryInputType },
+    tableStyle: { type: GraphQLJSON },
+    blockType: { type: GraphQLJSON },
+    textStyle: { type: GraphQLJSON },
+    sendAsAttachment: { type: GraphQLBoolean },
+    individualEmail: { type: GraphQLBoolean },
+    individualEmailFields: { type: new GraphQLList(GraphQLJSON) },
+    pageSize: { type: GraphQLInt },
+    navigateToPage: { type: GraphQLBoolean, defaultValue: false },
+    navigateSettings: { type: GraphQLJSON },
+  }),
+});
 
 /** GraphQL custom notification query input type definition */
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -37,9 +74,13 @@ export const EmailNotificationInputType = new GraphQLInputObjectType({
     schedule: { type: GraphQLString },
     applicationId: { type: new GraphQLNonNull(GraphQLID) },
     notificationType: { type: GraphQLString },
-    datasets: { type: new GraphQLList(GraphQLJSON) },
-    emailLayout: { type: GraphQLJSON },
-    emailDistributionList: { type: GraphQLJSON },
+    datasets: { type: new GraphQLList(DatasetInputType) },
+    emailLayout: { type: GraphQLID },
+    emailDistributionList: {
+      type: GraphQLID,
+    },
+    subscriptionList: { type: new GraphQLList(GraphQLString) },
+    restrictSubscription: { type: GraphQLBoolean },
     recipientsType: { type: GraphQLString },
     status: { type: GraphQLString },
     lastExecution: { type: GraphQLString },

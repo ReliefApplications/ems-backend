@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 import mongoose, { Schema, Document } from 'mongoose';
 import {
   customNotificationStatus,
@@ -7,25 +6,21 @@ import {
   notificationsType,
 } from '@const/enumTypes';
 import { AccessibleRecordModel } from '@casl/mongoose';
-
-/**
- *Resource interface
- */
-interface Resource {
-  id: Schema.Types.ObjectId;
-  name: string;
-}
+import { EmailDistributionList } from '@models/emailDistributionList.model';
+import { CustomTemplate } from '@models/customTemplate.model';
 
 /**
  *DataSet interface
  */
-interface Dataset {
+export interface Dataset {
   name: string;
-  resource: Resource;
-  filter: any;
-  pageSize?: number;
-  fields?: any[];
-  style?: any[];
+  resource: string;
+  reference?: string;
+  query: {
+    name: string;
+    filter: any;
+    fields: any[];
+  };
   tableStyle: {
     tableStyle: string;
     theadStyle: string;
@@ -40,27 +35,13 @@ interface Dataset {
   textStyle: any;
   sendAsAttachment: boolean;
   individualEmail: boolean;
-}
-
-/**
- *EmailLayout interface
- */
-interface EmailLayout {
-  subject: string;
-  header?: any;
-  body?: any;
-  banner?: any;
-  footer?: any;
-}
-
-/**
- *Recipients interface
- */
-interface EmailDistributionList {
-  name: string;
-  To: string[];
-  Cc: string[];
-  Bcc: string[];
+  individualEmailFields?: any[];
+  navigateToPage: boolean;
+  navigateSettings: {
+    field: string;
+    pageUrl: string;
+    title: string;
+  };
 }
 
 /** custom notification documents interface declaration */
@@ -73,8 +54,10 @@ export interface EmailNotification extends Document {
   createdBy: { name: string; email: string };
   notificationType: string;
   datasets: Dataset[];
-  emailDistributionList: EmailDistributionList;
-  emailLayout: EmailLayout;
+  emailDistributionList: mongoose.Schema.Types.ObjectId | EmailDistributionList; // Reference to EmailDistributionList
+  subscriptionList: string[];
+  restrictSubscription: boolean;
+  emailLayout: mongoose.Schema.Types.ObjectId | CustomTemplate; // Reference to CustomTemplate;
   recipientsType: string;
   status: string;
   lastExecution?: Date;
@@ -111,40 +94,45 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
     datasets: [
       {
         name: String,
-        resource: {
-          id: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Resource',
-            required: true,
-          },
+        resource: String,
+        reference: String,
+        query: {
           name: String,
+          fields: [{ type: mongoose.Schema.Types.Mixed }],
+          filter: { type: mongoose.Schema.Types.Mixed },
         },
-        filter: { type: mongoose.Schema.Types.Mixed },
+        individualEmailFields: [{ type: mongoose.Schema.Types.Mixed }],
         pageSize: { type: mongoose.Schema.Types.Number },
-        fields: [{ type: mongoose.Schema.Types.Mixed }],
         tableStyle: { type: mongoose.Schema.Types.Mixed },
         blockType: { type: mongoose.Schema.Types.Mixed },
         textStyle: { type: mongoose.Schema.Types.Mixed },
         sendAsAttachment: { type: Boolean, default: false },
         individualEmail: { type: Boolean, default: false },
+        navigateToPage: {
+          type: Boolean,
+          default: false,
+        },
+        navigateSettings: {
+          field: String,
+          pageUrl: String,
+          title: String,
+        },
       },
     ],
     emailDistributionList: {
-      name: String,
-      To: [{ type: String }],
-      Cc: [{ type: String }],
-      Bcc: [{ type: String }],
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'EmailDistributionList', // Reference to EmailDistributionList collection
+    },
+    subscriptionList: {
+      type: [String],
+    },
+    restrictSubscription: {
+      type: Boolean,
+      default: false,
     },
     emailLayout: {
-      subject: String,
-      header: {
-        type: mongoose.Schema.Types.Mixed,
-      },
-      body: { type: mongoose.Schema.Types.Mixed },
-      banner: { type: mongoose.Schema.Types.Mixed },
-      footer: {
-        type: mongoose.Schema.Types.Mixed,
-      },
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'customTemplate', // Reference to CustomTemplate collection
     },
     recipientsType: {
       type: String,
@@ -182,9 +170,9 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
   }
 );
 
-/**
- *
- */
+emailNotificationSchema.index({ name: 1, applicationId: 1 }, { unique: true });
+
+/** Mongoose email notification model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const EmailNotification = mongoose.model<
   EmailNotification,

@@ -11,7 +11,7 @@ import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 
 /** Arguments for the addDashboard mutation */
-type AddPageArgs = {
+export type AddPageArgs = {
   type: ContentType;
   content?: string | Types.ObjectId;
   application: string | Types.ObjectId;
@@ -89,8 +89,6 @@ export default {
           pageName = form.name;
           break;
         }
-        default:
-          break;
       }
       // Create a new page.
       const roles = await Role.find({ application: application._id });

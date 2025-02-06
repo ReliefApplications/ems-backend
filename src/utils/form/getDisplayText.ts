@@ -2,7 +2,7 @@ import { Context } from '../../server/apollo/context';
 import { CustomAPI } from '../../server/apollo/dataSources';
 import config from 'config';
 import { logger } from '@services/logger.service';
-import axios from 'axios';
+import axios, { AxiosHeaders } from 'axios';
 import get from 'lodash/get';
 import jsonpath from 'jsonpath';
 
@@ -67,6 +67,39 @@ export const getFullChoices = async (
           );
           return res;
         }
+      } else if (
+        config.get('commonServices.url') &&
+        url.includes(config.get('commonServices.url'))
+      ) {
+        let choices: any[] = [];
+        const valueField = get(field, 'choicesByUrl.value', null);
+        const textField = get(field, 'choicesByUrl.text', null);
+        await axios({
+          url,
+          method: 'get',
+          headers: {
+            Authorization: `Bearer ${context.accesstoken}`,
+            'Content-Type': 'application/json',
+          },
+        }).then(({ data }) => {
+          const path = field.choicesByUrl.path;
+          choices = path ? [...get(data, path)] : [...data];
+          if (field.choicesByUrl.hasOther) {
+            choices.push({ [valueField]: 'other', [textField]: 'Other' });
+          }
+          return choices
+            ? choices.map((x: any) => ({
+                value: String(valueField ? get(x, valueField) : x),
+                text: String(
+                  textField
+                    ? get(x, textField)
+                    : valueField
+                    ? get(x, valueField)
+                    : x
+                ),
+              }))
+            : [];
+        });
       } else {
         const dataSource: CustomAPI = context.dataSources._rest;
         const res = await dataSource.getChoices(
@@ -85,16 +118,24 @@ export const getFullChoices = async (
       let choices: any[] = [];
       const valueField = get(field, 'choicesByGraphQL.value', null);
       const textField = get(field, 'choicesByGraphQL.text', null);
+      const headers = new AxiosHeaders({
+        'Content-Type': 'application/json',
+      });
+      if (
+        config.get('commonServices.url') &&
+        url.includes(config.get('commonServices.url'))
+      ) {
+        headers.setAuthorization(`Bearer ${context.accesstoken}`);
+      } else {
+        headers.setAuthorization(context.token);
+        if (context.accesstoken) {
+          headers.set('accesstoken', context.accesstoken);
+        }
+      }
       await axios({
         url,
         method: 'post',
-        headers: {
-          Authorization: context.token,
-          'Content-Type': 'application/json',
-          ...(context.accesstoken && {
-            accesstoken: context.accesstoken,
-          }),
-        },
+        headers,
         data: {
           query: field.choicesByGraphQL.query,
         },

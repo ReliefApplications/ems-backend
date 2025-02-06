@@ -1,3 +1,4 @@
+import { Request } from 'express';
 import { getChoices } from '../proxy/getChoices';
 
 /** Default record fields */
@@ -6,14 +7,14 @@ const DEFAULT_FIELDS = ['id', 'createdAt', 'modifiedAt', 'incrementalId'];
 /**
  * Transforms fields into export columns.
  *
+ * @param req Express request
  * @param fields definition of structure fields.
- * @param token user token
  * @param template is the export for a template or not
  * @returns list of export columns.
  */
 export const getColumns = async (
+  req: Request,
   fields: any[],
-  token: string,
   template = false
 ): Promise<any[]> => {
   const columns = [];
@@ -39,7 +40,7 @@ export const getColumns = async (
           }
         } else {
           if (field.choicesByUrl || field.choicesByGraphQL) {
-            const choices = await getChoices(field, token);
+            const choices = await getChoices(req, field);
             columns.push({
               name: field.name,
               label: field.label || field.name,
@@ -142,7 +143,7 @@ export const getColumns = async (
           });
         } else {
           if (field.choicesByUrl || field.choicesByGraphQL) {
-            const choices = await getChoices(field, token);
+            const choices = await getChoices(req, field);
             columns.push({
               name: field.name,
               label: field.label || field.name,

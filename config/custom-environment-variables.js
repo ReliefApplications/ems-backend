@@ -32,6 +32,14 @@ module.exports = {
     port: 'MAIL_PORT',
     user: 'MAIL_USER',
     pass: 'MAIL_PASS',
+    blobStorage: {
+      connectionString: 'MAIL_BLOB_STORAGE_CONNECTION_STRING',
+      container: 'MAIL_BLOB_STORAGE_CONTAINER',
+    },
+    serverless: {
+      url: 'MAIL_SERVERLESS_URL',
+      key: 'MAIL_SERVERLESS_KEY',
+    },
   },
   auth: {
     provider: 'AUTH_PROVIDER',
@@ -64,6 +72,7 @@ module.exports = {
     clientId: 'COMMON_SERVICES_CLIENT_ID',
     clientSecret: 'COMMON_SERVICES_CLIENT_SECRET',
     scope: 'COMMON_SERVICES_SCOPE',
+    url: 'COMMON_SERVICES_URL',
   },
   microsoftGraph: {
     tokenEndpoint: 'MICROSOFT_GRAPH_TOKEN_ENDPOINT',
