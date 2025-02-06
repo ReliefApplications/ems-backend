@@ -1,3 +1,32 @@
+# [2.12.0-beta.13](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.12...v2.12.0-beta.13) (2025-02-06)
+
+
+### Bug Fixes
+
+* add & remove subscription endpoints not accessible anymore ([9ffcbdd](https://github.com/ReliefApplications/ems-backend/commit/9ffcbdd1f3df27b6573bb7fb00dce6556e334e13))
+* add ignore-scripts in npm install for Dockerfile   ([#1180](https://github.com/ReliefApplications/ems-backend/issues/1180)) ([fe089b4](https://github.com/ReliefApplications/ems-backend/commit/fe089b441aa6eae2a6dd9aeb242c4a7023d32a6d)), closes [Ab#108318](https://github.com/Ab/issues/108318)
+* better group page by url between modules ([4020521](https://github.com/ReliefApplications/ems-backend/commit/4020521bc1fc4c63bfa57f03d36203233c898f20))
+* better handle duplication error in editRole mutation ([#1178](https://github.com/ReliefApplications/ems-backend/issues/1178)) ([6b2c975](https://github.com/ReliefApplications/ems-backend/commit/6b2c97579bb45acde332e594e809603e384c32bd)), closes [AB#108245](https://github.com/AB/issues/108245)
+* rate limiter correctly configured ([#1177](https://github.com/ReliefApplications/ems-backend/issues/1177)) ([0d5a290](https://github.com/ReliefApplications/ems-backend/commit/0d5a290003f6d549fb32c44ca8e3fbfab0e1ad26)), closes [AB#108296](https://github.com/AB/issues/108296)
+* search index breaking filtering on associated resource & reference data ([#1161](https://github.com/ReliefApplications/ems-backend/issues/1161)) ([f4ce20e](https://github.com/ReliefApplications/ems-backend/commit/f4ce20ef13665e3433b2cfc12bcade8752492b6c))
+
+
+### Features
+
+* Ability to track user activity navigation logs ([#1167](https://github.com/ReliefApplications/ems-backend/issues/1167)) ([5233f6c](https://github.com/ReliefApplications/ems-backend/commit/5233f6c4a505a7bce919768db69b3c70eeb69c5d)), closes [AB#105244](https://github.com/AB/issues/105244)
+* add addRecord action in custom action buttons of dashboards ([#1139](https://github.com/ReliefApplications/ems-backend/issues/1139)) ([62826d2](https://github.com/ReliefApplications/ems-backend/commit/62826d24a824de820806d3641e153f5513f2462c)), closes [AB#104270](https://github.com/AB/issues/104270)
+* Add direct fetch to CS ([#1181](https://github.com/ReliefApplications/ems-backend/issues/1181)) ([d6c8b74](https://github.com/ReliefApplications/ems-backend/commit/d6c8b74d729ec8217df74a5f989364eb52578a83)), closes [AB#108468](https://github.com/AB/issues/108468)
+* add EditRecord & goToPreviousPage actions in custom action button of dashboard ([#1136](https://github.com/ReliefApplications/ems-backend/issues/1136)) ([ebb6a3f](https://github.com/ReliefApplications/ems-backend/commit/ebb6a3ff180d5e5b310016daccd732e519881e80)), closes [AB#104621](https://github.com/AB/issues/104621)
+* add possibility to auto reload dashboard when using editRecord / addRecord actions ([#1144](https://github.com/ReliefApplications/ems-backend/issues/1144)) ([6c1ef41](https://github.com/ReliefApplications/ems-backend/commit/6c1ef41aa169e5403c316abfab10eb9b808ceb69)), closes [AB#104882](https://github.com/AB/issues/104882)
+* add send notification action to custom action buttons ([#1142](https://github.com/ReliefApplications/ems-backend/issues/1142)) ([c742b3f](https://github.com/ReliefApplications/ems-backend/commit/c742b3f0563cc3d151aef75c0e0871735f60561c)), closes [AB#104883](https://github.com/AB/issues/104883)
+* add subscribeToNotification action in custom action buttons of dashboard ([#1137](https://github.com/ReliefApplications/ems-backend/issues/1137)) ([a21b5e1](https://github.com/ReliefApplications/ems-backend/commit/a21b5e153029f742cd5ca671dca64995f7230c89)), closes [AB#104719](https://github.com/AB/issues/104719)
+* add unsubscribe from notification action in custom action buttons ([#1153](https://github.com/ReliefApplications/ems-backend/issues/1153)) ([906cb62](https://github.com/ReliefApplications/ems-backend/commit/906cb624755819386479077a0aa09cf000e2c7ee)), closes [AB#105519](https://github.com/AB/issues/105519)
+* allow mapping between fields custom action button ([#1143](https://github.com/ReliefApplications/ems-backend/issues/1143)) ([06333a1](https://github.com/ReliefApplications/ems-backend/commit/06333a1dbd6df13e0e8be9b4f0d0eaf8adff21cc)), closes [AB#105315](https://github.com/AB/issues/105315)
+* Distribution lists can be built using common services users ([#1174](https://github.com/ReliefApplications/ems-backend/issues/1174)) ([e77e240](https://github.com/ReliefApplications/ems-backend/commit/e77e24026853ccad10f3889d57a38bc4dc529433))
+* Email functions hosted on serverless function ([#1160](https://github.com/ReliefApplications/ems-backend/issues/1160)) ([a3fb432](https://github.com/ReliefApplications/ems-backend/commit/a3fb432db876eff2f09660b15b0dc7e1ea46f89b))
+* form quick action buttons ([#1140](https://github.com/ReliefApplications/ems-backend/issues/1140)) ([7785278](https://github.com/ReliefApplications/ems-backend/commit/77852782b95ee3ab496369ed095ca1bc1bad32be)), closes [AB#104815](https://github.com/AB/issues/104815)
+* improvements on email feature ([#1129](https://github.com/ReliefApplications/ems-backend/issues/1129)) ([8beaed7](https://github.com/ReliefApplications/ems-backend/commit/8beaed73f5cb6568dd6d49fc95a29fa52decf137)), closes [Ab#104469](https://github.com/Ab/issues/104469)
+
 # [2.12.0-beta.12](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.11...v2.12.0-beta.12) (2024-11-21)
 
 
