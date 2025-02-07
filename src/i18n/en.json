@@ -5,7 +5,7 @@
 			"dataNotFound": "Data not found",
 			"duplicatedGraphQLTypeName": "A form or a reference data with a similar name already exists. Please provide a different name.",
 			"fileExtensionNotAllowed": "File extension not allowed",
-			"fileSizeLimitReached": "File size exceed 5MB",
+			"fileSizeLimitReached": "File size exceed {{limit}}MB",
 			"internalServerError": "Internal Server Error",
 			"invalidAPI": "API cannot be reached.",
 			"invalidEmailsInput": "Wrong format detected. Please provide valid emails.",

@@ -25,7 +25,7 @@ router.post('/track', async (req, res) => {
       user,
     } as Event);
 
-    return res.sendStatus(200);
+    return res.status(200).send({ status: 'OK' });
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
     return res.status(500).send(req.t('common.errors.internalServerError'));

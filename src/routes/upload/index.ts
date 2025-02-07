@@ -592,44 +592,20 @@ router.post('/file/:form', async (req, res) => {
 
     // Check form
     const formID = req.params.form;
+    const { uploadId, chunkId } = req.body;
+    const chunkList = JSON.parse(req.body.chunkList);
     const form = await Form.exists({ _id: formID });
     if (!form) {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
-    const path = await uploadFile('forms', formID, file);
-    return res.status(200).send({ path });
-  } catch (err) {
-    logger.error(err.message, { stack: err.stack });
-    return res.status(500).send(req.t('common.errors.internalServerError'));
-  }
-});
-
-/** Uploads file from a certain form to azure storage */
-router.post('/chunk-file/:form', async (req, res) => {
-  try {
-    // Check file
-    if (!req.files || Object.keys(req.files).length === 0)
-      return res
-        .status(400)
-        .send(i18next.t('routes.upload.errors.missingFile'));
-    const file = Array.isArray(req.files.file)
-      ? req.files.file[0]
-      : req.files.file;
-
-    // Check file size
-    if (file.size > FILE_SIZE_LIMIT) {
-      return res
-        .status(400)
-        .send(i18next.t('common.errors.fileSizeLimitReached'));
-    }
-
-    // Check form
-    const formID = req.params.form;
-    const form = await Form.exists({ _id: formID });
-    if (!form) {
-      return res.status(404).send(i18next.t('common.errors.dataNotFound'));
-    }
-    const path = await uploadFile('forms', formID, file, { chunks: true });
+    const path = await uploadFile(
+      'forms',
+      formID,
+      file,
+      uploadId,
+      chunkList,
+      chunkId
+    );
     return res.status(200).send({ path });
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
@@ -670,15 +646,21 @@ router.post('/style/:application', async (req, res) => {
       .getFilter();
 
     const application = await Application.findOne(filters);
+    const { uploadId, chunkId } = req.body;
+    const chunkList = JSON.parse(req.body.chunkList);
     if (!application) {
       return res
         .status(403)
         .send(i18next.t('common.errors.permissionNotGranted'));
     }
+    console.log('chien', chunkId, uploadId);
     const path = await uploadFile(
       'applications',
       req.params.application,
       file,
+      uploadId,
+      chunkList,
+      chunkId,
       {
         filename: application.cssFilename,
         allowedExtensions: ['css', 'scss'],
