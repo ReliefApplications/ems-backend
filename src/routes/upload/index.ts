@@ -653,7 +653,6 @@ router.post('/style/:application', async (req, res) => {
         .status(403)
         .send(i18next.t('common.errors.permissionNotGranted'));
     }
-    console.log('chien', chunkId, uploadId);
     const path = await uploadFile(
       'applications',
       req.params.application,
