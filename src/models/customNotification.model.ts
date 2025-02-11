@@ -61,6 +61,11 @@ export const customNotificationSchema = new Schema(
       default: customNotificationLastExecutionStatus.pending,
       required: true,
     },
+    onRecordCreation: Boolean,
+    onRecordUpdate: Boolean,
+    applicationTrigger: Boolean,
+    redirect: mongoose.Schema.Types.Mixed,
+    filter: mongoose.Schema.Types.Mixed,
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
@@ -72,7 +77,7 @@ export interface CustomNotification extends Document {
   kind: 'CustomNotification';
   name: string;
   description: string;
-  schedule: string;
+  schedule?: string;
   notificationType: string;
   resource: mongoose.Types.ObjectId;
   layout: mongoose.Types.ObjectId;
@@ -84,4 +89,15 @@ export interface CustomNotification extends Document {
   lastExecutionStatus: string;
   createdAt?: Date;
   modifiedAt?: Date;
+  onRecordCreation?: boolean;
+  onRecordUpdate?: boolean; // record deletion counts as an update
+  applicationTrigger?: boolean;
+  filter?: any;
+  redirect?: any;
+  // redirect?: {
+  //   active: boolean;
+  //   type: string; // 'url' | 'recordIds'
+  //   url?: string;
+  //   recordIds?: string[];
+  // };
 }

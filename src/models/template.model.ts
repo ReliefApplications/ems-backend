@@ -17,7 +17,7 @@ export const templateSchema = new Schema(
 /** template documents interface declaration */
 export interface Template extends Document {
   kind: 'Template';
-  type?: 'email'; // In the case we add other types of templates in the future
+  type?: 'email' | 'notification'; // In the case we add other types of templates in the future
   name?: string;
   content?: any;
   createdAt?: Date;

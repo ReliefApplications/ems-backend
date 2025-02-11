@@ -42,6 +42,8 @@ export const NotificationType = new GraphQLObjectType({
         return users;
       },
     },
+    user: { type: UserType },
+    redirect: { type: GraphQLJSON },
   }),
 });
 

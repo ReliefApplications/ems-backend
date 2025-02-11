@@ -16,12 +16,14 @@ import { logger } from '@lib/logger';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
+import GraphQLJSON from 'graphql-type-json';
 
 /** Arguments for the editCustomNotification mutation */
 type EditCustomNotificationArgs = {
   id: string | Types.ObjectId;
   application: string;
-  notification: CustomNotificationArgs;
+  notification?: CustomNotificationArgs;
+  triggersFilters?: any;
 };
 
 /**
@@ -32,7 +34,8 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     application: { type: new GraphQLNonNull(GraphQLID) },
-    notification: { type: new GraphQLNonNull(CustomNotificationInputType) },
+    notification: { type: CustomNotificationInputType },
+    triggersFilters: { type: GraphQLJSON },
   },
   async resolve(_, args: EditCustomNotificationArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -60,22 +63,38 @@ export default {
         }
       }
       // Save custom notification in application
-      const update = {
-        $set: {
-          'customNotifications.$.name': args.notification.name,
-          'customNotifications.$.description': args.notification.description,
-          'customNotifications.$.schedule': args.notification.schedule,
-          'customNotifications.$.notificationType':
-            args.notification.notificationType,
-          'customNotifications.$.resource': args.notification.resource,
-          'customNotifications.$.layout': args.notification.layout,
-          'customNotifications.$.template': args.notification.template,
-          'customNotifications.$.recipients': args.notification.recipients,
-          'customNotifications.$.status': args.notification.notification_status,
-          'customNotifications.$.recipientsType':
-            args.notification.recipientsType,
-        },
-      };
+      let update = {};
+      if (args.triggersFilters) {
+        update = {
+          $set: {
+            'customNotifications.$.filter': args.triggersFilters,
+          },
+        };
+      } else {
+        update = {
+          $set: {
+            'customNotifications.$.name': args.notification.name,
+            'customNotifications.$.description': args.notification.description,
+            'customNotifications.$.schedule': args.notification.schedule,
+            'customNotifications.$.notificationType':
+              args.notification.notificationType,
+            'customNotifications.$.resource': args.notification.resource,
+            'customNotifications.$.layout': args.notification.layout,
+            'customNotifications.$.template': args.notification.template,
+            'customNotifications.$.recipients': args.notification.recipients,
+            'customNotifications.$.status': args.notification.status,
+            'customNotifications.$.recipientsType':
+              args.notification.recipientsType,
+            'customNotifications.$.onRecordCreation':
+              args.notification.onRecordCreation,
+            'customNotifications.$.onRecordUpdate':
+              args.notification.onRecordUpdate,
+            'customNotifications.$.applicationTrigger':
+              args.notification.applicationTrigger,
+            'customNotifications.$.redirect': args.notification.redirect,
+          },
+        };
+      }
 
       const application = await Application.findOneAndUpdate(
         { _id: args.application, 'customNotifications._id': args.id },
@@ -87,8 +106,10 @@ export default {
         (customNotification) => customNotification.id.toString() === args.id
       );
       if (
-        args.notification.notification_status ===
-        customNotificationStatus.active
+        (args.notification?.schedule &&
+          args.notification?.status === customNotificationStatus.active) ||
+        (args.triggersFilters &&
+          notificationDetail.status === customNotificationStatus.active)
       ) {
         scheduleCustomNotificationJob(notificationDetail, application);
       } else {
