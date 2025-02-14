@@ -11,7 +11,7 @@ import {
 } from '@models';
 import { get } from 'lodash';
 import customNotificationSend from './customNotificationSend';
-import { logger } from '@services/logger.service';
+import { logger } from '@lib/logger';
 import { preprocess } from '@utils/email';
 
 /**

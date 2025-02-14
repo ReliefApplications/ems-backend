@@ -200,5 +200,19 @@ export const preprocess = (
       text = text.split(Placeholder.DATASET).join('');
     }
   }
+
+  // === INLINE TEMPLATE ===
+  if (dataset.rows.length === 1) {
+    const data = dataset.rows[0];
+    const regex = /{{data\..*?}}/g;
+    const matches = text.match(regex);
+    if (matches) {
+      matches.forEach((match) => {
+        const field = match.replace('{{data.', '').replace('}}', '');
+        const value = get(data, field, '');
+        text = text.replace(match, value);
+      });
+    }
+  }
   return text;
 };
