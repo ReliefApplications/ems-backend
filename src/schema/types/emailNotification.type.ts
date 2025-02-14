@@ -19,7 +19,10 @@ export const QueryType = new GraphQLObjectType({
   fields: () => ({
     name: { type: GraphQLString },
     filter: { type: GraphQLJSON },
-    fields: { type: new GraphQLList(GraphQLJSON) },
+    fields: {
+      type: new GraphQLList(GraphQLJSON),
+      resolve: (parent) => parent?.fields ?? [],
+    },
   }),
 });
 
