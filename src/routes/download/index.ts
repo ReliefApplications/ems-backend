@@ -1,40 +1,40 @@
-import express from 'express';
+import { accessibleBy } from '@casl/mongoose';
 import {
-  Form,
-  Record,
-  Resource,
   Application,
-  Role,
+  Form,
   PositionAttributeCategory,
-  User,
+  Record,
   RecordHistoryMeta,
   RecordHistory as RecordHistoryType,
+  Resource,
+  Role,
+  User,
 } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForRecords, {
   userHasRoleFor,
 } from '@security/extendAbilityForRecords';
-import fs from 'fs';
+import dataSources from '@server/apollo/dataSources';
+import { sendEmail } from '@utils/email';
 import {
-  fileBuilder,
   downloadFile,
-  templateBuilder,
+  fileBuilder,
   getColumns,
   getRows,
   historyFileBuilder,
+  templateBuilder,
 } from '@utils/files';
-import sanitize from 'sanitize-filename';
-import mongoose from 'mongoose';
-import i18next from 'i18next';
-import { RecordHistory } from '@utils/history';
-import { logger } from '../../services/logger.service';
-import { getAccessibleFields } from '@utils/form';
 import { formatFilename } from '@utils/files/format.helper';
-import { sendEmail } from '@utils/email';
-import { accessibleBy } from '@casl/mongoose';
-import dataSources from '@server/apollo/dataSources';
 import Exporter from '@utils/files/resourceExporter';
-import { resourcePermission } from '@types';
+import { getAccessibleFields } from '@utils/form';
+import { RecordHistory } from '@utils/history';
+import express from 'express';
+import fs from 'fs';
+import i18next from 'i18next';
+import mongoose from 'mongoose';
+import sanitize from 'sanitize-filename';
+import { logger } from '../../services/logger.service';
+import { resourcePermission } from '../../types/permission';
 
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwise
@@ -79,9 +79,9 @@ const buildUserExport = (req, res, users) => {
  */
 const templateExport = (res) => {
   const columns = [
-    { name: 'to', title: 'to', field: 'To' },
-    { name: 'cc', title: 'cc', field: 'Cc' },
-    { name: 'bcc', title: 'bcc', field: 'Bcc' },
+    { name: 'to', title: 'to', field: 'to' },
+    { name: 'cc', title: 'cc', field: 'cc' },
+    { name: 'bcc', title: 'bcc', field: 'bcc' },
   ];
   return fileBuilder(res, 'distributionList', columns, [], 'xlsx');
 };
@@ -130,8 +130,8 @@ router.get('/form/records/:id', async (req, res) => {
         ...Record.find(accessibleBy(formAbility, 'read').Record).getFilter(),
       };
       const columns = await getColumns(
+        req,
         form.fields,
-        '',
         req.query.template ? true : false
       );
       // If the export is only of a template, build and export it, else build and export a file with the records
@@ -304,8 +304,8 @@ router.get('/resource/records/:id', async (req, res) => {
     const resource = await Resource.findOne(filters);
     if (resource) {
       const columns = await getColumns(
+        req,
         resource.fields,
-        req.headers.authorization,
         req.query.template ? true : false
       );
       if (req.query.template) {

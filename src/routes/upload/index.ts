@@ -229,13 +229,17 @@ router.post('/resource/insert', async (req: any, res) => {
     const authToken = req.headers.authorization.split(' ')[1];
     const decodedToken = jwtDecode(authToken) as any;
 
+    const evaluateExpressions =
+      req.body.parameters.evaluateExpressions || false;
+
     // Block if connected with user to Service
     if (!decodedToken.email && !decodedToken.name) {
       const insertRecordsMessage = await insertRecordsPulljob(
         req.body.records,
         req.body.parameters,
         true,
-        true
+        true,
+        evaluateExpressions
       );
       return res.status(200).send(insertRecordsMessage);
     }
@@ -491,9 +495,9 @@ router.post('/distributionList', async (req: any, res) => {
 
     // Distribution list emails
     const emails = {
-      Cc: [],
-      Bcc: [],
-      To: [],
+      cc: [],
+      bcc: [],
+      to: [],
     };
     const workbook = new Workbook();
     await workbook.xlsx.load(file.data).then(() => {
@@ -507,37 +511,37 @@ router.post('/distributionList', async (req: any, res) => {
           /* if provided cell value is plain text */
           if (typeof toAddress === 'string') {
             if (validator.validate(toAddress)) {
-              emails.To.push(toAddress);
+              emails.to.push(toAddress);
             }
           }
           if (typeof ccAddress === 'string') {
             if (validator.validate(ccAddress)) {
-              emails.Cc.push(ccAddress);
+              emails.cc.push(ccAddress);
             }
           }
 
           if (typeof bccAddress === 'string') {
             if (validator.validate(bccAddress)) {
-              emails.Bcc.push(bccAddress);
+              emails.bcc.push(bccAddress);
             }
           }
 
           /* if provided cell value is object */
           if (typeof toAddress === 'object') {
             if (validator.validate(toAddress?.text)) {
-              emails.To.push(toAddress?.text);
+              emails.to.push(toAddress?.text);
             }
           }
 
           if (typeof ccAddress === 'object') {
             if (validator.validate(ccAddress?.text)) {
-              emails.Cc.push(ccAddress?.text);
+              emails.cc.push(ccAddress?.text);
             }
           }
 
           if (typeof bccAddress === 'object') {
             if (validator.validate(bccAddress?.text)) {
-              emails.Bcc.push(bccAddress?.text);
+              emails.bcc.push(bccAddress?.text);
             }
           }
         }

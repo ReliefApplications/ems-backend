@@ -16,6 +16,10 @@ import extendAbilityForApplications from '@security/extendAbilityForApplication'
 /** Default page size */
 // const DEFAULT_FIRST = 10;
 
+export interface EmailNotificationReturn extends EmailNotification {
+  userSubscribed: boolean;
+}
+
 /** Available sort fields */
 const SORT_FIELDS = [
   {
@@ -60,7 +64,7 @@ export default {
 
       const filters: any[] = [
         {
-          isDeleted: { $ne: 1 },
+          // isDeleted: { $ne: 1 },
           applicationId: args.applicationId,
         },
         abilityFilters,
@@ -73,10 +77,12 @@ export default {
         .skip(args.skip)
         .limit(args.limit);
 
-      const edges = items.map((r) => ({
-        cursor: encodeCursor(SORT_FIELDS[0].cursorId(r)),
-        node: r,
-      }));
+      const edges = (items as Array<EmailNotificationReturn>).map((r) => {
+        return {
+          cursor: encodeCursor(SORT_FIELDS[0].cursorId(r)),
+          node: r,
+        };
+      });
 
       return {
         pageInfo: {

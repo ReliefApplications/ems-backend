@@ -1,19 +1,20 @@
-import {
-  GraphQLObjectType,
-  GraphQLID,
-  GraphQLString,
-  GraphQLBoolean,
-} from 'graphql';
-import extendAbilityForPage from '@security/extendAbilityForPage';
-import { AccessType, ApplicationType } from '.';
+import { accessibleBy } from '@casl/mongoose';
 import { ContentEnumType } from '@const/enumTypes';
 import { Application, Page } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
+import extendAbilityForContent from '@security/extendAbilityForContent';
+import extendAbilityForPage from '@security/extendAbilityForPage';
+import config from 'config';
+import {
+  GraphQLBoolean,
+  GraphQLID,
+  GraphQLObjectType,
+  GraphQLString,
+} from 'graphql';
+import { GraphQLDate } from 'graphql-scalars';
 import GraphQLJSON from 'graphql-type-json';
 import { isNil } from 'lodash';
-import { accessibleBy } from '@casl/mongoose';
-import { GraphQLDate } from 'graphql-scalars';
-import config from 'config';
+import { AccessType, ApplicationType } from '.';
 
 /** GraphQL page type type definition */
 export const PageType = new GraphQLObjectType({
@@ -112,6 +113,25 @@ export const PageType = new GraphQLObjectType({
           date.getSeconds() + Number(config.get<string>('archive.expires'))
         );
         return date;
+      },
+    },
+    buttons: {
+      type: GraphQLJSON,
+      async resolve(parent, args, context) {
+        const ability = await extendAbilityForContent(context.user, parent);
+        if (ability.can('update', parent)) {
+          return parent.buttons;
+        } else {
+          return parent.buttons?.filter((button) => {
+            if (button.hasRoleRestriction) {
+              return context.user.roles?.some((role) =>
+                button.roles?.includes(role._id || '')
+              );
+            } else {
+              return true;
+            }
+          });
+        }
       },
     },
   }),

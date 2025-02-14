@@ -1,5 +1,5 @@
 import { Application, Dashboard, Step, Workflow, Page } from '@models';
-import { startDatabaseForMigration } from '@utils/migrations/database.helper';
+import { startDatabaseForMigration } from '../src/migrations/database.helper';
 import { isArray, cloneDeep } from 'lodash';
 import { contentType } from '@const/enumTypes';
 import { logger } from '@services/logger.service';
@@ -11,6 +11,10 @@ interface DistributionList {
   name: string;
   emails: string[];
 }
+
+/** Migration description */
+export const description =
+  'Generate application distribution lists from widgets';
 
 /**
  * Updates the distribution list for each of the workflow's widgets

@@ -8,6 +8,7 @@ import {
 } from '@const/fieldTypes';
 import { isNumber } from 'lodash';
 import { isUsingTodayPlaceholder } from '@const/placeholders';
+import { filterOperator } from '../../../../types';
 
 /** The default fields */
 const DEFAULT_FIELDS = [
@@ -263,7 +264,7 @@ const buildMongoFilter = (
             }
         }
         switch (filter.operator) {
-          case 'eq': {
+          case filterOperator.EQUAL_TO: {
             // user attributes
             if (isAttributeFilter) {
               return { [fieldName]: attrValue };
@@ -290,7 +291,7 @@ const buildMongoFilter = (
               }
             }
           }
-          case 'neq': {
+          case filterOperator.NOT_EQUAL_TO: {
             // user attributes
             if (isAttributeFilter) {
               return { [fieldName]: { $ne: attrValue } };
@@ -321,7 +322,7 @@ const buildMongoFilter = (
               }
             }
           }
-          case 'isnull': {
+          case filterOperator.IS_NULL: {
             return {
               $or: [
                 { [fieldName]: { $exists: false } },
@@ -329,10 +330,10 @@ const buildMongoFilter = (
               ],
             };
           }
-          case 'isnotnull': {
+          case filterOperator.IS_NOT_NULL: {
             return { [fieldName]: { $exists: true, $ne: null } };
           }
-          case 'lt': {
+          case filterOperator.LESS_THAN: {
             if (DATE_TYPES.includes(type)) {
               return { [fieldName]: { $lt: value } };
             } else if (DATETIME_TYPES.includes(type)) {
@@ -348,7 +349,7 @@ const buildMongoFilter = (
               };
             }
           }
-          case 'lte': {
+          case filterOperator.LESS_THAN_OR_EQUAL: {
             if (DATE_TYPES.includes(type)) {
               return { [fieldName]: { $lte: endDate } };
             } else if (DATETIME_TYPES.includes(type)) {
@@ -364,7 +365,7 @@ const buildMongoFilter = (
               };
             }
           }
-          case 'gt': {
+          case filterOperator.GREATER_THAN: {
             if (DATE_TYPES.includes(type)) {
               return { [fieldName]: { $gt: endDate } };
             } else if (DATETIME_TYPES.includes(type)) {
@@ -380,7 +381,7 @@ const buildMongoFilter = (
               };
             }
           }
-          case 'gte': {
+          case filterOperator.GREATER_THAN_OR_EQUAL: {
             if (DATE_TYPES.includes(type)) {
               return { [fieldName]: { $gte: value } };
             } else if (DATETIME_TYPES.includes(type)) {
@@ -396,17 +397,17 @@ const buildMongoFilter = (
               };
             }
           }
-          case 'startswith': {
+          case filterOperator.STARTS_WITH: {
             return { [fieldName]: { $regex: '^' + value, $options: 'i' } };
           }
-          case 'endswith': {
+          case filterOperator.ENDS_WITH: {
             return { [fieldName]: { $regex: value + '$', $options: 'i' } };
           }
-          case 'contains': {
+          case filterOperator.CONTAINS: {
             if (MULTISELECT_TYPES.includes(type)) {
               return { [fieldName]: { $all: value } };
               // Check if a number has been searched globally
-              //  If so, perform an 'eq' search
+              //  If so, perform an filterOperator.EQUAL_TO search
             } else if (isNumber(value?.[0]?.value)) {
               const eq = value.map((v) => {
                 return { [`data.${v.field}`]: { $eq: v.value } };
@@ -421,7 +422,7 @@ const buildMongoFilter = (
               return { [fieldName]: { $regex: value, $options: 'i' } };
             }
           }
-          case 'doesnotcontain': {
+          case filterOperator.DOES_NOT_CONTAIN: {
             if (MULTISELECT_TYPES.includes(type)) {
               return { [fieldName]: { $not: { $in: value } } };
             } else {
@@ -430,27 +431,87 @@ const buildMongoFilter = (
               };
             }
           }
-          case 'in': {
+          case filterOperator.IN: {
             if (isAttributeFilter) {
               return {
                 [fieldName]: { $regex: attrValue, $options: 'i' },
               };
             } else {
+              // Allow values to be passed as string separated with ','
+              if (typeof value === 'string') {
+                value = value.split(',').map((x) => x.trim());
+              }
               value = Array.isArray(value) ? value : [value];
-              return { [fieldName]: { $in: value } };
+              // Use _id field for objectId filtering
+              if (fieldName === 'id') {
+                fieldName = '_id';
+              }
+              // Try to cast values as object ids if possible
+              try {
+                return {
+                  $or: [
+                    {
+                      [fieldName]: {
+                        $in: value.map((x) => new mongoose.Types.ObjectId(x)),
+                      },
+                    },
+                    {
+                      [fieldName]: {
+                        $in: value,
+                      },
+                    },
+                  ],
+                };
+              } catch {
+                return {
+                  [fieldName]: {
+                    $in: value,
+                  },
+                };
+              }
             }
           }
-          case 'notin': {
+          case filterOperator.NOT_IN: {
             if (isAttributeFilter) {
               return {
                 [fieldName]: { $not: { $regex: attrValue, $options: 'i' } },
               };
             } else {
+              // Allow values to be passed as string separated with ','
+              if (typeof value === 'string') {
+                value = value.split(',').map((x) => x.trim());
+              }
               value = Array.isArray(value) ? value : [value];
-              return { [fieldName]: { $nin: value } };
+              // Use _id field for objectId filtering
+              if (fieldName === 'id') {
+                fieldName = '_id';
+              }
+              // Try to cast values as object ids if possible
+              try {
+                return {
+                  $and: [
+                    {
+                      [fieldName]: {
+                        $nin: value.map((x) => new mongoose.Types.ObjectId(x)),
+                      },
+                    },
+                    {
+                      [fieldName]: {
+                        $nin: value,
+                      },
+                    },
+                  ],
+                };
+              } catch {
+                return {
+                  [fieldName]: {
+                    $nin: value,
+                  },
+                };
+              }
             }
           }
-          case 'isempty': {
+          case filterOperator.IS_EMPTY: {
             if (MULTISELECT_TYPES.includes(type)) {
               return {
                 $or: [
@@ -463,7 +524,7 @@ const buildMongoFilter = (
               return { [fieldName]: { $exists: true, $eq: '' } };
             }
           }
-          case 'isnotempty': {
+          case filterOperator.IS_NOT_EMPTY: {
             if (MULTISELECT_TYPES.includes(type)) {
               return { [fieldName]: { $exists: true, $ne: [] } };
             } else {

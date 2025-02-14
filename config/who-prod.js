@@ -7,23 +7,23 @@ const { server, email, user } = require('./who');
  * Use https://www.npmjs.com/package/config package.
  */
 module.exports = {
-  ...server,
-  ...email,
+  server,
+  email,
   user: {
     groups: {
       local: false,
       list: {
         apiConfiguration: '613b5af515e8c265c982081c',
         endpoint: '/referenceData/items/SystemPosition',
-        path: '$.value[?(@.ApplicationId==1)]',
+        path: '$.value[?(@.ApplicationId==1 || @.ApplicationId==5)]',
         id: 'Id',
         title: 'Name',
         description: 'Description',
       },
       user: {
-        apiConfiguration: '613b5af515e8c265c982081c',
+        apiConfiguration: '62cc2355d3d00f628c6d3574',
         endpoint: '/users/permissions',
-        path: '$.systemRules.Permissions[?(@.Application=="EMS")].ApplicationPositions.*',
+        path: '$.systemRules.Permissions[?(@.Application=="EMS" || @.Application=="EIS")].ApplicationPositions.*',
         id: 'ApplicationPositionId',
       },
     },

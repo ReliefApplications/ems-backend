@@ -1,4 +1,4 @@
-import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
+import { startDatabaseForMigration } from '../src/migrations/database.helper';
 import { isArray, get } from 'lodash';
 import { contentType } from '@const/enumTypes';
 import {
@@ -11,6 +11,9 @@ import {
   Resource,
 } from '../src/models';
 import { logger } from '../src/services/logger.service';
+
+/** Migration description */
+export const description = 'Generate resource layouts from widgets';
 
 /**
  * Updates the layout for each of the dashboard's widgets

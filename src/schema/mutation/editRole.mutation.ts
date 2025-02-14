@@ -78,26 +78,36 @@ export default {
         .where({ _id: args.id })
         .getFilter();
 
-      // doing a separate update to avoid the following error:
-      // Updating the path 'x' would create a conflict at 'x'
-      if (autoAssignmentUpdate.$addToSet) {
-        await Role.findOneAndUpdate(filters, {
-          $addToSet: autoAssignmentUpdate.$addToSet,
-        });
-      }
+      // Save operations. Adding try / catch to detect duplication issues.
+      try {
+        // doing a separate update to avoid the following error:
+        // Updating the path 'x' would create a conflict at 'x'
+        if (autoAssignmentUpdate.$addToSet) {
+          await Role.findOneAndUpdate(filters, {
+            $addToSet: autoAssignmentUpdate.$addToSet,
+          });
+        }
 
-      await Role.findOneAndUpdate(filters, update, { new: true });
-      const role = await Role.findOneAndUpdate(
-        filters,
-        { $pull: { autoAssignment: null } },
-        { new: true }
-      );
-      if (!role) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
+        await Role.findOneAndUpdate(filters, update, { new: true });
+        const role = await Role.findOneAndUpdate(
+          filters,
+          { $pull: { autoAssignment: null } },
+          { new: true }
         );
+        if (!role) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.permissionNotGranted')
+          );
+        }
+        return role;
+      } catch (error) {
+        // Detect duplication error
+        if (error.code === 11000) {
+          throw new GraphQLError('Role with this name already exists.');
+        } else {
+          throw error;
+        }
       }
-      return role;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {

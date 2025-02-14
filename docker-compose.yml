@@ -16,7 +16,6 @@ services:
       - '3000'
       - '9229'
     volumes:
-      - ./.migrate:/home/node/app/.migrate
       - ./config:/home/node/app/config
       - ./src:/home/node/app/src
       - .docker/api/logs:/home/node/app/logs

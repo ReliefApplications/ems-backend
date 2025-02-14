@@ -91,5 +91,13 @@ export default function extendAbilityForApplications(
 
   if (canCreateEmailNotifications) can('create', 'EmailNotification');
 
+  // Grant permissions to read users from the application
+  const canSeeUsers = user.roles?.some(
+    (r) =>
+      r.application?.equals(application) &&
+      r.permissions?.some((p) => p.type === permissions.canSeeUsers)
+  );
+  if (canSeeUsers) can('manageUsers', 'Application');
+
   return abilityBuilder.build();
 }

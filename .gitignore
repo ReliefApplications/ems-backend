@@ -17,7 +17,7 @@ build/
 .idea/
 coverage/
 
-# Migration
+# Migration, not used anymore, but should remain until merged in main
 .migrate
 logs/
 config/local.js
@@ -31,3 +31,6 @@ config/local.js
 
 # Files
 files/*
+
+__blobstorage__/*
+__azurite_db_blob*

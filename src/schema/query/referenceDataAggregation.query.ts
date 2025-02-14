@@ -36,7 +36,7 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { CustomAPI } from '@server/apollo/dataSources';
 import { GraphQLDate } from 'graphql-scalars';
 import mongoose from 'mongoose';
-import { CompositeFilterDescriptor } from '@const/compositeFilter';
+import { CompositeFilterDescriptor, filterOperator } from '../../types/filter';
 
 /**
  * Apply the filter provided to the specified field
@@ -68,36 +68,36 @@ const applyFilters = (data: any, filter: any): boolean => {
       intValue = null;
     }
     switch (filter.operator) {
-      case 'eq':
+      case filterOperator.EQUAL_TO:
         if (isBoolean(value)) {
           return eq(value, filter.value);
         } else {
           return eq(value, String(filter.value)) || eq(value, intValue);
         }
       case 'ne':
-      case 'neq':
+      case filterOperator.NOT_EQUAL_TO:
         if (isBoolean(value)) {
           return !eq(value, filter.value);
         } else {
           return !(eq(value, String(filter.value)) || eq(value, intValue));
         }
-      case 'gt':
+      case filterOperator.GREATER_THAN:
         return !isNil(value) && value > filter.value;
-      case 'gte':
+      case filterOperator.GREATER_THAN_OR_EQUAL:
         return !isNil(value) && value >= filter.value;
-      case 'lt':
+      case filterOperator.LESS_THAN:
         return !isNil(value) && value < filter.value;
-      case 'lte':
+      case filterOperator.LESS_THAN_OR_EQUAL:
         return !isNil(value) && value <= filter.value;
-      case 'isnull':
+      case filterOperator.IS_NULL:
         return isNil(value);
-      case 'isnotnull':
+      case filterOperator.IS_NOT_NULL:
         return !isNil(value);
-      case 'startswith':
+      case filterOperator.STARTS_WITH:
         return !isNil(value) && value.startsWith(filter.value);
-      case 'endswith':
+      case filterOperator.ENDS_WITH:
         return !isNil(value) && value.endsWith(filter.value);
-      case 'contains':
+      case filterOperator.CONTAINS:
         if (isString(filter.value)) {
           const regex = new RegExp(filter.value, 'i');
           if (isString(value)) {
@@ -108,7 +108,7 @@ const applyFilters = (data: any, filter: any): boolean => {
         } else {
           return !isNil(value) && value.includes(filter.value);
         }
-      case 'doesnotcontain':
+      case filterOperator.DOES_NOT_CONTAIN:
         if (isString(filter.value)) {
           const regex = new RegExp(filter.value, 'i');
           if (isString(value)) {
@@ -119,7 +119,7 @@ const applyFilters = (data: any, filter: any): boolean => {
         } else {
           return isNil(value) || !value.includes(filter.value);
         }
-      case 'in':
+      case filterOperator.IN:
         if (isString(value)) {
           if (isArray(filter.value)) {
             return !isNil(filter.value) && filter.value.includes(value);
@@ -130,7 +130,7 @@ const applyFilters = (data: any, filter: any): boolean => {
         } else {
           return !isNil(filter.value) && filter.value.includes(value);
         }
-      case 'notin':
+      case filterOperator.NOT_IN:
         if (isString(value)) {
           if (isArray(filter.value)) {
             return isNil(filter.value) || !filter.value.includes(value);

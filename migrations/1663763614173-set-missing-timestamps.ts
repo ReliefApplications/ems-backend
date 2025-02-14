@@ -1,4 +1,4 @@
-import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
+import { startDatabaseForMigration } from '../src/migrations/database.helper';
 import {
   Application,
   Dashboard,
@@ -13,6 +13,9 @@ import {
   Workflow,
   Version,
 } from '../src/models';
+
+/** Migration description */
+export const description = 'Add missing createdAt / updatedAt to objects';
 
 /**
  * Use to documents date migrate up.
