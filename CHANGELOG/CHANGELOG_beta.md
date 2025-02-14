@@ -1,3 +1,12 @@
+# [2.12.0-beta.14](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.13...v2.12.0-beta.14) (2025-02-14)
+
+
+### Bug Fixes
+
+* empty arrays in dataset & distribution list gql types causing type issues ([d9fc861](https://github.com/ReliefApplications/ems-backend/commit/d9fc861f04f24d432e6edcff5769b45af4d9c00d))
+* incorrect update applications email template mutation ([0d534e1](https://github.com/ReliefApplications/ems-backend/commit/0d534e1c9d06fc77da8298df6a7e3650e90739cd))
+* update distribution list migration update to reflect latest changes in code ([4317a84](https://github.com/ReliefApplications/ems-backend/commit/4317a84a0a280180b2d74089f46a65bb3385387d))
+
 # [2.12.0-beta.13](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0-beta.12...v2.12.0-beta.13) (2025-02-06)
 
 
