@@ -1,3 +1,10 @@
+## [2.12.1](https://github.com/ReliefApplications/ems-backend/compare/v2.12.0...v2.12.1) (2025-02-15)
+
+
+### Bug Fixes
+
+* application query returning incorrect application ([19bfbf1](https://github.com/ReliefApplications/ems-backend/commit/19bfbf19465baf76284bbd09bea53a364d36f00d))
+
 # [2.12.0](https://github.com/ReliefApplications/ems-backend/compare/v2.11.1...v2.12.0) (2025-02-15)
 
 
