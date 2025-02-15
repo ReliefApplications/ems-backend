@@ -108,6 +108,11 @@
 				}
 			}
 		},
+		"customTemplate": {
+			"errors": {
+				"customTemplateNameExist": "******"
+			}
+		},
 		"dashboard": {
 			"add": {
 				"errors": {
@@ -126,6 +131,11 @@
 				"errors": {
 					"invalidArguments": "******"
 				}
+			}
+		},
+		"emailDistributionList": {
+			"errors": {
+				"emailDistributionListNameExist": "******"
 			}
 		},
 		"form": {
@@ -239,7 +249,12 @@
 					},
 					"invalidArguments": "******",
 					"permission": {
-						"notVisible": "******"
+						"downloadRecords": {
+							"notVisible": "******"
+						},
+						"updateRecords": {
+							"notVisible": "******"
+						}
 					}
 				}
 			}
@@ -295,6 +310,18 @@
 		"email": {
 			"errors": {
 				"missingFile": "******"
+			},
+			"subscription": {
+				"alerts": {
+					"dataNotFound": "****** {{type}} ******",
+					"restricted": "******",
+					"success": "****** {{notificationName}} ******",
+					"unsubscribe": {
+						"success": "****** {{notificationName}} ******"
+					},
+					"userAlreadyExists": "****** {{notificationName}} ******",
+					"userNotSubscribed": "****** {{notificationName}}"
+				}
 			}
 		},
 		"gis": {

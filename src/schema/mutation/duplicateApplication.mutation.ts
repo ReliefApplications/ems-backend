@@ -1,31 +1,32 @@
-import {
-  GraphQLNonNull,
-  GraphQLString,
-  GraphQLError,
-  GraphQLID,
-} from 'graphql';
+import { accessibleBy } from '@casl/mongoose';
+import { status } from '@const/enumTypes';
 import {
   Application,
-  Role,
   Channel,
-  Resource,
-  DistributionList,
-  Template,
-  Dashboard,
-  PositionAttributeCategory,
   CustomNotification,
+  Dashboard,
+  DistributionList,
   Page,
+  PositionAttributeCategory,
+  Resource,
+  Role,
+  Template,
 } from '@models';
-import { ApplicationType } from '../types';
-import { duplicatePages } from '../../services/page.service';
-import { AppAbility } from '@security/defineUserAbility';
-import { status } from '@const/enumTypes';
-import { copyFolder } from '@utils/files/copyFolder';
-import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
-import { accessibleBy } from '@casl/mongoose';
-import { Types } from 'mongoose';
+import { AppAbility } from '@security/defineUserAbility';
 import { Context } from '@server/apollo/context';
+import { logger } from '@services/logger.service';
+import { copyFolder } from '@utils/files/copyFolder';
+import {
+  GraphQLError,
+  GraphQLID,
+  GraphQLNonNull,
+  GraphQLString,
+} from 'graphql';
+import { Types } from 'mongoose';
+import { duplicatePages } from '../../services/page.service';
+import { resourcePermission } from '../../types/permission';
+import { ApplicationType } from '../types';
 
 type ResourcePermission =
   | {
@@ -156,10 +157,11 @@ export default {
                 'canSee',
                 'canUpdate',
                 'canDelete',
-                'canSeeRecords',
-                'canCreateRecords',
-                'canUpdateRecords',
-                'canDeleteRecords',
+                resourcePermission.SEE_RECORDS,
+                resourcePermission.CREATE_RECORDS,
+                resourcePermission.UPDATE_RECORDS,
+                resourcePermission.DELETE_RECORDS,
+                resourcePermission.DOWNLOAD_RECORDS,
               ] as const
             ).forEach((permType) => {
               const permissions = resource.permissions[permType] ?? [];

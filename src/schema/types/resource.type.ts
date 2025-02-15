@@ -1,3 +1,12 @@
+import { accessibleBy } from '@casl/mongoose';
+import { Form, Record } from '@models';
+import { AppAbility } from '@security/defineUserAbility';
+import extendAbilityForRecords, {
+  userHasRoleFor,
+} from '@security/extendAbilityForRecords';
+import { getAccessibleFields } from '@utils/form';
+import { getMetaData } from '@utils/form/metadata.helper';
+import getFilter from '@utils/schema/resolvers/Query/getFilter';
 import {
   GraphQLBoolean,
   GraphQLID,
@@ -8,26 +17,18 @@ import {
   GraphQLString,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
+import { pluralize } from 'inflection';
+import { get, indexOf } from 'lodash';
 import {
   AccessType,
-  FormType,
-  RecordConnectionType,
-  LayoutConnectionType,
   AggregationConnectionType,
   FieldMetaDataType,
+  FormType,
+  LayoutConnectionType,
+  RecordConnectionType,
 } from '.';
-import { Form, Record } from '@models';
-import { AppAbility } from '@security/defineUserAbility';
-import extendAbilityForRecords, {
-  userHasRoleFor,
-} from '@security/extendAbilityForRecords';
+import { resourcePermission } from '../../types/permission';
 import { Connection, decodeCursor, encodeCursor } from './pagination.type';
-import getFilter from '@utils/schema/resolvers/Query/getFilter';
-import { pluralize } from 'inflection';
-import { getMetaData } from '@utils/form/metadata.helper';
-import { getAccessibleFields } from '@utils/form';
-import { get, indexOf } from 'lodash';
-import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Resolve single permission
@@ -102,22 +103,27 @@ export const ResourceType = new GraphQLObjectType({
         if (ability.can('update', parent)) {
           return {
             canCreateRecords: rolePermissionResolver(
-              'canCreateRecords',
+              resourcePermission.CREATE_RECORDS,
               parent.permissions,
               args.role
             ),
             canSeeRecords: rolePermissionResolver(
-              'canSeeRecords',
+              resourcePermission.SEE_RECORDS,
               parent.permissions,
               args.role
             ),
             canUpdateRecords: rolePermissionResolver(
-              'canUpdateRecords',
+              resourcePermission.UPDATE_RECORDS,
               parent.permissions,
               args.role
             ),
             canDeleteRecords: rolePermissionResolver(
-              'canDeleteRecords',
+              resourcePermission.DELETE_RECORDS,
+              parent.permissions,
+              args.role
+            ),
+            canDownloadRecords: rolePermissionResolver(
+              resourcePermission.DOWNLOAD_RECORDS,
               parent.permissions,
               args.role
             ),
@@ -251,7 +257,11 @@ export const ResourceType = new GraphQLObjectType({
         // either check that user can manage records, either check that user has a role to create records
         return (
           ability.can('manage', 'Record') ||
-          userHasRoleFor('canCreateRecords', context.user, parent)
+          userHasRoleFor(
+            resourcePermission.CREATE_RECORDS,
+            context.user,
+            parent
+          )
         );
       },
     },
@@ -274,6 +284,21 @@ export const ResourceType = new GraphQLObjectType({
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
         return ability.can('delete', parent);
+      },
+    },
+    canDownloadRecords: {
+      type: GraphQLBoolean,
+      async resolve(parent, args, context) {
+        const ability: AppAbility = context.user.ability;
+        // either check that user can manage records, either check that user has a role to create records
+        return (
+          ability.can('manage', 'Record') ||
+          userHasRoleFor(
+            resourcePermission.DOWNLOAD_RECORDS,
+            context.user,
+            parent
+          )
+        );
       },
     },
     layouts: {

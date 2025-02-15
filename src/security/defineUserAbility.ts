@@ -1,41 +1,42 @@
-import mongoose from 'mongoose';
-import { get } from 'lodash';
 import {
-  AbilityBuilder,
   Ability,
-  InferSubjects,
+  AbilityBuilder,
   AbilityClass,
+  InferSubjects,
   MongoQuery,
   buildMongoQueryMatcher,
 } from '@casl/ability';
-import { $or, or, $and, and } from '@ucast/mongo2js';
 import permissions from '@const/permissions';
 import {
   ApiConfiguration,
   Application,
   Channel,
   Client,
+  CustomNotification,
   Dashboard,
+  DistributionList,
+  EmailNotification,
   Form,
+  Group,
+  Layer,
   Notification,
   Page,
   Permission,
+  PullJob,
   Record,
+  ReferenceData,
   Resource,
   Role,
   Step,
+  Template,
   User,
   Version,
   Workflow,
-  PullJob,
-  ReferenceData,
-  Group,
-  Template,
-  DistributionList,
-  CustomNotification,
-  Layer,
-  EmailNotification,
 } from '@models';
+import { $and, $or, and, or } from '@ucast/mongo2js';
+import { get } from 'lodash';
+import mongoose from 'mongoose';
+import { resourcePermission } from '../types/permission';
 
 /** Define available permissions on objects */
 export type ObjectPermissions = keyof (ApiConfiguration['permissions'] &
@@ -47,7 +48,15 @@ export type ObjectPermissions = keyof (ApiConfiguration['permissions'] &
   Step['permissions']);
 
 /** Define actions types for casl */
-export type Actions = 'create' | 'read' | 'update' | 'delete' | 'manage';
+export type Actions =
+  | 'create'
+  | 'read'
+  | 'update'
+  | 'delete'
+  | 'manage'
+  // application specific
+  | 'manageUsers'
+  | 'download';
 
 /** Define subjects types for casl */
 type Models =
@@ -193,8 +202,16 @@ export default function defineUserAbility(user: User | Client): AppAbility {
     can('read', ['Form', 'Record']);
   } else {
     can('read', 'Form', filters('canSee', user));
-    can('read', 'Form', filters('canSeeRecords', user, { suffix: 'role' }));
-    can('read', 'Form', filters('canCreateRecords', user, { suffix: 'role' }));
+    can(
+      'read',
+      'Form',
+      filters(resourcePermission.SEE_RECORDS, user, { suffix: 'role' })
+    );
+    can(
+      'read',
+      'Form',
+      filters(resourcePermission.CREATE_RECORDS, user, { suffix: 'role' })
+    );
   }
 
   /* ===
@@ -219,14 +236,19 @@ export default function defineUserAbility(user: User | Client): AppAbility {
     Access of resources
   === */
   if (userGlobalPermissions.includes(permissions.canSeeResources)) {
-    can('read', ['Resource', 'Record']);
+    can('read', 'Resource');
+    can(['read', 'download'], 'Record');
   } else {
     can('read', 'Resource', filters('canSee', user));
-    can('read', 'Resource', filters('canSeeRecords', user, { suffix: 'role' }));
     can(
       'read',
       'Resource',
-      filters('canCreateRecords', user, { suffix: 'role' })
+      filters(resourcePermission.SEE_RECORDS, user, { suffix: 'role' })
+    );
+    can(
+      'read',
+      'Resource',
+      filters(resourcePermission.CREATE_RECORDS, user, { suffix: 'role' })
     );
   }
 
@@ -242,7 +264,7 @@ export default function defineUserAbility(user: User | Client): AppAbility {
   === */
   if (userGlobalPermissions.includes(permissions.canManageResources)) {
     can(['create', 'read', 'update', 'delete'], ['Resource', 'Record']);
-    can('manage', 'Record');
+    can(['manage', 'download'], 'Record');
   } else {
     can('update', 'Resource', filters('canUpdate', user));
     can('delete', 'Resource', filters('canDelete', user));
@@ -289,7 +311,7 @@ export default function defineUserAbility(user: User | Client): AppAbility {
     Creation / Access / Edition / Deletion of users
   === */
   if (userGlobalPermissions.includes(permissions.canSeeUsers)) {
-    can(['create', 'read', 'update', 'delete'], 'User');
+    can(['create', 'read', 'update', 'delete', 'manage'], 'User');
   } else {
     can('read', 'User');
     // const applications = [];

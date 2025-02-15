@@ -1,8 +1,9 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
-import mongoose, { Schema, Document } from 'mongoose';
-import { addOnBeforeDeleteMany } from '@utils/models/deletion';
 import { contentType } from '@const/enumTypes';
+import { addOnBeforeDeleteMany } from '@utils/models/deletion';
+import mongoose, { Document, Schema } from 'mongoose';
 import { Dashboard } from './dashboard.model';
+import { Button, buttonSchema } from './actionButton.model';
 import { Workflow } from './workflow.model';
 
 /** Step documents interface definition */
@@ -10,6 +11,7 @@ export interface Step extends Document {
   kind: 'Step';
   name: string;
   icon: string;
+  showName?: boolean;
   createdAt: Date;
   modifiedAt: Date;
   type: string;
@@ -24,6 +26,7 @@ export interface Step extends Document {
   canDelete?: any;
   archived: boolean;
   archivedAt?: Date;
+  buttons?: Button[];
 }
 
 /** Mongoose step schema definition */
@@ -31,6 +34,7 @@ const stepSchema = new Schema<Step>(
   {
     name: String,
     icon: String,
+    showName: Boolean,
     type: {
       type: String,
       enum: Object.values(contentType),
@@ -65,6 +69,7 @@ const stepSchema = new Schema<Step>(
       type: Date,
       expires: 2592000,
     },
+    buttons: [buttonSchema],
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },

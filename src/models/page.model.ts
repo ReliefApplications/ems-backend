@@ -1,16 +1,17 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
-import mongoose, { Schema, Document } from 'mongoose';
 import { contentType } from '@const/enumTypes';
 import { addOnBeforeDeleteMany } from '@utils/models/deletion';
+import { has } from 'lodash';
+import mongoose, { Document, Schema } from 'mongoose';
 import { Application } from './application.model';
 import { Dashboard } from './dashboard.model';
 import { Form } from './form.model';
+import { Button, buttonSchema } from './actionButton.model';
+import { Record } from './record.model';
+import { ReferenceData } from './referenceData.model';
+import { Resource } from './resource.model';
 import { Role } from './role.model';
 import { Workflow } from './workflow.model';
-import { Record } from './record.model';
-import { Resource } from './resource.model';
-import { ReferenceData } from './referenceData.model';
-import { has } from 'lodash';
 
 /** Interface for the page context */
 export type PageContextT = (
@@ -29,11 +30,13 @@ export interface Page extends Document {
   kind: 'Page';
   name: string;
   icon: string;
+  showName?: boolean;
   createdAt: Date;
   modifiedAt: Date;
   type: string;
   content: mongoose.Types.ObjectId | Form | Workflow | Dashboard;
   context: PageContextT;
+  buttons?: Button[];
   contentWithContext: ((
     | {
         // The element string is the value for the value field of the refData
@@ -60,6 +63,7 @@ const pageSchema = new Schema<Page>(
   {
     name: String,
     icon: String,
+    showName: Boolean,
     type: {
       type: String,
       enum: Object.values(contentType),
@@ -77,6 +81,7 @@ const pageSchema = new Schema<Page>(
       },
       displayField: String,
     },
+    buttons: [buttonSchema],
     contentWithContext: [
       {
         element: mongoose.Schema.Types.Mixed,

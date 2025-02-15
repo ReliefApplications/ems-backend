@@ -6,6 +6,7 @@ module.exports = {
   server: {
     port: 3000,
     allowedOrigins: [],
+    protectedShortcuts: [],
     url: '',
     rateLimit: {
       enable: true,
@@ -32,6 +33,14 @@ module.exports = {
     port: '',
     user: '',
     pass: '',
+    blobStorage: {
+      connectionString: '',
+      container: '',
+    },
+    serverless: {
+      url: '',
+      key: '',
+    },
   },
   database: {
     provider: '',
@@ -177,5 +186,9 @@ module.exports = {
   },
   archive: {
     expires: 60 * 60 * 24 * 30, // Default archive time, in seconds. Set to 30 days
+  },
+  publicStorage: {
+    url: '',
+    enable: false,
   },
 };

@@ -45,6 +45,7 @@ import {
 import { uniqBy, get, isNil } from 'lodash';
 import { accessibleBy } from '@casl/mongoose';
 import getFilter from '@utils/filter/getFilter';
+import config from 'config';
 
 /** GraphQL application type definition */
 export const ApplicationType = new GraphQLObjectType({
@@ -55,6 +56,18 @@ export const ApplicationType = new GraphQLObjectType({
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     description: { type: GraphQLString },
+    publicCssFilename: {
+      type: GraphQLString,
+      resolve(parent) {
+        if (config.get('publicStorage.enable')) {
+          return `${config.get('publicStorage.url')}/applications/${
+            parent.cssFilename
+          }?${+parent.modifiedAt}`;
+        } else {
+          return null;
+        }
+      },
+    },
     sideMenu: {
       type: GraphQLBoolean,
       resolve(parent) {
@@ -560,6 +573,7 @@ export const ApplicationType = new GraphQLObjectType({
         };
       },
     },
+    shortcut: { type: GraphQLString },
   }),
 });
 

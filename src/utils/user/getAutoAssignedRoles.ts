@@ -5,11 +5,12 @@ import axios from 'axios';
 import { logger } from '@services/logger.service';
 import { AttributeSettings } from './userManagement';
 import jsonpath from 'jsonpath';
+import { filterOperator } from '../../types/filter';
 
 /**
  * Generate a new access token for Microsoft graph, on behalf of the user.
  */
-const getGraphAccessToken = async () => {
+export const getGraphAccessToken = async () => {
   const form = new FormData();
   const formAsJson = {
     grant_type: 'client_credentials',
@@ -42,7 +43,7 @@ const getGraphAccessToken = async () => {
  *
  * @param user current user
  */
-const getUserGraphInfo = async (user: User) => {
+export const getUserGraphInfo = async (user: User) => {
   const graphToken = await getGraphAccessToken();
   const oid = user.oid;
   if (graphToken && oid) {
@@ -96,13 +97,13 @@ export const checkIfRoleIsAssigned = (user: User, filter: any): boolean => {
       // todo: check other versions of the code
       const value = (filter.value || []).filter((x) => x !== null);
       switch (filter.operator) {
-        case 'eq': {
+        case filterOperator.EQUAL_TO: {
           return isEqual(
             groupIds.map((x) => x.toString()),
             value.map((x) => x.toString())
           );
         }
-        case 'contains': {
+        case filterOperator.CONTAINS: {
           return (
             difference(
               value.map((x) => x.toString()),
@@ -117,48 +118,40 @@ export const checkIfRoleIsAssigned = (user: User, filter: any): boolean => {
     }
     case '{{email}}': {
       const value = user.username || '';
-      if (value) {
-        switch (filter.operator) {
-          case 'eq': {
-            return eq(value, String(filter.value));
-          }
-          case 'neq': {
-            return !eq(value, String(filter.value));
-          }
-          case 'contains': {
-            const regex = new RegExp(filter.value, 'i');
-            return regex.test(value);
-          }
-          case 'doesnotcontain': {
-            const regex = new RegExp(filter.value, 'i');
-            return !regex.test(value);
-          }
-          case 'startswith': {
-            return value.startsWith(filter.value);
-          }
-          case 'endswith': {
-            return value.endsWith(filter.value);
-          }
-          default:
-            return false;
+      switch (filter.operator) {
+        case filterOperator.EQUAL_TO: {
+          return eq(value, String(filter.value));
         }
-      } else {
-        return false;
+        case filterOperator.NOT_EQUAL_TO: {
+          return !eq(value, String(filter.value));
+        }
+        case filterOperator.CONTAINS: {
+          const regex = new RegExp(filter.value, 'i');
+          return regex.test(value);
+        }
+        case filterOperator.DOES_NOT_CONTAIN: {
+          const regex = new RegExp(filter.value, 'i');
+          return !regex.test(value);
+        }
+        case filterOperator.STARTS_WITH: {
+          return value.startsWith(filter.value);
+        }
+        case filterOperator.ENDS_WITH: {
+          return value.endsWith(filter.value);
+        }
+        default:
+          return false;
       }
     }
     case '{{userType}}': {
       const value = get(user, 'graphData.userType') || '';
-      if (value) {
-        switch (filter.operator) {
-          case 'eq': {
-            return eq(value, String(filter.value));
-          }
-          case 'neq': {
-            return !eq(value, String(filter.value));
-          }
+      switch (filter.operator) {
+        case filterOperator.EQUAL_TO: {
+          return eq(value, String(filter.value));
         }
-      } else {
-        return false;
+        case filterOperator.NOT_EQUAL_TO: {
+          return !eq(value, String(filter.value));
+        }
       }
     }
     default: {
@@ -176,7 +169,7 @@ export const checkIfRoleIsAssigned = (user: User, filter: any): boolean => {
       const attribute = attributes.find((x) => x.field === filter.field);
       if (attribute) {
         switch (filter.operator) {
-          case 'eq': {
+          case filterOperator.EQUAL_TO: {
             return isEqual(userAttr[attribute.value], filter.value);
           }
           default: {
@@ -203,7 +196,7 @@ export const getAutoAssignedRoles = async (user: User): Promise<Role[]> => {
     if (graphData) {
       user.graphData = graphData;
       const settings: AttributeSettings = config.get('user.attributes');
-      if (settings.mapping) {
+      if (settings && settings.mapping) {
         const prevAttributes = clone(get(user, 'attributes'));
         // Map them to user attributes
         for (const mapping of settings.mapping) {

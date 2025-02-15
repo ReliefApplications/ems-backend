@@ -3,7 +3,7 @@ import { buildMetaQuery } from '@utils/query/queryBuilder';
 import config from 'config';
 import { Workbook, Worksheet, stream } from 'exceljs';
 import get from 'lodash/get';
-import { getColumnsFromMeta } from './getColumnsFromMeta';
+import { Column, FlatColumn, getColumnsFromMeta } from './getColumnsFromMeta';
 import axios from 'axios';
 import { logger } from '@services/logger.service';
 import { Parser } from 'json2csv';
@@ -30,13 +30,14 @@ import dataSources from '@server/apollo/dataSources';
 interface ExportBatchParams {
   fields?: any[];
   filter?: any;
-  format: 'csv' | 'xlsx';
+  format: 'csv' | 'xlsx' | 'email';
   query: any;
   sortField?: string;
   sortOrder?: 'asc' | 'desc';
   resource?: string;
   timeZone: string;
-  fileName: string;
+  fileName?: string;
+  limit?: number;
 }
 
 /**
@@ -52,7 +53,7 @@ export default class Exporter {
 
   private params: ExportBatchParams;
 
-  private columns: any[];
+  private columns: Column[];
 
   /**
    * Resource exporter class.
@@ -84,12 +85,13 @@ export default class Exporter {
     // Get total count and columns
     // todo: replace with resource fields
     await this.getColumns();
-    const records: Record[] = getRowsFromMeta(
-      this.columns,
-      await this.getRecords()
-    );
+
     switch (this.params.format) {
       case 'xlsx': {
+        const records: Record[] = getRowsFromMeta(
+          this.columns,
+          await this.getRecords()
+        );
         let workbook: Workbook | stream.xlsx.WorkbookWriter;
         // Create a new instance of a Workbook class
         if (this.res.closed) {
@@ -118,6 +120,10 @@ export default class Exporter {
         }
       }
       case 'csv': {
+        const records: Record[] = getRowsFromMeta(
+          this.columns,
+          await this.getRecords()
+        );
         // Create a string array with the columns' labels or names as fallback, then construct the parser from it
         const fields = this.columns.flatMap((x) => ({
           label: x.title,
@@ -130,8 +136,34 @@ export default class Exporter {
           for (const row of records) {
             const temp = {};
             for (const column of this.columns) {
+              const columnValue = get(row, column.name, null);
+              temp[column.name] = isArray(columnValue)
+                ? columnValue.length
+                : columnValue;
+            }
+            csvData.push(temp);
+          }
+        } catch (err) {
+          logger.error(err.message);
+        }
+        // Generate the file by parsing the data, set the response parameters and send it
+        const csv = json2csv.parse(csvData);
+        return csv;
+      }
+      case 'email': {
+        const records: Record[] = getRowsFromMeta(
+          this.columns,
+          await this.getRecords(),
+          true
+        );
+        // Generate csv, by parsing the data
+        const csvData = [];
+        try {
+          for (const row of records) {
+            const temp = {};
+            for (const column of this.columns) {
               if (column.subColumns) {
-                temp[column.name] = (get(row, column.name) || []).length;
+                temp[column.name] = get(row, column.name) || [];
               } else {
                 temp[column.name] = get(row, column.name, null);
               }
@@ -142,8 +174,7 @@ export default class Exporter {
           logger.error(err.message);
         }
         // Generate the file by parsing the data, set the response parameters and send it
-        const csv = json2csv.parse(csvData);
-        return csv;
+        return { records: csvData, columns: this.columns };
       }
     }
   }
@@ -155,7 +186,7 @@ export default class Exporter {
    */
   private getColumns = (): Promise<void> => {
     const metaQuery = buildMetaQuery(this.params.query);
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       axios({
         url: `${config.get('server.url')}/graphql`,
         method: 'POST',
@@ -163,59 +194,68 @@ export default class Exporter {
         data: {
           query: metaQuery,
         },
-      }).then(async ({ data }) => {
-        for (const field in data.data) {
-          if (Object.prototype.hasOwnProperty.call(data.data, field)) {
-            const meta = data.data[field];
-            const rawColumns = getColumnsFromMeta(meta, this.params.fields);
-            const columns = rawColumns.filter((x) =>
-              this.params.fields.find((f) => f.name === x.name)
-            );
-            // Edits the column to match with the fields
-            for (const column of columns) {
-              const queryField = this.params.fields.find(
-                (f) => f.name === column.name
+      })
+        .then(async ({ data }) => {
+          for (const field in data.data) {
+            if (Object.prototype.hasOwnProperty.call(data.data, field)) {
+              const meta = data.data[field];
+              const rawColumns = getColumnsFromMeta(meta, this.params.fields);
+              const columns = rawColumns.filter((x) =>
+                this.params.fields.find((f) => f.name === x.name)
               );
-              column.title = queryField.title;
-              if (column.subColumns) {
-                // Field does not exist in the template
-                if (!this.resource.fields.find((f) => f.name === column.name)) {
-                  const relatedResource = await Resource.findOne({
-                    fields: {
-                      $elemMatch: {
-                        resource: this.resource._id.toString(),
-                        relatedName: column.name,
+              // Edits the column to match with the fields
+              for (const column of columns) {
+                const queryField = this.params.fields.find(
+                  (f) => f.name === column.name
+                );
+                column.title = queryField.title;
+                if (column.displayField) {
+                  column.displayField.title = column.displayField.name;
+                }
+                if (column.subColumns) {
+                  // Field does not exist in the template
+                  if (
+                    !this.resource.fields.find((f) => f.name === column.name)
+                  ) {
+                    const relatedResource = await Resource.findOne({
+                      fields: {
+                        $elemMatch: {
+                          resource: this.resource._id.toString(),
+                          relatedName: column.name,
+                        },
                       },
-                    },
-                  }).select('fields');
-                  if (relatedResource) {
-                    column.parent = relatedResource;
+                    }).select('fields');
+                    if (relatedResource) {
+                      column.parent = relatedResource;
+                    }
+                  }
+                  if ((queryField.subFields || []).length > 0) {
+                    column.subColumns.forEach((subColumn) => {
+                      const subQueryField = queryField.subFields.find(
+                        (z) => z.name === `${column.name}.${subColumn.name}`
+                      );
+                      subColumn.title = subQueryField?.title;
+                    });
                   }
                 }
-                if ((queryField.subFields || []).length > 0) {
-                  column.subColumns.forEach((subColumn) => {
-                    const subQueryField = queryField.subFields.find(
-                      (z) => z.name === `${column.name}.${subColumn.name}`
-                    );
-                    subColumn.title = subQueryField.title;
-                  });
-                }
               }
+              this.columns = columns;
+              resolve();
             }
-            this.columns = columns;
-            resolve();
           }
-        }
-      });
+        })
+        .catch((err) => reject(err));
     });
   };
 
   /**
-   * Get records to put into the file
+   * Get records count
    *
-   * @returns list of data
+   * @param isValidate validate records count
+   * @returns records
    */
-  private getRecords = async () => {
+  public getRecordsCount = async (isValidate?: boolean) => {
+    if (isValidate) await this.getColumns();
     const ability = await extendAbilityForRecords(this.req.context.user);
     set(this.req.context.user, 'ability', ability);
     const contextDataSources = (
@@ -231,9 +271,9 @@ export default class Exporter {
       this.resource.fields,
       this.req.context
     );
-    const countAggregation = await Record.aggregate(
-      await this.recordsPipeline()
-    ).facet({
+    const countAggregation = await Record.aggregate([
+      ...(await this.recordsPipeline()),
+    ]).facet({
       items: [
         ...sort,
         {
@@ -248,8 +288,19 @@ export default class Exporter {
         },
       ],
     });
+
+    return countAggregation;
+  };
+
+  /**
+   * Get records to put into the file
+   *
+   * @returns list of data
+   */
+  private getRecords = async () => {
+    const countAggregation = await this.getRecordsCount();
     // Get total count
-    const totalCount = countAggregation[0].totalCount[0].count;
+    const totalCount = countAggregation?.[0]?.totalCount?.[0]?.count ?? 0;
     // Create a list of all ids
     const ids = countAggregation[0].items.map((x) => x._id);
     // Build an empty list of records
@@ -300,30 +351,9 @@ export default class Exporter {
             )
           );
         } else {
-          // Link is defined in currently exported resource
-          const columnValue = get(record, column.field) || null;
-          if (columnValue) {
-            relatedResourcePromises.push(
-              Record.aggregate(
-                this.buildPipeline(
-                  column.subColumns,
-                  isArray(columnValue)
-                    ? Array.from(new Set(columnValue)).map(
-                        (id: any) => new mongoose.Types.ObjectId(id)
-                      )
-                    : [new mongoose.Types.ObjectId(columnValue)]
-                )
-              ).then((relatedRecords) => {
-                if (relatedRecords.length > 0) {
-                  if (isArray(columnValue)) {
-                    set(record, column.field, relatedRecords);
-                  } else {
-                    set(record, column.field, relatedRecords[0]);
-                  }
-                }
-              })
-            );
-          }
+          relatedResourcePromises.push(
+            this.getResourceFields(column, column.field, record)
+          );
         }
       }
       promises.push(Promise.all(relatedResourcePromises));
@@ -389,6 +419,7 @@ export default class Exporter {
     const pipeline: any = [
       ...(searchFilter ? [searchFilter] : []),
       { $match: filters },
+      { $limit: this.params.limit || Number.MAX_SAFE_INTEGER },
     ];
     this.columns
       .filter((col) => col.meta?.field?.isCalculated)
@@ -411,7 +442,10 @@ export default class Exporter {
    * @param ids list of ids, used in the case of subcolumns (resource and resources)
    * @returns a built pipeline
    */
-  private buildPipeline = (columns: any[], ids: mongoose.Types.ObjectId[]) => {
+  private buildPipeline = (
+    columns: Column[],
+    ids: mongoose.Types.ObjectId[]
+  ) => {
     const permissionFilters = Record.find(
       accessibleBy(this.req.context.user.ability, 'read').Record
     ).getFilter();
@@ -485,16 +519,23 @@ export default class Exporter {
    * @param record current record
    * @returns reversed pipeline
    */
-  private buildReversedPipeline = (column: any, record: any) => {
+  private buildReversedPipeline = (column: Column, record: any) => {
     const relatedFieldName = column.parent.fields.find(
       (field) => field.relatedName === column.field
     )?.name;
     const permissionFilters = Record.find(
       accessibleBy(this.req.context.user.ability, 'read').Record
     ).getFilter();
+    // Extract subColumns directly from column, or create it from displayField
+    const subColumns =
+      Array.isArray(column.subColumns) && column.subColumns.length > 0
+        ? column.subColumns
+        : column.displayField
+        ? [column.displayField]
+        : [];
     const projectStep = {
       $project: {
-        ...column.subColumns.reduce((acc, col) => {
+        ...subColumns.reduce((acc, col) => {
           const field = defaultRecordFields.find(
             (f) => f.field === col.field.split('.')[0]
           );
@@ -528,7 +569,7 @@ export default class Exporter {
       },
       projectStep,
     ];
-    column.subColumns
+    subColumns
       .filter((col) => col.meta?.field?.isCalculated)
       .forEach((col) =>
         pipeline.unshift(
@@ -550,7 +591,7 @@ export default class Exporter {
   private setHeaders = (worksheet: Worksheet) => {
     const columns = this.getFlatColumns();
     // Create header row, and style it
-    const headerRow = worksheet.addRow(columns.map((x: any) => x.title));
+    const headerRow = worksheet.addRow(columns.map((x) => x.title));
     worksheet.columns = columns.map(() => ({ width: 15 }));
     headerRow.font = {
       color: { argb: 'FFFFFFFF' },
@@ -592,7 +633,7 @@ export default class Exporter {
     }
 
     // Create subheader row and style it
-    const subHeaderColumns = columns.map((x: any) => x.subTitle || '');
+    const subHeaderColumns = columns.map((x) => x.subTitle || '');
     if (subHeaderColumns.filter((x: string) => x).length > 0) {
       const subHeaderRow = worksheet.addRow(subHeaderColumns);
       subHeaderRow.font = {
@@ -632,7 +673,7 @@ export default class Exporter {
    *
    * @returns flat columns
    */
-  private getFlatColumns = () => {
+  private getFlatColumns = (): FlatColumn[] => {
     let index = -1;
     return this.columns.reduce((acc, value) => {
       if (value.subColumns) {
@@ -736,12 +777,9 @@ export default class Exporter {
    *
    * @param choicesByAPIColumns columns with choices by url / graphql
    */
-  private getChoicesByAPI = async (choicesByAPIColumns: any) => {
+  private getChoicesByAPI = async (choicesByAPIColumns: Column[]) => {
     for (const column of choicesByAPIColumns) {
-      const choices = await getChoices(
-        column.meta.field,
-        this.req.headers.authorization
-      );
+      const choices = await getChoices(this.req, column.meta.field);
       set(column, 'meta.field.choices', choices);
     }
   };
@@ -906,7 +944,8 @@ export default class Exporter {
         return isArray(recordValue)
           ? recordValue.reduce((acc, choice) => {
               const dataRow = data.find(
-                (obj) => obj[referenceData.valueField] === choice
+                (obj) =>
+                  obj[referenceData.valueField] === (choice.text || choice)
               );
               if (dataRow) {
                 const transformer = new DataTransformer(
@@ -914,15 +953,16 @@ export default class Exporter {
                   cloneDeep([dataRow])
                 );
                 const transformedObject = transformer.transformData()[0];
-                Object.keys(transformedObject).forEach((key) => {
-                  if (!acc[key]) {
-                    acc[key] = [];
-                  }
-                  acc[key].push(transformedObject[key]);
-                });
+                // Object.keys(transformedObject).forEach((key) => {
+                //   if (!acc[key]) {
+                //     acc[key] = [];
+                //   }
+                //   acc[key].push(transformedObject[key]);
+                // });
+                acc.push(transformedObject);
               }
               return acc;
-            }, {})
+            }, [])
           : data.find(
               (obj) => obj[referenceData.valueField] === recordValue //affecting all row, not optimal but gets the job done
             );
@@ -986,5 +1026,67 @@ export default class Exporter {
       });
     });
     return resourceResourcesColumns;
+  };
+
+  /**
+   * Get resource fields
+   *
+   * @param column Current column
+   * @param fieldName Current field name ( can be different from the one set in column )
+   * @param record Current record
+   * @returns Promise
+   */
+  private getResourceFields = (
+    column: Column,
+    fieldName: string,
+    record: any
+  ) => {
+    const columnValue = get(record, fieldName) || null;
+    const subColumns = column.displayField
+      ? [column.displayField]
+      : column.subColumns;
+    const subColumnsWithDisplay = column.displayField
+      ? []
+      : column.subColumns.filter((subColumn) => !!subColumn.displayField);
+
+    if (columnValue) {
+      // if (
+      //   (isArray(columnValue) &&
+      //     columnValue.every((id) =>
+      //       mongoose.Types.ObjectId.isValid(id)
+      //     )) ||
+      //   mongoose.Types.ObjectId.isValid(columnValue)
+      // )
+      const relatedPromises = Record.aggregate(
+        this.buildPipeline(
+          subColumns,
+          isArray(columnValue)
+            ? Array.from(new Set(columnValue))
+                .filter((id: any) => mongoose.Types.ObjectId.isValid(id))
+                .map((id: any) => new mongoose.Types.ObjectId(id))
+            : [new mongoose.Types.ObjectId(columnValue)]
+        )
+      ).then(async (relatedRecords) => {
+        if (relatedRecords.length > 0) {
+          set(
+            record,
+            fieldName,
+            isArray(columnValue) ? relatedRecords : relatedRecords[0]
+          );
+          for (let i = 0; i < columnValue.length; i++) {
+            await Promise.all(
+              subColumnsWithDisplay.map((subColumn) =>
+                this.getResourceFields(
+                  subColumn,
+                  `${fieldName}[${i}].${subColumn.field.split('.')[0]}`,
+                  record
+                )
+              )
+            );
+          }
+        }
+      });
+      return relatedPromises;
+    }
   };
 }

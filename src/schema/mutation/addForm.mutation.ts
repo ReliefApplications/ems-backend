@@ -67,10 +67,31 @@ export default {
       };
       const defaultResourcePermissions = {
         ...defaultFormPermissions,
-        canSeeRecords: [],
-        canCreateRecords: [],
-        canUpdateRecords: [],
-        canDeleteRecords: [],
+        canSeeRecords: userGlobalRoles.map((x) => {
+          return {
+            role: x,
+          };
+        }),
+        canCreateRecords: userGlobalRoles.map((x) => {
+          return {
+            role: x,
+          };
+        }),
+        canUpdateRecords: userGlobalRoles.map((x) => {
+          return {
+            role: x,
+          };
+        }),
+        canDeleteRecords: userGlobalRoles.map((x) => {
+          return {
+            role: x,
+          };
+        }),
+        canDownloadRecords: userGlobalRoles.map((x) => {
+          return {
+            role: x,
+          };
+        }),
       };
       try {
         if (!args.resource) {

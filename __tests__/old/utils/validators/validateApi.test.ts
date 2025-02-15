@@ -7,7 +7,7 @@ import { GraphQLError } from 'graphql';
  */
 describe('API validator tests', () => {
   describe('Correct api name should return true', () => {
-    const name = new Array(100).fill(faker.word.adjective());
+    const name = Array.from({ length: 100 }, () => faker.word.adjective());
     test.each(name)('Random api name should pass', (string: string) => {
       const test = () => validateApi(string);
       expect(test).not.toThrow();

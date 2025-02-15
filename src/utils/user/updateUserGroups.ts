@@ -5,7 +5,7 @@ import { logger } from '../../services/logger.service';
 import { authType } from '@const/enumTypes';
 import { ApiConfiguration, Group, User } from '@models';
 import { getDelegatedToken } from '../proxy';
-import { isEmpty } from 'lodash';
+import { isEmpty, isEqual } from 'lodash';
 import { GroupSettings } from './userManagement';
 import axios from 'axios';
 
@@ -46,6 +46,7 @@ export const updateUserGroups = async (
     const apiConfiguration = await ApiConfiguration.findById(
       settings.apiConfiguration
     );
+
     if (apiConfiguration) {
       if (apiConfiguration.authType === authType.serviceToService) {
         token = await getDelegatedToken(
@@ -71,35 +72,55 @@ export const updateUserGroups = async (
         });
         data = res.data;
       } catch (err) {
-        console.log(err.message);
         logger.error(i18next.t('common.errors.invalidAPI'), {
           stack: err.stack,
         });
         return false;
       }
 
-      // Extract groups from data
-      if (!data || isEmpty(data)) return false;
-      const rawGroups = jsonpath.query(data, settings.path);
-      if (!rawGroups || !rawGroups.length) return false;
+      // Check if data exists
+      if (!data || isEmpty(data)) {
+        // If no data, update user if needed
+        if (!isEqual(user.groups, [])) {
+          user.groups = [];
+          user.markModified('groups');
+          return true;
+        } else {
+          return false;
+        }
+      }
+
+      // Extract groups from response
+      const rawGroups = jsonpath.query(data, settings.path) || [];
       const groupsOids = rawGroups.map((group: any) =>
         jsonpath.value(group, settings.id)
       );
+
+      // Find groups
       const groups: Group[] = await Group.find(
         { oid: { $in: groupsOids } },
         '_id'
       );
 
-      // Update user if needed
-      if (groups.length > 0) {
+      // Compare current & new user groups
+      const newGroupIds = groups.map((g) => g._id.toString());
+      const currentGroupIds = (user.groups || []).map((id) => id.toString());
+      if (!isEqual(newGroupIds.sort(), currentGroupIds.sort())) {
         user.groups = groups.map((g) => g._id);
         user.markModified('groups');
         return true;
+      } else {
+        return false;
       }
-      return false;
     } else {
-      // Api configuration does not exist
-      return false;
+      // if no api configuration, update user if needed
+      if (!isEqual(user.groups, [])) {
+        user.groups = [];
+        user.markModified('groups');
+        return true;
+      } else {
+        return false;
+      }
     }
   } catch {
     logger.error('Fail to update user attributes');

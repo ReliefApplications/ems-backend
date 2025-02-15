@@ -1,23 +1,24 @@
+import { accessibleBy } from '@casl/mongoose';
+import { StatusEnumType, StatusType } from '@const/enumTypes';
+import { Application } from '@models';
+import { graphQLAuthCheck } from '@schema/shared';
+import { AppAbility } from '@security/defineUserAbility';
+import { Context } from '@server/apollo/context';
+import { logger } from '@services/logger.service';
+import config from 'config';
 import {
-  GraphQLNonNull,
-  GraphQLID,
-  GraphQLString,
-  GraphQLList,
-  GraphQLError,
   GraphQLBoolean,
+  GraphQLError,
+  GraphQLID,
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLString,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
+import { isEmpty, isNil } from 'lodash';
+import { Types } from 'mongoose';
 import pubsub from '../../server/pubsub';
 import { ApplicationType } from '../types';
-import { Application } from '@models';
-import { AppAbility } from '@security/defineUserAbility';
-import { StatusEnumType, StatusType } from '@const/enumTypes';
-import { isEmpty, isNil } from 'lodash';
-import { logger } from '@services/logger.service';
-import { accessibleBy } from '@casl/mongoose';
-import { graphQLAuthCheck } from '@schema/shared';
-import { Types } from 'mongoose';
-import { Context } from '@server/apollo/context';
 
 /** Arguments for the editApplication mutation */
 type EditApplicationArgs = {
@@ -30,6 +31,35 @@ type EditApplicationArgs = {
   pages?: string[] | Types.ObjectId[];
   settings?: any;
   permissions?: any;
+  shortcut?: string;
+};
+
+/**
+ * Must be stored in config file, as an array of strings
+ */
+const protectedShortcuts: string[] = config.get('server.protectedShortcuts');
+
+/**
+ * Validate shortcut
+ *
+ * @param id application id
+ * @param shortcut application shortcut
+ */
+export const validateShortcut = async (
+  id: string | Types.ObjectId,
+  shortcut: string
+) => {
+  const applicationWithShortcut = await Application.findOne({
+    _id: { $ne: id },
+    shortcut,
+  }).select('shortcut');
+  if (applicationWithShortcut || protectedShortcuts.includes(shortcut)) {
+    throw new GraphQLError(
+      applicationWithShortcut
+        ? 'Shortcut is already used by another application.'
+        : 'Shortcut not allowed by the system.'
+    );
+  }
 };
 
 /**
@@ -48,6 +78,7 @@ export default {
     pages: { type: new GraphQLList(GraphQLID) },
     settings: { type: GraphQLJSON },
     permissions: { type: GraphQLJSON },
+    shortcut: { type: GraphQLString },
   },
   async resolve(parent, args: EditApplicationArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -82,6 +113,10 @@ export default {
       const update = {
         // lockedBy: user._id,
       };
+      // Check if the applied shortcut is already in use
+      if (!isNil(args.shortcut) && args.shortcut !== '') {
+        await validateShortcut(args.id, args.shortcut);
+      }
       Object.assign(
         update,
         args.name && { name: args.name },
@@ -91,7 +126,8 @@ export default {
         args.settings && { settings: args.settings },
         args.permissions && { permissions: args.permissions },
         !isNil(args.sideMenu) && { sideMenu: args.sideMenu },
-        !isNil(args.hideMenu) && { hideMenu: args.hideMenu }
+        !isNil(args.hideMenu) && { hideMenu: args.hideMenu },
+        !isNil(args.shortcut) && { shortcut: args.shortcut }
       );
       application = await Application.findOneAndUpdate(filters, update, {
         new: true,

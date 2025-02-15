@@ -1,16 +1,6 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
-import mongoose, { Schema, Document } from 'mongoose';
-
-/** Mongoose button interface declaration */
-export interface Button {
-  text: string;
-  href: string;
-  hasRoleRestriction: boolean;
-  roles: string[];
-  variant: string;
-  category: string;
-  openInNewTab: boolean;
-}
+import mongoose, { Document, Schema } from 'mongoose';
+import { Button, buttonSchema } from './actionButton.model';
 
 /** Dashboard filter interface declaration */
 interface Filter {
@@ -34,21 +24,8 @@ export interface Dashboard extends Document {
   archivedAt?: Date;
   gridOptions?: any;
   filter?: Filter;
+  defaultTemplate?: boolean;
 }
-
-/** Mongoose button schema declaration */
-const buttonSchema = new Schema<Button>(
-  {
-    text: String,
-    href: String,
-    hasRoleRestriction: Boolean,
-    roles: Array<string>,
-    variant: String,
-    category: String,
-    openInNewTab: Boolean,
-  },
-  { _id: false }
-);
 
 /** Mongoose filter schema declaration */
 const filterSchema = new Schema<Filter>(

@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { filterOperator } from '../../../../types';
 
 /** The default fields */
 const DEFAULT_FIELDS = [
@@ -196,6 +197,8 @@ const buildMongoFilter = (
               return;
             }
           } else {
+            // Search on nested resource does not work, as related resources are not accessible when we execute the search
+            return;
             // Recreate the field name in order to match with aggregation
             // Logic is: _resource_name.data.field, if not default field, else _resource_name.field
             if (FLAT_DEFAULT_FIELDS.includes(filter.field.split('.')[1])) {
@@ -217,7 +220,7 @@ const buildMongoFilter = (
         // const field = fields.find(x => x.name === filter.field);
         const value = filter.value;
         switch (filter.operator) {
-          case 'contains': {
+          case filterOperator.CONTAINS: {
             if (fieldName.includes('id')) {
               return;
             }
@@ -256,7 +259,7 @@ const buildMongoFilter = (
             }
             return;
           }
-          case 'startswith': {
+          case filterOperator.STARTS_WITH: {
             if (fieldName.includes('id')) {
               return;
             }
@@ -269,7 +272,7 @@ const buildMongoFilter = (
             });
             return;
           }
-          case 'endswith': {
+          case filterOperator.ENDS_WITH: {
             if (fieldName.includes('id')) {
               return;
             }

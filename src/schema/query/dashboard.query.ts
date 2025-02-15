@@ -1,9 +1,4 @@
-import {
-  GraphQLNonNull,
-  GraphQLID,
-  GraphQLError,
-  GraphQLBoolean,
-} from 'graphql';
+import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { DashboardType } from '../types';
 import { Dashboard, Page } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
@@ -20,23 +15,29 @@ import { getContextData } from '@utils/context/getContextData';
 type DashboardArgs = {
   id: string | Types.ObjectId;
   contextEl: any;
-  createIfMissing: boolean;
 };
 
 /**
- * Throw GraphQL error if not logged.
- * Returns the dashboard by id if no contextEl is provided.
- * If contextEl is provided and its template already exists, returns the template.
- * If contextEl is provided and its template does not exist:
- *   - if createIfMissing is false, returns the main dashboard with the relevant context
- *   - if createIfMissing is true, creates a new template for the element and returns it (if user has permissions)
+ * Resolves the dashboard based on the provided ID and context element.
+ *
+ * @async
+ * @function resolve
+ * @param {Object} parent - The parent resolver result.
+ * @param {Object} args - The arguments provided to the resolver.
+ * @param {string} args.id - The ID of the dashboard to retrieve.
+ * @param {string|number} [args.contextEl] - The context element to retrieve the dashboard with respect to the context.
+ * @param {Context} context - The GraphQL execution context.
+ * @returns {Promise<Dashboard>} The resolved dashboard.
+ * @throws {GraphQLError} If the user does not have permission to read the dashboard.
+ * @throws {GraphQLError} If the provided context element is invalid.
+ * @throws {GraphQLError} If the dashboard or associated data cannot be found.
+ * @throws {GraphQLError} If an internal server error occurs.
  */
 export default {
   type: DashboardType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     contextEl: { type: GraphQLJSON },
-    createIfMissing: { type: GraphQLBoolean },
   },
   async resolve(parent, args: DashboardArgs, context: Context) {
     // Authentication check
@@ -58,10 +59,7 @@ export default {
       }
 
       // Check if contextEl is valid
-      if (
-        args.contextEl &&
-        !['string', 'number'].includes(typeof args.contextEl)
-      )
+      if (!['string', 'number'].includes(typeof args.contextEl))
         throw new GraphQLError(
           context.i18next.t(
             'mutations.dashboard.addWithContext.errors.invalidElement'
@@ -116,70 +114,25 @@ export default {
             ? 'record'
             : 'element';
 
-        // If we did not find a match, and the createIfMissing flag is not set
-        // we return the main dashboard with the relevant context
-        if (!args.createIfMissing) {
-          const contextData = getContextData(
-            type === 'record' ? args.contextEl : undefined,
-            type === 'element' ? args.contextEl : undefined,
-            page,
-            context
-          );
+        const contextData = getContextData(
+          type === 'record' ? args.contextEl : undefined,
+          type === 'element' ? args.contextEl : undefined,
+          page,
+          context
+        );
 
-          Object.assign(mainDashboard, {
-            contextData,
-            name: await getNewDashboardName(
-              mainDashboard,
-              page.context,
-              args.contextEl,
-              context.dataSources
-            ),
-          });
-          return mainDashboard;
-        }
-        // Else, we create a new template for the element
-
-        // We check for user permissions
-        const canCreateDashboard = ability.can('create', 'Dashboard');
-        const canUpdatePage = ability.can('update', page);
-        if (!canCreateDashboard || !canUpdatePage) {
-          throw new GraphQLError(
-            context.i18next.t('common.errors.permissionNotGranted')
-          );
-        }
-
-        // If we did not find a match, we create a new dashboard
-        const newDashboard = new Dashboard({
+        Object.assign(mainDashboard, {
+          contextData,
           name: await getNewDashboardName(
             mainDashboard,
             page.context,
             args.contextEl,
             context.dataSources
           ),
-          // Copy structure from the main dashboard
-          structure: mainDashboard.structure || [],
+          defaultTemplate: true,
         });
 
-        await newDashboard.save();
-
-        const newContentWithContext = {
-          ['resource' in page.context && page.context.resource
-            ? 'record'
-            : 'element']: args.contextEl,
-          content: newDashboard._id,
-        } as Page['contentWithContext'][number];
-
-        // Adds the dashboard to the page
-        if (Array.isArray(page.contentWithContext)) {
-          page.contentWithContext.push(newContentWithContext);
-        } else {
-          page.contentWithContext = [newContentWithContext];
-        }
-
-        page.markModified('contentWithContext');
-        await page.save();
-
-        return newDashboard;
+        return mainDashboard;
       }
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

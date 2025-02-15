@@ -1,20 +1,22 @@
+import { contentType } from '@const/enumTypes';
+import { Button, Dashboard, Form, Page, Workflow } from '@models';
+import ActionButtonInputType from '@schema/inputs/button-action.input';
+import { graphQLAuthCheck } from '@schema/shared';
+import extendAbilityForPage from '@security/extendAbilityForPage';
+import { Context } from '@server/apollo/context';
+import { logger } from '@services/logger.service';
 import {
-  GraphQLNonNull,
-  GraphQLID,
-  GraphQLString,
-  GraphQLError,
   GraphQLBoolean,
+  GraphQLError,
+  GraphQLID,
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLString,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { contentType } from '@const/enumTypes';
-import { PageType } from '../types';
-import { Page, Workflow, Dashboard, Form } from '@models';
-import { cloneDeep, isArray, isEmpty, isNil, omit } from 'lodash';
-import extendAbilityForPage from '@security/extendAbilityForPage';
-import { logger } from '@services/logger.service';
-import { graphQLAuthCheck } from '@schema/shared';
+import { cloneDeep, has, isArray, isEmpty, isNil, omit } from 'lodash';
 import { Types } from 'mongoose';
-import { Context } from '@server/apollo/context';
+import { PageType } from '../types';
 
 /** Simple form permission change type */
 type SimplePermissionChange =
@@ -32,12 +34,14 @@ type PermissionChange = {
 };
 
 /** Arguments for the editPage mutation */
-type EditPageArgs = {
+export type EditPageArgs = {
   id: string | Types.ObjectId;
   name?: string;
+  showName?: boolean;
   permissions?: any;
   icon?: string;
   visible?: boolean;
+  buttons?: Button[];
 };
 
 /**
@@ -50,9 +54,11 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     name: { type: GraphQLString },
+    showName: { type: GraphQLBoolean },
     icon: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
     visible: { type: GraphQLBoolean },
+    buttons: { type: new GraphQLList(ActionButtonInputType) },
   },
   async resolve(parent, args: EditPageArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -86,8 +92,12 @@ export default {
       const update = {
         ...(args.name && { name: args.name }),
         ...(args.icon && { icon: args.icon }),
-      };
-
+        ...(has(args, 'showName') && { showName: args.showName }),
+      } as any;
+      // Update buttons
+      if (args.buttons) {
+        update.buttons = args.buttons;
+      }
       // Updating permissions
       const permissionsUpdate: any = {};
       if (args.permissions) {

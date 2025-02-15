@@ -1,6 +1,10 @@
-import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
+import { startDatabaseForMigration } from '../src/migrations/database.helper';
 import { Form, ReferenceData } from '../src/models';
 import { logger } from '../src/services/logger.service';
+
+/** Migration description */
+export const description =
+  'Add graphql type names to form & reference data objects';
 
 /**
  * Use to graphqltypenames migrate up.

@@ -41,6 +41,9 @@ export default {
         );
       }
       const bulkOps: any[] = [];
+      const fetchedOids = groups.map((group) => group.oid);
+
+      // Update existing groups
       if (groups.length > 0) {
         groups.forEach((group) => {
           const upsertGroup = {
@@ -60,6 +63,9 @@ export default {
         });
         await Group.collection.bulkWrite(bulkOps);
       }
+
+      // Delete groups not in the fetched OIDs
+      await Group.deleteMany({ oid: { $nin: fetchedOids } });
 
       const filter = Group.find(
         accessibleBy(ability, 'read').Group

@@ -25,7 +25,7 @@ import { accessibleBy } from '@casl/mongoose';
 import { GraphQLDate } from 'graphql-scalars';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
-import { CompositeFilterDescriptor } from '@const/compositeFilter';
+import { CompositeFilterDescriptor } from '../../types/filter';
 
 /** Pagination default items per query */
 const DEFAULT_FIRST = 10;
@@ -209,7 +209,7 @@ export default {
 
       const mongooseFilter = {};
       // Check if resource exists and aggregation exists
-      if (resource && aggregation) {
+      if (resource) {
         Object.assign(
           mongooseFilter,
           { resource: new mongoose.Types.ObjectId(args.resource) },

@@ -58,6 +58,16 @@ export const AccessType = new GraphQLObjectType({
     canDeleteRecords: {
       type: new GraphQLList(GraphQLJSON),
     },
+    canDownloadRecords: {
+      type: new GraphQLList(RoleType),
+      async resolve(parent, args, context) {
+        const ability: AppAbility = context.user.ability;
+        const roles = await Role.find(accessibleBy(ability, 'read').Role)
+          .where('_id')
+          .in(parent.canDownloadRecords);
+        return roles;
+      },
+    },
     recordsUnicity: {
       type: GraphQLJSON,
     },

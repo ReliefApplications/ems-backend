@@ -31,7 +31,7 @@ export default {
       const filters = PullJob.find(accessibleBy(ability, 'delete').PullJob)
         .where({ _id: args.id })
         .getFilter();
-      const pullJob = await PullJob.findOneAndDelete(filters);
+      const pullJob = await PullJob.findOneAndDelete(filters, { new: true });
       if (!pullJob)
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')

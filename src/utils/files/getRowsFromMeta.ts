@@ -2,6 +2,7 @@ import { isArray } from 'lodash';
 import get from 'lodash/get';
 import set from 'lodash/set';
 import { getText } from '../form/getDisplayText';
+import { Column } from './getColumnsFromMeta';
 
 /**
  * Set a row for multiselect type, handle specific behavior with ReferenceData
@@ -37,9 +38,14 @@ const setMultiselectRow = (column: any, data: any, row: any) => {
  *
  * @param columns definition of export columns.
  * @param records list of records.
+ * @param isEmail boolean to account for email behaviour
  * @returns list of export rows.
  */
-export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
+export const getRowsFromMeta = (
+  columns: Column[],
+  records: any[],
+  isEmail = false
+): any[] => {
   const rows = [];
   for (const record of records) {
     const row = {};
@@ -114,9 +120,26 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
               const subRows = getRowsFromMeta(column.subColumns, value);
               set(row, column.name, subRows);
             }
+          } else if (column.displayField) {
+            const subRows = getRowsFromMeta([column.displayField], value);
+            const separator = column.displayField.separator;
+            set(
+              row,
+              column.name,
+              subRows
+                .map((subRow) => subRow[column.displayField.field])
+                .filter(
+                  (item) => item !== null && item !== undefined && item !== ''
+                )
+                .join(separator + ' ')
+            );
           } else {
             if (value.length > 0) {
-              set(row, column.name, `${value.length} items`);
+              set(
+                row,
+                column.name,
+                `${value.length} item${value.length > 1 ? 's' : ''}`
+              );
             } else {
               set(row, column.name, '');
             }
@@ -162,9 +185,36 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
           break;
         }
         case 'file': {
-          const value = get(record, `${column.field}.[0].name`);
-          set(row, column.name, value);
+          const value = (get(record, `${column.field}`) || []).map(
+            (x) => x.name
+          );
+          set(row, column.name, value.join(','));
           break;
+        }
+        case 'radiogroup': {
+          if (isEmail) {
+            const radioValue = get(record, column.field);
+            const choices = column?.meta?.field?.choices || [];
+            const text = choices?.length ? getText(choices, radioValue) : '';
+            set(row, column.name, text || radioValue);
+            break;
+          }
+        }
+        case 'geospatial': {
+          if (isEmail) {
+            const geoValue = get(record, `${column.field}.properties`);
+            const lat = geoValue?.coordinates.lat;
+            const lng = geoValue?.coordinates.lng;
+            const countryName = geoValue?.countryName;
+            if (lat && countryName) {
+              set(row, column.name, `${countryName}: ${lat}, ${lng}`);
+            } else if (lat) {
+              set(row, column.name, `${lat}, ${lng}`);
+            } else if (countryName) {
+              set(row, column.name, `${countryName}`);
+            }
+            break;
+          }
         }
         default: {
           const value = get(record, column.field);

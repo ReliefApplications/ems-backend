@@ -4,11 +4,13 @@ import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 import { EmailNotificationType } from '@schema/types/emailNotification.type';
+import { EmailNotificationReturn } from '@schema/types/emailNotification.type';
 import {
   EmailNotificationArgs,
   EmailNotificationInputType,
 } from '@schema/inputs/emailNotification.input';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
+import { cloneDeep } from 'lodash';
 
 /** Arguments for the addCustomNotification mutation */
 type AddCustomNotificationArgs = {
@@ -37,6 +39,36 @@ export default {
       //     );
       //   }
       // }
+      // Only count as a dataset if it has a resource
+      const datasetsCount = cloneDeep(args.notification.datasets).filter(
+        ({ resource, reference }) => resource || reference
+      ).length;
+      // Individual email count
+      let individualCount = 0;
+      for (const dataset of args.notification.datasets) {
+        if (
+          (dataset.resource || dataset.reference) &&
+          dataset.individualEmail
+        ) {
+          individualCount += 1;
+        }
+      }
+      let allSeparate = false;
+      if (datasetsCount === individualCount) {
+        allSeparate = true;
+      }
+
+      if (
+        !(args.notification.isDraft || args.notification.isDeleted === 1) &&
+        // (!args.notification.emailDistributionList.name ||
+        //   (!args.notification.emailDistributionList.to.resource &&
+        //     args.notification.emailDistributionList.to.inputEmails.length ===
+        //       0)) &&
+        !allSeparate &&
+        !args.notification.emailDistributionList
+      ) {
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
 
       const update = {
         name: args.notification.name,
@@ -47,6 +79,8 @@ export default {
         datasets: args.notification.datasets,
         emailLayout: args.notification.emailLayout,
         emailDistributionList: args.notification.emailDistributionList,
+        subscriptionList: args.notification.subscriptionList,
+        restrictSubscription: args.notification.restrictSubscription,
         status: args.notification.status,
         recipientsType: args.notification.recipientsType,
         lastExecution: args.notification.lastExecution,
@@ -68,11 +102,12 @@ export default {
       }
 
       update.datasets = update.datasets.filter(
-        (block) => block.resource !== null
+        (block) => block.resource !== null || block.reference !== null
       );
       const emailNotification = new EmailNotification(update);
       await emailNotification.save();
-      return emailNotification;
+      const response = emailNotification as EmailNotificationReturn;
+      return response;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {

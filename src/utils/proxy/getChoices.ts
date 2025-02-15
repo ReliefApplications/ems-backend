@@ -1,25 +1,40 @@
 import fetch from 'node-fetch';
 import get from 'lodash/get';
-import axios from 'axios';
 import jsonpath from 'jsonpath';
+import axios, { AxiosHeaders } from 'axios';
+import config from 'config';
+import { Request } from 'express';
 
 /**
  * Fetches the choices for a question field by URL
  *
- * @param field The question field
- * @param token The authorization token
+ * @param req Express request
+ * @param field Question definition
  * @returns the choices
  */
-export const getChoices = async (field: any, token: string): Promise<any[]> => {
+export const getChoices = async (req: Request, field: any): Promise<any[]> => {
+  const headers = new AxiosHeaders({
+    'Content-Type': 'application/json',
+  });
   if (field.choicesByUrl) {
+    const url = field.choicesByUrl.url;
     const valueField = get(field, 'choicesByUrl.value', null);
     const textField = get(field, 'choicesByUrl.text', null);
+    if (
+      config.get('commonServices.url') &&
+      url.includes(config.get('commonServices.url'))
+    ) {
+      headers.setAuthorization(`Bearer ${req.headers.accesstoken}`);
+    } else {
+      headers.setAuthorization(req.headers.authorization);
+      if (req.headers.accesstoken) {
+        headers.set('accesstoken', req.headers.accesstoken);
+      }
+    }
     try {
-      const res = await fetch(field.choicesByUrl.url, {
+      const res = await fetch(url, {
         method: 'get',
-        headers: {
-          Authorization: token,
-        },
+        headers,
       });
       const json = await res.json();
       const choices = field.choicesByUrl.path
@@ -45,18 +60,26 @@ export const getChoices = async (field: any, token: string): Promise<any[]> => {
       return [];
     }
   } else {
+    const url = get(field, 'choicesByGraphQL.url', null);
     const valueField = get(field, 'choicesByGraphQL.value', null);
     const textField = get(field, 'choicesByGraphQL.text', null);
-    const url = get(field, 'choicesByGraphQL.url', null);
+    if (
+      config.get('commonServices.url') &&
+      url.includes(config.get('commonServices.url'))
+    ) {
+      headers.setAuthorization(`Bearer ${req.headers.accesstoken}`);
+    } else {
+      headers.setAuthorization(req.headers.authorization);
+      if (req.headers.accesstoken) {
+        headers.set('accesstoken', req.headers.accesstoken);
+      }
+    }
     try {
       let choices: any[] = [];
       await axios({
         url,
         method: 'post',
-        headers: {
-          Authorization: token,
-          'Content-Type': 'application/json',
-        },
+        headers,
         data: {
           query: field.choicesByGraphQL.query,
         },
