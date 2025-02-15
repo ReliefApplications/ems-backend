@@ -21,7 +21,7 @@ module.exports = {
         description: 'Description',
       },
       user: {
-        apiConfiguration: '62cc2355d3d00f628c6d3574',
+        apiConfiguration: '613b5af515e8c265c982081c',
         endpoint: '/users/permissions',
         path: '$.systemRules.Permissions[?(@.Application=="EMS" || @.Application=="EIS")].ApplicationPositions.*',
         id: 'ApplicationPositionId',
