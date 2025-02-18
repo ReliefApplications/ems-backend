@@ -6,7 +6,7 @@ import {
   GraphQLString,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import mongoose from 'mongoose';
+import { Types } from 'mongoose';
 import { cloneDeep, get, isEqual } from 'lodash';
 import {
   Aggregation,
@@ -73,8 +73,8 @@ const CREATED_BY_STAGES = [
 
 /** Arguments for the recordsAggregation query */
 type RecordsAggregationArgs = {
-  resource: string | mongoose.Types.ObjectId;
-  aggregation: string | mongoose.Types.ObjectId | Aggregation;
+  resource: string | Types.ObjectId;
+  aggregation: string | Types.ObjectId | Aggregation;
   mapping?: any;
   first?: number;
   skip?: number;
@@ -282,7 +282,7 @@ export default {
       if (resource && aggregation) {
         Object.assign(
           mongooseFilter,
-          { resource: new mongoose.Types.ObjectId(args.resource) },
+          { resource: new Types.ObjectId(args.resource) },
           { archived: { $ne: true } }
         );
       } else {
@@ -317,6 +317,27 @@ export default {
               choices: relatedForms.map((x) => {
                 return { value: x.id, text: x.name };
               }),
+            });
+            pipeline.push({
+              $addFields: {
+                form: {
+                  $arrayElemAt: [
+                    {
+                      $filter: {
+                        input: relatedForms.map((x) => ({
+                          ...x.toJSON(),
+                          id: x._id.toString(),
+                        })),
+                        as: 'form',
+                        cond: {
+                          $eq: ['$$form._id', { $toObjectId: '$form' }],
+                        },
+                      },
+                    },
+                    0,
+                  ],
+                },
+              },
             });
           }
           // Created By
