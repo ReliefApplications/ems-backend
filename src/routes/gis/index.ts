@@ -16,6 +16,10 @@ import turf, { Feature, booleanPointInPolygon } from '@turf/turf';
 import dataSources, { CustomAPI } from '@server/apollo/dataSources';
 import { getAdmin0Polygons } from '@utils/gis/getCountryPolygons';
 import filterReferenceData from '@utils/referenceData/referenceDataFilter.util';
+import * as shapefile from 'shapefile';
+import path from 'path';
+import fs from 'fs';
+import AdmZip from 'adm-zip';
 
 /**
  * Endpoint for custom feature layers
@@ -455,6 +459,75 @@ router.get('/admin0', async (req, res) => {
     return res
       .status(500)
       .send(i18next.t('routes.gis.feature.errors.unexpected'));
+  }
+});
+
+router.post('/shapefile-to-geojson', async (req, res) => {
+  try {
+    const file = Array.isArray(req.files.file)
+      ? req.files.file[0]
+      : req.files.file;
+
+    // Create a temporary directory
+    const tempDir = path.join(Date.now().toString());
+    fs.mkdirSync(tempDir, { recursive: true });
+
+    // Extract the ZIP file
+    const zip = new AdmZip(file.data);
+    zip.extractAllTo(tempDir, true);
+
+    // Find required files inside the extracted folder
+    const shpFile = fs.readdirSync(tempDir).find((f) => f.endsWith('.shp'));
+    const dbfFile = fs.readdirSync(tempDir).find((f) => f.endsWith('.dbf'));
+
+    if (!shpFile || !dbfFile) {
+      // Cleanup: Delete the extracted folder
+      fs.rmSync(tempDir, { recursive: true, force: true });
+      return res
+        .status(400)
+        .send(
+          i18next.t('routes.gis.shapefile.errors.incorrectShapefileFormat')
+        );
+    }
+
+    // Read and parse the shapefile
+    const shpPath = path.join(tempDir, shpFile);
+    const dbfPath = path.join(tempDir, dbfFile);
+
+    const source = await shapefile.open(shpPath, dbfPath);
+
+    const features = [];
+    let result;
+    while (!(result = await source.read()).done) {
+      features.push({
+        type: 'Feature',
+        geometry: result.value.geometry,
+        properties: result.value.properties,
+      });
+    }
+
+    // Cleanup: Delete the extracted folder
+    fs.rmSync(tempDir, { recursive: true, force: true });
+
+    const zonations = features.map((f) => f.properties.Zonation);
+    if (
+      !(features.length === 3) ||
+      !(
+        zonations.length === 3 &&
+        ['Buffer', 'Core', 'Transition'].every((z) =>
+          features.some((f) => f.properties.Zonation === z)
+        )
+      )
+    ) {
+      return res
+        .status(400)
+        .send('routes.gis.shapefile.errors.featuresNotCorrect');
+    }
+
+    res.send({ geojson: { type: 'FeatureCollection', features } });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ error: 'Error processing shapefile' });
   }
 });
 

@@ -128,6 +128,9 @@ const getFieldType = (
     case 'geospatial': {
       return GraphQLJSON;
     }
+    case 'shapefile': {
+      return GraphQLJSON;
+    }
     default: {
       return GraphQLString;
     }
