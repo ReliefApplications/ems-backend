@@ -82,6 +82,7 @@ export const EmailNotificationFileInputType = new GraphQLInputObjectType({
         },
       }),
     },
+    _id: { type: GraphQLID },
     driveId: { type: new GraphQLNonNull(GraphQLString) },
     itemId: { type: new GraphQLNonNull(GraphQLString) },
     fileName: { type: new GraphQLNonNull(GraphQLString) },
