@@ -39,8 +39,12 @@ export default {
       if (mongoose.isValidObjectId(args.id)) {
         if (args.shortcut) {
           filters = {
-            $or: [{ _id: args.id }, { shortcut: args.shortcut }],
-          };
+            $and: [
+              {
+                $or: [{ _id: args.id }, { shortcut: args.shortcut }],
+              },
+            ],
+          }; // need to put it in a $and otherwise it create a single $or when combining it with the accessibility filter
         } else {
           filters = { _id: args.id };
         }

@@ -24,8 +24,12 @@ export const up = async () => {
         to: {
           inputEmails: distributionList.emails,
         },
-        cc: null,
-        bcc: null,
+        cc: {
+          inputEmails: [],
+        },
+        bcc: {
+          inputEmails: [],
+        },
         createdAt: distributionList.createdAt,
         modifiedAt: distributionList.modifiedAt,
         createdBy: {

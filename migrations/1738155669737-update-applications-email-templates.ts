@@ -22,6 +22,7 @@ export const up = async () => {
       const newTemplate = new CustomTemplate({
         _id: template._id,
         name: template.name,
+        subject: template.content.subject,
         body: {
           bodyHtml: template.content.body?.replaceAll('dataset', 'Block 1'),
           bodyBackgroundColor: '#ffffff',
