@@ -308,6 +308,12 @@
 					"missingPolygonGeoField": "Please provide a geoField when querying polygons.",
 					"unexpected": "System failed to query data."
 				}
+			},
+			"shapefile": {
+				"errors": {
+					"featuresNotCorrect": "There needs to be three polygons named 'Core', 'Buffer', and 'Transition'",
+					"incorrectShapefileFormat": "Please upload a .zip file containing both .shp and .dbf files"
+				}
 			}
 		},
 		"style": {

@@ -24,5 +24,15 @@
   "createAccountToApp.accessSteps.2": "Validez votre adresse e-mail en utilisant l'e-mail qui vous a été envoyé.",
   "createAccountToApp.accessSteps.3": "Accédez à la page de l'application <a href=\"{{url}}\">ici</a>. Nous vous recommandons de l'ajouter à vos favoris pour un accès facile.",
   "createAccountToApp.noteContent": "Vous pouvez créer votre compte uniquement dans les 7 jours suivant la réception de cet e-mail. Si l'invitation a expiré, veuillez demander au propriétaire de l'application de vous envoyer une nouvelle invitation.",
-  "createAccountToApp.registerDirectly": "Vous pouvez également vous inscrire à : "
+  "createAccountToApp.registerDirectly": "Vous pouvez également vous inscrire à : ",
+  "routes": {
+    "gis": {
+      "shapefile": {
+        "errors": {
+          "incorrectShapefileFormat": "Veuillez télécharger un fichier .zip contenant à la fois des fichiers .shp et .dbf",
+          "featuresNotCorrect": "Il doit y avoir trois polygones nommés 'Core', 'Buffer', et 'Transition'"
+        }
+      }
+    }
+  }
 }

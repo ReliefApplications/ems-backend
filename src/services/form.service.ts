@@ -21,6 +21,7 @@ export class FormService {
     this.initOwnerComponent();
     this.initUsersComponent();
     this.initGeoSpatialComponent();
+    this.initShapeFileComponent();
   }
 
   /**
@@ -132,6 +133,29 @@ export class FormService {
       title: 'Geospatial',
       questionJSON: {
         name: 'geospatial',
+        type: 'text',
+      },
+      onInit: () => {},
+      onCreated: () => {},
+      onLoaded: () => {},
+      onAfterRender: () => {},
+      onAfterRenderContentElement: () => {},
+      onPropertyChanged: () => {},
+      onValueChanged: () => {},
+      onItemValuePropertyChanged: () => {},
+    };
+    Survey.ComponentCollection.Instance.add(component);
+  }
+
+  /**
+   * Init ShapeFile component.
+   */
+  private initShapeFileComponent() {
+    const component: Survey.ICustomQuestionTypeConfiguration = {
+      name: 'shapefile',
+      title: 'ShapeFile',
+      questionJSON: {
+        name: 'shapefile',
         type: 'text',
       },
       onInit: () => {},
