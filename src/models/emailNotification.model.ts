@@ -44,6 +44,30 @@ export interface Dataset {
   };
 }
 
+/** Interface File */
+export interface EmailNotificationFile {
+  occurrence?: {
+    id: string;
+    name?: string;
+  };
+  driveId: string;
+  itemId: string;
+  fileName: string;
+  clamAV?: string;
+  fileFormat?: string;
+  versionName?: string;
+  fileSize: string;
+  documentType?: any[];
+  documentCategory?: any[];
+  createdDate?: string;
+  modifiedDate?: string;
+}
+
+/** Model for email File attachement response */
+export interface EmailNotificationAttachment {
+  sendAsAttachment: boolean;
+  files?: EmailNotificationFile[];
+}
 /** custom notification documents interface declaration */
 export interface EmailNotification extends Document {
   kind: 'EmailNotification';
@@ -67,6 +91,7 @@ export interface EmailNotification extends Document {
   modifiedAt?: Date;
   isDraft?: boolean;
   draftStepper?: number;
+  attachments?: EmailNotificationAttachment;
 }
 
 /** Mongoose email notification schema declaration */
@@ -163,6 +188,28 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
     },
     draftStepper: {
       type: Number,
+    },
+    attachments: {
+      sendAsAttachment: { type: Boolean, default: false },
+      files: [
+        {
+          occurrence: {
+            id: { type: String },
+            name: { type: String },
+          },
+          driveId: { type: String, required: true },
+          itemId: { type: String, required: true },
+          fileName: { type: String, required: true },
+          clamAV: { type: String },
+          fileFormat: { type: String },
+          versionName: { type: String },
+          fileSize: { type: String, required: true },
+          documentType: [{ type: mongoose.Schema.Types.Mixed }],
+          documentCategory: [{ type: mongoose.Schema.Types.Mixed }],
+          createdDate: { type: String },
+          modifiedDate: { type: String },
+        },
+      ],
     },
   },
   {
