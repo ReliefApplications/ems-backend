@@ -1,3 +1,4 @@
+import { EmailNotificationAttachment } from '@models';
 import {
   GraphQLInputObjectType,
   GraphQLString,
@@ -28,6 +29,7 @@ export type EmailNotificationArgs = {
   isDeleted: number;
   isDraft: boolean;
   draftStepper: number;
+  attachments: EmailNotificationAttachment;
 };
 
 /**
@@ -65,6 +67,47 @@ export const DatasetInputType = new GraphQLInputObjectType({
   }),
 });
 
+/**
+ * Input type for email notification file details.
+ */
+export const EmailNotificationFileInputType = new GraphQLInputObjectType({
+  name: 'EmailNotificationFileInputType',
+  fields: () => ({
+    occurrence: {
+      type: new GraphQLInputObjectType({
+        name: 'OccurrenceInputType',
+        fields: {
+          id: { type: new GraphQLNonNull(GraphQLString) },
+          name: { type: GraphQLString },
+        },
+      }),
+    },
+    _id: { type: GraphQLID },
+    driveId: { type: new GraphQLNonNull(GraphQLString) },
+    itemId: { type: new GraphQLNonNull(GraphQLString) },
+    fileName: { type: new GraphQLNonNull(GraphQLString) },
+    clamAV: { type: GraphQLString },
+    fileFormat: { type: GraphQLString },
+    versionName: { type: GraphQLString },
+    fileSize: { type: new GraphQLNonNull(GraphQLString) },
+    documentType: { type: new GraphQLList(GraphQLJSON) },
+    documentCategory: { type: new GraphQLList(GraphQLJSON) },
+    createdDate: { type: GraphQLString },
+    modifiedDate: { type: GraphQLString },
+  }),
+});
+
+/**
+ * Input type for email notification attachment details.
+ */
+export const EmailNotificationAttachmentInputType = new GraphQLInputObjectType({
+  name: 'EmailNotificationAttachmentInputType',
+  fields: () => ({
+    sendAsAttachment: { type: GraphQLBoolean },
+    files: { type: new GraphQLList(EmailNotificationFileInputType) },
+  }),
+});
+
 /** GraphQL custom notification query input type definition */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const EmailNotificationInputType = new GraphQLInputObjectType({
@@ -88,5 +131,6 @@ export const EmailNotificationInputType = new GraphQLInputObjectType({
     isDeleted: { type: GraphQLInt },
     isDraft: { type: GraphQLBoolean },
     draftStepper: { type: GraphQLInt },
+    attachments: { type: EmailNotificationAttachmentInputType },
   }),
 });
