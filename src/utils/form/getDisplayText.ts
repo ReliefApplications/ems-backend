@@ -2,9 +2,11 @@ import { Context } from '../../server/apollo/context';
 import { CustomAPI } from '../../server/apollo/dataSources';
 import config from 'config';
 import { logger } from '@services/logger.service';
-import axios, { AxiosHeaders } from 'axios';
+import axios, { AxiosHeaders, AxiosStatic } from 'axios';
 import get from 'lodash/get';
 import jsonpath from 'jsonpath';
+import commonServices from '@server/common-services';
+import { AxiosCacheInstance } from 'axios-cache-interceptor';
 
 /**
  * Gets display text from choice value.
@@ -114,6 +116,7 @@ export const getFullChoices = async (
         }
       }
     } else if (field.choicesByGraphQL) {
+      let sender: AxiosCacheInstance | AxiosStatic = axios;
       const url: string = field.choicesByGraphQL.url;
       let choices: any[] = [];
       const valueField = get(field, 'choicesByGraphQL.value', null);
@@ -126,13 +129,14 @@ export const getFullChoices = async (
         url.includes(config.get('commonServices.url'))
       ) {
         headers.setAuthorization(`Bearer ${context.accesstoken}`);
+        sender = commonServices();
       } else {
         headers.setAuthorization(context.token);
         if (context.accesstoken) {
           headers.set('accesstoken', context.accesstoken);
         }
       }
-      await axios({
+      await sender({
         url,
         method: 'post',
         headers,
