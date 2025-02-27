@@ -3,7 +3,7 @@ import {
   AxiosCacheInstance,
   setupCache,
   buildKeyGenerator,
-} from 'axios-cache-interceptor/dev';
+} from 'axios-cache-interceptor';
 
 let axios: AxiosCacheInstance;
 
@@ -21,7 +21,6 @@ export default () => {
       methods: ['get', 'post'],
       // Avoid using cache control set to false
       interpretHeader: false,
-      debug: console.log,
       // Generate an unique key, based on all parameters listed
       generateKey: buildKeyGenerator((request) => ({
         method: request.method,

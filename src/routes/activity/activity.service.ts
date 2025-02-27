@@ -367,7 +367,7 @@ export class ActivityService {
           filters
         )
           .skip(skip)
-          .limit(1000);
+          .limit(10000);
         formattedData.push(
           ...aggregation.map((activity) => ({
             timestamp: this.formatDate(activity.createdAt, timeZone),
