@@ -1,3 +1,10 @@
+# [2.13.0-rc.1](https://github.com/ReliefApplications/ems-backend/compare/v2.12.2...v2.13.0-rc.1) (2025-02-27)
+
+
+### Features
+
+* improve back-end caching for common services requests ([173877b](https://github.com/ReliefApplications/ems-backend/commit/173877b6f880194f1da554e4711bbbcb647181bd))
+
 ## [2.12.2-rc.1](https://github.com/ReliefApplications/ems-backend/compare/v2.12.1...v2.12.2-rc.1) (2025-02-19)
 
 
