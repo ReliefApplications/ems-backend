@@ -96,6 +96,7 @@ import editEmailDistributionList from './editEmailDistributionList.mutation';
 import addCustomTemplate from './addCustomTemplate.mutation';
 import editCustomTemplate from './editCustomTemplate.mutation';
 import deleteEmailNotification from './deleteEmailNotification.mutation';
+import deleteEmailDistributionList from './deleteEmailDistributionList.mutation';
 
 /** GraphQL mutation definition */
 const Mutation = new GraphQLObjectType({
@@ -198,6 +199,7 @@ const Mutation = new GraphQLObjectType({
     deleteDashboardTemplates,
     editCustomTemplate,
     deleteEmailNotification,
+    deleteEmailDistributionList,
   },
 });
 
