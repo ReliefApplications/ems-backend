@@ -1,9 +1,12 @@
 import fetch from 'node-fetch';
 import get from 'lodash/get';
 import jsonpath from 'jsonpath';
-import axios, { AxiosHeaders } from 'axios';
+import { AxiosHeaders, AxiosStatic } from 'axios';
 import config from 'config';
 import { Request } from 'express';
+import commonServices from '@server/common-services';
+import { AxiosCacheInstance } from 'axios-cache-interceptor';
+import axios from 'axios';
 
 /**
  * Fetches the choices for a question field by URL
@@ -63,11 +66,13 @@ export const getChoices = async (req: Request, field: any): Promise<any[]> => {
     const url = get(field, 'choicesByGraphQL.url', null);
     const valueField = get(field, 'choicesByGraphQL.value', null);
     const textField = get(field, 'choicesByGraphQL.text', null);
+    let sender: AxiosCacheInstance | AxiosStatic = axios;
     if (
       config.get('commonServices.url') &&
       url.includes(config.get('commonServices.url'))
     ) {
       headers.setAuthorization(`Bearer ${req.headers.accesstoken}`);
+      sender = commonServices();
     } else {
       headers.setAuthorization(req.headers.authorization);
       if (req.headers.accesstoken) {
@@ -76,7 +81,7 @@ export const getChoices = async (req: Request, field: any): Promise<any[]> => {
     }
     try {
       let choices: any[] = [];
-      await axios({
+      await sender({
         url,
         method: 'post',
         headers,
