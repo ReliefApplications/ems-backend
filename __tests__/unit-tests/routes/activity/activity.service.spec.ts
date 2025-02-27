@@ -216,13 +216,25 @@ describe('Activity Service', () => {
       const query = {};
       const aggregationResult = [];
       const listAggregationMock = jest.spyOn(service as any, 'listAggregation');
-      listAggregationMock.mockResolvedValueOnce(aggregationResult);
+      // Count
+      listAggregationMock.mockReturnValueOnce({
+        count: () => [{ count: 20000 }],
+      });
+      // 2 pages
+      listAggregationMock.mockReturnValueOnce({
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockResolvedValueOnce(aggregationResult),
+      });
+      listAggregationMock.mockReturnValueOnce({
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockResolvedValueOnce(aggregationResult),
+      });
 
       const mockFile = Buffer.from('Test content');
       jest.spyOn(XLSBuilder, 'default').mockResolvedValueOnce(mockFile as any);
 
       const result = await service.downloadList(query);
-      expect(listAggregationMock).toHaveBeenCalled();
+      expect(listAggregationMock).toHaveBeenCalledTimes(3); // 1 for count, 2 for pagination
       expect(result).toEqual({
         fileName: (service as any).listExportFileName,
         file: mockFile,
@@ -235,7 +247,11 @@ describe('Activity Service', () => {
 
       const listAggregationMock = jest
         .spyOn(service as any, 'listAggregation')
-        .mockRejectedValueOnce(error);
+        .mockReturnValueOnce({
+          count: () => {
+            throw error;
+          },
+        });
 
       await expect(service.downloadList(query)).rejects.toThrow(error);
       expect(listAggregationMock).toHaveBeenCalled();
