@@ -131,6 +131,9 @@ const getFieldType = (
     case 'shapefile': {
       return GraphQLJSON;
     }
+    case 'editor': {
+      return GraphQLString;
+    }
     default: {
       return GraphQLString;
     }
