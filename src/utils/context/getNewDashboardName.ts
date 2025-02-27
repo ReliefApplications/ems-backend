@@ -37,7 +37,7 @@ export const getNewDashboardName = async (
       : referenceData.data;
 
     const item = data.find((x) => get(x, referenceData.valueField) == id);
-    return item ? `${item?.[context.displayField]}` : undefined;
+    return get(item, context.displayField);
   } else if ('resource' in context && context.resource) {
     const record = await Record.findById(id);
     return `${record.data[context.displayField]}`;
