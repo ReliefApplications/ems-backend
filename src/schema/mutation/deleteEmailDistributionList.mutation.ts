@@ -34,7 +34,7 @@ export default {
         distributionList.applicationId.toString()
       );
 
-      if (ability.cannot('delete', 'DistributionList')) {
+      if (ability.cannot('update', 'EmailNotification')) {
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
