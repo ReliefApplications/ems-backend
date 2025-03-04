@@ -1,3 +1,10 @@
+# [2.13.0-rc.3](https://github.com/ReliefApplications/ems-backend/compare/v2.13.0-rc.2...v2.13.0-rc.3) (2025-03-04)
+
+
+### Features
+
+* Distribution list CRUD ([#1193](https://github.com/ReliefApplications/ems-backend/issues/1193)) ([1b06057](https://github.com/ReliefApplications/ems-backend/commit/1b060575b6574cc46c8b865464057c3cc63a5551))
+
 # [2.13.0-rc.2](https://github.com/ReliefApplications/ems-backend/compare/v2.13.0-rc.1...v2.13.0-rc.2) (2025-02-27)
 
 
