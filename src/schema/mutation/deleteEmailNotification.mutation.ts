@@ -15,6 +15,7 @@ import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { CustomTemplate } from '@models/customTemplate.model';
+import { deleteFile } from '@utils/notification/util';
 
 /** Arguments for the deleteEmailNotification mutation */
 type DeleteEmailNotificationArgs = {
@@ -60,6 +61,7 @@ export default {
           _id: args.id,
           applicationId: args.applicationId,
         });
+        await deleteFile(emailNotification.attachments, context);
       } else {
         // Handle cases where the user has limited permissions
         const accessibleEmailNotification = await EmailNotification.findOne({
@@ -73,6 +75,7 @@ export default {
             _id: args.id,
             applicationId: args.applicationId,
           });
+          await deleteFile(emailNotification.attachments, context);
         }
       }
 

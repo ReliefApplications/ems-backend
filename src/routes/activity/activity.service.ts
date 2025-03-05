@@ -352,18 +352,33 @@ export class ActivityService {
         filters.push(queryFilters);
       }
 
-      const aggregation = await this.listAggregation(
+      const totalCountAggregation = await this.listAggregation(
         sortField,
         sortOrder,
         filters
-      );
-      const formattedData = aggregation.map((activity) => ({
-        timestamp: this.formatDate(activity.createdAt, timeZone),
-        userId: activity.userId?.toString(),
-        page: activity.metadata?.title || '',
-        username: activity.username,
-        attributes: activity.attributes,
-      }));
+      ).count('count');
+
+      const formattedData = [];
+
+      for (let skip = 0; skip < totalCountAggregation[0].count; skip += 10000) {
+        const aggregation = await this.listAggregation(
+          sortField,
+          sortOrder,
+          filters
+        )
+          .skip(skip)
+          .limit(10000);
+        formattedData.push(
+          ...aggregation.map((activity) => ({
+            timestamp: this.formatDate(activity.createdAt, timeZone),
+            userId: activity.userId?.toString(),
+            page: activity.metadata?.title || '',
+            username: activity.username,
+            attributes: activity.attributes,
+          }))
+        );
+      }
+
       const file = await xlsBuilder(
         this.listExportFileName,
         this.listExportColumns,
