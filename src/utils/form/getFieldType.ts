@@ -91,6 +91,9 @@ export const getFieldType = async (question: {
       return 'shapefile';
     case 'expression':
       return 'expression';
+    case 'editor': {
+      return 'editor';
+    }
     default:
       return 'text';
   }
