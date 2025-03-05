@@ -1,3 +1,16 @@
+# [2.13.0](https://github.com/ReliefApplications/ems-backend/compare/v2.12.2...v2.13.0) (2025-03-05)
+
+
+### Bug Fixes
+
+* nested fields from ref data can now be used as display field in contextual dashboards ([#1197](https://github.com/ReliefApplications/ems-backend/issues/1197)) ([943c108](https://github.com/ReliefApplications/ems-backend/commit/943c1083fcec4fd2147c070e24a6b858f9a4d19d)), closes [AB#110861](https://github.com/AB/issues/110861)
+
+
+### Features
+
+* Distribution list CRUD ([#1193](https://github.com/ReliefApplications/ems-backend/issues/1193)) ([1b06057](https://github.com/ReliefApplications/ems-backend/commit/1b060575b6574cc46c8b865464057c3cc63a5551))
+* improve back-end caching for common services requests ([173877b](https://github.com/ReliefApplications/ems-backend/commit/173877b6f880194f1da554e4711bbbcb647181bd))
+
 ## [2.12.2](https://github.com/ReliefApplications/ems-backend/compare/v2.12.1...v2.12.2) (2025-02-20)
 
 
