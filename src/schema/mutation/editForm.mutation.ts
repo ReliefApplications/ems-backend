@@ -277,7 +277,7 @@ export default {
         if (structure.showPercentageProgressBar) {
           fields.push({
             type: 'progress',
-            name: 'progress',
+            name: '_progress',
             unique: false,
             isRequired: false,
             showOnXlsxTemplate: true,

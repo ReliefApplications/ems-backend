@@ -308,6 +308,12 @@
 					"missingPolygonGeoField": "******",
 					"unexpected": "******"
 				}
+			},
+			"shapefile": {
+				"errors": {
+					"featuresNotCorrect": "******",
+					"incorrectShapefileFormat": "******"
+				}
 			}
 		},
 		"style": {

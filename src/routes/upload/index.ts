@@ -23,6 +23,7 @@ import { insertRecords as insertRecordsPulljob } from '@server/pullJobScheduler'
 import jwtDecode from 'jwt-decode';
 import { cloneDeep, has, isEqual } from 'lodash';
 import { Context } from '@server/apollo/context';
+import fileUpload from 'express-fileupload';
 
 /** File size limit, in bytes  */
 const FILE_SIZE_LIMIT = 200 * 1024 * 1024;
@@ -337,29 +338,29 @@ async function insertRecords(
       .send(i18next.t('common.errors.permissionNotGranted'));
   }
 }
+/**
+ * Validate the uploaded file
+ *
+ * @param file The uploaded file
+ * @returns An error message if validation fails, otherwise null
+ */
+function validateXlsxFile(file: fileUpload.UploadedFile): string | null {
+  if (!file) return i18next.t('routes.upload.errors.missingFile');
+  if (file.size > FILE_SIZE_LIMIT)
+    return i18next.t('common.errors.fileSizeLimitReached');
+  if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
+    return i18next.t('common.errors.fileExtensionNotAllowed');
+  return null;
+}
 
 /**
  * Import a list of records for a form from an uploaded xlsx file
  */
 router.post('/form/records/:id', async (req: any, res) => {
   try {
-    // Check file
-    if (!req.files || Object.keys(req.files).length === 0)
-      return res
-        .status(400)
-        .send(i18next.t('routes.upload.errors.missingFile'));
-    // Get the file from request
-    const file = req.files.excelFile;
-    // Check file size
-    if (file.size > FILE_SIZE_LIMIT)
-      return res
-        .status(400)
-        .send(i18next.t('common.errors.fileSizeLimitReached'));
-    // Check file extension (only allowed .xlsx)
-    if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
-      return res
-        .status(400)
-        .send(i18next.t('common.errors.fileExtensionNotAllowed'));
+    const file = req.files?.excelFile;
+    const validationError = validateXlsxFile(file);
+    if (validationError) return res.status(400).send(validationError);
 
     const form = await Form.findById(req.params.id);
 
@@ -380,23 +381,9 @@ router.post('/form/records/:id', async (req: any, res) => {
  */
 router.post('/resource/records/:id', async (req: any, res) => {
   try {
-    // Check file
-    if (!req.files || Object.keys(req.files).length === 0)
-      return res
-        .status(400)
-        .send(i18next.t('routes.upload.errors.missingFile'));
-    // Get the file from request
-    const file = req.files.excelFile;
-    // Check file size
-    if (file.size > FILE_SIZE_LIMIT)
-      return res
-        .status(400)
-        .send(i18next.t('common.errors.fileSizeLimitReached'));
-    // Check file extension (only allowed .xlsx)
-    if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
-      return res
-        .status(400)
-        .send(i18next.t('common.errors.fileExtensionNotAllowed'));
+    const file = req.files?.excelFile;
+    const validationError = validateXlsxFile(file);
+    if (validationError) return res.status(400).send(validationError);
 
     const form = await Form.findOne({ resource: req.params.id, core: true });
     const resource = await Resource.findById(req.params.id);
@@ -442,23 +429,9 @@ router.post('/resource/insert', async (req: any, res) => {
  */
 router.post('/application/:id/invite', async (req: any, res) => {
   try {
-    // Check file
-    if (!req.files || Object.keys(req.files).length === 0)
-      return res
-        .status(400)
-        .send(i18next.t('routes.upload.errors.missingFile'));
-    // Get the file from request
-    const file = req.files.excelFile;
-    // Check file size
-    if (file.size > FILE_SIZE_LIMIT)
-      return res
-        .status(400)
-        .send(i18next.t('common.errors.fileSizeLimitReached'));
-    // Check file extension (only allowed .xlsx)
-    if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
-      return res
-        .status(400)
-        .send(i18next.t('common.errors.fileExtensionNotAllowed'));
+    const file = req.files?.excelFile;
+    const validationError = validateXlsxFile(file);
+    if (validationError) return res.status(400).send(validationError);
 
     const roles = await Role.find({ application: req.params.id }).select(
       'id title'
@@ -515,23 +488,9 @@ router.post('/application/:id/invite', async (req: any, res) => {
  */
 router.post('/invite', async (req: any, res) => {
   try {
-    // Check file
-    if (!req.files || Object.keys(req.files).length === 0)
-      return res
-        .status(400)
-        .send(i18next.t('routes.upload.errors.missingFile'));
-    // Get the file from request
-    const file = req.files.excelFile;
-    // Check file size
-    if (file.size > FILE_SIZE_LIMIT)
-      return res
-        .status(400)
-        .send(i18next.t('common.errors.fileSizeLimitReached'));
-    // Check file extension (only allowed .xlsx)
-    if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
-      return res
-        .status(400)
-        .send(i18next.t('common.errors.fileExtensionNotAllowed'));
+    const file = req.files?.excelFile;
+    const validationError = validateXlsxFile(file);
+    if (validationError) return res.status(400).send(validationError);
 
     const roles = await Role.find({ application: null }).select('id title');
     const workbook = new Workbook();
@@ -672,6 +631,43 @@ router.post('/style/:application', async (req, res) => {
     );
 
     return res.status(200).send({ path });
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    return res.status(500).send(req.t('common.errors.internalServerError'));
+  }
+});
+
+/** Route that gets a xlsx file and returns a json  */
+router.post('/parse/json', async (req, res) => {
+  try {
+    type ResType = { [key in string]: any };
+
+    const file = req.files?.excelFile as fileUpload.UploadedFile;
+    const validationError = validateXlsxFile(file);
+    if (validationError) return res.status(400).send(validationError);
+
+    // Load workbook
+    const workbook = new Workbook();
+    await workbook.xlsx.load(file.data as any);
+    const worksheet = workbook.getWorksheet(1);
+
+    const resData: ResType[] = [];
+    const columns: string[] = [];
+
+    worksheet.getRow(1).eachCell((cell) => {
+      columns.push(`${cell.value}`);
+      cell.value = null;
+    });
+    worksheet.eachRow({ includeEmpty: false }, (row) => {
+      const rowData: ResType = {};
+      row.eachCell((cell, colNumber) => {
+        const col = columns[colNumber - 1];
+        rowData[col] = cell.value;
+      });
+      resData.push(rowData);
+    });
+
+    return res.status(200).send(resData);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
     return res.status(500).send(req.t('common.errors.internalServerError'));
