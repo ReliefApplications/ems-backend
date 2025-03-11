@@ -127,6 +127,14 @@ export const RecordType = new GraphQLObjectType({
         }
       },
     },
+    userCanEdit: {
+      type: GraphQLBoolean,
+      async resolve(parent, args, context) {
+        const parentForm: Form = await Form.findById(parent.form);
+        const ability = await extendAbilityForRecords(context.user, parentForm);
+        return ability.can('update', parent);
+      },
+    },
     validationErrors: {
       type: new GraphQLList(
         new GraphQLObjectType({

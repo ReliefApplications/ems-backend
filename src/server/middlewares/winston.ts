@@ -22,7 +22,7 @@ function customRequestFilter(req, propName) {
  * Format used for winston logger
  */
 const customFormat = format.printf((info) => {
-  const { timestamp, level, message, meta } = info;
+  const { timestamp, level, message, meta } = info as any;
   const statusCode = meta.res.statusCode;
   const responseTime = meta.responseTime;
   return `${timestamp} [${level}] [${statusCode}] in ${responseTime}ms : ${message}`;

@@ -15,8 +15,9 @@ import {
   LayoutConnectionType,
   AggregationConnectionType,
   FieldMetaDataType,
+  CustomNotificationType,
 } from '.';
-import { Form, Record } from '@models';
+import { Application, Form, Record } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForRecords, {
   userHasRoleFor,
@@ -252,6 +253,29 @@ export const ResourceType = new GraphQLObjectType({
         return count;
       },
     },
+    customNotifications: {
+      type: new GraphQLList(CustomNotificationType),
+      args: {
+        application: { type: GraphQLID },
+      },
+      async resolve(parent, args) {
+        if (args.application) {
+          const application = await Application.findById(
+            args.application
+          ).populate({
+            path: 'customNotifications',
+            model: 'CustomNotification',
+          });
+          const filteredNotifications = application.customNotifications.filter(
+            (notification) =>
+              notification.applicationTrigger === true &&
+              notification.resource.equals(parent._id)
+          );
+          return filteredNotifications ?? [];
+        }
+        return [];
+      },
+    },
     fields: { type: GraphQLJSON },
     canCreateRecords: {
       type: GraphQLBoolean,
@@ -283,6 +307,12 @@ export const ResourceType = new GraphQLObjectType({
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
         return ability.can('delete', parent);
+      },
+    },
+    hasLayouts: {
+      type: GraphQLBoolean,
+      resolve(parent) {
+        return parent.layouts?.length;
       },
     },
     layouts: {

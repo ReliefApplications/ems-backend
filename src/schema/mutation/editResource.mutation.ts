@@ -852,11 +852,12 @@ export default {
         await updateIncrementalIds(resource, args.idShape);
       }
 
-      return await Resource.findByIdAndUpdate(
+      const updatedResource = await Resource.findByIdAndUpdate(
         args.id,
         update.$addToSet ? { $addToSet: update.$addToSet } : {},
         { new: true }
       );
+      return updatedResource;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) throw err;

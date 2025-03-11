@@ -179,6 +179,15 @@ export const preprocess = (
     text = text.split(Placeholder.NOW).join(nowToString);
   }
 
+  // === NOW ===
+  if (text.includes(Placeholder.RECORD_ID)) {
+    const textArray: string[] = [];
+    dataset.rows.forEach((record: any) => textArray.push(record.id));
+    text = text
+      .split(Placeholder.RECORD_ID)
+      .join(textArray.filter((x) => x).join(', '));
+  }
+
   // === DATASET ===
   if (text.includes(Placeholder.DATASET) && dataset) {
     if (dataset.fields.length > 0 && dataset.rows.length > 0) {
@@ -191,6 +200,20 @@ export const preprocess = (
         '<br>';
     } else {
       text = text.split(Placeholder.DATASET).join('');
+    }
+  }
+
+  // === INLINE TEMPLATE ===
+  if (dataset.rows.length === 1) {
+    const data = dataset.rows[0];
+    const regex = /{{data\..*?}}/g;
+    const matches = text.match(regex);
+    if (matches) {
+      matches.forEach((match) => {
+        const field = match.replace('{{data.', '').replace('}}', '');
+        const value = get(data, field, '');
+        text = text.replace(match, value);
+      });
     }
   }
   return text;
