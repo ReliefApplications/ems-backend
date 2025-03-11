@@ -51,7 +51,7 @@ export default {
         );
       }
       // Test that the frequency is not too high
-      if (args.notification.schedule) {
+      if (args.notification?.schedule) {
         // make sure minute is not a wildcard
         const reg = new RegExp('^([0-9]|[1-5][0-9])$');
         if (!reg.test(args.notification.schedule.split(' ')[0])) {

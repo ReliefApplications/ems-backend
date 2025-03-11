@@ -183,7 +183,9 @@ export const preprocess = (
   if (text.includes(Placeholder.RECORD_ID)) {
     const textArray: string[] = [];
     dataset.rows.forEach((record: any) => textArray.push(record.id));
-    text = textArray.join(', ');
+    text = text
+      .split(Placeholder.RECORD_ID)
+      .join(textArray.filter((x) => x).join(', '));
   }
 
   // === DATASET ===

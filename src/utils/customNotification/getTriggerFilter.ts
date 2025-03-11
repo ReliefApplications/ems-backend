@@ -14,7 +14,11 @@ export default (notification: CustomNotification, resource: Resource) => {
   if (notification.applicationTrigger && notification.filter?.filters?.length) {
     // TODO: take into account resources questions
     // Filter from the query definition
-    mongooseFilter = getFilter(notification.filter, resource.fields);
+    mongooseFilter = getFilter(notification.filter, resource.fields, {
+      resourceFieldsById: {
+        [resource._id.toString()]: resource.fields,
+      },
+    });
   }
   return mongooseFilter;
 };
