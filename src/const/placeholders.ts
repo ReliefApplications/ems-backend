@@ -31,6 +31,16 @@ export const isUsingTodayPlaceholder = (value: any) => {
 };
 
 /**
+ * Tests whether value is using the {{now}} placeholder
+ *
+ * @param value value to test
+ * @returns true if using {{now}}
+ */
+export const isUsingNowPlaceholder = (value: any) => {
+  return value === Placeholder.NOW;
+};
+
+/**
  * Extract string contained into brackets used for placeholders.
  *
  * @param str input string containing placeholder syntax
