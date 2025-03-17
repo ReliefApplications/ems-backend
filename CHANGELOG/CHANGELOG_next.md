@@ -1,3 +1,10 @@
+# [2.14.0-rc.1](https://github.com/ReliefApplications/ems-backend/compare/v2.13.0...v2.14.0-rc.1) (2025-03-17)
+
+
+### Features
+
+* enable {{now}} placeholder for datetime fields in edition ([#1200](https://github.com/ReliefApplications/ems-backend/issues/1200)) ([f97295b](https://github.com/ReliefApplications/ems-backend/commit/f97295b5b12d0c8bfb321bd33f5de0d8394cd1a0))
+
 # [2.13.0-rc.3](https://github.com/ReliefApplications/ems-backend/compare/v2.13.0-rc.2...v2.13.0-rc.3) (2025-03-04)
 
 
