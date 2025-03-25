@@ -3,6 +3,7 @@ import {
   REGEX_TODAY_PLUS,
   REGEX_TODAY_MINUS,
   isUsingTodayPlaceholder,
+  isUsingNowPlaceholder,
 } from '../../const/placeholders';
 
 /**
@@ -17,6 +18,7 @@ export const getDateForMongo = (
   // today's date
   let startDate: Date;
   if (isUsingTodayPlaceholder(value)) {
+    // Using {{today}}
     startDate = new Date();
     startDate.setHours(0, 0, 0, 0);
     // today + number of days
@@ -31,8 +33,12 @@ export const getDateForMongo = (
         extractStringFromBrackets(value).split('-')[1]
       );
       startDate.setDate(startDate.getDate() + difference);
-    } // classic date
+    }
+  } else if (isUsingNowPlaceholder(value)) {
+    // Using {{now}}
+    startDate = new Date();
   } else {
+    // Other dates
     startDate = new Date(value);
   }
   const endDate = new Date(startDate);
