@@ -9,12 +9,12 @@ import fileUpload from 'express-fileupload';
 import permissions from './permissions';
 import roles from './roles';
 import gis from './gis';
-import style from './style';
 import notification from './notification';
 import config from 'config';
 import { RouteDefinition } from 'types/route-definition';
 import { logger } from '@services/logger.service';
 import ActivityController from './activity/activity.controller';
+import StyleController from './style/style.controller';
 
 /**
  *
@@ -78,11 +78,10 @@ export default function registerRoutes(): Router | undefined {
     router.use('/summarycards', summarycards);
     router.use('/roles', roles);
     router.use('/gis', gis);
-    router.use('/style', style);
     router.use('/notification', notification);
 
     // Define an array of controller objects
-    const controllers = [new ActivityController()];
+    const controllers = [new ActivityController(), new StyleController()];
 
     // Dynamically register routes for each controller
     controllers.forEach((controller) => {
