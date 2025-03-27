@@ -15,6 +15,7 @@ import { RouteDefinition } from 'types/route-definition';
 import { logger } from '@services/logger.service';
 import ActivityController from './activity/activity.controller';
 import StyleController from './style/style.controller';
+import errorHandlerMiddleware from '@server/middlewares/error-handler';
 
 /**
  *
@@ -52,6 +53,8 @@ function registerControllerRoutes(routes: RouteDefinition[]): Router {
         throw new Error(`Unsupported HTTP method: ${route.method}`);
     }
   });
+  // todo: move somewhere else
+  controllerRouter.use(errorHandlerMiddleware);
   return controllerRouter;
 }
 
