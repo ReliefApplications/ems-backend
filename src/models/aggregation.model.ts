@@ -15,6 +15,7 @@ export const aggregationSchema = new Schema(
 /** Aggregation documents interface declaration */
 export interface Aggregation extends Document {
   kind: 'Aggregation';
+  _id?: mongoose.Types.ObjectId;
   name?: string;
   createdAt?: Date;
   modifiedAt?: Date;

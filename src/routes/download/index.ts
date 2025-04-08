@@ -1,7 +1,7 @@
 import express from 'express';
 import {
   Form,
-  Record,
+  Record as RecordModel,
   Resource,
   Application,
   Role,
@@ -9,6 +9,7 @@ import {
   User,
   RecordHistoryMeta,
   RecordHistory as RecordHistoryType,
+  Aggregation,
 } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
@@ -32,6 +33,9 @@ import { sendEmail } from '@utils/email';
 import { accessibleBy } from '@casl/mongoose';
 import dataSources from '@server/apollo/dataSources';
 import Exporter from '@utils/files/resourceExporter';
+import axios from 'axios';
+import config from 'config';
+import { Workbook, stream } from 'exceljs';
 
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwise
@@ -95,6 +99,108 @@ const buildChartDataExport = (req, res) => {
 };
 
 /**
+ * Build aggregation data export
+ *
+ * @param req current http request
+ * @param res current http response
+ */
+const buildAggregationDataExport = async (req, res) => {
+  axios({
+    url: `${config.get('server.url')}/graphql`,
+    method: 'POST',
+    headers: {
+      Authorization: req.headers.authorization,
+      'Content-Type': 'application/json',
+      ...(req.headers.accesstoken && {
+        accesstoken: req.headers.accesstoken,
+      }),
+    },
+    data: {
+      query: `query recordsAggregation($resource: ID!, $aggregation: JSON!, $first: Int) {
+        recordsAggregation(resource: $resource, aggregation: $aggregation, first: $first)
+      }`,
+
+      variables: {
+        resource: req.params.resource,
+        aggregation: req.params.id,
+        first: -1,
+      },
+    },
+  }).then(({ data }) => {
+    const rows: Array<Record<string, unknown>> =
+      data?.data?.recordsAggregation?.items;
+    if (!rows) {
+      return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    }
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+    res.setHeader('Content-Disposition', 'attachment; filename=records.xlsx');
+
+    const columns = new Set<string>();
+    rows.forEach((row) => {
+      Object.keys(row).forEach((r) => columns.add(r));
+    });
+    const uniqueCols = [...columns];
+
+    let workbook: Workbook | stream.xlsx.WorkbookWriter;
+    // Create a new instance of a Workbook class
+    if (res.closed) {
+      workbook = new Workbook();
+    } else {
+      workbook = new stream.xlsx.WorkbookWriter({
+        stream: res,
+        useStyles: true,
+      });
+    }
+    const worksheet = workbook.addWorksheet();
+    // Set headers of the file
+    const header = worksheet.addRow(uniqueCols);
+    header.eachCell((cell) => {
+      cell.font = {
+        color: { argb: 'FFFFFFFF' },
+      };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF008DC9' },
+      };
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' },
+      };
+      cell.alignment = {
+        horizontal: 'center',
+      };
+    });
+    try {
+      rows.forEach((row) => {
+        const dataRow: unknown[] = new Array(uniqueCols.length).fill('');
+        Object.keys(row).forEach((r) => {
+          const idx = uniqueCols.findIndex((col) => col === r);
+          dataRow[idx] = row[r];
+        });
+        worksheet.addRow(dataRow);
+      });
+    } catch (err) {
+      logger.error(err.message);
+    }
+    // Close workbook
+    if (workbook instanceof stream.xlsx.WorkbookWriter) {
+      workbook.commit().then(() => {
+        return 'aggregation-export.xlsx';
+      });
+    } else {
+      return workbook.xlsx.writeBuffer();
+    }
+  });
+};
+
+/**
  * Get list of fields for user template file
  *
  * @param roles list of roles
@@ -135,7 +241,9 @@ router.get('/form/records/:id', async (req, res) => {
       const filter = {
         form: req.params.id,
         archived: { $ne: true },
-        ...Record.find(accessibleBy(formAbility, 'read').Record).getFilter(),
+        ...RecordModel.find(
+          accessibleBy(formAbility, 'read').Record
+        ).getFilter(),
       };
       const columns = await getColumns(
         form.fields,
@@ -146,7 +254,7 @@ router.get('/form/records/:id', async (req, res) => {
       if (req.query.template) {
         return await templateBuilder(res, form.name, columns);
       } else {
-        const records = await Record.find(filter);
+        const records = await RecordModel.find(filter);
         const rows = await getRows(
           columns,
           getAccessibleFields(records, formAbility)
@@ -198,7 +306,7 @@ router.get('/form/records/:id/history', async (req, res) => {
       if (filters.toDate) filters.toDate.setDate(filters.toDate.getDate() + 1);
     }
 
-    const record: Record = await Record.findOne({
+    const record: RecordModel = await RecordModel.findOne({
       _id: req.params.id,
       archived: { $ne: true },
     })
@@ -340,7 +448,7 @@ router.get('/resource/records/:id', async (req, res) => {
       } else {
         let records = [];
         if (ability.can('read', 'Record')) {
-          records = await Record.find({
+          records = await RecordModel.find({
             resource: req.params.id,
             archived: { $ne: true },
           });
@@ -632,7 +740,7 @@ router.get('/file/:form/:blob/:record/:field', async (req, res) => {
     if (ability.cannot('read', form)) {
       // If user is not back office admin (any role assigned to the user is
       // considered as back office admin), check if has permission to see file field
-      const record: Record = await Record.findById(req.params.record);
+      const record: RecordModel = await RecordModel.findById(req.params.record);
       const recordAbility = await extendAbilityForRecords(
         req.context.user,
         form
@@ -659,6 +767,29 @@ router.get('/file/:form/:blob/:record/:field', async (req, res) => {
     logger.error(err.message, { stack: err.stack });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
+});
+
+/** Export aggregation results as xlsx */
+router.post('/aggregation/:resource/:id', async (req, res) => {
+  /** check if user has access to resource before allowing him to download */
+  const ability: AppAbility = req.context.user.ability;
+  const filters = Resource.find(accessibleBy(ability, 'read').Resource)
+    .where({
+      _id: {
+        $eq: new mongoose.Types.ObjectId(req.params.resource),
+      },
+    })
+    .getFilter();
+  const resource = await Resource.findOne(filters);
+
+  const aggregation = resource?.aggregations?.find((a: Aggregation) =>
+    a._id.equals(req.params.id)
+  );
+  if (!aggregation) {
+    return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+  }
+
+  const file = await buildAggregationDataExport(req, res);
 });
 
 export default router;
