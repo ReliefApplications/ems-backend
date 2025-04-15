@@ -789,7 +789,7 @@ router.post('/aggregation/:resource/:id', async (req, res) => {
     return res.status(404).send(i18next.t('common.errors.dataNotFound'));
   }
 
-  const file = await buildAggregationDataExport(req, res);
+  await buildAggregationDataExport(req, res);
 });
 
 export default router;
