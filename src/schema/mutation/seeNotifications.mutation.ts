@@ -1,17 +1,10 @@
-import {
-  GraphQLNonNull,
-  GraphQLID,
-  GraphQLError,
-  GraphQLList,
-  GraphQLBoolean,
-} from 'graphql';
+import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLList } from 'graphql';
 import { Notification } from '@models';
-import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@lib/logger';
-import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
+import { NotificationType } from '@schema/types';
 
 /** Arguments for the seeNotifications mutation */
 type SeeNotificationsArgs = {
@@ -23,7 +16,7 @@ type SeeNotificationsArgs = {
  * Throw an error if arguments are invalid.
  */
 export default {
-  type: GraphQLBoolean,
+  type: new GraphQLList(NotificationType),
   args: {
     ids: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
   },
@@ -31,8 +24,6 @@ export default {
     graphQLAuthCheck(context);
     try {
       const user = context.user;
-
-      const ability: AppAbility = context.user.ability;
       if (!args) {
         throw new GraphQLError(
           context.i18next.t(
@@ -40,15 +31,13 @@ export default {
           )
         );
       }
-      const filters = Notification.find(
-        accessibleBy(ability, 'update').Notification
-      )
-        .where({ _id: { $in: args.ids } })
-        .getFilter();
-      const result = await Notification.updateMany(filters, {
-        $push: { seenBy: user._id },
-      });
-      return result.acknowledged;
+      await Notification.updateMany(
+        { _id: { $in: args.ids } },
+        {
+          $addToSet: { seenBy: user._id },
+        }
+      );
+      return await Notification.find({ _id: { $in: args.ids } });
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {

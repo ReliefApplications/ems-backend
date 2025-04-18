@@ -13,6 +13,7 @@ import { get } from 'lodash';
 import customNotificationSend from './customNotificationSend';
 import { logger } from '@lib/logger';
 import { preprocess } from '@utils/email';
+import mongoose from 'mongoose';
 
 /**
  * Depending on  notification type,  for custom notification
@@ -141,10 +142,14 @@ export default async (
         for (const record of records) {
           if (record.data) {
             Object.keys(record.data).forEach(function (key) {
-              record.data[key] =
-                typeof record.data[key] == 'object'
-                  ? record.data[key]?.join(',')
-                  : record.data[key];
+              const value = record.data[key];
+              if (Array.isArray(value)) {
+                record.data[key] = value.join(',');
+              } else if (value instanceof Date) {
+                record.data[key] = value.toISOString();
+              } else {
+                record.data[key] = value;
+              }
             });
             recordListArr.push({ ...record.data, id: record._id });
             if (redirectToRecords) {
@@ -160,7 +165,7 @@ export default async (
           for (const record of recordListArr) {
             const index = groupValArr.indexOf(record[field]);
             if (index == -1) {
-              groupValArr.push(record[field]);
+              groupValArr.push(record[field].split(','));
               delete record[field];
               groupRecordArr.push([record]);
             } else {
@@ -181,11 +186,20 @@ export default async (
             }
             if (!!userField) {
               // If using userField, get the user with the id saved in the record data
-              const userDetail = await User.findById(groupValArr[d]);
-              if (!!userDetail && !!userDetail.username) {
+              const userDetails = await User.find(
+                {
+                  _id: {
+                    $in: groupValArr[d].map(
+                      (id: string) => new mongoose.Types.ObjectId(id)
+                    ),
+                  },
+                },
+                'username id'
+              );
+              if (userDetails.length > 0) {
                 if (notificationType === customNotificationType.email) {
                   // If email type, should get user email
-                  recipients = [userDetail.username];
+                  recipients = userDetails.map((details) => details.username);
                   await customNotificationSend(
                     template,
                     recipients,
@@ -194,7 +208,7 @@ export default async (
                   sent = true;
                 } else {
                   // If notification type, should get user id
-                  recipients = userDetail.id;
+                  recipients = userDetails.map((details) => details.id);
                   await customNotificationSend(
                     template,
                     recipients,

@@ -47,14 +47,19 @@ export default {
       const afterCursor = args.afterCursor;
       const cursorFilters = afterCursor
         ? {
-            _id: {
+            createdAt: {
               $lt: decodeCursor(afterCursor),
             },
           }
         : {};
 
       let items: any[] = await Notification.find({
-        $or: [{ $and: [cursorFilters, ...filters] }, { user: context.user }],
+        $and: [
+          {
+            $or: [{ $and: filters }, { user: context.user._id }],
+          },
+          cursorFilters,
+        ],
       })
         .sort({ createdAt: -1 })
         .limit(first + 1);
@@ -64,7 +69,7 @@ export default {
         items = items.slice(0, items.length - 1);
       }
       const edges = items.map((r) => ({
-        cursor: encodeCursor(r.id.toString()),
+        cursor: encodeCursor(r.createdAt.getTime().toString()),
         node: r,
       }));
       return {

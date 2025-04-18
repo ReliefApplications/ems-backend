@@ -162,6 +162,7 @@ class SafeServer {
               trigger[type] &&
               isEqual(trigger.resource, record.resource)
           );
+          console.log(triggers, application);
           for (const trigger of triggers) {
             // For each triggers, get trigger filter
             const mongooseFilter = getTriggerFilter(trigger, resource);

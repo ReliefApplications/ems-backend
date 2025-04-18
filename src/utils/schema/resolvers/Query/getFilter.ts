@@ -2,6 +2,7 @@ import mongoose, { Types } from 'mongoose';
 import { getDateForMongo } from '@utils/filter/getDateForMongo';
 import { getTimeForMongo } from '@utils/filter/getTimeForMongo';
 import { Context } from '@server/apollo/context';
+import { isArray } from 'lodash';
 
 /** The default fields */
 const DEFAULT_FIELDS = [
@@ -422,7 +423,11 @@ const buildMongoFilter = (
       case 'users': {
         const meID = context?.user?._id.toString();
         return getFilterForArrays(
-          (value ?? []).map((x: string) => (x === 'me' ? meID : x))
+          isArray(value)
+            ? (value ?? []).map((x: string) => (x === 'me' ? meID : x))
+            : value === 'me'
+            ? meID
+            : value
         );
       }
       case 'owner':

@@ -2,10 +2,10 @@ import {
   customNotificationRecipientsType,
   customNotificationType,
 } from '@const/enumTypes';
-import { Channel, Notification } from '@models';
+import { Channel, CustomNotification, Notification, Template } from '@models';
 import pubsub from '@server/pubsub';
-import { sendEmail } from '@utils/email';
-import { get } from 'lodash';
+import { Address, sendEmail } from '@utils/email';
+import { get, isArray } from 'lodash';
 
 /**
  * Send email for custom notification
@@ -15,9 +15,9 @@ import { get } from 'lodash';
  * @param notification custom notification
  */
 const customNotificationMailSend = async (
-  template,
-  recipients,
-  notification
+  template: Template,
+  recipients: Address[],
+  notification: CustomNotification
 ) => {
   if (!!template && recipients.length > 0) {
     await sendEmail({
@@ -44,10 +44,10 @@ const customNotificationMailSend = async (
  * @param recordsIds records ids list (if any)
  */
 const notificationSend = async (
-  template,
-  recipients,
-  notification,
-  recordsIds
+  template: Template,
+  recipients: string | string[],
+  notification: CustomNotification,
+  recordsIds: string[]
 ) => {
   if (!!template && !!recipients) {
     const redirect =
@@ -66,7 +66,7 @@ const notificationSend = async (
       const channel = await Channel.findById(recipients[0]);
       if (channel) {
         const notificationInstance = new Notification({
-          action: template.content.title,
+          action: template.content.title + ' - EMAIL, is that you?',
           content: template.content.description,
           //createdAt: new Date(),
           channel: channel.id,
@@ -80,18 +80,26 @@ const notificationSend = async (
     } else if (
       notification.recipientsType === customNotificationRecipientsType.userField
     ) {
-      // Send notification to a user
-      const notificationInstance = new Notification({
-        action: template.content.title,
-        content: template.content.description,
-        //createdAt: new Date(),
-        user: recipients,
-        seenBy: [],
-        redirect,
-      });
-      await notificationInstance.save();
       const publisher = await pubsub();
-      publisher.publish(recipients, { notificationInstance });
+      const sendToUser = async (recipient: string) => {
+        // Send notification to a user
+        const notificationInstance = new Notification({
+          action: template.content.title + ' - THIS IS A TEST',
+          content: template.content.description,
+          //createdAt: new Date(),
+          user: recipient,
+          seenBy: [],
+          redirect,
+        });
+        await notificationInstance.save();
+        publisher.publish(recipient, { notificationInstance });
+      };
+
+      if (isArray(recipients))
+        recipients.forEach((recipient) => sendToUser(recipient));
+      else {
+        sendToUser(recipients);
+      }
     }
   } else {
     throw new Error(
@@ -110,19 +118,28 @@ const notificationSend = async (
  * @param recordsIds records ids list
  */
 export default async (
-  template,
-  recipients,
-  notification,
+  template: Template,
+  recipients: Address[] | string,
+  notification: CustomNotification,
   recordsIds?: string[]
 ) => {
   if (!!template && recipients.length > 0) {
     const notificationType = get(notification, 'notificationType', 'email');
     if (notificationType === customNotificationType.email) {
       // If custom notification type is email
-      await customNotificationMailSend(template, recipients, notification);
+      await customNotificationMailSend(
+        template,
+        recipients as Address[],
+        notification
+      );
     } else {
       // If custom notification type is notification
-      await notificationSend(template, recipients, notification, recordsIds);
+      await notificationSend(
+        template,
+        recipients as string,
+        notification,
+        recordsIds
+      );
     }
   } else {
     throw new Error(

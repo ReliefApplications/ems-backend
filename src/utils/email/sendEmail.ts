@@ -50,7 +50,7 @@ const email = new Email({
 });
 
 /** Address type for nodemailer */
-type Address = string | { name: string; address: string };
+export type Address = string | { name: string; address: string };
 
 /**
  * Send an email from Oort. It's only a wrapper of the Email.send function,
