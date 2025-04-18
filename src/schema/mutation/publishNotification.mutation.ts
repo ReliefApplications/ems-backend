@@ -41,7 +41,7 @@ export default {
           )
         );
       const notification = new Notification({
-        action: args.action + 'you traitor',
+        action: args.action,
         content: args.content,
         //createdAt: new Date(),
         channel: args.channel,

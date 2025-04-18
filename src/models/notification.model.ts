@@ -61,15 +61,6 @@ notificationSchema.pre('validate', function (next) {
   next();
 });
 
-notificationSchema.pre('save', function (next) {
-  console.trace('Saving a notification', this._id);
-  next();
-});
-
-notificationSchema.post('save', function (doc) {
-  console.log(`✅ Notification ${doc._id} saved successfully`);
-});
-
 notificationSchema.plugin(accessibleRecordsPlugin);
 
 /** Mongoose notification model definition */

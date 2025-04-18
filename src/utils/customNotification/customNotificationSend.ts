@@ -66,7 +66,7 @@ const notificationSend = async (
       const channel = await Channel.findById(recipients[0]);
       if (channel) {
         const notificationInstance = new Notification({
-          action: template.content.title + ' - EMAIL, is that you?',
+          action: template.content.title,
           content: template.content.description,
           //createdAt: new Date(),
           channel: channel.id,
@@ -84,7 +84,7 @@ const notificationSend = async (
       const sendToUser = async (recipient: string) => {
         // Send notification to a user
         const notificationInstance = new Notification({
-          action: template.content.title + ' - THIS IS A TEST',
+          action: template.content.title,
           content: template.content.description,
           //createdAt: new Date(),
           user: recipient,
