@@ -15,7 +15,7 @@ module.exports = {
       list: {
         apiConfiguration: '613b5af515e8c265c982081c',
         endpoint: '/referenceData/items/SystemPosition',
-        path: '$.value[?(@.ApplicationId==1 || @.ApplicationId==5)]',
+        path: '$.value[?(@.ApplicationId==1 || @.ApplicationId==9)]',
         id: 'Id',
         title: 'Name',
         description: 'Description',
