@@ -141,6 +141,17 @@ export const RecordType = new GraphQLObjectType({
         })
       ),
     },
+    canUpdate: {
+      type: GraphQLBoolean,
+      async resolve(parent, args, context) {
+        const parentForm: Form = await Form.findById(
+          parent.form,
+          'fields permissions resource structure'
+        );
+        const ability = await extendAbilityForRecords(context.user, parentForm);
+        return ability.can('update', parent);
+      },
+    },
   }),
 });
 
