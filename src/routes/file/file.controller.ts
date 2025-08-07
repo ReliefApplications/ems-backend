@@ -14,7 +14,7 @@ export default class FileController extends BaseController {
   public routes(): RouteDefinition[] {
     return [
       {
-        path: '/drive/:driveId/item/:itemId/associated-record',
+        path: '/item/:itemId/associated-record',
         method: 'get',
         handler: this.findAssociatedRecordId.bind(this),
       },
@@ -35,7 +35,7 @@ export default class FileController extends BaseController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const { driveId, itemId } = req.params;
+      const { itemId } = req.params;
       const { resourceId } = req.query;
       if (!resourceId && typeof resourceId !== 'string') {
         res.status(400).send({ error: 'Resource ID is required' });
@@ -70,7 +70,7 @@ export default class FileController extends BaseController {
         [`data.${field.name}`]: {
           $elemMatch: {
             'content.itemId': { $regex: new RegExp(`^${itemId}$`, 'i') },
-            'content.driveId': { $regex: new RegExp(`^${driveId}$`, 'i') },
+            // 'content.driveId': { $regex: new RegExp(`^${driveId}$`, 'i') },
           },
         },
       }));
