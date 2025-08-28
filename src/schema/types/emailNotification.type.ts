@@ -50,6 +50,18 @@ export const DatasetType = new GraphQLObjectType({
 });
 
 /**
+ * Schedule type - used to define the schedule applied to an email notification
+ */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const ScheduleType = new GraphQLObjectType({
+  name: 'Schedule',
+  fields: () => ({
+    scheduleEnable: { type: GraphQLBoolean },
+    cronValue: { type: GraphQLString },
+  }),
+});
+
+/**
  * GraphQL EmailNotification type.
  */
 export const EmailNotificationType = new GraphQLObjectType({
@@ -64,7 +76,7 @@ export const EmailNotificationType = new GraphQLObjectType({
     name: { type: GraphQLString },
     applicationId: { type: GraphQLID },
     createdBy: { type: GraphQLJSON },
-    schedule: { type: GraphQLJSON },
+    schedule: { type: ScheduleType },
     notificationType: { type: GraphQLString },
     datasets: { type: new GraphQLList(DatasetType) },
     emailLayout: { type: GraphQLID },
