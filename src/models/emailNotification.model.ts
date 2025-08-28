@@ -117,7 +117,8 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
       required: true,
     },
     schedule: {
-      type: String,
+      scheduleEnabled: { type: mongoose.Schema.Types.Boolean },
+      cronValue: String,
     },
     applicationId: {
       type: mongoose.Schema.Types.ObjectId,
