@@ -13,7 +13,10 @@ import extendAbilityForApplications from '@security/extendAbilityForApplication'
 import { AppAbility } from '@security/defineUserAbility';
 import { EmailNotificationReturn } from '@schema/types/emailNotification.type';
 import { cloneDeep } from 'lodash';
-import { createCronJob } from '@server/emailNotificationScheduler';
+import {
+  createCronJob,
+  deleteCronJob,
+} from '@server/emailNotificationScheduler';
 
 /**
  * Interface for the arguments required to update a custom notification.
@@ -129,12 +132,20 @@ export default {
 
         if (
           existingNotification &&
-          existingNotification.schedule !== args.notification.schedule
+          existingNotification.schedule.cronValue !==
+            args.notification.schedule.cronValue
         ) {
-          console.log(
+          logger.info(
             `Schedule updated from "${existingNotification.schedule.cronValue}" to "${args.notification.schedule.cronValue}"`
           );
-          await createCronJob(args.notification.schedule.cronValue, args.id);
+          createCronJob(args.notification.schedule.cronValue, args.id);
+        } else if (
+          existingNotification &&
+          existingNotification.schedule.scheduleEnabled &&
+          !args.notification.schedule.scheduleEnabled
+        ) {
+          deleteCronJob(args.id);
+          logger.info(`Removed cron job from ${args.id}`);
         }
 
         const updatedData = await EmailNotification.findByIdAndUpdate(
