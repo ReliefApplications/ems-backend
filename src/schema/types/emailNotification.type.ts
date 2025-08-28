@@ -64,7 +64,7 @@ export const EmailNotificationType = new GraphQLObjectType({
     name: { type: GraphQLString },
     applicationId: { type: GraphQLID },
     createdBy: { type: GraphQLJSON },
-    schedule: { type: GraphQLString },
+    schedule: { type: GraphQLJSON },
     notificationType: { type: GraphQLString },
     datasets: { type: new GraphQLList(DatasetType) },
     emailLayout: { type: GraphQLID },

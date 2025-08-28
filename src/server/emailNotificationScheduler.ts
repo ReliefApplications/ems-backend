@@ -84,15 +84,17 @@ export const deleteCronJob = (notificationId) => {
 export const emailNotificationScheduler = async () => {
   try {
     const emailNotifications = await EmailNotification.find({
-      schedule: { $exists: true, $nin: ['', null] },
+      'schedule.cronValue': { $exists: true, $nin: ['', null] },
       isDeleted: { $ne: 1 },
     }).exec();
 
     emailNotifications.forEach((email) => {
-      const schedule = email.schedule;
-      const configId = email._id;
+      if (email.schedule.scheduleEnabled) {
+        const schedule = email.schedule.cronValue;
+        const configId = email._id;
 
-      createCronJob(schedule, configId);
+        createCronJob(schedule, configId);
+      }
     });
   } catch (error) {
     console.error('Error fetching scheduled emails:', error);
