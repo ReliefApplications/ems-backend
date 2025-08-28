@@ -110,8 +110,14 @@ export default {
       await emailNotification.save();
 
       // If schedule is provided, create cron job
-      if (emailNotification.schedule.length) {
-        createCronJob(emailNotification.schedule, emailNotification._id);
+      if (
+        emailNotification.schedule.scheduleEnabled &&
+        emailNotification.schedule.cronValue.length
+      ) {
+        createCronJob(
+          emailNotification.schedule.cronValue,
+          emailNotification._id
+        );
       }
 
       const response = emailNotification as EmailNotificationReturn;

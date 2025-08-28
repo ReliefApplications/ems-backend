@@ -132,9 +132,9 @@ export default {
           existingNotification.schedule !== args.notification.schedule
         ) {
           console.log(
-            `Schedule updated from "${existingNotification.schedule}" to "${args.notification.schedule}"`
+            `Schedule updated from "${existingNotification.schedule.cronValue}" to "${args.notification.schedule.cronValue}"`
           );
-          await createCronJob(args.notification.schedule, args.id);
+          await createCronJob(args.notification.schedule.cronValue, args.id);
         }
 
         const updatedData = await EmailNotification.findByIdAndUpdate(
