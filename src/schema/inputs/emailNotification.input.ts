@@ -101,6 +101,18 @@ export const EmailNotificationFileInputType = new GraphQLInputObjectType({
 });
 
 /**
+ * Schedule type - used to define the schedule applied to an email notification
+ */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const EmailNotificationScheduleInputType = new GraphQLInputObjectType({
+  name: 'EmailNotificationScheduleInputType',
+  fields: () => ({
+    scheduleEnabled: { type: GraphQLBoolean },
+    cronValue: { type: GraphQLString },
+  }),
+});
+
+/**
  * Input type for email notification attachment details.
  */
 export const EmailNotificationAttachmentInputType = new GraphQLInputObjectType({
@@ -117,7 +129,7 @@ export const EmailNotificationInputType = new GraphQLInputObjectType({
   name: 'EmailNotificationInputType',
   fields: () => ({
     name: { type: GraphQLString },
-    schedule: { type: GraphQLString },
+    schedule: { type: EmailNotificationScheduleInputType },
     applicationId: { type: new GraphQLNonNull(GraphQLID) },
     notificationType: { type: GraphQLString },
     datasets: { type: new GraphQLList(DatasetInputType) },
