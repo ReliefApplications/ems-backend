@@ -1,4 +1,7 @@
-import { EmailNotificationAttachment } from '@models';
+import {
+  EmailNotificationAttachment,
+  EmailNotificationSchedule,
+} from '@models';
 import {
   GraphQLInputObjectType,
   GraphQLString,
@@ -14,7 +17,7 @@ import { Types } from 'mongoose';
 /** Custom Notification type for queries/mutations argument */
 export type EmailNotificationArgs = {
   name: string;
-  schedule: string;
+  schedule: EmailNotificationSchedule;
   notificationType: string;
   applicationId: string | Types.ObjectId;
   datasets: any[];
