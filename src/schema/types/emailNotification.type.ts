@@ -56,7 +56,7 @@ export const DatasetType = new GraphQLObjectType({
 export const ScheduleType = new GraphQLObjectType({
   name: 'Schedule',
   fields: () => ({
-    scheduleEnable: { type: GraphQLBoolean },
+    scheduleEnabled: { type: GraphQLBoolean },
     cronValue: { type: GraphQLString },
   }),
 });
