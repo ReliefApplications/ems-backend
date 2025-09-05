@@ -1,3 +1,10 @@
+# [2.16.0-rc.1](https://github.com/ReliefApplications/ems-backend/compare/v2.15.0...v2.16.0-rc.1) (2025-09-05)
+
+
+### Features
+
+* add clone record action in dashboards ([#1208](https://github.com/ReliefApplications/ems-backend/issues/1208)) ([43559db](https://github.com/ReliefApplications/ems-backend/commit/43559db1e671c1ff4fbcad7439120327d99adf13)), closes [AB#118658](https://github.com/AB/issues/118658)
+
 # [2.15.0-rc.2](https://github.com/ReliefApplications/ems-backend/compare/v2.15.0-rc.1...v2.15.0-rc.2) (2025-09-05)
 
 
