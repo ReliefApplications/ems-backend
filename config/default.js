@@ -40,6 +40,12 @@ module.exports = {
     serverless: {
       url: '',
       key: '',
+      auth: {
+        accessTokenUrl: '',
+        clientId: '',
+        clientSecret: '',
+        csScope: '',
+      },
     },
     // Redis channel on which the email function publishes its email events.
     eventsChannel: 'email-events',
