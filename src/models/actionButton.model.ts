@@ -29,6 +29,11 @@ export interface Button {
     template?: string;
     autoReload?: boolean;
   };
+  // Clone Record
+  cloneRecord?: {
+    template?: string;
+    autoReload?: boolean;
+  };
   // Add Record
   addRecord?: {
     resource?: string;
@@ -86,6 +91,17 @@ export const buttonSchema = new Schema<Button>(
     href: String,
     openInNewTab: Boolean,
     previousPage: Boolean,
+    // Clone Record
+    cloneRecord: {
+      type: new Schema(
+        {
+          template: String,
+          autoReload: Boolean,
+        },
+        { _id: false }
+      ),
+      default: null,
+    },
     // Edit Record
     editRecord: {
       type: new Schema(
