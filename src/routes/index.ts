@@ -15,6 +15,7 @@ import config from 'config';
 import { RouteDefinition } from 'types/route-definition';
 import { logger } from '@services/logger.service';
 import ActivityController from './activity/activity.controller';
+import FileController from './file/file.controller';
 
 /**
  *
@@ -82,7 +83,7 @@ export default function registerRoutes(): Router | undefined {
     router.use('/notification', notification);
 
     // Define an array of controller objects
-    const controllers = [new ActivityController()];
+    const controllers = [new ActivityController(), new FileController()];
 
     // Dynamically register routes for each controller
     controllers.forEach((controller) => {

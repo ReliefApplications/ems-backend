@@ -1,3 +1,10 @@
+# [2.15.0-rc.1](https://github.com/ReliefApplications/ems-backend/compare/v2.14.0...v2.15.0-rc.1) (2025-08-29)
+
+
+### Features
+
+* file explorer widget ([ed7b3fa](https://github.com/ReliefApplications/ems-backend/commit/ed7b3fa899199fcd5035265ae63a27eb734e3f12)), closes [Ab#113709](https://github.com/Ab/issues/113709)
+
 # [2.14.0-rc.1](https://github.com/ReliefApplications/ems-backend/compare/v2.13.0...v2.14.0-rc.1) (2025-03-17)
 
 
