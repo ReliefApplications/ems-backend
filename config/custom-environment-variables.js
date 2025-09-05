@@ -39,6 +39,12 @@ module.exports = {
     serverless: {
       url: 'MAIL_SERVERLESS_URL',
       key: 'MAIL_SERVERLESS_KEY',
+      auth: {
+        accessTokenUrl: 'ACCESS_TOKEN_URL',
+        clientId: 'CLIENT_ID',
+        clientSecret: 'CLIENT_SECRET',
+        csScope: 'CS_SCOPE',
+      },
     },
   },
   auth: {
