@@ -55,6 +55,16 @@ const ActionButtonInputType = new GraphQLInputObjectType({
         },
       }),
     },
+    // Clone Record
+    cloneRecord: {
+      type: new GraphQLInputObjectType({
+        name: 'CloneRecordInputType',
+        fields: {
+          template: { type: GraphQLString },
+          autoReload: { type: GraphQLBoolean },
+        },
+      }),
+    },
     // Add Record
     addRecord: {
       type: new GraphQLInputObjectType({
