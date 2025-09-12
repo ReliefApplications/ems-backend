@@ -43,7 +43,7 @@ export const createCronJob = (schedule, configId) => {
         if (authorization) headers.Authorization = `Bearer ${authorization}`;
         if (accesstoken) headers.accesstoken = accesstoken;
         await axios.get(
-          `${config.get('email.serverless.url')}/api/send-email/${id}`,
+          `${config.get('email.serverless.url')}/send-email/${id}`,
           {
             headers,
             params: {
