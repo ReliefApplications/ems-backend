@@ -114,10 +114,7 @@ export default {
         emailNotification.schedule.scheduleEnabled &&
         emailNotification.schedule.cronValue.length
       ) {
-        createCronJob(
-          emailNotification.schedule.cronValue,
-          emailNotification._id
-        );
+        createCronJob(emailNotification);
       }
 
       const response = emailNotification as EmailNotificationReturn;

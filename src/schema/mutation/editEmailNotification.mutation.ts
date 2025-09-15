@@ -128,39 +128,25 @@ export default {
             context.i18next.t('common.errors.permissionNotGranted')
           );
         }
-        const existingNotification = await EmailNotification.findById(args.id);
-
-        if (existingNotification) {
-          const prevEnabled = !!existingNotification.schedule?.scheduleEnabled;
-          const prevCron = existingNotification.schedule?.cronValue || '';
-          const nextEnabled = !!args.notification.schedule?.scheduleEnabled;
-          const nextCron = args.notification.schedule?.cronValue || '';
-
-          if (args.notification.isDeleted === 1) {
-            deleteCronJob(args.id);
-            logger.info(`Removed cron job (deleted) for ${args.id}`);
-          } else if (nextEnabled && nextCron) {
-            if (!prevEnabled || prevCron !== nextCron) {
-              logger.info(
-                `Scheduling/Updating cron job for ${args.id} (${prevCron} -> ${nextCron})`
-              );
-              createCronJob(nextCron, args.id);
-            }
-          } else if (prevEnabled && !nextEnabled) {
-            deleteCronJob(args.id);
-            logger.info(`Removed cron job (disabled) for ${args.id}`);
-          } else if (!nextCron) {
-            // Cron cleared
-            deleteCronJob(args.id);
-            logger.info(`Removed cron job (cron cleared) for ${args.id}`);
-          }
-        }
-
         const updatedData = await EmailNotification.findByIdAndUpdate(
           args.id,
           { $set: updateFields },
           { new: true } // Return the modified document
         );
+        // Schedule/unschedule based on updated document
+        if (updatedData) {
+          if (
+            updatedData.isDeleted === 1 ||
+            !updatedData.schedule?.scheduleEnabled ||
+            !updatedData.schedule?.cronValue
+          ) {
+            deleteCronJob(args.id);
+            logger.info(`Removed cron job for ${args.id}`);
+          } else {
+            createCronJob(updatedData);
+            logger.info(`Scheduled/Updated cron job for ${args.id}`);
+          }
+        }
         const response = updatedData as EmailNotificationReturn;
         response.userSubscribed = userIsSubscribed;
         return response;

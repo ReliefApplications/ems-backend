@@ -1,4 +1,5 @@
 import { EmailNotification } from '@models';
+import type { EmailNotification as EmailNotificationDoc } from '@models/emailNotification.model';
 import { logger } from '@services/logger.service';
 import axios from 'axios';
 import config from 'config';
@@ -12,21 +13,19 @@ import { getAzureFunctionTokens } from '@utils/notification/schedulerAuth';
 const scheduledJobs: Record<string, CronJob> = {};
 
 /**
- * Creates and manages cron job for executing scheduled tasks.
+ * Creates and manages cron job for executing scheduled tasks for a notification.
  *
- * @param schedule - cron schedule expression.
- * @param configId - emailNotification Id.
+ * @param notification email notification document (includes schedule and datasets)
  */
-export const createCronJob = (schedule, configId) => {
-  // Validate the cron schedule before proceeding
+export const createCronJob = (notification: EmailNotificationDoc) => {
+  const id = String(notification._id);
+  const schedule = notification?.schedule?.cronValue || '';
+  const enabled = !!notification?.schedule?.scheduleEnabled;
+  if (!enabled || !schedule) return;
   if (!cronValidator.isValidCron(schedule)) {
-    logger.info(
-      `Invalid cron schedule provided for ID: ${configId} -> ${schedule}`
-    );
+    logger.info(`Invalid cron schedule provided for ID: ${id} -> ${schedule}`);
     return;
   }
-  // If cronjob exists, stop and remove before creating new one
-  const id = String(configId);
   if (scheduledJobs[id]) {
     scheduledJobs[id].stop();
     delete scheduledJobs[id];
@@ -42,8 +41,15 @@ export const createCronJob = (schedule, configId) => {
         };
         if (authorization) headers.Authorization = `Bearer ${authorization}`;
         if (accesstoken) headers.accesstoken = accesstoken;
+        // Choose function based on whether any dataset sends individual emails
+        const hasIndividual = Array.isArray(notification?.datasets)
+          ? notification.datasets.some((d: any) => d?.individualEmail === true)
+          : false;
+        const functionName = hasIndividual
+          ? 'send-individual-email'
+          : 'send-email';
         await axios.get(
-          `${config.get('email.serverless.url')}/send-email/${id}`,
+          `${config.get('email.serverless.url')}/${functionName}/${id}`,
           {
             headers,
             params: {
@@ -100,7 +106,7 @@ export const emailNotificationScheduler = async () => {
 
     emailNotifications.forEach((email) => {
       if (email.schedule?.scheduleEnabled && email.schedule?.cronValue) {
-        createCronJob(email.schedule.cronValue, email._id.toString());
+        createCronJob(email);
       }
     });
   } catch (error) {
