@@ -48,15 +48,20 @@ export const createCronJob = (notification: EmailNotificationDoc) => {
         const functionName = hasIndividual
           ? 'send-individual-email'
           : 'send-email';
-        await axios.get(
-          `${config.get('email.serverless.url')}/${functionName}/${id}`,
-          {
-            headers,
-            params: {
-              code: config.get('email.serverless.key'),
-            },
-          }
-        );
+        const requestConfig = {
+          headers,
+          params: {
+            code: config.get('email.serverless.key'),
+          },
+        };
+        const url = `${config.get(
+          'email.serverless.url'
+        )}/${functionName}/${id}`;
+        if (functionName === 'send-individual-email') {
+          await axios.post(url, {}, requestConfig);
+        } else {
+          await axios.get(url, requestConfig);
+        }
 
         await EmailNotification.findByIdAndUpdate(id, {
           $set: { lastExecution: new Date(), lastExecutionStatus: 'success' },
