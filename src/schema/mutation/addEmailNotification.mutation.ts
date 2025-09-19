@@ -12,6 +12,7 @@ import {
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { cloneDeep } from 'lodash';
 import { createCronJob } from '@server/emailNotificationScheduler';
+import { isValidCron } from 'cron-validator';
 
 /** Arguments for the addCustomNotification mutation */
 type AddCustomNotificationArgs = {
@@ -101,6 +102,18 @@ export default {
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
+      }
+
+      const schedule = args.notification.schedule;
+      if (schedule?.scheduleEnabled) {
+        const cron = schedule.cronValue?.trim?.() ?? '';
+        if (!cron || !isValidCron(cron)) {
+          throw new GraphQLError(
+            context.i18next.t(
+              'mutations.emailNotification.add.errors.invalidCron'
+            )
+          );
+        }
       }
 
       update.datasets = update.datasets.filter(

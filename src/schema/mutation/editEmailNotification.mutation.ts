@@ -17,6 +17,7 @@ import {
   createCronJob,
   deleteCronJob,
 } from '@server/emailNotificationScheduler';
+import { isValidCron } from 'cron-validator';
 
 /**
  * Interface for the arguments required to update a custom notification.
@@ -127,6 +128,18 @@ export default {
           throw new GraphQLError(
             context.i18next.t('common.errors.permissionNotGranted')
           );
+        }
+
+        const schedule = args.notification.schedule;
+        if (schedule?.scheduleEnabled) {
+          const cron = schedule.cronValue?.trim?.() ?? '';
+          if (!cron || !isValidCron(cron)) {
+            throw new GraphQLError(
+              context.i18next.t(
+                'mutations.emailNotification.add.errors.invalidCron'
+              )
+            );
+          }
         }
         const updatedData = await EmailNotification.findByIdAndUpdate(
           args.id,
