@@ -1,4 +1,4 @@
-FROM node:18-alpine as base
+FROM node:22-alpine AS base
 
 WORKDIR /home/node/app
 
@@ -10,7 +10,7 @@ COPY . .
 
 RUN mkdir -p files
 
-FROM base as production
+FROM base AS production
 
 ENV NODE_PATH=./build
 ENV NODE_CONFIG_DIR=/home/node/app/config
