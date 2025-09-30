@@ -13,7 +13,11 @@ export default () =>
   async (_, { id, data }, context) => {
     graphQLAuthCheck(context);
     try {
-      const record = await Record.findOne({ _id: id, archived: { $ne: true } });
+      const record = await Record.findOne({
+        _id: id,
+        archived: { $ne: true },
+        draft: { $ne: true },
+      });
       if (data) {
         record.data = data;
       }

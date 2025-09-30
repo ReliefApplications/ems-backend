@@ -1,5 +1,6 @@
 import { SafeServer } from './server';
 import mongoose from 'mongoose';
+// import { Record } from '@models';
 import pullJobScheduler from './server/pullJobScheduler';
 import customNotificationScheduler from './server/customNotificationScheduler';
 import { startDatabase } from './server/database';
@@ -45,8 +46,16 @@ const launchServer = async () => {
 };
 
 startDatabase();
-mongoose.connection.once('open', () => {
+mongoose.connection.once('open', async () => {
   logger.log({ level: 'info', message: '📶 Connected to database' });
+  // try {
+  //   const collection = mongoose.connection.db.collection('records');
+  //   await collection.dropIndex('incrementalId_1_resource_1').catch(() => {});
+  //   await Record.syncIndexes();
+  //   logger.info('✅ Record indexes synced');
+  // } catch (e) {
+  //   logger.warn(`⚠️ Could not auto-sync Record indexes: ${e?.message || e}`);
+  // }
   launchServer();
   // subscriberSafe();
   pullJobScheduler();

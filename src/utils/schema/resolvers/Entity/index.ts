@@ -60,7 +60,11 @@ export const getEntityResolver = (
             // Else, do db query
             const recordId = get(entity.data, fieldName.slice(0, -3), null);
             const record = recordId
-              ? await Record.findOne({ _id: recordId, archived: { $ne: true } })
+              ? await Record.findOne({
+                  _id: recordId,
+                  archived: { $ne: true },
+                  draft: { $ne: true },
+                })
               : null;
             return record;
           },
@@ -110,7 +114,7 @@ export const getEntityResolver = (
                 Object.assign(
                   mongooseFilter,
                   { _id: { $in: recordIds } },
-                  { archived: { $ne: true } }
+                  { archived: { $ne: true }, draft: { $ne: true } }
                 );
                 return await Record.find(mongooseFilter)
                   .sort([[getSortField(args.sortField), args.sortOrder]])
@@ -279,7 +283,7 @@ export const getEntityResolver = (
                         { form: ids[entityName] },
                       ],
                     },
-                    { archived: { $ne: true } }
+                    { archived: { $ne: true }, draft: { $ne: true } }
                   );
                   mongooseFilter[`data.${x.name}`] = entity.id.toString();
                   const records = await Record.find(mongooseFilter)
