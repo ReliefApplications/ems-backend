@@ -183,7 +183,10 @@ export const ResourceType = new GraphQLObjectType({
         if (args.archived) {
           Object.assign(mongooseFilter, { archived: true });
         } else {
-          Object.assign(mongooseFilter, { archived: { $ne: true } });
+          Object.assign(mongooseFilter, {
+            archived: { $ne: true },
+            draft: { $ne: true },
+          });
         }
         if (args.filter) {
           mongooseFilter = {
@@ -244,6 +247,7 @@ export const ResourceType = new GraphQLObjectType({
         const count = await Record.find({
           resource: parent.id,
           archived: { $ne: true },
+          draft: { $ne: true },
           ...accessibleBy(ability, 'read').Record,
         }).count();
         return count;

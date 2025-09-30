@@ -1,4 +1,9 @@
-import { GraphQLID, GraphQLNonNull, GraphQLError } from 'graphql';
+import {
+  GraphQLID,
+  GraphQLNonNull,
+  GraphQLError,
+  GraphQLBoolean,
+} from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { RecordType } from '../types';
 import { Form, Record, Notification, Channel } from '@models';
@@ -15,6 +20,7 @@ import { Context } from '@server/apollo/context';
 type AddRecordArgs = {
   form?: string | Types.ObjectId;
   data: any;
+  draft?: boolean;
 };
 
 /**
@@ -27,6 +33,7 @@ export default {
   args: {
     form: { type: GraphQLID },
     data: { type: new GraphQLNonNull(GraphQLJSON) },
+    draft: { type: GraphQLBoolean },
   },
   async resolve(parent, args: AddRecordArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -48,6 +55,7 @@ export default {
 
       // Check unicity of record
       if (
+        !args.draft &&
         form.permissions.recordsUnicity &&
         form.permissions.recordsUnicity.length > 0 &&
         form.permissions.recordsUnicity[0].role
@@ -60,7 +68,7 @@ export default {
         if (unicityFilters.length > 0) {
           const uniqueRecordAlreadyExists = await Record.exists({
             $and: [
-              { form: form._id, archived: { $ne: true } },
+              { form: form._id, archived: { $ne: true }, draft: { $ne: true } },
               { $or: unicityFilters },
             ],
           });
@@ -75,9 +83,9 @@ export default {
       // Create the record instance
       transformRecord(args.data, form.fields);
       const record = new Record({
-        incrementalId: await getNextId(
-          String(form.resource ? form.resource : args.form)
-        ),
+        incrementalId: args.draft
+          ? null
+          : await getNextId(String(form.resource ? form.resource : args.form)),
         form: args.form,
         //createdAt: new Date(),
         //modifiedAt: new Date(),
@@ -109,26 +117,31 @@ export default {
           _id: form._id,
           name: form.name,
         },
+        draft: args.draft || false,
       });
       // Update the createdBy property if we pass some owner data
       const ownership = getOwnership(form.fields, args.data);
       if (ownership) {
         record.createdBy = { ...record.createdBy, ...ownership };
       }
-      // send notifications to channel
-      const channel = await Channel.findOne({ form: form._id });
-      if (channel) {
-        const notification = new Notification({
-          action: `New record - ${form.name}`,
-          content: record,
-          //createdAt: new Date(),
-          channel: channel.id,
-          seenBy: [],
-        });
-        await notification.save();
-        const publisher = await pubsub();
-        publisher.publish(channel.id, { notification });
+
+      // send notifications to channel (skip for draft records)
+      if (!args.draft) {
+        const channel = await Channel.findOne({ form: form._id });
+        if (channel) {
+          const notification = new Notification({
+            action: `New record - ${form.name}`,
+            content: record,
+            //createdAt: new Date(),
+            channel: channel.id,
+            seenBy: [],
+          });
+          await notification.save();
+          const publisher = await pubsub();
+          publisher.publish(channel.id, { notification });
+        }
       }
+
       await record.save();
       return record;
     } catch (err) {

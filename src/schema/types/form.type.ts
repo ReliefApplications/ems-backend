@@ -87,7 +87,10 @@ export const FormType = new GraphQLObjectType({
         if (args.archived) {
           Object.assign(mongooseFilter, { archived: true });
         } else {
-          Object.assign(mongooseFilter, { archived: { $ne: true } });
+          Object.assign(mongooseFilter, {
+            archived: { $ne: true },
+            draft: { $ne: true },
+          });
         }
         if (args.filter) {
           mongooseFilter = {
@@ -153,6 +156,7 @@ export const FormType = new GraphQLObjectType({
         const count = await Record.find({
           form: parent.id,
           archived: { $ne: true },
+          draft: { $ne: true },
           ...accessibleBy(ability, 'read').Record,
         }).count();
         return count;
@@ -221,7 +225,11 @@ export const FormType = new GraphQLObjectType({
           if (unicityFilters.length > 0) {
             const record = await Record.findOne({
               $and: [
-                { form: parent._id, archived: { $ne: true } },
+                {
+                  form: parent._id,
+                  archived: { $ne: true },
+                  draft: { $ne: true },
+                },
                 { $or: unicityFilters },
               ],
             });
