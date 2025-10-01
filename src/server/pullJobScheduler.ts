@@ -336,8 +336,6 @@ export const insertRecords = async (
   const mappedUniqueConditions = uniqueConditions.map((x) =>
     Object.keys(pullJob.mapping).find((key) => pullJob.mapping[key] === x)
   );
-  console.log(uniqueConditions);
-  console.log(mappedUniqueConditions);
   // Initialize the array of linked fields in the case we have an array unique identifier with linked fields
   const linkedFieldsArray = new Array<Array<string>>(uniqueConditions.length);
   const filters = [];
