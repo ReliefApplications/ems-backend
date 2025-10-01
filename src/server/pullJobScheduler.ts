@@ -331,24 +331,26 @@ export const insertRecords = async (
   }
 
   const records = [];
-  const unicityConditions = pullJob.uniqueIdentifiers;
-  // Map unicity conditions to check if we already have some corresponding records in the DB
-  const mappedUnicityConditions = unicityConditions.map((x) =>
+  const uniqueConditions = pullJob.uniqueIdentifiers;
+  // Map unique conditions to check if we already have some corresponding records in the DB
+  const mappedUniqueConditions = uniqueConditions.map((x) =>
     Object.keys(pullJob.mapping).find((key) => pullJob.mapping[key] === x)
   );
+  console.log(uniqueConditions);
+  console.log(mappedUniqueConditions);
   // Initialize the array of linked fields in the case we have an array unique identifier with linked fields
-  const linkedFieldsArray = new Array<Array<string>>(unicityConditions.length);
+  const linkedFieldsArray = new Array<Array<string>>(uniqueConditions.length);
   const filters = [];
   for (let elementIndex = 0; elementIndex < data.length; elementIndex++) {
     const element = data[elementIndex];
     const filter = {};
     for (
-      let unicityIndex = 0;
-      unicityIndex < unicityConditions.length;
-      unicityIndex++
+      let uniqueIndex = 0;
+      uniqueIndex < uniqueConditions.length;
+      uniqueIndex++
     ) {
-      const identifier = unicityConditions[unicityIndex];
-      const mappedIdentifier = mappedUnicityConditions[unicityIndex];
+      const identifier = uniqueConditions[uniqueIndex];
+      const mappedIdentifier = mappedUniqueConditions[uniqueIndex];
       // Check if it's an automatically generated element which already have some part of the identifiers set up
       const value =
         element[`__${identifier}`] === undefined
@@ -366,11 +368,11 @@ export const insertRecords = async (
         // If a uniqueIdentifier value is an array, duplicate the element and add filter for the first one since the other will be handled in subsequent steps
       } else if (Array.isArray(value)) {
         // Get related fields from the mapping to duplicate use different values for these ones instead of concatenate everything
-        let linkedFields = linkedFieldsArray[unicityIndex];
+        let linkedFields = linkedFieldsArray[uniqueIndex];
         if (!linkedFields) {
           // eslint-disable-next-line @typescript-eslint/no-use-before-define
           linkedFields = getLinkedFields(identifier, pullJob.mapping, element);
-          linkedFieldsArray[unicityIndex] = linkedFields;
+          linkedFieldsArray[uniqueIndex] = linkedFields;
         }
         const linkedValues = new Array(linkedFields.length);
         for (
@@ -431,7 +433,7 @@ export const insertRecords = async (
     filters.push(filter);
   }
   // Find records already existing if any
-  const selectedFields = mappedUnicityConditions.map((x) => `data.${x}`);
+  const selectedFields = mappedUniqueConditions.map((x) => `data.${x}`);
   const duplicateRecords = await RecordModel.find({
     form: pullJob.convertTo,
     $or: filters,
@@ -473,19 +475,19 @@ export const insertRecords = async (
     const mappedElement = mapData(
       pullJob.mapping,
       element,
-      unicityConditions.concat(linkedFieldsArray.flat())
+      uniqueConditions.concat(linkedFieldsArray.flat())
     );
     // Adapt identifiers after mapping so if arrays are involved, it will correspond to each element of the array
     for (
-      let unicityIndex = 0;
-      unicityIndex < unicityConditions.length;
-      unicityIndex++
+      let uniqueIndex = 0;
+      uniqueIndex < uniqueConditions.length;
+      uniqueIndex++
     ) {
-      const identifier = unicityConditions[unicityIndex];
-      const mappedIdentifier = mappedUnicityConditions[unicityIndex];
+      const identifier = uniqueConditions[uniqueIndex];
+      const mappedIdentifier = mappedUniqueConditions[uniqueIndex];
       mappedElement[mappedIdentifier] = element[`__${identifier}`];
       // Adapt also linkedFields if any
-      const linkedFields = linkedFieldsArray[unicityIndex];
+      const linkedFields = linkedFieldsArray[uniqueIndex];
       if (linkedFields) {
         // Storing already assigned fields in the case we have different fields mapped to the same path
         const alreadyAssignedFields = [];
@@ -505,12 +507,12 @@ export const insertRecords = async (
       ? true
       : duplicateRecords.some((record) => {
           for (
-            let unicityIndex = 0;
-            unicityIndex < unicityConditions.length;
-            unicityIndex++
+            let uniqueIndex = 0;
+            uniqueIndex < uniqueConditions.length;
+            uniqueIndex++
           ) {
-            const identifier = unicityConditions[unicityIndex];
-            const mappedIdentifier = mappedUnicityConditions[unicityIndex];
+            const identifier = uniqueConditions[uniqueIndex];
+            const mappedIdentifier = mappedUniqueConditions[uniqueIndex];
             const recordValue = record.data[mappedIdentifier] || '';
             const elementValue = element[`__${identifier}`] || '';
             if (recordValue.toString() !== elementValue.toString()) {
