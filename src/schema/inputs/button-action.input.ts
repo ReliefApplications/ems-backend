@@ -62,6 +62,41 @@ const ActionButtonInputType = new GraphQLInputObjectType({
         fields: {
           template: { type: GraphQLString },
           autoReload: { type: GraphQLBoolean },
+          onSave: {
+            type: new GraphQLInputObjectType({
+              name: 'CloneRecordOnSaveInputType',
+              fields: {
+                navigateTo: {
+                  type: new GraphQLInputObjectType({
+                    name: 'NavigateToOnSaveInputType',
+                    fields: {
+                      enabled: { type: GraphQLBoolean },
+                      targetUrl: {
+                        type: new GraphQLInputObjectType({
+                          name: 'NavigateToTargetUrlOnSaveInputType',
+                          fields: {
+                            enabled: { type: GraphQLBoolean },
+                            href: { type: GraphQLString },
+                            openInNewTab: { type: GraphQLBoolean },
+                          },
+                        }),
+                      },
+                      targetPage: {
+                        type: new GraphQLInputObjectType({
+                          name: 'NavigateToTargetPageOnSaveInputType',
+                          fields: {
+                            enabled: { type: GraphQLBoolean },
+                            pageUrl: { type: GraphQLString },
+                            field: { type: GraphQLString },
+                          },
+                        }),
+                      },
+                    },
+                  }),
+                },
+              },
+            }),
+          },
         },
       }),
     },

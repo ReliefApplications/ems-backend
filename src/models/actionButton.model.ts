@@ -97,6 +97,45 @@ export const buttonSchema = new Schema<Button>(
         {
           template: String,
           autoReload: Boolean,
+          onSave: {
+            type: new Schema(
+              {
+                navigateTo: {
+                  type: new Schema(
+                    {
+                      enabled: { type: Boolean, default: false },
+                      targetUrl: {
+                        type: new Schema(
+                          {
+                            enabled: { type: Boolean, default: false },
+                            href: String,
+                            openInNewTab: { type: Boolean, default: true },
+                          },
+                          { _id: false }
+                        ),
+                        default: undefined,
+                      },
+                      targetPage: {
+                        type: new Schema(
+                          {
+                            enabled: { type: Boolean, default: false },
+                            pageUrl: { type: String },
+                            field: { type: String },
+                          },
+                          { _id: false }
+                        ),
+                        default: undefined,
+                      },
+                    },
+                    { _id: false }
+                  ),
+                  default: undefined,
+                },
+              },
+              { _id: false }
+            ),
+            default: undefined,
+          },
         },
         { _id: false }
       ),
