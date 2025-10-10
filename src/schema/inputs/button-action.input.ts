@@ -70,12 +70,10 @@ const ActionButtonInputType = new GraphQLInputObjectType({
                   type: new GraphQLInputObjectType({
                     name: 'NavigateToOnSaveInputType',
                     fields: {
-                      enabled: { type: GraphQLBoolean },
                       targetUrl: {
                         type: new GraphQLInputObjectType({
                           name: 'NavigateToTargetUrlOnSaveInputType',
                           fields: {
-                            enabled: { type: GraphQLBoolean },
                             href: { type: GraphQLString },
                             openInNewTab: { type: GraphQLBoolean },
                           },
@@ -85,7 +83,6 @@ const ActionButtonInputType = new GraphQLInputObjectType({
                         type: new GraphQLInputObjectType({
                           name: 'NavigateToTargetPageOnSaveInputType',
                           fields: {
-                            enabled: { type: GraphQLBoolean },
                             pageUrl: { type: GraphQLString },
                             field: { type: GraphQLString },
                           },
