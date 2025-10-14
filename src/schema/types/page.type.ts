@@ -41,6 +41,12 @@ export const PageType = new GraphQLObjectType({
         return isNil(parent.showName) ? defaultShowName : parent.showName;
       },
     },
+    showIcon: {
+      type: GraphQLBoolean,
+      resolve(parent) {
+        return isNil(parent.showIcon) ? true : parent.showIcon;
+      },
+    },
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     type: { type: ContentEnumType },

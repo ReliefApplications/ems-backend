@@ -38,6 +38,7 @@ type EditStepArgs = {
   id: string | Types.ObjectId;
   name?: string;
   showName?: boolean;
+  showIcon?: boolean;
   type?: string;
   content?: string | Types.ObjectId;
   permissions?: any;
@@ -55,6 +56,7 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     name: { type: GraphQLString },
     showName: { type: GraphQLBoolean },
+    showIcon: { type: GraphQLBoolean },
     icon: { type: GraphQLString },
     type: { type: GraphQLString },
     content: { type: GraphQLID },
@@ -109,6 +111,7 @@ export default {
         ...(args.type && { type: args.type }),
         ...(args.content && { content: args.content }),
         ...(has(args, 'showName') && { showName: args.showName }),
+        ...(has(args, 'showIcon') && { showIcon: args.showIcon }),
       } as any;
       // Update buttons
       if (args.buttons) {

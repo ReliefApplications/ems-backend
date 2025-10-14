@@ -38,6 +38,7 @@ export type EditPageArgs = {
   id: string | Types.ObjectId;
   name?: string;
   showName?: boolean;
+  showIcon?: boolean;
   permissions?: any;
   icon?: string;
   visible?: boolean;
@@ -55,6 +56,7 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     name: { type: GraphQLString },
     showName: { type: GraphQLBoolean },
+    showIcon: { type: GraphQLBoolean },
     icon: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
     visible: { type: GraphQLBoolean },
@@ -93,6 +95,7 @@ export default {
         ...(args.name && { name: args.name }),
         ...(args.icon && { icon: args.icon }),
         ...(has(args, 'showName') && { showName: args.showName }),
+        ...(has(args, 'showIcon') && { showIcon: args.showIcon }),
       } as any;
       // Update buttons
       if (args.buttons) {

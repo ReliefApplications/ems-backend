@@ -12,6 +12,7 @@ export interface Step extends Document {
   name: string;
   icon: string;
   showName?: boolean;
+  showIcon?: boolean;
   createdAt: Date;
   modifiedAt: Date;
   type: string;
@@ -35,6 +36,10 @@ const stepSchema = new Schema<Step>(
     name: String,
     icon: String,
     showName: Boolean,
+    showIcon: {
+      type: Boolean,
+      default: true,
+    },
     type: {
       type: String,
       enum: Object.values(contentType),
