@@ -13,8 +13,9 @@ import {
 } from 'graphql';
 import { GraphQLDate } from 'graphql-scalars';
 import GraphQLJSON from 'graphql-type-json';
-import { isNil } from 'lodash';
+import { get, isNil } from 'lodash';
 import { AccessType, ApplicationType } from '.';
+import { NavBarSettingsType } from './navBarSettings.type';
 
 /** GraphQL page type type definition */
 export const PageType = new GraphQLObjectType({
@@ -41,10 +42,15 @@ export const PageType = new GraphQLObjectType({
         return isNil(parent.showName) ? defaultShowName : parent.showName;
       },
     },
-    showIcon: {
-      type: GraphQLBoolean,
+    navBar: {
+      type: NavBarSettingsType,
       resolve(parent) {
-        return isNil(parent.showIcon) ? true : parent.showIcon;
+        if (parent.navBar) {
+          return {
+            showName: get(parent, 'navBar.showName') ?? true,
+            showIcon: get(parent, 'navBar.showIcon') ?? true,
+          };
+        }
       },
     },
     createdAt: { type: GraphQLString },

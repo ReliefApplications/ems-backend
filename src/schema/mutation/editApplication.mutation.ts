@@ -119,23 +119,6 @@ export default {
       if (!isNil(args.shortcut) && args.shortcut !== '') {
         await validateShortcut(args.id, args.shortcut);
       }
-      const nextTopMenu = !isNil(args.topMenu)
-        ? args.topMenu
-        : application.topMenu ?? false;
-      const nextSideMenu = !isNil(args.sideMenu)
-        ? args.sideMenu
-        : application.sideMenu ?? true;
-      let enforcedTopMenu = nextTopMenu;
-      let enforcedSideMenu = nextSideMenu;
-      if (nextTopMenu && nextSideMenu) {
-        if (!isNil(args.topMenu)) {
-          enforcedSideMenu = false;
-        } else if (!isNil(args.sideMenu)) {
-          enforcedTopMenu = false;
-        } else {
-          enforcedSideMenu = false;
-        }
-      }
 
       Object.assign(
         update,
@@ -145,16 +128,12 @@ export default {
         args.pages && { pages: args.pages },
         args.settings && { settings: args.settings },
         args.permissions && { permissions: args.permissions },
+        !isNil(args.sideMenu) && { sideMenu: args.sideMenu },
+        !isNil(args.topMenu) && { topMenu: args.topMenu },
         !isNil(args.hideMenu) && { hideMenu: args.hideMenu },
         !isNil(args.shortcut) && { shortcut: args.shortcut }
       );
 
-      if (!isNil(args.sideMenu) || nextSideMenu !== application.sideMenu) {
-        Object.assign(update, { sideMenu: enforcedSideMenu });
-      }
-      if (!isNil(args.topMenu) || nextTopMenu !== application.topMenu) {
-        Object.assign(update, { topMenu: enforcedTopMenu });
-      }
       application = await Application.findOneAndUpdate(filters, update, {
         new: true,
       });

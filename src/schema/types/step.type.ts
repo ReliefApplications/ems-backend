@@ -12,6 +12,8 @@ import {
 import GraphQLJSON from 'graphql-type-json';
 import isNil from 'lodash/isNil';
 import { AccessType, WorkflowType } from '.';
+import { NavBarSettingsType } from './navBarSettings.type';
+import { get } from 'lodash';
 
 /** GraphQL Step type definition */
 export const StepType = new GraphQLObjectType({
@@ -32,10 +34,15 @@ export const StepType = new GraphQLObjectType({
         return isNil(parent.showName) ? defaultShowName : parent.showName;
       },
     },
-    showIcon: {
-      type: GraphQLBoolean,
+    navBar: {
+      type: NavBarSettingsType,
       resolve(parent) {
-        return isNil(parent.showIcon) ? true : parent.showIcon;
+        if (parent.navBar) {
+          return {
+            showName: get(parent, 'navBar.showName') ?? true,
+            showIcon: get(parent, 'navBar.showIcon') ?? true,
+          };
+        }
       },
     },
     createdAt: { type: GraphQLString },

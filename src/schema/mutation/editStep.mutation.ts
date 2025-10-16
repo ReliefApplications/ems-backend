@@ -17,6 +17,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { cloneDeep, has, isArray, isEmpty, omit } from 'lodash';
 import { Types } from 'mongoose';
 import { StepType } from '../types';
+import { NavBarSettingsInputType } from '@schema/inputs/navBarSettings.input';
 
 /** Simple form permission change type */
 type SimplePermissionChange =
@@ -38,7 +39,10 @@ type EditStepArgs = {
   id: string | Types.ObjectId;
   name?: string;
   showName?: boolean;
-  showIcon?: boolean;
+  navBar?: {
+    showName?: boolean;
+    showIcon?: boolean;
+  };
   type?: string;
   content?: string | Types.ObjectId;
   permissions?: any;
@@ -56,7 +60,7 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     name: { type: GraphQLString },
     showName: { type: GraphQLBoolean },
-    showIcon: { type: GraphQLBoolean },
+    navBar: { type: NavBarSettingsInputType },
     icon: { type: GraphQLString },
     type: { type: GraphQLString },
     content: { type: GraphQLID },
@@ -111,7 +115,7 @@ export default {
         ...(args.type && { type: args.type }),
         ...(args.content && { content: args.content }),
         ...(has(args, 'showName') && { showName: args.showName }),
-        ...(has(args, 'showIcon') && { showIcon: args.showIcon }),
+        ...(args.navBar && { navBar: args.navBar }),
       } as any;
       // Update buttons
       if (args.buttons) {
