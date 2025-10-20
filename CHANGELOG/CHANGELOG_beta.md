@@ -1,3 +1,11 @@
+# [2.16.0-beta.1](https://github.com/ReliefApplications/ems-backend/compare/v2.15.0...v2.16.0-beta.1) (2025-10-20)
+
+
+### Features
+
+* add clone record action in dashboards ([#1208](https://github.com/ReliefApplications/ems-backend/issues/1208)) ([43559db](https://github.com/ReliefApplications/ems-backend/commit/43559db1e671c1ff4fbcad7439120327d99adf13)), closes [AB#118658](https://github.com/AB/issues/118658)
+* Admins can configure auto redirection after cloning from dashboard ([#1212](https://github.com/ReliefApplications/ems-backend/issues/1212)) ([9de1a8c](https://github.com/ReliefApplications/ems-backend/commit/9de1a8c142f1dbf7610e9168a838b0fc86bdba34)), closes [AB#118658](https://github.com/AB/issues/118658)
+
 # [2.13.0-beta.1](https://github.com/ReliefApplications/ems-backend/compare/v2.12.2...v2.13.0-beta.1) (2025-02-27)
 
 
