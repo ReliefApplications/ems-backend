@@ -256,9 +256,14 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       // Get list of needed resources for the aggregation
       const resourcesToQuery = [
         ...new Set(usedFields.map((x) => x.split('.')[0])),
-      ].filter((x) =>
-        fields.find((f) => f.name === x && f.type === 'resource')
-      );
+      ].filter((resourceName) => {
+        const resourceField = fields.find((f) => f.name === resourceName);
+        return (
+          resourceField &&
+          (resourceField.type === 'resource' ||
+            resourceField.type === 'resources')
+        );
+      });
 
       const resourceFieldsById = resourcesToQuery.reduce((o, x) => {
         const resourceId = fields.find((f) => f.name === x).resource;
@@ -276,42 +281,136 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       let linkedRecordsAggregation = [];
       for (const resource of resourcesToQuery) {
+        const resourceFieldDefinition = fields.find((f) => f.name === resource);
+        if (!resourceFieldDefinition) {
+          continue;
+        }
+        const isMultiResource = resourceFieldDefinition?.type === 'resources';
         // Build linked records aggregations
-        linkedRecordsAggregation = linkedRecordsAggregation.concat([
-          {
-            $addFields: {
-              [`data.${resource}_id`]: {
-                $convert: {
-                  input: `$data.${resource}`,
-                  to: 'objectId',
-                  onError: null,
+        linkedRecordsAggregation = linkedRecordsAggregation.concat(
+          isMultiResource
+            ? [
+                {
+                  $addFields: {
+                    [`data.${resource}_ids`]: {
+                      $let: {
+                        vars: {
+                          ids: {
+                            $map: {
+                              input: {
+                                $filter: {
+                                  input: {
+                                    $cond: [
+                                      { $isArray: `$data.${resource}` },
+                                      `$data.${resource}`,
+                                      {
+                                        $cond: [
+                                          { $eq: [`$data.${resource}`, null] },
+                                          [],
+                                          [`$data.${resource}`],
+                                        ],
+                                      },
+                                    ],
+                                  },
+                                  as: 'id',
+                                  cond: {
+                                    $and: [
+                                      { $ne: ['$$id', null] },
+                                      { $ne: ['$$id', ''] },
+                                    ],
+                                  },
+                                },
+                              },
+                              as: 'id',
+                              in: {
+                                $convert: {
+                                  input: '$$id',
+                                  to: 'objectId',
+                                  onError: null,
+                                  onNull: null,
+                                },
+                              },
+                            },
+                          },
+                        },
+                        in: {
+                          $filter: {
+                            input: '$$ids',
+                            as: 'id',
+                            cond: { $ne: ['$$id', null] },
+                          },
+                        },
+                      },
+                    },
+                  },
                 },
-              },
-            },
-          },
-          {
-            $lookup: {
-              from: 'records',
-              localField: `data.${resource}_id`,
-              foreignField: '_id',
-              as: `_${resource}`,
-            },
-          },
-          {
-            $unwind: {
-              path: `$_${resource}`,
-              preserveNullAndEmptyArrays: true,
-            },
-          },
-          {
-            $addFields: {
-              [`_${resource}.id`]: { $toString: `$_${resource}._id` },
-            },
-          },
-        ]);
+                {
+                  $lookup: {
+                    from: 'records',
+                    let: { recordIds: `$data.${resource}_ids` },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $in: [
+                              '$_id',
+                              {
+                                $cond: [
+                                  { $isArray: '$$recordIds' },
+                                  '$$recordIds',
+                                  [],
+                                ],
+                              },
+                            ],
+                          },
+                        },
+                      },
+                      {
+                        $addFields: {
+                          id: { $toString: '$_id' },
+                        },
+                      },
+                    ],
+                    as: `_${resource}`,
+                  },
+                },
+              ]
+            : [
+                {
+                  $addFields: {
+                    [`data.${resource}_id`]: {
+                      $convert: {
+                        input: `$data.${resource}`,
+                        to: 'objectId',
+                        onError: null,
+                      },
+                    },
+                  },
+                },
+                {
+                  $lookup: {
+                    from: 'records',
+                    localField: `data.${resource}_id`,
+                    foreignField: '_id',
+                    as: `_${resource}`,
+                  },
+                },
+                {
+                  $unwind: {
+                    path: `$_${resource}`,
+                    preserveNullAndEmptyArrays: true,
+                  },
+                },
+                {
+                  $addFields: {
+                    [`_${resource}.id`]: { $toString: `$_${resource}._id` },
+                  },
+                },
+              ]
+        );
 
         // Build linked records filter
-        const resourceId = fields.find((f) => f.name === resource).resource;
+        const resourceId = resourceFieldDefinition.resource;
         const resourceName = Object.keys(idsByName).find(
           (key) => idsByName[key] == resourceId
         );
