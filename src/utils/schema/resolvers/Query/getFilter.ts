@@ -247,7 +247,7 @@ const buildMongoFilter = (
             break;
           }
           case 'users': {
-            if (context && context.user) {
+            if (context && context.user && Array.isArray(value)) {
               // handles the case where we want to filter by connected user
               value = value.map((x) =>
                 x === 'me' ? context.user._id.toString() : x
