@@ -226,6 +226,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       filter = {},
       display = false,
       styles = [],
+      actions = [],
       at,
     },
     context,
@@ -372,6 +373,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
         // Check if the field is used in any styles' filters
         if (styles?.some((s) => isUsedInFilter(s.filter))) return true;
+
+        // Check if the field is used in any actions' filters
+        if (actions?.some((a) => isUsedInFilter(a.filter))) return true;
 
         // If not used in any of the above, don't add it to the pipeline
         return false;
@@ -706,6 +710,36 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         }
       }
 
+      // === ACTIONS ===
+      const actionRules: { items: any[]; action: any }[] = [];
+      console.log(actions);
+      // If there is a custom action rule
+      if (actions?.length > 0) {
+        // Create the filter for each action
+        const recordsIds = items.map((x) => x.id || x._id);
+        for (const action of actions) {
+          const actionFilter = getFilter(action.filter, fields, context);
+          // Get the records corresponding to the action filter
+          const itemsToAction = await Record.aggregate([
+            {
+              $match: {
+                _id: {
+                  $in: recordsIds.map((x) => new mongoose.Types.ObjectId(x)),
+                },
+              },
+            },
+            ...calculatedFieldsAggregation,
+            {
+              $match: actionFilter,
+            },
+            { $addFields: { id: '$_id' } },
+          ]);
+          console.log(itemsToAction);
+          // Add the list of record and the corresponding action
+          actionRules.push({ items: itemsToAction, action: action });
+        }
+      }
+
       // === CONSTRUCT OUTPUT + RETURN ===
       const edges = items.map((r) => {
         const record = getAccessibleFields(r, ability);
@@ -715,6 +749,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           cursor: encodeCursor(record.id.toString()),
           node: display ? Object.assign(record, { display, fields }) : record,
           meta: {
+            actions: actionRules
+              .filter((a) => a.items.some((i) => i.id.equals(record.id)))
+              .map((a) => a.action),
             style: getStyle(r, styleRules),
             raw: record.data,
           },
