@@ -17,10 +17,8 @@ export const extractFields = async (object, fields, core): Promise<void> => {
       if (element.type === 'panel') {
         await extractFields(element, fields, core);
       } else {
-        if (
-          (element.type === 'resource' || element.type === 'resources') &&
-          element.displayOnly
-        ) {
+        if (element.type === 'resources' && element.displayOnly) {
+          // Don't store as field if question is display only
           continue;
         }
         if (!element.valueName) {
