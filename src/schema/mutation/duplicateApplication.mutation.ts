@@ -88,6 +88,7 @@ export default {
             name: args.name,
             description: baseApplication.description,
             sideMenu: baseApplication.sideMenu,
+            topMenu: baseApplication.topMenu,
             hideMenu: baseApplication.hideMenu,
             status: status.pending,
             createdBy: user._id,
