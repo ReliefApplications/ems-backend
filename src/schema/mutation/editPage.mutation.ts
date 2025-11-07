@@ -97,7 +97,7 @@ export default {
       // Create update
       const update = {
         ...(args.name && { name: args.name }),
-        ...(args.icon && { icon: args.icon }),
+        ...(has(args, 'icon') && { icon: args.icon }),
         ...(has(args, 'showName') && { showName: args.showName }),
         ...(args.navBar && { navBar: args.navBar }),
       } as any;
