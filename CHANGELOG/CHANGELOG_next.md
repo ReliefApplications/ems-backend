@@ -1,3 +1,10 @@
+# [2.16.0-rc.3](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.2...v2.16.0-rc.3) (2025-10-31)
+
+
+### Features
+
+* Display only resources question ([#1214](https://github.com/ReliefApplications/ems-backend/issues/1214)) ([b9402aa](https://github.com/ReliefApplications/ems-backend/commit/b9402aab0f93b2193bfbb4376bd1c55bb3013776)), closes [AB#122462](https://github.com/AB/issues/122462)
+
 # [2.16.0-rc.2](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.1...v2.16.0-rc.2) (2025-10-10)
 
 
