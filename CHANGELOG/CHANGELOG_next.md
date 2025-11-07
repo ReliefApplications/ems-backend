@@ -1,3 +1,10 @@
+# [2.16.0-rc.4](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.3...v2.16.0-rc.4) (2025-11-07)
+
+
+### Features
+
+* Enable menu and account on one line, and icon-only menu items ([#1213](https://github.com/ReliefApplications/ems-backend/issues/1213)) ([30345c4](https://github.com/ReliefApplications/ems-backend/commit/30345c477e0819a19c1182fa10030d89cb7ad32c)), closes [AB#121668](https://github.com/AB/issues/121668)
+
 # [2.16.0-rc.3](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.2...v2.16.0-rc.3) (2025-10-31)
 
 
