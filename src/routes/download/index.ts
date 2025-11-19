@@ -127,6 +127,7 @@ router.get('/form/records/:id', async (req, res) => {
       const filter = {
         form: req.params.id,
         archived: { $ne: true },
+        draft: { $ne: true },
         ...Record.find(accessibleBy(formAbility, 'read').Record).getFilter(),
       };
       const columns = await getColumns(
@@ -187,6 +188,7 @@ router.get('/form/records/:id/history', async (req, res) => {
     const record: Record = await Record.findOne({
       _id: req.params.id,
       archived: { $ne: true },
+      draft: { $ne: true },
     })
       .populate({
         path: 'versions',
@@ -316,6 +318,7 @@ router.get('/resource/records/:id', async (req, res) => {
           records = await Record.find({
             resource: req.params.id,
             archived: { $ne: true },
+            draft: { $ne: true },
           });
         }
         const rows = await getRows(columns, records);

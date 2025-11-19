@@ -52,7 +52,7 @@ export default {
       const draftRecord = DraftRecord.findByIdAndUpdate(args.id, update, {
         new: true,
       });
-      return await draftRecord;
+      return draftRecord;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {

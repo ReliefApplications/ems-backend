@@ -28,5 +28,5 @@ export * from './distributionList.type';
 export * from './customNotification.type';
 export * from './metadata.type';
 export * from './layer.type';
-export * from './draftRecord.type';
+// export * from './draftRecord.type';
 export * from './emailNotification.type';

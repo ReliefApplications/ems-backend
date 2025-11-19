@@ -78,6 +78,7 @@ export default class FileController extends BaseController {
       const associatedRecord = await Record.findOne({
         resource: new Types.ObjectId(String(resourceId)),
         archived: { $ne: true },
+        draft: { $ne: true },
         $or: fileFieldQueries,
       }).select('_id');
 

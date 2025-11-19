@@ -23,6 +23,7 @@ export const RecordType = new GraphQLObjectType({
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     archived: { type: GraphQLBoolean },
+    draft: { type: GraphQLBoolean },
     form: {
       type: FormType,
       async resolve(parent, args, context) {
@@ -65,6 +66,7 @@ export const RecordType = new GraphQLObjectType({
                     const record = await Record.findOne({
                       _id: parent.data[name],
                       archived: { $ne: true },
+                      draft: { $ne: true },
                     });
                     res[name] = record.data[field.displayField];
                   } catch {

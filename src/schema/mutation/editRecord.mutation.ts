@@ -6,13 +6,23 @@ import {
   GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { Form, Record, Resource, Version } from '@models';
+import {
+  Form,
+  Record,
+  Resource,
+  Version,
+  Notification,
+  Channel,
+} from '@models';
+import pubsub from '../../server/pubsub';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
+import { getFormPermissionFilter } from '@utils/filter';
 import {
   transformRecord,
   getOwnership,
   checkRecordValidation,
   checkRecordTriggers,
+  getNextId,
 } from '@utils/form';
 import { RecordType } from '../types';
 import { Types } from 'mongoose';
@@ -63,6 +73,7 @@ type EditRecordArgs = {
   template?: string | Types.ObjectId;
   lang?: string;
   draft?: boolean;
+  updateDraftStatus?: boolean;
   skipValidation: boolean;
 };
 
@@ -79,6 +90,7 @@ export default {
     template: { type: GraphQLID },
     lang: { type: GraphQLString },
     draft: { type: GraphQLBoolean },
+    updateDraftStatus: { type: GraphQLBoolean },
     skipValidation: { type: GraphQLBoolean, defaultValue: false },
   },
   async resolve(parent, args: EditRecordArgs, context: Context) {
@@ -199,14 +211,77 @@ export default {
             },
           },
         };
+
+        if (args.updateDraftStatus !== undefined) {
+          update.draft = args.updateDraftStatus;
+
+          if (oldRecord.draft === true && args.updateDraftStatus === false) {
+            if (
+              parentForm.permissions.recordsUnicity &&
+              parentForm.permissions.recordsUnicity.length > 0 &&
+              parentForm.permissions.recordsUnicity[0].role
+            ) {
+              const unicityFilters = getFormPermissionFilter(
+                user,
+                parentForm,
+                'recordsUnicity'
+              );
+              if (unicityFilters.length > 0) {
+                const uniqueRecordAlreadyExists = await Record.exists({
+                  $and: [
+                    {
+                      form: parentForm._id,
+                      archived: { $ne: true },
+                      draft: { $ne: true },
+                      _id: { $ne: oldRecord._id },
+                    },
+                    { $or: unicityFilters },
+                  ],
+                });
+                if (uniqueRecordAlreadyExists) {
+                  throw new GraphQLError(
+                    context.i18next.t('common.errors.permissionNotGranted')
+                  );
+                }
+              }
+            }
+
+            if (!oldRecord.incrementalId) {
+              update.incrementalId = await getNextId(
+                String(
+                  parentForm.resource ? parentForm.resource : oldRecord.form
+                )
+              );
+            }
+          }
+        }
+
         const ownership = getOwnership(fields, args.data); // Update with template during merge
         Object.assign(
           update,
           ownership && { createdBy: { ...oldRecord.createdBy, ...ownership } }
         );
-        const record = Record.findByIdAndUpdate(args.id, update, { new: true });
+        const record = await Record.findByIdAndUpdate(args.id, update, {
+          new: true,
+        });
         await version.save();
-        return await record;
+
+        if (oldRecord.draft === true && args.updateDraftStatus === false) {
+          const channel = await Channel.findOne({ form: parentForm._id });
+          if (channel) {
+            const notification = new Notification({
+              action: `New record published - ${parentForm.name}`,
+              content: record,
+              channel: channel.id,
+              seenBy: [],
+            });
+            await notification.save();
+            const publisher = await pubsub();
+            publisher.publish(channel.id, { notification });
+          }
+        }
+
+        return record;
       } else {
         // Revert an old version
         const oldVersion = await Version.findOne({
@@ -235,9 +310,43 @@ export default {
           },
           $push: { versions: version._id },
         };
-        const record = Record.findByIdAndUpdate(args.id, update, { new: true });
+
+        if (args.updateDraftStatus !== undefined) {
+          update.draft = args.updateDraftStatus;
+
+          if (oldRecord.draft === true && args.updateDraftStatus === false) {
+            if (!oldRecord.incrementalId) {
+              update.incrementalId = await getNextId(
+                String(
+                  parentForm.resource ? parentForm.resource : oldRecord.form
+                )
+              );
+            }
+          }
+        }
+
+        const record = await Record.findByIdAndUpdate(args.id, update, {
+          new: true,
+        });
         await version.save();
-        return await record;
+
+        // Send notification if publishing a draft
+        if (oldRecord.draft === true && args.updateDraftStatus === false) {
+          const channel = await Channel.findOne({ form: parentForm._id });
+          if (channel) {
+            const notification = new Notification({
+              action: `New record published - ${parentForm.name}`,
+              content: record,
+              channel: channel.id,
+              seenBy: [],
+            });
+            await notification.save();
+            const publisher = await pubsub();
+            publisher.publish(channel.id, { notification });
+          }
+        }
+
+        return record;
       }
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

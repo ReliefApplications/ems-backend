@@ -479,7 +479,7 @@ export default class Exporter {
                 $in: ids,
               },
             },
-            { archived: { $ne: true } },
+            { archived: { $ne: true }, draft: { $ne: true } },
             permissionFilters,
           ],
         },

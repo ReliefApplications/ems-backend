@@ -2,8 +2,8 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
-import { DraftRecordType } from '../types';
-import { DraftRecord } from '@models';
+import { DraftRecordType } from '../types/draftRecord.type';
+import { DraftRecord } from '../../models/draftRecord.model';
 import { Types } from 'mongoose';
 
 /** Arguments for the deleteRecord mutation */
@@ -24,7 +24,7 @@ export default {
     graphQLAuthCheck(context);
     try {
       // Get draft Record and associated form
-      const draftRecord = await DraftRecord.findById(args.id);
+      const draftRecord = DraftRecord.findById(args.id);
       return await DraftRecord.findByIdAndDelete(draftRecord._id);
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

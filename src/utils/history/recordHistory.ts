@@ -416,7 +416,11 @@ export class RecordHistory {
       const recordFilters = Record.find(
         accessibleBy(this.options.ability, 'read').Record
       )
-        .where({ _id: { $in: ids }, archived: { $ne: true } })
+        .where({
+          _id: { $in: ids },
+          archived: { $ne: true },
+          draft: { $ne: true },
+        })
         .getFilter();
       const records: Record[] = await Record.find(recordFilters);
       return records.map((record) => record.incrementalId);

@@ -1,4 +1,9 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLError,
+  GraphQLBoolean,
+} from 'graphql';
 import { Form, Record } from '@models';
 import { RecordType } from '../types';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
@@ -11,6 +16,7 @@ import { Context } from '@server/apollo/context';
 /** Arguments for the record query */
 type RecordArgs = {
   id: string | Types.ObjectId;
+  draft?: boolean;
 };
 
 /**
@@ -21,13 +27,18 @@ export default {
   type: RecordType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
+    draft: { type: GraphQLBoolean },
   },
   async resolve(parent, args: RecordArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;
       // Get the form and the record
-      const record = await Record.findById(args.id);
+      const filter: any = { _id: args.id };
+      if (args.draft !== undefined) {
+        filter.draft = args.draft;
+      }
+      const record = await Record.findOne(filter);
       const form = await Form.findById(record.form);
 
       // Check ability

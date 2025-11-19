@@ -4,6 +4,7 @@ import {
   GraphQLInt,
   GraphQLNonNull,
   GraphQLString,
+  GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
@@ -63,6 +64,7 @@ type RecordsAggregationArgs = {
   sortField?: string;
   sortOrder?: string;
   contextFilters?: CompositeFilterDescriptor;
+  draft?: boolean;
 };
 
 /**
@@ -160,6 +162,7 @@ export default {
     sortField: { type: GraphQLString },
     sortOrder: { type: GraphQLString },
     at: { type: GraphQLDate },
+    draft: { type: GraphQLBoolean },
   },
   async resolve(parent, args: RecordsAggregationArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -213,8 +216,12 @@ export default {
         Object.assign(
           mongooseFilter,
           { resource: new mongoose.Types.ObjectId(args.resource) },
-          { archived: { $ne: true } }
+          { archived: { $ne: true }, draft: { $ne: true } }
         );
+
+        if (args.draft !== undefined) {
+          Object.assign(mongooseFilter, { draft: args.draft });
+        }
       } else {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }

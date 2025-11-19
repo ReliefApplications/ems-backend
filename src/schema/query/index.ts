@@ -36,7 +36,7 @@ import group from './group.query';
 import groups from './groups.query';
 import layers from './layers.query';
 import layer from './layer.query';
-import draftRecords from './draftRecords.query';
+// import draftRecords from './draftRecords.query';
 import referenceDataAggregation from './referenceDataAggregation.query';
 import emailNotification from './emailNotification.query';
 import emailNotifications from './emailNotifications.query';
@@ -89,7 +89,7 @@ const Query = new GraphQLObjectType({
     recordHistory,
     layers,
     layer,
-    draftRecords,
+    // draftRecords,
     emailDistributionLists,
     customTemplates,
   },

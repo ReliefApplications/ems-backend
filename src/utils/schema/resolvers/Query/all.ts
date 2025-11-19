@@ -633,6 +633,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           {
             $or: [{ _id: { $in: relatedIds } }, ...relatedFilters],
             archived: { $ne: true },
+            draft: { $ne: true },
           },
           projection
         );
