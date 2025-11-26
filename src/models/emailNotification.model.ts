@@ -16,6 +16,7 @@ export interface Dataset {
   name: string;
   resource: string;
   reference?: string;
+  referenceDataVariableMapping?: string;
   query: {
     name: string;
     filter: any;
@@ -133,6 +134,7 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
           fields: [{ type: mongoose.Schema.Types.Mixed }],
           filter: { type: mongoose.Schema.Types.Mixed },
         },
+        referenceDataVariableMapping: String,
         individualEmailFields: [{ type: mongoose.Schema.Types.Mixed }],
         pageSize: { type: mongoose.Schema.Types.Number },
         tableStyle: { type: mongoose.Schema.Types.Mixed },

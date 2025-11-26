@@ -36,6 +36,7 @@ export const DatasetType = new GraphQLObjectType({
     name: { type: GraphQLString },
     resource: { type: GraphQLString },
     reference: { type: GraphQLString },
+    referenceDataVariableMapping: { type: GraphQLString },
     query: { type: QueryType },
     tableStyle: { type: GraphQLJSON },
     blockType: { type: GraphQLJSON },
