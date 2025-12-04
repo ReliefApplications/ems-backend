@@ -77,6 +77,26 @@ export const getRowsFromMeta = (
           set(row, column.name, Array.isArray(value) ? value.join(',') : value);
           break;
         }
+        case 'people': {
+          // People field stores: { userid, firstname, lastname, emailaddress }
+          // Format as "FirstName LastName (email)" for export
+          const personData: any = get(record, column.field);
+          if (personData) {
+            const firstName = personData.firstname || '';
+            const lastName = personData.lastname || '';
+            const email = personData.emailaddress || '';
+            const name = [firstName, lastName].filter(Boolean).join(' ').trim();
+            const displayValue = email
+              ? name
+                ? `${name} (${email})`
+                : email
+              : name || personData.userid || '';
+            set(row, column.name, displayValue);
+          } else {
+            set(row, column.name, '');
+          }
+          break;
+        }
         case 'checkbox':
         case 'tagbox': {
           setMultiselectRow(column, record, row);
