@@ -55,9 +55,8 @@ export const getRows = async (
           set(row, column.name, Array.isArray(value) ? value.join(',') : value);
           break;
         }
-        case 'people': {
-          // People field stores: { userid, firstname, lastname, emailaddress }
-          // Format as "FirstName LastName (email)" for export
+        case 'people-dropdown': {
+          // People dropdown: { userid, firstname, lastname, emailaddress }
           const personData: any = get(data, column.field);
           if (personData) {
             const firstName = personData.firstname || '';
@@ -70,6 +69,27 @@ export const getRows = async (
                 : email
               : name || personData.userid || '';
             set(row, column.name, displayValue);
+          } else {
+            set(row, column.name, '');
+          }
+          break;
+        }
+        case 'people-tagbox': {
+          // People tagbox: array of { userid, firstname, lastname, emailaddress }
+          const peopleData: any[] = get(data, column.field) || [];
+          if (Array.isArray(peopleData) && peopleData.length > 0) {
+            const displayValues = peopleData.map((person) => {
+              const firstName = person.firstname || '';
+              const lastName = person.lastname || '';
+              const email = person.emailaddress || '';
+              const name = [firstName, lastName].filter(Boolean).join(' ').trim();
+              return email
+                ? name
+                  ? `${name} (${email})`
+                  : email
+                : name || person.userid || '';
+            });
+            set(row, column.name, displayValues.join(', '));
           } else {
             set(row, column.name, '');
           }

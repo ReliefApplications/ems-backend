@@ -170,9 +170,9 @@ export const getColumns = async (
         }
         break;
       }
-      case 'people': {
-        // People field stores: { userid, firstname, lastname, emailaddress }
-        // Display as "FirstName LastName (email)" in exports
+      case 'people-dropdown':
+      case 'people-tagbox': {
+        // people-dropdown: single object, people-tagbox: array of objects
         columns.push({
           name: field.name,
           label: field.label || field.name,
