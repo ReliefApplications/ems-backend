@@ -15,8 +15,11 @@ import { CustomTemplate } from '@models/customTemplate.model';
 export interface Dataset {
   name: string;
   resource: string;
+  dataType?: string;
   reference?: string;
   referenceDataVariableMapping?: string;
+  referenceDataInputConfig?: any;
+  referenceDataInputs?: any;
   query: {
     name: string;
     filter: any;
@@ -128,6 +131,7 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
       {
         name: String,
         resource: String,
+        dataType: String,
         reference: String,
         query: {
           name: String,
@@ -135,6 +139,8 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
           filter: { type: mongoose.Schema.Types.Mixed },
         },
         referenceDataVariableMapping: String,
+        referenceDataInputConfig: { type: mongoose.Schema.Types.Mixed },
+        referenceDataInputs: { type: mongoose.Schema.Types.Mixed },
         individualEmailFields: [{ type: mongoose.Schema.Types.Mixed }],
         pageSize: { type: mongoose.Schema.Types.Number },
         tableStyle: { type: mongoose.Schema.Types.Mixed },

@@ -68,6 +68,8 @@ export const DatasetInputType = new GraphQLInputObjectType({
     navigateToPage: { type: GraphQLBoolean, defaultValue: false },
     navigateSettings: { type: GraphQLJSON },
     referenceDataVariableMapping: { type: GraphQLString },
+    referenceDataInputConfig: { type: GraphQLJSON },
+    referenceDataInputs: { type: GraphQLJSON },
   }),
 });
 
