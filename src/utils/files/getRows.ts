@@ -82,7 +82,10 @@ export const getRows = async (
               const firstName = person.firstname || '';
               const lastName = person.lastname || '';
               const email = person.emailaddress || '';
-              const name = [firstName, lastName].filter(Boolean).join(' ').trim();
+              const name = [firstName, lastName]
+                .filter(Boolean)
+                .join(' ')
+                .trim();
               return email
                 ? name
                   ? `${name} (${email})`

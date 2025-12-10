@@ -22,6 +22,9 @@ export const formatValue = (field: any, value: any): any => {
     case 'text':
       if (!isNil(value)) {
         if (Array.isArray(value)) {
+          if (value.length > 0 && typeof value[0] === 'object') {
+            return value;
+          }
           return value.toString();
         } else {
           return value;
@@ -59,6 +62,16 @@ export const formatValue = (field: any, value: any): any => {
           (resourceId) =>
             new mongoose.Types.ObjectId(resourceId).toString() === resourceId
         );
+      }
+      break;
+    case 'people-dropdown':
+      if (!isNil(value)) {
+        return value;
+      }
+      break;
+    case 'people-tagbox':
+      if (!isNil(value) && Array.isArray(value)) {
+        return value;
       }
       break;
     default:
