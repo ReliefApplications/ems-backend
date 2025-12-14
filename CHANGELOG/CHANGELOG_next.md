@@ -1,3 +1,10 @@
+# [2.16.0-rc.5](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.4...v2.16.0-rc.5) (2025-12-14)
+
+
+### Features
+
+* People picker in forms  ([#1216](https://github.com/ReliefApplications/ems-backend/issues/1216)) ([544b5ab](https://github.com/ReliefApplications/ems-backend/commit/544b5ab0fd4c7113b7c5ac36e7fa8b16c908f909)), closes [AB#68534](https://github.com/AB/issues/68534)
+
 # [2.16.0-rc.4](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.3...v2.16.0-rc.4) (2025-11-07)
 
 
