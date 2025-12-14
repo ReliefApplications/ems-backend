@@ -22,9 +22,6 @@ export const formatValue = (field: any, value: any): any => {
     case 'text':
       if (!isNil(value)) {
         if (Array.isArray(value)) {
-          if (value.length > 0 && typeof value[0] === 'object') {
-            return value;
-          }
           return value.toString();
         } else {
           return value;
