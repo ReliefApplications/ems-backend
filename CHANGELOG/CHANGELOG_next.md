@@ -1,3 +1,10 @@
+# [2.16.0-rc.6](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.5...v2.16.0-rc.6) (2025-12-29)
+
+
+### Bug Fixes
+
+* Editing record with fields not defined in resource could fail ([#1217](https://github.com/ReliefApplications/ems-backend/issues/1217)) ([480929c](https://github.com/ReliefApplications/ems-backend/commit/480929c030a6d964d646ba85ad60343d7b7ea62d)), closes [AB#125221](https://github.com/AB/issues/125221)
+
 # [2.16.0-rc.5](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.4...v2.16.0-rc.5) (2025-12-14)
 
 
