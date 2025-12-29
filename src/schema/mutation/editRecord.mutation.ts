@@ -13,47 +13,13 @@ import {
   getOwnership,
   checkRecordValidation,
   checkRecordTriggers,
+  hasInaccessibleFields,
 } from '@utils/form';
 import { RecordType } from '../types';
 import { Types } from 'mongoose';
-import { AppAbility } from 'security/defineUserAbility';
-import { filter, isEqual, keys, union, has, get } from 'lodash';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
-
-/**
- * Checks if the user has the permission to update all the fields they're trying to update
- *
- * @param record The record to edit
- * @param newData The new data to set
- * @param ability The user ability
- * @returns If there's a field the user can't update
- */
-export const hasInaccessibleFields = (
-  record: Record,
-  newData: any,
-  ability: AppAbility
-) => {
-  const oldData = record.data || {};
-  const allKeys = union(keys(oldData), keys(newData));
-  const updatedKeys = filter(allKeys, (key) => {
-    let previous = get(oldData, key);
-    let next = get(newData, key);
-
-    // check for date objects and convert them to strings
-    if (previous instanceof Date) previous = previous.toISOString();
-    if (next instanceof Date) next = next.toISOString();
-
-    return !isEqual(previous, next);
-  });
-
-  return updatedKeys.some(
-    (question) =>
-      ability.cannot('update', record, `data.${question}`) &&
-      has(newData, question)
-  );
-};
 
 /** Arguments for the editRecord mutation */
 type EditRecordArgs = {
@@ -100,7 +66,11 @@ export default {
         oldRecord.form,
         'fields permissions resource structure'
       );
-      if (!oldRecord || !parentForm) {
+      const parentResource: Resource = await Resource.findById(
+        parentForm.resource,
+        'fields'
+      );
+      if (!oldRecord || !parentForm || !parentResource) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
 
@@ -108,7 +78,7 @@ export default {
       const ability = await extendAbilityForRecords(user, parentForm);
       if (
         ability.cannot('update', oldRecord) ||
-        hasInaccessibleFields(oldRecord, args.data, ability)
+        hasInaccessibleFields(oldRecord, args.data, ability, parentResource)
       ) {
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')

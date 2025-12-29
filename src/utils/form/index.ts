@@ -5,6 +5,7 @@ export * from './replaceField';
 export * from './findDuplicateFields';
 export * from './extractFields';
 export * from './getFieldType';
+export * from './hasInaccessibleFields';
 
 // === RECORDS ===
 export * from './transformRecord';
