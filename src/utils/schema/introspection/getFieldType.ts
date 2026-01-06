@@ -128,6 +128,12 @@ const getFieldType = (
     case 'editor': {
       return GraphQLString;
     }
+    case 'people-dropdown': {
+      return GraphQLJSON;
+    }
+    case 'people-tagbox': {
+      return GraphQLJSON;
+    }
     default: {
       return GraphQLString;
     }

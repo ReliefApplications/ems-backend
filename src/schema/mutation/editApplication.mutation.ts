@@ -25,6 +25,7 @@ type EditApplicationArgs = {
   id: string | Types.ObjectId;
   description?: string;
   sideMenu?: boolean;
+  topMenu?: boolean;
   hideMenu?: boolean;
   name?: string;
   status?: StatusType;
@@ -72,6 +73,7 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     description: { type: GraphQLString },
     sideMenu: { type: GraphQLBoolean },
+    topMenu: { type: GraphQLBoolean },
     hideMenu: { type: GraphQLBoolean },
     name: { type: GraphQLString },
     status: { type: StatusEnumType },
@@ -117,6 +119,7 @@ export default {
       if (!isNil(args.shortcut) && args.shortcut !== '') {
         await validateShortcut(args.id, args.shortcut);
       }
+
       Object.assign(
         update,
         args.name && { name: args.name },
@@ -126,9 +129,11 @@ export default {
         args.settings && { settings: args.settings },
         args.permissions && { permissions: args.permissions },
         !isNil(args.sideMenu) && { sideMenu: args.sideMenu },
+        !isNil(args.topMenu) && { topMenu: args.topMenu },
         !isNil(args.hideMenu) && { hideMenu: args.hideMenu },
         !isNil(args.shortcut) && { shortcut: args.shortcut }
       );
+
       application = await Application.findOneAndUpdate(filters, update, {
         new: true,
       });

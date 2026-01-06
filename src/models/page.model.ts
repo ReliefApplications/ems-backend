@@ -31,6 +31,10 @@ export interface Page extends Document {
   name: string;
   icon: string;
   showName?: boolean;
+  navBar?: {
+    showName?: boolean;
+    showIcon?: boolean;
+  };
   createdAt: Date;
   modifiedAt: Date;
   type: string;
@@ -64,6 +68,16 @@ const pageSchema = new Schema<Page>(
     name: String,
     icon: String,
     showName: Boolean,
+    navBar: {
+      showName: {
+        type: Boolean,
+        default: true,
+      },
+      showIcon: {
+        type: Boolean,
+        default: true,
+      },
+    },
     type: {
       type: String,
       enum: Object.values(contentType),

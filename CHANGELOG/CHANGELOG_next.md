@@ -1,3 +1,31 @@
+# [2.16.0-rc.6](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.5...v2.16.0-rc.6) (2025-12-29)
+
+
+### Bug Fixes
+
+* Editing record with fields not defined in resource could fail ([#1217](https://github.com/ReliefApplications/ems-backend/issues/1217)) ([480929c](https://github.com/ReliefApplications/ems-backend/commit/480929c030a6d964d646ba85ad60343d7b7ea62d)), closes [AB#125221](https://github.com/AB/issues/125221)
+
+# [2.16.0-rc.5](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.4...v2.16.0-rc.5) (2025-12-14)
+
+
+### Features
+
+* People picker in forms  ([#1216](https://github.com/ReliefApplications/ems-backend/issues/1216)) ([544b5ab](https://github.com/ReliefApplications/ems-backend/commit/544b5ab0fd4c7113b7c5ac36e7fa8b16c908f909)), closes [AB#68534](https://github.com/AB/issues/68534)
+
+# [2.16.0-rc.4](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.3...v2.16.0-rc.4) (2025-11-07)
+
+
+### Features
+
+* Enable menu and account on one line, and icon-only menu items ([#1213](https://github.com/ReliefApplications/ems-backend/issues/1213)) ([30345c4](https://github.com/ReliefApplications/ems-backend/commit/30345c477e0819a19c1182fa10030d89cb7ad32c)), closes [AB#121668](https://github.com/AB/issues/121668)
+
+# [2.16.0-rc.3](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.2...v2.16.0-rc.3) (2025-10-31)
+
+
+### Features
+
+* Display only resources question ([#1214](https://github.com/ReliefApplications/ems-backend/issues/1214)) ([b9402aa](https://github.com/ReliefApplications/ems-backend/commit/b9402aab0f93b2193bfbb4376bd1c55bb3013776)), closes [AB#122462](https://github.com/AB/issues/122462)
+
 # [2.16.0-rc.2](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.1...v2.16.0-rc.2) (2025-10-10)
 
 
