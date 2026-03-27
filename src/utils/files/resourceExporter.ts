@@ -716,6 +716,38 @@ export default class Exporter {
   };
 
   /**
+   * Sanitize string content for excel cells
+   *
+   * @param content Cell content, only strings will be sanitized
+   * @returns Sanitized string
+   */
+  private sanitizeForExcel(content: any): any {
+    if (typeof content !== 'string') return content;
+
+    // Convert to string and decode basic entities
+    const str = content;
+    //   .replace(/&nbsp;/g, ' ')
+    //   .replace(/&ndash;/g, '-')
+    //   .replace(/&mdash;/g, '-');
+
+    // // Strip ALL HTML tags
+    // str = str.replace(/<[^>]*>/g, '');
+
+    // // Remove XML-illegal control characters (The "Corruption" list)
+    // // Covers: \x00-\x08, \x0B, \x0C, \x0E-\x1F, \uFFFE, \uFFFF
+    // const illegalChars = /[\x00-\x08\x0B\x0C\x0E-\x1F\uFFFE\uFFFF]/g;
+    // str = str.replace(illegalChars, '');
+
+    // // Prevent Formula Injection
+    // // If the string starts with a symbol that triggers a formula, add a space
+    // if (/^[=\+\-\@]/.test(str)) {
+    //   str = ' ' + str;
+    // }
+
+    return str.substring(0, 32000);
+  }
+
+  /**
    * Write rows in xlsx format
    *
    * @param worksheet worksheet to write on
@@ -732,7 +764,7 @@ export default class Exporter {
           maxFieldLength = Math.max(maxFieldLength, value.length);
           temp.push('');
         } else {
-          temp.push(get(record, column.field, null));
+          temp.push(this.sanitizeForExcel(get(record, column.field, null)));
         }
       }
 
@@ -744,10 +776,8 @@ export default class Exporter {
           for (const column of columns.filter((x: any) => x.subTitle)) {
             const value = get(record, column.field, []);
             if (value && value.length > 0) {
-              temp[column.index] = get(
-                get(record, column.field, null)[i],
-                column.subField,
-                null
+              temp[column.index] = this.sanitizeForExcel(
+                get(get(record, column.field, null)[i], column.subField, '')
               );
             } else {
               temp[column.index] = null;
