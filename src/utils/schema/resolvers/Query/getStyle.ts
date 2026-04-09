@@ -23,6 +23,12 @@ const getStyle = (record, styleRules: { items: any[]; style: any }[]) => {
       'font-weight': rule.style.text?.bold && 'bold',
       'text-decoration': rule.style.text?.underline && 'underline',
       'font-style': rule.style.text?.italic && 'italic',
+      // Tag styling
+      padding: rule.style.isTag && '4px 8px',
+      'border-radius': rule.style.isTag && '8px',
+      width: rule.style.isTag && 'fit-content',
+      height: rule.style.isTag && 'fit-content',
+      margin: rule.style.isTag && '0 4px',
     };
     Object.keys(ruleStyle).forEach((key) => {
       if (!ruleStyle[key]) {
