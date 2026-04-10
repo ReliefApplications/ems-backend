@@ -109,7 +109,7 @@ export const getContextDataForRecord = async (
 
       const result = await Record.aggregate(pipeline);
       const calculatedValue = result[0]?.data?.[field.name];
-      if (calculatedValue) {
+      if (calculatedValue !== undefined && calculatedValue !== null) {
         Object.assign(data, { [field.name]: calculatedValue });
       }
     } else {
