@@ -69,7 +69,7 @@ module.exports = {
         },
       ],
     },
-    useMicrosoftGraph: false,// user.useMicrosoftGraph,
+    useMicrosoftGraph: user.useMicrosoftGraph,
   },
   publicStorage: {
     enable: true,
