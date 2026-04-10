@@ -102,7 +102,8 @@ export const getContextDataForRecord = async (
         ...buildCalculatedFieldPipeline(
           field.expression,
           field.name,
-          context.timeZone
+          context.timeZone,
+          context.user?.attributes || {}
         ),
       ];
 

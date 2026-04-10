@@ -17,14 +17,15 @@
       "@services/*": ["services/*"],
       "@utils/*": ["utils/*"]
     },
+    "types": ["jest", "node"],
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
+    "forceConsistentCasingInFileNames": true
   },
   "exclude": [
     "node_modules",
     "build",
     "src/migrations/template.ts", // there's a wrong link in this file, needed for migration
     "__tests__/old" // old tests
-  ],
+  ]
 }
