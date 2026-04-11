@@ -384,7 +384,8 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             ...buildCalculatedFieldPipeline(
               f.expression,
               f.name,
-              context.timeZone
+              context.timeZone,
+              context.user?.attributes || {}
             )
           )
         );

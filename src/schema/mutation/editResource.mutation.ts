@@ -722,12 +722,16 @@ export default {
           const expression = getExpressionFromString(
             calculatedField.add.expression
           );
+          const type =
+            expression.type === 'expression'
+              ? OperationTypeMap[expression.value.operation] ?? 'text'
+              : 'text';
           const pushCalculatedField = {
             fields: {
               isCalculated: true,
               name: calculatedField.add.name,
               expression: calculatedField.add.expression,
-              type: OperationTypeMap[expression.operation] ?? 'text',
+              type,
             },
           };
 
@@ -764,6 +768,10 @@ export default {
           const expression = getExpressionFromString(
             calculatedField.update.expression
           );
+          const type =
+            expression.type === 'expression'
+              ? OperationTypeMap[expression.value.operation] ?? 'text'
+              : 'text';
 
           const oldField = allResourceFields.find(
             (field) => field.name === calculatedField.update.oldName
@@ -775,7 +783,7 @@ export default {
               isCalculated: true,
               name: calculatedField.update.name,
               expression: calculatedField.update.expression,
-              type: OperationTypeMap[expression.operation] ?? 'text',
+              type,
               permissions: oldField.permissions,
             },
           };
