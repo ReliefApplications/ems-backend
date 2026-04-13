@@ -59,10 +59,8 @@ export const checkRecordValidation = (
   survey.locale = lang;
   // fill with the record data
   survey.data = { ...record.data, ...newData };
-  // validate the record
-  survey.completeLastPage();
   // If error detected, filter out questions based on criteria, and send back the issues
-  if (survey.hasErrors()) {
+  if (survey.hasErrors(true, false)) {
     // Filter questions based on our criteria
     const filteredQuestions = survey.getAllQuestions().filter((question) => {
       if (question.hasErrors()) {

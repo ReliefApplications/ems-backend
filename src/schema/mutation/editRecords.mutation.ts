@@ -7,15 +7,15 @@ import {
   GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { Record, Version, Form } from '@models';
+import { Record, Version, Form, Resource } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import {
   transformRecord,
   getOwnership,
   checkRecordValidation,
+  hasInaccessibleFields,
 } from '@utils/form';
 import { RecordType } from '../types';
-import { hasInaccessibleFields } from './editRecord.mutation';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
@@ -71,9 +71,13 @@ export default {
       });
       for (const record of oldRecords) {
         const ability = await extendAbilityForRecords(user, record.form);
+        const parentResource: Resource = await Resource.findById(
+          record.form.resource,
+          'fields'
+        );
         if (
           ability.can('update', record) &&
-          !hasInaccessibleFields(record, args.data, ability)
+          !hasInaccessibleFields(record, args.data, ability, parentResource)
         ) {
           const validationErrors = checkRecordValidation(
             record,

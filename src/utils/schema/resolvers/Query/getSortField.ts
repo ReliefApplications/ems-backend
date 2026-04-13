@@ -42,6 +42,16 @@ export default (sortField: string, field?: any): string => {
     ) {
       return `_${sortField}`;
     }
+    if (field) {
+      switch (field.type) {
+        case 'people-dropdown':
+        case 'people-tagbox': {
+          // Sort by last name within people fields
+          return `data.${sortField}.lastname`;
+        }
+        // By default, continue
+      }
+    }
     return `data.${sortField}`;
   }
   return defaultSortField ? defaultSortField.path : 'createdAt';

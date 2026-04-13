@@ -55,6 +55,48 @@ const ActionButtonInputType = new GraphQLInputObjectType({
         },
       }),
     },
+    // Clone Record
+    cloneRecord: {
+      type: new GraphQLInputObjectType({
+        name: 'CloneRecordInputType',
+        fields: {
+          template: { type: GraphQLString },
+          autoReload: { type: GraphQLBoolean },
+          onSave: {
+            type: new GraphQLInputObjectType({
+              name: 'CloneRecordOnSaveInputType',
+              fields: {
+                navigateTo: {
+                  type: new GraphQLInputObjectType({
+                    name: 'NavigateToOnSaveInputType',
+                    fields: {
+                      targetUrl: {
+                        type: new GraphQLInputObjectType({
+                          name: 'NavigateToTargetUrlOnSaveInputType',
+                          fields: {
+                            href: { type: GraphQLString },
+                            openInNewTab: { type: GraphQLBoolean },
+                          },
+                        }),
+                      },
+                      targetPage: {
+                        type: new GraphQLInputObjectType({
+                          name: 'NavigateToTargetPageOnSaveInputType',
+                          fields: {
+                            pageUrl: { type: GraphQLString },
+                            field: { type: GraphQLString },
+                          },
+                        }),
+                      },
+                    },
+                  }),
+                },
+              },
+            }),
+          },
+        },
+      }),
+    },
     // Add Record
     addRecord: {
       type: new GraphQLInputObjectType({

@@ -29,6 +29,11 @@ export interface Button {
     template?: string;
     autoReload?: boolean;
   };
+  // Clone Record
+  cloneRecord?: {
+    template?: string;
+    autoReload?: boolean;
+  };
   // Add Record
   addRecord?: {
     resource?: string;
@@ -86,6 +91,53 @@ export const buttonSchema = new Schema<Button>(
     href: String,
     openInNewTab: Boolean,
     previousPage: Boolean,
+    // Clone Record
+    cloneRecord: {
+      type: new Schema(
+        {
+          template: String,
+          autoReload: Boolean,
+          onSave: {
+            type: new Schema(
+              {
+                navigateTo: {
+                  type: new Schema(
+                    {
+                      targetUrl: {
+                        type: new Schema(
+                          {
+                            href: String,
+                            openInNewTab: { type: Boolean, default: true },
+                          },
+                          { _id: false }
+                        ),
+                        default: null,
+                      },
+                      targetPage: {
+                        type: new Schema(
+                          {
+                            pageUrl: { type: String },
+                            field: { type: String },
+                          },
+                          { _id: false }
+                        ),
+                        default: null,
+                      },
+                    },
+                    { _id: false }
+                  ),
+                  default: null,
+                },
+              },
+              { _id: false }
+            ),
+            default: null,
+          },
+        },
+        { _id: false }
+      ),
+      default: null,
+    },
     // Edit Record
     editRecord: {
       type: new Schema(
