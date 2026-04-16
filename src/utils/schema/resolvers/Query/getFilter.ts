@@ -69,7 +69,12 @@ const ATTRIBUTE_MATCH_ALL_FILTER = { _id: { $exists: true } };
 const ATTRIBUTE_MATCH_NONE_FILTER = { _id: { $exists: false } };
 
 /** Operators that compare an attribute against another field value. */
-const ATTRIBUTE_FIELD_OPERATORS = ['eq', 'neq', 'in', 'notin'];
+const ATTRIBUTE_FIELD_OPERATORS = [
+  filterOperator.EQUAL_TO,
+  filterOperator.NOT_EQUAL_TO,
+  filterOperator.IN,
+  filterOperator.NOT_IN,
+];
 
 /**
  * Returns a Mongo filter that either always matches or never matches.
