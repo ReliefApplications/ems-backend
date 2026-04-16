@@ -252,13 +252,16 @@ const buildMongoFilter = (
       }
 
       const isAttributeFilter = filter.field.startsWith('$attribute.');
+      if (isAttributeFilter && !context?.user) {
+        return ATTRIBUTE_MATCH_NONE_FILTER;
+      }
       const attributeValueSource =
         filter.valueSource === 'literal' ||
         !ATTRIBUTE_FIELD_OPERATORS.includes(filter.operator)
           ? 'literal'
           : 'field';
       const attrValue = isAttributeFilter
-        ? context.user?.attributes?.[filter.field.split('.')[1]]
+        ? context.user.attributes?.[filter.field.split('.')[1]]
         : '';
       if (isAttributeFilter && attributeValueSource === 'literal') {
         return buildLiteralAttributeFilter(
