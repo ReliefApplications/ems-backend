@@ -358,11 +358,15 @@ export default {
           // If field is a calculated field
           if (field && field.isCalculated) {
             pipeline.unshift(
-              ...buildCalculatedFieldPipeline(
+              ...(await buildCalculatedFieldPipeline(
                 field.expression,
                 field.name,
-                context.timeZone
-              )
+                context.timeZone,
+                {
+                  fields: resource.fields,
+                  context,
+                }
+              ))
             );
           }
 
