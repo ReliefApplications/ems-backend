@@ -355,6 +355,12 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       // only add calculated fields that are in the query
       // in order to decrease the pipeline size
       const shouldAddCalculatedFieldToPipeline = (field: any) => {
+        // If the generic `data` payload is requested, calculated fields must be
+        // materialized into parent.data so records tables can display them.
+        if (queryFields.findIndex((x) => x.name === 'data') > -1) {
+          return true;
+        }
+
         // If field is requested in the query
         if (queryFields.findIndex((x) => x.name === field.name) > -1)
           return true;
@@ -377,17 +383,23 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         return false;
       };
 
-      fields
-        .filter((f) => f.isCalculated && shouldAddCalculatedFieldToPipeline(f))
-        .forEach((f) =>
-          calculatedFieldsAggregation.push(
-            ...buildCalculatedFieldPipeline(
-              f.expression,
-              f.name,
-              context.timeZone
-            )
-          )
+      for (const field of fields.filter(
+        (candidate) =>
+          candidate.isCalculated &&
+          shouldAddCalculatedFieldToPipeline(candidate)
+      )) {
+        calculatedFieldsAggregation.push(
+          ...(await buildCalculatedFieldPipeline(
+            field.expression,
+            field.name,
+            context.timeZone,
+            {
+              fields,
+              context,
+            }
+          ))
         );
+      }
 
       // Build linked records aggregations
       const linkedReferenceDataAggregation = flatten(

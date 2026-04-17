@@ -1,11 +1,28 @@
-/**
- * Interface for a simple operator
- * If type is 'value', the operator is a constant, stored in the value field
- * If type is 'field', the operator is the value for that the field with the name stored in value
- */
-interface SimpleOperator {
-  type: 'const' | 'field' | 'info';
+/** Supported display modifiers for field operators */
+export type FieldDisplayMode = 'text';
+
+/** Typed value for field operators */
+export interface FieldOperatorValue {
+  field: string;
+  display?: FieldDisplayMode;
+}
+
+/** Interface for constant operators */
+interface ConstOperator {
+  type: 'const';
   value: string | number | boolean;
+}
+
+/** Interface for field operators */
+interface FieldOperator {
+  type: 'field';
+  value: FieldOperatorValue;
+}
+
+/** Interface for info operators */
+interface InfoOperator {
+  type: 'info';
+  value: string;
 }
 
 /**
@@ -16,7 +33,11 @@ interface RecursiveOperator {
   value: Operation;
 }
 
-export type Operator = SimpleOperator | RecursiveOperator;
+export type Operator =
+  | ConstOperator
+  | FieldOperator
+  | InfoOperator
+  | RecursiveOperator;
 
 export type OperationTypes =
   | SingleOperatorOperationsTypes

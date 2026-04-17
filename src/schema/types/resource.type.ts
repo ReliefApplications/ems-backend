@@ -6,6 +6,7 @@ import extendAbilityForRecords, {
 } from '@security/extendAbilityForRecords';
 import { getAccessibleFields } from '@utils/form';
 import { getMetaData } from '@utils/form/metadata.helper';
+import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
 import getFilter from '@utils/schema/resolvers/Query/getFilter';
 import {
   GraphQLBoolean,
@@ -17,6 +18,7 @@ import {
   GraphQLString,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
+import mongoose from 'mongoose';
 import { pluralize } from 'inflection';
 import { get, indexOf } from 'lodash';
 import {
@@ -177,8 +179,9 @@ export const ResourceType = new GraphQLObjectType({
         archived: { type: GraphQLBoolean },
       },
       async resolve(parent, args, context) {
+        const first = args.first || DEFAULT_FIRST;
         let mongooseFilter: any = {
-          resource: parent.id,
+          resource: new mongoose.Types.ObjectId(String(parent.id)),
         };
         if (args.archived) {
           Object.assign(mongooseFilter, { archived: true });
@@ -200,7 +203,9 @@ export const ResourceType = new GraphQLObjectType({
         const cursorFilters = args.afterCursor
           ? {
               _id: {
-                $gt: decodeCursor(args.afterCursor),
+                $gt: new mongoose.Types.ObjectId(
+                  String(decodeCursor(args.afterCursor))
+                ),
               },
             }
           : {};
@@ -210,20 +215,55 @@ export const ResourceType = new GraphQLObjectType({
         const permissionFilters = Record.find(
           accessibleBy(ability, 'read').Record
         ).getFilter();
-        let items = await Record.find({
-          $and: [cursorFilters, mongooseFilter, permissionFilters],
-        }).limit(args.first + 1);
-        const hasNextPage = items.length > args.first;
+        const calculatedFieldsAggregation: any[] = [];
+        for (const field of (parent.fields || []).filter(
+          (candidate: any) => candidate.isCalculated
+        )) {
+          calculatedFieldsAggregation.push(
+            ...(await buildCalculatedFieldPipeline(
+              field.expression,
+              field.name,
+              context.timeZone,
+              {
+                fields: parent.fields,
+                context,
+              }
+            ))
+          );
+        }
+
+        let items = await Record.aggregate([
+          {
+            $match: {
+              $and: [cursorFilters, mongooseFilter, permissionFilters],
+            },
+          },
+          ...calculatedFieldsAggregation,
+          {
+            $sort: {
+              _id: 1,
+            },
+          },
+          {
+            $limit: first + 1,
+          },
+        ]);
+        const hasNextPage = items.length > first;
         if (hasNextPage) {
           items = items.slice(0, items.length - 1);
         }
-        const edges = items.map((r) => ({
-          cursor: encodeCursor(r.id.toString()),
-          node: Object.assign(
-            getAccessibleFields(r, ability).toObject({ minimize: false }),
-            { id: r._id }
-          ),
-        }));
+        const edges = items.map((r) => {
+          const accessibleRecord = getAccessibleFields(r, ability) as any;
+          const node =
+            typeof accessibleRecord.toObject === 'function'
+              ? accessibleRecord.toObject({ minimize: false })
+              : accessibleRecord;
+
+          return {
+            cursor: encodeCursor(r._id.toString()),
+            node: Object.assign(node, { id: r._id }),
+          };
+        });
         return {
           pageInfo: {
             hasNextPage,

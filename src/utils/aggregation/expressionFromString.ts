@@ -1,4 +1,5 @@
 import {
+  FieldOperatorValue,
   Operation,
   SingleOperatorOperationsTypes,
   DoubleOperatorOperationsTypes,
@@ -193,6 +194,25 @@ const getArgs = (exp: string): string[] => {
 };
 
 /**
+ * Parses a field reference, including its optional display modifier.
+ *
+ * @param exp The field expression without the `data.` prefix
+ * @returns Parsed field reference
+ */
+const parseFieldReference = (exp: string): FieldOperatorValue => {
+  if (exp.endsWith(':text')) {
+    return {
+      field: exp.slice(0, -5),
+      display: 'text',
+    };
+  }
+
+  return {
+    field: exp,
+  };
+};
+
+/**
  * Parses a string into an operation
  *
  * @param exp The expression to parse
@@ -228,7 +248,7 @@ const solveExp = (exp: string): Operator => {
   if (exp.startsWith('data.')) {
     return {
       type: 'field',
-      value: exp.substring(5),
+      value: parseFieldReference(exp.substring(5)),
     };
   }
 
@@ -299,12 +319,22 @@ const solveExp = (exp: string): Operator => {
 };
 
 /**
+ * Parses an expression string into its root operator.
+ *
+ * @param expression The raw expression string
+ * @returns The parsed root operator
+ */
+export const getOperatorFromString = (expression: string): Operator => {
+  expression = expression.trim();
+  return solveExp(expression);
+};
+
+/**
  * Transforms an operation expression into the Operation structure
  *
  * @param expression The operation expression of the calculated field in string format
  * @returns The operation expression of the calculated field in Operation format
  */
 export const getExpressionFromString = (expression: string): Operation => {
-  expression = expression.trim();
-  return solveExp(expression).value as Operation;
+  return getOperatorFromString(expression).value as Operation;
 };

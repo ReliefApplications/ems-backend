@@ -99,11 +99,15 @@ export const getContextDataForRecord = async (
           },
         },
         // Stages for calculating the field
-        ...buildCalculatedFieldPipeline(
+        ...(await buildCalculatedFieldPipeline(
           field.expression,
           field.name,
-          context.timeZone
-        ),
+          context.timeZone,
+          {
+            fields,
+            context,
+          }
+        )),
       ];
 
       const result = await Record.aggregate(pipeline);
