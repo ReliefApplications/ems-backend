@@ -23,6 +23,7 @@ import { accessibleBy } from '@casl/mongoose';
 import getSearchFilter from '@utils/schema/resolvers/Query/getSearchFilter';
 import getSortAggregation from '@utils/schema/resolvers/Query/getSortAggregation';
 import dataSources from '@server/apollo/dataSources';
+import sanitizeHtml from 'sanitize-html';
 
 /**
  * Export batch parameters interface
@@ -724,19 +725,10 @@ export default class Exporter {
   private sanitizeForExcel(content: any): any {
     if (typeof content !== 'string') return content;
 
-    // Convert to string and decode basic entities
-    const str = content;
-    //   .replace(/&nbsp;/g, ' ')
-    //   .replace(/&ndash;/g, '-')
-    //   .replace(/&mdash;/g, '-');
-
-    // // Strip ALL HTML tags
-    // str = str.replace(/<[^>]*>/g, '');
-
-    // // Remove XML-illegal control characters (The "Corruption" list)
-    // // Covers: \x00-\x08, \x0B, \x0C, \x0E-\x1F, \uFFFE, \uFFFF
-    // const illegalChars = /[\x00-\x08\x0B\x0C\x0E-\x1F\uFFFE\uFFFF]/g;
-    // str = str.replace(illegalChars, '');
+    const str = sanitizeHtml(content, {
+      allowedTags: [], // Removes ALL tags
+      allowedAttributes: {},
+    });
 
     // // Prevent Formula Injection
     // // If the string starts with a symbol that triggers a formula, add a space
@@ -744,6 +736,7 @@ export default class Exporter {
     //   str = ' ' + str;
     // }
 
+    // Excel has a maximum cell content length of 32,767 characters
     return str.substring(0, 32000);
   }
 
