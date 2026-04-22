@@ -1,3 +1,10 @@
+# [2.16.0-rc.9](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.8...v2.16.0-rc.9) (2026-04-22)
+
+
+### Features
+
+* Make context.incrementalid available in context data ([#1226](https://github.com/ReliefApplications/ems-backend/issues/1226)) ([cc96f6d](https://github.com/ReliefApplications/ems-backend/commit/cc96f6dd3bb6648ab61dc3bf4b7809444fdbe428)), closes [AB#128988](https://github.com/AB/issues/128988)
+
 # [2.16.0-rc.8](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.7...v2.16.0-rc.8) (2026-04-22)
 
 
