@@ -1,3 +1,10 @@
+# [2.16.0-rc.7](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.6...v2.16.0-rc.7) (2026-04-22)
+
+
+### Bug Fixes
+
+* some grids export could fail due to cell content too long ([d97e4f6](https://github.com/ReliefApplications/ems-backend/commit/d97e4f6ae62dd8556c1d794791b63dc39df710e1)), closes [AB#128561](https://github.com/AB/issues/128561)
+
 # [2.16.0-rc.6](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.5...v2.16.0-rc.6) (2025-12-29)
 
 
