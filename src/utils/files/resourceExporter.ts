@@ -23,6 +23,7 @@ import { accessibleBy } from '@casl/mongoose';
 import getSearchFilter from '@utils/schema/resolvers/Query/getSearchFilter';
 import getSortAggregation from '@utils/schema/resolvers/Query/getSortAggregation';
 import dataSources from '@server/apollo/dataSources';
+import sanitizeHtml from 'sanitize-html';
 
 /**
  * Export batch parameters interface
@@ -716,6 +717,24 @@ export default class Exporter {
   };
 
   /**
+   * Sanitize string content for excel cells
+   *
+   * @param content Cell content, only strings will be sanitized
+   * @returns Sanitized string
+   */
+  private sanitizeForExcel(content: any): any {
+    if (typeof content !== 'string') return content;
+
+    const str = sanitizeHtml(content, {
+      allowedTags: [], // Removes ALL tags
+      allowedAttributes: {},
+    });
+
+    // Excel has a maximum cell content length of 32,767 characters
+    return str.substring(0, 32000);
+  }
+
+  /**
    * Write rows in xlsx format
    *
    * @param worksheet worksheet to write on
@@ -732,7 +751,7 @@ export default class Exporter {
           maxFieldLength = Math.max(maxFieldLength, value.length);
           temp.push('');
         } else {
-          temp.push(get(record, column.field, null));
+          temp.push(this.sanitizeForExcel(get(record, column.field, null)));
         }
       }
 
@@ -744,10 +763,8 @@ export default class Exporter {
           for (const column of columns.filter((x: any) => x.subTitle)) {
             const value = get(record, column.field, []);
             if (value && value.length > 0) {
-              temp[column.index] = get(
-                get(record, column.field, null)[i],
-                column.subField,
-                null
+              temp[column.index] = this.sanitizeForExcel(
+                get(get(record, column.field, null)[i], column.subField, '')
               );
             } else {
               temp[column.index] = null;
