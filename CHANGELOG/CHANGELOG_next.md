@@ -1,3 +1,10 @@
+# [2.16.0-rc.8](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.7...v2.16.0-rc.8) (2026-04-22)
+
+
+### Features
+
+* Allow style rules in grids to use badge display ([#1223](https://github.com/ReliefApplications/ems-backend/issues/1223)) ([0bc4dc4](https://github.com/ReliefApplications/ems-backend/commit/0bc4dc488a34fa03bb14f8ecea660bffd3726e7c)), closes [AB#128960](https://github.com/AB/issues/128960)
+
 # [2.16.0-rc.7](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.6...v2.16.0-rc.7) (2026-04-22)
 
 
