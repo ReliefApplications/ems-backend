@@ -730,12 +730,6 @@ export default class Exporter {
       allowedAttributes: {},
     });
 
-    // // Prevent Formula Injection
-    // // If the string starts with a symbol that triggers a formula, add a space
-    // if (/^[=\+\-\@]/.test(str)) {
-    //   str = ' ' + str;
-    // }
-
     // Excel has a maximum cell content length of 32,767 characters
     return str.substring(0, 32000);
   }
