@@ -23,6 +23,13 @@ const getStyle = (record, styleRules: { items: any[]; style: any }[]) => {
       'font-weight': rule.style.text?.bold && 'bold',
       'text-decoration': rule.style.text?.underline && 'underline',
       'font-style': rule.style.text?.italic && 'italic',
+      // Tag styling
+      padding: rule.style.isBadge && '4px 8px',
+      'border-radius': rule.style.isBadge && '8px',
+      width: rule.style.isBadge && 'fit-content',
+      'max-width': rule.style.isBadge && 'calc(100% - 8px)',
+      height: rule.style.isBadge && '28px',
+      margin: rule.style.isBadge && '0 4px',
     };
     Object.keys(ruleStyle).forEach((key) => {
       if (!ruleStyle[key]) {
