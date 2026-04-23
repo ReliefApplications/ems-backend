@@ -1,3 +1,10 @@
+## [2.16.1](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0...v2.16.1) (2026-04-23)
+
+
+### Bug Fixes
+
+* update config package version ([13dba76](https://github.com/ReliefApplications/ems-backend/commit/13dba76b43871fd776cd228a4657f230d778b18c))
+
 # [2.16.0](https://github.com/ReliefApplications/ems-backend/compare/v2.15.0...v2.16.0) (2026-04-13)
 
 
