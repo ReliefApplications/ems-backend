@@ -110,7 +110,10 @@ const buildMongoFilter = (
         )?.type || '';
 
       // If type is resource and refers to a nested field, get the type of the nested field
-      if (type === 'resource' && context?.resourceFieldsById) {
+      if (
+        (type === 'resource' || type === 'resources') &&
+        context?.resourceFieldsById
+      ) {
         const resourceField = fields.find(
           (x) => x.name === filter.field.split('.')[0]
         );
@@ -166,7 +169,8 @@ const buildMongoFilter = (
           if (
             !fields.find(
               (x) =>
-                x.name === filter.field.split('.')[0] && x.type === 'resource'
+                x.name === filter.field.split('.')[0] &&
+                (x.type === 'resource' || x.type === 'resources')
             )
           ) {
             // Prevent createdBy / lastUpdatedBy to return, as they should be in the filter
@@ -243,7 +247,7 @@ const buildMongoFilter = (
             break;
           }
           case 'users': {
-            if (context && context.user) {
+            if (context && context.user && Array.isArray(value)) {
               // handles the case where we want to filter by connected user
               value = value.map((x) =>
                 x === 'me' ? context.user._id.toString() : x

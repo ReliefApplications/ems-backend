@@ -138,6 +138,13 @@
 				"emailDistributionListNameExist": "Email distribution list title already exist"
 			}
 		},
+		"emailNotification": {
+			"add": {
+				"errors": {
+					"invalidCron": "The cron expression used in the scheduler is invalid"
+				}
+			}
+		},
 		"form": {
 			"add": {
 				"errors": {
