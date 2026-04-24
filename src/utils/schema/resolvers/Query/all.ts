@@ -712,32 +712,34 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // === ACTIONS ===
       const actionRules: { items: any[]; action: any }[] = [];
-      console.log(actions);
       // If there is a custom action rule
       if (actions?.length > 0) {
         // Create the filter for each action
         const recordsIds = items.map((x) => x.id || x._id);
-        for (const action of actions) {
-          const actionFilter = getFilter(action.filter, fields, context);
-          // Get the records corresponding to the action filter
-          const itemsToAction = await Record.aggregate([
-            {
-              $match: {
-                _id: {
-                  $in: recordsIds.map((x) => new mongoose.Types.ObjectId(x)),
+        const objectIds = recordsIds.map(
+          (x) => new mongoose.Types.ObjectId(x)
+        );
+        // Run action filters in parallel
+        const actionResults = await Promise.all(
+          actions.map((action) => {
+            const actionFilter = getFilter(action.filter, fields, context);
+            return Record.aggregate([
+              {
+                $match: {
+                  _id: { $in: objectIds },
                 },
               },
-            },
-            ...calculatedFieldsAggregation,
-            {
-              $match: actionFilter,
-            },
-            { $addFields: { id: '$_id' } },
-          ]);
-          console.log(itemsToAction);
-          // Add the list of record and the corresponding action
-          actionRules.push({ items: itemsToAction, action: action });
-        }
+              ...calculatedFieldsAggregation,
+              {
+                $match: actionFilter,
+              },
+              { $addFields: { id: '$_id' } },
+            ]);
+          })
+        );
+        actions.forEach((action, idx) => {
+          actionRules.push({ items: actionResults[idx], action });
+        });
       }
 
       // === CONSTRUCT OUTPUT + RETURN ===
