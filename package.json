@@ -1,6 +1,6 @@
 {
   "name": "ems-backend",
-  "version": "2.16.0",
+  "version": "2.16.0-rc.9",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -94,6 +94,7 @@
     "pug": "^3.0.2",
     "redis": "^4.6.7",
     "sanitize-filename": "^1.6.3",
+    "sanitize-html": "^2.17.3",
     "sass": "^1.63.6",
     "survey-knockout": "^1.9.64",
     "ts-node-dev": "^2.0.0",

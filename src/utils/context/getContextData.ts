@@ -41,7 +41,12 @@ export const getContextDataForRecord = async (
     recordID instanceof Record ? recordID : await Record.findById(recordID)
   ) as Record;
 
-  if (!resource || depth > MAX_DEPTH || !record.data) return record.data ?? {};
+  if (!resource || depth > MAX_DEPTH || !record.data) {
+    return {
+      ...(record.data ?? {}),
+      incrementalId: record.incrementalId,
+    };
+  }
 
   const fields = resource.fields;
   const data: { [key: string]: any } = {};
@@ -123,7 +128,10 @@ export const getContextDataForRecord = async (
     }
   }
 
-  return data;
+  return {
+    ...data,
+    incrementalId: record.incrementalId,
+  };
 };
 
 /**
