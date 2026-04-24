@@ -3,6 +3,8 @@ import { CustomAPI } from '../../server/apollo/dataSources';
 import config from 'config';
 import { logger } from '@services/logger.service';
 import axios, { AxiosHeaders, AxiosStatic } from 'axios';
+import { referenceDataType } from '@const/enumTypes';
+import { ReferenceData } from '@models';
 import get from 'lodash/get';
 import jsonpath from 'jsonpath';
 import commonServices from '@server/common-services';
@@ -155,6 +157,39 @@ export const getFullChoices = async (
         choices.push({ [valueField]: 'other', [textField]: 'Other' });
       }
       return choices;
+    } else if (field.referenceData?.id) {
+      const referenceData = await ReferenceData.findById(
+        field.referenceData.id
+      ).populate({
+        path: 'apiConfiguration',
+        model: 'ApiConfiguration',
+        select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
+      });
+
+      if (!referenceData) {
+        return field.choices || [];
+      }
+
+      let items: any[] = [];
+      if (referenceData.type !== referenceDataType.static) {
+        const dataSource: CustomAPI =
+          context.dataSources[(referenceData.apiConfiguration as any)?.name];
+        if (dataSource) {
+          items = await dataSource.getReferenceDataItems(
+            referenceData,
+            referenceData.apiConfiguration as any
+          );
+        }
+      } else {
+        items = referenceData.data;
+      }
+
+      const displayField =
+        field.referenceData.displayField || referenceData.valueField;
+      return items.map((item) => ({
+        value: get(item, referenceData.valueField),
+        text: get(item, displayField),
+      }));
     } else {
       return field.choices;
     }

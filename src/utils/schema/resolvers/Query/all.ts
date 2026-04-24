@@ -349,12 +349,39 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       // Check if we need to fetch any other record related to resource questions
       const queryFields = getQueryFields(info);
 
+      // Additional filter from the user permissions
+      let permissionFilters;
+      // Try to get ability from cache
+      let ability = abilityCache.get<AppAbility>(userId);
+      if (!ability) {
+        // If not available, build ability
+        ability = await extendAbilityForRecords(user);
+        set(context, 'user.ability', ability);
+        permissionFilters = Record.find(
+          accessibleBy(ability, 'read').Record
+        ).getFilter();
+        // And cache it
+        abilityCache.set(userId, ability);
+      } else {
+        // Update user ability
+        set(context, 'user.ability', ability);
+        permissionFilters = Record.find(
+          accessibleBy(ability, 'read').Record
+        ).getFilter();
+      }
+
       // Build aggregation for calculated fields
       const calculatedFieldsAggregation: any[] = [];
 
       // only add calculated fields that are in the query
       // in order to decrease the pipeline size
       const shouldAddCalculatedFieldToPipeline = (field: any) => {
+        // If the generic `data` payload is requested, calculated fields must be
+        // materialized into parent.data so records tables can display them.
+        if (queryFields.findIndex((x) => x.name === 'data') > -1) {
+          return true;
+        }
+
         // If field is requested in the query
         if (queryFields.findIndex((x) => x.name === field.name) > -1)
           return true;
@@ -377,17 +404,24 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         return false;
       };
 
-      fields
-        .filter((f) => f.isCalculated && shouldAddCalculatedFieldToPipeline(f))
-        .forEach((f) =>
-          calculatedFieldsAggregation.push(
-            ...buildCalculatedFieldPipeline(
-              f.expression,
-              f.name,
-              context.timeZone
-            )
-          )
+      for (const field of fields.filter(
+        (f) => f.isCalculated && shouldAddCalculatedFieldToPipeline(f)
+      )) {
+        calculatedFieldsAggregation.push(
+          ...((await buildCalculatedFieldPipeline(
+            field.expression,
+            field.name,
+            context.timeZone,
+            {
+              fields,
+              context,
+              parentResourceId: id?.toString(),
+              ability: context.user.ability,
+              user: context.user,
+            }
+          )) as any)
         );
+      }
 
       // Build linked records aggregations
       const linkedReferenceDataAggregation = flatten(
@@ -409,27 +443,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         $or: [{ resource: id }, { form: id }],
         archived: { $not: { $eq: true } },
       };
-
-      // Additional filter from the user permissions
-      let permissionFilters;
-      // Try to get ability from cache
-      let ability = abilityCache.get<AppAbility>(userId);
-      if (!ability) {
-        // If not available, build ability
-        ability = await extendAbilityForRecords(user);
-        set(context, 'user.ability', ability);
-        permissionFilters = Record.find(
-          accessibleBy(ability, 'read').Record
-        ).getFilter();
-        // And cache it
-        abilityCache.set(userId, ability);
-      } else {
-        // Update user ability
-        set(context, 'user.ability', ability);
-        permissionFilters = Record.find(
-          accessibleBy(ability, 'read').Record
-        ).getFilter();
-      }
 
       // Finally putting all filters together
       const filters = {

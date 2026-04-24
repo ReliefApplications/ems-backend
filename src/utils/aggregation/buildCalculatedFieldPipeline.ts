@@ -1,18 +1,43 @@
-import { flattenDeep, isNil } from 'lodash';
+import { MULTISELECT_TYPES } from '@const/fieldTypes';
+import { ReferenceData } from '@models';
+import { getFullChoices } from '@utils/form/getDisplayText';
+import { flattenDeep } from 'lodash';
+import { PipelineStage } from 'mongoose';
 import {
   DateOperationTypes,
   DoubleOperatorOperationsTypes,
   MultipleOperatorsOperationsTypes,
   Operation,
   Operator,
+  ParsedCalculatedExpression,
   SingleOperatorOperationsTypes,
 } from '../../const/calculatedFields';
-import { getExpressionFromString } from './expressionFromString';
-import { PipelineStage } from 'mongoose';
+import {
+  getExpressionFromString,
+  getOperatorFromString,
+} from './expressionFromString';
+import getFilter from '../schema/resolvers/Query/getFilter';
+import { getResolvedRelatedField } from './calculatedFieldExpression';
 
 type Dependency = {
   operation: Operation;
   path: string;
+};
+
+type FieldTextPaths = Record<string, string>;
+
+type BuildCalculatedFieldOptions = {
+  fields?: any[];
+  context?: any;
+  parentResourceId?: string;
+  ability?: any;
+  user?: any;
+};
+
+type DisplayTextStage = {
+  fieldPath: string;
+  targetPath: string;
+  step: PipelineStage.AddFields;
 };
 
 /** Special date operators enum */
@@ -56,44 +81,500 @@ const operationMap: {
 };
 
 /**
- * If provided a simple operator, returns the value, otherwise returns null
+ * Checks whether an operator is an expression.
+ *
+ * @param operator Operator to check
+ * @returns Whether the operator is an expression
+ */
+const isExpressionOperator = (
+  operator: Operator | null
+): operator is Extract<Operator, { type: 'expression' }> =>
+  Boolean(operator && operator.type === 'expression');
+
+/**
+ * If provided a simple operator, returns the value, otherwise returns null.
  *
  * @param operator The operator to get value from
+ * @param fieldTextPaths Pre-computed paths for `:text` field references
  * @returns The value of the operator, or null if it is not a simple operator
  */
-const getSimpleOperatorValue = (operator: Operator) => {
+const getSimpleOperatorValue = (
+  operator: Operator | null,
+  fieldTextPaths: FieldTextPaths = {}
+) => {
+  if (!operator) return null;
+
   if (operator.type === 'const') return operator.value;
-  if (operator.type === 'field') return `$data.${operator.value}`;
+
+  if (operator.type === 'field') {
+    const fieldPath = operator.value.field;
+
+    if (operator.value.display === 'text' && fieldTextPaths[fieldPath]) {
+      return `$${fieldTextPaths[fieldPath]}`;
+    }
+
+    return `$data.${fieldPath}`;
+  }
+
   if (operator.type === 'info') {
     if (operator.value === infoOperators.CREATED_AT) return '$createdAt';
     if (operator.value === infoOperators.UPDATED_AT) return '$modifiedAt';
     if (operator.value === infoOperators.ID) return '$incrementalId';
   }
+
   return null;
 };
 
 /**
- * Creates the pipeline stage for a 'today' operation
+ * Collects all field paths referenced with the `:text` modifier in an operation.
+ *
+ * @param operation Operation to inspect
+ * @param displayFields Mutable set of discovered field paths
+ * @returns Discovered field paths
+ */
+const collectDisplayTextFieldPaths = (
+  operation: Operation,
+  displayFields = new Set<string>()
+) => {
+  const collectOperator = (operator: Operator | null) => {
+    if (!operator) return;
+
+    if (operator.type === 'field' && operator.value.display === 'text') {
+      displayFields.add(operator.value.field);
+      return;
+    }
+
+    if (isExpressionOperator(operator)) {
+      collectDisplayTextFieldPaths(operator.value, displayFields);
+    }
+  };
+
+  switch (operation.operation) {
+    case 'today': {
+      collectOperator(operation.operator);
+      break;
+    }
+    case 'year':
+    case 'month':
+    case 'day':
+    case 'hour':
+    case 'minute':
+    case 'second':
+    case 'millisecond':
+    case 'date':
+    case 'exists':
+    case 'size':
+    case 'toInt':
+    case 'toLong': {
+      collectOperator(operation.operator);
+      break;
+    }
+    case 'sub':
+    case 'div':
+    case 'gte':
+    case 'gt':
+    case 'lte':
+    case 'lt':
+    case 'eq':
+    case 'ne':
+    case 'datediff':
+    case 'includes': {
+      collectOperator(operation.operator1);
+      collectOperator(operation.operator2);
+      break;
+    }
+    case 'add':
+    case 'mul':
+    case 'and':
+    case 'or':
+    case 'if':
+    case 'substr':
+    case 'concat': {
+      operation.operators.forEach((operator) => collectOperator(operator));
+      break;
+    }
+    case 'relatedField':
+    default:
+      break;
+  }
+
+  return displayFields;
+};
+
+/**
+ * Collects `:text` field references from a root operator.
+ *
+ * @param operator Root operator
+ * @param displayFields Mutable set of discovered field paths
+ * @returns Discovered field paths
+ */
+const collectDisplayTextFieldPathsFromOperator = (
+  operator: Operator,
+  displayFields = new Set<string>()
+) => {
+  if (operator.type === 'field' && operator.value.display === 'text') {
+    displayFields.add(operator.value.field);
+    return displayFields;
+  }
+
+  if (isExpressionOperator(operator)) {
+    return collectDisplayTextFieldPaths(operator.value, displayFields);
+  }
+
+  return displayFields;
+};
+
+/**
+ * Gets a field definition from the available fields list.
+ *
+ * @param fieldPath Field path referenced in the expression
+ * @param fields Available fields
+ * @returns Matching field definition, if any
+ */
+const getFieldDefinition = (fieldPath: string, fields: any[]) => {
+  const [fieldName] = fieldPath.split('.');
+  return fields.find((field) => field?.name === fieldName);
+};
+
+/**
+ * Extracts the comparable value from a choice item.
+ *
+ * @param choice Choice definition
+ * @returns Choice value
+ */
+const getChoiceValue = (choice: any) =>
+  typeof choice === 'object' && choice !== null && 'value' in choice
+    ? choice.value
+    : choice;
+
+/**
+ * Extracts the text value from a choice item.
+ *
+ * @param choice Choice definition
+ * @returns Choice text
+ */
+const getChoiceText = (choice: any) =>
+  typeof choice === 'object' && choice !== null && 'text' in choice
+    ? choice.text
+    : choice;
+
+/**
+ * Resolves the field used to compare a stored non-primitive value with its corresponding choice value.
+ *
+ * @param field Field definition
+ * @returns Comparable field name, when applicable
+ */
+const getComparableValueField = async (field: any): Promise<string | null> => {
+  if (!field?.referenceData?.id) {
+    return null;
+  }
+
+  try {
+    const referenceData = await ReferenceData.findById(field.referenceData.id)
+      .select('valueField')
+      .lean();
+
+    return referenceData?.valueField || null;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Builds a Mongo expression that extracts the primitive comparable value from a stored select/tagbox value.
+ *
+ * @param sourcePath Source value path
+ * @param comparableField Optional reference-data comparable field
+ * @returns Mongo expression resolving the comparable value
+ */
+const buildComparableValueExpression = (
+  sourcePath: string,
+  comparableField?: string | null
+) => {
+  const wrappedValuePath = `${sourcePath}.value`;
+
+  if (!comparableField) {
+    return {
+      $ifNull: [wrappedValuePath, sourcePath],
+    };
+  }
+
+  return {
+    $ifNull: [
+      `${wrappedValuePath}.${comparableField}`,
+      {
+        $ifNull: [
+          `${sourcePath}.${comparableField}`,
+          {
+            $ifNull: [wrappedValuePath, sourcePath],
+          },
+        ],
+      },
+    ],
+  };
+};
+
+/**
+ * Builds an auxiliary stage that resolves the display text for a field.
+ *
+ * @param fieldPath Expression field path
+ * @param fields Available fields
+ * @param context Request context
+ * @returns Display text stage information
+ */
+const buildDisplayTextStage = async (
+  fieldPath: string,
+  fields: any[],
+  context: any
+): Promise<DisplayTextStage | null> => {
+  const field = getFieldDefinition(fieldPath, fields);
+  if (
+    !field ||
+    !(
+      field.choices ||
+      field.choicesByUrl ||
+      field.choicesByGraphQL ||
+      field.referenceData
+    )
+  ) {
+    return null;
+  }
+
+  const choices = (await getFullChoices(field, context)) || [];
+  if (!choices.length) {
+    return null;
+  }
+
+  const comparableField = await getComparableValueField(field);
+  const choiceValues = choices.map((choice) => getChoiceValue(choice));
+  const choiceTexts = choices.map((choice) => getChoiceText(choice));
+  const targetPath = `aux.displayText.${fieldPath}`;
+  const sourcePath = `$data.${fieldPath}`;
+  const normalizedSourceValue = buildComparableValueExpression(
+    sourcePath,
+    comparableField
+  );
+
+  if (MULTISELECT_TYPES.includes(field.type)) {
+    return {
+      fieldPath,
+      targetPath,
+      step: {
+        $addFields: {
+          [targetPath]: {
+            $cond: {
+              if: { $isArray: sourcePath },
+              then: {
+                $map: {
+                  input: sourcePath,
+                  as: 'selectedValue',
+                  in: {
+                    $let: {
+                      vars: {
+                        choiceValues,
+                        choiceTexts,
+                        normalizedSelectedValue: buildComparableValueExpression(
+                          '$$selectedValue',
+                          comparableField
+                        ),
+                      },
+                      in: {
+                        $let: {
+                          vars: {
+                            choiceIndex: {
+                              $indexOfArray: [
+                                '$$choiceValues',
+                                '$$normalizedSelectedValue',
+                              ],
+                            },
+                          },
+                          in: {
+                            $cond: {
+                              if: { $eq: ['$$choiceIndex', -1] },
+                              then: '$$normalizedSelectedValue',
+                              else: {
+                                $arrayElemAt: [
+                                  '$$choiceTexts',
+                                  '$$choiceIndex',
+                                ],
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+              else: normalizedSourceValue,
+            },
+          },
+        },
+      },
+    };
+  }
+
+  return {
+    fieldPath,
+    targetPath,
+    step: {
+      $addFields: {
+        [targetPath]: {
+          $let: {
+            vars: {
+              choiceValues,
+              choiceTexts,
+              normalizedValue: normalizedSourceValue,
+            },
+            in: {
+              $let: {
+                vars: {
+                  choiceIndex: {
+                    $indexOfArray: ['$$choiceValues', '$$normalizedValue'],
+                  },
+                },
+                in: {
+                  $cond: {
+                    if: { $eq: ['$$choiceIndex', -1] },
+                    then: '$$normalizedValue',
+                    else: {
+                      $arrayElemAt: ['$$choiceTexts', '$$choiceIndex'],
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  };
+};
+
+/**
+ * Builds all auxiliary stages required for `:text` field references.
+ *
+ * @param operation Parsed calculated-field operation
+ * @param fields Available fields
+ * @param context Request context
+ * @returns Auxiliary stages and their corresponding field-path mapping
+ */
+const buildDisplayTextStages = async (
+  operation: Operation,
+  fields: any[] = [],
+  context?: any
+) => {
+  const displayFieldPaths = Array.from(collectDisplayTextFieldPaths(operation));
+
+  if (displayFieldPaths.length === 0 || fields.length === 0) {
+    return {
+      stages: [] as PipelineStage.AddFields[],
+      fieldTextPaths: {} as FieldTextPaths,
+    };
+  }
+
+  const mappings = await Promise.all(
+    displayFieldPaths.map((fieldPath) =>
+      buildDisplayTextStage(fieldPath, fields, context)
+    )
+  );
+
+  return mappings.reduce(
+    (acc, mapping) => {
+      if (!mapping) {
+        return acc;
+      }
+
+      acc.stages.push(mapping.step);
+      acc.fieldTextPaths[mapping.fieldPath] = mapping.targetPath;
+      return acc;
+    },
+    {
+      stages: [] as PipelineStage.AddFields[],
+      fieldTextPaths: {} as FieldTextPaths,
+    }
+  );
+};
+
+/**
+ * Builds auxiliary stages required for `:text` references found on a root operator, including direct `{{data.field:text}}` expressions.
+ *
+ * @param operator Root parsed operator
+ * @param fields Available fields
+ * @param context Request context
+ * @returns Auxiliary stages and their corresponding field-path mapping
+ */
+const buildDisplayTextStagesFromOperator = async (
+  operator: Operator,
+  fields: any[] = [],
+  context?: any
+) => {
+  if (isExpressionOperator(operator)) {
+    return buildDisplayTextStages(operator.value, fields, context);
+  }
+
+  const displayFieldPaths = Array.from(
+    collectDisplayTextFieldPathsFromOperator(operator)
+  );
+
+  if (displayFieldPaths.length === 0 || fields.length === 0) {
+    return {
+      stages: [] as PipelineStage.AddFields[],
+      fieldTextPaths: {} as FieldTextPaths,
+    };
+  }
+
+  const mappings = await Promise.all(
+    displayFieldPaths.map((fieldPath) =>
+      buildDisplayTextStage(fieldPath, fields, context)
+    )
+  );
+
+  return mappings.reduce(
+    (acc, mapping) => {
+      if (!mapping) {
+        return acc;
+      }
+
+      acc.stages.push(mapping.step);
+      acc.fieldTextPaths[mapping.fieldPath] = mapping.targetPath;
+      return acc;
+    },
+    {
+      stages: [] as PipelineStage.AddFields[],
+      fieldTextPaths: {} as FieldTextPaths,
+    }
+  );
+};
+
+/**
+ * Creates the pipeline stage for a 'today' operation.
  *
  * @param operator The operator for the operation, if any
  * @param path The current path in the recursion
- * @returns The stage for the operation and an array with dependencies for the operation
+ * @param fieldTextPaths Pre-computed paths for `:text` field references
+ * @returns The stage for the operation and an array with dependencies
  */
-const resolveTodayOperator = (operator: Operator | null, path: string) => {
+const resolveTodayOperator = (
+  operator: Operator | null,
+  path: string,
+  fieldTextPaths: FieldTextPaths
+) => {
   const dependencies: Dependency[] = [];
 
   const getValueString = () => {
-    const value = getSimpleOperatorValue(operator);
-    if (!isNil(value)) return value; // check that not null or undefined, so 0 works
+    if (!operator) return null;
 
-    // if is an expression, add to dependencies array,
-    // that will be resolved before, since will be appended
-    // to the beginning of the pipeline
+    if (!isExpressionOperator(operator)) {
+      return getSimpleOperatorValue(operator, fieldTextPaths);
+    }
+
     const auxPath = `${path}-today`;
     dependencies.unshift({
-      operation: operator.value as Operation,
+      operation: operator.value,
       path: auxPath.startsWith('aux.') ? auxPath.slice(4) : auxPath,
     });
+
     return `$${auxPath.startsWith('aux.') ? '' : 'aux.'}${auxPath}`;
   };
 
@@ -111,32 +592,208 @@ const resolveTodayOperator = (operator: Operator | null, path: string) => {
 };
 
 /**
- * Creates the pipeline stage for an operation with a single operator
+ * Gets a direct record expression for a child-record field.
+ *
+ * @param fieldName Child field name
+ * @returns Mongo expression
+ */
+const getSimpleRelatedFieldExpression = (fieldName: string) => {
+  switch (fieldName) {
+    case 'id':
+      return { $toString: '$_id' };
+    case 'incrementalId':
+      return '$incrementalId';
+    case 'createdAt':
+      return '$createdAt';
+    case 'modifiedAt':
+      return '$modifiedAt';
+    case 'form':
+      return '$form';
+    case 'lastUpdateForm':
+      return '$lastUpdateForm';
+    default:
+      return `$data.${fieldName}`;
+  }
+};
+
+/**
+ * Creates the pipeline stages for a related child selector.
+ *
+ * @param operation Related field operation
+ * @param path The current path in the recursion
+ * @param options Current build options
+ * @returns Stages for the related field pipeline
+ */
+const resolveRelatedFieldOperator = async (
+  operation: Extract<Operation, { operation: 'relatedField' }>,
+  path: string,
+  options: BuildCalculatedFieldOptions
+) => {
+  const resolvedField = await getResolvedRelatedField(operation, {
+    parentResourceId: options.parentResourceId,
+    ability: options.ability,
+    user: options.user,
+  });
+
+  const targetPath = path.startsWith('aux.') ? path : `data.${path}`;
+  if (!resolvedField.canReadField) {
+    return [
+      {
+        $addFields: {
+          [targetPath]: null,
+        },
+      },
+    ] as PipelineStage[];
+  }
+
+  const lookupPath = `__${path.replace(/\./g, '_')}_relatedField`;
+  const linkFilters = resolvedField.linkFieldNames.map((linkFieldName) => ({
+    $eq: [`$data.${linkFieldName}`, '$$parentRecordId'],
+  }));
+  const relationMatchExpr =
+    linkFilters.length === 1
+      ? linkFilters[0]
+      : {
+          $or: linkFilters,
+        };
+
+  const resourceOrFormMatchExpr = {
+    $or: [
+      {
+        $eq: [{ $toString: '$resource' }, resolvedField.childResourceId],
+      },
+      ...(resolvedField.childFormIds.length > 0
+        ? [
+            {
+              $in: [{ $toString: '$form' }, resolvedField.childFormIds],
+            },
+          ]
+        : []),
+    ],
+  };
+
+  const baseMatch: Record<string, unknown> = {
+    $expr: {
+      $and: [relationMatchExpr, resourceOrFormMatchExpr],
+    },
+    archived: { $ne: true },
+  };
+
+  const matchFilters: Record<string, unknown>[] = [baseMatch];
+
+  if (resolvedField.permissionFilter) {
+    matchFilters.push(resolvedField.permissionFilter);
+  }
+
+  if (operation.filter) {
+    matchFilters.push(
+      getFilter(operation.filter, resolvedField.childResourceFields, {
+        ...(options.context || {}),
+        user: options.user,
+      })
+    );
+  }
+
+  const match =
+    matchFilters.length === 1
+      ? matchFilters[0]
+      : {
+          $and: matchFilters,
+        };
+
+  const sortField = operation.sortField || 'createdAt';
+  const sortDirection = operation.sortOrder === 'desc' ? -1 : 1;
+  const sortFieldExpression = getSimpleRelatedFieldExpression(sortField);
+  const childValueExpression = getSimpleRelatedFieldExpression(operation.field);
+
+  return [
+    {
+      $lookup: {
+        from: 'records',
+        let: {
+          parentRecordId: {
+            $toString: '$_id',
+          },
+        },
+        pipeline: [
+          {
+            $match: match,
+          },
+          {
+            $addFields: {
+              __sortValue: sortFieldExpression,
+            },
+          },
+          {
+            $sort: {
+              __sortValue: sortDirection,
+            },
+          },
+          {
+            $limit: operation.first,
+          },
+          {
+            $project: {
+              _id: 0,
+              value: childValueExpression,
+            },
+          },
+        ],
+        as: lookupPath,
+      },
+    },
+    {
+      $addFields: {
+        [targetPath]: {
+          $ifNull: [
+            {
+              $let: {
+                vars: {
+                  selectedRecord: {
+                    $arrayElemAt: [`$${lookupPath}`, 0],
+                  },
+                },
+                in: '$$selectedRecord.value',
+              },
+            },
+            null,
+          ],
+        },
+      },
+    },
+    {
+      $unset: [lookupPath],
+    },
+  ] as any[];
+};
+
+/**
+ * Creates the pipeline stage for an operation with a single operator.
  *
  * @param operation The operation to resolve
  * @param operator The operator for the operation
  * @param path The current path in the recursion
  * @param timeZone the current timezone of the user
- * @returns The stage for the operation and an array with dependencies for the operation
+ * @param fieldTextPaths Pre-computed paths for `:text` field references
+ * @returns The stage for the operation and an array with dependencies
  */
 const resolveSingleOperator = (
   operation: SingleOperatorOperationsTypes,
   operator: Operator,
   path: string,
-  timeZone: string
+  timeZone: string,
+  fieldTextPaths: FieldTextPaths
 ) => {
   const dependencies: Dependency[] = [];
 
   const getValueString = () => {
-    const value = getSimpleOperatorValue(operator);
-    if (!isNil(value)) return value; // check that not null or undefined, so 0 works
+    if (!isExpressionOperator(operator)) {
+      return getSimpleOperatorValue(operator, fieldTextPaths);
+    }
 
-    // if is an expression, add to dependencies array,
-    // that will be resolved before, since will be appended
-    // to the beginning of the pipeline
     const auxPath = `${path}-${operation}`;
     dependencies.unshift({
-      operation: operator.value as Operation,
+      operation: operator.value,
       path: auxPath.startsWith('aux.') ? auxPath.slice(4) : auxPath,
     });
     return `$${auxPath.startsWith('aux.') ? '' : 'aux.'}${auxPath}`;
@@ -148,7 +805,6 @@ const resolveSingleOperator = (
     case 'exists':
     case 'toInt':
     case 'toLong': {
-      // Simple operations
       step = {
         $addFields: {
           [path.startsWith('aux.') ? path : `data.${path}`]: {
@@ -159,7 +815,6 @@ const resolveSingleOperator = (
       break;
     }
     case 'size': {
-      // Size operation
       step = {
         $addFields: {
           [path.startsWith('aux.') ? path : `data.${path}`]: {
@@ -176,7 +831,6 @@ const resolveSingleOperator = (
       break;
     }
     case 'date': {
-      // To date operation
       step = {
         $addFields: {
           [path.startsWith('aux.') ? path : `data.${path}`]: {
@@ -200,7 +854,6 @@ const resolveSingleOperator = (
     case 'minute':
     case 'second':
     case 'millisecond': {
-      // Date operations
       step = {
         $addFields: {
           [path.startsWith('aux.') ? path : `data.${path}`]: {
@@ -229,35 +882,37 @@ const resolveSingleOperator = (
 };
 
 /**
- * Creates the pipeline stage for an operation with a single operator
+ * Creates the pipeline stage for an operation with two operators.
  *
  * @param operation The operation to resolve
  * @param operator1 The first operator for the operation
  * @param operator2 The second operator for the operation
  * @param path The current path in the recursion
- * @returns The stage for the operation and an array with dependencies for the operation
+ * @param fieldTextPaths Pre-computed paths for `:text` field references
+ * @returns The stage for the operation and an array with dependencies
  */
 const resolveDoubleOperator = (
   operation: DoubleOperatorOperationsTypes,
   operator1: Operator,
   operator2: Operator,
-  path: string
+  path: string,
+  fieldTextPaths: FieldTextPaths
 ) => {
   const dependencies: Dependency[] = [];
 
   const getValueString = (i: number) => {
     const selectedOperator = i === 1 ? operator1 : operator2;
-    const value = getSimpleOperatorValue(selectedOperator);
-    if (!isNil(value)) return value; // check that not null or undefined, so 0 works
 
-    // if is an expression, add to dependencies array,
-    // that will be resolved before, since will be appended
-    // to the beginning of the pipeline
+    if (!isExpressionOperator(selectedOperator)) {
+      return getSimpleOperatorValue(selectedOperator, fieldTextPaths);
+    }
+
     const auxPath = `${path}-${operation}${i}`;
     dependencies.unshift({
-      operation: selectedOperator.value as Operation,
+      operation: selectedOperator.value,
       path: auxPath.startsWith('aux.') ? auxPath.slice(4) : auxPath,
     });
+
     return `$${auxPath.startsWith('aux.') ? '' : 'aux.'}${auxPath}`;
   };
 
@@ -265,7 +920,6 @@ const resolveDoubleOperator = (
 
   switch (operation) {
     case 'datediff':
-      // Date diff operation (always in minutes, can be converted to other units in the display options)
       step = {
         $addFields: {
           [path.startsWith('aux.') ? path : `data.${path}`]: {
@@ -279,9 +933,6 @@ const resolveDoubleOperator = (
       };
       break;
     case 'includes':
-      // Includes operation
-
-      // Add check if the value is an array, if not, evaluate to false
       step = {
         $addFields: {
           [path.startsWith('aux.') ? path : `data.${path}`]: {
@@ -297,7 +948,6 @@ const resolveDoubleOperator = (
       };
       break;
     default:
-      // Simple operations
       step = {
         $addFields: {
           [path.startsWith('aux.') ? path : `data.${path}`]: {
@@ -311,17 +961,19 @@ const resolveDoubleOperator = (
 };
 
 /**
- * Creates the pipeline stage for an operation with multiple operators
+ * Creates the pipeline stage for an operation with multiple operators.
  *
  * @param operation The operation to resolve
  * @param operators The operators for the operation
  * @param path The current path in the recursion
- * @returns The stage for the operation and an array with dependencies for the operation
+ * @param fieldTextPaths Pre-computed paths for `:text` field references
+ * @returns The stage for the operation and an array with dependencies
  */
 const resolveMultipleOperators = (
   operation: MultipleOperatorsOperationsTypes,
   operators: Operator[],
-  path: string
+  path: string,
+  fieldTextPaths: FieldTextPaths
 ) => {
   const dependencies: Dependency[] = [];
 
@@ -329,23 +981,19 @@ const resolveMultipleOperators = (
     $addFields: {
       [path.startsWith('aux.') ? path : `data.${path}`]: {
         [operationMap[operation]]: operators.map((operator, index) => {
-          let value = getSimpleOperatorValue(operator);
+          let value = getSimpleOperatorValue(operator, fieldTextPaths);
 
-          if (value === null) {
-            // if is an expression, add to dependencies array,
-            // that will be resolved before, since will be appended
-            // to the beginning of the pipeline
+          if (isExpressionOperator(operator)) {
             const auxPath = `${path}-${operation}${index}`;
             value = `$${auxPath.startsWith('aux.') ? '' : 'aux.'}${auxPath}`;
             dependencies.unshift({
-              operation: operator.value as Operation,
+              operation: operator.value,
               path: auxPath.startsWith('aux.') ? auxPath.slice(4) : auxPath,
             });
           }
 
           switch (operation) {
             case 'concat': {
-              // converts the value to a string (checks for date) if the operation is concat
               if (typeof value === 'string' && value.startsWith('$')) {
                 return {
                   $cond: {
@@ -366,20 +1014,19 @@ const resolveMultipleOperators = (
                     },
                   },
                 };
-              } else {
-                return {
-                  $convert: {
-                    input: value,
-                    to: 'string',
-                    onError: '',
-                    onNull: '',
-                  },
-                };
               }
+
+              return {
+                $convert: {
+                  input: value,
+                  to: 'string',
+                  onError: '',
+                  onNull: '',
+                },
+              };
             }
-            default: {
+            default:
               return value;
-            }
           }
         }),
       },
@@ -390,15 +1037,24 @@ const resolveMultipleOperators = (
 };
 
 /**
- * Gets the pipeline for a calculated field from its operation
+ * Gets the pipeline for a calculated field from its operation.
  *
  * @param op The operation that results in the calculated field
  * @param path The current path in the recursion
  * @param timeZone the current timezone of the user
+ * @param options Current build options
+ * @param fieldTextPaths Pre-computed paths for `:text` field references
  * @returns The pipeline for the calculated field
  */
-const buildPipeline = (op: Operation, path: string, timeZone: string) => {
-  const pipeline: PipelineStage.AddFields[] = [];
+const buildPipeline = async (
+  op: Operation,
+  path: string,
+  timeZone: string,
+  options: BuildCalculatedFieldOptions,
+  fieldTextPaths: FieldTextPaths
+) => {
+  const pipeline: any[] = [];
+
   switch (op.operation) {
     case 'add':
     case 'mul':
@@ -410,17 +1066,28 @@ const buildPipeline = (op: Operation, path: string, timeZone: string) => {
       const { step, dependencies } = resolveMultipleOperators(
         op.operation,
         op.operators,
-        path
+        path,
+        fieldTextPaths
       );
 
-      if (dependencies.length > 0)
+      if (dependencies.length > 0) {
         pipeline.unshift(
           ...flattenDeep(
-            dependencies.map((dep) =>
-              buildPipeline(dep.operation, `aux.${dep.path}`, timeZone)
+            await Promise.all(
+              dependencies.map((dep) =>
+                buildPipeline(
+                  dep.operation,
+                  `aux.${dep.path}`,
+                  timeZone,
+                  options,
+                  fieldTextPaths
+                )
+              )
             )
           )
         );
+      }
+
       pipeline.push(step);
       break;
     }
@@ -438,17 +1105,28 @@ const buildPipeline = (op: Operation, path: string, timeZone: string) => {
         op.operation,
         op.operator1,
         op.operator2,
-        path
+        path,
+        fieldTextPaths
       );
 
-      if (dependencies.length > 0)
+      if (dependencies.length > 0) {
         pipeline.unshift(
           ...flattenDeep(
-            dependencies.map((dep) =>
-              buildPipeline(dep.operation, `aux.${dep.path}`, timeZone)
+            await Promise.all(
+              dependencies.map((dep) =>
+                buildPipeline(
+                  dep.operation,
+                  `aux.${dep.path}`,
+                  timeZone,
+                  options,
+                  fieldTextPaths
+                )
+              )
             )
           )
         );
+      }
+
       pipeline.push(step);
       break;
     }
@@ -468,31 +1146,61 @@ const buildPipeline = (op: Operation, path: string, timeZone: string) => {
         op.operation,
         op.operator,
         path,
-        timeZone
+        timeZone,
+        fieldTextPaths
       );
-      if (dependencies.length > 0)
+
+      if (dependencies.length > 0) {
         pipeline.unshift(
           ...flattenDeep(
-            dependencies.map((dep) =>
-              buildPipeline(dep.operation, `aux.${dep.path}`, timeZone)
+            await Promise.all(
+              dependencies.map((dep) =>
+                buildPipeline(
+                  dep.operation,
+                  `aux.${dep.path}`,
+                  timeZone,
+                  options,
+                  fieldTextPaths
+                )
+              )
             )
           )
         );
+      }
+
       pipeline.push(step);
       break;
     }
     case 'today': {
-      const { step, dependencies } = resolveTodayOperator(op.operator, path);
+      const { step, dependencies } = resolveTodayOperator(
+        op.operator,
+        path,
+        fieldTextPaths
+      );
 
-      if (dependencies.length > 0)
+      if (dependencies.length > 0) {
         pipeline.unshift(
           ...flattenDeep(
-            dependencies.map((dep) =>
-              buildPipeline(dep.operation, `aux.${dep.path}`, timeZone)
+            await Promise.all(
+              dependencies.map((dep) =>
+                buildPipeline(
+                  dep.operation,
+                  `aux.${dep.path}`,
+                  timeZone,
+                  options,
+                  fieldTextPaths
+                )
+              )
             )
           )
         );
+      }
+
       pipeline.push(step);
+      break;
+    }
+    case 'relatedField': {
+      pipeline.push(...(await resolveRelatedFieldOperator(op, path, options)));
       break;
     }
   }
@@ -501,21 +1209,82 @@ const buildPipeline = (op: Operation, path: string, timeZone: string) => {
 };
 
 /**
- * Gets the pipeline for a calculated field from its operation expression
+ * Builds a pipeline for a parsed calculated expression.
+ *
+ * @param expression Parsed expression node
+ * @param path The current path in the recursion
+ * @param timeZone Current user timezone
+ * @param options Current build options
+ * @param fieldTextPaths Pre-computed paths for `:text` field references
+ * @returns Pipeline stages
+ */
+const buildExpressionPipeline = async (
+  expression: ParsedCalculatedExpression,
+  path: string,
+  timeZone: string,
+  options: BuildCalculatedFieldOptions,
+  fieldTextPaths: FieldTextPaths
+) => {
+  if ('operation' in expression) {
+    return buildPipeline(expression, path, timeZone, options, fieldTextPaths);
+  }
+
+  return [
+    {
+      $addFields: {
+        [path.startsWith('aux.') ? path : `data.${path}`]:
+          getSimpleOperatorValue(expression, fieldTextPaths),
+      },
+    },
+  ] as any[];
+};
+
+/**
+ * Gets the pipeline for a calculated field from its operation expression.
  *
  * @param expression The operation expression of the calculated field
  * @param name The name of the calculated field
  * @param timeZone the current timezone of the user
+ * @param options Additional context required to resolve related selectors and `:text` operators
  * @returns The pipeline for the calculated field
  */
-const buildCalculatedFieldPipeline = (
+const buildCalculatedFieldPipeline = async (
   expression: string,
   name: string,
-  timeZone: string
+  timeZone: string,
+  options: BuildCalculatedFieldOptions = {}
 ) => {
-  const operation = getExpressionFromString(expression);
-  const pipeline = buildPipeline(operation, name, timeZone);
-  return pipeline;
+  const rootOperator = getOperatorFromString(expression);
+  const { stages, fieldTextPaths } = await buildDisplayTextStagesFromOperator(
+    rootOperator,
+    options.fields,
+    options.context
+  );
+
+  if (!isExpressionOperator(rootOperator)) {
+    return [
+      ...stages,
+      {
+        $addFields: {
+          [`data.${name}`]: getSimpleOperatorValue(
+            rootOperator,
+            fieldTextPaths
+          ),
+        },
+      },
+    ];
+  }
+
+  const parsedExpression = getExpressionFromString(expression);
+  const pipeline = await buildExpressionPipeline(
+    parsedExpression,
+    name,
+    timeZone,
+    options,
+    fieldTextPaths
+  );
+
+  return [...stages, ...pipeline];
 };
 
 export default buildCalculatedFieldPipeline;

@@ -104,16 +104,23 @@ export const getContextDataForRecord = async (
           },
         },
         // Stages for calculating the field
-        ...buildCalculatedFieldPipeline(
+        ...((await buildCalculatedFieldPipeline(
           field.expression,
           field.name,
-          context.timeZone
-        ),
+          context.timeZone,
+          {
+            fields: resource.fields,
+            context,
+            parentResourceId: resource._id.toString(),
+            ability: context.user.ability,
+            user: context.user,
+          }
+        )) as any),
       ];
 
       const result = await Record.aggregate(pipeline);
       const calculatedValue = result[0]?.data?.[field.name];
-      if (calculatedValue) {
+      if (calculatedValue !== undefined) {
         Object.assign(data, { [field.name]: calculatedValue });
       }
     } else {
