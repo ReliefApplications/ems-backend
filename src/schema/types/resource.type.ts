@@ -227,6 +227,9 @@ export const ResourceType = new GraphQLObjectType({
               {
                 fields: parent.fields,
                 context,
+                parentResourceId: parent.id?.toString?.() || String(parent.id),
+                ability,
+                user: context.user,
               }
             ))
           );

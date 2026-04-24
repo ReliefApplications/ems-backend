@@ -310,12 +310,11 @@ export default class Exporter {
     const pageSize = 100;
     for (let i = 0; i < totalCount; i += pageSize) {
       recordsPromises.push(
-        this.buildPipeline(this.columns, ids.slice(i, i + pageSize)).then(
-          (pipeline) =>
-            Record.aggregate(pipeline).then((items) => {
-              records.splice(i, items.length, ...items);
-            })
-        )
+        this.buildPipeline(this.columns, ids.slice(i, i + pageSize))
+          .then((pipeline) => Record.aggregate(pipeline))
+          .then((items) => {
+            records.splice(i, items.length, ...items);
+          })
       );
     }
     // Execute all promises
@@ -343,13 +342,13 @@ export default class Exporter {
         // Reversed relationship, the resource is used in another resource's template
         if (column.parent) {
           relatedResourcePromises.push(
-            this.buildReversedPipeline(column, record).then((pipeline) =>
-              Record.aggregate(pipeline).then((relatedRecords) => {
+            this.buildReversedPipeline(column, record)
+              .then((pipeline) => Record.aggregate(pipeline))
+              .then((relatedRecords) => {
                 if (relatedRecords.length > 0) {
                   set(record, column.field, relatedRecords);
                 }
               })
-            )
           );
         } else {
           relatedResourcePromises.push(
@@ -422,19 +421,22 @@ export default class Exporter {
       { $match: filters },
       { $limit: this.params.limit || Number.MAX_SAFE_INTEGER },
     ];
-    for (const column of this.columns.filter(
-      (candidate) => candidate.meta?.field?.isCalculated
+    for (const col of this.columns.filter(
+      (column) => column.meta?.field?.isCalculated
     )) {
       pipeline.unshift(
-        ...(await buildCalculatedFieldPipeline(
-          column.meta.field.expression,
-          column.meta.field.name,
+        ...((await buildCalculatedFieldPipeline(
+          col.meta.field.expression,
+          col.meta.field.name,
           this.params.timeZone,
           {
             fields: this.resource.fields,
             context,
+            parentResourceId: this.resource._id.toString(),
+            ability: context.user.ability,
+            user: context.user,
           }
-        ))
+        )) as any)
       );
     }
     return pipeline;
@@ -503,19 +505,22 @@ export default class Exporter {
         },
       },
     ];
-    for (const column of columns.filter(
-      (candidate) => candidate.meta?.field?.isCalculated
+    for (const col of columns.filter(
+      (column) => column.meta?.field?.isCalculated
     )) {
       pipeline.unshift(
-        ...(await buildCalculatedFieldPipeline(
-          column.meta.field.expression,
-          column.meta.field.name,
+        ...((await buildCalculatedFieldPipeline(
+          col.meta.field.expression,
+          col.meta.field.name,
           this.params.timeZone,
           {
-            fields: this.resource.fields,
+            fields: col.parent?.fields || this.resource.fields,
             context: this.req.context,
+            parentResourceId: this.resource._id.toString(),
+            ability: this.req.context.user.ability,
+            user: this.req.context.user,
           }
-        ))
+        )) as any)
       );
     }
     return pipeline;
@@ -578,19 +583,22 @@ export default class Exporter {
       },
       projectStep,
     ];
-    for (const subColumn of subColumns.filter(
-      (candidate) => candidate.meta?.field?.isCalculated
+    for (const col of subColumns.filter(
+      (subColumn) => subColumn.meta?.field?.isCalculated
     )) {
       pipeline.unshift(
-        ...(await buildCalculatedFieldPipeline(
-          subColumn.meta.field.expression,
-          subColumn.meta.field.name,
+        ...((await buildCalculatedFieldPipeline(
+          col.meta.field.expression,
+          col.meta.field.name,
           this.params.timeZone,
           {
-            fields: column.parent?.fields || [],
+            fields: column.parent.fields,
             context: this.req.context,
+            parentResourceId: column.parent._id.toString(),
+            ability: this.req.context.user.ability,
+            user: this.req.context.user,
           }
-        ))
+        )) as any)
       );
     }
     return pipeline;
@@ -1077,8 +1085,9 @@ export default class Exporter {
               .filter((id: any) => mongoose.Types.ObjectId.isValid(id))
               .map((id: any) => new mongoose.Types.ObjectId(id))
           : [new mongoose.Types.ObjectId(columnValue)]
-      ).then((pipeline) =>
-        Record.aggregate(pipeline).then(async (relatedRecords) => {
+      )
+        .then((pipeline) => Record.aggregate(pipeline))
+        .then(async (relatedRecords) => {
           if (relatedRecords.length > 0) {
             set(
               record,
@@ -1097,8 +1106,7 @@ export default class Exporter {
               );
             }
           }
-        })
-      );
+        });
       return relatedPromises;
     }
   };

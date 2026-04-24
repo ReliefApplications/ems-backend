@@ -1,3 +1,5 @@
+import { CompositeFilterDescriptor } from '../types/filter';
+
 /** Supported display modifiers for field operators */
 export type FieldDisplayMode = 'text';
 
@@ -43,7 +45,8 @@ export type OperationTypes =
   | SingleOperatorOperationsTypes
   | DoubleOperatorOperationsTypes
   | MultipleOperatorsOperationsTypes
-  | 'today';
+  | 'today'
+  | 'relatedField';
 
 /** Interface for the 'today' operation */
 interface TodayOperation {
@@ -105,8 +108,22 @@ interface MultipleOperatorsOperation {
   operators: Operator[];
 }
 
+/** Interface for a related child record selector */
+export interface RelatedFieldOperation {
+  operation: 'relatedField';
+  relation: string;
+  field: string;
+  first: 1;
+  sortField?: string;
+  sortOrder?: 'asc' | 'desc';
+  filter?: CompositeFilterDescriptor;
+}
+
 export type Operation =
   | MultipleOperatorsOperation
   | TodayOperation
   | SingleOperatorOperation
-  | DoubleOperatorOperation;
+  | DoubleOperatorOperation
+  | RelatedFieldOperation;
+
+export type ParsedCalculatedExpression = Operation | Operator;

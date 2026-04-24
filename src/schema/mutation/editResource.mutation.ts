@@ -3,10 +3,7 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { AppAbility } from '@security/defineUserAbility';
 import { Context } from '@server/apollo/context';
 import { logger } from '@services/logger.service';
-import {
-  getExpressionFromString,
-  OperationTypeMap,
-} from '@utils/aggregation/expressionFromString';
+import { getCalculatedFieldType } from '@utils/aggregation/calculatedFieldExpression';
 import { findDuplicateFields } from '@utils/form';
 import { GraphQLError, GraphQLID, GraphQLList, GraphQLNonNull } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
@@ -719,15 +716,21 @@ export default {
 
         // Add new calculated field
         if (calculatedField.add) {
-          const expression = getExpressionFromString(
-            calculatedField.add.expression
+          const type = await getCalculatedFieldType(
+            calculatedField.add.expression,
+            {
+              parentResourceId: resource._id.toString(),
+              resourceFields: allResourceFields,
+              ability,
+              user,
+            }
           );
           const pushCalculatedField = {
             fields: {
               isCalculated: true,
               name: calculatedField.add.name,
               expression: calculatedField.add.expression,
-              type: OperationTypeMap[expression.operation] ?? 'text',
+              type,
             },
           };
 
@@ -761,8 +764,14 @@ export default {
           };
           if (update.$pull) Object.assign(update.$pull, pullCalculatedField);
           else Object.assign(update, { $pull: pullCalculatedField });
-          const expression = getExpressionFromString(
-            calculatedField.update.expression
+          const type = await getCalculatedFieldType(
+            calculatedField.update.expression,
+            {
+              parentResourceId: resource._id.toString(),
+              resourceFields: allResourceFields,
+              ability,
+              user,
+            }
           );
 
           const oldField = allResourceFields.find(
@@ -775,7 +784,7 @@ export default {
               isCalculated: true,
               name: calculatedField.update.name,
               expression: calculatedField.update.expression,
-              type: OperationTypeMap[expression.operation] ?? 'text',
+              type,
               permissions: oldField.permissions,
             },
           };

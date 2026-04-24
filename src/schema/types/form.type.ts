@@ -131,6 +131,10 @@ export const FormType = new GraphQLObjectType({
               {
                 fields: parent.fields,
                 context,
+                parentResourceId:
+                  parent.resource?.toString?.() || String(parent.resource),
+                ability,
+                user: context.user,
               }
             ))
           );
