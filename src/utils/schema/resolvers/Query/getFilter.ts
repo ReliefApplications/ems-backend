@@ -62,6 +62,118 @@ export const extractFilterFields = (filter: any): string[] => {
   return fields;
 };
 
+/** Mongo predicate that matches every record. */
+const ATTRIBUTE_MATCH_ALL_FILTER = { _id: { $exists: true } };
+
+/** Mongo predicate that matches no record. */
+const ATTRIBUTE_MATCH_NONE_FILTER = { _id: { $exists: false } };
+
+/** Operators that compare an attribute against another field value. */
+const ATTRIBUTE_FIELD_OPERATORS = [
+  filterOperator.EQUAL_TO,
+  filterOperator.NOT_EQUAL_TO,
+  filterOperator.IN,
+  filterOperator.NOT_IN,
+];
+
+/**
+ * Returns a Mongo filter that either always matches or never matches.
+ *
+ * @param matches whether the condition should match
+ * @returns Mongo filter
+ */
+const buildStaticAttributeFilter = (matches: boolean) =>
+  matches ? ATTRIBUTE_MATCH_ALL_FILTER : ATTRIBUTE_MATCH_NONE_FILTER;
+
+/**
+ * Converts any attribute value to a comparable string.
+ *
+ * @param value value to normalize
+ * @returns normalized string
+ */
+const normalizeAttributeValue = (value: any): string => String(value ?? '');
+
+/**
+ * Evaluates a user-attribute comparison that does not depend on record data.
+ *
+ * @param operator filter operator
+ * @param attributeValue current user's attribute value
+ * @param compareValue configured literal value
+ * @returns Mongo filter that either matches all or no records
+ */
+const buildLiteralAttributeFilter = (
+  operator: string,
+  attributeValue: any,
+  compareValue: any
+) => {
+  const attributeText = normalizeAttributeValue(attributeValue);
+  const compareText = normalizeAttributeValue(compareValue);
+  const attributeTextLower = attributeText.toLowerCase();
+  const compareTextLower = compareText.toLowerCase();
+  const compareValues = (
+    Array.isArray(compareValue)
+      ? compareValue
+      : compareText
+          .split(',')
+          .map((value) => value.trim())
+          .filter((value) => value !== '')
+  ).map((value) => normalizeAttributeValue(value));
+
+  switch (operator) {
+    case filterOperator.EQUAL_TO: {
+      return buildStaticAttributeFilter(attributeText === compareText);
+    }
+    case filterOperator.NOT_EQUAL_TO: {
+      return buildStaticAttributeFilter(attributeText !== compareText);
+    }
+    case filterOperator.CONTAINS: {
+      return buildStaticAttributeFilter(
+        attributeTextLower.includes(compareTextLower)
+      );
+    }
+    case filterOperator.DOES_NOT_CONTAIN: {
+      return buildStaticAttributeFilter(
+        !attributeTextLower.includes(compareTextLower)
+      );
+    }
+    case filterOperator.STARTS_WITH: {
+      return buildStaticAttributeFilter(
+        attributeTextLower.startsWith(compareTextLower)
+      );
+    }
+    case filterOperator.ENDS_WITH: {
+      return buildStaticAttributeFilter(
+        attributeTextLower.endsWith(compareTextLower)
+      );
+    }
+    case filterOperator.IN: {
+      return buildStaticAttributeFilter(compareValues.includes(attributeText));
+    }
+    case filterOperator.NOT_IN: {
+      return buildStaticAttributeFilter(!compareValues.includes(attributeText));
+    }
+    case filterOperator.IS_NULL: {
+      return buildStaticAttributeFilter(
+        attributeValue === null || attributeValue === undefined
+      );
+    }
+    case filterOperator.IS_NOT_NULL: {
+      return buildStaticAttributeFilter(
+        attributeValue !== null && attributeValue !== undefined
+      );
+    }
+    case filterOperator.IS_EMPTY: {
+      return buildStaticAttributeFilter(attributeText === '');
+    }
+    case filterOperator.IS_NOT_EMPTY: {
+      return buildStaticAttributeFilter(attributeText !== '');
+    }
+    default: {
+      return ATTRIBUTE_MATCH_NONE_FILTER;
+    }
+  }
+};
+
 /**
  * Transforms query filter into mongo filter.
  *
@@ -145,9 +257,24 @@ const buildMongoFilter = (
       }
 
       const isAttributeFilter = filter.field.startsWith('$attribute.');
+      if (isAttributeFilter && !context?.user) {
+        return ATTRIBUTE_MATCH_NONE_FILTER;
+      }
+      const attributeValueSource =
+        filter.valueSource === 'literal' ||
+        !ATTRIBUTE_FIELD_OPERATORS.includes(filter.operator)
+          ? 'literal'
+          : 'field';
       const attrValue = isAttributeFilter
         ? context.user.attributes?.[filter.field.split('.')[1]]
         : '';
+      if (isAttributeFilter && attributeValueSource === 'literal') {
+        return buildLiteralAttributeFilter(
+          filter.operator,
+          attrValue,
+          filter.value
+        );
+      }
       if (isAttributeFilter)
         fieldName = FLAT_DEFAULT_FIELDS.includes(filter.value)
           ? filter.value
