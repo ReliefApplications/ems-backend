@@ -716,9 +716,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       if (actions?.length > 0) {
         // Create the filter for each action
         const recordsIds = items.map((x) => x.id || x._id);
-        const objectIds = recordsIds.map(
-          (x) => new mongoose.Types.ObjectId(x)
-        );
+        const objectIds = recordsIds.map((x) => new mongoose.Types.ObjectId(x));
         // Run action filters in parallel
         const actionResults = await Promise.all(
           actions.map((action) => {
