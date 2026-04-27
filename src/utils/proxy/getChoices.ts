@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 import get from 'lodash/get';
-import jsonpath from 'jsonpath';
+import jsonpath from '@utils/jsonpath';
 import { AxiosHeaders, AxiosStatic } from 'axios';
 import config from 'config';
 import { Request } from 'express';

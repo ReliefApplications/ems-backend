@@ -4,7 +4,7 @@ import config from 'config';
 import axios from 'axios';
 import { logger } from '@services/logger.service';
 import { AttributeSettings } from './userManagement';
-import jsonpath from 'jsonpath';
+import jsonpath from '@utils/jsonpath';
 import { filterOperator } from '../../types/filter';
 
 /**

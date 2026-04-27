@@ -1,6 +1,6 @@
 import config from 'config';
 import i18next from 'i18next';
-import jsonpath from 'jsonpath';
+import jsonpath from '@utils/jsonpath';
 import { isEmpty, set } from 'lodash';
 import { authType } from '@const/enumTypes';
 import { ApiConfiguration, User } from '@models';

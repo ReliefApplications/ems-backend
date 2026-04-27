@@ -1,4 +1,4 @@
-import jsonpath from 'jsonpath';
+import jsonpath from '@utils/jsonpath';
 import config from 'config';
 import i18next from 'i18next';
 import { logger } from '../../services/logger.service';

@@ -5,7 +5,7 @@ import { fetchGroups } from '@utils/user/fetchGroups';
 import axios from 'axios';
 import { getToken } from '@utils/proxy/authManagement';
 import { Group } from '@models/group.model';
-import jsonpath from 'jsonpath';
+import jsonpath from '@utils/jsonpath';
 
 jest.mock('@services/logger.service');
 jest.mock('axios');

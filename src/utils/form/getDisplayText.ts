@@ -4,7 +4,7 @@ import config from 'config';
 import { logger } from '@services/logger.service';
 import axios, { AxiosHeaders, AxiosStatic } from 'axios';
 import get from 'lodash/get';
-import jsonpath from 'jsonpath';
+import jsonpath from '@utils/jsonpath';
 import commonServices from '@server/common-services';
 import { AxiosCacheInstance } from 'axios-cache-interceptor';
 

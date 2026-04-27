@@ -14,7 +14,7 @@ import getFilter from '@utils/schema/resolvers/Query/getFilter';
 import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
 import { getChoices } from '@utils/proxy';
 import { referenceDataType } from '@const/enumTypes';
-import jsonpath from 'jsonpath';
+import jsonpath from '@utils/jsonpath';
 import { cloneDeep, each, isArray, omit, set } from 'lodash';
 import { getRowsFromMeta } from './getRowsFromMeta';
 import { Response } from 'express';

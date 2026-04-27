@@ -1,7 +1,7 @@
 import { authType } from '@const/enumTypes';
 import { ApiConfiguration, Group } from '@models';
 import { getToken } from '../proxy';
-import jsonpath from 'jsonpath';
+import jsonpath from '@utils/jsonpath';
 import config from 'config';
 import { GroupListSettings } from './userManagement';
 import { logger } from '@services/logger.service';

@@ -4,7 +4,7 @@ import { ApiConfiguration, ReferenceData } from '@models';
 import { getToken } from '@utils/proxy';
 import { get, isEmpty, memoize, set } from 'lodash';
 import { logger } from '@services/logger.service';
-import jsonpath from 'jsonpath';
+import jsonpath from '@utils/jsonpath';
 import { ApolloServer } from '@apollo/server';
 import { Context } from './context';
 // eslint-disable-next-line import/no-extraneous-dependencies
