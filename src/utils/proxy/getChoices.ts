@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 import get from 'lodash/get';
-import jsonpath from '@utils/jsonpath';
+import { JSONPath } from 'jsonpath-plus';
 import { AxiosHeaders, AxiosStatic } from 'axios';
 import config from 'config';
 import { Request } from 'express';
@@ -89,12 +89,14 @@ export const getChoices = async (req: Request, field: any): Promise<any[]> => {
           query: field.choicesByGraphQL.query,
         },
       }).then(({ data }) => {
-        choices = jsonpath
-          .query(data, get(field, 'choicesByGraphQL.path'))
-          .map((x) => ({
-            value: get(x, valueField),
-            text: get(x, textField),
-          }));
+        choices = JSONPath({
+          path: get(field, 'choicesByGraphQL.path'),
+          json: data,
+          wrap: true,
+        }).map((x) => ({
+          value: get(x, valueField),
+          text: get(x, textField),
+        }));
       });
       return choices.sort((a, b) => {
         const textA = a.text || '';

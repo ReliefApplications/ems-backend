@@ -1,4 +1,4 @@
-import jsonpath from '@utils/jsonpath';
+import { JSONPath } from 'jsonpath-plus';
 import config from 'config';
 import i18next from 'i18next';
 import { logger } from '../../services/logger.service';
@@ -91,9 +91,14 @@ export const updateUserGroups = async (
       }
 
       // Extract groups from response
-      const rawGroups = jsonpath.query(data, settings.path) || [];
+      const rawGroups =
+        JSONPath({
+          path: settings.path,
+          json: data,
+          wrap: true,
+        }) || [];
       const groupsOids = rawGroups.map((group: any) =>
-        jsonpath.value(group, settings.id)
+        JSONPath({ path: settings.id, json: group, wrap: false })
       );
 
       // Find groups

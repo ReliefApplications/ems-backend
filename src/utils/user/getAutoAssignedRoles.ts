@@ -4,7 +4,7 @@ import config from 'config';
 import axios from 'axios';
 import { logger } from '@services/logger.service';
 import { AttributeSettings } from './userManagement';
-import jsonpath from '@utils/jsonpath';
+import { JSONPath } from 'jsonpath-plus';
 import { filterOperator } from '../../types/filter';
 
 /**
@@ -201,7 +201,11 @@ export const getAutoAssignedRoles = async (user: User): Promise<Role[]> => {
         // Map them to user attributes
         for (const mapping of settings.mapping) {
           if (mapping.provider === 'microsoftGraph') {
-            const value = jsonpath.value(graphData, mapping.value);
+            const value = JSONPath({
+              path: mapping.value,
+              json: graphData,
+              wrap: false,
+            });
             set(user, mapping.field, value);
           }
         }

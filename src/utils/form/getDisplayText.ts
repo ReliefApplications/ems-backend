@@ -4,7 +4,7 @@ import config from 'config';
 import { logger } from '@services/logger.service';
 import axios, { AxiosHeaders, AxiosStatic } from 'axios';
 import get from 'lodash/get';
-import jsonpath from '@utils/jsonpath';
+import { JSONPath } from 'jsonpath-plus';
 import commonServices from '@server/common-services';
 import { AxiosCacheInstance } from 'axios-cache-interceptor';
 
@@ -144,12 +144,14 @@ export const getFullChoices = async (
           query: field.choicesByGraphQL.query,
         },
       }).then(({ data }) => {
-        choices = jsonpath
-          .query(data, get(field, 'choicesByGraphQL.path'))
-          .map((x) => ({
-            value: get(x, valueField),
-            text: get(x, textField),
-          }));
+        choices = JSONPath({
+          path: get(field, 'choicesByGraphQL.path'),
+          json: data,
+          wrap: true,
+        }).map((x) => ({
+          value: get(x, valueField),
+          text: get(x, textField),
+        }));
       });
       if (field.choicesByGraphQL.hasOther) {
         choices.push({ [valueField]: 'other', [textField]: 'Other' });
