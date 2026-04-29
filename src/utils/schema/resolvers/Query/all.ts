@@ -1,4 +1,4 @@
-import { GraphQLError } from 'graphql';
+import { GraphQLError, valueFromASTUntyped } from 'graphql';
 import { Record, ReferenceData, User } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { decodeCursor, encodeCursor } from '@schema/types';
@@ -171,8 +171,9 @@ const getQueryFields = (
             ...(field.selectionSet && {
               fields: field.selectionSet.selections.map((x) => x.name.value),
               arguments: field.arguments.reduce((o, x) => {
-                if (x.value.value) {
-                  Object.assign(o, { [x.name.value]: x.value.value });
+                const value = valueFromASTUntyped(x.value);
+                if (value !== undefined && value !== null) {
+                  Object.assign(o, { [x.name.value]: value });
                 }
                 return o;
               }, {}),
@@ -513,11 +514,18 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       }
 
+      // When a sub-selection passes a `filter` argument, we cannot satisfy it
+      // from the bulk pre-fetch below (it groups records by id only). Let the
+      // field's own resolver handle those by skipping the optimization.
+      const hasSubFilter = (queryField: any) =>
+        queryField?.arguments?.filter &&
+        Object.keys(queryField.arguments.filter).length > 0;
+
       // Deal with resource/resources questions on THIS form
       const resourcesFields: any[] = fields.reduce((arr, field) => {
         if (field.type === 'resource' || field.type === 'resources') {
           const queryField = queryFields.find((x) => x.name === field.name);
-          if (queryField) {
+          if (queryField && !hasSubFilter(queryField)) {
             arr.push({
               ...field,
               fields: [
@@ -535,7 +543,10 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // Deal with resource/resources questions on OTHER forms if any
       let relatedFields = [];
-      if (queryFields.filter((x) => x.fields).length - resourcesFields.length) {
+      const relatedQueryFieldsCount = queryFields.filter(
+        (x) => x.fields && !hasSubFilter(x)
+      ).length;
+      if (relatedQueryFieldsCount - resourcesFields.length) {
         const entities = Object.keys(fieldsByName);
         const mappedRelatedFields = [];
         relatedFields = entities.reduce((arr, relatedEntityName) => {
@@ -547,7 +558,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               const queryField = queryFields.find(
                 (y) => x.relatedName === y.name
               );
-              if (queryField) {
+              if (queryField && !hasSubFilter(queryField)) {
                 mappedRelatedFields.push(x.relatedName);
                 entityArr.push({
                   ...x,
