@@ -14,7 +14,7 @@ import getFilter from '@utils/schema/resolvers/Query/getFilter';
 import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
 import { getChoices } from '@utils/proxy';
 import { referenceDataType } from '@const/enumTypes';
-import jsonpath from 'jsonpath';
+import { JSONPath } from 'jsonpath-plus';
 import { cloneDeep, each, isArray, omit, set } from 'lodash';
 import { getRowsFromMeta } from './getRowsFromMeta';
 import { Response } from 'express';
@@ -943,7 +943,11 @@ export default class Exporter {
         await axiosQuery
           .then((response) => {
             data = referenceData.path
-              ? jsonpath.query(response.data, referenceData.path)
+              ? JSONPath({
+                  path: referenceData.path,
+                  json: response.data,
+                  wrap: true,
+                })
               : response.data;
           })
           .catch((error) => {

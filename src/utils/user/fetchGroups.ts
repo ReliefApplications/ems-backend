@@ -1,7 +1,7 @@
 import { authType } from '@const/enumTypes';
 import { ApiConfiguration, Group } from '@models';
 import { getToken } from '../proxy';
-import jsonpath from 'jsonpath';
+import { JSONPath } from 'jsonpath-plus';
 import config from 'config';
 import { GroupListSettings } from './userManagement';
 import { logger } from '@services/logger.service';
@@ -60,13 +60,14 @@ export const fetchGroups = async () => {
     // Throwing an error here so above function can catch and throw GraphQL error.
     throw new Error();
   }
-  const rawGroups = jsonpath.query(data, path);
+  const rawGroups = JSONPath({ path, json: data, wrap: true });
   const groups: Group[] = rawGroups.map(
     (group: any) =>
       new Group({
-        oid: jsonpath.value(group, id) || null,
-        title: jsonpath.value(group, title) || null,
-        description: jsonpath.value(group, description) || null,
+        oid: JSONPath({ path: id, json: group, wrap: false }) || null,
+        title: JSONPath({ path: title, json: group, wrap: false }) || null,
+        description:
+          JSONPath({ path: description, json: group, wrap: false }) || null,
       })
   );
 

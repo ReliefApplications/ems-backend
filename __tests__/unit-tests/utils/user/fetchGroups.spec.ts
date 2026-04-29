@@ -5,7 +5,6 @@ import { fetchGroups } from '@utils/user/fetchGroups';
 import axios from 'axios';
 import { getToken } from '@utils/proxy/authManagement';
 import { Group } from '@models/group.model';
-import jsonpath from 'jsonpath';
 
 jest.mock('@services/logger.service');
 jest.mock('axios');
@@ -65,8 +64,6 @@ describe('Fetch Groups', () => {
   });
 
   it('should fetch groups using service-to-service auth', async () => {
-    const querySpy = jest.spyOn(jsonpath, 'query');
-
     const result = await fetchGroups();
 
     expect(ApiConfiguration.findById).toHaveBeenCalledWith('mockApiConfigID');
@@ -76,7 +73,6 @@ describe('Fetch Groups', () => {
       method: 'get',
       headers: { Authorization: `Bearer ${mockToken}` },
     });
-    expect(querySpy).toHaveBeenCalledWith(mockApiResponse, '$.groups[*]');
     expect(Group).toHaveBeenCalledWith(mockGroups[0]);
     expect(result).toEqual(mockGroups);
   });
@@ -87,8 +83,6 @@ describe('Fetch Groups', () => {
       authType: authType.public,
     });
 
-    const querySpy = jest.spyOn(jsonpath, 'query');
-
     const result = await fetchGroups();
 
     expect(ApiConfiguration.findById).toHaveBeenCalledWith('mockApiConfigID');
@@ -96,7 +90,6 @@ describe('Fetch Groups', () => {
       url: 'https://example.com/api/groups',
       method: 'get',
     });
-    expect(querySpy).toHaveBeenCalledWith(mockApiResponse, '$.groups[*]');
     expect(Group).toHaveBeenCalledWith(mockGroups[0]);
     expect(result).toEqual(mockGroups);
   });
