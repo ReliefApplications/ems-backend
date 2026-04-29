@@ -8,6 +8,7 @@
     "build": "tsc -p tsconfig.json && tsconfig-replace-paths -p tsconfig.json",
     "dev": "nodemon -r tsconfig-paths/register -r dotenv/config src/index.ts",
     "lint": "eslint . --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\"",
     "test": "jest --coverage",
     "check-i18n": "node .scripts/check-i18n",
     "migrate": "ts-node -r tsconfig-paths/register -r dotenv/config ./src/migrations/index.ts",
