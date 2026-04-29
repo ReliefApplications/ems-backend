@@ -214,10 +214,11 @@ export default class Exporter {
                   column.displayField.title = column.displayField.name;
                 }
                 if (column.subColumns) {
+                  const fieldDef = this.resource.fields.find(
+                    (f) => f.name === column.name
+                  );
                   // Field does not exist in the template
-                  if (
-                    !this.resource.fields.find((f) => f.name === column.name)
-                  ) {
+                  if (!fieldDef) {
                     const relatedResource = await Resource.findOne({
                       fields: {
                         $elemMatch: {
@@ -229,6 +230,13 @@ export default class Exporter {
                     if (relatedResource) {
                       column.parent = relatedResource;
                     }
+                  } else if (fieldDef.resource) {
+                    const relatedResource = await Resource.findById(
+                      fieldDef.resource
+                    ).select('fields');
+                    if (relatedResource) {
+                      column.relatedResource = relatedResource;
+                    }
                   }
                   if ((queryField.subFields || []).length > 0) {
                     column.subColumns.forEach((subColumn) => {
@@ -237,6 +245,12 @@ export default class Exporter {
                       );
                       subColumn.title = subQueryField?.title;
                     });
+                  }
+                  const subQueryDef = this.params.query?.fields?.find(
+                    (f: any) => f.name === column.name
+                  );
+                  if (subQueryDef?.filter?.filters?.length > 0) {
+                    column.filter = subQueryDef.filter;
                   }
                 }
               }
@@ -445,7 +459,8 @@ export default class Exporter {
    */
   private buildPipeline = (
     columns: Column[],
-    ids: mongoose.Types.ObjectId[]
+    ids: mongoose.Types.ObjectId[],
+    extraMatch?: any
   ) => {
     const permissionFilters = Record.find(
       accessibleBy(this.req.context.user.ability, 'read').Record
@@ -482,6 +497,9 @@ export default class Exporter {
             },
             { archived: { $ne: true } },
             permissionFilters,
+            ...(extraMatch && Object.keys(extraMatch).length > 0
+              ? [extraMatch]
+              : []),
           ],
         },
       },
@@ -555,6 +573,10 @@ export default class Exporter {
         resource: 1,
       },
     };
+    const subFilter =
+      column.filter && column.parent?.fields
+        ? getFilter(column.filter, column.parent.fields, this.req.context)
+        : null;
     const pipeline: any = [
       {
         $match: {
@@ -565,6 +587,9 @@ export default class Exporter {
               archived: { $not: { $eq: true } },
             },
             permissionFilters,
+            ...(subFilter && Object.keys(subFilter).length > 0
+              ? [subFilter]
+              : []),
           ],
         },
       },
@@ -1078,6 +1103,14 @@ export default class Exporter {
       //     )) ||
       //   mongoose.Types.ObjectId.isValid(columnValue)
       // )
+      const subFilter =
+        column.filter && column.relatedResource?.fields
+          ? getFilter(
+              column.filter,
+              column.relatedResource.fields,
+              this.req.context
+            )
+          : null;
       const relatedPromises = Record.aggregate(
         this.buildPipeline(
           subColumns,
@@ -1085,7 +1118,8 @@ export default class Exporter {
             ? Array.from(new Set(columnValue))
                 .filter((id: any) => mongoose.Types.ObjectId.isValid(id))
                 .map((id: any) => new mongoose.Types.ObjectId(id))
-            : [new mongoose.Types.ObjectId(columnValue)]
+            : [new mongoose.Types.ObjectId(columnValue)],
+          subFilter
         )
       ).then(async (relatedRecords) => {
         if (relatedRecords.length > 0) {
