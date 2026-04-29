@@ -1,3 +1,10 @@
+# [2.16.0-rc.10](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.9...v2.16.0-rc.10) (2026-04-29)
+
+
+### Bug Fixes
+
+* filters configured from layout now taken into account in queries & export ([#1232](https://github.com/ReliefApplications/ems-backend/issues/1232)) ([5e6891e](https://github.com/ReliefApplications/ems-backend/commit/5e6891ea84c9d880c18913f9eb4a7c5793b7ce7d)), closes [AB#128560](https://github.com/AB/issues/128560)
+
 # [2.16.0-rc.9](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.8...v2.16.0-rc.9) (2026-04-22)
 
 
