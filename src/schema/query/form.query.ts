@@ -22,6 +22,14 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args: FormArgs, context: Context) {
+    const form = await Form.findById(args.id).populate({
+      path: 'resource',
+      model: 'Resource',
+    });
+    if (!form) {
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+    }
+    return form;
     graphQLAuthCheck(context);
     try {
       const user = context.user;

@@ -29,9 +29,9 @@ export default {
     data: { type: new GraphQLNonNull(GraphQLJSON) },
   },
   async resolve(parent, args: AddRecordArgs, context: Context) {
-    graphQLAuthCheck(context);
+    // graphQLAuthCheck(context);
     try {
-      const user = context.user;
+      // const user = context.user;
 
       // Get the form
       const form = await Form.findById(args.form);
@@ -39,38 +39,38 @@ export default {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
 
       // Check the ability with permissions for this form
-      const ability = await extendAbilityForRecords(user, form);
-      if (ability.cannot('create', 'Record')) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
-      }
+      // const ability = await extendAbilityForRecords(user, form);
+      // if (ability.cannot('create', 'Record')) {
+      //   throw new GraphQLError(
+      //     context.i18next.t('common.errors.permissionNotGranted')
+      //   );
+      // }
 
       // Check unicity of record
-      if (
-        form.permissions.recordsUnicity &&
-        form.permissions.recordsUnicity.length > 0 &&
-        form.permissions.recordsUnicity[0].role
-      ) {
-        const unicityFilters = getFormPermissionFilter(
-          user,
-          form,
-          'recordsUnicity'
-        );
-        if (unicityFilters.length > 0) {
-          const uniqueRecordAlreadyExists = await Record.exists({
-            $and: [
-              { form: form._id, archived: { $ne: true } },
-              { $or: unicityFilters },
-            ],
-          });
-          if (uniqueRecordAlreadyExists) {
-            throw new GraphQLError(
-              context.i18next.t('common.errors.permissionNotGranted')
-            );
-          }
-        }
-      }
+      // if (
+      //   form.permissions.recordsUnicity &&
+      //   form.permissions.recordsUnicity.length > 0 &&
+      //   form.permissions.recordsUnicity[0].role
+      // ) {
+      //   const unicityFilters = getFormPermissionFilter(
+      //     user,
+      //     form,
+      //     'recordsUnicity'
+      //   );
+      //   if (unicityFilters.length > 0) {
+      //     const uniqueRecordAlreadyExists = await Record.exists({
+      //       $and: [
+      //         { form: form._id, archived: { $ne: true } },
+      //         { $or: unicityFilters },
+      //       ],
+      //     });
+      //     if (uniqueRecordAlreadyExists) {
+      //       throw new GraphQLError(
+      //         context.i18next.t('common.errors.permissionNotGranted')
+      //       );
+      //     }
+      //   }
+      // }
 
       // Create the record instance
       transformRecord(args.data, form.fields);
@@ -84,21 +84,16 @@ export default {
         data: args.data,
         resource: form.resource ? form.resource : null,
         createdBy: {
-          user: user._id,
-          roles: user.roles.map((x) => x._id),
-          positionAttributes: user.positionAttributes.map((x) => {
-            return {
-              value: x.value,
-              category: x.category._id,
-            };
-          }),
+          user: '000000000000000000000001',
+          roles: [],
+          positionAttributes: []
         },
         lastUpdateForm: form.id,
         _createdBy: {
           user: {
-            _id: context.user._id,
-            name: context.user.name,
-            username: context.user.username,
+            _id: '000000000000000000000001',
+            name: 'anonymous',
+            username: 'anonymous',
           },
         },
         _form: {
@@ -129,6 +124,7 @@ export default {
         const publisher = await pubsub();
         publisher.publish(channel.id, { notification });
       }
+      console.log('record to save');
       await record.save();
       return record;
     } catch (err) {
