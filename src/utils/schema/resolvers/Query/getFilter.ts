@@ -43,6 +43,39 @@ const DEFAULT_FIELDS = [
 export const FLAT_DEFAULT_FIELDS = DEFAULT_FIELDS.map((x) => x.name);
 
 /**
+ * Recursively detects whether a built mongo filter contains a comparison
+ * against `null` / `undefined` / invalid Date. Such comparisons (typically
+ * coming from date fields whose value did not parse, e.g. when a free-text
+ * global search is mapped onto a date field) match every document where the
+ * field is missing — which would explode the `$or` of the global-search
+ * expansion and effectively return every record.
+ *
+ * @param filter mongo filter fragment to inspect
+ * @returns true if the fragment compares to null/invalid Date anywhere
+ */
+const containsNullComparison = (filter: any): boolean => {
+  if (filter === null || filter === undefined) return true;
+  if (typeof filter !== 'object') return false;
+  if (filter instanceof Date) return isNaN(filter.getTime());
+  if (Array.isArray(filter)) return filter.some(containsNullComparison);
+  for (const key of Object.keys(filter)) {
+    const val = filter[key];
+    if (
+      ['$gte', '$lte', '$gt', '$lt', '$eq', '$ne'].includes(key) &&
+      (val === null ||
+        val === undefined ||
+        (val instanceof Date && isNaN(val.getTime())))
+    ) {
+      return true;
+    }
+    if (containsNullComparison(val)) {
+      return true;
+    }
+  }
+  return false;
+};
+
+/**
  * Fill passed array with fields used in filters
  *
  * @param filter filter to use for extraction
@@ -417,7 +450,33 @@ const buildMongoFilter = (
               fieldName === 'data._globalSearch' &&
               (type === 'text' || type === '')
             ) {
-              return;
+              // Global search: expand into an $or over each per-field rule
+              // produced by the frontend `searchFilters()` helper. Each child
+              // rule is delegated back to buildMongoFilter so all the existing
+              // path-resolution + per-operator logic is reused (default fields
+              // stay flat, others get the `data.` prefix, multiselect uses
+              // $all, numeric uses $eq, etc.).
+              if (!Array.isArray(value)) {
+                return;
+              }
+              const subFilters = value
+                .map((rule: any) =>
+                  buildMongoFilter(
+                    {
+                      field: rule.field,
+                      operator: rule.operator,
+                      value: rule.value,
+                    },
+                    fields,
+                    context,
+                    prefix
+                  )
+                )
+                .filter((x: any) => x && !containsNullComparison(x));
+              if (subFilters.length === 0) {
+                return;
+              }
+              return { $or: subFilters };
             } else {
               return { [fieldName]: { $regex: value, $options: 'i' } };
             }
