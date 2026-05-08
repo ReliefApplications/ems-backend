@@ -14,7 +14,7 @@ import getFilter from '@utils/schema/resolvers/Query/getFilter';
 import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
 import { getChoices } from '@utils/proxy';
 import { referenceDataType } from '@const/enumTypes';
-import jsonpath from 'jsonpath';
+import { JSONPath } from 'jsonpath-plus';
 import { cloneDeep, each, isArray, omit, set } from 'lodash';
 import { getRowsFromMeta } from './getRowsFromMeta';
 import { Response } from 'express';
@@ -23,6 +23,7 @@ import { accessibleBy } from '@casl/mongoose';
 import getSearchFilter from '@utils/schema/resolvers/Query/getSearchFilter';
 import getSortAggregation from '@utils/schema/resolvers/Query/getSortAggregation';
 import dataSources from '@server/apollo/dataSources';
+import sanitizeHtml from 'sanitize-html';
 
 /**
  * Export batch parameters interface
@@ -213,10 +214,11 @@ export default class Exporter {
                   column.displayField.title = column.displayField.name;
                 }
                 if (column.subColumns) {
+                  const fieldDef = this.resource.fields.find(
+                    (f) => f.name === column.name
+                  );
                   // Field does not exist in the template
-                  if (
-                    !this.resource.fields.find((f) => f.name === column.name)
-                  ) {
+                  if (!fieldDef) {
                     const relatedResource = await Resource.findOne({
                       fields: {
                         $elemMatch: {
@@ -228,6 +230,13 @@ export default class Exporter {
                     if (relatedResource) {
                       column.parent = relatedResource;
                     }
+                  } else if (fieldDef.resource) {
+                    const relatedResource = await Resource.findById(
+                      fieldDef.resource
+                    ).select('fields');
+                    if (relatedResource) {
+                      column.relatedResource = relatedResource;
+                    }
                   }
                   if ((queryField.subFields || []).length > 0) {
                     column.subColumns.forEach((subColumn) => {
@@ -236,6 +245,12 @@ export default class Exporter {
                       );
                       subColumn.title = subQueryField?.title;
                     });
+                  }
+                  const subQueryDef = this.params.query?.fields?.find(
+                    (f: any) => f.name === column.name
+                  );
+                  if (subQueryDef?.filter?.filters?.length > 0) {
+                    column.filter = subQueryDef.filter;
                   }
                 }
               }
@@ -444,7 +459,8 @@ export default class Exporter {
    */
   private buildPipeline = (
     columns: Column[],
-    ids: mongoose.Types.ObjectId[]
+    ids: mongoose.Types.ObjectId[],
+    extraMatch?: any
   ) => {
     const permissionFilters = Record.find(
       accessibleBy(this.req.context.user.ability, 'read').Record
@@ -481,6 +497,9 @@ export default class Exporter {
             },
             { archived: { $ne: true } },
             permissionFilters,
+            ...(extraMatch && Object.keys(extraMatch).length > 0
+              ? [extraMatch]
+              : []),
           ],
         },
       },
@@ -554,6 +573,10 @@ export default class Exporter {
         resource: 1,
       },
     };
+    const subFilter =
+      column.filter && column.parent?.fields
+        ? getFilter(column.filter, column.parent.fields, this.req.context)
+        : null;
     const pipeline: any = [
       {
         $match: {
@@ -564,6 +587,9 @@ export default class Exporter {
               archived: { $not: { $eq: true } },
             },
             permissionFilters,
+            ...(subFilter && Object.keys(subFilter).length > 0
+              ? [subFilter]
+              : []),
           ],
         },
       },
@@ -716,6 +742,24 @@ export default class Exporter {
   };
 
   /**
+   * Sanitize string content for excel cells
+   *
+   * @param content Cell content, only strings will be sanitized
+   * @returns Sanitized string
+   */
+  private sanitizeForExcel(content: any): any {
+    if (typeof content !== 'string') return content;
+
+    const str = sanitizeHtml(content, {
+      allowedTags: [], // Removes ALL tags
+      allowedAttributes: {},
+    });
+
+    // Excel has a maximum cell content length of 32,767 characters
+    return str.substring(0, 32000);
+  }
+
+  /**
    * Write rows in xlsx format
    *
    * @param worksheet worksheet to write on
@@ -732,7 +776,7 @@ export default class Exporter {
           maxFieldLength = Math.max(maxFieldLength, value.length);
           temp.push('');
         } else {
-          temp.push(get(record, column.field, null));
+          temp.push(this.sanitizeForExcel(get(record, column.field, null)));
         }
       }
 
@@ -744,10 +788,8 @@ export default class Exporter {
           for (const column of columns.filter((x: any) => x.subTitle)) {
             const value = get(record, column.field, []);
             if (value && value.length > 0) {
-              temp[column.index] = get(
-                get(record, column.field, null)[i],
-                column.subField,
-                null
+              temp[column.index] = this.sanitizeForExcel(
+                get(get(record, column.field, null)[i], column.subField, '')
               );
             } else {
               temp[column.index] = null;
@@ -926,7 +968,11 @@ export default class Exporter {
         await axiosQuery
           .then((response) => {
             data = referenceData.path
-              ? jsonpath.query(response.data, referenceData.path)
+              ? JSONPath({
+                  path: referenceData.path,
+                  json: response.data,
+                  wrap: true,
+                })
               : response.data;
           })
           .catch((error) => {
@@ -1057,6 +1103,14 @@ export default class Exporter {
       //     )) ||
       //   mongoose.Types.ObjectId.isValid(columnValue)
       // )
+      const subFilter =
+        column.filter && column.relatedResource?.fields
+          ? getFilter(
+              column.filter,
+              column.relatedResource.fields,
+              this.req.context
+            )
+          : null;
       const relatedPromises = Record.aggregate(
         this.buildPipeline(
           subColumns,
@@ -1064,7 +1118,8 @@ export default class Exporter {
             ? Array.from(new Set(columnValue))
                 .filter((id: any) => mongoose.Types.ObjectId.isValid(id))
                 .map((id: any) => new mongoose.Types.ObjectId(id))
-            : [new mongoose.Types.ObjectId(columnValue)]
+            : [new mongoose.Types.ObjectId(columnValue)],
+          subFilter
         )
       ).then(async (relatedRecords) => {
         if (relatedRecords.length > 0) {
