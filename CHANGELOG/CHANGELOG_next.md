@@ -1,3 +1,10 @@
+# [2.16.0-rc.11](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.10...v2.16.0-rc.11) (2026-05-12)
+
+
+### Features
+
+* Add filters to grid actions ([#1218](https://github.com/ReliefApplications/ems-backend/issues/1218)) ([84ba849](https://github.com/ReliefApplications/ems-backend/commit/84ba849358d7dafd276938e5dcc33213c9719a42)), closes [AB#121666](https://github.com/AB/issues/121666)
+
 # [2.16.0-rc.10](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.9...v2.16.0-rc.10) (2026-04-29)
 
 
