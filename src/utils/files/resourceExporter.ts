@@ -455,6 +455,7 @@ export default class Exporter {
    *
    * @param columns list of available columns
    * @param ids list of ids, used in the case of subcolumns (resource and resources)
+   * @param extraMatch optional additional match stage to apply to the pipeline
    * @returns a built pipeline
    */
   private buildPipeline = (
