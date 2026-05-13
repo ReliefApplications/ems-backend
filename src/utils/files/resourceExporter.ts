@@ -11,7 +11,7 @@ import { DataTransformer, Record, Resource } from '@models';
 import mongoose from 'mongoose';
 import { defaultRecordFields } from '@const/defaultRecordFields';
 import getFilter from '@utils/schema/resolvers/Query/getFilter';
-import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
+import { CalculatedFieldService } from '@services/calculatedField.service';
 import { getChoices } from '@utils/proxy';
 import { referenceDataType } from '@const/enumTypes';
 import { JSONPath } from 'jsonpath-plus';
@@ -325,11 +325,12 @@ export default class Exporter {
     const pageSize = 100;
     for (let i = 0; i < totalCount; i += pageSize) {
       recordsPromises.push(
-        Record.aggregate(
-          this.buildPipeline(this.columns, ids.slice(i, i + pageSize))
-        ).then((items) => {
+        (async () => {
+          const items = await Record.aggregate(
+            await this.buildPipeline(this.columns, ids.slice(i, i + pageSize))
+          );
           records.splice(i, items.length, ...items);
-        })
+        })()
       );
     }
     // Execute all promises
@@ -357,13 +358,14 @@ export default class Exporter {
         // Reversed relationship, the resource is used in another resource's template
         if (column.parent) {
           relatedResourcePromises.push(
-            Record.aggregate(this.buildReversedPipeline(column, record)).then(
-              (relatedRecords) => {
-                if (relatedRecords.length > 0) {
-                  set(record, column.field, relatedRecords);
-                }
+            (async () => {
+              const relatedRecords = await Record.aggregate(
+                await this.buildReversedPipeline(column, record)
+              );
+              if (relatedRecords.length > 0) {
+                set(record, column.field, relatedRecords);
               }
-            )
+            })()
           );
         } else {
           relatedResourcePromises.push(
@@ -436,18 +438,20 @@ export default class Exporter {
       { $match: filters },
       { $limit: this.params.limit || Number.MAX_SAFE_INTEGER },
     ];
-    this.columns
-      .filter((col) => col.meta?.field?.isCalculated)
-      .forEach((col) =>
-        pipeline.unshift(
-          ...(buildCalculatedFieldPipeline(
-            col.meta.field.expression,
-            col.meta.field.name,
-            this.params.timeZone,
-            this.req.context.user?.attributes || {}
-          ) as any)
-        )
+    const calculatedFieldService = new CalculatedFieldService(
+      this.resource,
+      this.req.context,
+      this.params.timeZone,
+      this.req.context.user?.attributes || {}
+    );
+    for (const col of this.columns.filter((c) => c.meta?.field?.isCalculated)) {
+      pipeline.unshift(
+        ...((await calculatedFieldService.build(
+          col.meta.field.expression,
+          col.meta.field.name
+        )) as any)
       );
+    }
     return pipeline;
   };
 
@@ -457,12 +461,16 @@ export default class Exporter {
    * @param columns list of available columns
    * @param ids list of ids, used in the case of subcolumns (resource and resources)
    * @param extraMatch optional additional match stage to apply to the pipeline
+   * @param resource resource whose fields define the calculated-field context (defaults to the exporter's own resource; pass a related resource when building a sub-pipeline for resource/resources columns)
+   * @param resource.fields field definitions used to compile calculated fields
+   * @param resource.name optional resource name, used only in error messages
    * @returns a built pipeline
    */
-  private buildPipeline = (
+  private buildPipeline = async (
     columns: Column[],
     ids: mongoose.Types.ObjectId[],
-    extraMatch?: any
+    extraMatch?: any,
+    resource: { fields: any[]; name?: string } = this.resource
   ) => {
     const permissionFilters = Record.find(
       accessibleBy(this.req.context.user.ability, 'read').Record
@@ -519,18 +527,20 @@ export default class Exporter {
         },
       },
     ];
-    columns
-      .filter((col) => col.meta?.field?.isCalculated)
-      .forEach((col) =>
-        pipeline.unshift(
-          ...(buildCalculatedFieldPipeline(
-            col.meta.field.expression,
-            col.meta.field.name,
-            this.params.timeZone,
-            this.req.context.user?.attributes || {}
-          ) as any)
-        )
+    const calculatedFieldService = new CalculatedFieldService(
+      resource,
+      this.req.context,
+      this.params.timeZone,
+      this.req.context.user?.attributes || {}
+    );
+    for (const col of columns.filter((c) => c.meta?.field?.isCalculated)) {
+      pipeline.unshift(
+        ...((await calculatedFieldService.build(
+          col.meta.field.expression,
+          col.meta.field.name
+        )) as any)
       );
+    }
     return pipeline;
   };
 
@@ -541,7 +551,7 @@ export default class Exporter {
    * @param record current record
    * @returns reversed pipeline
    */
-  private buildReversedPipeline = (column: Column, record: any) => {
+  private buildReversedPipeline = async (column: Column, record: any) => {
     const relatedFieldName = column.parent.fields.find(
       (field) => field.relatedName === column.field
     )?.name;
@@ -598,18 +608,20 @@ export default class Exporter {
       },
       projectStep,
     ];
-    subColumns
-      .filter((col) => col.meta?.field?.isCalculated)
-      .forEach((col) =>
-        pipeline.unshift(
-          ...(buildCalculatedFieldPipeline(
-            col.meta.field.expression,
-            col.meta.field.name,
-            this.params.timeZone,
-            this.req.context.user?.attributes || {}
-          ) as any)
-        )
+    const calculatedFieldService = new CalculatedFieldService(
+      column.parent,
+      this.req.context,
+      this.params.timeZone,
+      this.req.context.user?.attributes || {}
+    );
+    for (const col of subColumns.filter((c) => c.meta?.field?.isCalculated)) {
+      pipeline.unshift(
+        ...((await calculatedFieldService.build(
+          col.meta.field.expression,
+          col.meta.field.name
+        )) as any)
       );
+    }
     return pipeline;
   };
 
@@ -1086,7 +1098,7 @@ export default class Exporter {
    * @param record Current record
    * @returns Promise
    */
-  private getResourceFields = (
+  private getResourceFields = async (
     column: Column,
     fieldName: string,
     record: any
@@ -1116,14 +1128,15 @@ export default class Exporter {
             )
           : null;
       const relatedPromises = Record.aggregate(
-        this.buildPipeline(
+        await this.buildPipeline(
           subColumns,
           isArray(columnValue)
             ? Array.from(new Set(columnValue))
                 .filter((id: any) => mongoose.Types.ObjectId.isValid(id))
                 .map((id: any) => new mongoose.Types.ObjectId(id))
             : [new mongoose.Types.ObjectId(columnValue)],
-          subFilter
+          subFilter,
+          column.relatedResource
         )
       ).then(async (relatedRecords) => {
         if (relatedRecords.length > 0) {

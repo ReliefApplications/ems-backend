@@ -22,7 +22,14 @@ export type OperationTypes =
   | SingleOperatorOperationsTypes
   | DoubleOperatorOperationsTypes
   | MultipleOperatorsOperationsTypes
-  | 'today';
+  | 'today'
+  | 'displayValue';
+
+/** Operation that resolves a choice/refData field stored value to its display label */
+interface DisplayValueOperation {
+  operation: 'displayValue';
+  fieldName: string;
+}
 
 /** Interface for the 'today' operation */
 interface TodayOperation {
@@ -88,4 +95,5 @@ export type Operation =
   | MultipleOperatorsOperation
   | TodayOperation
   | SingleOperatorOperation
-  | DoubleOperatorOperation;
+  | DoubleOperatorOperation
+  | DisplayValueOperation;

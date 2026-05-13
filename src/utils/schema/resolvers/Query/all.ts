@@ -13,7 +13,7 @@ import getSortAggregation from './getSortAggregation';
 import mongoose from 'mongoose';
 import buildReferenceDataAggregation from '@utils/aggregation/buildReferenceDataAggregation';
 import { getAccessibleFields } from '@utils/form';
-import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
+import { CalculatedFieldService } from '@services/calculatedField.service';
 import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { flatten, get, isArray, set } from 'lodash';
@@ -382,18 +382,19 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         return false;
       };
 
-      fields
-        .filter((f) => f.isCalculated && shouldAddCalculatedFieldToPipeline(f))
-        .forEach((f) =>
-          calculatedFieldsAggregation.push(
-            ...buildCalculatedFieldPipeline(
-              f.expression,
-              f.name,
-              context.timeZone,
-              context.user?.attributes || {}
-            )
-          )
+      const calculatedFieldService = new CalculatedFieldService(
+        { fields, name: entityName },
+        context,
+        context.timeZone,
+        context.user?.attributes || {}
+      );
+      for (const f of fields.filter(
+        (x) => x.isCalculated && shouldAddCalculatedFieldToPipeline(x)
+      )) {
+        calculatedFieldsAggregation.push(
+          ...(await calculatedFieldService.build(f.expression, f.name))
         );
+      }
 
       // Build linked records aggregations
       const linkedReferenceDataAggregation = flatten(

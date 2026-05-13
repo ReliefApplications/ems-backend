@@ -1,5 +1,5 @@
 import { getAccessibleFields } from '@utils/form';
-import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
+import { CalculatedFieldService } from '@services/calculatedField.service';
 import { Types } from 'mongoose';
 import {
   ApiConfiguration,
@@ -91,6 +91,12 @@ export const getContextDataForRecord = async (
         accessibleBy(context.user.ability, 'read').Record
       ).getFilter();
 
+      const calculatedFieldService = new CalculatedFieldService(
+        resource,
+        context,
+        context.timeZone,
+        context.user?.attributes || {}
+      );
       const pipeline = [
         // Match the record and the permission filters
         {
@@ -104,12 +110,7 @@ export const getContextDataForRecord = async (
           },
         },
         // Stages for calculating the field
-        ...buildCalculatedFieldPipeline(
-          field.expression,
-          field.name,
-          context.timeZone,
-          context.user?.attributes || {}
-        ),
+        ...(await calculatedFieldService.build(field.expression, field.name)),
       ];
 
       const result = await Record.aggregate(pipeline);

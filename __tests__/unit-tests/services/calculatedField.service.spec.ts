@@ -1,92 +1,88 @@
-import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
+import { CalculatedFieldService } from '@services/calculatedField.service';
 
-describe('buildCalculatedFieldPipeline', () => {
-  const TZ = 'UTC';
+/**
+ * Thin helper to keep call sites readable: most existing tests don't need a
+ * resource, context, or user attributes, so we hide those behind defaults.
+ *
+ * @param expression Calculated-field expression in string form (e.g. `{{calc.add(1; 2)}}`)
+ * @param name Target field name (result lands in `data.<name>`)
+ * @param timeZone User timezone, used by date operations
+ * @param userAttributes Logged-in user contextual attributes for `{{user.X}}` placeholders
+ * @returns Aggregation pipeline stages produced by the service
+ */
+const build = (
+  expression: string,
+  name: string,
+  timeZone = 'UTC',
+  userAttributes: Record<string, unknown> = {}
+) =>
+  new CalculatedFieldService(null, null, timeZone, userAttributes).build(
+    expression,
+    name
+  );
 
+describe('CalculatedFieldService', () => {
   describe('simple operators', () => {
-    it('resolves a constant number operator', () => {
-      const pipeline = buildCalculatedFieldPipeline(
-        '{{calc.add(1; 2)}}',
-        'result',
-        TZ
-      );
+    it('resolves a constant number operator', async () => {
+      const pipeline = await build('{{calc.add(1; 2)}}', 'result');
       expect(pipeline).toEqual([
         { $addFields: { 'data.result': { $add: [1, 2] } } },
       ]);
     });
 
-    it('resolves a constant string operator', () => {
-      const pipeline = buildCalculatedFieldPipeline(
-        '{{calc.eq("foo"; "bar")}}',
-        'result',
-        TZ
-      );
+    it('resolves a constant string operator', async () => {
+      const pipeline = await build('{{calc.eq("foo"; "bar")}}', 'result');
       expect(pipeline).toEqual([
         { $addFields: { 'data.result': { $eq: ['foo', 'bar'] } } },
       ]);
     });
 
-    it('resolves a boolean constant', () => {
-      const pipeline = buildCalculatedFieldPipeline(
-        '{{calc.and(true; false)}}',
-        'result',
-        TZ
-      );
+    it('resolves a boolean constant', async () => {
+      const pipeline = await build('{{calc.and(true; false)}}', 'result');
       expect(pipeline).toEqual([
         { $addFields: { 'data.result': { $and: [true, false] } } },
       ]);
     });
 
-    it('resolves a field operator with the $data. prefix', () => {
-      const pipeline = buildCalculatedFieldPipeline(
-        '{{calc.add({{data.x}}; 2)}}',
-        'result',
-        TZ
-      );
+    it('resolves a field operator with the $data. prefix', async () => {
+      const pipeline = await build('{{calc.add({{data.x}}; 2)}}', 'result');
       expect(pipeline).toEqual([
         { $addFields: { 'data.result': { $add: ['$data.x', 2] } } },
       ]);
     });
 
-    it('resolves info.createdAt to $createdAt', () => {
-      const pipeline = buildCalculatedFieldPipeline(
+    it('resolves info.createdAt to $createdAt', async () => {
+      const pipeline = await build(
         '{{calc.eq({{info.createdAt}}; 0)}}',
-        'result',
-        TZ
+        'result'
       );
       expect(pipeline).toEqual([
         { $addFields: { 'data.result': { $eq: ['$createdAt', 0] } } },
       ]);
     });
 
-    it('resolves info.updatedAt to $modifiedAt', () => {
-      const pipeline = buildCalculatedFieldPipeline(
+    it('resolves info.updatedAt to $modifiedAt', async () => {
+      const pipeline = await build(
         '{{calc.eq({{info.updatedAt}}; 0)}}',
-        'result',
-        TZ
+        'result'
       );
       expect(pipeline).toEqual([
         { $addFields: { 'data.result': { $eq: ['$modifiedAt', 0] } } },
       ]);
     });
 
-    it('resolves info.incrementalId to $incrementalId', () => {
-      const pipeline = buildCalculatedFieldPipeline(
+    it('resolves info.incrementalId to $incrementalId', async () => {
+      const pipeline = await build(
         '{{calc.eq({{info.incrementalId}}; 0)}}',
-        'result',
-        TZ
+        'result'
       );
       expect(pipeline).toEqual([
         { $addFields: { 'data.result': { $eq: ['$incrementalId', 0] } } },
       ]);
     });
 
-    it('treats 0 as a valid value (not nil)', () => {
-      const pipeline = buildCalculatedFieldPipeline(
-        '{{calc.add(0; 1)}}',
-        'result',
-        TZ
-      );
+    it('treats 0 as a valid value (not nil)', async () => {
+      const pipeline = await build('{{calc.add(0; 1)}}', 'result');
       expect(pipeline).toEqual([
         { $addFields: { 'data.result': { $add: [0, 1] } } },
       ]);
@@ -94,63 +90,43 @@ describe('buildCalculatedFieldPipeline', () => {
   });
 
   describe('multiple-operator operations', () => {
-    it('builds $add', () => {
-      const pipeline = buildCalculatedFieldPipeline(
-        '{{calc.add(1; 2; 3)}}',
-        'result',
-        TZ
-      );
+    it('builds $add', async () => {
+      const pipeline = await build('{{calc.add(1; 2; 3)}}', 'result');
       expect(pipeline).toEqual([
         { $addFields: { 'data.result': { $add: [1, 2, 3] } } },
       ]);
     });
 
-    it('builds $multiply', () => {
-      const pipeline = buildCalculatedFieldPipeline(
-        '{{calc.mul(2; 3)}}',
-        'result',
-        TZ
-      );
+    it('builds $multiply', async () => {
+      const pipeline = await build('{{calc.mul(2; 3)}}', 'result');
       expect(pipeline).toEqual([
         { $addFields: { 'data.result': { $multiply: [2, 3] } } },
       ]);
     });
 
-    it('builds $and / $or', () => {
-      expect(
-        buildCalculatedFieldPipeline('{{calc.or(true; false)}}', 'r', TZ)
-      ).toEqual([{ $addFields: { 'data.r': { $or: [true, false] } } }]);
+    it('builds $and / $or', async () => {
+      expect(await build('{{calc.or(true; false)}}', 'r')).toEqual([
+        { $addFields: { 'data.r': { $or: [true, false] } } },
+      ]);
     });
 
-    it('builds $cond from "if" using the array form', () => {
-      const pipeline = buildCalculatedFieldPipeline(
-        '{{calc.if(true; "yes"; "no")}}',
-        'result',
-        TZ
-      );
+    it('builds $cond from "if" using the array form', async () => {
+      const pipeline = await build('{{calc.if(true; "yes"; "no")}}', 'result');
       expect(pipeline).toEqual([
         { $addFields: { 'data.result': { $cond: [true, 'yes', 'no'] } } },
       ]);
     });
 
-    it('builds $substr', () => {
-      const pipeline = buildCalculatedFieldPipeline(
-        '{{calc.substr("hello"; 1; 3)}}',
-        'result',
-        TZ
-      );
+    it('builds $substr', async () => {
+      const pipeline = await build('{{calc.substr("hello"; 1; 3)}}', 'result');
       expect(pipeline).toEqual([
         { $addFields: { 'data.result': { $substr: ['hello', 1, 3] } } },
       ]);
     });
 
     describe('concat string conversion', () => {
-      it('wraps a plain constant in a simple $convert', () => {
-        const pipeline = buildCalculatedFieldPipeline(
-          '{{calc.concat("a"; "b")}}',
-          'result',
-          TZ
-        );
+      it('wraps a plain constant in a simple $convert', async () => {
+        const pipeline = await build('{{calc.concat("a"; "b")}}', 'result');
         expect(pipeline).toEqual([
           {
             $addFields: {
@@ -179,11 +155,10 @@ describe('buildCalculatedFieldPipeline', () => {
         ]);
       });
 
-      it('wraps a field reference with a date-aware $cond branch', () => {
-        const pipeline = buildCalculatedFieldPipeline(
+      it('wraps a field reference with a date-aware $cond branch', async () => {
+        const pipeline = await build(
           '{{calc.concat({{data.x}}; "b")}}',
-          'result',
-          TZ
+          'result'
         );
         expect(pipeline).toEqual([
           {
@@ -227,23 +202,15 @@ describe('buildCalculatedFieldPipeline', () => {
   });
 
   describe('double-operator operations', () => {
-    it('builds $subtract', () => {
-      const pipeline = buildCalculatedFieldPipeline(
-        '{{calc.sub(5; 2)}}',
-        'result',
-        TZ
-      );
+    it('builds $subtract', async () => {
+      const pipeline = await build('{{calc.sub(5; 2)}}', 'result');
       expect(pipeline).toEqual([
         { $addFields: { 'data.result': { $subtract: [5, 2] } } },
       ]);
     });
 
-    it('builds $divide', () => {
-      const pipeline = buildCalculatedFieldPipeline(
-        '{{calc.div(10; 2)}}',
-        'result',
-        TZ
-      );
+    it('builds $divide', async () => {
+      const pipeline = await build('{{calc.div(10; 2)}}', 'result');
       expect(pipeline).toEqual([
         { $addFields: { 'data.result': { $divide: [10, 2] } } },
       ]);
@@ -256,22 +223,17 @@ describe('buildCalculatedFieldPipeline', () => {
       ['lt', '$lt'],
       ['eq', '$eq'],
       ['ne', '$ne'],
-    ])('builds %s comparison as %s', (op, mongoOp) => {
-      const pipeline = buildCalculatedFieldPipeline(
-        `{{calc.${op}(1; 2)}}`,
-        'result',
-        TZ
-      );
+    ])('builds %s comparison as %s', async (op, mongoOp) => {
+      const pipeline = await build(`{{calc.${op}(1; 2)}}`, 'result');
       expect(pipeline).toEqual([
         { $addFields: { 'data.result': { [mongoOp]: [1, 2] } } },
       ]);
     });
 
-    it('builds $dateDiff in minutes from two date operands', () => {
-      const pipeline = buildCalculatedFieldPipeline(
+    it('builds $dateDiff in minutes from two date operands', async () => {
+      const pipeline = await build(
         '{{calc.datediff({{data.start}}; {{data.end}})}}',
-        'result',
-        TZ
+        'result'
       );
       expect(pipeline).toEqual([
         {
@@ -288,11 +250,10 @@ describe('buildCalculatedFieldPipeline', () => {
       ]);
     });
 
-    it('builds includes with an isArray guard', () => {
-      const pipeline = buildCalculatedFieldPipeline(
+    it('builds includes with an isArray guard', async () => {
+      const pipeline = await build(
         '{{calc.includes({{data.arr}}; "x")}}',
-        'result',
-        TZ
+        'result'
       );
       expect(pipeline).toEqual([
         {
@@ -311,12 +272,8 @@ describe('buildCalculatedFieldPipeline', () => {
   });
 
   describe('single-operator operations', () => {
-    it('builds $toBool for exists', () => {
-      const pipeline = buildCalculatedFieldPipeline(
-        '{{calc.exists({{data.x}})}}',
-        'result',
-        TZ
-      );
+    it('builds $toBool for exists', async () => {
+      const pipeline = await build('{{calc.exists({{data.x}})}}', 'result');
       expect(pipeline).toEqual([
         { $addFields: { 'data.result': { $toBool: '$data.x' } } },
       ]);
@@ -325,23 +282,15 @@ describe('buildCalculatedFieldPipeline', () => {
     it.each([
       ['toInt', '$toInt'],
       ['toLong', '$toLong'],
-    ])('builds %s as %s', (op, mongoOp) => {
-      const pipeline = buildCalculatedFieldPipeline(
-        `{{calc.${op}({{data.x}})}}`,
-        'result',
-        TZ
-      );
+    ])('builds %s as %s', async (op, mongoOp) => {
+      const pipeline = await build(`{{calc.${op}({{data.x}})}}`, 'result');
       expect(pipeline).toEqual([
         { $addFields: { 'data.result': { [mongoOp]: '$data.x' } } },
       ]);
     });
 
-    it('wraps size with an isArray guard', () => {
-      const pipeline = buildCalculatedFieldPipeline(
-        '{{calc.size({{data.arr}})}}',
-        'result',
-        TZ
-      );
+    it('wraps size with an isArray guard', async () => {
+      const pipeline = await build('{{calc.size({{data.arr}})}}', 'result');
       expect(pipeline).toEqual([
         {
           $addFields: {
@@ -359,12 +308,8 @@ describe('buildCalculatedFieldPipeline', () => {
       ]);
     });
 
-    it('builds date using $toDate inside a $convert', () => {
-      const pipeline = buildCalculatedFieldPipeline(
-        '{{calc.date({{data.x}})}}',
-        'result',
-        TZ
-      );
+    it('builds date using $toDate inside a $convert', async () => {
+      const pipeline = await build('{{calc.date({{data.x}})}}', 'result');
       expect(pipeline).toEqual([
         {
           $addFields: {
@@ -391,49 +336,44 @@ describe('buildCalculatedFieldPipeline', () => {
       'minute',
       'second',
       'millisecond',
-    ])('extracts %s using $dateToParts with the user timezone', (part) => {
-      const tz = 'Europe/Paris';
-      const pipeline = buildCalculatedFieldPipeline(
-        `{{calc.${part}({{data.dt}})}}`,
-        'result',
-        tz
-      );
-      expect(pipeline).toEqual([
-        {
-          $addFields: {
-            'data.result': {
-              $getField: {
-                field: part,
-                input: {
-                  $dateToParts: {
-                    date: { $toDate: '$data.dt' },
-                    timezone: tz,
+    ])(
+      'extracts %s using $dateToParts with the user timezone',
+      async (part) => {
+        const tz = 'Europe/Paris';
+        const pipeline = await build(
+          `{{calc.${part}({{data.dt}})}}`,
+          'result',
+          tz
+        );
+        expect(pipeline).toEqual([
+          {
+            $addFields: {
+              'data.result': {
+                $getField: {
+                  field: part,
+                  input: {
+                    $dateToParts: {
+                      date: { $toDate: '$data.dt' },
+                      timezone: tz,
+                    },
                   },
                 },
               },
             },
           },
-        },
-      ]);
-    });
+        ]);
+      }
+    );
   });
 
   describe('today operator', () => {
-    it('returns $$NOW when called without an operand', () => {
-      const pipeline = buildCalculatedFieldPipeline(
-        '{{calc.today()}}',
-        'result',
-        TZ
-      );
+    it('returns $$NOW when called without an operand', async () => {
+      const pipeline = await build('{{calc.today()}}', 'result');
       expect(pipeline).toEqual([{ $addFields: { 'data.result': '$$NOW' } }]);
     });
 
-    it('adds an offset in days when called with a numeric operand', () => {
-      const pipeline = buildCalculatedFieldPipeline(
-        '{{calc.today(5)}}',
-        'result',
-        TZ
-      );
+    it('adds an offset in days when called with a numeric operand', async () => {
+      const pipeline = await build('{{calc.today(5)}}', 'result');
       expect(pipeline).toEqual([
         {
           $addFields: {
@@ -445,12 +385,8 @@ describe('buildCalculatedFieldPipeline', () => {
       ]);
     });
 
-    it('supports a field reference as the offset operand', () => {
-      const pipeline = buildCalculatedFieldPipeline(
-        '{{calc.today({{data.offset}})}}',
-        'result',
-        TZ
-      );
+    it('supports a field reference as the offset operand', async () => {
+      const pipeline = await build('{{calc.today({{data.offset}})}}', 'result');
       expect(pipeline).toEqual([
         {
           $addFields: {
@@ -464,11 +400,10 @@ describe('buildCalculatedFieldPipeline', () => {
   });
 
   describe('nested expressions (dependencies)', () => {
-    it('emits the dependency stage before the consuming stage', () => {
-      const pipeline = buildCalculatedFieldPipeline(
+    it('emits the dependency stage before the consuming stage', async () => {
+      const pipeline = await build(
         '{{calc.add({{calc.mul(2; 3)}}; 1)}}',
-        'result',
-        TZ
+        'result'
       );
       expect(pipeline).toEqual([
         { $addFields: { 'aux.result-add0': { $multiply: [2, 3] } } },
@@ -480,11 +415,10 @@ describe('buildCalculatedFieldPipeline', () => {
       ]);
     });
 
-    it('numbers dependency aux paths by operator position for double operators', () => {
-      const pipeline = buildCalculatedFieldPipeline(
+    it('numbers dependency aux paths by operator position for double operators', async () => {
+      const pipeline = await build(
         '{{calc.sub({{calc.add(1; 2)}}; {{calc.add(3; 4)}})}}',
-        'result',
-        TZ
+        'result'
       );
       expect(pipeline).toEqual([
         { $addFields: { 'aux.result-sub2': { $add: [3, 4] } } },
@@ -499,11 +433,10 @@ describe('buildCalculatedFieldPipeline', () => {
       ]);
     });
 
-    it('handles deeply nested dependencies without re-prefixing aux paths', () => {
-      const pipeline = buildCalculatedFieldPipeline(
+    it('handles deeply nested dependencies without re-prefixing aux paths', async () => {
+      const pipeline = await build(
         '{{calc.add({{calc.mul({{calc.sub(10; 1)}}; 2)}}; 1)}}',
-        'result',
-        TZ
+        'result'
       );
       expect(pipeline).toEqual([
         {
@@ -526,11 +459,10 @@ describe('buildCalculatedFieldPipeline', () => {
       ]);
     });
 
-    it('emits an aux dependency for a nested today() offset', () => {
-      const pipeline = buildCalculatedFieldPipeline(
+    it('emits an aux dependency for a nested today() offset', async () => {
+      const pipeline = await build(
         '{{calc.today({{calc.add(1; 2)}})}}',
-        'result',
-        TZ
+        'result'
       );
       expect(pipeline).toEqual([
         { $addFields: { 'aux.result-today': { $add: [1, 2] } } },
@@ -562,11 +494,11 @@ describe('buildCalculatedFieldPipeline', () => {
 
     it.each(STANDARD_ATTRIBUTES)(
       'resolves a direct {{user.%s}} placeholder to the attribute value',
-      (attr) => {
-        const pipeline = buildCalculatedFieldPipeline(
+      async (attr) => {
+        const pipeline = await build(
           `{{user.${attr}}}`,
           'result',
-          TZ,
+          'UTC',
           userAttributes
         );
         expect(pipeline).toEqual([
@@ -577,11 +509,11 @@ describe('buildCalculatedFieldPipeline', () => {
 
     it.each(STANDARD_ATTRIBUTES)(
       'inlines {{user.%s}} as a constant inside a double operator',
-      (attr) => {
-        const pipeline = buildCalculatedFieldPipeline(
+      async (attr) => {
+        const pipeline = await build(
           `{{calc.eq({{user.${attr}}}; "target")}}`,
           'result',
-          TZ,
+          'UTC',
           userAttributes
         );
         expect(pipeline).toEqual([
@@ -594,11 +526,11 @@ describe('buildCalculatedFieldPipeline', () => {
       }
     );
 
-    it('inlines a user attribute inside a multi-operator concat', () => {
-      const pipeline = buildCalculatedFieldPipeline(
+    it('inlines a user attribute inside a multi-operator concat', async () => {
+      const pipeline = await build(
         '{{calc.concat({{user.country}}; "-"; {{user.department}})}}',
         'label',
-        TZ,
+        'UTC',
         userAttributes
       );
       expect(pipeline).toEqual([
@@ -637,11 +569,11 @@ describe('buildCalculatedFieldPipeline', () => {
       ]);
     });
 
-    it('mixes a user attribute with a data field reference', () => {
-      const pipeline = buildCalculatedFieldPipeline(
+    it('mixes a user attribute with a data field reference', async () => {
+      const pipeline = await build(
         '{{calc.eq({{user.region}}; {{data.region}})}}',
         'matchesRegion',
-        TZ,
+        'UTC',
         userAttributes
       );
       expect(pipeline).toEqual([
@@ -655,22 +587,17 @@ describe('buildCalculatedFieldPipeline', () => {
 
     it.each(STANDARD_ATTRIBUTES)(
       'falls back to "" when {{user.%s}} is missing from userAttributes',
-      (attr) => {
-        const pipeline = buildCalculatedFieldPipeline(
-          `{{user.${attr}}}`,
-          'result',
-          TZ,
-          {}
-        );
+      async (attr) => {
+        const pipeline = await build(`{{user.${attr}}}`, 'result', 'UTC', {});
         expect(pipeline).toEqual([{ $addFields: { 'data.result': '' } }]);
       }
     );
 
-    it('falls back to "" for missing user attributes inside an expression', () => {
-      const pipeline = buildCalculatedFieldPipeline(
+    it('falls back to "" for missing user attributes inside an expression', async () => {
+      const pipeline = await build(
         '{{calc.concat({{user.country}}; "-"; {{user.department}})}}',
         'label',
-        TZ,
+        'UTC',
         {}
       );
       expect(pipeline).toEqual([
@@ -709,26 +636,119 @@ describe('buildCalculatedFieldPipeline', () => {
       ]);
     });
 
-    it('falls back to "" when userAttributes is not passed at all', () => {
-      const pipeline = buildCalculatedFieldPipeline(
-        '{{user.country}}',
-        'result',
-        TZ
-      );
+    it('falls back to "" when userAttributes is not passed at all', async () => {
+      const pipeline = await build('{{user.country}}', 'result');
       expect(pipeline).toEqual([{ $addFields: { 'data.result': '' } }]);
     });
   });
 
   describe('field naming', () => {
-    it('writes the result under data.<name>', () => {
-      const pipeline = buildCalculatedFieldPipeline(
-        '{{calc.add(1; 2)}}',
-        'myField',
-        TZ
-      );
+    it('writes the result under data.<name>', async () => {
+      const pipeline = await build('{{calc.add(1; 2)}}', 'myField');
       expect(Object.keys((pipeline[0] as any).$addFields)).toContain(
         'data.myField'
       );
+    });
+  });
+
+  describe('calc.displayValue (static choices)', () => {
+    const resource = {
+      name: 'tasks',
+      fields: [
+        {
+          name: 'country',
+          choices: [
+            { value: 'FR', text: 'France' },
+            { value: 'DE', text: 'Germany' },
+          ],
+        },
+      ],
+    };
+
+    it('emits a value→label lookup stage using the field choice map', async () => {
+      const pipeline = await new CalculatedFieldService(
+        resource,
+        null,
+        'UTC'
+      ).build("{{calc.displayValue('country')}}", 'result');
+
+      expect(pipeline).toHaveLength(1);
+      const stage = (pipeline[0] as any).$addFields['data.result'];
+      expect(stage.$let.vars.dvValues).toEqual(['FR', 'DE']);
+      expect(stage.$let.vars.dvTexts).toEqual(['France', 'Germany']);
+      expect(stage.$let.in.$cond.if).toEqual({ $isArray: '$data.country' });
+    });
+
+    it('normalizes numeric choice values and coerces the stored value to string so 4 matches "4"', async () => {
+      const numericResource = {
+        name: 'tasks',
+        fields: [
+          {
+            name: 'rating',
+            choices: [
+              { value: 4, text: 'Good' },
+              { value: 5, text: 'Great' },
+            ],
+          },
+        ],
+      };
+      const pipeline = await new CalculatedFieldService(
+        numericResource,
+        null,
+        'UTC'
+      ).build("{{calc.displayValue('rating')}}", 'result');
+
+      const stage = (pipeline[0] as any).$addFields['data.result'];
+      // Choice values are stringified at build time so the $indexOfArray comparison is type-stable
+      expect(stage.$let.vars.dvValues).toEqual(['4', '5']);
+      // The stored value is $convert-ed to string inside the lookup so a stored 4 matches a choice "4"
+      const scalarLookup = stage.$let.in.$cond.else;
+      expect(scalarLookup.$let.vars.dvIdx.$indexOfArray[1]).toEqual({
+        $convert: {
+          input: '$data.rating',
+          to: 'string',
+          onError: '$data.rating',
+          onNull: null,
+        },
+      });
+    });
+
+    it('composes inside calc.concat by emitting an aux dependency first', async () => {
+      const pipeline = await new CalculatedFieldService(
+        resource,
+        null,
+        'UTC'
+      ).build(
+        "{{calc.concat('Hello, '; {{calc.displayValue('country')}})}}",
+        'greeting'
+      );
+      expect(pipeline).toHaveLength(2);
+      expect(Object.keys((pipeline[0] as any).$addFields)[0]).toBe(
+        'aux.greeting-concat1'
+      );
+      // concat wraps the aux reference in a date-aware $cond
+      expect(
+        (pipeline[1] as any).$addFields['data.greeting'].$concat[1].$cond.else
+          .$convert.input
+      ).toBe('$aux.greeting-concat1');
+    });
+
+    it('throws when called against an unknown field', async () => {
+      await expect(
+        new CalculatedFieldService(resource, null, 'UTC').build(
+          "{{calc.displayValue('unknownField')}}",
+          'result'
+        )
+      ).rejects.toThrow(/unknown field/);
+    });
+
+    it('rejects an unquoted argument at parse time', async () => {
+      await expect(
+        new CalculatedFieldService(resource, null, 'UTC').build(
+          '{{calc.displayValue(country)}}',
+          'result'
+        )
+      ).rejects.toThrow(/quoted field name/);
     });
   });
 });

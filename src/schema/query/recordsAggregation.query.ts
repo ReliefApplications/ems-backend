@@ -19,7 +19,7 @@ import {
   selectableDefaultRecordFieldsFlat,
 } from '@const/defaultRecordFields';
 import { logger } from '@services/logger.service';
-import buildCalculatedFieldPipeline from '../../utils/aggregation/buildCalculatedFieldPipeline';
+import { CalculatedFieldService } from '@services/calculatedField.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { accessibleBy } from '@casl/mongoose';
 import { GraphQLDate } from 'graphql-scalars';
@@ -352,18 +352,22 @@ export default {
             },
           },
         });
+        const calculatedFieldService = new CalculatedFieldService(
+          resource,
+          context,
+          context.timeZone,
+          context.user?.attributes || {}
+        );
         // Loop on fields to apply lookups for special fields
         for (const fieldName of sourceFields) {
           const field = resource.fields.find((x) => x.name === fieldName);
           // If field is a calculated field
           if (field && field.isCalculated) {
             pipeline.unshift(
-              ...buildCalculatedFieldPipeline(
+              ...(await calculatedFieldService.build(
                 field.expression,
-                field.name,
-                context.timeZone,
-                context.user?.attributes || {}
-              )
+                field.name
+              ))
             );
           }
 
