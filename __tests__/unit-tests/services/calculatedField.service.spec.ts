@@ -269,6 +269,102 @@ describe('CalculatedFieldService', () => {
         },
       ]);
     });
+
+    describe('join', () => {
+      it('reduces an array field to a separator-joined string', async () => {
+        const pipeline = await build(
+          '{{calc.join({{data.tags}}; ", ")}}',
+          'result'
+        );
+        expect(pipeline).toEqual([
+          {
+            $addFields: {
+              'data.result': {
+                $let: {
+                  vars: {
+                    joinReduced: {
+                      $reduce: {
+                        input: {
+                          $cond: {
+                            if: { $isArray: '$data.tags' },
+                            then: '$data.tags',
+                            else: [],
+                          },
+                        },
+                        initialValue: { i: 0, s: '' },
+                        in: {
+                          i: { $add: ['$$value.i', 1] },
+                          s: {
+                            $concat: [
+                              '$$value.s',
+                              {
+                                $cond: {
+                                  if: { $eq: ['$$value.i', 0] },
+                                  then: '',
+                                  else: {
+                                    $convert: {
+                                      input: ', ',
+                                      to: 'string',
+                                      onError: '',
+                                      onNull: '',
+                                    },
+                                  },
+                                },
+                              },
+                              {
+                                $convert: {
+                                  input: '$$this',
+                                  to: 'string',
+                                  onError: '',
+                                  onNull: '',
+                                },
+                              },
+                            ],
+                          },
+                        },
+                      },
+                    },
+                  },
+                  in: '$$joinReduced.s',
+                },
+              },
+            },
+          },
+        ]);
+      });
+
+      it('wraps non-array input as [] inside the reduce', async () => {
+        const pipeline = await build(
+          '{{calc.join({{data.notArray}}; "-")}}',
+          'result'
+        );
+        const stage = (pipeline[0] as any).$addFields['data.result'];
+        expect(stage.$let.vars.joinReduced.$reduce.input).toEqual({
+          $cond: {
+            if: { $isArray: '$data.notArray' },
+            then: '$data.notArray',
+            else: [],
+          },
+        });
+      });
+
+      it('emits an aux dependency when the array operand is a nested expression', async () => {
+        const pipeline = await build(
+          '{{calc.join({{calc.if(true; {{data.a}}; {{data.b}})}}; "-")}}',
+          'result'
+        );
+        expect(pipeline.length).toBeGreaterThanOrEqual(2);
+        const last = pipeline[pipeline.length - 1] as any;
+        const stage = last.$addFields['data.result'];
+        expect(stage.$let.vars.joinReduced.$reduce.input).toEqual({
+          $cond: {
+            if: { $isArray: '$aux.result-join1' },
+            then: '$aux.result-join1',
+            else: [],
+          },
+        });
+      });
+    });
   });
 
   describe('single-operator operations', () => {

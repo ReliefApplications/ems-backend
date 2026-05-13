@@ -70,6 +70,7 @@ const operationMap: {
   toInt: '$toInt',
   toLong: '$toLong',
   includes: '$in',
+  join: '$reduce',
 };
 
 /**
@@ -494,9 +495,9 @@ export class CalculatedFieldService {
 
   /**
    * Build the `$addFields` stage for an operation that takes exactly two
-   * operands (`sub`, `div`, comparisons, `datediff`, `includes`). Order matters
-   * — operator1 is the left-hand side. Nested expressions are queued as
-   * dependencies and referenced through aux paths.
+   * operands (`sub`, `div`, comparisons, `datediff`, `includes`, `join`). Order
+   * matters — operator1 is the left-hand side. Nested expressions are queued
+   * as dependencies and referenced through aux paths.
    *
    * @param operation The two-operand operation to compile
    * @param operator1 Left operand
@@ -549,6 +550,61 @@ export class CalculatedFieldService {
                 if: { $isArray: getValueString(1) },
                 then: { $in: [getValueString(2), getValueString(1)] },
                 else: false,
+              },
+            },
+          },
+        };
+        break;
+      case 'join':
+        step = {
+          $addFields: {
+            [path.startsWith('aux.') ? path : `data.${path}`]: {
+              $let: {
+                vars: {
+                  joinReduced: {
+                    $reduce: {
+                      input: {
+                        $cond: {
+                          if: { $isArray: getValueString(1) },
+                          then: getValueString(1),
+                          else: [],
+                        },
+                      },
+                      initialValue: { i: 0, s: '' },
+                      in: {
+                        i: { $add: ['$$value.i', 1] },
+                        s: {
+                          $concat: [
+                            '$$value.s',
+                            {
+                              $cond: {
+                                if: { $eq: ['$$value.i', 0] },
+                                then: '',
+                                else: {
+                                  $convert: {
+                                    input: getValueString(2),
+                                    to: 'string',
+                                    onError: '',
+                                    onNull: '',
+                                  },
+                                },
+                              },
+                            },
+                            {
+                              $convert: {
+                                input: '$$this',
+                                to: 'string',
+                                onError: '',
+                                onNull: '',
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    },
+                  },
+                },
+                in: '$$joinReduced.s',
               },
             },
           },
@@ -696,7 +752,8 @@ export class CalculatedFieldService {
       case 'eq':
       case 'ne':
       case 'datediff':
-      case 'includes': {
+      case 'includes':
+      case 'join': {
         const { step, dependencies } = this.resolveDoubleOperator(
           op.operation,
           op.operator1,
