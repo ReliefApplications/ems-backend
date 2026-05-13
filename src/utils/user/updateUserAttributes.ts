@@ -1,6 +1,6 @@
 import config from 'config';
 import i18next from 'i18next';
-import jsonpath from 'jsonpath';
+import { JSONPath } from 'jsonpath-plus';
 import { isEmpty, set } from 'lodash';
 import { authType } from '@const/enumTypes';
 import { ApiConfiguration, User } from '@models';
@@ -80,7 +80,11 @@ export const updateUserAttributes = async (
       // Map them to user attributes
       for (const mapping of settings.mapping) {
         if (mapping.provider !== 'microsoftGraph') {
-          const value = jsonpath.value(data, mapping.value);
+          const value = JSONPath({
+            path: mapping.value,
+            json: data,
+            wrap: false,
+          });
           set(user, mapping.field, value);
         }
       }

@@ -1,4 +1,4 @@
-import { GraphQLError } from 'graphql';
+import { GraphQLError, valueFromASTUntyped } from 'graphql';
 import { Record, ReferenceData, User } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { decodeCursor, encodeCursor } from '@schema/types';
@@ -171,8 +171,9 @@ const getQueryFields = (
             ...(field.selectionSet && {
               fields: field.selectionSet.selections.map((x) => x.name.value),
               arguments: field.arguments.reduce((o, x) => {
-                if (x.value.value) {
-                  Object.assign(o, { [x.name.value]: x.value.value });
+                const value = valueFromASTUntyped(x.value);
+                if (value !== undefined && value !== null) {
+                  Object.assign(o, { [x.name.value]: value });
                 }
                 return o;
               }, {}),
@@ -226,6 +227,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       filter = {},
       display = false,
       styles = [],
+      actions = [],
       at,
     },
     context,
@@ -373,6 +375,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         // Check if the field is used in any styles' filters
         if (styles?.some((s) => isUsedInFilter(s.filter))) return true;
 
+        // Check if the field is used in any actions' filters
+        if (actions?.some((a) => isUsedInFilter(a.filter))) return true;
+
         // If not used in any of the above, don't add it to the pipeline
         return false;
       };
@@ -514,11 +519,18 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       }
 
+      // When a sub-selection passes a `filter` argument, we cannot satisfy it
+      // from the bulk pre-fetch below (it groups records by id only). Let the
+      // field's own resolver handle those by skipping the optimization.
+      const hasSubFilter = (queryField: any) =>
+        queryField?.arguments?.filter &&
+        Object.keys(queryField.arguments.filter).length > 0;
+
       // Deal with resource/resources questions on THIS form
       const resourcesFields: any[] = fields.reduce((arr, field) => {
         if (field.type === 'resource' || field.type === 'resources') {
           const queryField = queryFields.find((x) => x.name === field.name);
-          if (queryField) {
+          if (queryField && !hasSubFilter(queryField)) {
             arr.push({
               ...field,
               fields: [
@@ -536,7 +548,10 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // Deal with resource/resources questions on OTHER forms if any
       let relatedFields = [];
-      if (queryFields.filter((x) => x.fields).length - resourcesFields.length) {
+      const relatedQueryFieldsCount = queryFields.filter(
+        (x) => x.fields && !hasSubFilter(x)
+      ).length;
+      if (relatedQueryFieldsCount - resourcesFields.length) {
         const entities = Object.keys(fieldsByName);
         const mappedRelatedFields = [];
         relatedFields = entities.reduce((arr, relatedEntityName) => {
@@ -548,7 +563,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               const queryField = queryFields.find(
                 (y) => x.relatedName === y.name
               );
-              if (queryField) {
+              if (queryField && !hasSubFilter(queryField)) {
                 mappedRelatedFields.push(x.relatedName);
                 entityArr.push({
                   ...x,
@@ -707,6 +722,36 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         }
       }
 
+      // === ACTIONS ===
+      const actionRules: { items: any[]; action: any }[] = [];
+      // If there is a custom action rule
+      if (actions?.length > 0) {
+        // Create the filter for each action
+        const recordsIds = items.map((x) => x.id || x._id);
+        const objectIds = recordsIds.map((x) => new mongoose.Types.ObjectId(x));
+        // Run action filters in parallel
+        const actionResults = await Promise.all(
+          actions.map((action) => {
+            const actionFilter = getFilter(action.filter, fields, context);
+            return Record.aggregate([
+              {
+                $match: {
+                  _id: { $in: objectIds },
+                },
+              },
+              ...calculatedFieldsAggregation,
+              {
+                $match: actionFilter,
+              },
+              { $addFields: { id: '$_id' } },
+            ]);
+          })
+        );
+        actions.forEach((action, idx) => {
+          actionRules.push({ items: actionResults[idx], action });
+        });
+      }
+
       // === CONSTRUCT OUTPUT + RETURN ===
       const edges = items.map((r) => {
         const record = getAccessibleFields(r, ability);
@@ -716,6 +761,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           cursor: encodeCursor(record.id.toString()),
           node: display ? Object.assign(record, { display, fields }) : record,
           meta: {
+            actions: actionRules
+              .filter((a) => a.items.some((i) => i.id.equals(record.id)))
+              .map((a) => a.action),
             style: getStyle(r, styleRules),
             raw: record.data,
           },
