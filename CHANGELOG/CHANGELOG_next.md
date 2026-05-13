@@ -1,3 +1,10 @@
+# [2.16.0-rc.12](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.11...v2.16.0-rc.12) (2026-05-13)
+
+
+### Features
+
+* Allow use of user attributes in calculated fields ([#1224](https://github.com/ReliefApplications/ems-backend/issues/1224)) ([e58562d](https://github.com/ReliefApplications/ems-backend/commit/e58562d044ff6c44cd51f06fbe9c33c65f1d7589)), closes [AB#128968](https://github.com/AB/issues/128968)
+
 # [2.16.0-rc.11](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.10...v2.16.0-rc.11) (2026-05-12)
 
 
