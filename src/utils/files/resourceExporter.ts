@@ -280,6 +280,14 @@ export default class Exporter {
       } as any)
     )();
     set(this.req.context, 'dataSources', contextDataSources);
+    // The calc service's displayValue fetches choicesByUrl / choicesByGraphQL
+    // through getFullChoices, which authenticates with these headers. The REST
+    // middleware seeds req.context with only { user }, so we mirror what the
+    // Apollo context builder does and copy the auth headers across.
+    set(this.req.context, 'token', this.req.headers.authorization);
+    if (this.req.headers.accesstoken) {
+      set(this.req.context, 'accesstoken', this.req.headers.accesstoken);
+    }
     const sort = await getSortAggregation(
       this.params.sortField,
       this.params.sortOrder,
