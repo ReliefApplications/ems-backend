@@ -34,6 +34,7 @@ const DOUBLE_OPERATORS_OPERATIONS: DoubleOperatorOperationsTypes[] = [
   'ne',
   'datediff',
   'includes',
+  'join',
 ];
 
 /** All the available operations with multiple operators */
@@ -79,6 +80,8 @@ export const OperationTypeMap: { [key in OperationTypes]: string } = {
   toInt: 'numeric',
   toLong: 'numeric',
   includes: 'boolean',
+  join: 'text',
+  displayValue: 'text',
 };
 
 /** All the available operations */
@@ -252,6 +255,32 @@ const solveExp = (exp: string): Operator => {
     const operation = exp.split('(')[0].split('.')[1].trim() as any;
     if (!AVAILABLE_OPERATIONS.includes(operation))
       throw new Error(`Invalid operation: ${operation}`);
+
+    // displayValue takes a single literal field name (string), not a generic operator
+    if (operation === 'displayValue') {
+      const rawArgs = getArgs(
+        exp.substring(exp.indexOf('(') + 1, exp.length - 1)
+      );
+      if (rawArgs.length !== 1)
+        throw new Error(
+          `Invalid number of arguments for operation displayValue: ${rawArgs.length}. Expected 1`
+        );
+      const arg = rawArgs[0].trim();
+      const isQuoted =
+        (arg.startsWith('"') && arg.endsWith('"')) ||
+        (arg.startsWith("'") && arg.endsWith("'"));
+      if (!isQuoted)
+        throw new Error(
+          `Invalid argument for operation displayValue: expected a quoted field name, got ${arg}`
+        );
+      return {
+        type: 'expression',
+        value: {
+          operation: 'displayValue',
+          fieldName: arg.substring(1, arg.length - 1),
+        },
+      };
+    }
 
     const expectedNumOfArgs = getExpectedNumberOfArgs(operation);
     const args = getArgs(exp.substring(exp.indexOf('(') + 1, exp.length - 1));
