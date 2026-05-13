@@ -1,5 +1,4 @@
 import {
-  Operation,
   SingleOperatorOperationsTypes,
   DoubleOperatorOperationsTypes,
   MultipleOperatorsOperationsTypes,
@@ -240,6 +239,14 @@ const solveExp = (exp: string): Operator => {
     };
   }
 
+  // base case: user contextual field
+  if (exp.startsWith('user.')) {
+    return {
+      type: 'user',
+      value: exp.substring(5),
+    };
+  }
+
   // recursive case: is an expression
   if (exp.startsWith('calc.')) {
     const operation = exp.split('(')[0].split('.')[1].trim() as any;
@@ -299,12 +306,12 @@ const solveExp = (exp: string): Operator => {
 };
 
 /**
- * Transforms an operation expression into the Operation structure
+ * Transforms an operation expression into the Operator structure.
  *
  * @param expression The operation expression of the calculated field in string format
- * @returns The operation expression of the calculated field in Operation format
+ * @returns The operation expression of the calculated field in Operator format
  */
-export const getExpressionFromString = (expression: string): Operation => {
+export const getExpressionFromString = (expression: string): Operator => {
   expression = expression.trim();
-  return solveExp(expression).value as Operation;
+  return solveExp(expression);
 };

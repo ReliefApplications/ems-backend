@@ -4,8 +4,8 @@
  * If type is 'field', the operator is the value for that the field with the name stored in value
  */
 interface SimpleOperator {
-  type: 'const' | 'field' | 'info';
-  value: string | number | boolean;
+  type: 'const' | 'field' | 'info' | 'user';
+  value: string | number | boolean | null;
 }
 
 /**

@@ -443,7 +443,8 @@ export default class Exporter {
           ...(buildCalculatedFieldPipeline(
             col.meta.field.expression,
             col.meta.field.name,
-            this.params.timeZone
+            this.params.timeZone,
+            this.req.context.user?.attributes || {}
           ) as any)
         )
       );
@@ -525,7 +526,8 @@ export default class Exporter {
           ...(buildCalculatedFieldPipeline(
             col.meta.field.expression,
             col.meta.field.name,
-            this.params.timeZone
+            this.params.timeZone,
+            this.req.context.user?.attributes || {}
           ) as any)
         )
       );
@@ -603,7 +605,8 @@ export default class Exporter {
           ...(buildCalculatedFieldPipeline(
             col.meta.field.expression,
             col.meta.field.name,
-            this.params.timeZone
+            this.params.timeZone,
+            this.req.context.user?.attributes || {}
           ) as any)
         )
       );

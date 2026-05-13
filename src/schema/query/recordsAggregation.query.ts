@@ -361,7 +361,8 @@ export default {
               ...buildCalculatedFieldPipeline(
                 field.expression,
                 field.name,
-                context.timeZone
+                context.timeZone,
+                context.user?.attributes || {}
               )
             );
           }

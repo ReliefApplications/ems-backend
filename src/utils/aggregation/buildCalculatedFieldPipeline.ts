@@ -10,6 +10,8 @@ import {
 import { getExpressionFromString } from './expressionFromString';
 import { PipelineStage } from 'mongoose';
 
+type UserAttributes = Record<string, unknown>;
+
 type Dependency = {
   operation: Operation;
   path: string;
@@ -59,15 +61,23 @@ const operationMap: {
  * If provided a simple operator, returns the value, otherwise returns null
  *
  * @param operator The operator to get value from
+ * @param userAttributes User contextual attributes of the logged user
  * @returns The value of the operator, or null if it is not a simple operator
  */
-const getSimpleOperatorValue = (operator: Operator) => {
+const getSimpleOperatorValue = (
+  operator: Exclude<Operator, { type: 'expression' }>,
+  userAttributes: UserAttributes = {}
+) => {
   if (operator.type === 'const') return operator.value;
   if (operator.type === 'field') return `$data.${operator.value}`;
   if (operator.type === 'info') {
     if (operator.value === infoOperators.CREATED_AT) return '$createdAt';
     if (operator.value === infoOperators.UPDATED_AT) return '$modifiedAt';
     if (operator.value === infoOperators.ID) return '$incrementalId';
+  }
+  if (operator.type === 'user') {
+    const value = userAttributes[operator.value as string];
+    return isNil(value) ? '' : value;
   }
   return null;
 };
@@ -77,14 +87,20 @@ const getSimpleOperatorValue = (operator: Operator) => {
  *
  * @param operator The operator for the operation, if any
  * @param path The current path in the recursion
+ * @param userAttributes User contextual attributes of the logged user
  * @returns The stage for the operation and an array with dependencies for the operation
  */
-const resolveTodayOperator = (operator: Operator | null, path: string) => {
+const resolveTodayOperator = (
+  operator: Operator | null,
+  path: string,
+  userAttributes: UserAttributes = {}
+) => {
   const dependencies: Dependency[] = [];
 
   const getValueString = () => {
-    const value = getSimpleOperatorValue(operator);
-    if (!isNil(value)) return value; // check that not null or undefined, so 0 works
+    if (!operator) return null;
+    if (operator.type !== 'expression')
+      return getSimpleOperatorValue(operator, userAttributes);
 
     // if is an expression, add to dependencies array,
     // that will be resolved before, since will be appended
@@ -117,19 +133,21 @@ const resolveTodayOperator = (operator: Operator | null, path: string) => {
  * @param operator The operator for the operation
  * @param path The current path in the recursion
  * @param timeZone the current timezone of the user
+ * @param userAttributes User contextual attributes of the logged user
  * @returns The stage for the operation and an array with dependencies for the operation
  */
 const resolveSingleOperator = (
   operation: SingleOperatorOperationsTypes,
   operator: Operator,
   path: string,
-  timeZone: string
+  timeZone: string,
+  userAttributes: UserAttributes = {}
 ) => {
   const dependencies: Dependency[] = [];
 
   const getValueString = () => {
-    const value = getSimpleOperatorValue(operator);
-    if (!isNil(value)) return value; // check that not null or undefined, so 0 works
+    if (operator.type !== 'expression')
+      return getSimpleOperatorValue(operator, userAttributes);
 
     // if is an expression, add to dependencies array,
     // that will be resolved before, since will be appended
@@ -235,20 +253,22 @@ const resolveSingleOperator = (
  * @param operator1 The first operator for the operation
  * @param operator2 The second operator for the operation
  * @param path The current path in the recursion
+ * @param userAttributes User contextual attributes of the logged user
  * @returns The stage for the operation and an array with dependencies for the operation
  */
 const resolveDoubleOperator = (
   operation: DoubleOperatorOperationsTypes,
   operator1: Operator,
   operator2: Operator,
-  path: string
+  path: string,
+  userAttributes: UserAttributes = {}
 ) => {
   const dependencies: Dependency[] = [];
 
   const getValueString = (i: number) => {
     const selectedOperator = i === 1 ? operator1 : operator2;
-    const value = getSimpleOperatorValue(selectedOperator);
-    if (!isNil(value)) return value; // check that not null or undefined, so 0 works
+    if (selectedOperator.type !== 'expression')
+      return getSimpleOperatorValue(selectedOperator, userAttributes);
 
     // if is an expression, add to dependencies array,
     // that will be resolved before, since will be appended
@@ -316,12 +336,14 @@ const resolveDoubleOperator = (
  * @param operation The operation to resolve
  * @param operators The operators for the operation
  * @param path The current path in the recursion
+ * @param userAttributes User contextual attributes of the logged user
  * @returns The stage for the operation and an array with dependencies for the operation
  */
 const resolveMultipleOperators = (
   operation: MultipleOperatorsOperationsTypes,
   operators: Operator[],
-  path: string
+  path: string,
+  userAttributes: UserAttributes = {}
 ) => {
   const dependencies: Dependency[] = [];
 
@@ -329,9 +351,10 @@ const resolveMultipleOperators = (
     $addFields: {
       [path.startsWith('aux.') ? path : `data.${path}`]: {
         [operationMap[operation]]: operators.map((operator, index) => {
-          let value = getSimpleOperatorValue(operator);
-
-          if (value === null) {
+          let value;
+          if (operator.type !== 'expression') {
+            value = getSimpleOperatorValue(operator, userAttributes);
+          } else {
             // if is an expression, add to dependencies array,
             // that will be resolved before, since will be appended
             // to the beginning of the pipeline
@@ -395,9 +418,15 @@ const resolveMultipleOperators = (
  * @param op The operation that results in the calculated field
  * @param path The current path in the recursion
  * @param timeZone the current timezone of the user
+ * @param userAttributes User contextual attributes of the logged user
  * @returns The pipeline for the calculated field
  */
-const buildPipeline = (op: Operation, path: string, timeZone: string) => {
+const buildPipeline = (
+  op: Operation,
+  path: string,
+  timeZone: string,
+  userAttributes: UserAttributes = {}
+) => {
   const pipeline: PipelineStage.AddFields[] = [];
   switch (op.operation) {
     case 'add':
@@ -410,14 +439,20 @@ const buildPipeline = (op: Operation, path: string, timeZone: string) => {
       const { step, dependencies } = resolveMultipleOperators(
         op.operation,
         op.operators,
-        path
+        path,
+        userAttributes
       );
 
       if (dependencies.length > 0)
         pipeline.unshift(
           ...flattenDeep(
             dependencies.map((dep) =>
-              buildPipeline(dep.operation, `aux.${dep.path}`, timeZone)
+              buildPipeline(
+                dep.operation,
+                `aux.${dep.path}`,
+                timeZone,
+                userAttributes
+              )
             )
           )
         );
@@ -438,14 +473,20 @@ const buildPipeline = (op: Operation, path: string, timeZone: string) => {
         op.operation,
         op.operator1,
         op.operator2,
-        path
+        path,
+        userAttributes
       );
 
       if (dependencies.length > 0)
         pipeline.unshift(
           ...flattenDeep(
             dependencies.map((dep) =>
-              buildPipeline(dep.operation, `aux.${dep.path}`, timeZone)
+              buildPipeline(
+                dep.operation,
+                `aux.${dep.path}`,
+                timeZone,
+                userAttributes
+              )
             )
           )
         );
@@ -468,13 +509,19 @@ const buildPipeline = (op: Operation, path: string, timeZone: string) => {
         op.operation,
         op.operator,
         path,
-        timeZone
+        timeZone,
+        userAttributes
       );
       if (dependencies.length > 0)
         pipeline.unshift(
           ...flattenDeep(
             dependencies.map((dep) =>
-              buildPipeline(dep.operation, `aux.${dep.path}`, timeZone)
+              buildPipeline(
+                dep.operation,
+                `aux.${dep.path}`,
+                timeZone,
+                userAttributes
+              )
             )
           )
         );
@@ -482,13 +529,22 @@ const buildPipeline = (op: Operation, path: string, timeZone: string) => {
       break;
     }
     case 'today': {
-      const { step, dependencies } = resolveTodayOperator(op.operator, path);
+      const { step, dependencies } = resolveTodayOperator(
+        op.operator,
+        path,
+        userAttributes
+      );
 
       if (dependencies.length > 0)
         pipeline.unshift(
           ...flattenDeep(
             dependencies.map((dep) =>
-              buildPipeline(dep.operation, `aux.${dep.path}`, timeZone)
+              buildPipeline(
+                dep.operation,
+                `aux.${dep.path}`,
+                timeZone,
+                userAttributes
+              )
             )
           )
         );
@@ -506,16 +562,36 @@ const buildPipeline = (op: Operation, path: string, timeZone: string) => {
  * @param expression The operation expression of the calculated field
  * @param name The name of the calculated field
  * @param timeZone the current timezone of the user
+ * @param userAttributes User contextual attributes of the logged user
  * @returns The pipeline for the calculated field
  */
 const buildCalculatedFieldPipeline = (
   expression: string,
   name: string,
-  timeZone: string
+  timeZone: string,
+  userAttributes: UserAttributes = {}
 ) => {
-  const operation = getExpressionFromString(expression);
-  const pipeline = buildPipeline(operation, name, timeZone);
-  return pipeline;
+  const parsedExpression = getExpressionFromString(expression);
+
+  if (parsedExpression.type === 'expression') {
+    return buildPipeline(
+      parsedExpression.value,
+      name,
+      timeZone,
+      userAttributes
+    );
+  }
+
+  return [
+    {
+      $addFields: {
+        [`data.${name}`]: getSimpleOperatorValue(
+          parsedExpression,
+          userAttributes
+        ),
+      },
+    },
+  ];
 };
 
 export default buildCalculatedFieldPipeline;
