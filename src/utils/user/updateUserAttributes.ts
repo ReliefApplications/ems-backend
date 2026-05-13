@@ -71,6 +71,8 @@ export const updateUserAttributes = async (
           headers,
         });
         data = res.data;
+        console.log('Get user attributes');
+        console.log(JSON.stringify(data));
       } catch (err) {
         logger.error(i18next.t('common.errors.invalidAPI'), {
           stack: err.stack,
