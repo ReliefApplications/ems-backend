@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": ["node", "jest"],
+    "rootDir": "..",
+    "noEmit": true
+  },
+  "include": ["**/*", "../src/**/*"],
+  "exclude": ["../src/migrations/template.ts"]
+}
