@@ -2,6 +2,7 @@ import { User } from '@models';
 import NodeCache from 'node-cache';
 import { updateUserAttributes } from './updateUserAttributes';
 import { updateUserGroups } from './updateUserGroups';
+import { enrichUserAttributes } from './enrichUserAttributes';
 import { getAutoAssignedRoles } from './getAutoAssignedRoles';
 import { isNil } from 'lodash';
 
@@ -100,6 +101,10 @@ export const updateUser = async (user: User, req: any): Promise<boolean> => {
     updateUserAttributes(user, req),
     updateUserGroups(user, req),
   ]);
+  // Resolve common-services metadata for the user's country/region and
+  // attach it as a sibling, non-persisted field. Must run after attributes
+  // are populated and must never block login.
+  await enrichUserAttributes(user);
   for (const update of userChanges) {
     if (update) return true;
   }
