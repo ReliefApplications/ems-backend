@@ -545,6 +545,180 @@ describe('buildCalculatedFieldPipeline', () => {
     });
   });
 
+  describe('user contextual attributes', () => {
+    const STANDARD_ATTRIBUTES = [
+      'country',
+      'region',
+      'location',
+      'department',
+    ] as const;
+
+    const userAttributes = {
+      country: 'France',
+      region: 'Europe',
+      location: 'Paris',
+      department: 'Engineering',
+    };
+
+    it.each(STANDARD_ATTRIBUTES)(
+      'resolves a direct {{user.%s}} placeholder to the attribute value',
+      (attr) => {
+        const pipeline = buildCalculatedFieldPipeline(
+          `{{user.${attr}}}`,
+          'result',
+          TZ,
+          userAttributes
+        );
+        expect(pipeline).toEqual([
+          { $addFields: { 'data.result': userAttributes[attr] } },
+        ]);
+      }
+    );
+
+    it.each(STANDARD_ATTRIBUTES)(
+      'inlines {{user.%s}} as a constant inside a double operator',
+      (attr) => {
+        const pipeline = buildCalculatedFieldPipeline(
+          `{{calc.eq({{user.${attr}}}; "target")}}`,
+          'result',
+          TZ,
+          userAttributes
+        );
+        expect(pipeline).toEqual([
+          {
+            $addFields: {
+              'data.result': { $eq: [userAttributes[attr], 'target'] },
+            },
+          },
+        ]);
+      }
+    );
+
+    it('inlines a user attribute inside a multi-operator concat', () => {
+      const pipeline = buildCalculatedFieldPipeline(
+        '{{calc.concat({{user.country}}; "-"; {{user.department}})}}',
+        'label',
+        TZ,
+        userAttributes
+      );
+      expect(pipeline).toEqual([
+        {
+          $addFields: {
+            'data.label': {
+              $concat: [
+                {
+                  $convert: {
+                    input: 'France',
+                    to: 'string',
+                    onError: '',
+                    onNull: '',
+                  },
+                },
+                {
+                  $convert: {
+                    input: '-',
+                    to: 'string',
+                    onError: '',
+                    onNull: '',
+                  },
+                },
+                {
+                  $convert: {
+                    input: 'Engineering',
+                    to: 'string',
+                    onError: '',
+                    onNull: '',
+                  },
+                },
+              ],
+            },
+          },
+        },
+      ]);
+    });
+
+    it('mixes a user attribute with a data field reference', () => {
+      const pipeline = buildCalculatedFieldPipeline(
+        '{{calc.eq({{user.region}}; {{data.region}})}}',
+        'matchesRegion',
+        TZ,
+        userAttributes
+      );
+      expect(pipeline).toEqual([
+        {
+          $addFields: {
+            'data.matchesRegion': { $eq: ['Europe', '$data.region'] },
+          },
+        },
+      ]);
+    });
+
+    it.each(STANDARD_ATTRIBUTES)(
+      'falls back to "" when {{user.%s}} is missing from userAttributes',
+      (attr) => {
+        const pipeline = buildCalculatedFieldPipeline(
+          `{{user.${attr}}}`,
+          'result',
+          TZ,
+          {}
+        );
+        expect(pipeline).toEqual([{ $addFields: { 'data.result': '' } }]);
+      }
+    );
+
+    it('falls back to "" for missing user attributes inside an expression', () => {
+      const pipeline = buildCalculatedFieldPipeline(
+        '{{calc.concat({{user.country}}; "-"; {{user.department}})}}',
+        'label',
+        TZ,
+        {}
+      );
+      expect(pipeline).toEqual([
+        {
+          $addFields: {
+            'data.label': {
+              $concat: [
+                {
+                  $convert: {
+                    input: '',
+                    to: 'string',
+                    onError: '',
+                    onNull: '',
+                  },
+                },
+                {
+                  $convert: {
+                    input: '-',
+                    to: 'string',
+                    onError: '',
+                    onNull: '',
+                  },
+                },
+                {
+                  $convert: {
+                    input: '',
+                    to: 'string',
+                    onError: '',
+                    onNull: '',
+                  },
+                },
+              ],
+            },
+          },
+        },
+      ]);
+    });
+
+    it('falls back to "" when userAttributes is not passed at all', () => {
+      const pipeline = buildCalculatedFieldPipeline(
+        '{{user.country}}',
+        'result',
+        TZ
+      );
+      expect(pipeline).toEqual([{ $addFields: { 'data.result': '' } }]);
+    });
+  });
+
   describe('field naming', () => {
     it('writes the result under data.<name>', () => {
       const pipeline = buildCalculatedFieldPipeline(
