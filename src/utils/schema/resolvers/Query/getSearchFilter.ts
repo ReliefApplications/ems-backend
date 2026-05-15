@@ -226,26 +226,12 @@ const buildMongoFilter = (
             }
             if (type === 'text' || type === '') {
               if (fieldName == 'data._globalSearch') {
-                const number = Number(value[0].value);
-                if (number) {
-                  return;
-                } else {
-                  searchStage.$search.compound.must.unshift({
-                    wildcard: {
-                      query: `*${value[0].value}*`,
-                      path: value.map((searchObject) => {
-                        const pathName = FLAT_DEFAULT_FIELDS.includes(
-                          searchObject.field
-                        )
-                          ? searchObject.field
-                          : `${prefix}${searchObject.field}`;
-                        return pathName;
-                      }),
-                      allowAnalyzedField: true,
-                    },
-                  });
-                  return;
-                }
+                // Global search is now handled by getFilter.ts as an $or of
+                // regex / per-type rules so it works on every field present in
+                // the resource, not only those covered by the Atlas
+                // `keyword_lowercase` search index. Skip here to avoid
+                // pre-filtering documents with an incomplete Atlas index.
+                return;
               } else {
                 searchStage.$search.compound.must.unshift({
                   wildcard: {
