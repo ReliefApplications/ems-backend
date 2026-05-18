@@ -309,50 +309,50 @@ export default {
         );
         const relatedFields: any[] = hasUnknownSourceField
           ? await Form.aggregate([
-          {
-            $match: {
-              fields: {
-                $elemMatch: {
-                  resource: String(args.resource),
+              {
+                $match: {
+                  fields: {
+                    $elemMatch: {
+                      resource: String(args.resource),
+                      $or: [
+                        {
+                          type: 'resource',
+                        },
+                        {
+                          type: 'resources',
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+              {
+                $unwind: '$fields',
+              },
+              {
+                $match: {
+                  'fields.resource': String(args.resource),
                   $or: [
                     {
-                      type: 'resource',
+                      'fields.type': 'resource',
                     },
                     {
-                      type: 'resources',
+                      'fields.type': 'resources',
                     },
                   ],
                 },
               },
-            },
-          },
-          {
-            $unwind: '$fields',
-          },
-          {
-            $match: {
-              'fields.resource': String(args.resource),
-              $or: [
-                {
-                  'fields.type': 'resource',
+              {
+                $addFields: {
+                  'fields.form': '$_id',
                 },
-                {
-                  'fields.type': 'resources',
+              },
+              {
+                $replaceRoot: {
+                  newRoot: '$fields',
                 },
-              ],
-            },
-          },
-          {
-            $addFields: {
-              'fields.form': '$_id',
-            },
-          },
-          {
-            $replaceRoot: {
-              newRoot: '$fields',
-            },
-          },
-        ])
+              },
+            ])
           : [];
         pipeline.push({
           $addFields: {
@@ -373,9 +373,7 @@ export default {
           new Set(
             sourceFields
               .map((fName) => resource.fields.find((x) => x.name === fName))
-              .filter(
-                (f: any) => f && f.referenceData && f.referenceData.id
-              )
+              .filter((f: any) => f && f.referenceData && f.referenceData.id)
               .map((f: any) => f.referenceData.id)
           )
         );

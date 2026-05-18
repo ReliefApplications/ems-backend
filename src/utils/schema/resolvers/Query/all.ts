@@ -231,7 +231,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       sortOrder = 'asc',
       first = DEFAULT_FIRST,
       skip = 0,
-      afterCursor,
       filter = {},
       display = false,
       styles = [],

@@ -18,6 +18,11 @@ import config from 'config';
 
 /** Shared `ioredis` client. */
 let sharedClient: Redis | null = null;
+/**
+ * Returns the process-wide shared `ioredis` client (created lazily).
+ *
+ * @returns The shared `Redis` instance.
+ */
 export const getRedisClient = (): Redis => {
   if (!sharedClient) {
     sharedClient = new Redis(config.get<string>('redis.url'), {
@@ -32,6 +37,13 @@ export const getRedisClient = (): Redis => {
 
 /** Shared `BaseRedisCache` (string KV with TTL) used by Apollo + utilities. */
 let sharedBase: BaseRedisCache | null = null;
+/**
+ * Returns the process-wide shared `BaseRedisCache` (created lazily) backed by
+ * `getRedisClient()`. Suitable for raw string-value usage (Apollo, getNextId,
+ * referenceData last-request).
+ *
+ * @returns The shared `BaseRedisCache` instance.
+ */
 export const getBaseCache = (): BaseRedisCache => {
   if (!sharedBase) {
     sharedBase = new BaseRedisCache({ client: getRedisClient() as any });
@@ -56,6 +68,7 @@ export interface KVCache {
  *
  * @param namespace Prefix prepended to every key (e.g. `permissionFilters`).
  * @param defaultTTL Default TTL in seconds when `set` is called without one.
+ * @returns A `KVCache` that JSON-serializes values and namespaces keys.
  */
 export const createCache = (namespace: string, defaultTTL: number): KVCache => {
   const base = getBaseCache();
