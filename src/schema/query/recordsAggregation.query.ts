@@ -299,8 +299,16 @@ export default {
             ]);
           }
         }
-        // Fetch related fields from other forms
-        const relatedFields: any[] = await Form.aggregate([
+        // Fetch related fields from other forms.
+        // Only needed when at least one `sourceField` is NOT found in the
+        // resource's own fields (i.e. is a candidate related-form field).
+        const hasUnknownSourceField = (sourceFields as string[]).some(
+          (fName) =>
+            !selectableDefaultRecordFieldsFlat.includes(fName) &&
+            !resource.fields.find((x) => x.name === fName)
+        );
+        const relatedFields: any[] = hasUnknownSourceField
+          ? await Form.aggregate([
           {
             $match: {
               fields: {
@@ -344,7 +352,8 @@ export default {
               newRoot: '$fields',
             },
           },
-        ]);
+        ])
+          : [];
         pipeline.push({
           $addFields: {
             record_id: {
@@ -358,6 +367,31 @@ export default {
           context.timeZone,
           context.user?.attributes || {}
         );
+        // Batch-load all referenceData documents referenced by the queried
+        // fields in a single query, instead of one `findById` per field.
+        const referenceDataIds = Array.from(
+          new Set(
+            sourceFields
+              .map((fName) => resource.fields.find((x) => x.name === fName))
+              .filter(
+                (f: any) => f && f.referenceData && f.referenceData.id
+              )
+              .map((f: any) => f.referenceData.id)
+          )
+        );
+        const referenceDataById = new Map<string, any>();
+        if (referenceDataIds.length > 0) {
+          const refDataDocs = await ReferenceData.find({
+            _id: { $in: referenceDataIds },
+          }).populate({
+            path: 'apiConfiguration',
+            model: 'ApiConfiguration',
+            select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
+          });
+          for (const doc of refDataDocs) {
+            referenceDataById.set(String(doc._id), doc);
+          }
+        }
         // Loop on fields to apply lookups for special fields
         for (const fieldName of sourceFields) {
           const field = resource.fields.find((x) => x.name === fieldName);
@@ -494,20 +528,18 @@ export default {
           }
           // If we have referenceData fields
           if (field && field.referenceData && field.referenceData.id) {
-            const referenceData = await ReferenceData.findById(
-              field.referenceData.id
-            ).populate({
-              path: 'apiConfiguration',
-              model: 'ApiConfiguration',
-              select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
-            });
-            const referenceDataAggregation: any[] =
-              await buildReferenceDataAggregation(
-                referenceData,
-                field,
-                context
-              );
-            pipeline.push(...referenceDataAggregation);
+            const referenceData = referenceDataById.get(
+              String(field.referenceData.id)
+            );
+            if (referenceData) {
+              const referenceDataAggregation: any[] =
+                await buildReferenceDataAggregation(
+                  referenceData,
+                  field,
+                  context
+                );
+              pipeline.push(...referenceDataAggregation);
+            }
           }
         }
         pipeline.push({

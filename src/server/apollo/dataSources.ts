@@ -9,20 +9,10 @@ import { ApolloServer } from '@apollo/server';
 import { Context } from './context';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import gql from 'graphql-tag';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { BaseRedisCache } from 'apollo-server-cache-redis';
-import Redis from 'ioredis';
-import config from 'config';
+import { getBaseCache } from '@utils/cache';
 
-/** Local storage initialization */
-const referenceDataCache = new BaseRedisCache({
-  client: new Redis(config.get('redis.url'), {
-    password: config.get('redis.password'),
-    showFriendlyErrorStack: true,
-    lazyConnect: true,
-    maxRetriesPerRequest: 5,
-  }),
-});
+/** Local storage initialization (shared base cache) */
+const referenceDataCache = getBaseCache();
 /** Local storage key for last request */
 const LAST_REQUEST_KEY = '_last_request';
 /** Property for filtering in requests */

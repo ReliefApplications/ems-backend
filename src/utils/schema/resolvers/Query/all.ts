@@ -1,7 +1,7 @@
 import { GraphQLError, valueFromASTUntyped } from 'graphql';
 import { Record, ReferenceData, User } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
-import { decodeCursor, encodeCursor } from '@schema/types';
+import { encodeCursor } from '@schema/types';
 import getReversedFields from '../../introspection/getReversedFields';
 import getFilter, {
   FLAT_DEFAULT_FIELDS,
@@ -21,12 +21,20 @@ import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import NodeCache from 'node-cache';
 import { AppAbility } from '@security/defineUserAbility';
+import { createCache } from '@utils/cache';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
 
 /** Ability Cache, based on user id, time to live: 5min */
 const abilityCache = new NodeCache({ stdTTL: 60 * 5, checkperiod: 60 });
+
+/**
+ * Permission filters cache, keyed by user id. 5 min TTL.
+ * Backed by Redis when configured (shared across instances), otherwise
+ * by an in-process map. Values are plain mongo filter objects.
+ */
+const permissionFiltersCache = createCache('permissionFilters', 60 * 5);
 
 // todo: improve by only keeping used fields in the $project stage
 /**
@@ -424,18 +432,16 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       if (!ability) {
         // If not available, build ability
         ability = await extendAbilityForRecords(user);
-        set(context, 'user.ability', ability);
-        permissionFilters = Record.find(
-          accessibleBy(ability, 'read').Record
-        ).getFilter();
-        // And cache it
         abilityCache.set(userId, ability);
-      } else {
-        // Update user ability
-        set(context, 'user.ability', ability);
+      }
+      set(context, 'user.ability', ability);
+      // Try to get permission filters from cache (Redis or memory)
+      permissionFilters = await permissionFiltersCache.get<any>(userId);
+      if (!permissionFilters) {
         permissionFilters = Record.find(
           accessibleBy(ability, 'read').Record
         ).getFilter();
+        await permissionFiltersCache.set(userId, permissionFilters);
       }
 
       // Finally putting all filters together
@@ -482,43 +488,10 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         });
         items = aggregation[0].items;
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
-      } else {
-        // If we're using cursors, get pagination filters  <---- DEPRECATED ??
-        const cursorFilters = afterCursor
-          ? {
-              _id: {
-                $gt: decodeCursor(afterCursor),
-              },
-            }
-          : {};
-        const pipeline = [
-          { $match: basicFilters },
-          ...linkedRecordsAggregation,
-          ...linkedReferenceDataAggregation,
-          { $match: { $and: [filters, cursorFilters] } },
-          {
-            $facet: {
-              results: [
-                ...(await getSortAggregation(
-                  sortField,
-                  sortOrder,
-                  fields,
-                  context
-                )),
-                { $limit: first + 1 },
-              ],
-              totalCount: [
-                {
-                  $count: 'count',
-                },
-              ],
-            },
-          },
-        ];
-        const aggregation = await Record.aggregate(pipeline);
-        items = aggregation[0].items;
-        totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       }
+      // Note: the cursor-based pagination branch was removed: it was deprecated,
+      // dead (read `aggregation[0].items` from a facet aliased `results`) and
+      // unreachable since callers always provide a `skip` value (defaults to 0).
 
       // When a sub-selection passes a `filter` argument, we cannot satisfy it
       // from the bulk pre-fetch below (it groups records by id only). Let the
@@ -596,7 +569,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           record?: any;
           records?: any[];
         }[] = [];
-        const relatedFilters = [];
         for (const item of items as any) {
           item._relatedRecords = {};
           item.data = item.data || {};
@@ -619,15 +591,41 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           }
           for (const field of relatedFields) {
             itemsToUpdate.push({ item, field });
-            relatedFilters.push({
-              $or: [
-                { resource: idsByName[field.entityName] },
-                { form: idsByName[field.entityName] },
-              ],
-              [`data.${field.name}`]: item.id,
-            });
           }
         }
+        // Group related filters by (entityName, fieldName) so each related
+        // field results in a single `$or` clause with `$in: [...itemIds]`
+        // instead of one `$or` clause per item.
+        const relatedFiltersByKey = new Map<
+          string,
+          { entityName: string; fieldName: string; itemIds: any[] }
+        >();
+        if (relatedFields.length > 0) {
+          for (const item of items as any) {
+            for (const field of relatedFields) {
+              const key = `${field.entityName}::${field.name}`;
+              let entry = relatedFiltersByKey.get(key);
+              if (!entry) {
+                entry = {
+                  entityName: field.entityName,
+                  fieldName: field.name,
+                  itemIds: [],
+                };
+                relatedFiltersByKey.set(key, entry);
+              }
+              entry.itemIds.push(item.id);
+            }
+          }
+        }
+        const relatedFilters = Array.from(relatedFiltersByKey.values()).map(
+          (entry) => ({
+            $or: [
+              { resource: idsByName[entry.entityName] },
+              { form: idsByName[entry.entityName] },
+            ],
+            [`data.${entry.fieldName}`]: { $in: entry.itemIds },
+          })
+        );
         // Extract unique IDs
         const relatedIds = [
           ...new Set(
@@ -652,7 +650,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             archived: { $ne: true },
           },
           projection
-        );
+        ).lean();
         // Update items
         for (const item of itemsToUpdate) {
           if (item.record) {
@@ -701,26 +699,28 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       if (styles?.length > 0) {
         // Create the filter for each style
         const recordsIds = items.map((x) => x.id || x._id);
-        for (const style of styles) {
-          const styleFilter = getFilter(style.filter, fields, context);
-          // Get the records corresponding to the style filter
-          const itemsToStyle = await Record.aggregate([
-            {
-              $match: {
-                _id: {
-                  $in: recordsIds.map((x) => new mongoose.Types.ObjectId(x)),
+        const objectIds = recordsIds.map((x) => new mongoose.Types.ObjectId(x));
+        // Run style filters in parallel
+        const styleResults = await Promise.all(
+          styles.map((style) => {
+            const styleFilter = getFilter(style.filter, fields, context);
+            return Record.aggregate([
+              {
+                $match: {
+                  _id: { $in: objectIds },
                 },
               },
-            },
-            ...calculatedFieldsAggregation,
-            {
-              $match: styleFilter,
-            },
-            { $addFields: { id: '$_id' } },
-          ]);
-          // Add the list of record and the corresponding style
-          styleRules.push({ items: itemsToStyle, style: style });
-        }
+              ...calculatedFieldsAggregation,
+              {
+                $match: styleFilter,
+              },
+              { $addFields: { id: '$_id' } },
+            ]);
+          })
+        );
+        styles.forEach((style, idx) => {
+          styleRules.push({ items: styleResults[idx], style });
+        });
       }
 
       // === ACTIONS ===
