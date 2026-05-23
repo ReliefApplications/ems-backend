@@ -36,6 +36,7 @@ export interface Dataset {
   sendAsAttachment: boolean;
   individualEmail: boolean;
   individualEmailFields?: any[];
+  csFilter?: any;
   navigateToPage: boolean;
   navigateSettings: {
     field: string;
@@ -134,6 +135,7 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
           filter: { type: mongoose.Schema.Types.Mixed },
         },
         individualEmailFields: [{ type: mongoose.Schema.Types.Mixed }],
+        csFilter: { type: mongoose.Schema.Types.Mixed },
         pageSize: { type: mongoose.Schema.Types.Number },
         tableStyle: { type: mongoose.Schema.Types.Mixed },
         blockType: { type: mongoose.Schema.Types.Mixed },
