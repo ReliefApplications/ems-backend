@@ -1,3 +1,24 @@
+# [2.16.0-rc.13](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.12...v2.16.0-rc.13) (2026-05-13)
+
+
+### Features
+
+* Add join & displayValue to calculated fields ([#1234](https://github.com/ReliefApplications/ems-backend/issues/1234)) ([286ca6e](https://github.com/ReliefApplications/ems-backend/commit/286ca6ed67a735d83305dceff58619260832dbb6)), closes [Ab#129193](https://github.com/Ab/issues/129193)
+
+# [2.16.0-rc.12](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.11...v2.16.0-rc.12) (2026-05-13)
+
+
+### Features
+
+* Allow use of user attributes in calculated fields ([#1224](https://github.com/ReliefApplications/ems-backend/issues/1224)) ([e58562d](https://github.com/ReliefApplications/ems-backend/commit/e58562d044ff6c44cd51f06fbe9c33c65f1d7589)), closes [AB#128968](https://github.com/AB/issues/128968)
+
+# [2.16.0-rc.11](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.10...v2.16.0-rc.11) (2026-05-12)
+
+
+### Features
+
+* Add filters to grid actions ([#1218](https://github.com/ReliefApplications/ems-backend/issues/1218)) ([84ba849](https://github.com/ReliefApplications/ems-backend/commit/84ba849358d7dafd276938e5dcc33213c9719a42)), closes [AB#121666](https://github.com/AB/issues/121666)
+
 # [2.16.0-rc.10](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.9...v2.16.0-rc.10) (2026-04-29)
 
 

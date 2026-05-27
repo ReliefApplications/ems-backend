@@ -1,5 +1,5 @@
 import { getAccessibleFields } from '@utils/form';
-import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
+import { CalculatedFieldService } from '@services/calculatedField.service';
 import { Types } from 'mongoose';
 import {
   ApiConfiguration,
@@ -13,6 +13,7 @@ import get from 'lodash/get';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { Context } from '@server/apollo/context';
 import { CustomAPI } from '@server/apollo/dataSources';
+import { logger } from '@services/logger.service';
 
 /** Maximum recursion depth for getting the context data */
 const MAX_DEPTH = 10;
@@ -41,10 +42,10 @@ export const getContextDataForRecord = async (
     recordID instanceof Record ? recordID : await Record.findById(recordID)
   ) as Record;
 
-  if (!resource || depth > MAX_DEPTH || !record.data) {
+  if (!resource || depth > MAX_DEPTH || !record?.data) {
     return {
-      ...(record.data ?? {}),
-      incrementalId: record.incrementalId,
+      ...(record?.data ?? {}),
+      incrementalId: record?.incrementalId,
     };
   }
 
@@ -86,35 +87,45 @@ export const getContextDataForRecord = async (
         [field.name]: record.data[field.name],
       });
     } else if (field.isCalculated) {
-      // Check abilities
-      const permissionFilters = Record.find(
-        accessibleBy(context.user.ability, 'read').Record
-      ).getFilter();
+      try {
+        // Check abilities
+        const permissionFilters = Record.find(
+          accessibleBy(context.user.ability, 'read').Record
+        ).getFilter();
 
-      const pipeline = [
-        // Match the record and the permission filters
-        {
-          $match: {
-            $and: [
-              {
-                _id: record._id,
-              },
-              permissionFilters,
-            ],
+        const calculatedFieldService = new CalculatedFieldService(
+          resource,
+          context,
+          context.timeZone,
+          context.user?.attributes || {}
+        );
+        const pipeline = [
+          // Match the record and the permission filters
+          {
+            $match: {
+              $and: [
+                {
+                  _id: record._id,
+                },
+                permissionFilters,
+              ],
+            },
           },
-        },
-        // Stages for calculating the field
-        ...buildCalculatedFieldPipeline(
-          field.expression,
-          field.name,
-          context.timeZone
-        ),
-      ];
+          // Stages for calculating the field
+          ...(await calculatedFieldService.build(field.expression, field.name)),
+        ];
 
-      const result = await Record.aggregate(pipeline);
-      const calculatedValue = result[0]?.data?.[field.name];
-      if (calculatedValue) {
-        Object.assign(data, { [field.name]: calculatedValue });
+        const result = await Record.aggregate(pipeline);
+        const calculatedValue = result[0]?.data?.[field.name];
+        if (calculatedValue !== undefined && calculatedValue !== null) {
+          Object.assign(data, { [field.name]: calculatedValue });
+        }
+      } catch (calcErr) {
+        logger.error(
+          `Failed to compute calculated field "${field.name}": ${
+            (calcErr as any)?.message
+          }`
+        );
       }
     } else {
       Object.assign(data, { [field.name]: record.data[field.name] });
@@ -150,6 +161,7 @@ export const getContextData = async (
       const data = await getContextDataForRecord(resource, recordId, context);
       return data;
     } catch (err) {
+      logger.error(err);
       return null;
     }
   } else if (elementId) {

@@ -13,7 +13,7 @@ import getSortAggregation from './getSortAggregation';
 import mongoose from 'mongoose';
 import buildReferenceDataAggregation from '@utils/aggregation/buildReferenceDataAggregation';
 import { getAccessibleFields } from '@utils/form';
-import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
+import { CalculatedFieldService } from '@services/calculatedField.service';
 import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { flatten, get, isArray, set } from 'lodash';
@@ -227,6 +227,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       filter = {},
       display = false,
       styles = [],
+      actions = [],
       at,
     },
     context,
@@ -374,21 +375,26 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         // Check if the field is used in any styles' filters
         if (styles?.some((s) => isUsedInFilter(s.filter))) return true;
 
+        // Check if the field is used in any actions' filters
+        if (actions?.some((a) => isUsedInFilter(a.filter))) return true;
+
         // If not used in any of the above, don't add it to the pipeline
         return false;
       };
 
-      fields
-        .filter((f) => f.isCalculated && shouldAddCalculatedFieldToPipeline(f))
-        .forEach((f) =>
-          calculatedFieldsAggregation.push(
-            ...buildCalculatedFieldPipeline(
-              f.expression,
-              f.name,
-              context.timeZone
-            )
-          )
+      const calculatedFieldService = new CalculatedFieldService(
+        { fields, name: entityName },
+        context,
+        context.timeZone,
+        context.user?.attributes || {}
+      );
+      for (const f of fields.filter(
+        (x) => x.isCalculated && shouldAddCalculatedFieldToPipeline(x)
+      )) {
+        calculatedFieldsAggregation.push(
+          ...(await calculatedFieldService.build(f.expression, f.name))
         );
+      }
 
       // Build linked records aggregations
       const linkedReferenceDataAggregation = flatten(
@@ -717,6 +723,36 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         }
       }
 
+      // === ACTIONS ===
+      const actionRules: { items: any[]; action: any }[] = [];
+      // If there is a custom action rule
+      if (actions?.length > 0) {
+        // Create the filter for each action
+        const recordsIds = items.map((x) => x.id || x._id);
+        const objectIds = recordsIds.map((x) => new mongoose.Types.ObjectId(x));
+        // Run action filters in parallel
+        const actionResults = await Promise.all(
+          actions.map((action) => {
+            const actionFilter = getFilter(action.filter, fields, context);
+            return Record.aggregate([
+              {
+                $match: {
+                  _id: { $in: objectIds },
+                },
+              },
+              ...calculatedFieldsAggregation,
+              {
+                $match: actionFilter,
+              },
+              { $addFields: { id: '$_id' } },
+            ]);
+          })
+        );
+        actions.forEach((action, idx) => {
+          actionRules.push({ items: actionResults[idx], action });
+        });
+      }
+
       // === CONSTRUCT OUTPUT + RETURN ===
       const edges = items.map((r) => {
         const record = getAccessibleFields(r, ability);
@@ -726,6 +762,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           cursor: encodeCursor(record.id.toString()),
           node: display ? Object.assign(record, { display, fields }) : record,
           meta: {
+            actions: actionRules
+              .filter((a) => a.items.some((i) => i.id.equals(record.id)))
+              .map((a) => a.action),
             style: getStyle(r, styleRules),
             raw: record.data,
           },

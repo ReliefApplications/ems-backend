@@ -143,6 +143,7 @@ export const getSchema = (
             filter: { type: GraphQLJSON },
             display: { type: GraphQLBoolean },
             styles: { type: GraphQLJSON },
+            actions: { type: GraphQLJSON },
             at: { type: GraphQLDate },
           },
         };

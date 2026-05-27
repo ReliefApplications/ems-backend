@@ -1,42 +1,9 @@
 import redis from '../../server/redis';
 import { logger } from '@services/logger.service';
+import { getToken, getGraphqlUrl } from '@utils/commonServices';
 import axios from 'axios';
-import config from 'config';
 import { parse } from 'wellknown';
 import { simplify } from '@turf/turf';
-
-/**
- * Get token for common services API.
- *
- * @returns token
- */
-export const getToken = async () => {
-  const details: any = {
-    grant_type: 'client_credentials',
-    client_id: config.get('commonServices.clientId'),
-    client_secret: config.get('commonServices.clientSecret'),
-    scope: config.get('commonServices.scope'),
-  };
-  const formBody = [];
-  for (const property in details) {
-    const encodedKey = encodeURIComponent(property);
-    const encodedValue = encodeURIComponent(details[property]);
-    formBody.push(encodedKey + '=' + encodedValue);
-  }
-  const body = formBody.join('&');
-  return (
-    await axios({
-      url: config.get('commonServices.tokenEndpoint'),
-      method: 'post',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Content-Length': `${body.length}`,
-      },
-      maxRedirects: 35,
-      data: body,
-    })
-  ).data.access_token;
-};
 
 /**
  * Get country polygons from common services.
@@ -51,7 +18,7 @@ export const getAdmin0Polygons = async () => {
   if (!cacheData) {
     const token = await getToken();
     admin0s = await axios({
-      url: 'https://ems-safe-dev.who.int/csapi/api/graphql/', //todo: remove hardcoded url
+      url: getGraphqlUrl(),
       method: 'post',
       headers: {
         Authorization: `Bearer ${token}`,
