@@ -114,7 +114,7 @@ export default {
             ? 'record'
             : 'element';
 
-        const contextData = getContextData(
+        const contextData = await getContextData(
           type === 'record' ? args.contextEl : undefined,
           type === 'element' ? args.contextEl : undefined,
           page,
