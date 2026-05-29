@@ -1,3 +1,69 @@
+# [2.17.0-rc.1](https://github.com/ReliefApplications/ems-backend/compare/v2.16.1...v2.17.0-rc.1) (2026-05-29)
+
+
+### Bug Fixes
+
+* filters configured from layout now taken into account in queries & export ([#1232](https://github.com/ReliefApplications/ems-backend/issues/1232)) ([5e6891e](https://github.com/ReliefApplications/ems-backend/commit/5e6891ea84c9d880c18913f9eb4a7c5793b7ce7d)), closes [AB#128560](https://github.com/AB/issues/128560)
+* some grids export could fail due to cell content too long ([d97e4f6](https://github.com/ReliefApplications/ems-backend/commit/d97e4f6ae62dd8556c1d794791b63dc39df710e1)), closes [AB#128561](https://github.com/AB/issues/128561)
+
+
+### Features
+
+* Add filters to grid actions ([#1218](https://github.com/ReliefApplications/ems-backend/issues/1218)) ([84ba849](https://github.com/ReliefApplications/ems-backend/commit/84ba849358d7dafd276938e5dcc33213c9719a42)), closes [AB#121666](https://github.com/AB/issues/121666)
+* Add join & displayValue to calculated fields ([#1234](https://github.com/ReliefApplications/ems-backend/issues/1234)) ([286ca6e](https://github.com/ReliefApplications/ems-backend/commit/286ca6ed67a735d83305dceff58619260832dbb6)), closes [Ab#129193](https://github.com/Ab/issues/129193)
+* Allow style rules in grids to use badge display ([#1223](https://github.com/ReliefApplications/ems-backend/issues/1223)) ([0bc4dc4](https://github.com/ReliefApplications/ems-backend/commit/0bc4dc488a34fa03bb14f8ecea660bffd3726e7c)), closes [AB#128960](https://github.com/AB/issues/128960)
+* Allow use of user attributes in calculated fields ([#1224](https://github.com/ReliefApplications/ems-backend/issues/1224)) ([e58562d](https://github.com/ReliefApplications/ems-backend/commit/e58562d044ff6c44cd51f06fbe9c33c65f1d7589)), closes [AB#128968](https://github.com/AB/issues/128968)
+* Make context.incrementalid available in context data ([#1226](https://github.com/ReliefApplications/ems-backend/issues/1226)) ([cc96f6d](https://github.com/ReliefApplications/ems-backend/commit/cc96f6dd3bb6648ab61dc3bf4b7809444fdbe428)), closes [AB#128988](https://github.com/AB/issues/128988)
+
+# [2.16.0-rc.13](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.12...v2.16.0-rc.13) (2026-05-13)
+
+
+### Features
+
+* Add join & displayValue to calculated fields ([#1234](https://github.com/ReliefApplications/ems-backend/issues/1234)) ([286ca6e](https://github.com/ReliefApplications/ems-backend/commit/286ca6ed67a735d83305dceff58619260832dbb6)), closes [Ab#129193](https://github.com/Ab/issues/129193)
+
+# [2.16.0-rc.12](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.11...v2.16.0-rc.12) (2026-05-13)
+
+
+### Features
+
+* Allow use of user attributes in calculated fields ([#1224](https://github.com/ReliefApplications/ems-backend/issues/1224)) ([e58562d](https://github.com/ReliefApplications/ems-backend/commit/e58562d044ff6c44cd51f06fbe9c33c65f1d7589)), closes [AB#128968](https://github.com/AB/issues/128968)
+
+# [2.16.0-rc.11](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.10...v2.16.0-rc.11) (2026-05-12)
+
+
+### Features
+
+* Add filters to grid actions ([#1218](https://github.com/ReliefApplications/ems-backend/issues/1218)) ([84ba849](https://github.com/ReliefApplications/ems-backend/commit/84ba849358d7dafd276938e5dcc33213c9719a42)), closes [AB#121666](https://github.com/AB/issues/121666)
+
+# [2.16.0-rc.10](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.9...v2.16.0-rc.10) (2026-04-29)
+
+
+### Bug Fixes
+
+* filters configured from layout now taken into account in queries & export ([#1232](https://github.com/ReliefApplications/ems-backend/issues/1232)) ([5e6891e](https://github.com/ReliefApplications/ems-backend/commit/5e6891ea84c9d880c18913f9eb4a7c5793b7ce7d)), closes [AB#128560](https://github.com/AB/issues/128560)
+
+# [2.16.0-rc.9](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.8...v2.16.0-rc.9) (2026-04-22)
+
+
+### Features
+
+* Make context.incrementalid available in context data ([#1226](https://github.com/ReliefApplications/ems-backend/issues/1226)) ([cc96f6d](https://github.com/ReliefApplications/ems-backend/commit/cc96f6dd3bb6648ab61dc3bf4b7809444fdbe428)), closes [AB#128988](https://github.com/AB/issues/128988)
+
+# [2.16.0-rc.8](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.7...v2.16.0-rc.8) (2026-04-22)
+
+
+### Features
+
+* Allow style rules in grids to use badge display ([#1223](https://github.com/ReliefApplications/ems-backend/issues/1223)) ([0bc4dc4](https://github.com/ReliefApplications/ems-backend/commit/0bc4dc488a34fa03bb14f8ecea660bffd3726e7c)), closes [AB#128960](https://github.com/AB/issues/128960)
+
+# [2.16.0-rc.7](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.6...v2.16.0-rc.7) (2026-04-22)
+
+
+### Bug Fixes
+
+* some grids export could fail due to cell content too long ([d97e4f6](https://github.com/ReliefApplications/ems-backend/commit/d97e4f6ae62dd8556c1d794791b63dc39df710e1)), closes [AB#128561](https://github.com/AB/issues/128561)
+
 # [2.16.0-rc.6](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.5...v2.16.0-rc.6) (2025-12-29)
 
 

@@ -32,7 +32,7 @@ const email = new Email({
     from: EMAIL_FROM,
     replyTo: EMAIL_REPLY_TO,
   },
-  send: true, // force sending mails in dev mode (disable by default)
+  send: process.env.NODE_ENV === 'production',
   views: { root: 'src/assets/emails' },
   juice: true,
   juiceResources: {
