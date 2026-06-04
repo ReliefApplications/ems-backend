@@ -1,0 +1,408 @@
+{
+	"common": {
+		"copyright": {
+			"who": "Copyright &copy; Всесвітня організація охорони здоров'я 2024."
+		},
+		"errors": {
+			"authenticationTokenNotFound": "Missing bearer token.",
+			"dataNotFound": "Data not found",
+			"duplicatedGraphQLTypeName": "A form or a reference data with a similar Ім'я already exists. Please provide a different Ім'я.",
+			"fileExtensionNotAllowed": "File extension not allowed",
+			"fileSizeLimitReached": "File size exceed 7MB",
+			"fileTotalSizeLimitReached": "Total File size exceed 7MB",
+			"internalServerError": "Internal Server Помилка",
+			"invalidAPI": "API cannot be reached.",
+			"invalidEmailsInput": "Wrong format detected. Please provide valid emails.",
+			"invalidGraphQLName": "The Ім'я can only consist of alphanumeric characters and underscores, and must start with a letter. Please choose a different Ім'я.",
+			"maximumPaginationLimit": "Maximum Сторінка size is {{paginationLimit}}. Please use a different Сторінка size.",
+			"permissionNotGranted": "Permission not granted.",
+			"userNotLogged": "You must be connected."
+		}
+	},
+	"history": {
+		"allFields": "All fields",
+		"filename": "Запис Історія {{id}}",
+		"headers": {
+			"date": "Дата",
+			"displayName": "Field",
+			"exportDate": "Експорт Дата",
+			"fields": "Filtered fields",
+			"form": "Form",
+			"fromDate": "Фільтр from",
+			"new": "New value",
+			"old": "Old value",
+			"record": "Запис",
+			"time": "Час",
+			"toDate": "Фільтр to",
+			"type": "Action type",
+			"user": "Користувач"
+		},
+		"value": {
+			"add": "Додати value",
+			"change": "Change value",
+			"delete": "Видалити value",
+			"pull": "Видалити element",
+			"push": "Додати element"
+		}
+	},
+	"mutations": {
+		"aggregation": {
+			"add": {
+				"errors": {
+					"invalidArguments": "Ресурс or reference data and aggregation must be provided when adding a new aggregation"
+				}
+			},
+			"delete": {
+				"errors": {
+					"invalidArguments": "Ресурс or reference data and aggregation id must be provided when deleting an aggregation"
+				}
+			},
+			"edit": {
+				"errors": {
+					"invalidArguments": "Ресурс or reference data and aggregation and aggregation id must be provided when editing an aggregation"
+				}
+			}
+		},
+		"apiConfiguration": {
+			"add": {
+				"errors": {
+					"invalidArguments": "API Ім'я must be provided."
+				}
+			},
+			"edit": {
+				"errors": {
+					"invalidArguments": "Either Ім'я, Статус, authType, endpoint, graphqlEndpoint, pingUrl, Параметри or permissions must be provided."
+				}
+			}
+		},
+		"application": {
+			"content": {
+				"duplicate": {
+					"errors": {
+						"incompatibleArguments": "Крок id and Сторінка id cannot be both provided.",
+						"missingArguments": "Крок id or Сторінка id must be provided."
+					}
+				}
+			},
+			"duplicate": {
+				"errors": {
+					"invalidArguments": "Додаток Ім'я must be provided.",
+					"namedDuplicated": "Додаток with Ім'я {{name}} already exists. This Ім'я cannot be used. Please provide a different Ім'я."
+				}
+			},
+			"edit": {
+				"errors": {
+					"invalidArguments": "Either Ім'я, Статус, Сторінки, Параметри or permissions must be provided."
+				}
+			}
+		},
+		"customNotification": {
+			"add": {
+				"errors": {
+					"maximumFrequency": "Please set a frequency lower than or equal to than once per hour."
+				}
+			},
+			"edit": {
+				"errors": {
+					"maximumFrequency": "Please set a frequency lower than or equal to than once per hour."
+				}
+			}
+		},
+		"customTemplate": {
+			"errors": {
+				"customTemplateNameExist": "Custom Шаблон Назва already exist"
+			}
+		},
+		"dashboard": {
+			"add": {
+				"errors": {
+					"invalidArguments": "Панель керування Ім'я must be provided.",
+					"invalidPageType": "The provided Сторінка is not a Панель керування."
+				}
+			},
+			"addWithContext": {
+				"errors": {
+					"invalidArguments": "You need to provide one, and only one, argument between a reference data element and a Запис.",
+					"invalidContextEl": "The context element does not exist",
+					"invalidElement": "Provided element must be a string or a number"
+				}
+			},
+			"edit": {
+				"errors": {
+					"invalidArguments": "Either Ім'я or structure must be provided."
+				}
+			}
+		},
+		"emailDistributionList": {
+			"errors": {
+				"emailDistributionListNameExist": "Email distribution list Назва already exist"
+			}
+		},
+		"form": {
+			"add": {
+				"errors": {
+					"resourceDuplicated": "An existing Ресурс with that Ім'я already exists."
+				}
+			},
+			"edit": {
+				"errors": {
+					"coreFieldMissing": "Core field missing : {{name}}. Please implement this field.",
+					"defaultFieldDuplicated": "За замовчуванням field Ім'я duplicated: {{name}}. This Ім'я cannot be used. Please provide a different Ім'я.",
+					"relatedNameDuplicated": "Related Ім'я duplicated : {{name}}. The target Ресурс already contains a field with that Ім'я. Please provide a different Ім'я."
+				}
+			}
+		},
+		"group": {
+			"add": {
+				"errors": {
+					"manualCreationDisabled": "Manual creation of groups is disabled."
+				}
+			},
+			"fetch": {
+				"errors": {
+					"fetchRequestFailed": "Failed to fetch groups.",
+					"groupsFromServiceDisabled": "Fetching groups from service not available."
+				}
+			}
+		},
+		"layout": {
+			"add": {
+				"errors": {
+					"invalidAddPageArguments": "Сторінка type must be an available type and linked Додаток ID must be provided."
+				}
+			},
+			"delete": {
+				"errors": {
+					"invalidArguments": "Ресурс and aggregation id must be provided when you are Видалити Aggregation"
+				}
+			},
+			"edit": {
+				"errors": {
+					"invalidAddPageArguments": "Сторінка type must be an available type and linked Додаток ID must be provided."
+				}
+			}
+		},
+		"notification": {
+			"publish": {
+				"errors": {
+					"invalidArguments": "Action, content and channel arguments must all be provided."
+				}
+			},
+			"see": {
+				"errors": {
+					"invalidArguments": "Сповіщення IDs must be provided."
+				}
+			}
+		},
+		"page": {
+			"add": {
+				"errors": {
+					"invalidArguments": "Сторінка type must be an available type and linked Додаток ID must be provided."
+				}
+			},
+			"edit": {
+				"context": {
+					"errors": {
+						"invalidArguments": "You cannot provide both a reference data and a Ресурс as datasource."
+					}
+				},
+				"errors": {
+					"invalidArguments": "Either Ім'я, permissions, visibility or icon must be provided to Оновити the Сторінка."
+				}
+			}
+		},
+		"record": {
+			"convert": {
+				"errors": {
+					"invalidConversion": "Cannot convert this Запис to this target form type."
+				}
+			},
+			"edit": {
+				"errors": {
+					"invalidArguments": "Either data or version must be provided.",
+					"wrongTemplateProvided": "Шаблон must sharing the same Ресурс as the parent form of the edited Запис."
+				}
+			}
+		},
+		"reference": {
+			"add": {
+				"errors": {
+					"invalidArguments": "Ім'я must be provided."
+				}
+			},
+			"edit": {
+				"errors": {
+					"formResDuplicated": "A form or a Ресурс with that Ім'я already exists.",
+					"invalidArguments": "Either Ім'я, type, pageInfo, apiConfiguration, query, fields, valueField, path, data or permissions must be provided."
+				}
+			}
+		},
+		"resource": {
+			"edit": {
+				"errors": {
+					"calculatedFieldTooLong": "The expression is too big.",
+					"field": {
+						"missingReadPermissionOnResource": "Please provide permission to read or Створити Записи before setting visible fields.",
+						"missingWritePermissionOnResource": "Please provide permission to Оновити or Створити Записи before setting editable fields.",
+						"notFound": "Field does not exist.",
+						"notVisible": "Please set field as visible before setting it as editable."
+					},
+					"invalidArguments": "Either fields or permissions must be provided.",
+					"permission": {
+						"downloadRecords": {
+							"notVisible": "Please provide permission to read Записи before providing permission to Завантажити them."
+						},
+						"updateRecords": {
+							"notVisible": "Please provide permission to read Записи before providing permission to Редагувати them."
+						}
+					}
+				}
+			}
+		},
+		"step": {
+			"add": {
+				"errors": {
+					"invalidArguments": "Ім'я must be provided."
+				}
+			},
+			"edit": {
+				"errors": {
+					"invalidArguments": "Either Ім'я, type, content, icon or permissions must be provided."
+				}
+			}
+		},
+		"user": {
+			"edit": {
+				"errors": {
+					"invalidArguments": "Either groups or Ролі must be provided."
+				}
+			}
+		},
+		"workflow": {
+			"add": {
+				"errors": {
+					"invalidArguments": "Сторінка id must be provided.",
+					"pageTypeError": "The Сторінка passed in argument is not a Робочий процес type"
+				}
+			},
+			"edit": {
+				"errors": {
+					"invalidArguments": "Either Ім'я or Кроки must be provided."
+				}
+			}
+		}
+	},
+	"query": {
+		"records": {
+			"aggregation": {
+				"errors": {
+					"invalidAggregation": "Помилка with the aggregation format passed, missing a core parameter such as dataSource, pipeline, etc."
+				}
+			}
+		}
+	},
+	"routes": {
+		"download": {
+			"errors": {
+				"missingParameters": "Missing parameters"
+			}
+		},
+		"email": {
+			"errors": {
+				"missingFile": "Ні file detected."
+			},
+			"subscription": {
+				"alerts": {
+					"dataNotFound": "Failed to {{type}}. Помилка: Data not found!",
+					"restricted": "Subscriptions to this Email Сповіщення are not permitted!",
+					"success": "Subscribed to email Сповіщення: {{notificationName}}.",
+					"unsubscribe": {
+						"success": "Unsubscribed from email Сповіщення: {{notificationName}}."
+					},
+					"userAlreadyExists": "Користувач email address already exists in distribution list for: {{notificationName}}.",
+					"userNotSubscribed": "Користувач not currently subscribed to {{notificationName}}"
+				}
+			}
+		},
+		"gis": {
+			"feature": {
+				"errors": {
+					"invalidFields": "Please provide either geoField or latitudeField and longitudeField to the request parameters.",
+					"missingPolygonGeoField": "Please provide a geoField when querying polygons.",
+					"unexpected": "System failed to query data."
+				}
+			}
+		},
+		"style": {
+			"errors": {
+				"notFound": "Unable to load Додаток's style"
+			},
+			"noStyle": "This Додаток don't have a custom style file."
+		},
+		"upload": {
+			"errors": {
+				"invalidUserUpload": "Please provide email and Роль for each Користувач.",
+				"missingFile": "Ні file detected.",
+				"noRecordsToInsert": "Ні Записи were provided for insertion."
+			}
+		}
+	},
+	"server": {
+		"middlewares": {
+			"cors": {
+				"errors": {
+					"invalidCORS": "The CORS policy for this site does not allow access from the specified Origin."
+				}
+			}
+		}
+	},
+	"utils": {
+		"aggregation": {
+			"buildPipeline": {
+				"errors": {
+					"invalidCustomStage": "Custom stage cannot be parsed correctly."
+				}
+			}
+		},
+		"files": {
+			"uploadFile": {
+				"errors": {
+					"fileCannotBeUploaded": "File cannot be uploaded."
+				}
+			}
+		},
+		"form": {
+			"extractFields": {
+				"errors": {
+					"missingDataField": "Please Додати a value Ім'я to all questions, inside Data tab.",
+					"missingRelatedField": "Please Додати a related Ім'я to {{name}} question."
+				}
+			},
+			"findDuplicateFields": {
+				"errors": {
+					"dataFieldDuplicated": "Data Ім'я duplicated : {{name}}. Please provide different value names for all questions."
+				}
+			},
+			"getNextId": {
+				"errors": {
+					"incrementalIdError": "Помилка with the incremental ID for Записи"
+				}
+			}
+		},
+		"user": {
+			"updateUserAttributes": {
+				"errors": {
+					"missingObjectParameters": "Missing {{object}} parameters"
+				}
+			}
+		},
+		"validators": {
+			"validateName": {
+				"errors": {
+					"invalidFieldName": "The Ім'я of the field {{field}} is invalid: {{err}}",
+					"usageOfProtectedName": "This Ім'я is protected and cannot be used. Please choose a different Ім'я."
+				}
+			}
+		}
+	}
+}

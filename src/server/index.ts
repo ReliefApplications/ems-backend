@@ -153,7 +153,7 @@ class SafeServer {
           loadPath: 'src/i18n/{{lng}}.json',
         },
         fallbackLng: 'en',
-        preload: ['en', 'test'],
+        preload: ['en', 'test', 'uk'],
       });
     this.app.use(corsMiddleware);
     this.app.use(authMiddleware);
