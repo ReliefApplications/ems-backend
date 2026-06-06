@@ -4,74 +4,74 @@
 			"who": "Copyright &copy; Всесвітня організація охорони здоров'я 2024."
 		},
 		"errors": {
-			"authenticationTokenNotFound": "Missing bearer token.",
-			"dataNotFound": "Data not found",
-			"duplicatedGraphQLTypeName": "A form or a reference data with a similar Ім'я already exists. Please provide a different Ім'я.",
-			"fileExtensionNotAllowed": "File extension not allowed",
-			"fileSizeLimitReached": "File size exceed 7MB",
-			"fileTotalSizeLimitReached": "Total File size exceed 7MB",
-			"internalServerError": "Internal Server Помилка",
-			"invalidAPI": "API cannot be reached.",
-			"invalidEmailsInput": "Wrong format detected. Please provide valid emails.",
-			"invalidGraphQLName": "The Ім'я can only consist of alphanumeric characters and underscores, and must start with a letter. Please choose a different Ім'я.",
-			"maximumPaginationLimit": "Maximum Сторінка size is {{paginationLimit}}. Please use a different Сторінка size.",
-			"permissionNotGranted": "Permission not granted.",
-			"userNotLogged": "You must be connected."
+			"authenticationTokenNotFound": "Відсутній токен авторизації.",
+			"dataNotFound": "Дані не знайдено",
+			"duplicatedGraphQLTypeName": "Форма або довідкові дані з подібним Ім'ям вже існують. Будь ласка, вкажіть інше Ім'я.",
+			"fileExtensionNotAllowed": "Розширення файлу не дозволено",
+			"fileSizeLimitReached": "Розмір файлу перевищує 7 МБ",
+			"fileTotalSizeLimitReached": "Загальний розмір файлів перевищує 7 МБ",
+			"internalServerError": "Внутрішня помилка сервера",
+			"invalidAPI": "API недоступне.",
+			"invalidEmailsInput": "Виявлено неправильний формат. Будь ласка, вкажіть дійсні адреси електронної пошти.",
+			"invalidGraphQLName": "Ім'я може складатися лише з буквено-цифрових символів та підкреслень і має починатися з літери. Будь ласка, виберіть інше Ім'я.",
+			"maximumPaginationLimit": "Максимальний розмір сторінки: {{paginationLimit}}. Будь ласка, використовуйте інший розмір сторінки.",
+			"permissionNotGranted": "Дозвіл не надано.",
+			"userNotLogged": "Ви повинні бути підключені."
 		}
 	},
 	"history": {
-		"allFields": "All fields",
+		"allFields": "Усі поля",
 		"filename": "Запис Історія {{id}}",
 		"headers": {
 			"date": "Дата",
-			"displayName": "Field",
-			"exportDate": "Експорт Дата",
-			"fields": "Filtered fields",
-			"form": "Form",
-			"fromDate": "Фільтр from",
-			"new": "New value",
-			"old": "Old value",
+			"displayName": "Поле",
+			"exportDate": "Дата експорту",
+			"fields": "Відфільтровані поля",
+			"form": "Форма",
+			"fromDate": "Фільтр з",
+			"new": "Нове значення",
+			"old": "Старе значення",
 			"record": "Запис",
 			"time": "Час",
-			"toDate": "Фільтр to",
-			"type": "Action type",
+			"toDate": "Фільтр по",
+			"type": "Тип дії",
 			"user": "Користувач"
 		},
 		"value": {
-			"add": "Додати value",
-			"change": "Change value",
-			"delete": "Видалити value",
-			"pull": "Видалити element",
-			"push": "Додати element"
+			"add": "Додати значення",
+			"change": "Змінити значення",
+			"delete": "Видалити значення",
+			"pull": "Видалити елемент",
+			"push": "Додати елемент"
 		}
 	},
 	"mutations": {
 		"aggregation": {
 			"add": {
 				"errors": {
-					"invalidArguments": "Ресурс or reference data and aggregation must be provided when adding a new aggregation"
+					"invalidArguments": "Ресурс або довідкові дані та агрегація повинні бути надані при додаванні нової агрегації"
 				}
 			},
 			"delete": {
 				"errors": {
-					"invalidArguments": "Ресурс or reference data and aggregation id must be provided when deleting an aggregation"
+					"invalidArguments": "Ресурс або довідкові дані та ID агрегації повинні бути надані при видаленні агрегації"
 				}
 			},
 			"edit": {
 				"errors": {
-					"invalidArguments": "Ресурс or reference data and aggregation and aggregation id must be provided when editing an aggregation"
+					"invalidArguments": "Ресурс або довідкові дані, агрегація та ID агрегації повинні бути надані при редагуванні агрегації"
 				}
 			}
 		},
 		"apiConfiguration": {
 			"add": {
 				"errors": {
-					"invalidArguments": "API Ім'я must be provided."
+					"invalidArguments": "Ім'я API має бути надано."
 				}
 			},
 			"edit": {
 				"errors": {
-					"invalidArguments": "Either Ім'я, Статус, authType, endpoint, graphqlEndpoint, pingUrl, Параметри or permissions must be provided."
+					"invalidArguments": "Необхідно надати Ім'я, Статус, authType, endpoint, graphqlEndpoint, pingUrl, Параметри або permissions."
 				}
 			}
 		},
@@ -79,181 +79,181 @@
 			"content": {
 				"duplicate": {
 					"errors": {
-						"incompatibleArguments": "Крок id and Сторінка id cannot be both provided.",
-						"missingArguments": "Крок id or Сторінка id must be provided."
+						"incompatibleArguments": "ID кроку та ID сторінки не можуть бути надані одночасно.",
+						"missingArguments": "ID кроку або ID сторінки має бути надано."
 					}
 				}
 			},
 			"duplicate": {
 				"errors": {
-					"invalidArguments": "Додаток Ім'я must be provided.",
-					"namedDuplicated": "Додаток with Ім'я {{name}} already exists. This Ім'я cannot be used. Please provide a different Ім'я."
+					"invalidArguments": "Ім'я додатка має бути надано.",
+					"namedDuplicated": "Додаток з Ім'ям {{name}} вже існує. Це Ім'я не може бути використане. Будь ласка, вкажіть інше Ім'я."
 				}
 			},
 			"edit": {
 				"errors": {
-					"invalidArguments": "Either Ім'я, Статус, Сторінки, Параметри or permissions must be provided."
+					"invalidArguments": "Необхідно вказати Ім'я, Статус, Сторінки, Параметри або permissions."
 				}
 			}
 		},
 		"customNotification": {
 			"add": {
 				"errors": {
-					"maximumFrequency": "Please set a frequency lower than or equal to than once per hour."
+					"maximumFrequency": "Будь ласка, встановіть частоту, меншу або рівну одного разу на годину."
 				}
 			},
 			"edit": {
 				"errors": {
-					"maximumFrequency": "Please set a frequency lower than or equal to than once per hour."
+					"maximumFrequency": "Будь ласка, встановіть частоту, меншу або рівну одного разу на годину."
 				}
 			}
 		},
 		"customTemplate": {
 			"errors": {
-				"customTemplateNameExist": "Custom Шаблон Назва already exist"
+				"customTemplateNameExist": "Назва власного шаблону вже існує"
 			}
 		},
 		"dashboard": {
 			"add": {
 				"errors": {
-					"invalidArguments": "Панель керування Ім'я must be provided.",
-					"invalidPageType": "The provided Сторінка is not a Панель керування."
+					"invalidArguments": "Ім'я панелі керування має бути надано.",
+					"invalidPageType": "Надана сторінка не є панеллю керування."
 				}
 			},
 			"addWithContext": {
 				"errors": {
-					"invalidArguments": "You need to provide one, and only one, argument between a reference data element and a Запис.",
-					"invalidContextEl": "The context element does not exist",
-					"invalidElement": "Provided element must be a string or a number"
+					"invalidArguments": "Необхідно надати один і тільки один аргумент між елементом довідкових даних та записом.",
+					"invalidContextEl": "Контекстний елемент не існує",
+					"invalidElement": "Наданий елемент має бути рядком або числом"
 				}
 			},
 			"edit": {
 				"errors": {
-					"invalidArguments": "Either Ім'я or structure must be provided."
+					"invalidArguments": "Необхідно надати Ім'я або структуру."
 				}
 			}
 		},
 		"emailDistributionList": {
 			"errors": {
-				"emailDistributionListNameExist": "Email distribution list Назва already exist"
+				"emailDistributionListNameExist": "Назва списку розсилки електронної пошти вже існує"
 			}
 		},
 		"form": {
 			"add": {
 				"errors": {
-					"resourceDuplicated": "An existing Ресурс with that Ім'я already exists."
+					"resourceDuplicated": "Існуючий Ресурс з таким Ім'ям вже існує."
 				}
 			},
 			"edit": {
 				"errors": {
-					"coreFieldMissing": "Core field missing : {{name}}. Please implement this field.",
-					"defaultFieldDuplicated": "За замовчуванням field Ім'я duplicated: {{name}}. This Ім'я cannot be used. Please provide a different Ім'я.",
-					"relatedNameDuplicated": "Related Ім'я duplicated : {{name}}. The target Ресурс already contains a field with that Ім'я. Please provide a different Ім'я."
+					"coreFieldMissing": "Відсутнє основне поле: {{name}}. Будь ласка, реалізуйте це поле.",
+					"defaultFieldDuplicated": "Поле за замовчуванням Ім'я дублюється: {{name}}. Це Ім'я не може бути використане. Будь ласка, вкажіть інше Ім'я.",
+					"relatedNameDuplicated": "Пов'язане Ім'я дублюється: {{name}}. Цільовий Ресурс вже містить поле з таким Ім'ям. Будь ласка, вкажіть інше Ім'я."
 				}
 			}
 		},
 		"group": {
 			"add": {
 				"errors": {
-					"manualCreationDisabled": "Manual creation of groups is disabled."
+					"manualCreationDisabled": "Ручне створення груп вимкнено."
 				}
 			},
 			"fetch": {
 				"errors": {
-					"fetchRequestFailed": "Failed to fetch groups.",
-					"groupsFromServiceDisabled": "Fetching groups from service not available."
+					"fetchRequestFailed": "Не вдалося отримати групи.",
+					"groupsFromServiceDisabled": "Отримання груп із сервісу недоступне."
 				}
 			}
 		},
 		"layout": {
 			"add": {
 				"errors": {
-					"invalidAddPageArguments": "Сторінка type must be an available type and linked Додаток ID must be provided."
+					"invalidAddPageArguments": "Тип сторінки має бути доступним типом, і необхідно надати ID пов'язаного додатка."
 				}
 			},
 			"delete": {
 				"errors": {
-					"invalidArguments": "Ресурс and aggregation id must be provided when you are Видалити Aggregation"
+					"invalidArguments": "Ресурс та ID агрегації повинні бути надані при видаленні агрегації"
 				}
 			},
 			"edit": {
 				"errors": {
-					"invalidAddPageArguments": "Сторінка type must be an available type and linked Додаток ID must be provided."
+					"invalidAddPageArguments": "Тип сторінки має бути доступним типом, і необхідно надати ID пов'язаного додатка."
 				}
 			}
 		},
 		"notification": {
 			"publish": {
 				"errors": {
-					"invalidArguments": "Action, content and channel arguments must all be provided."
+					"invalidArguments": "Необхідно надати аргументи action, content та channel."
 				}
 			},
 			"see": {
 				"errors": {
-					"invalidArguments": "Сповіщення IDs must be provided."
+					"invalidArguments": "Необхідно надати ID сповіщень."
 				}
 			}
 		},
 		"page": {
 			"add": {
 				"errors": {
-					"invalidArguments": "Сторінка type must be an available type and linked Додаток ID must be provided."
+					"invalidArguments": "Тип сторінки має бути доступним типом, і необхідно надати ID пов'язаного додатка."
 				}
 			},
 			"edit": {
 				"context": {
 					"errors": {
-						"invalidArguments": "You cannot provide both a reference data and a Ресурс as datasource."
+						"invalidArguments": "Ви не можете надати як довідкові дані, так і Ресурс як джерело даних."
 					}
 				},
 				"errors": {
-					"invalidArguments": "Either Ім'я, permissions, visibility or icon must be provided to Оновити the Сторінка."
+					"invalidArguments": "Необхідно надати Ім'я, permissions, visibility або icon для оновлення сторінки."
 				}
 			}
 		},
 		"record": {
 			"convert": {
 				"errors": {
-					"invalidConversion": "Cannot convert this Запис to this target form type."
+					"invalidConversion": "Не вдається конвертувати цей запис у цей цільовий тип форми."
 				}
 			},
 			"edit": {
 				"errors": {
-					"invalidArguments": "Either data or version must be provided.",
-					"wrongTemplateProvided": "Шаблон must sharing the same Ресурс as the parent form of the edited Запис."
+					"invalidArguments": "Необхідно надати data або version.",
+					"wrongTemplateProvided": "Шаблон має використовувати той самий Ресурс, що й батьківська форма відредагованого запису."
 				}
 			}
 		},
 		"reference": {
 			"add": {
 				"errors": {
-					"invalidArguments": "Ім'я must be provided."
+					"invalidArguments": "Ім'я має бути надано."
 				}
 			},
 			"edit": {
 				"errors": {
-					"formResDuplicated": "A form or a Ресурс with that Ім'я already exists.",
-					"invalidArguments": "Either Ім'я, type, pageInfo, apiConfiguration, query, fields, valueField, path, data or permissions must be provided."
+					"formResDuplicated": "Форма або Ресурс з таким Ім'ям вже існує.",
+					"invalidArguments": "Необхідно надати Ім'я, type, pageInfo, apiConfiguration, query, fields, valueField, path, data або permissions."
 				}
 			}
 		},
 		"resource": {
 			"edit": {
 				"errors": {
-					"calculatedFieldTooLong": "The expression is too big.",
+					"calculatedFieldTooLong": "Вираз занадто великий.",
 					"field": {
-						"missingReadPermissionOnResource": "Please provide permission to read or Створити Записи before setting visible fields.",
-						"missingWritePermissionOnResource": "Please provide permission to Оновити or Створити Записи before setting editable fields.",
-						"notFound": "Field does not exist.",
-						"notVisible": "Please set field as visible before setting it as editable."
+						"missingReadPermissionOnResource": "Будь ласка, надайте дозвіл на читання або створення записів перед налаштуванням видимих полів.",
+						"missingWritePermissionOnResource": "Будь ласка, надайте дозвіл на оновлення або створення записів перед налаштуванням редагованих полів.",
+						"notFound": "Поле не існує.",
+						"notVisible": "Будь ласка, встановіть поле як видиме перед тим, як зробити його редагованим."
 					},
-					"invalidArguments": "Either fields or permissions must be provided.",
+					"invalidArguments": "Необхідно надати fields або permissions.",
 					"permission": {
 						"downloadRecords": {
-							"notVisible": "Please provide permission to read Записи before providing permission to Завантажити them."
+							"notVisible": "Будь ласка, надайте дозвіл на читання записів перед наданням дозволу на їх завантаження."
 						},
 						"updateRecords": {
-							"notVisible": "Please provide permission to read Записи before providing permission to Редагувати them."
+							"notVisible": "Будь ласка, надайте дозвіл на читання записів перед наданням дозволу на їх редагування."
 						}
 					}
 				}
@@ -262,32 +262,32 @@
 		"step": {
 			"add": {
 				"errors": {
-					"invalidArguments": "Ім'я must be provided."
+					"invalidArguments": "Ім'я має бути надано."
 				}
 			},
 			"edit": {
 				"errors": {
-					"invalidArguments": "Either Ім'я, type, content, icon or permissions must be provided."
+					"invalidArguments": "Необхідно надати Ім'я, type, content, icon або permissions."
 				}
 			}
 		},
 		"user": {
 			"edit": {
 				"errors": {
-					"invalidArguments": "Either groups or Ролі must be provided."
+					"invalidArguments": "Необхідно надати groups або Ролі."
 				}
 			}
 		},
 		"workflow": {
 			"add": {
 				"errors": {
-					"invalidArguments": "Сторінка id must be provided.",
-					"pageTypeError": "The Сторінка passed in argument is not a Робочий процес type"
+					"invalidArguments": "ID сторінки має бути надано.",
+					"pageTypeError": "Сторінка, передана в аргументі, не є типом Робочий процес"
 				}
 			},
 			"edit": {
 				"errors": {
-					"invalidArguments": "Either Ім'я or Кроки must be provided."
+					"invalidArguments": "Необхідно надати Ім'я або Кроки."
 				}
 			}
 		}
@@ -296,7 +296,7 @@
 		"records": {
 			"aggregation": {
 				"errors": {
-					"invalidAggregation": "Помилка with the aggregation format passed, missing a core parameter such as dataSource, pipeline, etc."
+					"invalidAggregation": "Помилка у форматі переданої агрегації: відсутній основний параметр, такий як dataSource, pipeline тощо."
 				}
 			}
 		}
@@ -304,46 +304,46 @@
 	"routes": {
 		"download": {
 			"errors": {
-				"missingParameters": "Missing parameters"
+				"missingParameters": "Відсутні параметри"
 			}
 		},
 		"email": {
 			"errors": {
-				"missingFile": "Ні file detected."
+				"missingFile": "Файл не виявлено."
 			},
 			"subscription": {
 				"alerts": {
-					"dataNotFound": "Failed to {{type}}. Помилка: Data not found!",
-					"restricted": "Subscriptions to this Email Сповіщення are not permitted!",
-					"success": "Subscribed to email Сповіщення: {{notificationName}}.",
+					"dataNotFound": "Не вдалося {{type}}. Помилка: Дані не знайдено!",
+					"restricted": "Підписка на це сповіщення електронною поштою заборонена!",
+					"success": "Підписано на сповіщення електронною поштою: {{notificationName}}.",
 					"unsubscribe": {
-						"success": "Unsubscribed from email Сповіщення: {{notificationName}}."
+						"success": "Скасовано підписку на сповіщення електронною поштою: {{notificationName}}."
 					},
-					"userAlreadyExists": "Користувач email address already exists in distribution list for: {{notificationName}}.",
-					"userNotSubscribed": "Користувач not currently subscribed to {{notificationName}}"
+					"userAlreadyExists": "Адреса електронної пошти користувача вже існує у списку розсилки для: {{notificationName}}.",
+					"userNotSubscribed": "Користувач наразі не підписаний на {{notificationName}}"
 				}
 			}
 		},
 		"gis": {
 			"feature": {
 				"errors": {
-					"invalidFields": "Please provide either geoField or latitudeField and longitudeField to the request parameters.",
-					"missingPolygonGeoField": "Please provide a geoField when querying polygons.",
-					"unexpected": "System failed to query data."
+					"invalidFields": "Будь ласка, вкажіть geoField або latitudeField та longitudeField у параметрах запиту.",
+					"missingPolygonGeoField": "Будь ласка, вкажіть geoField при запиті полігонів.",
+					"unexpected": "Системі не вдалося виконати запит даних."
 				}
 			}
 		},
 		"style": {
 			"errors": {
-				"notFound": "Unable to load Додаток's style"
+				"notFound": "Не вдалося завантажити стиль додатка"
 			},
-			"noStyle": "This Додаток don't have a custom style file."
+			"noStyle": "Цей додаток не має файлу власного стилю."
 		},
 		"upload": {
 			"errors": {
-				"invalidUserUpload": "Please provide email and Роль for each Користувач.",
-				"missingFile": "Ні file detected.",
-				"noRecordsToInsert": "Ні Записи were provided for insertion."
+				"invalidUserUpload": "Будь ласка, вкажіть email та Роль для кожного користувача.",
+				"missingFile": "Файл не виявлено.",
+				"noRecordsToInsert": "Не було надано записів для вставки."
 			}
 		}
 	},
@@ -351,7 +351,7 @@
 		"middlewares": {
 			"cors": {
 				"errors": {
-					"invalidCORS": "The CORS policy for this site does not allow access from the specified Origin."
+					"invalidCORS": "Політика CORS для цього сайту не дозволяє доступ із вказаного джерела."
 				}
 			}
 		}
@@ -360,47 +360,47 @@
 		"aggregation": {
 			"buildPipeline": {
 				"errors": {
-					"invalidCustomStage": "Custom stage cannot be parsed correctly."
+					"invalidCustomStage": "Власний етап не вдалося коректно проаналізувати."
 				}
 			}
 		},
 		"files": {
 			"uploadFile": {
 				"errors": {
-					"fileCannotBeUploaded": "File cannot be uploaded."
+					"fileCannotBeUploaded": "Файл не вдалося завантажити."
 				}
 			}
 		},
 		"form": {
 			"extractFields": {
 				"errors": {
-					"missingDataField": "Please Додати a value Ім'я to all questions, inside Data tab.",
-					"missingRelatedField": "Please Додати a related Ім'я to {{name}} question."
+					"missingDataField": "Будь ласка, додайте назву значення для всіх запитань на вкладці Дані.",
+					"missingRelatedField": "Будь ласка, додайте пов'язане Ім'я до запитання {{name}}."
 				}
 			},
 			"findDuplicateFields": {
 				"errors": {
-					"dataFieldDuplicated": "Data Ім'я duplicated : {{name}}. Please provide different value names for all questions."
+					"dataFieldDuplicated": "Назва даних дублюється: {{name}}. Будь ласка, вкажіть унікальні назви значень для всіх запитань."
 				}
 			},
 			"getNextId": {
 				"errors": {
-					"incrementalIdError": "Помилка with the incremental ID for Записи"
+					"incrementalIdError": "Помилка з інкрементним ID для записів"
 				}
 			}
 		},
 		"user": {
 			"updateUserAttributes": {
 				"errors": {
-					"missingObjectParameters": "Missing {{object}} parameters"
+					"missingObjectParameters": "Відсутні параметри {{object}}"
 				}
 			}
 		},
 		"validators": {
 			"validateName": {
 				"errors": {
-					"invalidFieldName": "The Ім'я of the field {{field}} is invalid: {{err}}",
-					"usageOfProtectedName": "This Ім'я is protected and cannot be used. Please choose a different Ім'я."
+					"invalidFieldName": "Ім'я поля {{field}} є недійсним: {{err}}",
+					"usageOfProtectedName": "Це Ім'я є захищеним і не може бути використане. Будь ласка, виберіть інше Ім'я."
 				}
 			}
 		}
