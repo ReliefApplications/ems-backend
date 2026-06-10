@@ -31,6 +31,7 @@ type EditDashboardArgs = {
   id: string | Types.ObjectId;
   structure?: any;
   name?: string;
+  nameTranslations?: Record<string, string>;
   buttons?: Button[];
   gridOptions?: any;
   filter?: DashboardFilterArgs;
@@ -86,6 +87,7 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     structure: { type: GraphQLJSON },
     name: { type: GraphQLString },
+    nameTranslations: { type: GraphQLJSON },
     buttons: { type: new GraphQLList(ActionButtonInputType) },
     gridOptions: { type: GraphQLJSON },
     filter: { type: DashboardFilterInputType },
@@ -114,6 +116,7 @@ export default {
         //modifiedAt?: Date;
         structure?: any;
         name?: string;
+        nameTranslations?: Record<string, string>;
         filter?: any;
         buttons?: any;
         gridOptions?: any;
@@ -137,6 +140,7 @@ export default {
         updateDashboard,
         args.structure && { structure: args.structure },
         args.name && { name: args.name },
+        args.nameTranslations && { nameTranslations: args.nameTranslations },
         args.filter && {
           filter: { ...dashboard.toObject().filter, ...args.filter },
         },
@@ -150,6 +154,7 @@ export default {
       const update = {
         modifiedAt: dashboard.modifiedAt, //todo: remove?
         name: dashboard.name,
+        nameTranslations: dashboard.nameTranslations,
         gridOptions: dashboard.gridOptions,
       };
       await Page.findOneAndUpdate({ content: dashboard.id }, update);
