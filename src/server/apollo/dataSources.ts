@@ -4,7 +4,7 @@ import { ApiConfiguration, ReferenceData } from '@models';
 import { getToken } from '@utils/proxy';
 import { get, isEmpty, memoize, set } from 'lodash';
 import { logger } from '@services/logger.service';
-import jsonpath from 'jsonpath';
+import { JSONPath } from 'jsonpath-plus';
 import { ApolloServer } from '@apollo/server';
 import { Context } from './context';
 // eslint-disable-next-line import/no-extraneous-dependencies
@@ -209,7 +209,7 @@ export class CustomAPI extends RESTDataSource {
         // Fetch data from url
         const data = await this.get(url);
         return referenceData.path
-          ? jsonpath.query(data, referenceData.path)
+          ? JSONPath({ path: referenceData.path, json: data, wrap: true })
           : data;
       }
       // Static reference data
@@ -250,7 +250,7 @@ export class CustomAPI extends RESTDataSource {
       data = JSON.parse(data);
     }
     const items = referenceData.path
-      ? jsonpath.query(data, referenceData.path)
+      ? JSONPath({ path: referenceData.path, json: data, wrap: true })
       : data;
     return items;
   }

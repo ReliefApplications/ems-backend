@@ -13,8 +13,9 @@ import {
 } from 'graphql';
 import { GraphQLDate } from 'graphql-scalars';
 import GraphQLJSON from 'graphql-type-json';
-import { isNil } from 'lodash';
+import { get, isNil } from 'lodash';
 import { AccessType, ApplicationType } from '.';
+import { NavBarSettingsType } from './navBarSettings.type';
 
 /** GraphQL page type type definition */
 export const PageType = new GraphQLObjectType({
@@ -39,6 +40,17 @@ export const PageType = new GraphQLObjectType({
       resolve(parent) {
         const defaultShowName = parent.type === 'workflow' ? true : false;
         return isNil(parent.showName) ? defaultShowName : parent.showName;
+      },
+    },
+    navBar: {
+      type: NavBarSettingsType,
+      resolve(parent) {
+        if (parent.navBar) {
+          return {
+            showName: get(parent, 'navBar.showName') ?? true,
+            showIcon: get(parent, 'navBar.showIcon') ?? true,
+          };
+        }
       },
     },
     createdAt: { type: GraphQLString },

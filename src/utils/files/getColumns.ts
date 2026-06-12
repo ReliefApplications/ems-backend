@@ -170,6 +170,20 @@ export const getColumns = async (
         }
         break;
       }
+      case 'people-dropdown':
+      case 'people-tagbox': {
+        // people-dropdown: single object, people-tagbox: array of objects
+        columns.push({
+          name: field.name,
+          label: field.label || field.name,
+          field: field.name,
+          type: field.type,
+          meta: {
+            field,
+          },
+        });
+        break;
+      }
       default: {
         const name = `${field.name}`;
         columns.push({

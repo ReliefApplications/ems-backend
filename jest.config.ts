@@ -18,10 +18,17 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   setupFiles: ['dotenv/config'],
+  globalSetup: '<rootDir>/__tests__/helpers/global-setup.ts',
+  globalTeardown: '<rootDir>/__tests__/helpers/global-teardown.ts',
   roots: ['./__tests__'],
   testMatch: ['**/__tests__/**/*.spec.ts'],
   collectCoverageFrom: ['src/**/*.{js,jsx,ts,tsx}'],
-  modulePathIgnorePatterns: ['./__tests__/old'],
+  transform: {
+    '^.+\\.tsx?$': [
+      'ts-jest',
+      { tsconfig: '<rootDir>/__tests__/tsconfig.json' },
+    ],
+  },
   // A map from regular expressions to module names or to arrays of module names that allow to stub out resources with a single module
   moduleNameMapper: pathsToModuleNameMapper(paths, {
     prefix: '<rootDir>/src/',

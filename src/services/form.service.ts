@@ -21,6 +21,8 @@ export class FormService {
     this.initOwnerComponent();
     this.initUsersComponent();
     this.initGeoSpatialComponent();
+    this.initPeopleDropdownComponent();
+    this.initPeopleTagboxComponent();
   }
 
   /**
@@ -133,6 +135,56 @@ export class FormService {
       questionJSON: {
         name: 'geospatial',
         type: 'text',
+      },
+      onInit: () => {},
+      onCreated: () => {},
+      onLoaded: () => {},
+      onAfterRender: () => {},
+      onAfterRenderContentElement: () => {},
+      onPropertyChanged: () => {},
+      onValueChanged: () => {},
+      onItemValuePropertyChanged: () => {},
+    };
+    Survey.ComponentCollection.Instance.add(component);
+  }
+
+  /**
+   * Init People Dropdown component.
+   */
+  private initPeopleDropdownComponent() {
+    const component = {
+      name: 'people-dropdown',
+      title: 'People Dropdown',
+      questionJSON: {
+        name: 'people-dropdown',
+        type: 'dropdown',
+        choicesOrder: 'asc',
+        choices: [] as any[],
+      },
+      onInit: () => {},
+      onCreated: () => {},
+      onLoaded: () => {},
+      onAfterRender: () => {},
+      onAfterRenderContentElement: () => {},
+      onPropertyChanged: () => {},
+      onValueChanged: () => {},
+      onItemValuePropertyChanged: () => {},
+    };
+    Survey.ComponentCollection.Instance.add(component);
+  }
+
+  /**
+   * Init People tagbox component.
+   */
+  private initPeopleTagboxComponent() {
+    const component = {
+      name: 'people-tagbox',
+      title: 'People Tagbox',
+      questionJSON: {
+        name: 'people-tagbox',
+        type: 'tagbox',
+        choicesOrder: 'asc',
+        choices: [] as any[],
       },
       onInit: () => {},
       onCreated: () => {},

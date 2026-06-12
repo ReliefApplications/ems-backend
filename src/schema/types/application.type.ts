@@ -79,6 +79,16 @@ export const ApplicationType = new GraphQLObjectType({
         }
       },
     },
+    topMenu: {
+      type: GraphQLBoolean,
+      resolve(parent) {
+        if (isNil(parent.topMenu)) {
+          return false;
+        } else {
+          return parent.topMenu;
+        }
+      },
+    },
     hideMenu: {
       type: GraphQLBoolean,
       resolve(parent) {

@@ -27,6 +27,8 @@ export type Column = {
   field: string;
   type?: string;
   parent?: Resource;
+  relatedResource?: Resource;
+  filter?: any;
   displayField?: Column & { separator: string };
   subColumns: Column[];
   meta?: { field: Field };

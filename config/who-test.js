@@ -23,7 +23,7 @@ module.exports = {
       user: {
         apiConfiguration: '62cc2355d3d00f628c6d3574',
         endpoint: '/users/permissions',
-        path: '$.systemRules.Permissions[?(@.Application=="EMS" || @.Application=="EIS")].ApplicationPositions.*',
+        path: '$.systemRules.Permissions[?(@.Application=="EMS" || @.Application=="EIS" || @.Application=="HEMS")].ApplicationPositions.*',
         id: 'ApplicationPositionId',
       },
     },

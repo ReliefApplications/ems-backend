@@ -17,6 +17,10 @@ export const extractFields = async (object, fields, core): Promise<void> => {
       if (element.type === 'panel') {
         await extractFields(element, fields, core);
       } else {
+        if (element.type === 'resources' && element.displayOnly) {
+          // Don't store as field if question is display only
+          continue;
+        }
         if (!element.valueName) {
           throw new GraphQLError(
             i18next.t('utils.form.extractFields.errors.missingDataField')

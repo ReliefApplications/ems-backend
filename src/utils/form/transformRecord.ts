@@ -61,6 +61,16 @@ export const formatValue = (field: any, value: any): any => {
         );
       }
       break;
+    case 'people-dropdown':
+      if (!isNil(value)) {
+        return value;
+      }
+      break;
+    case 'people-tagbox':
+      if (!isNil(value) && Array.isArray(value)) {
+        return value;
+      }
+      break;
     default:
       return value;
   }

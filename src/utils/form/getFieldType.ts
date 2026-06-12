@@ -86,6 +86,12 @@ export const getFieldType = async (question: {
     case 'editor': {
       return 'editor';
     }
+    case 'people-dropdown': {
+      return 'people-dropdown';
+    }
+    case 'people-tagbox': {
+      return 'people-tagbox';
+    }
     default:
       return 'text';
   }

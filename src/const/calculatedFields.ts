@@ -4,8 +4,8 @@
  * If type is 'field', the operator is the value for that the field with the name stored in value
  */
 interface SimpleOperator {
-  type: 'const' | 'field' | 'info';
-  value: string | number | boolean;
+  type: 'const' | 'field' | 'info' | 'user';
+  value: string | number | boolean | null;
 }
 
 /**
@@ -22,7 +22,14 @@ export type OperationTypes =
   | SingleOperatorOperationsTypes
   | DoubleOperatorOperationsTypes
   | MultipleOperatorsOperationsTypes
-  | 'today';
+  | 'today'
+  | 'displayValue';
+
+/** Operation that resolves a choice/refData field stored value to its display label */
+interface DisplayValueOperation {
+  operation: 'displayValue';
+  fieldName: string;
+}
 
 /** Interface for the 'today' operation */
 interface TodayOperation {
@@ -61,7 +68,8 @@ export type DoubleOperatorOperationsTypes =
   | 'eq'
   | 'ne'
   | 'datediff'
-  | 'includes';
+  | 'includes'
+  | 'join';
 
 /** Interface for an operation with two operators (the order matters) */
 interface DoubleOperatorOperation {
@@ -88,4 +96,5 @@ export type Operation =
   | MultipleOperatorsOperation
   | TodayOperation
   | SingleOperatorOperation
-  | DoubleOperatorOperation;
+  | DoubleOperatorOperation
+  | DisplayValueOperation;

@@ -17,6 +17,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { cloneDeep, has, isArray, isEmpty, isNil, omit } from 'lodash';
 import { Types } from 'mongoose';
 import { PageType } from '../types';
+import { NavBarSettingsInputType } from '@schema/inputs/navBarSettings.input';
 
 /** Simple form permission change type */
 type SimplePermissionChange =
@@ -38,6 +39,10 @@ export type EditPageArgs = {
   id: string | Types.ObjectId;
   name?: string;
   showName?: boolean;
+  navBar?: {
+    showName?: boolean;
+    showIcon?: boolean;
+  };
   permissions?: any;
   icon?: string;
   visible?: boolean;
@@ -55,6 +60,7 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     name: { type: GraphQLString },
     showName: { type: GraphQLBoolean },
+    navBar: { type: NavBarSettingsInputType },
     icon: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
     visible: { type: GraphQLBoolean },
@@ -91,8 +97,9 @@ export default {
       // Create update
       const update = {
         ...(args.name && { name: args.name }),
-        ...(args.icon && { icon: args.icon }),
+        ...(has(args, 'icon') && { icon: args.icon }),
         ...(has(args, 'showName') && { showName: args.showName }),
+        ...(args.navBar && { navBar: args.navBar }),
       } as any;
       // Update buttons
       if (args.buttons) {
