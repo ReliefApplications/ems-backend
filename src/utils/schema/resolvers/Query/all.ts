@@ -225,6 +225,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       skip = 0,
       afterCursor,
       filter = {},
+      archived,
       display = false,
       styles = [],
       actions = [],
@@ -414,7 +415,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       // Add the basic records filter
       const basicFilters = {
         $or: [{ resource: id }, { form: id }],
-        archived: { $not: { $eq: true } },
+        ...(archived ? { archived: true } : { archived: { $ne: true } }),
       };
 
       // Additional filter from the user permissions
@@ -649,7 +650,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         const relatedRecords = await Record.find(
           {
             $or: [{ _id: { $in: relatedIds } }, ...relatedFilters],
-            archived: { $ne: true },
+            ...(archived ? { archived: true } : { archived: { $ne: true } }),
           },
           projection
         );

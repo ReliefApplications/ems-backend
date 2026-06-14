@@ -138,6 +138,7 @@ export const getSchema = (
             first: { type: GraphQLInt },
             afterCursor: { type: GraphQLID },
             skip: { type: GraphQLInt },
+            archived: { type: GraphQLBoolean },
             sortField: { type: GraphQLString },
             sortOrder: { type: GraphQLString },
             filter: { type: GraphQLJSON },

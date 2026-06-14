@@ -72,6 +72,9 @@ const getReferenceDataResolver =
         const item = items.find((x) =>
           isEqual(get(x, referenceData.valueField, ''), fieldValue)
         );
+        if (!item) {
+          return null;
+        }
         return Object.keys(item).reduce(
           (o, x) =>
             Object.assign(o, {

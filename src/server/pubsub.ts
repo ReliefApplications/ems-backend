@@ -3,6 +3,20 @@ import config from 'config';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
 import Redis from 'ioredis';
 
+// Patch RedisPubSub.unsubscribe to prevent crashes when unsubscribing non-existent subscriptions
+const originalUnsubscribe = RedisPubSub.prototype.unsubscribe;
+RedisPubSub.prototype.unsubscribe = function (subId) {
+  try {
+    return originalUnsubscribe.call(this, subId);
+  } catch (error: any) {
+    if (error?.message?.includes('There is no subscription of id')) {
+      logger.warn(`RedisPubSub.unsubscribe: ${error.message}`);
+      return;
+    }
+    throw error;
+  }
+};
+
 let pubsub: RedisPubSub;
 
 /**
