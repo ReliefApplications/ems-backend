@@ -259,7 +259,15 @@ export default class Exporter {
             }
           }
         })
-        .catch((err) => reject(err));
+        .catch((err) => {
+          logger.error('axios getColumns error:', {
+            message: err.message,
+            response: err.response?.data,
+            query: metaQuery,
+            headers: this.axiosHeaders()
+          });
+          reject(err);
+        });
     });
   };
 
