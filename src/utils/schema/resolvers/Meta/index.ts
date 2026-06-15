@@ -186,6 +186,7 @@ export const getMetaResolver = (
   };
 
   const entities = Object.keys(data);
+  const mappedRelatedFields = [];
   const oneToManyResolvers = entities.reduce(
     // tslint:disable-next-line: no-shadowed-variable
     (resolvers, entityName) =>
@@ -193,9 +194,17 @@ export const getMetaResolver = (
         {},
         resolvers,
         Object.fromEntries(
-          getReversedFields(data[entityName], id).map((x) => {
-            return [x.relatedName, meta(ids[entityName])];
-          })
+          getReversedFields(data[entityName], id)
+            .filter(
+              (x) =>
+                x.relatedName !== 'id' &&
+                !defaultMetaFieldsFlat.includes(x.relatedName) &&
+                !mappedRelatedFields.includes(x.relatedName)
+            )
+            .map((x) => {
+              mappedRelatedFields.push(x.relatedName);
+              return [x.relatedName, meta(ids[entityName])];
+            })
         )
       ),
     {}

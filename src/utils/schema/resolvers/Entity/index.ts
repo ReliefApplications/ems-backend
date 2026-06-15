@@ -283,7 +283,12 @@ export const getEntityResolver = (
         resolvers,
         Object.fromEntries(
           getReversedFields(data[entityName], id)
-            .filter((x) => !mappedRelatedFields.includes(x.relatedName))
+            .filter(
+              (x) =>
+                x.relatedName !== 'id' &&
+                !defaultRecordFieldsFlat.includes(x.relatedName) &&
+                !mappedRelatedFields.includes(x.relatedName)
+            )
             .map((x) => {
               mappedRelatedFields.push(x.relatedName);
               return [
