@@ -52,17 +52,20 @@ export const getResolvers = (
     return obj;
   }, {});
 
-  const referenceDataFieldResolvers = referenceDatas.reduce((resolvers: any, refData) => {
-    const fieldResolvers = refData.fields.reduce((o: any, field) => {
-      o[field.graphQLFieldName] = (parent) => {
-        const value = parent[field.graphQLFieldName];
-        return getStringValue(value);
-      };
-      return o;
-    }, {});
-    resolvers[refData.name] = fieldResolvers;
-    return resolvers;
-  }, {});
+  const referenceDataFieldResolvers = referenceDatas.reduce(
+    (resolvers: any, refData) => {
+      const fieldResolvers = refData.fields.reduce((o: any, field) => {
+        o[field.graphQLFieldName] = (parent) => {
+          const value = parent[field.graphQLFieldName];
+          return getStringValue(value);
+        };
+        return o;
+      }, {});
+      resolvers[refData.name] = fieldResolvers;
+      return resolvers;
+    },
+    {}
+  );
 
   return Object.assign(
     {},

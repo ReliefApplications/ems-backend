@@ -213,7 +213,11 @@ export const getSchema = (
         const glField = structureField.name;
         const canExtendField = glField !== 'id';
         if (!canExtendField) {
-          logger.warn(`Skipping relation extension for field "${structureField.name}" on "${x.toString()}" because "id" is a reserved system field.`);
+          logger.warn(
+            `Skipping relation extension for field "${
+              structureField.name
+            }" on "${x.toString()}" because "id" is a reserved system field.`
+          );
         }
         if (!field.name.endsWith(NameExtension.referenceData)) {
           const glRelatedType = getRelatedType(
@@ -225,7 +229,9 @@ export const getSchema = (
           const glRelatedField = structureField.relatedName;
           const canExtendRelated = glRelatedField && glRelatedField !== 'id';
           if (glRelatedField === 'id') {
-            logger.warn(`Skipping relation extension for related field "${glRelatedField}" from "${x.toString()}" because "id" is a reserved system field.`);
+            logger.warn(
+              `Skipping relation extension for related field "${glRelatedField}" from "${x.toString()}" because "id" is a reserved system field.`
+            );
           }
           // const glFieldFilterType = getGraphQLFilterTypeName(glRelatedType);
           if (glRelatedType) {

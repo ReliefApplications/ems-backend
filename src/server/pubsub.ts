@@ -4,6 +4,9 @@ import { RedisPubSub } from 'graphql-redis-subscriptions';
 import Redis from 'ioredis';
 
 // Patch RedisPubSub.unsubscribe to prevent crashes when unsubscribing non-existent subscriptions
+/**
+ *
+ */
 const originalUnsubscribe = RedisPubSub.prototype.unsubscribe;
 RedisPubSub.prototype.unsubscribe = function (subId) {
   try {

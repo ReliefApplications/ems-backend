@@ -265,7 +265,7 @@ export default class Exporter {
             message: err.message,
             response: err.response?.data,
             query: metaQuery,
-            headers: this.axiosHeaders()
+            headers: this.axiosHeaders(),
           });
           reject(err);
         });
@@ -429,7 +429,9 @@ export default class Exporter {
   private recordsPipeline = async () => {
     const context = this.req.context;
     // Add the basic records filter
-    const isArchived = this.params.query?.archived === true || this.params.query?.archived === 'true';
+    const isArchived =
+      this.params.query?.archived === true ||
+      this.params.query?.archived === 'true';
     const basicFilters = {
       resource: this.resource._id,
       ...(isArchived ? { archived: true } : { archived: { $ne: true } }),
@@ -517,7 +519,9 @@ export default class Exporter {
         ...(ids ? { resource: 1 } : {}), //add the resource for subcolumns
       },
     };
-    const isArchived = this.params.query?.archived === true || this.params.query?.archived === 'true';
+    const isArchived =
+      this.params.query?.archived === true ||
+      this.params.query?.archived === 'true';
     const pipeline: any = [
       {
         $match: {

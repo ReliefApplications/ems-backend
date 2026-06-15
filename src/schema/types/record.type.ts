@@ -105,11 +105,7 @@ export const RecordType = new GraphQLObjectType({
                   field.choicesByUrl ||
                   field.choicesByGraphQL
                 ) {
-                  res[name] = await getDisplayText(
-                    field,
-                    val,
-                    context
-                  );
+                  res[name] = await getDisplayText(field, val, context);
                 }
               } else {
                 res[name] = null;
