@@ -39,6 +39,7 @@ interface ExportBatchParams {
   timeZone: string;
   fileName?: string;
   limit?: number;
+  skip?: number;
 }
 
 /**
@@ -453,8 +454,11 @@ export default class Exporter {
     const pipeline: any = [
       ...(searchFilter ? [searchFilter] : []),
       { $match: filters },
-      { $limit: this.params.limit || Number.MAX_SAFE_INTEGER },
     ];
+    if (typeof this.params.skip === 'number' && this.params.skip > 0) {
+      pipeline.push({ $skip: this.params.skip });
+    }
+    pipeline.push({ $limit: this.params.limit || Number.MAX_SAFE_INTEGER });
     const calculatedFieldService = new CalculatedFieldService(
       this.resource,
       this.req.context,
