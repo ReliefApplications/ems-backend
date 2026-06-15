@@ -52,6 +52,8 @@ export default {
           );
         }
         resource.layouts.id(args.id).name = args.layout.name;
+        resource.layouts.id(args.id).nameTranslations =
+          args.layout.nameTranslations;
         resource.layouts.id(args.id).query = args.layout.query;
         resource.layouts.id(args.id).display = args.layout.display;
         await resource.save();
@@ -68,6 +70,8 @@ export default {
           );
         }
         form.layouts.id(args.id).name = args.layout.name;
+        form.layouts.id(args.id).nameTranslations =
+          args.layout.nameTranslations;
         form.layouts.id(args.id).query = args.layout.query;
         form.layouts.id(args.id).display = args.layout.display;
         await form.save();

@@ -5,6 +5,7 @@ import {
   GraphQLList,
   GraphQLBoolean,
 } from 'graphql';
+import GraphQLJSON from 'graphql-type-json';
 import { Step, Page, Workflow } from '@models';
 import { AccessType, PageType, StepType } from '.';
 import extendAbilityForStep from '@security/extendAbilityForStep';
@@ -18,6 +19,7 @@ export const WorkflowType = new GraphQLObjectType({
   fields: () => ({
     id: { type: GraphQLID },
     name: { type: GraphQLString },
+    nameTranslations: { type: GraphQLJSON },
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     steps: {

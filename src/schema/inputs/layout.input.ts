@@ -59,6 +59,7 @@ const LayoutDisplayInputType = new GraphQLInputObjectType({
 /** LayoutDisplay type for queries/mutations argument */
 export type LayoutArgs = {
   name: string;
+  nameTranslations?: Record<string, string>;
   query: LayoutQueryArgs;
   display: LayoutDisplayArgs;
 };
@@ -68,6 +69,7 @@ export const LayoutInputType = new GraphQLInputObjectType({
   name: 'LayoutInputType',
   fields: () => ({
     name: { type: new GraphQLNonNull(GraphQLString) },
+    nameTranslations: { type: GraphQLJSON },
     query: { type: new GraphQLNonNull(LayoutQueryInputType) },
     display: { type: new GraphQLNonNull(LayoutDisplayInputType) },
   }),

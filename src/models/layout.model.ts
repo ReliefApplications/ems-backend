@@ -4,6 +4,10 @@ import mongoose, { Schema, Document } from 'mongoose';
 export const layoutSchema = new Schema(
   {
     name: String,
+    nameTranslations: {
+      type: mongoose.Schema.Types.Mixed,
+      default: undefined,
+    },
     query: {
       type: mongoose.Schema.Types.Mixed,
     },
@@ -20,6 +24,7 @@ export const layoutSchema = new Schema(
 export interface Layout extends Document {
   kind: 'Layout';
   name?: string;
+  nameTranslations?: Record<string, string>;
   createdAt?: Date;
   modifiedAt?: Date;
   query?: any;

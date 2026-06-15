@@ -15,6 +15,7 @@ interface Filter {
 export interface Dashboard extends Document {
   kind: 'Dashboard';
   name?: string;
+  nameTranslations?: Record<string, string>;
   createdAt?: Date;
   modifiedAt?: Date;
   structure?: any;
@@ -43,6 +44,10 @@ const filterSchema = new Schema<Filter>(
 const dashboardSchema = new Schema<Dashboard>(
   {
     name: String,
+    nameTranslations: {
+      type: mongoose.Schema.Types.Mixed,
+      default: undefined,
+    },
     structure: mongoose.Schema.Types.Mixed,
     showFilter: Boolean,
     buttons: [buttonSchema],

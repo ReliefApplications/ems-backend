@@ -19,6 +19,7 @@ export const DashboardType = new GraphQLObjectType({
   fields: () => ({
     id: { type: GraphQLID },
     name: { type: GraphQLString },
+    nameTranslations: { type: GraphQLJSON },
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     structure: {

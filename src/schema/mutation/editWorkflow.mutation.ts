@@ -5,6 +5,7 @@ import {
   GraphQLList,
   GraphQLError,
 } from 'graphql';
+import GraphQLJSON from 'graphql-type-json';
 import { WorkflowType } from '../types';
 import { Workflow, Page, Step } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
@@ -17,6 +18,7 @@ import { Context } from '@server/apollo/context';
 type EditWorkflowArgs = {
   id: string | Types.ObjectId;
   name?: string;
+  nameTranslations?: Record<string, string>;
   steps?: string[] | Types.ObjectId[];
 };
 
@@ -29,6 +31,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     name: { type: GraphQLString },
+    nameTranslations: { type: GraphQLJSON },
     steps: { type: new GraphQLList(GraphQLID) },
   },
   async resolve(parent, args: EditWorkflowArgs, context: Context) {
@@ -36,7 +39,7 @@ export default {
     try {
       const user = context.user;
       // check inputs
-      if (!args || (!args.name && !args.steps)) {
+      if (!args || (!args.name && !args.steps && !args.nameTranslations)) {
         throw new GraphQLError(
           context.i18next.t('mutations.workflow.edit.errors.invalidArguments')
         );
@@ -55,6 +58,7 @@ export default {
       const update = Object.assign(
         {},
         args.name && { name: args.name },
+        args.nameTranslations && { nameTranslations: args.nameTranslations },
         args.steps && { steps: args.steps }
       );
       logger.info('update ==>> ', update);
