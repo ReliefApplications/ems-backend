@@ -30,6 +30,9 @@ class TranslationService {
     }
 
     if (!this.apiKey) {
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error('Azure Translator key is not configured');
+      }
       logger.warn(
         'Azure Translator API key not configured, returning stub translation'
       );
