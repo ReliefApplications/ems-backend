@@ -8,26 +8,120 @@ import { JSONPath } from 'jsonpath-plus';
 import commonServices from '@server/common-services';
 import { AxiosCacheInstance } from 'axios-cache-interceptor';
 
+export type Choice =
+  | string
+  | number
+  | boolean
+  | {
+      value?: unknown;
+      text?: unknown;
+      [key: string]: unknown;
+    };
+
+/** Default language used when no locale is provided. */
+const DEFAULT_LANGUAGE = 'en';
+
+/**
+ * Gets the stored value represented by a choice definition.
+ *
+ * @param choice Choice definition.
+ * @returns Stored value of the choice.
+ */
+const getChoiceValue = (choice: Choice): unknown => {
+  if (choice && typeof choice === 'object' && 'value' in choice) {
+    return choice.value;
+  }
+  return choice;
+};
+
+/**
+ * Gets the localized label from a SurveyJS choice text object.
+ *
+ * @param text Choice text or localized text map.
+ * @param locale Requested application locale.
+ * @param fallback Fallback value when no label is available.
+ * @returns Localized choice label.
+ */
+export const getLocalizedText = (
+  text: unknown,
+  locale?: string,
+  fallback?: unknown
+): unknown => {
+  if (!text || typeof text !== 'object') {
+    return text ?? fallback;
+  }
+
+  const normalizedLocale = locale?.replace('-', '_') || DEFAULT_LANGUAGE;
+  const baseLanguage = normalizedLocale.split('_')[0];
+  const candidates = [
+    normalizedLocale,
+    normalizedLocale.replace('_', '-'),
+    baseLanguage,
+    'default',
+    DEFAULT_LANGUAGE,
+  ];
+
+  const localizedText = text as Record<string, unknown>;
+  for (const key of candidates) {
+    const value = localizedText[key];
+    if (value !== undefined && value !== null && value !== '') {
+      return value;
+    }
+  }
+
+  return fallback;
+};
+
+/**
+ * Localizes static choices without changing their stored values.
+ *
+ * @param choices Choice definitions.
+ * @param locale Requested application locale.
+ * @returns Choices with localized text.
+ */
+export const getLocalizedChoices = (
+  choices: Choice[] = [],
+  locale?: string
+): Choice[] =>
+  choices.map((choice) => {
+    if (choice && typeof choice === 'object' && 'text' in choice) {
+      const value = getChoiceValue(choice);
+      return {
+        ...choice,
+        text: getLocalizedText(choice.text, locale, value),
+      };
+    }
+    return choice;
+  });
+
 /**
  * Gets display text from choice value.
  *
  * @param choices list of choices.
  * @param value choice value.
+ * @param locale Requested application locale.
  * @returns display value of the value.
  */
-export const getText = (choices: any[], value: any): string => {
-  if (value) {
-    const choice = choices.find((x) =>
-      x.value
-        ? x.value.toString() === value.toString()
-        : x.toString() === value.toString()
-    );
+export const getText = (
+  choices: Choice[],
+  value: unknown,
+  locale?: string,
+  localize = true
+): unknown => {
+  if (value !== undefined && value !== null && value !== '') {
+    const choice = choices.find((x) => {
+      const choiceValue = getChoiceValue(x);
+      return choiceValue?.toString() === value.toString();
+    });
     if (choice != null) {
-      if (choice.text) {
-        if (choice.text.default) {
-          return choice.text.default;
+      if (typeof choice === 'object' && 'text' in choice) {
+        if (localize) {
+          return getLocalizedText(choice.text, locale, getChoiceValue(choice));
         }
-        return choice.text;
+        const text = choice.text as { default?: unknown } | unknown;
+        return text && typeof text === 'object' && 'default' in text
+          ? (text as { default?: unknown }).default
+          : text;
       }
       return choice;
     }
@@ -45,7 +139,7 @@ export const getText = (choices: any[], value: any): string => {
 export const getFullChoices = async (
   field: any,
   context: Context
-): Promise<{ value: string; text: string }[] | string[]> => {
+): Promise<Choice[]> => {
   try {
     if (field.choicesByUrl) {
       const url: string = field.choicesByUrl.url;
@@ -158,11 +252,11 @@ export const getFullChoices = async (
       }
       return choices;
     } else {
-      return field.choices;
+      return getLocalizedChoices(field.choices, context?.locale);
     }
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    return field.choices;
+    return getLocalizedChoices(field.choices, context?.locale);
   }
 };
 
@@ -178,14 +272,16 @@ const getDisplayText = async (
   field: any,
   value: any,
   context: Context
-): Promise<string | string[]> => {
-  const choices: { value: string; text: string }[] | string[] =
-    await getFullChoices(field, context);
+): Promise<unknown | unknown[]> => {
+  const choices = await getFullChoices(field, context);
+  const localizeStaticChoices = Boolean(field.choices);
   if (choices && choices.length) {
     if (Array.isArray(value)) {
-      return value.map((x) => getText(choices, x));
+      return value.map((x) =>
+        getText(choices, x, context?.locale, localizeStaticChoices)
+      );
     } else {
-      return getText(choices, value);
+      return getText(choices, value, context?.locale, localizeStaticChoices);
     }
   }
   return value;

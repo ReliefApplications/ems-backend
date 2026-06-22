@@ -10,8 +10,14 @@ import { Column } from './getColumnsFromMeta';
  * @param column Corresponding column.
  * @param data Data to set in row.
  * @param row Row to be updated.
+ * @param locale Requested application locale.
  */
-const setMultiselectRow = (column: any, data: any, row: any) => {
+const setMultiselectRow = (
+  column: any,
+  data: any,
+  row: any,
+  locale?: string
+) => {
   if (column.value) {
     const value = data[column.field]?.includes(column.value) ? 1 : 0;
     set(row, column.name, value);
@@ -22,9 +28,9 @@ const setMultiselectRow = (column: any, data: any, row: any) => {
       const choices = column.meta.field.choices || [];
       if (choices.length > 0) {
         if (Array.isArray(value)) {
-          value = value.map((x) => getText(choices, x));
+          value = value.map((x) => getText(choices, x, locale));
         } else {
-          value = getText(choices, value);
+          value = getText(choices, value, locale);
         }
       }
     }
@@ -39,12 +45,14 @@ const setMultiselectRow = (column: any, data: any, row: any) => {
  * @param columns definition of export columns.
  * @param records list of records.
  * @param isEmail boolean to account for email behaviour
+ * @param locale Requested application locale.
  * @returns list of export rows.
  */
 export const getRowsFromMeta = (
   columns: Column[],
   records: any[],
-  isEmail = false
+  isEmail = false,
+  locale?: string
 ): any[] => {
   const rows = [];
   for (const record of records) {
@@ -56,9 +64,9 @@ export const getRowsFromMeta = (
           const choices = column.meta.field.choices || [];
           if (choices.length > 0) {
             if (Array.isArray(value)) {
-              value = value.map((x) => getText(choices, x));
+              value = value.map((x) => getText(choices, x, locale));
             } else {
-              value = getText(choices, value);
+              value = getText(choices, value, locale);
             }
           }
           set(row, column.name, Array.isArray(value) ? value.join(',') : value);
@@ -69,9 +77,9 @@ export const getRowsFromMeta = (
           const choices = column.meta.field.choices || [];
           if (choices.length > 0) {
             if (Array.isArray(value)) {
-              value = value.map((x) => getText(choices, x));
+              value = value.map((x) => getText(choices, x, locale));
             } else {
-              value = getText(choices, value);
+              value = getText(choices, value, locale);
             }
           }
           set(row, column.name, Array.isArray(value) ? value.join(',') : value);
@@ -122,7 +130,7 @@ export const getRowsFromMeta = (
         }
         case 'checkbox':
         case 'tagbox': {
-          setMultiselectRow(column, record, row);
+          setMultiselectRow(column, record, row, locale);
           break;
         }
         case 'dropdown': {
@@ -132,9 +140,9 @@ export const getRowsFromMeta = (
             const choices = column.meta.field.choices || [];
             if (choices.length > 0) {
               if (Array.isArray(value)) {
-                value = value.map((x) => getText(choices, x));
+                value = value.map((x) => getText(choices, x, locale));
               } else {
-                value = getText(choices, value);
+                value = getText(choices, value, locale);
               }
             }
           }
@@ -160,11 +168,21 @@ export const getRowsFromMeta = (
           const value = get(record, column.field) || [];
           if ((column.subColumns || []).length > 0) {
             if (value && isArray(value)) {
-              const subRows = getRowsFromMeta(column.subColumns, value);
+              const subRows = getRowsFromMeta(
+                column.subColumns,
+                value,
+                isEmail,
+                locale
+              );
               set(row, column.name, subRows);
             }
           } else if (column.displayField) {
-            const subRows = getRowsFromMeta([column.displayField], value);
+            const subRows = getRowsFromMeta(
+              [column.displayField],
+              value,
+              isEmail,
+              locale
+            );
             const separator = column.displayField.separator;
             set(
               row,
@@ -238,7 +256,9 @@ export const getRowsFromMeta = (
           if (isEmail) {
             const radioValue = get(record, column.field);
             const choices = column?.meta?.field?.choices || [];
-            const text = choices?.length ? getText(choices, radioValue) : '';
+            const text = choices?.length
+              ? getText(choices, radioValue, locale)
+              : '';
             set(row, column.name, text || radioValue);
             break;
           }
@@ -263,7 +283,12 @@ export const getRowsFromMeta = (
           const value = get(record, column.field);
           if (column.subColumns) {
             if (value && isArray(value)) {
-              const subRows = getRowsFromMeta(column.subColumns, value);
+              const subRows = getRowsFromMeta(
+                column.subColumns,
+                value,
+                isEmail,
+                locale
+              );
               set(row, column.name, subRows);
             }
           } else {

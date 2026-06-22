@@ -10,7 +10,7 @@ import {
 } from '@const/calculatedFields';
 import { referenceDataType } from '@const/enumTypes';
 import { getExpressionFromString } from '@utils/aggregation/expressionFromString';
-import { getFullChoices } from '@utils/form/getDisplayText';
+import { getFullChoices, getText } from '@utils/form/getDisplayText';
 import { ApiConfiguration, ReferenceData } from '@models';
 import { CustomAPI } from '@server/apollo/dataSources';
 import { Context } from '@server/apollo/context';
@@ -196,10 +196,19 @@ export class CalculatedFieldService {
       }
       if (field.choicesByUrl || field.choicesByGraphQL || field.choices) {
         const choices = await getFullChoices(field, this.context as any);
+        const localizeStaticChoices = Boolean(field.choices);
         return (choices || []).map((c: any) =>
           typeof c === 'string' || typeof c === 'number'
             ? { value: c, text: c }
-            : { value: c.value, text: c.text?.default ?? c.text ?? c.value }
+            : {
+                value: c.value,
+                text: getText(
+                  choices,
+                  c.value,
+                  this.context?.locale,
+                  localizeStaticChoices
+                ),
+              }
         );
       }
       return [];

@@ -1,5 +1,5 @@
 import { MULTISELECT_TYPES } from '@const/fieldTypes';
-import { getFullChoices } from '../../../form';
+import { getFullChoices, getText } from '../../../form';
 import getSortField from './getSortField';
 import getSortOrder from './getSortOrder';
 
@@ -29,7 +29,20 @@ const getSortAggregation = async (
     field &&
     (field.choices || field.choicesByUrl || field.choicesByGraphQL)
   ) {
-    const choices = (await getFullChoices(field, context)) || [];
+    const fullChoices = (await getFullChoices(field, context)) || [];
+    const localizeStaticChoices = Boolean(field.choices);
+    const choices = fullChoices.map((choice: any) => {
+      const value = choice?.value ?? choice;
+      return {
+        value,
+        text: getText(
+          fullChoices,
+          value,
+          context?.locale,
+          localizeStaticChoices
+        ),
+      };
+    });
     const choicesValue = choices.map((x) => x.value);
     // Create aggregation to have text instead of values
     if (MULTISELECT_TYPES.includes(field.type)) {

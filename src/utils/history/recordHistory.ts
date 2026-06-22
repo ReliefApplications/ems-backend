@@ -15,7 +15,7 @@ import {
   startCase,
   isNil,
 } from 'lodash';
-import { getFullChoices } from '@utils/form';
+import { Choice, getFullChoices, getText } from '@utils/form';
 import { accessibleBy } from '@casl/mongoose';
 
 /**
@@ -299,12 +299,15 @@ export class RecordHistory {
   private async formatValues(history: RecordHistoryType) {
     const getOptionFromChoices = (
       value: string,
-      choices: { value: string; text: string }[] | string[]
+      choices: Choice[],
+      localizeStaticChoices: boolean
     ) => {
-      const choice = (choices as any[])?.find((c: any) =>
-        c.value ? c.value == value : c == value
+      return getText(
+        choices,
+        value,
+        this.options.context?.locale,
+        localizeStaticChoices
       );
-      return choice === undefined ? value : choice.text ? choice.text : choice;
     };
 
     const getReferenceData = async (id: string) =>
@@ -359,17 +362,22 @@ export class RecordHistory {
       } else {
         // Otherwise, get the display value from choices stored in the field/choicesByUrl
         const choices = await getFullChoices(field, this.options.context);
+        const localizeStaticChoices = Boolean(field.choices);
         if (change.old !== undefined) {
           if (isArray(change.old)) {
             change.old = [
               ...new Set(
                 change.old.map((item: string) =>
-                  getOptionFromChoices(item, choices)
+                  getOptionFromChoices(item, choices, localizeStaticChoices)
                 )
               ),
             ];
           } else {
-            change.old = getOptionFromChoices(change.old, choices);
+            change.old = getOptionFromChoices(
+              change.old,
+              choices,
+              localizeStaticChoices
+            );
           }
         }
         if (change.new !== undefined) {
@@ -377,12 +385,16 @@ export class RecordHistory {
             change.new = [
               ...new Set(
                 change.new.map((item: string) =>
-                  getOptionFromChoices(item, choices)
+                  getOptionFromChoices(item, choices, localizeStaticChoices)
                 )
               ),
             ];
           } else {
-            change.new = getOptionFromChoices(change.new, choices);
+            change.new = getOptionFromChoices(
+              change.new,
+              choices,
+              localizeStaticChoices
+            );
           }
         }
       }
@@ -520,11 +532,15 @@ export class RecordHistory {
                     switch (field.columns[i].cellType) {
                       case 'radiogroup':
                       case 'dropdown':
-                        newVal = getOptionFromChoices(newVal, field.choices);
+                        newVal = getOptionFromChoices(
+                          newVal,
+                          field.choices,
+                          true
+                        );
                         break;
                       case 'checkbox':
                         newVal = newVal.map((item: string) =>
-                          getOptionFromChoices(item, field.choices)
+                          getOptionFromChoices(item, field.choices, true)
                         );
                     }
                     Object.assign(change[state], {
@@ -546,7 +562,8 @@ export class RecordHistory {
                     const newKey = getTitleFromName(key, field.columns);
                     const newVal = getOptionFromChoices(
                       entry[key],
-                      field.choices
+                      field.choices,
+                      true
                     );
                     Object.assign(newEntry, { [newKey]: newVal });
                   }

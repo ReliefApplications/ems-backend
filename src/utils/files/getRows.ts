@@ -7,11 +7,13 @@ import { getText } from '../form/getDisplayText';
  *
  * @param columns definition of export columns.
  * @param records list of records.
+ * @param locale Requested application locale.
  * @returns list of export rows.
  */
 export const getRows = async (
   columns: any[],
-  records: any[]
+  records: any[],
+  locale?: string
 ): Promise<any[]> => {
   const rows = [];
   for (const record of records) {
@@ -29,9 +31,9 @@ export const getRows = async (
             const choices = column.meta.field.choices || [];
             if (choices.length > 0) {
               if (Array.isArray(value)) {
-                value = value.map((x) => getText(choices, x));
+                value = value.map((x) => getText(choices, x, locale));
               } else {
-                value = getText(choices, value);
+                value = getText(choices, value, locale);
               }
             }
             set(
@@ -47,9 +49,9 @@ export const getRows = async (
           const choices = column.meta.field.choices || [];
           if (choices.length > 0) {
             if (Array.isArray(value)) {
-              value = value.map((x) => getText(choices, x));
+              value = value.map((x) => getText(choices, x, locale));
             } else {
-              value = getText(choices, value);
+              value = getText(choices, value, locale);
             }
           }
           set(row, column.name, Array.isArray(value) ? value.join(',') : value);

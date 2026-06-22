@@ -775,6 +775,31 @@ describe('CalculatedFieldService', () => {
       expect(stage.$let.in.$cond.if).toEqual({ $isArray: '$data.country' });
     });
 
+    it('uses localized static choice labels in the lookup stage', async () => {
+      const localizedResource = {
+        name: 'tasks',
+        fields: [
+          {
+            name: 'status',
+            choices: [
+              {
+                value: 'open',
+                text: { default: 'Open', en: 'Open', fr: 'Ouvert' },
+              },
+            ],
+          },
+        ],
+      };
+      const pipeline = await new CalculatedFieldService(
+        localizedResource,
+        { locale: 'fr' } as any,
+        'UTC'
+      ).build("{{calc.displayValue('status')}}", 'result');
+
+      const stage = (pipeline[0] as any).$addFields['data.result'];
+      expect(stage.$let.vars.dvTexts).toEqual(['Ouvert']);
+    });
+
     it('normalizes numeric choice values and coerces the stored value to string so 4 matches "4"', async () => {
       const numericResource = {
         name: 'tasks',

@@ -48,9 +48,13 @@ const setDisplayText = async (
     }
   };
   const fieldWithChoices = await mappedFields.reduce(reducer, {});
-  for (const [key, field] of Object.entries(fieldWithChoices)) {
+  for (const [key, field] of Object.entries(fieldWithChoices) as [
+    string,
+    any
+  ][]) {
     // Fetch choices from source ( static / rest / graphql )
     const choices = await getFullChoices(field, context);
+    const localizeStaticChoices = Boolean(field.choices);
     for (const item of items) {
       const fieldValue = get(item, key, null);
       if (fieldValue) {
@@ -60,8 +64,15 @@ const setDisplayText = async (
             item,
             key,
             isArray(fieldValue)
-              ? fieldValue.map((x) => getText(choices, x))
-              : getText(choices, fieldValue)
+              ? fieldValue.map((x) =>
+                  getText(choices, x, context?.locale, localizeStaticChoices)
+                )
+              : getText(
+                  choices,
+                  fieldValue,
+                  context?.locale,
+                  localizeStaticChoices
+                )
           );
         }
       } else {
