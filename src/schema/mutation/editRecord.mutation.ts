@@ -14,6 +14,7 @@ import {
   checkRecordValidation,
   checkRecordTriggers,
   hasInaccessibleFields,
+  autoTranslateRecord,
 } from '@utils/form';
 import { RecordType } from '../types';
 import { Types } from 'mongoose';
@@ -174,9 +175,14 @@ export default {
           update,
           ownership && { createdBy: { ...oldRecord.createdBy, ...ownership } }
         );
-        const record = Record.findByIdAndUpdate(args.id, update, { new: true });
+        const updatedRecord = await Record.findByIdAndUpdate(args.id, update, {
+          new: true,
+        });
         await version.save();
-        return await record;
+        if (updatedRecord) {
+          autoTranslateRecord(updatedRecord._id, Object.keys(args.data || {}));
+        }
+        return updatedRecord;
       } else {
         // Revert an old version
         const oldVersion = await Version.findOne({

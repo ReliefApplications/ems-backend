@@ -43,6 +43,7 @@ import emailNotifications from './emailNotifications.query';
 import types from './types.query';
 import emailDistributionLists from './emailDistributionList.query';
 import customTemplates from './customTemplates.query';
+import translateText from './translateText.query';
 
 /** GraphQL query type definition */
 const Query = new GraphQLObjectType({
@@ -92,6 +93,7 @@ const Query = new GraphQLObjectType({
     draftRecords,
     emailDistributionLists,
     customTemplates,
+    translateText,
   },
 });
 

@@ -98,15 +98,27 @@ const buildMongoFilter = (
     }
   } else {
     if (filter.field) {
+      let targetField = filter.field;
+      if (context?.locale && fields) {
+        const siblingField = fields.find(
+          (f: any) =>
+            f.translateFrom === targetField &&
+            f.translateTo &&
+            f.translateTo.toLowerCase() === context.locale.toLowerCase()
+        );
+        if (siblingField) {
+          targetField = siblingField.name;
+        }
+      }
+
       // Get field name from filter field
-      let fieldName = FLAT_DEFAULT_FIELDS.includes(filter.field)
-        ? filter.field
-        : `${prefix}${filter.field}`;
+      let fieldName = FLAT_DEFAULT_FIELDS.includes(targetField)
+        ? targetField
+        : `${prefix}${targetField}`;
       // Get type of field from filter field
       let type: string =
         fields.find(
-          (x) =>
-            x.name === filter.field || x.name === filter.field.split('.')[0]
+          (x) => x.name === targetField || x.name === targetField.split('.')[0]
         )?.type || '';
 
       // If type is resource and refers to a nested field, get the type of the nested field

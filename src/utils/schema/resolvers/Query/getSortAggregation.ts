@@ -18,6 +18,18 @@ const getSortAggregation = async (
   fields: any[],
   context
 ): Promise<any[]> => {
+  if (context?.locale && fields) {
+    const siblingField = fields.find(
+      (f: any) =>
+        f.translateFrom === sortField &&
+        f.translateTo &&
+        f.translateTo.toLowerCase() === context.locale.toLowerCase()
+    );
+    if (siblingField) {
+      sortField = siblingField.name;
+    }
+  }
+
   const field: any = fields.find((x) => x && x.name === sortField);
   const parentField: any =
     sortField && sortField.includes('.')
