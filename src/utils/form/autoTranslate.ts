@@ -102,10 +102,12 @@ export const autoTranslateRecord = async (
 
       // Perform translation using TranslationService
       try {
+        const format = field.type === 'editor' ? 'html' : 'plain';
         const translatedText = await TranslationService.translate(
           sourceValue,
           null, // auto-detect source language
-          targetLang
+          targetLang,
+          format
         );
 
         if (translatedText !== updatedData[targetField]) {

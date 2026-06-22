@@ -55,7 +55,7 @@ describe('autoTranslateRecord', () => {
 
     await autoTranslateRecord('record123');
 
-    expect(mockTranslate).toHaveBeenCalledWith('Headache', null, 'uk');
+    expect(mockTranslate).toHaveBeenCalledWith('Headache', null, 'uk', 'plain');
     expect(mockRecordUpdateOne).toHaveBeenCalledWith(
       { _id: 'record123' },
       {
@@ -137,5 +137,50 @@ describe('autoTranslateRecord', () => {
 
     expect(mockTranslate).not.toHaveBeenCalled();
     expect(mockRecordUpdateOne).not.toHaveBeenCalled();
+  });
+
+  it('should auto-translate with HTML format for editor type fields', async () => {
+    const mockRecord = {
+      _id: 'record123',
+      form: 'form123',
+      data: {
+        symptom: '<p>Headache</p>',
+      },
+    };
+
+    const mockForm = {
+      _id: 'form123',
+      fields: [
+        {
+          name: 'symptom_uk',
+          type: 'editor',
+          translateFrom: 'symptom',
+          translateTo: 'uk',
+        },
+      ],
+    };
+
+    mockRecordFindById.mockResolvedValue(mockRecord as any);
+    mockFormFindById.mockResolvedValue(mockForm as any);
+
+    await autoTranslateRecord('record123');
+
+    expect(mockTranslate).toHaveBeenCalledWith(
+      '<p>Headache</p>',
+      null,
+      'uk',
+      'html'
+    );
+    expect(mockRecordUpdateOne).toHaveBeenCalledWith(
+      { _id: 'record123' },
+      {
+        $set: {
+          data: {
+            symptom: '<p>Headache</p>',
+            symptom_uk: '[Translated to uk]: Headache',
+          },
+        },
+      }
+    );
   });
 });

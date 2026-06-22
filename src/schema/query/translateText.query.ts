@@ -8,6 +8,7 @@ type TranslateTextArgs = {
   text: string;
   from?: string;
   to: string;
+  format?: 'html' | 'plain';
 };
 
 /**
@@ -19,6 +20,7 @@ export default {
     text: { type: new GraphQLNonNull(GraphQLString) },
     from: { type: GraphQLString },
     to: { type: new GraphQLNonNull(GraphQLString) },
+    format: { type: GraphQLString },
   },
   async resolve(parent, args: TranslateTextArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -26,7 +28,8 @@ export default {
       return await TranslationService.translate(
         args.text,
         args.from || null,
-        args.to
+        args.to,
+        args.format
       );
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

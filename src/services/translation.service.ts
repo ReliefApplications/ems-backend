@@ -17,11 +17,13 @@ class TranslationService {
    * @param text Source text to translate
    * @param from BCP-47 source language code (e.g. 'en'). Pass null for auto-detect.
    * @param to BCP-47 target language code (e.g. 'uk')
+   * @param format Explicit text format ('html' or 'plain')
    */
   async translate(
     text: string,
     from: string | null,
-    to: string
+    to: string,
+    format?: 'html' | 'plain'
   ): Promise<string> {
     if (!text || !text.trim()) {
       return '';
@@ -34,8 +36,8 @@ class TranslationService {
       return `[Translated to ${to}]: ${text}`;
     }
 
-    // Auto-detect HTML content to preserve markup structure
-    const isHtml = /<[a-z][\s\S]*>/i.test(text);
+    // Auto-detect HTML content to preserve markup structure if format is not explicitly provided
+    const isHtml = format ? format === 'html' : /<[a-z][\s\S]*>/i.test(text);
 
     try {
       const response = await axios.post(
