@@ -9,3 +9,4 @@ export * from './loadRow';
 export * from './getColumnsFromMeta';
 export * from './getRowsFromMeta';
 export * from './extractGridData';
+export { default as convertUrlToBase64 } from './convertUrlToBase64';

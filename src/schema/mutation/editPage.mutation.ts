@@ -38,6 +38,7 @@ type PermissionChange = {
 export type EditPageArgs = {
   id: string | Types.ObjectId;
   name?: string;
+  nameTranslations?: Record<string, string>;
   showName?: boolean;
   navBar?: {
     showName?: boolean;
@@ -59,6 +60,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     name: { type: GraphQLString },
+    nameTranslations: { type: GraphQLJSON },
     showName: { type: GraphQLBoolean },
     navBar: { type: NavBarSettingsInputType },
     icon: { type: GraphQLString },
@@ -97,6 +99,9 @@ export default {
       // Create update
       const update = {
         ...(args.name && { name: args.name }),
+        ...(!isNil(args.nameTranslations) && {
+          nameTranslations: args.nameTranslations,
+        }),
         ...(has(args, 'icon') && { icon: args.icon }),
         ...(has(args, 'showName') && { showName: args.showName }),
         ...(args.navBar && { navBar: args.navBar }),
@@ -159,6 +164,7 @@ export default {
           break;
         case contentType.form:
           if (update.name) delete update.name;
+          if (update.nameTranslations) delete update.nameTranslations;
           await Form.findByIdAndUpdate(page.content, update);
           break;
         default:

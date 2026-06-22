@@ -7,7 +7,7 @@ import { Application } from './application.model';
 import { Dashboard } from './dashboard.model';
 import { Form } from './form.model';
 import { Button, buttonSchema } from './actionButton.model';
-import { Record } from './record.model';
+import { Record as RecordModel } from './record.model';
 import { ReferenceData } from './referenceData.model';
 import { Resource } from './resource.model';
 import { Role } from './role.model';
@@ -29,6 +29,7 @@ export type PageContextT = (
 export interface Page extends Document {
   kind: 'Page';
   name: string;
+  nameTranslations?: Record<string, string>;
   icon: string;
   showName?: boolean;
   navBar?: {
@@ -47,7 +48,7 @@ export interface Page extends Document {
         element: string | number;
       }
     | {
-        record: mongoose.Types.ObjectId | Record;
+        record: mongoose.Types.ObjectId | RecordModel;
       }
   ) & {
     content: mongoose.Types.ObjectId | Form | Workflow | Dashboard;
@@ -66,6 +67,10 @@ export interface Page extends Document {
 const pageSchema = new Schema<Page>(
   {
     name: String,
+    nameTranslations: {
+      type: mongoose.Schema.Types.Mixed,
+      default: undefined,
+    },
     icon: String,
     showName: Boolean,
     navBar: {

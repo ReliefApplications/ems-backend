@@ -1,3 +1,11 @@
+# [2.17.0-rc.2](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.1...v2.17.0-rc.2) (2026-06-22)
+
+
+### Features
+
+* Add Ukrainian language ([e9054a3](https://github.com/ReliefApplications/ems-backend/commit/e9054a3f73755c6eda2bc49dc244ef961804bc67)), closes [Ab#133173](https://github.com/Ab/issues/133173)
+* Enable translation on widgets / pages of applications  ([#1238](https://github.com/ReliefApplications/ems-backend/issues/1238)) ([95fc6c7](https://github.com/ReliefApplications/ems-backend/commit/95fc6c7167024ab3318ee3b2d8713ce7ee1334fd)), closes [AB#133293](https://github.com/AB/issues/133293)
+
 # [2.17.0-rc.1](https://github.com/ReliefApplications/ems-backend/compare/v2.16.1...v2.17.0-rc.1) (2026-05-29)
 
 

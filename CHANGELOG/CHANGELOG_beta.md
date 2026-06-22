@@ -1,3 +1,30 @@
+# [2.17.0-beta.1](https://github.com/ReliefApplications/ems-backend/compare/v2.16.1...v2.17.0-beta.1) (2026-06-15)
+
+
+### Bug Fixes
+
+* filters configured from layout now taken into account in queries & export ([#1232](https://github.com/ReliefApplications/ems-backend/issues/1232)) ([5e6891e](https://github.com/ReliefApplications/ems-backend/commit/5e6891ea84c9d880c18913f9eb4a7c5793b7ce7d)), closes [AB#128560](https://github.com/AB/issues/128560)
+* some grids export could fail due to cell content too long ([d97e4f6](https://github.com/ReliefApplications/ems-backend/commit/d97e4f6ae62dd8556c1d794791b63dc39df710e1)), closes [AB#128561](https://github.com/AB/issues/128561)
+
+
+### Features
+
+* Add filters to grid actions ([#1218](https://github.com/ReliefApplications/ems-backend/issues/1218)) ([84ba849](https://github.com/ReliefApplications/ems-backend/commit/84ba849358d7dafd276938e5dcc33213c9719a42)), closes [AB#121666](https://github.com/AB/issues/121666)
+* Add join & displayValue to calculated fields ([#1234](https://github.com/ReliefApplications/ems-backend/issues/1234)) ([286ca6e](https://github.com/ReliefApplications/ems-backend/commit/286ca6ed67a735d83305dceff58619260832dbb6)), closes [Ab#129193](https://github.com/Ab/issues/129193)
+* Add Ukrainian language ([e9054a3](https://github.com/ReliefApplications/ems-backend/commit/e9054a3f73755c6eda2bc49dc244ef961804bc67)), closes [Ab#133173](https://github.com/Ab/issues/133173)
+* Allow style rules in grids to use badge display ([#1223](https://github.com/ReliefApplications/ems-backend/issues/1223)) ([0bc4dc4](https://github.com/ReliefApplications/ems-backend/commit/0bc4dc488a34fa03bb14f8ecea660bffd3726e7c)), closes [AB#128960](https://github.com/AB/issues/128960)
+* Allow use of user attributes in calculated fields ([#1224](https://github.com/ReliefApplications/ems-backend/issues/1224)) ([e58562d](https://github.com/ReliefApplications/ems-backend/commit/e58562d044ff6c44cd51f06fbe9c33c65f1d7589)), closes [AB#128968](https://github.com/AB/issues/128968)
+* Enable translation on widgets / pages of applications  ([#1238](https://github.com/ReliefApplications/ems-backend/issues/1238)) ([95fc6c7](https://github.com/ReliefApplications/ems-backend/commit/95fc6c7167024ab3318ee3b2d8713ce7ee1334fd)), closes [AB#133293](https://github.com/AB/issues/133293)
+* Make context.incrementalid available in context data ([#1226](https://github.com/ReliefApplications/ems-backend/issues/1226)) ([cc96f6d](https://github.com/ReliefApplications/ems-backend/commit/cc96f6dd3bb6648ab61dc3bf4b7809444fdbe428)), closes [AB#128988](https://github.com/AB/issues/128988)
+
+# [2.16.0-beta.1](https://github.com/ReliefApplications/ems-backend/compare/v2.15.0...v2.16.0-beta.1) (2025-10-20)
+
+
+### Features
+
+* add clone record action in dashboards ([#1208](https://github.com/ReliefApplications/ems-backend/issues/1208)) ([43559db](https://github.com/ReliefApplications/ems-backend/commit/43559db1e671c1ff4fbcad7439120327d99adf13)), closes [AB#118658](https://github.com/AB/issues/118658)
+* Admins can configure auto redirection after cloning from dashboard ([#1212](https://github.com/ReliefApplications/ems-backend/issues/1212)) ([9de1a8c](https://github.com/ReliefApplications/ems-backend/commit/9de1a8c142f1dbf7610e9168a838b0fc86bdba34)), closes [AB#118658](https://github.com/AB/issues/118658)
+
 # [2.13.0-beta.1](https://github.com/ReliefApplications/ems-backend/compare/v2.12.2...v2.13.0-beta.1) (2025-02-27)
 
 
