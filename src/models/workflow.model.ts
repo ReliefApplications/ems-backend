@@ -8,6 +8,7 @@ import { has } from 'lodash';
 export interface Workflow extends Document {
   kind: 'Workflow';
   name: string;
+  nameTranslations?: Record<string, string>;
   createdAt: Date;
   modifiedAt: Date;
   steps: any[];
@@ -19,6 +20,10 @@ export interface Workflow extends Document {
 const workflowSchema = new Schema<Workflow>(
   {
     name: String,
+    nameTranslations: {
+      type: mongoose.Schema.Types.Mixed,
+      default: undefined,
+    },
     steps: {
       type: [mongoose.Schema.Types.ObjectId],
       ref: 'Step',
