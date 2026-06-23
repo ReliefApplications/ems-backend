@@ -2,6 +2,9 @@ import axios from 'axios';
 import TranslationService from '@services/translation.service';
 
 jest.mock('axios');
+/**
+ *
+ */
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 describe('TranslationService', () => {
@@ -55,7 +58,12 @@ describe('TranslationService', () => {
         data: [{ translations: [{ text: 'Привіт' }] }],
       } as any);
 
-      const res = await TranslationService.translate('Hello', 'en', 'uk', 'plain');
+      const res = await TranslationService.translate(
+        'Hello',
+        'en',
+        'uk',
+        'plain'
+      );
 
       expect(res).toBe('Привіт');
       expect(mockedAxios.post).toHaveBeenCalledWith(
@@ -82,7 +90,11 @@ describe('TranslationService', () => {
         data: [{ translations: [{ text: '<p>Привіт</p>' }] }],
       } as any);
 
-      const res = await TranslationService.translate('<p>Hello</p>', null, 'uk');
+      const res = await TranslationService.translate(
+        '<p>Hello</p>',
+        null,
+        'uk'
+      );
 
       expect(res).toBe('<p>Привіт</p>');
       expect(mockedAxios.post).toHaveBeenCalledWith(

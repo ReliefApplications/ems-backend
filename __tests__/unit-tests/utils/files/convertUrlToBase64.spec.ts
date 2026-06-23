@@ -5,6 +5,9 @@ import { convertUrlToBase64 } from '@utils/files';
 jest.mock('axios');
 jest.mock('@services/logger.service');
 
+/**
+ *
+ */
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 describe('convertUrlToBase64', () => {
