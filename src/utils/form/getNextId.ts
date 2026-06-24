@@ -1,19 +1,10 @@
 import { Record, Form } from '@models';
 import mongoose from 'mongoose';
 import i18next from 'i18next';
-import { BaseRedisCache } from 'apollo-server-cache-redis';
-import Redis from 'ioredis';
-import config from 'config';
+import { getBaseCache } from '@utils/cache';
 
-/** Redis caching initialization */
-const nextIdCache = new BaseRedisCache({
-  client: new Redis(config.get('redis.url'), {
-    password: config.get('redis.password'),
-    showFriendlyErrorStack: true,
-    lazyConnect: true,
-    maxRetriesPerRequest: 5,
-  }),
-});
+/** Redis caching initialization (shared base cache) */
+const nextIdCache = getBaseCache();
 
 /** Default start padding size for the IDs */
 const PADDING_MAX_LENGTH = 8;

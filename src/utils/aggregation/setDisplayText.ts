@@ -16,38 +16,55 @@ const setDisplayText = async (
   resource: Resource,
   context: any
 ): Promise<void> => {
-  // Reducer to fetch fields with choices
-  const reducer = async (acc, x) => {
-    let lookAt = resource.fields;
-    let lookFor = x.value;
-    const [questionResource, question] = x.value.split('.');
-
-    // in case it's a resource.s type question, search for the related resource
-    if (questionResource && question) {
-      const formResource = resource.fields.find(
-        (field: any) =>
-          questionResource === field.name &&
-          ['resource', 'resources'].includes(field.type)
-      );
-      if (formResource) {
-        lookAt = (await Resource.findById(formResource.resource)).fields;
-        lookFor = question;
-      }
+  // Cache resolved related Resource documents within this call to avoid
+  // repeated lookups when several mapped fields reference the same resource.
+  const resourceCache = new Map<string, Resource>();
+  const getRelatedResource = async (id: any): Promise<Resource> => {
+    const key = String(id);
+    if (resourceCache.has(key)) {
+      return resourceCache.get(key);
     }
-    // then, search for related field
-    const formField = lookAt.find((field: any) => {
-      return (
-        lookFor === field.name &&
-        (field.choices || field.choicesByUrl || field.choicesByGraphQL)
-      );
-    });
-    if (formField) {
-      return { ...(await acc), [x.key]: formField };
-    } else {
-      return { ...(await acc) };
-    }
+    const doc = await Resource.findById(id);
+    resourceCache.set(key, doc);
+    return doc;
   };
-  const fieldWithChoices = await mappedFields.reduce(reducer, {});
+
+  // Resolve fields with choices in parallel
+  const resolved = await Promise.all(
+    mappedFields.map(async (x) => {
+      let lookAt = resource.fields;
+      let lookFor = x.value;
+      const [questionResource, question] = x.value.split('.');
+
+      // in case it's a resource.s type question, search for the related resource
+      if (questionResource && question) {
+        const formResource = resource.fields.find(
+          (field: any) =>
+            questionResource === field.name &&
+            ['resource', 'resources'].includes(field.type)
+        );
+        if (formResource) {
+          const related = await getRelatedResource(formResource.resource);
+          lookAt = related?.fields ?? [];
+          lookFor = question;
+        }
+      }
+      // then, search for related field
+      const formField = lookAt.find((field: any) => {
+        return (
+          lookFor === field.name &&
+          (field.choices || field.choicesByUrl || field.choicesByGraphQL)
+        );
+      });
+      return formField ? { key: x.key, field: formField } : null;
+    })
+  );
+  const fieldWithChoices: Record<string, any> = {};
+  for (const entry of resolved) {
+    if (entry) {
+      fieldWithChoices[entry.key] = entry.field;
+    }
+  }
   for (const [key, field] of Object.entries(fieldWithChoices)) {
     // Fetch choices from source ( static / rest / graphql )
     const choices = await getFullChoices(field, context);
