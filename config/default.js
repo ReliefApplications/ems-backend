@@ -40,6 +40,12 @@ module.exports = {
     serverless: {
       url: '',
       key: '',
+      auth: {
+        accessTokenUrl: '',
+        clientId: '',
+        clientSecret: '',
+        csScope: '',
+      },
     },
   },
   database: {

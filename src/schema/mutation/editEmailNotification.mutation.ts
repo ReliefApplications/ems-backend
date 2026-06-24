@@ -13,6 +13,11 @@ import extendAbilityForApplications from '@security/extendAbilityForApplication'
 import { AppAbility } from '@security/defineUserAbility';
 import { EmailNotificationReturn } from '@schema/types/emailNotification.type';
 import { cloneDeep } from 'lodash';
+import {
+  createCronJob,
+  deleteCronJob,
+} from '@server/emailNotificationScheduler';
+import { isValidCron } from 'cron-validator';
 
 /**
  * Interface for the arguments required to update a custom notification.
@@ -125,11 +130,36 @@ export default {
           );
         }
 
+        const schedule = args.notification.schedule;
+        if (schedule?.scheduleEnabled) {
+          const cron = schedule.cronValue?.trim?.() ?? '';
+          if (!cron || !isValidCron(cron)) {
+            throw new GraphQLError(
+              context.i18next.t(
+                'mutations.emailNotification.add.errors.invalidCron'
+              )
+            );
+          }
+        }
         const updatedData = await EmailNotification.findByIdAndUpdate(
           args.id,
           { $set: updateFields },
           { new: true } // Return the modified document
         );
+        // Schedule/unschedule based on updated document
+        if (updatedData) {
+          if (
+            updatedData.isDeleted === 1 ||
+            !updatedData.schedule?.scheduleEnabled ||
+            !updatedData.schedule?.cronValue
+          ) {
+            deleteCronJob(args.id);
+            logger.info(`Removed cron job for ${args.id}`);
+          } else {
+            createCronJob(updatedData);
+            logger.info(`Scheduled/Updated cron job for ${args.id}`);
+          }
+        }
         const response = updatedData as EmailNotificationReturn;
         response.userSubscribed = userIsSubscribed;
         return response;

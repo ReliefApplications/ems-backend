@@ -1,4 +1,7 @@
-import { EmailNotificationAttachment } from '@models';
+import {
+  EmailNotificationAttachment,
+  EmailNotificationSchedule,
+} from '@models';
 import {
   GraphQLInputObjectType,
   GraphQLString,
@@ -14,7 +17,7 @@ import { Types } from 'mongoose';
 /** Custom Notification type for queries/mutations argument */
 export type EmailNotificationArgs = {
   name: string;
-  schedule: string;
+  schedule: EmailNotificationSchedule;
   notificationType: string;
   applicationId: string | Types.ObjectId;
   datasets: any[];
@@ -98,6 +101,18 @@ export const EmailNotificationFileInputType = new GraphQLInputObjectType({
 });
 
 /**
+ * Schedule type - used to define the schedule applied to an email notification
+ */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const EmailNotificationScheduleInputType = new GraphQLInputObjectType({
+  name: 'EmailNotificationScheduleInputType',
+  fields: () => ({
+    scheduleEnabled: { type: GraphQLBoolean },
+    cronValue: { type: GraphQLString },
+  }),
+});
+
+/**
  * Input type for email notification attachment details.
  */
 export const EmailNotificationAttachmentInputType = new GraphQLInputObjectType({
@@ -114,7 +129,7 @@ export const EmailNotificationInputType = new GraphQLInputObjectType({
   name: 'EmailNotificationInputType',
   fields: () => ({
     name: { type: GraphQLString },
-    schedule: { type: GraphQLString },
+    schedule: { type: EmailNotificationScheduleInputType },
     applicationId: { type: new GraphQLNonNull(GraphQLID) },
     notificationType: { type: GraphQLString },
     datasets: { type: new GraphQLList(DatasetInputType) },

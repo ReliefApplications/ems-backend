@@ -138,6 +138,13 @@
 				"emailDistributionListNameExist": "******"
 			}
 		},
+		"emailNotification": {
+			"add": {
+				"errors": {
+					"invalidCron": "******"
+				}
+			}
+		},
 		"form": {
 			"add": {
 				"errors": {
