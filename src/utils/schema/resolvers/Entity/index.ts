@@ -15,6 +15,44 @@ import { subject } from '@casl/ability';
 import { SortOrder } from 'mongoose';
 
 /**
+ * Safely converts an object or array to its string representation.
+ *
+ * @param value The value to convert.
+ * @returns The string representation.
+ */
+export const getStringValue = (value: any): string => {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  if (typeof value === 'object') {
+    if (Array.isArray(value)) {
+      return value.map(getStringValue).filter(Boolean).join(', ');
+    }
+    if (value.hasOwnProperty('aggregate_count')) {
+      return String(value.aggregate_count);
+    }
+    if (value.hasOwnProperty('name')) {
+      return String(value.name);
+    }
+    if (value.hasOwnProperty('text')) {
+      return String(value.text);
+    }
+    if (value.hasOwnProperty('label')) {
+      return String(value.label);
+    }
+    if (value.hasOwnProperty('value')) {
+      return String(value.value);
+    }
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
+  return String(value);
+};
+
+/**
  * Gets the resolvers for each field of the document for a given resource
  *
  * @param name Name of the resource
@@ -162,7 +200,10 @@ export const getEntityResolver = (
                 return getDisplayText(formField, value, context);
               }
             }
-            return field.type === 'String' ? value.toString() : value;
+            const typeStr = field.type?.toString() || '';
+            const isStringy =
+              typeStr.startsWith('String') || typeStr.startsWith('ID');
+            return isStringy ? getStringValue(value) : value;
           },
         }),
       {}
@@ -242,7 +283,12 @@ export const getEntityResolver = (
         resolvers,
         Object.fromEntries(
           getReversedFields(data[entityName], id)
-            .filter((x) => !mappedRelatedFields.includes(x.relatedName))
+            .filter(
+              (x) =>
+                x.relatedName !== 'id' &&
+                !defaultRecordFieldsFlat.includes(x.relatedName) &&
+                !mappedRelatedFields.includes(x.relatedName)
+            )
             .map((x) => {
               mappedRelatedFields.push(x.relatedName);
               return [

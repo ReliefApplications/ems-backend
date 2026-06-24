@@ -138,6 +138,7 @@ export const getSchema = (
             first: { type: GraphQLInt },
             afterCursor: { type: GraphQLID },
             skip: { type: GraphQLInt },
+            archived: { type: GraphQLBoolean },
             sortField: { type: GraphQLString },
             sortOrder: { type: GraphQLString },
             filter: { type: GraphQLJSON },
@@ -209,6 +210,15 @@ export const getSchema = (
           )
       );
       if (structureField) {
+        const glField = structureField.name;
+        const canExtendField = glField !== 'id';
+        if (!canExtendField) {
+          logger.warn(
+            `Skipping relation extension for field "${
+              structureField.name
+            }" on "${x.toString()}" because "id" is a reserved system field.`
+          );
+        }
         if (!field.name.endsWith(NameExtension.referenceData)) {
           const glRelatedType = getRelatedType(
             field.name,
@@ -216,20 +226,29 @@ export const getSchema = (
             namesById
           );
           const glRelatedMetaType = getGraphQLMetaTypeName(glRelatedType);
-          const glField = structureField.name;
           const glRelatedField = structureField.relatedName;
+          const canExtendRelated = glRelatedField && glRelatedField !== 'id';
+          if (glRelatedField === 'id') {
+            logger.warn(
+              `Skipping relation extension for related field "${glRelatedField}" from "${x.toString()}" because "id" is a reserved system field.`
+            );
+          }
           // const glFieldFilterType = getGraphQLFilterTypeName(glRelatedType);
-          if (glRelatedField && glRelatedType) {
+          if (glRelatedType) {
             const key = `${glRelatedField}.${glField}`;
-            if (field.type === GraphQLID) {
-              o += `extend type ${x} { ${glField}: ${glRelatedType} }`;
-            } else {
-              o += `extend type ${x} { ${glField}(filter: JSON, sortField: String, sortOrder: String, first: Int): [${glRelatedType}] }`;
+            if (canExtendField) {
+              if (field.type === GraphQLID) {
+                o += `extend type ${x} { ${glField}: ${glRelatedType} }`;
+              } else {
+                o += `extend type ${x} { ${glField}(filter: JSON, sortField: String, sortOrder: String, first: Int): [${glRelatedType}] }`;
+              }
+              o += `extend type ${metaName} { ${glField}: ${glRelatedMetaType} }`;
             }
-            o += `extend type ${metaName} { ${glField}: ${glRelatedMetaType} }`;
-            if (!extendedFields.includes(key)) {
-              o += `extend type ${glRelatedType} { ${glRelatedField}(filter: JSON, sortField: String, sortOrder: String, first: Int): [${x}] }
+            if (canExtendRelated) {
+              if (!extendedFields.includes(key)) {
+                o += `extend type ${glRelatedType} { ${glRelatedField}(filter: JSON, sortField: String, sortOrder: String, first: Int): [${x}] }
                             extend type ${glRelatedMetaType} { ${glRelatedField}: ${metaName} }`;
+              }
             }
             extendedFields.push(key);
           } else {
@@ -243,8 +262,7 @@ export const getSchema = (
           const glRelatedType =
             refDataNamesById[structureField.referenceData.id];
           const glRelatedMetaType = getGraphQLMetaTypeName(glRelatedType);
-          const glField = structureField.name;
-          if (glRelatedType) {
+          if (glRelatedType && canExtendField) {
             if (field.type === GraphQLID) {
               o += `extend type ${x} { ${glField}: ${glRelatedType} }`;
             } else {

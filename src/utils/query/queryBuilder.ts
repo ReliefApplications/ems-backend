@@ -32,33 +32,40 @@ const buildFields = (fields: any[], withId = true): any => {
   const defaultField: string[] = withId ? ['id\n'] : [];
   return defaultField.concat(
     fields.map((x) => {
-      switch (x.kind) {
+      const kind = x.kind || x.type?.kind;
+      const typeName =
+        typeof x.type === 'string'
+          ? x.type
+          : x.type?.name || x.type?.ofType?.name || '';
+      const isRefData = typeName.endsWith(REFERENCE_DATA_END);
+      const subFields = x.fields || x.type?.fields;
+      switch (kind) {
         case 'SCALAR': {
           return x.name + '\n';
         }
         case 'LIST': {
-          if (x.type.endsWith(REFERENCE_DATA_END)) {
+          if (isRefData) {
             return (
               `${x.name} {
-              ${buildFields(x.fields, false)}
+              ${buildFields(subFields, false)}
             }` + '\n'
             );
           }
           return (
             `${x.name} (
-            sortField: ${x.sort.field ? `"${x.sort.field}"` : null},
-            sortOrder: "${x.sort.order}",
-            first: ${get(x, 'first', null)}
-            filter: ${filterToString(x.filter)},
+            sortField: ${x.sort?.field ? `"${x.sort.field}"` : null},
+            sortOrder: "${x.sort?.order || 'asc'}",
+            first: ${get(x, 'first', null)},
+            filter: ${x.filter ? filterToString(x.filter) : null}
           ) {
-            ${['canUpdate\ncanDelete\n'].concat(buildFields(x.fields))}
+            ${['canUpdate\ncanDelete\n'].concat(buildFields(subFields))}
           }` + '\n'
           );
         }
         case 'OBJECT': {
           return (
             `${x.name} {
-            ${buildFields(x.fields, !x.type.endsWith(REFERENCE_DATA_END))}
+            ${buildFields(subFields, !isRefData)}
           }` + '\n'
           );
         }
@@ -82,21 +89,23 @@ const buildMetaFields = (fields: any[]): any => {
   }
   return [''].concat(
     fields.map((x) => {
-      switch (x.kind) {
+      const kind = x.kind || x.type?.kind;
+      const subFields = x.fields || x.type?.fields;
+      switch (kind) {
         case 'SCALAR': {
           return x.name + '\n';
         }
         case 'LIST': {
           return (
             `${x.name} {
-          ${x.fields && x.fields.length > 0 ? buildMetaFields(x.fields) : ''}
+          ${subFields && subFields.length > 0 ? buildMetaFields(subFields) : ''}
         }` + '\n'
           );
         }
         case 'OBJECT': {
           return (
             `${x.name} {
-          ${x.fields && x.fields.length > 0 ? buildMetaFields(x.fields) : ''}
+          ${subFields && subFields.length > 0 ? buildMetaFields(subFields) : ''}
         }` + '\n'
           );
         }

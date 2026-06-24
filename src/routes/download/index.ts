@@ -313,9 +313,10 @@ router.get('/resource/records/:id', async (req, res) => {
       } else {
         let records = [];
         if (ability.can('read', 'Record')) {
+          const archived = req.query.archived === 'true';
           records = await Record.find({
             resource: req.params.id,
-            archived: { $ne: true },
+            ...(archived ? { archived: true } : { archived: { $ne: true } }),
           });
         }
         const rows = await getRows(columns, records);

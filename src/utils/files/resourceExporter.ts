@@ -39,6 +39,7 @@ interface ExportBatchParams {
   timeZone: string;
   fileName?: string;
   limit?: number;
+  skip?: number;
 }
 
 /**
@@ -259,7 +260,15 @@ export default class Exporter {
             }
           }
         })
-        .catch((err) => reject(err));
+        .catch((err) => {
+          logger.error('axios getColumns error:', {
+            message: err.message,
+            response: err.response?.data,
+            query: metaQuery,
+            headers: this.axiosHeaders(),
+          });
+          reject(err);
+        });
     });
   };
 
@@ -420,9 +429,12 @@ export default class Exporter {
   private recordsPipeline = async () => {
     const context = this.req.context;
     // Add the basic records filter
+    const isArchived =
+      this.params.query?.archived === true ||
+      this.params.query?.archived === 'true';
     const basicFilters = {
       resource: this.resource._id,
-      archived: { $not: { $eq: true } },
+      ...(isArchived ? { archived: true } : { archived: { $ne: true } }),
     };
     const permissionFilters = Record.find(
       accessibleBy(context.user.ability, 'read').Record
@@ -444,8 +456,11 @@ export default class Exporter {
     const pipeline: any = [
       ...(searchFilter ? [searchFilter] : []),
       { $match: filters },
-      { $limit: this.params.limit || Number.MAX_SAFE_INTEGER },
     ];
+    if (typeof this.params.skip === 'number' && this.params.skip > 0) {
+      pipeline.push({ $skip: this.params.skip });
+    }
+    pipeline.push({ $limit: this.params.limit || Number.MAX_SAFE_INTEGER });
     const calculatedFieldService = new CalculatedFieldService(
       this.resource,
       this.req.context,
@@ -504,6 +519,9 @@ export default class Exporter {
         ...(ids ? { resource: 1 } : {}), //add the resource for subcolumns
       },
     };
+    const isArchived =
+      this.params.query?.archived === true ||
+      this.params.query?.archived === 'true';
     const pipeline: any = [
       {
         $match: {
@@ -513,7 +531,7 @@ export default class Exporter {
                 $in: ids,
               },
             },
-            { archived: { $ne: true } },
+            isArchived ? { archived: true } : { archived: { $ne: true } },
             permissionFilters,
             ...(extraMatch && Object.keys(extraMatch).length > 0
               ? [extraMatch]

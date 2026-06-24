@@ -3,7 +3,7 @@ import { ApiConfiguration, ReferenceData } from '@models';
 import { CustomAPI } from '../../../server/apollo/dataSources';
 import { SchemaStructure } from '../getStructures';
 import { getMetaTypeFromKey } from '../introspection/getTypeFromKey';
-import { getEntityResolver } from './Entity';
+import { getEntityResolver, getStringValue } from './Entity';
 import Meta from './Meta';
 import all from './Query/all';
 import meta from './Query/meta';
@@ -51,6 +51,21 @@ export const getResolvers = (
     obj[x.name] = x._id;
     return obj;
   }, {});
+
+  const referenceDataFieldResolvers = referenceDatas.reduce(
+    (resolvers: any, refData) => {
+      const fieldResolvers = refData.fields.reduce((o: any, field) => {
+        o[field.graphQLFieldName] = (parent) => {
+          const value = parent[field.graphQLFieldName];
+          return getStringValue(value);
+        };
+        return o;
+      }, {});
+      resolvers[refData.name] = fieldResolvers;
+      return resolvers;
+    },
+    {}
+  );
 
   return Object.assign(
     {},
@@ -109,6 +124,7 @@ export const getResolvers = (
           referenceDatas
         ),
       });
-    }, {})
+    }, {}),
+    referenceDataFieldResolvers
   );
 };

@@ -13,6 +13,7 @@ import { Connection } from './pagination.type';
 import getDisplayText from '@utils/form/getDisplayText';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { accessibleBy } from '@casl/mongoose';
+import { CalculatedFieldService } from '@services/calculatedField.service';
 
 /** GraphQL Record type definition */
 export const RecordType = new GraphQLObjectType({
@@ -54,16 +55,43 @@ export const RecordType = new GraphQLObjectType({
             ? await Resource.findById(parent.resource)
             : await Form.findById(parent.form);
           if (source) {
+            let recordData = parent.data || {};
+            const calculatedFields = source.fields.filter(
+              (x: any) => x.isCalculated
+            );
+            if (calculatedFields.length > 0) {
+              const calculatedFieldService = new CalculatedFieldService(
+                source as any,
+                context,
+                context.timeZone || 'UTC',
+                context.user?.attributes || {}
+              );
+              const calculatedFieldsAggregation = [];
+              for (const f of calculatedFields) {
+                calculatedFieldsAggregation.push(
+                  ...(await calculatedFieldService.build(f.expression, f.name))
+                );
+              }
+              const aggregationResult = await Record.aggregate([
+                { $match: { _id: parent._id } },
+                ...calculatedFieldsAggregation,
+              ]);
+              if (aggregationResult && aggregationResult[0]) {
+                recordData = aggregationResult[0].data || {};
+              }
+            }
+
             const res = {};
             for (const field of source.fields) {
               const name = field.name;
-              if (parent.data[name]) {
-                res[name] = parent.data[name];
+              const val = recordData[name];
+              if (val !== undefined && val !== null) {
+                res[name] = val;
                 // Get the display field from the linked record if any
                 if (field.resource && field.displayField) {
                   try {
                     const record = await Record.findOne({
-                      _id: parent.data[name],
+                      _id: val,
                       archived: { $ne: true },
                     });
                     res[name] = record.data[field.displayField];
@@ -77,11 +105,7 @@ export const RecordType = new GraphQLObjectType({
                   field.choicesByUrl ||
                   field.choicesByGraphQL
                 ) {
-                  res[name] = await getDisplayText(
-                    field,
-                    parent.data[name],
-                    context
-                  );
+                  res[name] = await getDisplayText(field, val, context);
                 }
               } else {
                 res[name] = null;
