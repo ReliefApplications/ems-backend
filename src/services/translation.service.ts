@@ -1,4 +1,5 @@
 import axios from 'axios';
+import config from 'config';
 import { logger } from '@services/logger.service';
 
 /**
@@ -7,9 +8,9 @@ import { logger } from '@services/logger.service';
 class TranslationService {
   private readonly endpoint = 'https://api.cognitive.microsofttranslator.com';
 
-  private readonly apiKey = process.env.AZURE_TRANSLATOR_KEY;
+  private readonly apiKey = config.get<string>('azureTranslator.key');
 
-  private readonly region = process.env.AZURE_TRANSLATOR_REGION;
+  private readonly region = config.get<string>('azureTranslator.region');
 
   /**
    * Translate text using Azure Cognitive Translator v3.
@@ -30,7 +31,7 @@ class TranslationService {
     }
 
     if (!this.apiKey) {
-      if (process.env.NODE_ENV === 'production') {
+      if (config.util.getEnv('NODE_ENV') === 'production') {
         throw new Error('Azure Translator key is not configured');
       }
       logger.warn(
