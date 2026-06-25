@@ -10,7 +10,7 @@ import { TranslationService } from '../../services/translation.service';
  */
 export default class TranslationController extends BaseController {
   /** Controller base path */
-  public basePath = 'translation';
+  public basePath = 'translate';
 
   /** Translation service instance */
   private translationService = new TranslationService();
