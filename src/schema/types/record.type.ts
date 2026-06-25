@@ -47,10 +47,9 @@ export const RecordType = new GraphQLObjectType({
       type: GraphQLJSON,
       args: {
         display: { type: GraphQLBoolean },
-        lang: { type: GraphQLString },
       },
       async resolve(parent, args, context) {
-        let lang = args.lang || context.locale;
+        let lang = context.locale;
         if (lang) {
           lang = lang.toLowerCase();
         }
@@ -58,12 +57,13 @@ export const RecordType = new GraphQLObjectType({
         const source =
           args.display || lang
             ? parent.resource
-              ? await Resource.findById(parent.resource)
-              : await Form.findById(parent.form)
+              ? await Resource.findById(parent.resource).select('fields')
+              : await Form.findById(parent.form).select('fields')
             : null;
 
         const data = parent.data ? { ...parent.data } : {};
 
+        // Replace fields with translated versions when available
         if (lang && source && source.fields) {
           for (const field of source.fields) {
             if (field.translateField && field.translateTo) {

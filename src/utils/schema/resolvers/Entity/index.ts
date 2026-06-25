@@ -146,6 +146,7 @@ export const getEntityResolver = (
 
             let value = null;
             if (context.locale && data[name]) {
+              // When possible, pick the translated version
               const siblingField = data[name].find(
                 (f: any) =>
                   f.translateField === path &&
