@@ -174,11 +174,11 @@ export default {
           update,
           ownership && { createdBy: { ...oldRecord.createdBy, ...ownership } }
         );
-        const updatedRecord = await Record.findByIdAndUpdate(args.id, update, {
+        const record = await Record.findByIdAndUpdate(args.id, update, {
           new: true,
         });
         await version.save();
-        return updatedRecord;
+        return record;
       } else {
         // Revert an old version
         const oldVersion = await Version.findOne({
