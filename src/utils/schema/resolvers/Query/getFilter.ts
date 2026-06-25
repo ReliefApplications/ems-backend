@@ -101,7 +101,7 @@ const buildMongoFilter = (
     if (filter.field) {
       // Locale-based translation: replace the field with its sibling
       // translation field when one matches the user's locale.
-      let targetField = getTranslatedFieldName(
+      const targetField = getTranslatedFieldName(
         filter.field,
         fields,
         context?.locale
