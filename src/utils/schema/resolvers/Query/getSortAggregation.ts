@@ -2,6 +2,7 @@ import { MULTISELECT_TYPES } from '@const/fieldTypes';
 import { getFullChoices } from '../../../form';
 import getSortField from './getSortField';
 import getSortOrder from './getSortOrder';
+import getTranslatedFieldName from './getTranslatedFieldName';
 
 /**
  * Builds sort aggregation.
@@ -16,19 +17,11 @@ const getSortAggregation = async (
   sortField: string,
   sortOrder: string,
   fields: any[],
-  context
+  context: any
 ): Promise<any[]> => {
-  if (context?.locale && fields) {
-    const siblingField = fields.find(
-      (f: any) =>
-        f.translateField === sortField &&
-        f.translateTo &&
-        f.translateTo.toLowerCase() === context.locale.toLowerCase()
-    );
-    if (siblingField) {
-      sortField = siblingField.name;
-    }
-  }
+  // Locale-based translation: replace the sort field with its sibling
+  // translation field when one matches the user's locale.
+  sortField = getTranslatedFieldName(sortField, fields, context?.locale);
 
   const field: any = fields.find((x) => x && x.name === sortField);
   const parentField: any =

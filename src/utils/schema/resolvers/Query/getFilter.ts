@@ -9,6 +9,7 @@ import {
 import { isNumber } from 'lodash';
 import { isUsingTodayPlaceholder } from '@const/placeholders';
 import { filterOperator } from '../../../../types';
+import getTranslatedFieldName from './getTranslatedFieldName';
 
 /** The default fields */
 const DEFAULT_FIELDS = [
@@ -98,18 +99,13 @@ const buildMongoFilter = (
     }
   } else {
     if (filter.field) {
-      let targetField = filter.field;
-      if (context?.locale && fields) {
-        const siblingField = fields.find(
-          (f: any) =>
-            f.translateField === targetField &&
-            f.translateTo &&
-            f.translateTo.toLowerCase() === context.locale.toLowerCase()
-        );
-        if (siblingField) {
-          targetField = siblingField.name;
-        }
-      }
+      // Locale-based translation: replace the field with its sibling
+      // translation field when one matches the user's locale.
+      let targetField = getTranslatedFieldName(
+        filter.field,
+        fields,
+        context?.locale
+      );
 
       // Get field name from filter field
       let fieldName = FLAT_DEFAULT_FIELDS.includes(targetField)
