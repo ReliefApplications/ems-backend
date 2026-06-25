@@ -1,3 +1,10 @@
+# [2.17.0-rc.3](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.2...v2.17.0-rc.3) (2026-06-25)
+
+
+### Features
+
+* Auto translated text fields in forms ([46be48f](https://github.com/ReliefApplications/ems-backend/commit/46be48fbbe4e56c51af36d6ba738430dab0a00a0)), closes [Ab#134348](https://github.com/Ab/issues/134348)
+
 # [2.17.0-rc.2](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.1...v2.17.0-rc.2) (2026-06-22)
 
 
