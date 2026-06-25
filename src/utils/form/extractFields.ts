@@ -230,9 +230,9 @@ export const extractFields = async (object, fields, core): Promise<void> => {
           Object.assign(field, { applications: element.applications });
         }
         // ** Translation binding **
-        if (element.translateFrom) {
+        if (element.translateField) {
           Object.assign(field, {
-            translateFrom: element.translateFrom,
+            translateField: element.translateField,
             translateTo: element.translateTo || null,
             ...(element.translateIf && { translateIf: element.translateIf }),
           });

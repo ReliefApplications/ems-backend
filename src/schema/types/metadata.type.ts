@@ -31,7 +31,7 @@ export const FieldMetaDataType = new GraphQLObjectType({
     filter: { type: GraphQLJSON },
     filterable: { type: GraphQLBoolean },
     multiSelect: { type: GraphQLBoolean },
-    translateFrom: { type: GraphQLString },
+    translateField: { type: GraphQLString },
     translateTo: { type: GraphQLString },
     canSee: {
       type: GraphQLBoolean,

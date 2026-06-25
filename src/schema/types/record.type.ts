@@ -66,11 +66,11 @@ export const RecordType = new GraphQLObjectType({
 
         if (lang && source && source.fields) {
           for (const field of source.fields) {
-            if (field.translateFrom && field.translateTo) {
+            if (field.translateField && field.translateTo) {
               const targetLang = field.translateTo.toLowerCase();
               if (targetLang === lang) {
                 const targetField = field.name;
-                const sourceField = field.translateFrom;
+                const sourceField = field.translateField;
                 if (
                   data[targetField] !== undefined &&
                   data[targetField] !== null &&

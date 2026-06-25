@@ -148,7 +148,7 @@ export const getEntityResolver = (
             if (context.locale && data[name]) {
               const siblingField = data[name].find(
                 (f: any) =>
-                  f.translateFrom === path &&
+                  f.translateField === path &&
                   f.translateTo &&
                   f.translateTo.toLowerCase() === context.locale.toLowerCase()
               );

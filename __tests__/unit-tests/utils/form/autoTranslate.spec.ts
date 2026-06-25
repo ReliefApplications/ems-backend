@@ -46,7 +46,7 @@ describe('autoTranslateRecord', () => {
     const mockForm = {
       _id: 'form123',
       fields: [
-        { name: 'symptom_uk', translateFrom: 'symptom', translateTo: 'uk' },
+        { name: 'symptom_uk', translateField: 'symptom', translateTo: 'uk' },
       ],
     };
 
@@ -88,7 +88,7 @@ describe('autoTranslateRecord', () => {
           {
             type: 'text',
             name: 'symptom_uk',
-            translateFrom: 'symptom',
+            translateField: 'symptom',
             translateTo: 'uk',
             translateIf: '{consent} = true',
           },
@@ -97,7 +97,7 @@ describe('autoTranslateRecord', () => {
       fields: [
         {
           name: 'symptom_uk',
-          translateFrom: 'symptom',
+          translateField: 'symptom',
           translateTo: 'uk',
           translateIf: '{consent} = true',
         },
@@ -126,7 +126,7 @@ describe('autoTranslateRecord', () => {
     const mockForm = {
       _id: 'form123',
       fields: [
-        { name: 'symptom_uk', translateFrom: 'symptom', translateTo: 'uk' },
+        { name: 'symptom_uk', translateField: 'symptom', translateTo: 'uk' },
       ],
     };
 
@@ -154,7 +154,7 @@ describe('autoTranslateRecord', () => {
         {
           name: 'symptom_uk',
           type: 'editor',
-          translateFrom: 'symptom',
+          translateField: 'symptom',
           translateTo: 'uk',
         },
       ],

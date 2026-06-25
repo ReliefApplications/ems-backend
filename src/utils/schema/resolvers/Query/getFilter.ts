@@ -102,7 +102,7 @@ const buildMongoFilter = (
       if (context?.locale && fields) {
         const siblingField = fields.find(
           (f: any) =>
-            f.translateFrom === targetField &&
+            f.translateField === targetField &&
             f.translateTo &&
             f.translateTo.toLowerCase() === context.locale.toLowerCase()
         );

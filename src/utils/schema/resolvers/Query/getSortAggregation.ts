@@ -21,7 +21,7 @@ const getSortAggregation = async (
   if (context?.locale && fields) {
     const siblingField = fields.find(
       (f: any) =>
-        f.translateFrom === sortField &&
+        f.translateField === sortField &&
         f.translateTo &&
         f.translateTo.toLowerCase() === context.locale.toLowerCase()
     );

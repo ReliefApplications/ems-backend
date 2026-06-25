@@ -40,8 +40,8 @@ export const autoTranslateRecord = async (
       }
     }
 
-    // Find all fields that have translateFrom configured
-    const translationFields = fields.filter((f: any) => f.translateFrom);
+    // Find all fields that have translateField configured
+    const translationFields = fields.filter((f: any) => f.translateField);
 
     if (translationFields.length === 0) {
       return;
@@ -52,7 +52,7 @@ export const autoTranslateRecord = async (
 
     for (const field of translationFields) {
       const targetField = field.name;
-      const sourceField = field.translateFrom;
+      const sourceField = field.translateField;
       const targetLang = field.translateTo;
 
       if (!targetLang) {
