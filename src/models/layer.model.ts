@@ -7,7 +7,7 @@ import { addOnBeforeDeleteOne } from '@utils/models/deletion';
  */
 export interface PopupElementText {
   type: 'text';
-  text?: string;
+  text?: string | Record<string, string>;
 }
 
 /**

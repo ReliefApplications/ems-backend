@@ -154,7 +154,7 @@ const LayerPopupElement = new GraphQLObjectType({
     type: { type: new GraphQLNonNull(GraphQLString) },
     title: { type: GraphQLJSON },
     description: { type: GraphQLJSON },
-    text: { type: GraphQLString },
+    text: { type: GraphQLJSON },
     fields: {
       type: new GraphQLList(GraphQLString),
       resolve: (parent) => parent.fields ?? [],
