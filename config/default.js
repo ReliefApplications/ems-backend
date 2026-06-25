@@ -67,6 +67,10 @@ module.exports = {
   blobStorage: {
     connectionString: '',
   },
+  azureTranslator: {
+    key: '',
+    region: '',
+  },
   rabbitMQ: {
     application: '',
     user: '',

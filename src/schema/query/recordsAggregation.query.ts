@@ -13,6 +13,7 @@ import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import buildPipeline from '@utils/aggregation/buildPipeline';
 import buildReferenceDataAggregation from '@utils/aggregation/buildReferenceDataAggregation';
 import setDisplayText from '@utils/aggregation/setDisplayText';
+import getTranslatedFieldName from '@utils/schema/resolvers/Query/getTranslatedFieldName';
 import { UserType } from '../types';
 import {
   defaultRecordFields,
@@ -512,15 +513,23 @@ export default {
         }
         pipeline.push({
           $project: {
-            ...(sourceFields as any[]).reduce(
-              (o, field) =>
-                Object.assign(o, {
-                  [field]: selectableDefaultRecordFieldsFlat.includes(field)
-                    ? 1
-                    : `$data.${field}`,
-                }),
-              {}
-            ),
+            ...(sourceFields as any[]).reduce((o, field) => {
+              if (selectableDefaultRecordFieldsFlat.includes(field)) {
+                return Object.assign(o, { [field]: 1 });
+              }
+              // Locale-based translation: read from the sibling translation
+              // field when one matches the user's locale, while keeping the
+              // original field name as the output key so downstream stages
+              // (group, sort, mapping) keep working unchanged.
+              const translatedField = getTranslatedFieldName(
+                field,
+                resource.fields,
+                context?.locale
+              );
+              return Object.assign(o, {
+                [field]: `$data.${translatedField}`,
+              });
+            }, {}),
           },
         });
       } else {

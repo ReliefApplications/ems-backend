@@ -49,21 +49,53 @@ export const RecordType = new GraphQLObjectType({
         display: { type: GraphQLBoolean },
       },
       async resolve(parent, args, context) {
+        let lang = context.locale;
+        if (lang) {
+          lang = lang.toLowerCase();
+        }
+
+        const source =
+          args.display || lang
+            ? parent.resource
+              ? await Resource.findById(parent.resource).select('fields')
+              : await Form.findById(parent.form).select('fields')
+            : null;
+
+        const data = parent.data ? { ...parent.data } : {};
+
+        // Replace fields with translated versions when available
+        if (lang && source && source.fields) {
+          for (const field of source.fields) {
+            if (field.translateField && field.translateTo) {
+              const targetLang = field.translateTo.toLowerCase();
+              if (targetLang === lang) {
+                const targetField = field.name;
+                const sourceField = field.translateField;
+                if (
+                  data[targetField] !== undefined &&
+                  data[targetField] !== null &&
+                  data[targetField] !== ''
+                ) {
+                  data[sourceField] = data[targetField];
+                }
+                delete data[targetField];
+              }
+            }
+          }
+        }
+
         if (args.display) {
-          const source = parent.resource
-            ? await Resource.findById(parent.resource)
-            : await Form.findById(parent.form);
           if (source) {
             const res = {};
             for (const field of source.fields) {
               const name = field.name;
-              if (parent.data[name]) {
-                res[name] = parent.data[name];
+              if (data[name] !== undefined && data[name] !== null) {
+                res[name] = data[name];
                 // Get the display field from the linked record if any
                 if (field.resource && field.displayField) {
                   try {
                     const record = await Record.findOne({
-                      _id: parent.data[name],
+                      _id: data[name],
                       archived: { $ne: true },
                     });
                     res[name] = record.data[field.displayField];
@@ -77,11 +109,7 @@ export const RecordType = new GraphQLObjectType({
                   field.choicesByUrl ||
                   field.choicesByGraphQL
                 ) {
-                  res[name] = await getDisplayText(
-                    field,
-                    parent.data[name],
-                    context
-                  );
+                  res[name] = await getDisplayText(field, data[name], context);
                 }
               } else {
                 res[name] = null;
@@ -90,7 +118,7 @@ export const RecordType = new GraphQLObjectType({
             return res;
           }
         }
-        return parent.data;
+        return data;
       },
     },
     versions: {

@@ -213,7 +213,9 @@ export default {
         update.structure = args.structure;
         const structure = JSON.parse(args.structure);
         const fields = [];
-        for (const page of structure.pages) {
+        const pages =
+          structure && Array.isArray(structure.pages) ? structure.pages : [];
+        for (const page of pages) {
           await extractFields(page, fields, form.core);
           findDuplicateFields(fields);
           for (const field of fields.filter((x) =>
