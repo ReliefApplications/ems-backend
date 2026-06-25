@@ -2,3 +2,5 @@ node_modules
 src/migrations/template.ts
 logs
 __tests__/old
+**/*.spec.ts
+**/*.test.ts
