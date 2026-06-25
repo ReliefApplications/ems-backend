@@ -12,6 +12,7 @@ export interface Context {
   accesstoken?: string;
   i18next: any;
   timeZone: string;
+  locale?: string;
 }
 
 /** User interface with specified AppAbility */
