@@ -14,7 +14,6 @@ import {
   checkRecordValidation,
   checkRecordTriggers,
   hasInaccessibleFields,
-  autoTranslateRecord,
 } from '@utils/form';
 import { RecordType } from '../types';
 import { Types } from 'mongoose';
@@ -179,9 +178,6 @@ export default {
           new: true,
         });
         await version.save();
-        if (updatedRecord) {
-          autoTranslateRecord(updatedRecord._id, Object.keys(args.data || {}));
-        }
         return updatedRecord;
       } else {
         // Revert an old version

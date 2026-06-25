@@ -6,7 +6,6 @@ import {
   transformRecord,
   getOwnership,
   getNextId,
-  autoTranslateRecord,
 } from '@utils/form';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import pubsub from '../../server/pubsub';
@@ -135,7 +134,6 @@ export default {
         publisher.publish(channel.id, { notification });
       }
       await record.save();
-      autoTranslateRecord(record._id, Object.keys(args.data));
       return record;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
