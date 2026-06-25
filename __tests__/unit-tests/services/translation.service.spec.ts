@@ -1,5 +1,6 @@
 import axios from 'axios';
-import TranslationService from '@services/translation.service';
+import config from 'config';
+import { TranslationService } from '@services/translation.service';
 
 jest.mock('axios');
 /**
@@ -9,10 +10,12 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 describe('TranslationService', () => {
   const originalEnv = process.env;
+  let service: TranslationService;
 
   beforeEach(() => {
     jest.resetModules();
     process.env = { ...originalEnv };
+    service = new TranslationService();
   });
 
   afterEach(() => {
@@ -21,8 +24,8 @@ describe('TranslationService', () => {
   });
 
   it('should return empty string if text is empty or whitespace', async () => {
-    const res1 = await TranslationService.translate('', null, 'uk');
-    const res2 = await TranslationService.translate('   ', null, 'uk');
+    const res1 = await service.translate('', null, 'uk');
+    const res2 = await service.translate('   ', null, 'uk');
     expect(res1).toBe('');
     expect(res2).toBe('');
   });
@@ -30,27 +33,27 @@ describe('TranslationService', () => {
   describe('when API key is not configured', () => {
     beforeEach(() => {
       // Ensure apiKey is undefined on the service instance
-      (TranslationService as any).apiKey = undefined;
+      (service as any).apiKey = undefined;
     });
 
     it('should throw an error in production environment', async () => {
-      process.env.NODE_ENV = 'production';
-      await expect(
-        TranslationService.translate('Hello', null, 'uk')
-      ).rejects.toThrow('Azure Translator key is not configured');
+      jest.spyOn(config.util, 'getEnv').mockReturnValue('production');
+      await expect(service.translate('Hello', null, 'uk')).rejects.toThrow(
+        'Azure Translator key is not configured'
+      );
     });
 
     it('should return stub translation in non-production environments', async () => {
-      process.env.NODE_ENV = 'development';
-      const res = await TranslationService.translate('Hello', null, 'uk');
+      jest.spyOn(config.util, 'getEnv').mockReturnValue('development');
+      const res = await service.translate('Hello', null, 'uk');
       expect(res).toBe('[Translated to uk]: Hello');
     });
   });
 
   describe('when API key is configured', () => {
     beforeEach(() => {
-      (TranslationService as any).apiKey = 'test-api-key';
-      (TranslationService as any).region = 'test-region';
+      (service as any).apiKey = 'test-api-key';
+      (service as any).region = 'test-region';
     });
 
     it('should call Azure Translator API and return translation', async () => {
@@ -58,12 +61,7 @@ describe('TranslationService', () => {
         data: [{ translations: [{ text: 'Привіт' }] }],
       } as any);
 
-      const res = await TranslationService.translate(
-        'Hello',
-        'en',
-        'uk',
-        'plain'
-      );
+      const res = await service.translate('Hello', 'en', 'uk', 'plain');
 
       expect(res).toBe('Привіт');
       expect(mockedAxios.post).toHaveBeenCalledWith(
@@ -90,11 +88,7 @@ describe('TranslationService', () => {
         data: [{ translations: [{ text: '<p>Привіт</p>' }] }],
       } as any);
 
-      const res = await TranslationService.translate(
-        '<p>Hello</p>',
-        null,
-        'uk'
-      );
+      const res = await service.translate('<p>Hello</p>', null, 'uk');
 
       expect(res).toBe('<p>Привіт</p>');
       expect(mockedAxios.post).toHaveBeenCalledWith(

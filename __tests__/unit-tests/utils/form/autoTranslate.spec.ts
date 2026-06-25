@@ -1,6 +1,6 @@
 import { autoTranslateRecord } from '@utils/form';
 import { Record, Form, Resource } from '@models';
-import TranslationService from '../../../../src/services/translation.service';
+import { TranslationService } from '../../../../src/services/translation.service';
 
 jest.mock('../../../../src/services/translation.service');
 
@@ -22,7 +22,7 @@ describe('autoTranslateRecord', () => {
       .mockResolvedValue({} as any);
 
     mockTranslate = jest
-      .spyOn(TranslationService, 'translate')
+      .spyOn(TranslationService.prototype, 'translate')
       .mockResolvedValue('[Translated to uk]: Headache');
   });
 

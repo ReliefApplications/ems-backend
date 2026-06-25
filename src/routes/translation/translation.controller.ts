@@ -3,7 +3,7 @@ import { ReasonPhrases, StatusCodes } from 'http-status-codes';
 import ApiError from '../../abstractions/api-error';
 import BaseController from '../../abstractions/base.controller';
 import { RouteDefinition } from 'types/route-definition';
-import TranslationService from '../../services/translation.service';
+import { TranslationService } from '../../services/translation.service';
 
 /**
  * Translation controller.
@@ -11,6 +11,9 @@ import TranslationService from '../../services/translation.service';
 export default class TranslationController extends BaseController {
   /** Controller base path */
   public basePath = 'translation';
+
+  /** Translation service instance */
+  private translationService = new TranslationService();
 
   /** @returns List of routes & handlers */
   public routes(): RouteDefinition[] {
@@ -40,7 +43,7 @@ export default class TranslationController extends BaseController {
       if (!text || !to) {
         throw new ApiError(ReasonPhrases.BAD_REQUEST, StatusCodes.BAD_REQUEST);
       }
-      const translation = await TranslationService.translate(
+      const translation = await this.translationService.translate(
         text,
         from || null,
         to,

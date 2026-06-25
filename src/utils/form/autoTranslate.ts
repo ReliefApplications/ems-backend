@@ -1,5 +1,5 @@
 import { Record, Form, Resource } from '@models';
-import TranslationService from '../../services/translation.service';
+import { TranslationService } from '../../services/translation.service';
 import { logger } from '@services/logger.service';
 import * as Survey from 'survey-knockout';
 
@@ -14,6 +14,7 @@ export const autoTranslateRecord = async (
   recordId: any,
   modifiedKeys?: string[]
 ): Promise<void> => {
+  const translationService = new TranslationService();
   try {
     const record = await Record.findById(recordId);
     if (!record) {
@@ -103,7 +104,7 @@ export const autoTranslateRecord = async (
       // Perform translation using TranslationService
       try {
         const format = field.type === 'editor' ? 'html' : 'plain';
-        const translatedText = await TranslationService.translate(
+        const translatedText = await translationService.translate(
           sourceValue,
           null, // auto-detect source language
           targetLang,

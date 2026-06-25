@@ -3,9 +3,10 @@ import config from 'config';
 import { logger } from '@services/logger.service';
 
 /**
- *
+ * Translation service for form fields.
+ * Use Azure Translator API.
  */
-class TranslationService {
+export class TranslationService {
   private readonly endpoint = 'https://api.cognitive.microsofttranslator.com';
 
   private readonly apiKey = config.get<string>('azureTranslator.key');
@@ -71,5 +72,3 @@ class TranslationService {
     }
   }
 }
-
-export default new TranslationService();
