@@ -3,9 +3,7 @@ import config from 'config';
 import { TranslationService } from '@services/translation.service';
 
 jest.mock('axios');
-/**
- *
- */
+
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 describe('TranslationService', () => {
