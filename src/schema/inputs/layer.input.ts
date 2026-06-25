@@ -8,6 +8,7 @@ import {
   GraphQLNonNull,
   GraphQLString,
 } from 'graphql';
+import GraphQLJSON from 'graphql-type-json';
 
 /** GraphQL Layer Symbol outline input type definition */
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -128,7 +129,7 @@ const LayerDefinitionInputType = new GraphQLInputObjectType({
 const FieldElementInputType = new GraphQLInputObjectType({
   name: 'FieldElementInputType',
   fields: () => ({
-    label: { type: GraphQLString },
+    label: { type: GraphQLJSON },
     name: { type: GraphQLString },
     type: { type: GraphQLString },
   }),
@@ -140,8 +141,8 @@ const LayerPopupElementInputType = new GraphQLInputObjectType({
   name: 'LayerPopupElementFieldsInputType',
   fields: () => ({
     type: { type: new GraphQLNonNull(GraphQLString) },
-    title: { type: GraphQLString },
-    description: { type: GraphQLString },
+    title: { type: GraphQLJSON },
+    description: { type: GraphQLJSON },
     text: { type: GraphQLString },
     fields: { type: new GraphQLList(GraphQLString) },
   }),
@@ -169,7 +170,7 @@ const LayerDataSourceInputType = new GraphQLInputObjectType({
 const LayerInputType = new GraphQLInputObjectType({
   name: 'LayerInputType',
   fields: () => ({
-    name: { type: new GraphQLNonNull(GraphQLString) },
+    name: { type: new GraphQLNonNull(GraphQLJSON) },
     type: { type: GraphQLString },
     sublayers: { type: new GraphQLList(GraphQLID) },
     visibility: { type: GraphQLBoolean },
@@ -179,8 +180,8 @@ const LayerInputType = new GraphQLInputObjectType({
       type: new GraphQLInputObjectType({
         name: 'popupInfoDataInputType',
         fields: () => ({
-          title: { type: GraphQLString },
-          description: { type: GraphQLString },
+          title: { type: GraphQLJSON },
+          description: { type: GraphQLJSON },
           popupElements: { type: new GraphQLList(LayerPopupElementInputType) },
           fieldsInfo: { type: new GraphQLList(FieldElementInputType) },
         }),

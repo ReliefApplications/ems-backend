@@ -152,8 +152,8 @@ const LayerPopupElement = new GraphQLObjectType({
   name: 'LayerPopupElement',
   fields: () => ({
     type: { type: new GraphQLNonNull(GraphQLString) },
-    title: { type: GraphQLString },
-    description: { type: GraphQLString },
+    title: { type: GraphQLJSON },
+    description: { type: GraphQLJSON },
     text: { type: GraphQLString },
     fields: {
       type: new GraphQLList(GraphQLString),
@@ -168,7 +168,7 @@ const LayerPopupElement = new GraphQLObjectType({
 const LayerFieldElement = new GraphQLObjectType({
   name: 'LayerFieldElement',
   fields: () => ({
-    label: { type: GraphQLString },
+    label: { type: GraphQLJSON },
     name: { type: GraphQLString },
     type: { type: GraphQLString },
   }),
@@ -186,7 +186,7 @@ export const LayerType = new GraphQLObjectType({
         return parent._id ? parent._id : parent.id;
       },
     },
-    name: { type: GraphQLString },
+    name: { type: GraphQLJSON },
     type: { type: GraphQLString },
     sublayers: { type: GraphQLJSON },
     visibility: { type: GraphQLBoolean },
@@ -196,8 +196,8 @@ export const LayerType = new GraphQLObjectType({
       type: new GraphQLObjectType({
         name: 'popupInfoData',
         fields: () => ({
-          title: { type: GraphQLString },
-          description: { type: GraphQLString },
+          title: { type: GraphQLJSON },
+          description: { type: GraphQLJSON },
           popupElements: { type: new GraphQLList(LayerPopupElement) },
           fieldsInfo: { type: new GraphQLList(LayerFieldElement) },
         }),
