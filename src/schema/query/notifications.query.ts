@@ -42,6 +42,7 @@ export default {
       const abilityFilters = Notification.find(
         accessibleBy(ability, 'read').Notification
       ).getFilter();
+      // abilityFilters is already an $or combining channel-based and user-based rules
       const filters: any[] = [abilityFilters];
 
       const afterCursor = args.afterCursor;

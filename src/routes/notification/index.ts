@@ -1,10 +1,11 @@
 import express from 'express';
 import { logger } from '@services/logger.service';
-import { EmailNotification } from '@models';
+import { EmailNotification, Notification, User } from '@models';
 import { azureFunctionHeaders } from '@utils/notification/util';
 import i18next from 'i18next';
 import axios from 'axios';
 import config from 'config';
+import pubsub from '@server/pubsub';
 
 /**
  * Send email using SMTP email client
@@ -125,6 +126,68 @@ router.post('/remove-subscription', async (req, res) => {
 });
 
 /**
+ * After sending an email notification, create in-app notifications for any
+ * recipient (To/Cc/Bcc) who is also a registered user.
+ *
+ * @param configId EmailNotification document id
+ * @param html Rendered HTML body returned by the Azure function
+ */
+const createInAppNotificationsForEmailRecipients = async (
+  configId: string,
+  html: string
+): Promise<void> => {
+  try {
+    const emailNotif = await EmailNotification.findById(configId)
+      .select('name recipients subscriptionList')
+      .lean()
+      .exec();
+    if (!emailNotif) return;
+
+    // Collect all recipient addresses: pre-resolved To/Cc/Bcc + opt-in list
+    const recipientEmails = [
+      ...(emailNotif.recipients?.To ?? []),
+      ...(emailNotif.recipients?.Cc ?? []),
+      ...(emailNotif.recipients?.Bcc ?? []),
+      ...(emailNotif.subscriptionList ?? []),
+    ];
+
+    if (!recipientEmails.length) return;
+
+    const uniqueEmails = [...new Set(recipientEmails)];
+    const users = await User.find({ username: { $in: uniqueEmails } }).select(
+      '_id'
+    );
+
+    if (!users.length) return;
+
+    const subject = emailNotif.name;
+    const publisher = await pubsub();
+    for (const user of users) {
+      const notification = new Notification({
+        action: subject,
+        content: { emailNotificationId: configId, subject, html },
+        user: user._id,
+        seenBy: [],
+      });
+      await notification.save();
+      publisher.publish(`user:${String(user._id)}`, { notification });
+    }
+  } catch (err) {
+    logger.error(
+      `Failed to create in-app notifications for email ${configId}: ${err.message}`,
+      { stack: err.stack }
+    );
+  }
+};
+
+/** Function names that actually send emails (not previews) */
+const EMAIL_SEND_FUNCTIONS = new Set([
+  'send-email',
+  'send-individual-email',
+  'send-quick-email',
+]);
+
+/**
  * Redirect POST request to Azure function
  */
 router.post('/:functionName/:configId?', async (req, res) => {
@@ -144,6 +207,12 @@ router.post('/:functionName/:configId?', async (req, res) => {
       requestConfig
     );
     res.status(200).send(response.data);
+
+    // Fire-and-forget: create in-app notifications for email recipients
+    if (configId && EMAIL_SEND_FUNCTIONS.has(functionName)) {
+      const html = typeof response.data === 'string' ? response.data : '';
+      createInAppNotificationsForEmailRecipients(configId, html);
+    }
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
     res.status(500).send(req.t('common.errors.internalServerError'));
@@ -170,6 +239,12 @@ router.get('/:functionName/:configId?', async (req, res) => {
     );
 
     res.status(200).send(response.data);
+
+    // Fire-and-forget: create in-app notifications for GET-triggered email sends
+    if (configId && EMAIL_SEND_FUNCTIONS.has(functionName)) {
+      const html = typeof response.data === 'string' ? response.data : '';
+      createInAppNotificationsForEmailRecipients(configId, html);
+    }
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
     res.status(500).send(req.t('common.errors.internalServerError'));

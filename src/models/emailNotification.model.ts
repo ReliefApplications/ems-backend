@@ -82,6 +82,8 @@ export interface EmailNotification extends Document {
   subscriptionList: string[];
   restrictSubscription: boolean;
   emailLayout: mongoose.Schema.Types.ObjectId | CustomTemplate; // Reference to CustomTemplate;
+  /** Pre-resolved recipient lists stored by the frontend before sending */
+  recipients?: { To: string[]; Cc: string[]; Bcc: string[] };
   recipientsType: string;
   status: string;
   lastExecution?: Date;
@@ -158,6 +160,11 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
     emailLayout: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'customTemplate', // Reference to CustomTemplate collection
+    },
+    recipients: {
+      To: [{ type: String }],
+      Cc: [{ type: String }],
+      Bcc: [{ type: String }],
     },
     recipientsType: {
       type: String,

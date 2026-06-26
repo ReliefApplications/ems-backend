@@ -32,6 +32,13 @@ export const NotificationType = new GraphQLObjectType({
         return channel;
       },
     },
+    user: {
+      type: UserType,
+      async resolve(parent) {
+        if (!parent.user) return null;
+        return User.findById(parent.user);
+      },
+    },
     seenBy: {
       type: new GraphQLList(UserType),
       async resolve(parent, args, context) {

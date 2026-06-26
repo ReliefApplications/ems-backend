@@ -9,7 +9,10 @@ const notificationSchema = new Schema(
     channel: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Channel',
-      required: true,
+    },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
     },
     seenBy: {
       type: [mongoose.Schema.Types.ObjectId],
@@ -33,6 +36,7 @@ export interface Notification extends Document {
   content: any;
   createdAt: Date;
   channel: any;
+  user: any;
   seenBy: any[];
 }
 
