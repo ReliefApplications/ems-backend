@@ -83,6 +83,7 @@ export interface EmailNotification extends Document {
   restrictSubscription: boolean;
   emailLayout: mongoose.Schema.Types.ObjectId | CustomTemplate; // Reference to CustomTemplate;
   /** Pre-resolved recipient lists stored by the frontend before sending */
+  // eslint-disable-next-line @typescript-eslint/naming-convention -- email header keys
   recipients?: { To: string[]; Cc: string[]; Bcc: string[] };
   recipientsType: string;
   status: string;

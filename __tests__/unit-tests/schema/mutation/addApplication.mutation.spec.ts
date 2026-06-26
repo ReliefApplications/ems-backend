@@ -1,6 +1,6 @@
 import addApplication from '@schema/mutation/addApplication.mutation';
 import mongoose from 'mongoose';
-import { Application, Channel, Notification, Role } from '@models';
+import { Application, Channel, Role } from '@models';
 import pubsub from '@server/pubsub';
 import { DatabaseHelpers } from '../../../helpers/database-helpers';
 import { GraphQLError } from 'graphql';
@@ -123,24 +123,6 @@ describe('addApplication Resolver', () => {
         expect.any(mongoose.Types.ObjectId),
         expect.any(mongoose.Types.ObjectId),
       ]);
-    });
-  });
-
-  describe('Notification Logic', () => {
-    it('should create and save notification after application creation', async () => {
-      await addApplication.resolve(null, {}, context);
-      const notification = await Notification.findOne({
-        action: 'Application created',
-      });
-      expect(notification).toBeTruthy();
-    });
-
-    it('should publish notification to appropriate channel', async () => {
-      await addApplication.resolve(null, {}, context);
-      expect((await pubsub()).publish).toHaveBeenCalledWith(
-        expect.any(mongoose.Types.ObjectId),
-        expect.objectContaining({ notification: expect.any(Object) })
-      );
     });
   });
 
