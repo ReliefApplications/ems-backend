@@ -47,6 +47,10 @@ export const RecordType = new GraphQLObjectType({
       type: GraphQLJSON,
       args: {
         display: { type: GraphQLBoolean },
+        replaceTranslations: {
+          type: GraphQLBoolean,
+          defaultValue: false,
+        },
       },
       async resolve(parent, args, context) {
         let lang = context.locale;
@@ -55,7 +59,7 @@ export const RecordType = new GraphQLObjectType({
         }
 
         const source =
-          args.display || lang
+          args.display || (lang && args.replaceTranslations)
             ? parent.resource
               ? await Resource.findById(parent.resource).select('fields')
               : await Form.findById(parent.form).select('fields')
@@ -64,7 +68,7 @@ export const RecordType = new GraphQLObjectType({
         const data = parent.data ? { ...parent.data } : {};
 
         // Replace fields with translated versions when available
-        if (lang && source && source.fields) {
+        if (lang && args.replaceTranslations && source && source.fields) {
           for (const field of source.fields) {
             if (field.translateField && field.translateTo) {
               const targetLang = field.translateTo.toLowerCase();
@@ -84,39 +88,37 @@ export const RecordType = new GraphQLObjectType({
           }
         }
 
-        if (args.display) {
-          if (source) {
-            const res = {};
-            for (const field of source.fields) {
-              const name = field.name;
-              if (data[name] !== undefined && data[name] !== null) {
-                res[name] = data[name];
-                // Get the display field from the linked record if any
-                if (field.resource && field.displayField) {
-                  try {
-                    const record = await Record.findOne({
-                      _id: data[name],
-                      archived: { $ne: true },
-                    });
-                    res[name] = record.data[field.displayField];
-                  } catch {
-                    res[name] = null;
-                  }
+        if (args.display && source) {
+          const res = {};
+          for (const field of source.fields) {
+            const name = field.name;
+            if (data[name] !== undefined && data[name] !== null) {
+              res[name] = data[name];
+              // Get the display field from the linked record if any
+              if (field.resource && field.displayField) {
+                try {
+                  const record = await Record.findOne({
+                    _id: data[name],
+                    archived: { $ne: true },
+                  });
+                  res[name] = record.data[field.displayField];
+                } catch {
+                  res[name] = null;
                 }
-                // Get the text instead of the value for choices, fetch it if needed.
-                if (
-                  field.choices ||
-                  field.choicesByUrl ||
-                  field.choicesByGraphQL
-                ) {
-                  res[name] = await getDisplayText(field, data[name], context);
-                }
-              } else {
-                res[name] = null;
               }
+              // Get the text instead of the value for choices, fetch it if needed.
+              if (
+                field.choices ||
+                field.choicesByUrl ||
+                field.choicesByGraphQL
+              ) {
+                res[name] = await getDisplayText(field, data[name], context);
+              }
+            } else {
+              res[name] = null;
             }
-            return res;
           }
+          return res;
         }
         return data;
       },

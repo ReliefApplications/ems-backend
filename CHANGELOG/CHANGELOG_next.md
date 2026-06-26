@@ -1,3 +1,10 @@
+# [2.17.0-rc.4](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.3...v2.17.0-rc.4) (2026-06-26)
+
+
+### Bug Fixes
+
+* record data in graphql could have blank fields due to auto translate feature ([c1d90d4](https://github.com/ReliefApplications/ems-backend/commit/c1d90d4e40fff8bd136691933c17f1b5b5be7b93))
+
 # [2.17.0-rc.3](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.2...v2.17.0-rc.3) (2026-06-25)
 
 
