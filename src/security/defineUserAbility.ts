@@ -340,6 +340,12 @@ export default function defineUserAbility(user: User | Client): AppAbility {
     },
     seenBy: { $ne: user._id },
   });
+  // User-targeted notifications (e.g. relayed email events) are only readable
+  // by the user they were generated for.
+  can(['read', 'update'], 'Notification', {
+    user: user._id,
+    seenBy: { $ne: user._id },
+  });
 
   /* ===
     Creation / Access / Edition / Deletion of API configurations, PullJobs and ReferenceData
