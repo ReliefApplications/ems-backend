@@ -1,8 +1,6 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ApplicationType } from '../types';
-import { Application, Channel, Notification } from '@models';
-import pubsub from '../../server/pubsub';
-import channels from '@const/channels';
+import { Application } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
@@ -38,18 +36,6 @@ export default {
       const application = await Application.findOneAndDelete(filters);
       if (!application)
         throw new GraphQLError('common.errors.permissionNotGranted');
-      // Send notification
-      const channel = await Channel.findOne({ title: channels.applications });
-      const notification = new Notification({
-        action: 'Application deleted',
-        content: application,
-        //createdAt: new Date(),
-        channel: channel.id,
-        seenBy: [],
-      });
-      await notification.save();
-      const publisher = await pubsub();
-      publisher.publish(channel.id, { notification });
       return application;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

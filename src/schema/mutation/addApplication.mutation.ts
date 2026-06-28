@@ -1,7 +1,5 @@
 import { GraphQLError } from 'graphql';
-import channels from '@const/channels';
-import { Application, Role, Notification, Channel } from '@models';
-import pubsub from '../../server/pubsub';
+import { Application, Role, Channel } from '@models';
 import { ApplicationType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { status } from '@const/enumTypes';
@@ -73,17 +71,6 @@ export default {
           };
         }
         await application.save();
-        // Send notification
-        const channel = await Channel.findOne({ title: channels.applications });
-        const notification = new Notification({
-          action: 'Application created',
-          content: application,
-          channel: channel.id,
-          seenBy: [],
-        });
-        await notification.save();
-        const publisher = await pubsub();
-        publisher.publish(channel.id, { notification });
         // Create main channel
         const mainChannel = new Channel({
           title: 'main',

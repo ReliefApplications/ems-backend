@@ -40,6 +40,7 @@ module.exports = {
       url: 'MAIL_SERVERLESS_URL',
       key: 'MAIL_SERVERLESS_KEY',
     },
+    eventsChannel: 'REDIS_CHANNEL',
   },
   auth: {
     provider: 'AUTH_PROVIDER',
