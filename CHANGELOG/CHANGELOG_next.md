@@ -1,3 +1,10 @@
+# [2.17.0-rc.5](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.4...v2.17.0-rc.5) (2026-06-28)
+
+
+### Features
+
+* Email notifications now generate in-app notifications ([#1245](https://github.com/ReliefApplications/ems-backend/issues/1245)) ([fdbe2c4](https://github.com/ReliefApplications/ems-backend/commit/fdbe2c493009c3ff3f746f7597b5f28d2c07e64b)), closes [AB#133554](https://github.com/AB/issues/133554)
+
 # [2.17.0-rc.4](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.3...v2.17.0-rc.4) (2026-06-26)
 
 
