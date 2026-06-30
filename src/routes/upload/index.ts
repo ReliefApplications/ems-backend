@@ -21,6 +21,7 @@ import validator from 'email-validator';
 import { insertRecords as insertRecordsPulljob } from '@server/pullJobScheduler';
 import jwtDecode from 'jwt-decode';
 import { GraphQLError } from 'graphql';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** File size limit, in bytes  */
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
@@ -128,7 +129,7 @@ async function insertRecords(
         Record.insertMany(records);
         return res.status(200).send({ status: 'OK' });
       } catch (err) {
-        logger.error(err.message, { stack: err.stack });
+        logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
         return res
           .status(500)
           .send(i18next.t('common.errors.internalServerError'));
@@ -173,7 +174,7 @@ router.post('/form/records/:id', async (req: any, res) => {
     // Insert records if authorized
     return await insertRecords(res, file, form, form.fields, req.context);
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -210,7 +211,7 @@ router.post('/resource/records/:id', async (req: any, res) => {
     // Insert records if authorized
     return await insertRecords(res, file, form, resource.fields, req.context);
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -245,7 +246,7 @@ router.post('/resource/insert', async (req: any, res) => {
     }
     return res.status(400).send(req.t('common.errors.permissionNotGranted'));
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -318,7 +319,7 @@ router.post('/application/:id/invite', async (req: any, res) => {
     });
     return res.status(200).send(data);
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -379,7 +380,7 @@ router.post('/invite', async (req: any, res) => {
     });
     return res.status(200).send(data);
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -412,8 +413,8 @@ router.post('/file/:form', async (req, res) => {
     const path = await uploadFile('forms', formID, file);
     return res.status(200).send({ path });
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
-    return res.status(500).send(err.message);
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
+    return res.status(500).send(getErrorMessage(err));
   }
 });
 
@@ -462,7 +463,7 @@ router.post('/style/:application', async (req, res) => {
         allowedExtensions: ['css', 'scss'],
       });
     } catch (err) {
-      throw new GraphQLError(err.message);
+      throw new GraphQLError(getErrorMessage(err));
     }
 
     await Application.updateOne(
@@ -472,7 +473,7 @@ router.post('/style/:application', async (req, res) => {
 
     return res.status(200).send({ path });
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -549,7 +550,7 @@ router.post('/distributionList', async (req: any, res) => {
     });
     res.status(200).send(emails);
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });

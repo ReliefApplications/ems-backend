@@ -6,6 +6,7 @@ import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 import { Types } from 'mongoose';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Arguments for the dashboards query */
 type DashboardsArgs = {
@@ -46,7 +47,7 @@ export default {
         return await Dashboard.find(filters);
       }
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

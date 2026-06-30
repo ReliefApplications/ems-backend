@@ -35,6 +35,7 @@ import mongoose from 'mongoose';
 import sanitize from 'sanitize-filename';
 import { logger } from '../../services/logger.service';
 import { resourcePermission } from '../../types/permission';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwise
@@ -151,7 +152,7 @@ router.get('/form/records/:id', async (req, res) => {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -287,7 +288,7 @@ router.get('/form/records/:id/history', async (req, res) => {
       return res.status(404).send(req.t('common.errors.dataNotFound'));
     }
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -327,7 +328,7 @@ router.get('/resource/records/:id', async (req, res) => {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -437,7 +438,7 @@ router.post('/records', async (req, res) => {
       });
     }
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -458,7 +459,7 @@ router.get('/application/:id/invite', async (req, res) => {
 
     return await templateBuilder(res, `${application.name}-users`, fields);
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -472,7 +473,7 @@ router.get('/invite', async (req, res) => {
     const fields = await getUserTemplateFields(roles);
     return await templateBuilder(res, 'users', fields);
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -505,7 +506,7 @@ router.post('/users', async (req, res) => {
     }
     return res.status(404).send(i18next.t('common.errors.dataNotFound'));
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -517,7 +518,7 @@ router.get('/templates', async (req, res) => {
   try {
     return await templateExport(res);
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -572,7 +573,7 @@ router.post('/application/:id/users', async (req, res) => {
     }
     return res.status(404).send(i18next.t('common.errors.dataNotFound'));
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -610,7 +611,7 @@ router.get('/file/:form/:blob', async (req, res) => {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });

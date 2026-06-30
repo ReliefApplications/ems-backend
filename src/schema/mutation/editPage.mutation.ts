@@ -18,6 +18,7 @@ import { cloneDeep, has, isArray, isEmpty, isNil, omit } from 'lodash';
 import { Types } from 'mongoose';
 import { PageType } from '../types';
 import { NavBarSettingsInputType } from '@schema/inputs/navBarSettings.input';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Simple form permission change type */
 type SimplePermissionChange =
@@ -172,7 +173,7 @@ export default {
       }
       return page;
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

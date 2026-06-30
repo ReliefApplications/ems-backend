@@ -1,6 +1,7 @@
 import { BlobServiceClient, BlockBlobClient } from '@azure/storage-blob';
 import { logger } from '@services/logger.service';
 import config from 'config';
+import { getErrorMessage } from '@utils/error';
 
 /** Azure storage connection string */
 const AZURE_STORAGE_CONNECTION_STRING: string = config.get(
@@ -46,7 +47,7 @@ export async function blobStorageUpload(
     await containerClient.createIfNotExists();
     blobClient = containerClient.getBlockBlobClient(fileName);
   } catch (err) {
-    logger.error(`Failed to create blob client: ${err.message}`);
+    logger.error(`Failed to create blob client: ${getErrorMessage(err)}`);
     throw err;
   }
   try {
@@ -59,11 +60,11 @@ export async function blobStorageUpload(
       });
       return blobClient.url;
     } catch (err) {
-      logger.error(`Failed in .uploadData: ${err.message}`);
+      logger.error(`Failed in .uploadData: ${getErrorMessage(err)}`);
       throw err;
     }
   } catch (err) {
-    logger.error(`Failed to encode blob: ${err.message}`);
+    logger.error(`Failed to encode blob: ${getErrorMessage(err)}`);
     throw err;
   }
 }

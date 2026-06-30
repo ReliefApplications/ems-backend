@@ -7,6 +7,7 @@ import get from 'lodash/get';
 import { JSONPath } from 'jsonpath-plus';
 import commonServices from '@server/common-services';
 import { AxiosCacheInstance } from 'axios-cache-interceptor';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Gets display text from choice value.
@@ -161,7 +162,7 @@ export const getFullChoices = async (
       return field.choices;
     }
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return field.choices;
   }
 };

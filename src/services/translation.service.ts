@@ -1,6 +1,7 @@
 import axios from 'axios';
 import config from 'config';
 import { logger } from '@services/logger.service';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Translation service for form fields.
@@ -65,8 +66,8 @@ export class TranslationService {
       return response.data[0].translations[0].text;
     } catch (err) {
       logger.error('Error calling Azure Cognitive Translator', {
-        error: err.message,
-        stack: err.stack,
+        error: getErrorMessage(err),
+        stack: getErrorStack(err),
       });
       throw err;
     }

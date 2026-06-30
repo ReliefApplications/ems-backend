@@ -13,6 +13,7 @@ import gql from 'graphql-tag';
 import { BaseRedisCache } from 'apollo-server-cache-redis';
 import Redis from 'ioredis';
 import config from 'config';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Local storage initialization */
 const referenceDataCache = new BaseRedisCache({
@@ -156,7 +157,7 @@ export class CustomAPI extends RESTDataSource {
           }))
         : [];
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       return [];
     }
   }

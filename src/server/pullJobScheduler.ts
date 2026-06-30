@@ -27,6 +27,7 @@ import * as cronValidator from 'cron-validator';
 import get from 'lodash/get';
 import axios from 'axios';
 import { ownershipMappingJSON } from './EIOSOwnernshipMapping';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** A map with the task ids as keys and the scheduled tasks as values */
 const taskMap: Record<string, CronJob> = {};
@@ -124,7 +125,7 @@ export const scheduleJob = (pullJob: PullJob) => {
               );
             }
           } catch (err) {
-            logger.error(err.message, { stack: err.stack });
+            logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
           }
         },
         null,
@@ -135,7 +136,7 @@ export const scheduleJob = (pullJob: PullJob) => {
       throw new Error(`[${pullJob.name}] Invalid schedule: ${schedule}`);
     }
   } catch (err) {
-    logger.error(err.message);
+    logger.error(getErrorMessage(err));
   }
 };
 

@@ -5,6 +5,7 @@ import i18next from 'i18next';
 import config from 'config';
 import get from 'lodash/get';
 import { logger } from '@services/logger.service';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Azure storage connection string */
 const AZURE_STORAGE_CONNECTION_STRING: string = config.get(
@@ -94,7 +95,7 @@ export const uploadFile = async (
     await blockBlobClient.uploadData(file.data);
     return filename;
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     throw new Error(
       i18next.t('utils.files.uploadFile.errors.fileCannotBeUploaded')
     );

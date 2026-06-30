@@ -11,6 +11,7 @@ import {
 } from 'graphql';
 import mongoose, { Types } from 'mongoose';
 import { ApplicationType } from '../types';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Arguments for the application query */
 type ApplicationArgs = {
@@ -81,7 +82,7 @@ export default {
       }
       return application;
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

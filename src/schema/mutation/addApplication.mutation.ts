@@ -7,6 +7,7 @@ import permissions from '@const/permissions';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Arguments for the addApplication mutation */
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -94,7 +95,7 @@ export default {
         );
       }
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

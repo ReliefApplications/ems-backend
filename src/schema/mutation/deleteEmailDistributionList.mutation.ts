@@ -6,6 +6,7 @@ import { EmailDistributionList, EmailNotification } from '@models';
 import { EmailDistributionListType } from '@schema/types/emailDistribution.type';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { AppAbility } from '@security/defineUserAbility';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Mutation to delete an existing distribution list.
@@ -51,7 +52,7 @@ export default {
 
       return distributionList;
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

@@ -17,6 +17,7 @@ import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 import { DashboardFilterInputType } from '@schema/inputs/dashboard-filter.input';
 import { convertUrlToBase64 } from '@utils/files';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 type DashboardFilterArgs = {
   variant?: string;
@@ -121,7 +122,7 @@ export default {
       await Step.findOneAndUpdate({ content: dashboard.id }, update);
       return dashboard;
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

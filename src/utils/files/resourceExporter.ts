@@ -24,6 +24,7 @@ import getSearchFilter from '@utils/schema/resolvers/Query/getSearchFilter';
 import getSortAggregation from '@utils/schema/resolvers/Query/getSortAggregation';
 import dataSources from '@server/apollo/dataSources';
 import sanitizeHtml from 'sanitize-html';
+import { getErrorMessage } from '@utils/error';
 
 /**
  * Export batch parameters interface
@@ -109,7 +110,7 @@ export default class Exporter {
         try {
           this.writeRowsXlsx(worksheet, records);
         } catch (err) {
-          logger.error(err.message);
+          logger.error(getErrorMessage(err));
         }
         // Close workbook
         if (workbook instanceof stream.xlsx.WorkbookWriter) {
@@ -145,7 +146,7 @@ export default class Exporter {
             csvData.push(temp);
           }
         } catch (err) {
-          logger.error(err.message);
+          logger.error(getErrorMessage(err));
         }
         // Generate the file by parsing the data, set the response parameters and send it
         const csv = json2csv.parse(csvData);
@@ -172,7 +173,7 @@ export default class Exporter {
             csvData.push(temp);
           }
         } catch (err) {
-          logger.error(err.message);
+          logger.error(getErrorMessage(err));
         }
         // Generate the file by parsing the data, set the response parameters and send it
         return { records: csvData, columns: this.columns };

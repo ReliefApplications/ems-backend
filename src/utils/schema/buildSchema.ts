@@ -6,6 +6,7 @@ import { getStructures, getReferenceDatas } from './getStructures';
 import { Form } from '@models';
 import { logger } from '../../services/logger.service';
 import buildTypes from './buildTypes';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Build a new GraphQL schema to add to the default one, providing API for the resources / forms.
@@ -41,7 +42,7 @@ const buildSchema = async (): Promise<GraphQLSchema> => {
 
     return graphQLSchema;
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return schema;
   }
 };

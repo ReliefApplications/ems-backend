@@ -15,6 +15,7 @@ import { ApiConfiguration, ReferenceData } from '@models';
 import { CustomAPI } from '@server/apollo/dataSources';
 import { Context } from '@server/apollo/context';
 import { logger } from '@services/logger.service';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Minimal resource shape the service needs — just the field list, plus an
@@ -204,7 +205,7 @@ export class CalculatedFieldService {
       }
       return [];
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       return [];
     }
   }

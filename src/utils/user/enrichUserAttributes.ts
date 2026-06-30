@@ -2,6 +2,7 @@ import { User } from '@models';
 import commonServices from '../../server/common-services';
 import { logger } from '@services/logger.service';
 import { getToken, getGraphqlUrl } from '@utils/commonServices';
+import { getErrorMessage } from '@utils/error';
 
 /** Enriched keys (under user.attributes) managed by this module. */
 const ENRICHED_KEYS = [
@@ -174,7 +175,7 @@ export const enrichUserAttributes = async (user: User): Promise<boolean> => {
     if (added || hadEnrichedKeys) user.markModified('attributes');
     return added;
   } catch (err) {
-    logger.error(`enrichUserAttributes failed: ${err?.message}`);
+    logger.error(`enrichUserAttributes failed: ${getErrorMessage(err)}`);
     return false;
   }
 };

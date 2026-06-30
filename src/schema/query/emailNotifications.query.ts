@@ -12,6 +12,7 @@ import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 import { accessibleBy } from '@casl/mongoose';
 import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Default page size */
 // const DEFAULT_FIRST = 10;
@@ -94,7 +95,7 @@ export default {
         totalCount: await EmailNotification.countDocuments({ $and: filters }),
       };
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

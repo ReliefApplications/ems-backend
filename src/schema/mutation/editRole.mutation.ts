@@ -15,6 +15,7 @@ import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
+import { getErrorCode, getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Arguments for the editRole mutation */
 type EditRoleArgs = {
@@ -102,14 +103,14 @@ export default {
         return role;
       } catch (error) {
         // Detect duplication error
-        if (error.code === 11000) {
+        if (getErrorCode(error) === 11000) {
           throw new GraphQLError('Role with this name already exists.');
         } else {
           throw error;
         }
       }
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

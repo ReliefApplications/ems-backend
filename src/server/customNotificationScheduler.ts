@@ -11,6 +11,7 @@ import * as cronValidator from 'cron-validator';
 import get from 'lodash/get';
 import { sendEmail, preprocess } from '@utils/email';
 import { customNotificationRecipientsType } from '@const/enumTypes';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** A map with the custom notification ids as keys and the scheduled custom notification as values */
 const customNotificationMap: Record<string, CronJob> = {};
@@ -223,7 +224,9 @@ export const scheduleCustomNotificationJob = async (
               update
             );
           } catch (error) {
-            logger.error(error.message, { stack: error.stack });
+            logger.error(getErrorMessage(error), {
+              stack: getErrorStack(error),
+            });
           }
         },
         null,
@@ -236,7 +239,7 @@ export const scheduleCustomNotificationJob = async (
       );
     }
   } catch (err) {
-    logger.error(err.message);
+    logger.error(getErrorMessage(err));
   }
 };
 

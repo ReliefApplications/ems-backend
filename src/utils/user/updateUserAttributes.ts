@@ -8,6 +8,7 @@ import { logger } from '@services/logger.service';
 import { getDelegatedToken } from '../proxy';
 import { AttributeSettings } from './userManagement';
 import axios from 'axios';
+import { getErrorStack } from '@utils/error';
 
 /**
  * Check if we need to update user attributes and perform it when needed.
@@ -73,7 +74,7 @@ export const updateUserAttributes = async (
         data = res.data;
       } catch (err) {
         logger.error(i18next.t('common.errors.invalidAPI'), {
-          stack: err.stack,
+          stack: getErrorStack(err),
         });
         return false;
       }

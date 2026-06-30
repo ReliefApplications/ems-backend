@@ -3,6 +3,7 @@ import { ReferenceData } from '@models';
 import { MULTISELECT_TYPES } from '@const/fieldTypes';
 import { CustomAPI } from '../../server/apollo/dataSources';
 import { logger } from '@services/logger.service';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Builds a ReferenceData aggregation to populate the corresponding field.
@@ -32,7 +33,7 @@ const buildReferenceDataAggregation = async (
     }
   } catch (err) {
     // Log error but continue execution
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
   }
 
   // We map the items to create objects with the graphQLFieldName as key and the value as value.

@@ -14,6 +14,7 @@ import { get, has, isArray, isEqual, isNil } from 'lodash';
 import mongoose from 'mongoose';
 import { resourcePermission } from '../../types/permission';
 import { ResourceType } from '../types';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Simple resource permission change type */
 type SimplePermissionChange =
@@ -814,7 +815,7 @@ export default {
         { new: true }
       );
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) throw err;
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

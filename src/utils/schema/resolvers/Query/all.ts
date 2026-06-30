@@ -21,6 +21,7 @@ import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import NodeCache from 'node-cache';
 import { AppAbility } from '@security/defineUserAbility';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -781,7 +782,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         _source: id,
       };
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

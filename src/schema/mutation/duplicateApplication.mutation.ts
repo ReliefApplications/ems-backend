@@ -27,6 +27,7 @@ import { Types } from 'mongoose';
 import { duplicatePages } from '../../services/page.service';
 import { resourcePermission } from '../../types/permission';
 import { ApplicationType } from '../types';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 type ResourcePermission =
   | {
@@ -435,7 +436,7 @@ export default {
         );
       }
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

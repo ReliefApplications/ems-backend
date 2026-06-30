@@ -2,6 +2,7 @@ import { printSchema } from 'graphql';
 import { getSchema } from './introspection/getSchema';
 import { getReferenceDatas, getStructures } from './getStructures';
 import { logger } from '../../services/logger.service';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Build GraphQL types from the active resources / forms stored in the database.
@@ -18,7 +19,7 @@ const buildTypes = async (): Promise<string> => {
 
     return typeDefs;
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return;
   }
 };

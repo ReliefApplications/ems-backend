@@ -2,6 +2,7 @@ import { BlobItem, BlobServiceClient } from '@azure/storage-blob';
 import { logger } from '@services/logger.service';
 import config from 'config';
 import fs from 'fs';
+import { getErrorMessage } from '@utils/error';
 
 /** Azure storage connection string */
 const AZURE_STORAGE_CONNECTION_STRING: string = config.get(
@@ -37,8 +38,8 @@ export const downloadFile = async (
       fs.mkdirSync(pathToFile, { recursive: true });
     await blockBlobClient.downloadToFile(path);
   } catch (err) {
-    logger.error(err.message);
-    throw new Error(err.message);
+    logger.error(getErrorMessage(err));
+    throw new Error(getErrorMessage(err));
   }
   return;
 };

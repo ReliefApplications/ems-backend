@@ -11,6 +11,7 @@ import pubsub from '../../server/pubsub';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Arguments for the publishNotification mutation */
 type PublishNotificationArgs = {
@@ -52,7 +53,7 @@ export default {
       publisher.publish(args.channel, { notification });
       return notification;
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

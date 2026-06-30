@@ -3,6 +3,7 @@ import { UserType } from '../types';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Return user from logged user id.
@@ -15,7 +16,7 @@ export default {
     try {
       return context.user;
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

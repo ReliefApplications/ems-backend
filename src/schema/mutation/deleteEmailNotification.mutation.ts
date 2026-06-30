@@ -16,6 +16,7 @@ import { Context } from '@server/apollo/context';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { CustomTemplate } from '@models/customTemplate.model';
 import { deleteFile } from '@utils/notification/util';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Arguments for the deleteEmailNotification mutation */
 type DeleteEmailNotificationArgs = {
@@ -99,8 +100,10 @@ export default {
       };
     } catch (err) {
       logger.error(
-        `Error deleting EmailNotification with ID: ${args.id} - ${err.message}`,
-        { stack: err.stack }
+        `Error deleting EmailNotification with ID: ${
+          args.id
+        } - ${getErrorMessage(err)}`,
+        { stack: getErrorStack(err) }
       );
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

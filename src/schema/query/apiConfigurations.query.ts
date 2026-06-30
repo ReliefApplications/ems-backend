@@ -15,6 +15,7 @@ import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 import { CompositeFilterDescriptor } from '../../types/filter';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
@@ -133,7 +134,7 @@ export default {
         totalCount: await ApiConfiguration.countDocuments({ $and: filters }),
       };
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

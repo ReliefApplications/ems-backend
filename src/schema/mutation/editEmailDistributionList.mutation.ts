@@ -5,6 +5,7 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 import GraphQLJSON from 'graphql-type-json';
 import { EmailDistributionListType } from '@schema/types/emailDistribution.type';
+import { getErrorCode, getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Mutation to update an existing distribution list.
@@ -50,11 +51,11 @@ export default {
         return distributionList;
       }
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
 
       if (err instanceof GraphQLError) {
         throw err;
-      } else if (err?.code === 11000) {
+      } else if (getErrorCode(err) === 11000) {
         throw new GraphQLError(
           context.i18next.t(
             'mutations.emailDistributionList.errors.emailDistributionListNameExist'

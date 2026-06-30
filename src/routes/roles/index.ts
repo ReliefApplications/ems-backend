@@ -6,6 +6,7 @@ import defineUserAbility, { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Routes for roles */
 const router = express.Router();
@@ -120,7 +121,7 @@ router.get('/:id/summary', async (req, res) => {
 
     return res.send(response);
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
