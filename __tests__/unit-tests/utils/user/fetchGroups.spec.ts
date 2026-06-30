@@ -94,6 +94,65 @@ describe('Fetch Groups', () => {
     expect(result).toEqual(mockGroups);
   });
 
+  it('should fetch groups using user-to-service auth', async () => {
+    const userToServiceConfig = {
+      ...apiConfiguration,
+      authType: authType.userToService,
+    };
+    (ApiConfiguration.findById as jest.Mock).mockResolvedValueOnce(
+      userToServiceConfig
+    );
+
+    const result = await fetchGroups();
+
+    expect(getToken).toHaveBeenCalledWith(userToServiceConfig);
+    expect(axios).toHaveBeenCalledWith({
+      url: 'https://example.com/api/groups',
+      method: 'get',
+      headers: { Authorization: `Bearer ${mockToken}` },
+    });
+    expect(Group).toHaveBeenCalledWith(mockGroups[0]);
+    expect(result).toEqual(mockGroups);
+  });
+
+  it('should map every group returned by the API', async () => {
+    (axios as any).mockResolvedValueOnce({
+      data: {
+        groups: [
+          { id: '1', title: 'Group 1', description: 'Desc 1' },
+          { id: '2', title: 'Group 2', description: 'Desc 2' },
+        ],
+      },
+    });
+
+    const result = await fetchGroups();
+
+    expect(Group).toHaveBeenCalledTimes(2);
+    expect(result).toEqual([
+      { oid: '1', title: 'Group 1', description: 'Desc 1' },
+      { oid: '2', title: 'Group 2', description: 'Desc 2' },
+    ]);
+  });
+
+  it('should default missing fields to null', async () => {
+    (axios as any).mockResolvedValueOnce({
+      data: { groups: [{ id: '1' }] },
+    });
+
+    const result = await fetchGroups();
+
+    expect(result).toEqual([{ oid: '1', title: null, description: null }]);
+  });
+
+  it('should return an empty array when the API returns no groups', async () => {
+    (axios as any).mockResolvedValueOnce({ data: { groups: [] } });
+
+    const result = await fetchGroups();
+
+    expect(Group).not.toHaveBeenCalled();
+    expect(result).toEqual([]);
+  });
+
   it('should throw an error if API configuration not found', async () => {
     (ApiConfiguration.findById as jest.Mock).mockResolvedValueOnce(undefined);
 

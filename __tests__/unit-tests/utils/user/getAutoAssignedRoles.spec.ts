@@ -70,6 +70,25 @@ describe('getGraphAccessToken', () => {
     expect(result).toBeUndefined();
     expect(logSpy).toHaveBeenCalledWith('Request failed', expect.any(Object));
   });
+
+  it('should fall back to empty strings when client credentials are not configured', async () => {
+    (config.get as jest.Mock).mockImplementation((setting: string) =>
+      setting === 'microsoftGraph.tokenEndpoint'
+        ? 'mockTokenEndpoint'
+        : undefined
+    );
+    (axios as any).mockResolvedValue({ data: { access_token: 'token' } });
+
+    const result = await utils.getGraphAccessToken();
+
+    expect(result).toBe('token');
+    expect(axios).toHaveBeenCalledWith({
+      url: 'mockTokenEndpoint',
+      method: 'post',
+      data: expect.any(FormData),
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  });
 });
 
 describe('getUserGraphInfo', () => {
@@ -618,6 +637,60 @@ describe('checkIfRoleIsAssigned', () => {
     });
     const filter = {
       field: '{{attributes.attr2}}',
+      operator: filterOperator.EQUAL_TO,
+      value: 'value1',
+    };
+    expect(utils.checkIfRoleIsAssigned(user, filter)).toBe(false);
+  });
+
+  it('should treat a missing groups filter value as an empty list', () => {
+    const filter = {
+      field: '{{groups}}',
+      operator: filterOperator.CONTAINS,
+      // no value: exercises the `filter.value || []` fallback
+    };
+    // CONTAINS with an empty required set is vacuously satisfied
+    expect(utils.checkIfRoleIsAssigned(user, filter)).toBe(true);
+  });
+
+  it('should treat a missing username as an empty string for email filters', () => {
+    const userWithoutEmail = { groups: [] } as unknown as User;
+    const filter = {
+      field: '{{email}}',
+      operator: filterOperator.EQUAL_TO,
+      value: '',
+    };
+    expect(utils.checkIfRoleIsAssigned(userWithoutEmail, filter)).toBe(true);
+  });
+
+  it('should treat a missing graphData userType as an empty string', () => {
+    const userWithoutGraph = {
+      groups: [],
+      username: 'test@example.com',
+    } as unknown as User;
+    const filter = {
+      field: '{{userType}}',
+      operator: filterOperator.NOT_EQUAL_TO,
+      value: 'Member',
+    };
+    expect(utils.checkIfRoleIsAssigned(userWithoutGraph, filter)).toBe(true);
+  });
+
+  it('should return false for an unsupported operator with userType', () => {
+    // The {{userType}} case has no break, so an unsupported operator falls
+    // through to the default case, which returns false.
+    const filter = {
+      field: '{{userType}}',
+      operator: filterOperator.CONTAINS,
+      value: 'Guest',
+    };
+    expect(utils.checkIfRoleIsAssigned(user, filter)).toBe(false);
+  });
+
+  it('should default to an empty attributes list when config is missing', () => {
+    (config.get as jest.Mock).mockReturnValue(undefined);
+    const filter = {
+      field: '{{attributes.attr1}}',
       operator: filterOperator.EQUAL_TO,
       value: 'value1',
     };
