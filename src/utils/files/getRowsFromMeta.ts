@@ -54,7 +54,6 @@ export const getRowsFromMeta = (
   isEmail = false,
   locale?: string
 ): any[] => {
-  console.log('Locale is : ', locale);
   const rows = [];
   for (const record of records) {
     const row = {};
