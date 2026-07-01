@@ -100,6 +100,7 @@ export const getLocalizedChoices = (
  * @param choices list of choices.
  * @param value choice value.
  * @param locale Requested application locale.
+ * @param localize Whether to localize choice labels.
  * @returns display value of the value.
  */
 export const getText = (
