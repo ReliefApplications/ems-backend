@@ -243,6 +243,7 @@ router.get('/form/records/:id/history', async (req, res) => {
               } as any)
             )(),
             token: req.headers.authorization,
+            locale: req.context?.locale,
             ...(req.headers.accesstoken && {
               accesstoken: req.headers.accesstoken,
             }),
