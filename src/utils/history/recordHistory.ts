@@ -17,6 +17,7 @@ import {
 } from 'lodash';
 import { getFullChoices } from '@utils/form';
 import { accessibleBy } from '@casl/mongoose';
+import { resolveLocalizedString } from '@utils/i18n/resolveLocalizedString';
 
 /**
  * Class used to get a record's history
@@ -297,6 +298,7 @@ export class RecordHistory {
    * @returns The record history with formated values
    */
   private async formatValues(history: RecordHistoryType) {
+    const locale = this.options.context?.locale;
     const getOptionFromChoices = (
       value: string,
       choices: { value: string; text: string }[] | string[]
@@ -304,7 +306,10 @@ export class RecordHistory {
       const choice = (choices as any[])?.find((c: any) =>
         c.value ? c.value == value : c == value
       );
-      return choice === undefined ? value : choice.text ? choice.text : choice;
+      if (choice === undefined) return value;
+      // choice.text may be a plain string or a localized map ({ default, ua, ... }),
+      // resolve it to the requested locale before displaying.
+      return choice.text ? resolveLocalizedString(choice.text, locale) : choice;
     };
 
     const getReferenceData = async (id: string) =>

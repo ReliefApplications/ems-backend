@@ -171,7 +171,9 @@ const getRows = async (
                 rows.push(
                   ...getRowsFromMeta(
                     columns,
-                    data.data[field].edges.map((x) => x.node)
+                    data.data[field].edges.map((x) => x.node),
+                    false,
+                    req?.context?.locale
                   )
                 );
               }
