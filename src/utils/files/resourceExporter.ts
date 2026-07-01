@@ -92,7 +92,9 @@ export default class Exporter {
       case 'xlsx': {
         const records: Record[] = getRowsFromMeta(
           this.columns,
-          await this.getRecords()
+          await this.getRecords(),
+          false,
+          this.req.context?.locale
         );
         let workbook: Workbook | stream.xlsx.WorkbookWriter;
         // Create a new instance of a Workbook class
@@ -124,7 +126,9 @@ export default class Exporter {
       case 'csv': {
         const records: Record[] = getRowsFromMeta(
           this.columns,
-          await this.getRecords()
+          await this.getRecords(),
+          false,
+          this.req.context?.locale
         );
         // Create a string array with the columns' labels or names as fallback, then construct the parser from it
         const fields = this.columns.flatMap((x) => ({
@@ -156,7 +160,8 @@ export default class Exporter {
         const records: Record[] = getRowsFromMeta(
           this.columns,
           await this.getRecords(),
-          true
+          true,
+          this.req.context?.locale
         );
         // Generate csv, by parsing the data
         const csvData = [];

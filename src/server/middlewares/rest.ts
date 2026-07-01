@@ -3,6 +3,7 @@ import defineUserAbility from '@security/defineUserAbility';
 import { AuthenticationType } from '../../oort.config';
 import i18next from 'i18next';
 import config from 'config';
+import { getICULocale } from '@utils/date/getICULocale';
 
 /** Authentication strategy */
 const strategy =
@@ -20,7 +21,7 @@ const strategy =
 export const restMiddleware = (req, res, next) => {
   passport.authenticate(strategy, { session: true }, (err, user) => {
     if (user) {
-      req.context = { user };
+      req.context = { user, locale: getICULocale(req?.headers?.language) };
       // req.context.user = user;
       // Define the rights of the user
       req.context.user.ability = defineUserAbility(user);
