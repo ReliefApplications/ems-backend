@@ -177,6 +177,13 @@ function extendAbilityForRecordsOnForm(
       } as MongoQuery);
     }
 
+    // upload records
+    if (userHasRoleFor(resourcePermission.UPLOAD_RECORDS, user, resource)) {
+      can('upload', 'Record', {
+        $or: [{ 'form._id': form._id }, { form: form._id }],
+      } as MongoQuery);
+    }
+
     // access a record
     if (userHasRoleFor(resourcePermission.SEE_RECORDS, user, resource)) {
       // can('read', 'Form', { _id: form._id });

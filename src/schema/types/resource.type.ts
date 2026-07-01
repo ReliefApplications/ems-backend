@@ -127,6 +127,11 @@ export const ResourceType = new GraphQLObjectType({
               parent.permissions,
               args.role
             ),
+            canUploadRecords: rolePermissionResolver(
+              resourcePermission.UPLOAD_RECORDS,
+              parent.permissions,
+              args.role
+            ),
           };
         } else {
           return null;
@@ -295,6 +300,20 @@ export const ResourceType = new GraphQLObjectType({
           ability.can('manage', 'Record') ||
           userHasRoleFor(
             resourcePermission.DOWNLOAD_RECORDS,
+            context.user,
+            parent
+          )
+        );
+      },
+    },
+    canUploadRecords: {
+      type: GraphQLBoolean,
+      async resolve(parent, args, context) {
+        const ability: AppAbility = context.user.ability;
+        return (
+          ability.can('manage', 'Record') ||
+          userHasRoleFor(
+            resourcePermission.UPLOAD_RECORDS,
             context.user,
             parent
           )

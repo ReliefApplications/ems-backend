@@ -10,7 +10,6 @@ import {
   Application,
 } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
-import { Types } from 'mongoose';
 import { getUploadColumns, loadRow, uploadFile } from '@utils/files';
 import { getNextId } from '@utils/form';
 import i18next from 'i18next';
@@ -48,19 +47,38 @@ async function insertRecords(
   // Check if the user is authorized
   const ability: AppAbility = context.user.ability;
   let canCreate = false;
-  if (ability.can('create', 'Record')) {
+  if (ability.can('create', 'Record') || ability.can('upload', 'Record')) {
     canCreate = true;
   } else {
-    const roles = context.user.roles.map((x) => new Types.ObjectId(x._id));
+    // Populate resource on form if not populated to access permissions
+    if (form.resource && !form.resource.permissions) {
+      await form.populate('resource');
+    }
+    const roles = context.user.roles.map((x) => String(x._id));
+
     const canCreateRoles = get(
       form,
       'resource.permissions.canCreateRecords',
       []
-    );
-    canCreate =
+    ).map((x: any) => String(x.role || x));
+
+    const canUploadRoles = get(
+      form,
+      'resource.permissions.canUploadRecords',
+      []
+    ).map((x: any) => String(x.role || x));
+
+    const hasCreateRole =
       canCreateRoles.length > 0
         ? canCreateRoles.some((x) => roles.includes(x))
         : true;
+
+    const hasUploadRole =
+      canUploadRoles.length > 0
+        ? canUploadRoles.some((x) => roles.includes(x))
+        : false;
+
+    canCreate = hasCreateRole || hasUploadRole;
   }
   // Check unicity of record
   // TODO: this is always breaking

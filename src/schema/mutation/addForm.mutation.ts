@@ -92,6 +92,11 @@ export default {
             role: x,
           };
         }),
+        canUploadRecords: userGlobalRoles.map((x) => {
+          return {
+            role: x,
+          };
+        }),
       };
       try {
         if (!args.resource) {
