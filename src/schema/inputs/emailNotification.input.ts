@@ -64,6 +64,7 @@ export const DatasetInputType = new GraphQLInputObjectType({
     sendAsAttachment: { type: GraphQLBoolean },
     individualEmail: { type: GraphQLBoolean },
     individualEmailFields: { type: new GraphQLList(GraphQLJSON) },
+    individualEmailToDistributionList: { type: GraphQLBoolean },
     csFilter: { type: GraphQLJSON },
     pageSize: { type: GraphQLInt },
     navigateToPage: { type: GraphQLBoolean, defaultValue: false },
