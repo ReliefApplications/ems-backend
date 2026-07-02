@@ -142,6 +142,7 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
         textStyle: { type: mongoose.Schema.Types.Mixed },
         sendAsAttachment: { type: Boolean, default: false },
         individualEmail: { type: Boolean, default: false },
+        individualEmailToDistributionList: { type: Boolean, default: false },
         navigateToPage: {
           type: Boolean,
           default: false,
