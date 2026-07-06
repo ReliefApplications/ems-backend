@@ -1,4 +1,4 @@
-import { Record, User, Role, ReferenceData } from '@models';
+import { Record, User, Role, ReferenceData, Version } from '@models';
 import {
   Change,
   RecordHistory as RecordHistoryType,
@@ -24,6 +24,9 @@ import { resolveLocalizedString } from '@utils/i18n/resolveLocalizedString';
  */
 export class RecordHistory {
   fields: any[] = [];
+
+  /** Default number of history entries returned per page, when a limit is not specified */
+  private static defaultPageLimit = 20;
 
   /**
    * Initializes a RecordHistory object with the given record
@@ -231,60 +234,118 @@ export class RecordHistory {
   }
 
   /**
-   * Gets the list of changes per version of a record
+   * Gets the list of changes per version of a record.
    *
+   * Entries are chronologically indexed 0..N (N = number of stored versions):
+   * entry 0 is the initial creation diff, entries 1..N-1 are diffs between
+   * consecutive versions, and entry N is the diff between the last version
+   * and the record's current data. The returned list is reversed so index 0
+   * is the most recent change. When pagination is provided, only the version
+   * documents strictly required to compute the requested slice are fetched
+   * from the database, instead of the record's entire version history.
+   *
+   * @param pagination optional pagination options
+   * @param pagination.page requested page, 1-indexed
+   * @param pagination.limit number of history entries per page
    * @returns A list of changes
    */
-  async getHistory() {
-    const res: RecordHistoryType = [];
-    const versions =
-      this.record.versions?.map((v) => ({
-        ...v.toObject({ minimize: false }),
-        data: pick(v, this.record.accessibleFieldsBy(this.options.ability))
-          .data,
-      })) || [];
+  async getHistory(pagination?: { page?: number; limit?: number }) {
     const filteredData = pick(
       this.record,
       this.record.accessibleFieldsBy(this.options.ability)
     ).data;
-    let changes: any;
-    if (versions.length === 0) {
-      changes = this.getDifference(null, filteredData);
-      res.push({
-        createdAt: this.record.createdAt,
-        createdBy: this.record._createdBy?.user?.name,
-        changes,
-      });
+    const versionIds: any[] = this.record.versions || [];
+    const N = versionIds.length;
 
-      const formatted = await this.formatValues(res);
-      return formatted;
+    // No prior versions: the only possible entry is the creation of the record
+    if (N === 0) {
+      const changes = this.getDifference(null, filteredData);
+      const entries: RecordHistoryType = [
+        {
+          createdAt: this.record.createdAt,
+          createdBy: this.record._createdBy?.user?.name,
+          changes,
+        },
+      ];
+      const page = pagination
+        ? entries.slice(
+            ((pagination.page || 1) - 1) *
+              (pagination.limit || RecordHistory.defaultPageLimit),
+            (pagination.page || 1) *
+              (pagination.limit || RecordHistory.defaultPageLimit)
+          )
+        : entries;
+      return this.formatValues(page);
     }
-    changes = this.getDifference(null, versions[0].data);
-    res.push({
-      createdAt: versions[0].createdAt,
-      createdBy: this.record._createdBy?.user?.name,
-      changes,
-      version: versions[0],
-    });
 
-    for (let i = 1; i < versions.length; i++) {
-      changes = this.getDifference(versions[i - 1].data, versions[i].data);
-      res.push({
-        createdAt: versions[i].createdAt,
-        createdBy: versions[i - 1].createdBy?.name,
-        changes,
-        version: versions[i],
-      });
+    // Determine which chronological entries (e = 0..N) are requested, expressed
+    // in reversed (most-recent-first) order matching the public API.
+    let eMin = 0;
+    let eMax = N;
+    if (pagination) {
+      const limit = pagination.limit || RecordHistory.defaultPageLimit;
+      const page = pagination.page || 1;
+      const skip = (page - 1) * limit;
+      // Reversed index range is [0, N] (N+1 total entries) - a page starting
+      // past the last valid index has nothing to return.
+      if (skip > N) return [];
+      const rStart = skip;
+      const rEnd = Math.min(skip + limit - 1, N);
+      eMax = N - rStart;
+      eMin = N - rEnd;
     }
-    changes = this.getDifference(
-      versions[versions.length - 1].data,
-      filteredData
+
+    // Only fetch the version documents strictly needed to compute entries [eMin, eMax]
+    const vStart = Math.max(0, eMin - 1);
+    const vEnd = Math.min(N - 1, eMax);
+    const neededIds = versionIds.slice(vStart, vEnd + 1);
+
+    const fetchedVersions = await Version.find({
+      _id: { $in: neededIds },
+    }).populate({ path: 'createdBy', model: 'User' });
+    const fetchedById = new Map(
+      fetchedVersions.map((v: any) => [String(v._id), v])
     );
-    res.push({
-      createdAt: this.record.modifiedAt,
-      createdBy: versions[versions.length - 1].createdBy?.name,
-      changes,
+    // Mongo doesn't preserve $in order, so re-map to match neededIds
+    const versions = neededIds.map((id) => {
+      const v = fetchedById.get(String(id));
+      return {
+        ...v.toObject({ minimize: false }),
+        data: pick(v, this.record.accessibleFieldsBy(this.options.ability))
+          .data,
+      };
     });
+    // versions[idx - vStart] is the version at original array index `idx`
+    const getVersion = (idx: number) => versions[idx - vStart];
+
+    const res: RecordHistoryType = [];
+    for (let e = eMin; e <= eMax; e++) {
+      if (e === 0) {
+        const v0 = getVersion(0);
+        res.push({
+          createdAt: v0.createdAt,
+          createdBy: this.record._createdBy?.user?.name,
+          changes: this.getDifference(null, v0.data),
+          version: v0,
+        });
+      } else if (e === N) {
+        const vLast = getVersion(N - 1);
+        res.push({
+          createdAt: this.record.modifiedAt,
+          createdBy: vLast.createdBy?.name,
+          changes: this.getDifference(vLast.data, filteredData),
+        });
+      } else {
+        const vPrev = getVersion(e - 1);
+        const vCurr = getVersion(e);
+        res.push({
+          createdAt: vCurr.createdAt,
+          createdBy: vPrev.createdBy?.name,
+          changes: this.getDifference(vPrev.data, vCurr.data),
+          version: vCurr,
+        });
+      }
+    }
 
     const formatted = await this.formatValues(res.reverse());
     return formatted;

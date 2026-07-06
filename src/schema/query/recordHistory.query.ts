@@ -4,6 +4,7 @@ import {
   GraphQLError,
   GraphQLList,
   GraphQLString,
+  GraphQLInt,
 } from 'graphql';
 import { HistoryVersionType } from '../types';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
@@ -15,10 +16,15 @@ import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 import { getErrorMessage, getErrorStack } from '@utils/error';
 
+/** Maximum number of history entries that can be requested per page */
+const MAX_HISTORY_PAGE_LIMIT = 100;
+
 /** Arguments for the recordHistory query */
 type RecordHistoryArgs = {
   id: string | Types.ObjectId;
   lang?: string;
+  page?: number;
+  limit?: number;
 };
 
 /**
@@ -30,6 +36,8 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     lang: { type: GraphQLString },
+    page: { type: GraphQLInt },
+    limit: { type: GraphQLInt },
   },
   async resolve(parent, args: RecordHistoryArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -40,20 +48,12 @@ export default {
       }
 
       const user = context.user;
-      // Get data
-      const record: Record = await Record.findById(args.id)
-        .populate({
-          path: 'versions',
-          model: 'Version',
-          populate: {
-            path: 'createdBy',
-            model: 'User',
-          },
-        })
-        .populate({
-          path: 'resource',
-          model: 'Resource',
-        });
+      // Get data. Versions are fetched lazily by RecordHistory, only for the
+      // requested page, instead of being populated in full here.
+      const record: Record = await Record.findById(args.id).populate({
+        path: 'resource',
+        model: 'Resource',
+      });
       if (!record) {
         throw new GraphQLError(
           context.i18next.i18n.t('common.errors.permissionNotGranted')
@@ -76,11 +76,20 @@ export default {
 
       // Create the history and return it
       record.form = form;
+      const pagination =
+        args.page !== undefined || args.limit !== undefined
+          ? {
+              page: args.page,
+              limit: args.limit
+                ? Math.min(args.limit, MAX_HISTORY_PAGE_LIMIT)
+                : undefined,
+            }
+          : undefined;
       const history = await new RecordHistory(record, {
         translate: context.i18next.i18n.t,
         ability,
         context,
-      }).getHistory();
+      }).getHistory(pagination);
       for (const version of history) {
         for (const change of version.changes) {
           if (change.new) change.new = JSON.stringify(change.new);
