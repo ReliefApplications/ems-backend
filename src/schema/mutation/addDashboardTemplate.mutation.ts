@@ -124,7 +124,7 @@ export default {
             mainDashboard,
             page.context,
             args.contextEl,
-            context.dataSources
+            context
           ),
           // Copy structure from the main dashboard
           structure: mainDashboard.structure || [],

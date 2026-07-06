@@ -10,6 +10,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { accessibleBy } from '@casl/mongoose';
 import { getNewDashboardName } from '@utils/context/getNewDashboardName';
 import { getContextData } from '@utils/context/getContextData';
+import { hasContextPlaceholder } from '@utils/context/hasContextPlaceholder';
 import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Arguments for the dashboard query */
@@ -122,16 +123,28 @@ export default {
           context
         );
 
-        Object.assign(mainDashboard, {
-          contextData,
-          name: await getNewDashboardName(
-            mainDashboard,
-            page.context,
-            args.contextEl,
-            context.dataSources
-          ),
-          defaultTemplate: true,
-        });
+        if (
+          hasContextPlaceholder(
+            mainDashboard.name,
+            mainDashboard.nameTranslations
+          )
+        ) {
+          // The admin has typed a {{context.field}} template into the title:
+          // leave name / nameTranslations untouched, the frontend resolves it.
+          Object.assign(mainDashboard, { contextData, defaultTemplate: true });
+        } else {
+          Object.assign(mainDashboard, {
+            contextData,
+            name: await getNewDashboardName(
+              mainDashboard,
+              page.context,
+              args.contextEl,
+              context,
+              contextData
+            ),
+            defaultTemplate: true,
+          });
+        }
 
         return mainDashboard;
       }
