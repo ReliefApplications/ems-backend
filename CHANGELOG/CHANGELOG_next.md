@@ -1,3 +1,10 @@
+# [2.17.0-rc.7](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.6...v2.17.0-rc.7) (2026-07-07)
+
+
+### Features
+
+* Add canUploadRecords permission ([#1247](https://github.com/ReliefApplications/ems-backend/issues/1247)) ([ddb5a0f](https://github.com/ReliefApplications/ems-backend/commit/ddb5a0fc52cfc836f4c507a055c3d7c66f6df7ca)), closes [AB#134543](https://github.com/AB/issues/134543)
+
 # [2.17.0-rc.6](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.5...v2.17.0-rc.6) (2026-07-01)
 
 
