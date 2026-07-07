@@ -242,24 +242,31 @@ export class RecordHistory {
    * and the record's current data. The returned list is reversed so index 0
    * is the most recent change.
    *
-   * When paginating or filtering by fields, entries without any remaining
-   * change are dropped, and skip / limit apply to the remaining displayable
-   * entries: a page always contains up to `limit` non-empty entries. Entries
-   * are computed most-recent-first in batches, fetching only the version
-   * documents needed, until the page is filled or history is exhausted.
+   * When paginating or filtering, entries outside the date range or without
+   * any remaining change are dropped, and skip / limit apply to the remaining
+   * displayable entries: a page always contains up to `limit` non-empty
+   * entries. Entries are computed most-recent-first in batches, fetching only
+   * the version documents needed, until the page is filled or history is
+   * exhausted.
    *
    * @param options optional options
    * @param options.skip number of history entries to skip
    * @param options.limit number of history entries per page
    * @param options.fields when provided, only keep changes on those fields
+   * @param options.fromDate when provided, only keep entries from that date
+   * @param options.toDate when provided, only keep entries up to that date
    * @returns A list of changes
    */
   async getHistory(options?: {
     skip?: number;
     limit?: number;
     fields?: string[];
+    fromDate?: Date;
+    toDate?: Date;
   }) {
     const fields = options?.fields?.length ? options.fields : undefined;
+    const fromDate = options?.fromDate;
+    const toDate = options?.toDate;
     const paginating =
       options?.skip !== undefined || options?.limit !== undefined;
     const skip = paginating ? options.skip || 0 : 0;
@@ -272,15 +279,22 @@ export class RecordHistory {
     // remove changes whose formatted old & new values are equal.
     const dropEmpty = paginating || !!fields;
 
-    const applyFieldsFilter = (entries: RecordHistoryType) => {
+    const applyFilters = (entries: RecordHistoryType) => {
+      let filtered = entries;
+      if (fromDate || toDate) {
+        filtered = filtered.filter((entry) => {
+          const date = new Date(entry.createdAt);
+          return !(fromDate && date < fromDate) && !(toDate && date > toDate);
+        });
+      }
       if (fields) {
-        for (const entry of entries) {
+        for (const entry of filtered) {
           entry.changes = entry.changes.filter((change) =>
             fields.includes(change.field)
           );
         }
       }
-      return entries;
+      return filtered;
     };
 
     const filteredData = pick(
@@ -300,7 +314,7 @@ export class RecordHistory {
           changes,
         },
       ];
-      entries = await this.formatValues(applyFieldsFilter(entries));
+      entries = await this.formatValues(applyFilters(entries));
       if (dropEmpty) {
         entries = entries.filter((entry) => entry.changes.length);
       }
@@ -329,7 +343,11 @@ export class RecordHistory {
         versionIds,
         filteredData
       );
-      const formatted = await this.formatValues(applyFieldsFilter(raw));
+      // Entries are ordered most recent first: once one is older than
+      // fromDate, all the remaining history is out of range too
+      const exhausted =
+        fromDate && raw.some((entry) => new Date(entry.createdAt) < fromDate);
+      const formatted = await this.formatValues(applyFilters(raw));
       for (const entry of formatted) {
         if (dropEmpty && !entry.changes.length) continue;
         if (seen >= skip && result.length < limit) {
@@ -337,6 +355,7 @@ export class RecordHistory {
         }
         seen++;
       }
+      if (exhausted) break;
     }
     return result;
   }

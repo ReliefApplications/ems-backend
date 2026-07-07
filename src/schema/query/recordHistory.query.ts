@@ -6,6 +6,7 @@ import {
   GraphQLString,
   GraphQLInt,
 } from 'graphql';
+import { GraphQLDateTime } from 'graphql-scalars';
 import { HistoryVersionType } from '../types';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { RecordHistory } from '@utils/history';
@@ -24,6 +25,8 @@ type RecordHistoryArgs = {
   first?: number;
   skip?: number;
   fields?: string[];
+  fromDate?: Date;
+  toDate?: Date;
 };
 
 /**
@@ -38,6 +41,8 @@ export default {
     first: { type: GraphQLInt },
     skip: { type: GraphQLInt },
     fields: { type: new GraphQLList(GraphQLString) },
+    fromDate: { type: GraphQLDateTime },
+    toDate: { type: GraphQLDateTime },
   },
   async resolve(parent, args: RecordHistoryArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -88,6 +93,8 @@ export default {
         skip: args.skip,
         limit: args.first,
         fields: args.fields,
+        fromDate: args.fromDate,
+        toDate: args.toDate,
       });
       for (const version of history) {
         for (const change of version.changes) {

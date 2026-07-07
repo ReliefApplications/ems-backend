@@ -236,6 +236,45 @@ describe('RecordHistory Class Unit Tests', () => {
     expect(history[2].changes[0].new).toBe(25); // creation
   });
 
+  it('should only return entries within the given date range', async () => {
+    const versionsList = [
+      {
+        _id: 'versionId1',
+        createdAt: new Date('2026-07-02T12:00:00Z'),
+        data: { name: 'Bob', age: 25 },
+        toObject: jest.fn().mockReturnValue({ _id: 'versionId1', createdAt: new Date('2026-07-02T12:00:00Z'), data: { name: 'Bob', age: 25 } }),
+      },
+      {
+        _id: 'versionId2',
+        createdAt: new Date('2026-07-03T12:00:00Z'),
+        data: { name: 'Bob', age: 28 },
+        toObject: jest.fn().mockReturnValue({ _id: 'versionId2', createdAt: new Date('2026-07-03T12:00:00Z'), data: { name: 'Bob', age: 28 } }),
+      },
+      {
+        _id: 'versionId3',
+        createdAt: new Date('2026-07-04T12:00:00Z'),
+        data: { name: 'Alice', age: 28 },
+        toObject: jest.fn().mockReturnValue({ _id: 'versionId3', createdAt: new Date('2026-07-04T12:00:00Z'), data: { name: 'Alice', age: 28 } }),
+      },
+    ];
+
+    (Version.find as jest.Mock).mockReturnValue({
+      populate: jest.fn().mockResolvedValue(versionsList),
+    });
+
+    const recordHistory = new RecordHistory(record, options);
+    const history = await recordHistory.getHistory({
+      fromDate: new Date('2026-07-03T00:00:00Z'),
+      toDate: new Date('2026-07-03T23:59:59Z'),
+    });
+
+    // Only the v1 -> v2 entry (created 2026-07-03) is in range
+    expect(history.length).toBe(1);
+    expect(history[0].changes[0].field).toBe('age');
+    expect(history[0].changes[0].old).toBe(25);
+    expect(history[0].changes[0].new).toBe(28);
+  });
+
   it('should apply pagination to a record with no prior versions', async () => {
     const noVersionsRecord = { ...record, versions: [] };
     const recordHistory = new RecordHistory(noVersionsRecord, options);

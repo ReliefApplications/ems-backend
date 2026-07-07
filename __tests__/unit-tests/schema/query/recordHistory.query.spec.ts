@@ -100,21 +100,48 @@ describe('RecordHistory Query Resolver', () => {
     );
   });
 
-  it('should fetch history with page and limit parameters if page or limit is provided', async () => {
-    const args = { id: 'recordId', page: 2, limit: 10 };
+  it('should fetch history with pagination, fields and date range parameters', async () => {
+    const fromDate = new Date('2026-07-01T00:00:00Z');
+    const toDate = new Date('2026-07-05T00:00:00Z');
+    const args = {
+      id: 'recordId',
+      first: 10,
+      skip: 20,
+      fields: ['name'],
+      fromDate,
+      toDate,
+    };
     const result = await resolver.resolve(null, args, context);
 
     expect(RecordHistory).toHaveBeenCalledWith(mockRecord, expect.any(Object));
-    expect(mockGetHistory).toHaveBeenCalledWith({ page: 2, limit: 10 });
+    expect(mockGetHistory).toHaveBeenCalledWith({
+      skip: 20,
+      limit: 10,
+      fields: ['name'],
+      fromDate,
+      toDate,
+    });
     expect(result).toBeDefined();
   });
 
-  it('should fetch history without pagination if no page or limit is provided', async () => {
+  it('should fetch history without pagination if no first or skip is provided', async () => {
     const args = { id: 'recordId' };
     const result = await resolver.resolve(null, args, context);
 
     expect(RecordHistory).toHaveBeenCalledWith(mockRecord, expect.any(Object));
-    expect(mockGetHistory).toHaveBeenCalledWith(undefined);
+    expect(mockGetHistory).toHaveBeenCalledWith({
+      skip: undefined,
+      limit: undefined,
+      fields: undefined,
+    });
     expect(result).toBeDefined();
+  });
+
+  it('should throw an error if the requested page size is too large', async () => {
+    const args = { id: 'recordId', first: 5000 };
+    await expect(resolver.resolve(null, args, context)).rejects.toThrow(
+      GraphQLError
+    );
+    expect(mockGetHistory).not.toHaveBeenCalled();
   });
 });
