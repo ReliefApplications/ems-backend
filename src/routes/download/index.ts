@@ -189,19 +189,10 @@ router.get('/form/records/:id/history', async (req, res) => {
     const record: Record = await Record.findOne({
       _id: req.params.id,
       archived: { $ne: true },
-    })
-      .populate({
-        path: 'versions',
-        model: 'Version',
-        populate: {
-          path: 'createdBy',
-          model: 'User',
-        },
-      })
-      .populate({
-        path: 'resource',
-        model: 'Resource',
-      });
+    }).populate({
+      path: 'resource',
+      model: 'Resource',
+    });
     if (!record) {
       return res.status(404).send(req.t('common.errors.dataNotFound'));
     }
@@ -219,7 +210,7 @@ router.get('/form/records/:id/history', async (req, res) => {
     if (form) {
       record.form = form;
       const meta: RecordHistoryMeta = {
-        form: form.name,
+        form: form.name as string,
         record: record.incrementalId,
         fields: filters.fields?.join(',') || '',
         fromDate: filters.fromDate

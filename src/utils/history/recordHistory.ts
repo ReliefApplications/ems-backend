@@ -1,4 +1,4 @@
-import { Record, User, Role, ReferenceData } from '@models';
+import { Record, User, Role, ReferenceData, Version } from '@models';
 import {
   Change,
   RecordHistory as RecordHistoryType,
@@ -24,6 +24,9 @@ import { resolveLocalizedString } from '@utils/i18n/resolveLocalizedString';
  */
 export class RecordHistory {
   fields: any[] = [];
+
+  /** Default number of history entries returned per page, when a limit is not specified */
+  private static defaultPageLimit = 20;
 
   /**
    * Initializes a RecordHistory object with the given record
@@ -231,63 +234,203 @@ export class RecordHistory {
   }
 
   /**
-   * Gets the list of changes per version of a record
+   * Gets the list of changes per version of a record.
    *
+   * Entries are chronologically indexed 0..N (N = number of stored versions):
+   * entry 0 is the initial creation diff, entries 1..N-1 are diffs between
+   * consecutive versions, and entry N is the diff between the last version
+   * and the record's current data. The returned list is reversed so index 0
+   * is the most recent change.
+   *
+   * When paginating or filtering, entries outside the date range or without
+   * any remaining change are dropped, and skip / limit apply to the remaining
+   * displayable entries: a page always contains up to `limit` non-empty
+   * entries. Entries are computed most-recent-first in batches, fetching only
+   * the version documents needed, until the page is filled or history is
+   * exhausted.
+   *
+   * @param options optional options
+   * @param options.skip number of history entries to skip
+   * @param options.limit number of history entries per page
+   * @param options.fields when provided, only keep changes on those fields
+   * @param options.fromDate when provided, only keep entries from that date
+   * @param options.toDate when provided, only keep entries up to that date
    * @returns A list of changes
    */
-  async getHistory() {
-    const res: RecordHistoryType = [];
-    const versions =
-      this.record.versions?.map((v) => ({
-        ...v.toObject({ minimize: false }),
-        data: pick(v, this.record.accessibleFieldsBy(this.options.ability))
-          .data,
-      })) || [];
+  async getHistory(options?: {
+    skip?: number;
+    limit?: number;
+    fields?: string[];
+    fromDate?: Date;
+    toDate?: Date;
+  }) {
+    const fields = options?.fields?.length ? options.fields : undefined;
+    const fromDate = options?.fromDate;
+    const toDate = options?.toDate;
+    const paginating =
+      options?.skip !== undefined || options?.limit !== undefined;
+    const skip = paginating ? options.skip || 0 : 0;
+    const limit = paginating
+      ? options.limit || RecordHistory.defaultPageLimit
+      : Infinity;
+    // Entries left without changes cannot be displayed, so they are dropped
+    // whenever the caller paginates or filters, and don't count towards
+    // skip / limit. Emptiness is only known after formatValues, which can
+    // remove changes whose formatted old & new values are equal.
+    const dropEmpty = paginating || !!fields;
+
+    const applyFilters = (entries: RecordHistoryType) => {
+      let filtered = entries;
+      if (fromDate || toDate) {
+        filtered = filtered.filter((entry) => {
+          const date = new Date(entry.createdAt);
+          return !(fromDate && date < fromDate) && !(toDate && date > toDate);
+        });
+      }
+      if (fields) {
+        for (const entry of filtered) {
+          entry.changes = entry.changes.filter((change) =>
+            fields.includes(change.field)
+          );
+        }
+      }
+      return filtered;
+    };
+
     const filteredData = pick(
       this.record,
       this.record.accessibleFieldsBy(this.options.ability)
     ).data;
-    let changes: any;
-    if (versions.length === 0) {
-      changes = this.getDifference(null, filteredData);
-      res.push({
-        createdAt: this.record.createdAt,
-        createdBy: this.record._createdBy?.user?.name,
-        changes,
-      });
+    const versionIds: any[] = this.record.versions || [];
+    const N = versionIds.length;
 
-      const formatted = await this.formatValues(res);
-      return formatted;
+    // No prior versions: the only possible entry is the creation of the record
+    if (N === 0) {
+      const changes = this.getDifference(null, filteredData);
+      let entries: RecordHistoryType = [
+        {
+          createdAt: this.record.createdAt,
+          createdBy: this.record._createdBy?.user?.name,
+          changes,
+        },
+      ];
+      entries = await this.formatValues(applyFilters(entries));
+      if (dropEmpty) {
+        entries = entries.filter((entry) => entry.changes.length);
+      }
+      return entries.slice(skip, skip + limit);
     }
-    changes = this.getDifference(null, versions[0].data);
-    res.push({
-      createdAt: versions[0].createdAt,
-      createdBy: this.record._createdBy?.user?.name,
-      changes,
-      version: versions[0],
-    });
 
-    for (let i = 1; i < versions.length; i++) {
-      changes = this.getDifference(versions[i - 1].data, versions[i].data);
-      res.push({
-        createdAt: versions[i].createdAt,
-        createdBy: versions[i - 1].createdBy?.name,
-        changes,
-        version: versions[i],
-      });
+    const result: RecordHistoryType = [];
+    // Displayable entries encountered so far, to consume `skip`
+    let seen = 0;
+    // Reversed index of the next entry to compute (0 = most recent, N = creation)
+    let nextR = 0;
+    // The first batch covers exactly the requested window, so when no entry is
+    // dropped a page costs a single versions query, as if slicing directly.
+    // Follow-up batches double in size to bound the number of queries when
+    // most entries are filtered out.
+    let batchSize = Math.min(skip + limit, N + 1);
+    while (nextR <= N && result.length < limit) {
+      const rStart = nextR;
+      const rEnd = Math.min(nextR + batchSize - 1, N);
+      nextR = rEnd + 1;
+      batchSize *= 2;
+
+      const raw = await this.getEntries(
+        N - rEnd,
+        N - rStart,
+        versionIds,
+        filteredData
+      );
+      // Entries are ordered most recent first: once one is older than
+      // fromDate, all the remaining history is out of range too
+      const exhausted =
+        fromDate && raw.some((entry) => new Date(entry.createdAt) < fromDate);
+      const formatted = await this.formatValues(applyFilters(raw));
+      for (const entry of formatted) {
+        if (dropEmpty && !entry.changes.length) continue;
+        if (seen >= skip && result.length < limit) {
+          result.push(entry);
+        }
+        seen++;
+      }
+      if (exhausted) break;
     }
-    changes = this.getDifference(
-      versions[versions.length - 1].data,
-      filteredData
+    return result;
+  }
+
+  /**
+   * Builds the raw (unformatted) history entries for the chronological
+   * indices [eMin, eMax], fetching only the version documents strictly
+   * required to compute that range.
+   *
+   * @param eMin first chronological entry index (0 = creation diff)
+   * @param eMax last chronological entry index (N = current data diff)
+   * @param versionIds ids of all the record's versions, in chronological order
+   * @param filteredData record's current data, restricted to accessible fields
+   * @returns The entries for the range, most recent first
+   */
+  private async getEntries(
+    eMin: number,
+    eMax: number,
+    versionIds: any[],
+    filteredData: any
+  ): Promise<RecordHistoryType> {
+    const N = versionIds.length;
+    // Only fetch the version documents strictly needed to compute entries [eMin, eMax]
+    const vStart = Math.max(0, eMin - 1);
+    const vEnd = Math.min(N - 1, eMax);
+    const neededIds = versionIds.slice(vStart, vEnd + 1);
+
+    const fetchedVersions = await Version.find({
+      _id: { $in: neededIds },
+    }).populate({ path: 'createdBy', model: 'User' });
+    const fetchedById = new Map(
+      fetchedVersions.map((v: any) => [String(v._id), v])
     );
-    res.push({
-      createdAt: this.record.modifiedAt,
-      createdBy: versions[versions.length - 1].createdBy?.name,
-      changes,
+    // Mongo doesn't preserve $in order, so re-map to match neededIds
+    const versions = neededIds.map((id) => {
+      const v = fetchedById.get(String(id));
+      return {
+        ...v.toObject({ minimize: false }),
+        data: pick(v, this.record.accessibleFieldsBy(this.options.ability))
+          .data,
+      };
     });
+    // versions[idx - vStart] is the version at original array index `idx`
+    const getVersion = (idx: number) => versions[idx - vStart];
 
-    const formatted = await this.formatValues(res.reverse());
-    return formatted;
+    const res: RecordHistoryType = [];
+    for (let e = eMin; e <= eMax; e++) {
+      if (e === 0) {
+        const v0 = getVersion(0);
+        res.push({
+          createdAt: v0.createdAt,
+          createdBy: this.record._createdBy?.user?.name,
+          changes: this.getDifference(null, v0.data),
+          version: v0,
+        });
+      } else if (e === N) {
+        const vLast = getVersion(N - 1);
+        res.push({
+          createdAt: this.record.modifiedAt,
+          createdBy: vLast.createdBy?.name,
+          changes: this.getDifference(vLast.data, filteredData),
+        });
+      } else {
+        const vPrev = getVersion(e - 1);
+        const vCurr = getVersion(e);
+        res.push({
+          createdAt: vCurr.createdAt,
+          createdBy: vPrev.createdBy?.name,
+          changes: this.getDifference(vPrev.data, vCurr.data),
+          version: vCurr,
+        });
+      }
+    }
+
+    return res.reverse();
   }
 
   /**
