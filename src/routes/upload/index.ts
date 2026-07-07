@@ -57,29 +57,18 @@ async function insertRecords(
     }
     const roles = context.user.roles.map((x) => String(x._id));
 
-    const canCreateRoles = get(
-      form,
-      'resource.permissions.canCreateRecords',
-      []
-    ).map((x: any) => String(x.role || x));
-
     const canUploadRoles = get(
       form,
       'resource.permissions.canUploadRecords',
       []
     ).map((x: any) => String(x.role || x));
 
-    const hasCreateRole =
-      canCreateRoles.length > 0
-        ? canCreateRoles.some((x) => roles.includes(x))
-        : true;
-
     const hasUploadRole =
       canUploadRoles.length > 0
         ? canUploadRoles.some((x) => roles.includes(x))
         : false;
 
-    canCreate = hasCreateRole || hasUploadRole;
+    canCreate = hasUploadRole;
   }
   // Check unicity of record
   // TODO: this is always breaking
@@ -107,18 +96,21 @@ async function insertRecords(
       }
     });
 
+    // Resource may have been populated by the permission check above,
+    // so only keep its id
+    const structureId = String(
+      form.resource ? get(form.resource, '_id', form.resource) : form.id
+    );
     // Create records one by one so the incrementalId works correctly
     for (const dataSet of dataSets) {
       records.push(
         new Record({
-          incrementalId: await getNextId(
-            String(form.resource ? form.resource : form.id)
-          ),
+          incrementalId: await getNextId(structureId),
           form: form.id,
           // createdAt: new Date(),
           // modifiedAt: new Date(),
           data: dataSet.data,
-          resource: form.resource ? form.resource : null,
+          resource: form.resource ? structureId : null,
           createdBy: {
             positionAttributes: dataSet.positionAttributes,
             user: context.user._id,
