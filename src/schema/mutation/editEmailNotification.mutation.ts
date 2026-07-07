@@ -13,6 +13,7 @@ import extendAbilityForApplications from '@security/extendAbilityForApplication'
 import { AppAbility } from '@security/defineUserAbility';
 import { EmailNotificationReturn } from '@schema/types/emailNotification.type';
 import { cloneDeep } from 'lodash';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Interface for the arguments required to update a custom notification.
@@ -138,7 +139,7 @@ export default {
         return emailNotification;
       }
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
 
       if (err instanceof GraphQLError) {
         throw err;

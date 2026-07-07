@@ -16,6 +16,7 @@ import turf, { Feature, booleanPointInPolygon } from '@turf/turf';
 import { CustomAPI, buildDataSource } from '@server/apollo/dataSources';
 import { getAdmin0Polygons } from '@utils/gis/getCountryPolygons';
 import filterReferenceData from '@utils/referenceData/referenceDataFilter.util';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Endpoint for custom feature layers
@@ -158,7 +159,7 @@ const getFeatures = (
     try {
       getFeatureFromItem(features, layerType, item, mapping);
     } catch (err) {
-      logger.error(err.message);
+      logger.error(getErrorMessage(err));
     }
   });
 };
@@ -223,7 +224,7 @@ const gqlQuery = (
         }
       }
     } catch (err) {
-      throw new Error(err);
+      throw new Error(getErrorMessage(err));
     }
   });
 
@@ -429,7 +430,7 @@ router.post('/feature', async (req, res) => {
     }
     return res.send(featureCollection);
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res
       .status(500)
       .send(i18next.t('routes.gis.feature.errors.unexpected'));
@@ -441,7 +442,7 @@ router.get('/admin0', async (req, res) => {
     const polygons = await getAdmin0Polygons();
     return res.send(polygons);
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res
       .status(500)
       .send(i18next.t('routes.gis.feature.errors.unexpected'));

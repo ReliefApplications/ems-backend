@@ -4,6 +4,7 @@ import { getToken, getGraphqlUrl } from '@utils/commonServices';
 import axios from 'axios';
 import { parse } from 'wellknown';
 import { simplify } from '@turf/turf';
+import { getErrorMessage } from '@utils/error';
 
 /**
  * Get country polygons from common services.
@@ -56,7 +57,9 @@ export const getAdmin0Polygons = async () => {
               });
             } catch (err) {
               logger.error(
-                `Failed to fetch admin0s for country ${country.iso3code}: ${err.message}`
+                `Failed to fetch admin0s for country ${
+                  country.iso3code
+                }: ${getErrorMessage(err)}`
               );
             }
           }

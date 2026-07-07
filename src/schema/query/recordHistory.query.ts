@@ -4,7 +4,9 @@ import {
   GraphQLError,
   GraphQLList,
   GraphQLString,
+  GraphQLInt,
 } from 'graphql';
+import { GraphQLDateTime } from 'graphql-scalars';
 import { HistoryVersionType } from '../types';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { RecordHistory } from '@utils/history';
@@ -13,11 +15,18 @@ import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
+import { getErrorMessage, getErrorStack } from '@utils/error';
+import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 
 /** Arguments for the recordHistory query */
 type RecordHistoryArgs = {
   id: string | Types.ObjectId;
   lang?: string;
+  first?: number;
+  skip?: number;
+  fields?: string[];
+  fromDate?: Date;
+  toDate?: Date;
 };
 
 /**
@@ -29,9 +38,18 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     lang: { type: GraphQLString },
+    first: { type: GraphQLInt },
+    skip: { type: GraphQLInt },
+    fields: { type: new GraphQLList(GraphQLString) },
+    fromDate: { type: GraphQLDateTime },
+    toDate: { type: GraphQLDateTime },
   },
   async resolve(parent, args: RecordHistoryArgs, context: Context) {
     graphQLAuthCheck(context);
+    // Make sure that the page size is not too important
+    if (args.first) {
+      checkPageSize(args.first);
+    }
     try {
       // Setting language, if provided
       if (args.lang) {
@@ -39,20 +57,12 @@ export default {
       }
 
       const user = context.user;
-      // Get data
-      const record: Record = await Record.findById(args.id)
-        .populate({
-          path: 'versions',
-          model: 'Version',
-          populate: {
-            path: 'createdBy',
-            model: 'User',
-          },
-        })
-        .populate({
-          path: 'resource',
-          model: 'Resource',
-        });
+      // Get data. Versions are fetched lazily by RecordHistory, only for the
+      // requested page, instead of being populated in full here.
+      const record: Record = await Record.findById(args.id).populate({
+        path: 'resource',
+        model: 'Resource',
+      });
       if (!record) {
         throw new GraphQLError(
           context.i18next.i18n.t('common.errors.permissionNotGranted')
@@ -79,7 +89,13 @@ export default {
         translate: context.i18next.i18n.t,
         ability,
         context,
-      }).getHistory();
+      }).getHistory({
+        skip: args.skip,
+        limit: args.first,
+        fields: args.fields,
+        fromDate: args.fromDate,
+        toDate: args.toDate,
+      });
       for (const version of history) {
         for (const change of version.changes) {
           if (change.new) change.new = JSON.stringify(change.new);
@@ -88,7 +104,7 @@ export default {
       }
       return history;
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

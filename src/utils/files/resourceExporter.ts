@@ -24,6 +24,7 @@ import getSearchFilter from '@utils/schema/resolvers/Query/getSearchFilter';
 import getSortAggregation from '@utils/schema/resolvers/Query/getSortAggregation';
 import dataSources from '@server/apollo/dataSources';
 import sanitizeHtml from 'sanitize-html';
+import { getErrorMessage } from '@utils/error';
 
 /**
  * Export batch parameters interface
@@ -91,7 +92,9 @@ export default class Exporter {
       case 'xlsx': {
         const records: Record[] = getRowsFromMeta(
           this.columns,
-          await this.getRecords()
+          await this.getRecords(),
+          false,
+          this.req.context?.locale
         );
         let workbook: Workbook | stream.xlsx.WorkbookWriter;
         // Create a new instance of a Workbook class
@@ -109,7 +112,7 @@ export default class Exporter {
         try {
           this.writeRowsXlsx(worksheet, records);
         } catch (err) {
-          logger.error(err.message);
+          logger.error(getErrorMessage(err));
         }
         // Close workbook
         if (workbook instanceof stream.xlsx.WorkbookWriter) {
@@ -123,7 +126,9 @@ export default class Exporter {
       case 'csv': {
         const records: Record[] = getRowsFromMeta(
           this.columns,
-          await this.getRecords()
+          await this.getRecords(),
+          false,
+          this.req.context?.locale
         );
         // Create a string array with the columns' labels or names as fallback, then construct the parser from it
         const fields = this.columns.flatMap((x) => ({
@@ -145,7 +150,7 @@ export default class Exporter {
             csvData.push(temp);
           }
         } catch (err) {
-          logger.error(err.message);
+          logger.error(getErrorMessage(err));
         }
         // Generate the file by parsing the data, set the response parameters and send it
         const csv = json2csv.parse(csvData);
@@ -155,7 +160,8 @@ export default class Exporter {
         const records: Record[] = getRowsFromMeta(
           this.columns,
           await this.getRecords(),
-          true
+          true,
+          this.req.context?.locale
         );
         // Generate csv, by parsing the data
         const csvData = [];
@@ -172,7 +178,7 @@ export default class Exporter {
             csvData.push(temp);
           }
         } catch (err) {
-          logger.error(err.message);
+          logger.error(getErrorMessage(err));
         }
         // Generate the file by parsing the data, set the response parameters and send it
         return { records: csvData, columns: this.columns };

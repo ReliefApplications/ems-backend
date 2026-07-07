@@ -3,6 +3,7 @@ import { Permission, Role, Channel, User } from '@models';
 import config from 'config';
 import { logger } from '../services/logger.service';
 import permissions from '@const/permissions';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Build the MongoDB url according to the environment parameters
@@ -174,6 +175,6 @@ export const initDatabase = async () => {
       logger.info(`${channel} channel created`);
     }
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
   }
 };

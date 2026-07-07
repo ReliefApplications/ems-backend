@@ -11,6 +11,7 @@ import {
 } from '@schema/inputs/emailNotification.input';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { cloneDeep } from 'lodash';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Arguments for the addCustomNotification mutation */
 type AddCustomNotificationArgs = {
@@ -110,7 +111,7 @@ export default {
       const response = emailNotification as EmailNotificationReturn;
       return response;
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

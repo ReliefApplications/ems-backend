@@ -6,6 +6,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { CustomTemplateType } from '@schema/types/customTemplate.type';
 import { CustomTemplate } from '@models/customTemplate.model';
 import { blobStorageUpload } from '@utils/notification/blobStorage';
+import { getErrorCode, getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Mutation to update an existing custom template.
@@ -75,11 +76,11 @@ export default {
         return customTemplate;
       }
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
 
       if (err instanceof GraphQLError) {
         throw err;
-      } else if (err?.code === 11000) {
+      } else if (getErrorCode(err) === 11000) {
         throw new GraphQLError(
           context.i18next.t(
             'mutations.customTemplate.errors.customTemplateNameExist'

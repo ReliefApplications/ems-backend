@@ -1,6 +1,7 @@
 import { logger } from '@services/logger.service';
 import config from 'config';
 import { isNil } from 'lodash';
+import { getErrorMessage } from '@utils/error';
 
 /** List all mandatory config keys */
 const mandatoryConfigKeys = [
@@ -33,7 +34,7 @@ export const checkConfig = () => {
       }
     }
   } catch (err) {
-    logger.error(err.message);
+    logger.error(getErrorMessage(err));
     process.exit();
   }
 };

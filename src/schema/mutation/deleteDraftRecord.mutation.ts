@@ -5,6 +5,7 @@ import { Context } from '@server/apollo/context';
 import { DraftRecordType } from '../types';
 import { DraftRecord } from '@models';
 import { Types } from 'mongoose';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Arguments for the deleteRecord mutation */
 type DeleteDraftRecordArgs = {
@@ -27,7 +28,7 @@ export default {
       const draftRecord = await DraftRecord.findById(args.id);
       return await DraftRecord.findByIdAndDelete(draftRecord._id);
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

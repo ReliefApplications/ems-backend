@@ -15,6 +15,8 @@ import { ApiConfiguration, ReferenceData } from '@models';
 import { CustomAPI } from '@server/apollo/dataSources';
 import { Context } from '@server/apollo/context';
 import { logger } from '@services/logger.service';
+import { getErrorMessage, getErrorStack } from '@utils/error';
+import { resolveLocalizedString } from '@utils/i18n/resolveLocalizedString';
 
 /**
  * Minimal resource shape the service needs — just the field list, plus an
@@ -199,12 +201,19 @@ export class CalculatedFieldService {
         return (choices || []).map((c: any) =>
           typeof c === 'string' || typeof c === 'number'
             ? { value: c, text: c }
-            : { value: c.value, text: c.text?.default ?? c.text ?? c.value }
+            : {
+                value: c.value,
+                // Resolve the (possibly localized) text to the active locale,
+                // falling back to the raw value when no translation is available.
+                text:
+                  resolveLocalizedString(c.text, this.context?.locale) ||
+                  c.value,
+              }
         );
       }
       return [];
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       return [];
     }
   }

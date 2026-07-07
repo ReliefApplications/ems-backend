@@ -4,6 +4,7 @@ import { Dashboard } from '../../models';
 import get from 'lodash/get';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Get templates for summary cards
@@ -76,7 +77,7 @@ router.get('/templates', async (req, res) => {
 
     res.send(cards);
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });

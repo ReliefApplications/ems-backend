@@ -4,6 +4,7 @@ import config from 'config';
 import { createHash } from 'crypto';
 import getRedisClient from './redis';
 import pubsub from './pubsub';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Redis client type, as returned by the shared redis helper. */
 type RedisClient = Awaited<ReturnType<typeof getRedisClient>>;
@@ -115,8 +116,8 @@ const emailEventSubscriber = async (): Promise<void> => {
       const event: EmailEvent = JSON.parse(message);
       await handleEmailEvent(event);
     } catch (error) {
-      logger.error(`Failed to handle email event: ${error.message}`, {
-        stack: error.stack,
+      logger.error(`Failed to handle email event: ${getErrorMessage(error)}`, {
+        stack: getErrorStack(error),
       });
     }
   });

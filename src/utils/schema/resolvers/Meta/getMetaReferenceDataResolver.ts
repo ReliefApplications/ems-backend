@@ -4,6 +4,7 @@ import { Field } from '../../introspection/getFieldType';
 import { referenceDataType } from '@const/enumTypes';
 import get from 'lodash/get';
 import { logger } from '@services/logger.service';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Return reference data meta field resolver.
@@ -32,7 +33,7 @@ const getMetaReferenceDataResolver =
         }
       } catch (err) {
         // Log error but continue execution
-        logger.error(err.message, { stack: err.stack });
+        logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       }
       return referenceData.fields.reduce(
         (o, x) =>

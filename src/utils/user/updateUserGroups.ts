@@ -8,6 +8,7 @@ import { getDelegatedToken } from '../proxy';
 import { isEmpty, isEqual } from 'lodash';
 import { GroupSettings } from './userManagement';
 import axios from 'axios';
+import { getErrorStack } from '@utils/error';
 
 /**
  * Check if we need to update user groups and perform it when needed.
@@ -73,7 +74,7 @@ export const updateUserGroups = async (
         data = res.data;
       } catch (err) {
         logger.error(i18next.t('common.errors.invalidAPI'), {
-          stack: err.stack,
+          stack: getErrorStack(err),
         });
         return false;
       }

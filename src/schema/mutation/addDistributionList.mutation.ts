@@ -11,6 +11,7 @@ import {
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
+import { getErrorCode, getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Arguments for the addDistributionList mutation */
 type AddDistributionListArgs = {
@@ -67,10 +68,10 @@ export default {
 
       return application.distributionLists.pop();
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
-      } else if (err?.code === 11000) {
+      } else if (getErrorCode(err) === 11000) {
         throw new GraphQLError(
           context.i18next.t(
             'mutations.emailDistributionList.errors.emailDistributionListNameExist'

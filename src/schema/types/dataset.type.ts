@@ -3,6 +3,7 @@ import { GraphQLInt, GraphQLObjectType } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
 import { logger } from '@services/logger.service';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * GraphQL DataSet type definition
@@ -56,8 +57,8 @@ export const DatasetType = new GraphQLObjectType({
           }
           return parent.records;
         } catch (error) {
-          logger.error('Failed to resolved dataset', error.message, {
-            stack: error.stack,
+          logger.error('Failed to resolved dataset', getErrorMessage(error), {
+            stack: getErrorStack(error),
           });
         }
       },

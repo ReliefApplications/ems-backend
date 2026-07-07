@@ -10,6 +10,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { accessibleBy } from '@casl/mongoose';
 import { getNewDashboardName } from '@utils/context/getNewDashboardName';
 import { getContextData } from '@utils/context/getContextData';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Arguments for the dashboard query */
 type DashboardArgs = {
@@ -135,7 +136,7 @@ export default {
         return mainDashboard;
       }
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

@@ -6,6 +6,7 @@ import { decodeCursor, encodeCursor } from '@schema/types';
 import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 import { CustomTemplateConnectionType } from '@schema/types/customTemplate.type';
 import { CustomTemplate } from '@models/customTemplate.model';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Default page size */
 // const DEFAULT_FIRST = 10;
@@ -70,7 +71,7 @@ export default {
         totalCount: await CustomTemplate.countDocuments(),
       };
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

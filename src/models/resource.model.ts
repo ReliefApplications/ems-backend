@@ -7,6 +7,7 @@ import { aggregationSchema } from './aggregation.model';
 import { Record } from './record.model';
 import { deleteFolder } from '@utils/files/deleteFolder';
 import { logger } from '@services/logger.service';
+import { getErrorMessage } from '@utils/error';
 
 /** Resource documents interface definition */
 export interface Resource extends Document {
@@ -150,13 +151,15 @@ addOnBeforeDeleteMany(resourceSchema, async (resources) => {
         logger.info(`Files from form ${form.id} successfully removed.`);
       }
     } catch (err) {
-      logger.error(`Deletion of files from forms failed: ${err.message}`);
+      logger.error(
+        `Deletion of files from forms failed: ${getErrorMessage(err)}`
+      );
     }
 
     await Form.deleteMany({ resource: { $in: resourcesIds } });
     await Record.deleteMany({ resource: { $in: resourcesIds } });
   } catch (err) {
-    logger.error(`Deletion of resources failed: ${err.message}`);
+    logger.error(`Deletion of resources failed: ${getErrorMessage(err)}`);
   }
 });
 

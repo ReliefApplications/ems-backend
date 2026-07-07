@@ -19,6 +19,7 @@ import {
 import { referenceDataType } from '@const/enumTypes';
 import { CustomAPI } from '@server/apollo/dataSources';
 import { logger } from '@services/logger.service';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** GraphQL field metadata type definition */
 export const FieldMetaDataType = new GraphQLObjectType({
@@ -91,7 +92,7 @@ export const FieldMetaDataType = new GraphQLObjectType({
               }
             } catch (err) {
               // Log error but continue execution
-              logger.error(err.message, { stack: err.stack });
+              logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
             }
             return sortBy(
               items.map((x) => ({

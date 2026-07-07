@@ -60,8 +60,8 @@ const setDisplayText = async (
             item,
             key,
             isArray(fieldValue)
-              ? fieldValue.map((x) => getText(choices, x))
-              : getText(choices, fieldValue)
+              ? fieldValue.map((x) => getText(choices, x, context?.locale))
+              : getText(choices, fieldValue, context?.locale)
           );
         }
       } else {

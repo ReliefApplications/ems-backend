@@ -37,6 +37,7 @@ import { CustomAPI } from '@server/apollo/dataSources';
 import { GraphQLDate } from 'graphql-scalars';
 import mongoose from 'mongoose';
 import { CompositeFilterDescriptor, filterOperator } from '../../types/filter';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Apply the filter provided to the specified field
@@ -513,7 +514,7 @@ export default {
           }
           return { items: items, totalCount: items.length };
         } catch (err) {
-          logger.error(err.message, { stack: err.stack });
+          logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
           throw new GraphQLError(
             'Something went wrong with the pipelines, these aggregations may not be supported yet'
           );
@@ -526,7 +527,7 @@ export default {
         );
       }
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

@@ -15,6 +15,7 @@ import fs from 'fs';
 import i18next from 'i18next';
 import sanitize from 'sanitize-filename';
 import { logger } from '@services/logger.service';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** File size limit, in bytes  */
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
@@ -154,13 +155,13 @@ router.post('/', async (req, res) => {
       });
       return res.status(200).send({ status: 'OK' });
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       return res
         .status(400)
         .send({ status: 'SMTP server failed to send the email', error: err });
     }
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -219,14 +220,14 @@ router.post('/files', async (req: any, res) => {
       }
     } catch (err) {
       // Specific try / catch so we can know what the error is
-      logger.error(err.message, { stack: err.stack });
-      return res.status(500).send(err.message);
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
+      return res.status(500).send(getErrorMessage(err));
     }
 
     // Return id of folder
     return res.json({ id: folderName });
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -250,7 +251,7 @@ router.post('/preview', async (req, res) => {
       // attachments: email.attachments,
     });
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });

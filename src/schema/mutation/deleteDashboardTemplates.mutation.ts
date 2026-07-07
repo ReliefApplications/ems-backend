@@ -13,6 +13,7 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 import { Types } from 'mongoose';
 import { accessibleBy } from '@casl/mongoose';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Arguments for the dashboard query */
 type DashboardArgs = {
@@ -84,7 +85,7 @@ export default {
       });
       return result.deletedCount;
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

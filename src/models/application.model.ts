@@ -16,6 +16,7 @@ import {
 } from './distributionList.model';
 import { deleteFolder } from '@utils/files/deleteFolder';
 import { logger } from '@services/logger.service';
+import { getErrorMessage } from '@utils/error';
 
 /** Application documents interface declaration */
 export interface Application extends Document {
@@ -141,7 +142,7 @@ addOnBeforeDeleteMany(applicationSchema, async (applications) => {
     await Role.deleteMany({ application: { $in: applications } });
     await Channel.deleteMany({ application: { $in: applications } });
   } catch (err) {
-    logger.error(`Deletion of applications failed: ${err.message}`);
+    logger.error(`Deletion of applications failed: ${getErrorMessage(err)}`);
   }
 });
 
