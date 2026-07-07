@@ -254,6 +254,9 @@
 						},
 						"updateRecords": {
 							"notVisible": "Please provide permission to read records before providing permission to edit them."
+						},
+						"uploadRecords": {
+							"notVisible": "Please provide permission to read records before providing permission to upload them."
 						}
 					}
 				}

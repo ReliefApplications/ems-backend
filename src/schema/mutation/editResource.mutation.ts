@@ -210,6 +210,7 @@ const checkPermission = (
 ) => {
   switch (permission) {
     case resourcePermission.DOWNLOAD_RECORDS:
+    case resourcePermission.UPLOAD_RECORDS:
     case resourcePermission.UPDATE_RECORDS: {
       // If there is a global see permission for this role it should be okay.
       if (
@@ -237,6 +238,12 @@ const checkPermission = (
         throw new GraphQLError(
           context.i18next.t(
             'mutations.resource.edit.errors.permission.downloadRecords.notVisible'
+          )
+        );
+      } else if (permission === resourcePermission.UPLOAD_RECORDS) {
+        throw new GraphQLError(
+          context.i18next.t(
+            'mutations.resource.edit.errors.permission.uploadRecords.notVisible'
           )
         );
       } else {
