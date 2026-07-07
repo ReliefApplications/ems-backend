@@ -1,8 +1,9 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import { Form, Record } from '@models';
+import { Form, Record, Resource } from '@models';
 import { RecordType } from '../types';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { getAccessibleFields } from '@utils/form';
+import { CalculatedFieldService } from '@services/calculatedField.service';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
@@ -37,6 +38,35 @@ export default {
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
+      }
+
+      // Resolve calculated fields, so that they're not left undefined in the returned data
+      if (record.resource) {
+        const resource = await Resource.findById(record.resource);
+        const calculatedFields = (resource?.fields || []).filter(
+          (f: any) => f.isCalculated
+        );
+        if (calculatedFields.length > 0) {
+          const calculatedFieldService = new CalculatedFieldService(
+            resource,
+            context,
+            context.timeZone,
+            context.user?.attributes || {}
+          );
+          const pipeline: any[] = [{ $match: { _id: record._id } }];
+          for (const field of calculatedFields) {
+            pipeline.push(
+              ...(await calculatedFieldService.build(
+                field.expression,
+                field.name
+              ))
+            );
+          }
+          const result = await Record.aggregate(pipeline);
+          if (result[0]?.data) {
+            record.data = { ...record.data, ...result[0].data };
+          }
+        }
       }
 
       // Return the record

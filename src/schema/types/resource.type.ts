@@ -4,6 +4,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForRecords, {
   userHasRoleFor,
 } from '@security/extendAbilityForRecords';
+import { CalculatedFieldService } from '@services/calculatedField.service';
 import { getAccessibleFields } from '@utils/form';
 import { getMetaData } from '@utils/form/metadata.helper';
 import getFilter from '@utils/schema/resolvers/Query/getFilter';
@@ -19,6 +20,7 @@ import {
 import GraphQLJSON from 'graphql-type-json';
 import { pluralize } from 'inflection';
 import { get, indexOf } from 'lodash';
+import mongoose from 'mongoose';
 import {
   AccessType,
   AggregationConnectionType,
@@ -177,30 +179,29 @@ export const ResourceType = new GraphQLObjectType({
         archived: { type: GraphQLBoolean },
       },
       async resolve(parent, args, context) {
-        let mongooseFilter: any = {
-          resource: parent.id,
+        const basicFilters: any = {
+          resource: parent._id,
         };
         if (args.archived) {
-          Object.assign(mongooseFilter, { archived: true });
+          Object.assign(basicFilters, { archived: true });
         } else {
-          Object.assign(mongooseFilter, { archived: { $ne: true } });
+          Object.assign(basicFilters, { archived: { $ne: true } });
         }
-        if (args.filter) {
-          mongooseFilter = {
-            ...mongooseFilter,
-            ...getFilter(args.filter, parent.fields, {
+        const userFilter = args.filter
+          ? getFilter(args.filter, parent.fields, {
               ...context,
               resourceFieldsById: {
                 [parent.id]: parent.fields,
               },
-            }),
-          };
-        }
+            })
+          : {};
         // PAGINATION
         const cursorFilters = args.afterCursor
           ? {
               _id: {
-                $gt: decodeCursor(args.afterCursor),
+                $gt: new mongoose.Types.ObjectId(
+                  decodeCursor(args.afterCursor)
+                ),
               },
             }
           : {};
@@ -210,19 +211,45 @@ export const ResourceType = new GraphQLObjectType({
         const permissionFilters = Record.find(
           accessibleBy(ability, 'read').Record
         ).getFilter();
-        let items = await Record.find({
-          $and: [cursorFilters, mongooseFilter, permissionFilters],
-        }).limit(args.first + 1);
+        // Build the calculated fields aggregation, so that calculated
+        // fields (e.g. used as a dashboard context display field) are
+        // resolved instead of coming back undefined
+        const calculatedFieldService = new CalculatedFieldService(
+          parent,
+          context,
+          context.timeZone,
+          context.user?.attributes || {}
+        );
+        const calculatedFieldsAggregation: any[] = [];
+        for (const field of (parent.fields || []).filter(
+          (f: any) => f.isCalculated
+        )) {
+          calculatedFieldsAggregation.push(
+            ...(await calculatedFieldService.build(
+              field.expression,
+              field.name
+            ))
+          );
+        }
+        const aggregation = await Record.aggregate([
+          { $match: { $and: [cursorFilters, basicFilters] } },
+          ...calculatedFieldsAggregation,
+          { $match: { $and: [userFilter, permissionFilters] } },
+        ]).facet({
+          items: [{ $limit: args.first + 1 }],
+          totalCount: [{ $count: 'count' }],
+        });
+        let items = aggregation[0].items;
+        const totalCount = aggregation[0]?.totalCount[0]?.count || 0;
         const hasNextPage = items.length > args.first;
         if (hasNextPage) {
           items = items.slice(0, items.length - 1);
         }
         const edges = items.map((r) => ({
-          cursor: encodeCursor(r.id.toString()),
-          node: Object.assign(
-            getAccessibleFields(r, ability).toObject({ minimize: false }),
-            { id: r._id }
-          ),
+          cursor: encodeCursor(r._id.toString()),
+          node: Object.assign(getAccessibleFields(r, ability), {
+            id: r._id,
+          }),
         }));
         return {
           pageInfo: {
@@ -231,9 +258,7 @@ export const ResourceType = new GraphQLObjectType({
             endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
           },
           edges,
-          totalCount: await Record.countDocuments({
-            $and: [mongooseFilter, permissionFilters],
-          }),
+          totalCount,
         };
       },
     },
