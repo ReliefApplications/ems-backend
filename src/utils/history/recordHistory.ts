@@ -240,16 +240,49 @@ export class RecordHistory {
    * entry 0 is the initial creation diff, entries 1..N-1 are diffs between
    * consecutive versions, and entry N is the diff between the last version
    * and the record's current data. The returned list is reversed so index 0
-   * is the most recent change. When pagination is provided, only the version
-   * documents strictly required to compute the requested slice are fetched
-   * from the database, instead of the record's entire version history.
+   * is the most recent change.
    *
-   * @param pagination optional pagination options
-   * @param pagination.skip number of history entries to skip
-   * @param pagination.limit number of history entries per page
+   * When paginating or filtering by fields, entries without any remaining
+   * change are dropped, and skip / limit apply to the remaining displayable
+   * entries: a page always contains up to `limit` non-empty entries. Entries
+   * are computed most-recent-first in batches, fetching only the version
+   * documents needed, until the page is filled or history is exhausted.
+   *
+   * @param options optional options
+   * @param options.skip number of history entries to skip
+   * @param options.limit number of history entries per page
+   * @param options.fields when provided, only keep changes on those fields
    * @returns A list of changes
    */
-  async getHistory(pagination?: { skip?: number; limit?: number }) {
+  async getHistory(options?: {
+    skip?: number;
+    limit?: number;
+    fields?: string[];
+  }) {
+    const fields = options?.fields?.length ? options.fields : undefined;
+    const paginating =
+      options?.skip !== undefined || options?.limit !== undefined;
+    const skip = paginating ? options.skip || 0 : 0;
+    const limit = paginating
+      ? options.limit || RecordHistory.defaultPageLimit
+      : Infinity;
+    // Entries left without changes cannot be displayed, so they are dropped
+    // whenever the caller paginates or filters, and don't count towards
+    // skip / limit. Emptiness is only known after formatValues, which can
+    // remove changes whose formatted old & new values are equal.
+    const dropEmpty = paginating || !!fields;
+
+    const applyFieldsFilter = (entries: RecordHistoryType) => {
+      if (fields) {
+        for (const entry of entries) {
+          entry.changes = entry.changes.filter((change) =>
+            fields.includes(change.field)
+          );
+        }
+      }
+      return entries;
+    };
+
     const filteredData = pick(
       this.record,
       this.record.accessibleFieldsBy(this.options.ability)
@@ -260,39 +293,72 @@ export class RecordHistory {
     // No prior versions: the only possible entry is the creation of the record
     if (N === 0) {
       const changes = this.getDifference(null, filteredData);
-      const entries: RecordHistoryType = [
+      let entries: RecordHistoryType = [
         {
           createdAt: this.record.createdAt,
           createdBy: this.record._createdBy?.user?.name,
           changes,
         },
       ];
-      const page = pagination
-        ? entries.slice(
-            pagination.skip || 0,
-            (pagination.skip || 0) +
-              (pagination.limit || RecordHistory.defaultPageLimit)
-          )
-        : entries;
-      return this.formatValues(page);
+      entries = await this.formatValues(applyFieldsFilter(entries));
+      if (dropEmpty) {
+        entries = entries.filter((entry) => entry.changes.length);
+      }
+      return entries.slice(skip, skip + limit);
     }
 
-    // Determine which chronological entries (e = 0..N) are requested, expressed
-    // in reversed (most-recent-first) order matching the public API.
-    let eMin = 0;
-    let eMax = N;
-    if (pagination) {
-      const limit = pagination.limit || RecordHistory.defaultPageLimit;
-      const skip = pagination.skip || 0;
-      // Reversed index range is [0, N] (N+1 total entries) - a page starting
-      // past the last valid index has nothing to return.
-      if (skip > N) return [];
-      const rStart = skip;
-      const rEnd = Math.min(skip + limit - 1, N);
-      eMax = N - rStart;
-      eMin = N - rEnd;
-    }
+    const result: RecordHistoryType = [];
+    // Displayable entries encountered so far, to consume `skip`
+    let seen = 0;
+    // Reversed index of the next entry to compute (0 = most recent, N = creation)
+    let nextR = 0;
+    // The first batch covers exactly the requested window, so when no entry is
+    // dropped a page costs a single versions query, as if slicing directly.
+    // Follow-up batches double in size to bound the number of queries when
+    // most entries are filtered out.
+    let batchSize = Math.min(skip + limit, N + 1);
+    while (nextR <= N && result.length < limit) {
+      const rStart = nextR;
+      const rEnd = Math.min(nextR + batchSize - 1, N);
+      nextR = rEnd + 1;
+      batchSize *= 2;
 
+      const raw = await this.getEntries(
+        N - rEnd,
+        N - rStart,
+        versionIds,
+        filteredData
+      );
+      const formatted = await this.formatValues(applyFieldsFilter(raw));
+      for (const entry of formatted) {
+        if (dropEmpty && !entry.changes.length) continue;
+        if (seen >= skip && result.length < limit) {
+          result.push(entry);
+        }
+        seen++;
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Builds the raw (unformatted) history entries for the chronological
+   * indices [eMin, eMax], fetching only the version documents strictly
+   * required to compute that range.
+   *
+   * @param eMin first chronological entry index (0 = creation diff)
+   * @param eMax last chronological entry index (N = current data diff)
+   * @param versionIds ids of all the record's versions, in chronological order
+   * @param filteredData record's current data, restricted to accessible fields
+   * @returns The entries for the range, most recent first
+   */
+  private async getEntries(
+    eMin: number,
+    eMax: number,
+    versionIds: any[],
+    filteredData: any
+  ): Promise<RecordHistoryType> {
+    const N = versionIds.length;
     // Only fetch the version documents strictly needed to compute entries [eMin, eMax]
     const vStart = Math.max(0, eMin - 1);
     const vEnd = Math.min(N - 1, eMax);
@@ -345,8 +411,7 @@ export class RecordHistory {
       }
     }
 
-    const formatted = await this.formatValues(res.reverse());
-    return formatted;
+    return res.reverse();
   }
 
   /**

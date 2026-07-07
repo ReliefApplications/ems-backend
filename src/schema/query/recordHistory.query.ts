@@ -23,6 +23,7 @@ type RecordHistoryArgs = {
   lang?: string;
   first?: number;
   skip?: number;
+  fields?: string[];
 };
 
 /**
@@ -36,6 +37,7 @@ export default {
     lang: { type: GraphQLString },
     first: { type: GraphQLInt },
     skip: { type: GraphQLInt },
+    fields: { type: new GraphQLList(GraphQLString) },
   },
   async resolve(parent, args: RecordHistoryArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -78,15 +80,15 @@ export default {
 
       // Create the history and return it
       record.form = form;
-      const pagination =
-        args.first !== undefined || args.skip !== undefined
-          ? { skip: args.skip, limit: args.first }
-          : undefined;
       const history = await new RecordHistory(record, {
         translate: context.i18next.i18n.t,
         ability,
         context,
-      }).getHistory(pagination);
+      }).getHistory({
+        skip: args.skip,
+        limit: args.first,
+        fields: args.fields,
+      });
       for (const version of history) {
         for (const change of version.changes) {
           if (change.new) change.new = JSON.stringify(change.new);

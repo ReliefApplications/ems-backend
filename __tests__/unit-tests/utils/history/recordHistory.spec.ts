@@ -123,13 +123,117 @@ describe('RecordHistory Class Unit Tests', () => {
   });
 
   it('should return an empty array when the requested page is past the end of history', async () => {
+    const versionsList = [
+      {
+        _id: 'versionId1',
+        createdAt: new Date('2026-07-02T12:00:00Z'),
+        data: { name: 'Bob', age: 25 },
+        toObject: jest.fn().mockReturnValue({ _id: 'versionId1', createdAt: new Date('2026-07-02T12:00:00Z'), data: { name: 'Bob', age: 25 } }),
+      },
+      {
+        _id: 'versionId2',
+        createdAt: new Date('2026-07-03T12:00:00Z'),
+        data: { name: 'Bob', age: 28 },
+        toObject: jest.fn().mockReturnValue({ _id: 'versionId2', createdAt: new Date('2026-07-03T12:00:00Z'), data: { name: 'Bob', age: 28 } }),
+      },
+      {
+        _id: 'versionId3',
+        createdAt: new Date('2026-07-04T12:00:00Z'),
+        data: { name: 'Alice', age: 28 },
+        toObject: jest.fn().mockReturnValue({ _id: 'versionId3', createdAt: new Date('2026-07-04T12:00:00Z'), data: { name: 'Alice', age: 28 } }),
+      },
+    ];
+
+    (Version.find as jest.Mock).mockReturnValue({
+      populate: jest.fn().mockResolvedValue(versionsList),
+    });
+
     const recordHistory = new RecordHistory(record, options);
-    // record has 3 versions -> 4 total entries (reversed indices 0..3), so a
-    // page starting at index 4 has nothing to return.
+    // record has 3 versions -> 4 total entries, all with changes, so skipping
+    // 4 displayable entries leaves nothing to return.
     const history = await recordHistory.getHistory({ skip: 4, limit: 2 });
 
-    expect(Version.find).not.toHaveBeenCalled();
     expect(history).toEqual([]);
+  });
+
+  it('should not count entries with empty changes towards pagination', async () => {
+    // v3 has the same data as v2, so the v2 -> v3 entry has no changes and
+    // must be skipped: the page is filled with the next non-empty entry.
+    const versionsList = [
+      {
+        _id: 'versionId1',
+        createdAt: new Date('2026-07-02T12:00:00Z'),
+        data: { name: 'Bob', age: 25 },
+        toObject: jest.fn().mockReturnValue({ _id: 'versionId1', createdAt: new Date('2026-07-02T12:00:00Z'), data: { name: 'Bob', age: 25 } }),
+      },
+      {
+        _id: 'versionId2',
+        createdAt: new Date('2026-07-03T12:00:00Z'),
+        data: { name: 'Bob', age: 28 },
+        toObject: jest.fn().mockReturnValue({ _id: 'versionId2', createdAt: new Date('2026-07-03T12:00:00Z'), data: { name: 'Bob', age: 28 } }),
+      },
+      {
+        _id: 'versionId3',
+        createdAt: new Date('2026-07-04T12:00:00Z'),
+        data: { name: 'Bob', age: 28 },
+        toObject: jest.fn().mockReturnValue({ _id: 'versionId3', createdAt: new Date('2026-07-04T12:00:00Z'), data: { name: 'Bob', age: 28 } }),
+      },
+    ];
+    record.data = { name: 'Alice', age: 28 };
+
+    (Version.find as jest.Mock).mockReturnValue({
+      populate: jest.fn().mockResolvedValue(versionsList),
+    });
+
+    const recordHistory = new RecordHistory(record, options);
+    const history = await recordHistory.getHistory({ skip: 0, limit: 2 });
+
+    expect(history.length).toBe(2);
+    expect(history[0].changes[0].field).toBe('name'); // current vs v3
+    expect(history[1].changes[0].field).toBe('age'); // v1 vs v2, empty v2 vs v3 skipped
+  });
+
+  it('should only return changes on the given fields', async () => {
+    const versionsList = [
+      {
+        _id: 'versionId1',
+        createdAt: new Date('2026-07-02T12:00:00Z'),
+        data: { name: 'Bob', age: 25 },
+        toObject: jest.fn().mockReturnValue({ _id: 'versionId1', createdAt: new Date('2026-07-02T12:00:00Z'), data: { name: 'Bob', age: 25 } }),
+      },
+      {
+        _id: 'versionId2',
+        createdAt: new Date('2026-07-03T12:00:00Z'),
+        data: { name: 'Bob', age: 28 },
+        toObject: jest.fn().mockReturnValue({ _id: 'versionId2', createdAt: new Date('2026-07-03T12:00:00Z'), data: { name: 'Bob', age: 28 } }),
+      },
+      {
+        _id: 'versionId3',
+        createdAt: new Date('2026-07-04T12:00:00Z'),
+        data: { name: 'Alice', age: 28 },
+        toObject: jest.fn().mockReturnValue({ _id: 'versionId3', createdAt: new Date('2026-07-04T12:00:00Z'), data: { name: 'Alice', age: 28 } }),
+      },
+    ];
+
+    (Version.find as jest.Mock).mockReturnValue({
+      populate: jest.fn().mockResolvedValue(versionsList),
+    });
+
+    const recordHistory = new RecordHistory(record, options);
+    const history = await recordHistory.getHistory({ fields: ['age'] });
+
+    // v2 -> v3 only changes 'name', so it is dropped entirely
+    expect(history.length).toBe(3);
+    for (const entry of history) {
+      expect(entry.changes.every((change) => change.field === 'age')).toBe(
+        true
+      );
+    }
+    expect(history[0].changes[0].old).toBe(28); // current vs v3
+    expect(history[0].changes[0].new).toBe(30);
+    expect(history[1].changes[0].old).toBe(25); // v1 vs v2
+    expect(history[1].changes[0].new).toBe(28);
+    expect(history[2].changes[0].new).toBe(25); // creation
   });
 
   it('should apply pagination to a record with no prior versions', async () => {
