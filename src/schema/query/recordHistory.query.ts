@@ -15,16 +15,14 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 import { getErrorMessage, getErrorStack } from '@utils/error';
-
-/** Maximum number of history entries that can be requested per page */
-const MAX_HISTORY_PAGE_LIMIT = 100;
+import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 
 /** Arguments for the recordHistory query */
 type RecordHistoryArgs = {
   id: string | Types.ObjectId;
   lang?: string;
-  page?: number;
-  limit?: number;
+  first?: number;
+  skip?: number;
 };
 
 /**
@@ -36,11 +34,15 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     lang: { type: GraphQLString },
-    page: { type: GraphQLInt },
-    limit: { type: GraphQLInt },
+    first: { type: GraphQLInt },
+    skip: { type: GraphQLInt },
   },
   async resolve(parent, args: RecordHistoryArgs, context: Context) {
     graphQLAuthCheck(context);
+    // Make sure that the page size is not too important
+    if (args.first) {
+      checkPageSize(args.first);
+    }
     try {
       // Setting language, if provided
       if (args.lang) {
@@ -77,13 +79,8 @@ export default {
       // Create the history and return it
       record.form = form;
       const pagination =
-        args.page !== undefined || args.limit !== undefined
-          ? {
-              page: args.page,
-              limit: args.limit
-                ? Math.min(args.limit, MAX_HISTORY_PAGE_LIMIT)
-                : undefined,
-            }
+        args.first !== undefined || args.skip !== undefined
+          ? { skip: args.skip, limit: args.first }
           : undefined;
       const history = await new RecordHistory(record, {
         translate: context.i18next.i18n.t,

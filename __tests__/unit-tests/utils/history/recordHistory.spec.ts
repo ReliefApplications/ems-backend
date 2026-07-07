@@ -88,7 +88,7 @@ describe('RecordHistory Class Unit Tests', () => {
     expect(history[0].changes[0].new).toBe(30);
   });
 
-  it('should process history with page=1, limit=2 correctly', async () => {
+  it('should process history with skip=0, limit=2 correctly', async () => {
     const versionsList = [
       {
         _id: 'versionId2',
@@ -109,10 +109,10 @@ describe('RecordHistory Class Unit Tests', () => {
     });
 
     const recordHistory = new RecordHistory(record, options);
-    // page 1, limit 2: entries index 0 and 1 (current vs v3, v3 vs v2)
+    // skip 0, limit 2: entries index 0 and 1 (current vs v3, v3 vs v2)
     // Needs versions: N-1 = 2 (v3), N-2 = 1 (v2), N-3 = 0 (v1) for boundary.
     // Clamped slice: versions index 1 and 2 (v2 and v3) since skip=0, endEntry=1.
-    const history = await recordHistory.getHistory({ page: 1, limit: 2 });
+    const history = await recordHistory.getHistory({ skip: 0, limit: 2 });
 
     expect(Version.find).toHaveBeenCalledWith({
       _id: { $in: ['versionId2', 'versionId3'] },
@@ -126,7 +126,7 @@ describe('RecordHistory Class Unit Tests', () => {
     const recordHistory = new RecordHistory(record, options);
     // record has 3 versions -> 4 total entries (reversed indices 0..3), so a
     // page starting at index 4 has nothing to return.
-    const history = await recordHistory.getHistory({ page: 3, limit: 2 });
+    const history = await recordHistory.getHistory({ skip: 4, limit: 2 });
 
     expect(Version.find).not.toHaveBeenCalled();
     expect(history).toEqual([]);
@@ -136,11 +136,11 @@ describe('RecordHistory Class Unit Tests', () => {
     const noVersionsRecord = { ...record, versions: [] };
     const recordHistory = new RecordHistory(noVersionsRecord, options);
 
-    const firstPage = await recordHistory.getHistory({ page: 1, limit: 1 });
+    const firstPage = await recordHistory.getHistory({ skip: 0, limit: 1 });
     expect(Version.find).not.toHaveBeenCalled();
     expect(firstPage.length).toBe(1);
 
-    const secondPage = await recordHistory.getHistory({ page: 2, limit: 1 });
+    const secondPage = await recordHistory.getHistory({ skip: 1, limit: 1 });
     expect(secondPage).toEqual([]);
   });
 

@@ -210,7 +210,7 @@ router.get('/form/records/:id/history', async (req, res) => {
     if (form) {
       record.form = form;
       const meta: RecordHistoryMeta = {
-        form: form.name,
+        form: form.name as string,
         record: record.incrementalId,
         fields: filters.fields?.join(',') || '',
         fromDate: filters.fromDate

@@ -245,11 +245,11 @@ export class RecordHistory {
    * from the database, instead of the record's entire version history.
    *
    * @param pagination optional pagination options
-   * @param pagination.page requested page, 1-indexed
+   * @param pagination.skip number of history entries to skip
    * @param pagination.limit number of history entries per page
    * @returns A list of changes
    */
-  async getHistory(pagination?: { page?: number; limit?: number }) {
+  async getHistory(pagination?: { skip?: number; limit?: number }) {
     const filteredData = pick(
       this.record,
       this.record.accessibleFieldsBy(this.options.ability)
@@ -269,9 +269,8 @@ export class RecordHistory {
       ];
       const page = pagination
         ? entries.slice(
-            ((pagination.page || 1) - 1) *
-              (pagination.limit || RecordHistory.defaultPageLimit),
-            (pagination.page || 1) *
+            pagination.skip || 0,
+            (pagination.skip || 0) +
               (pagination.limit || RecordHistory.defaultPageLimit)
           )
         : entries;
@@ -284,8 +283,7 @@ export class RecordHistory {
     let eMax = N;
     if (pagination) {
       const limit = pagination.limit || RecordHistory.defaultPageLimit;
-      const page = pagination.page || 1;
-      const skip = (page - 1) * limit;
+      const skip = pagination.skip || 0;
       // Reversed index range is [0, N] (N+1 total entries) - a page starting
       // past the last valid index has nothing to return.
       if (skip > N) return [];
