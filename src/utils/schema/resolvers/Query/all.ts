@@ -635,16 +635,38 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             itemsToUpdate.flatMap((x) => (x.record ? x.record : x.records))
           ),
         ];
-        // Build projection to fetch minimum data
+        // Build projection to fetch minimum data. For each requested field,
+        // also project its locale-translation sibling (translateField /
+        // translateTo), if the related resource has one matching the request
+        // locale. Otherwise the sibling's value is never fetched here, and
+        // the per-field resolver in Entity/index.ts silently falls back to
+        // the untranslated base value, even though it looks for that sibling.
         const projection: string[] = ['createdBy', 'form'].concat(
-          resourcesFields.concat(relatedFields).flatMap((x) =>
-            x.fields.map((fieldName: string) => {
+          resourcesFields.concat(relatedFields).flatMap((x: any) => {
+            const relatedResourceName =
+              x.relatedEntityName ??
+              Object.keys(idsByName).find((key) => idsByName[key] == x.resource);
+            const relatedResourceFields = relatedResourceName
+              ? fieldsByName[relatedResourceName]
+              : undefined;
+            return x.fields.flatMap((fieldName: string) => {
               if (FLAT_DEFAULT_FIELDS.includes(fieldName)) {
-                return fieldName;
+                return [fieldName];
               }
-              return `data.${fieldName}`;
-            })
-          )
+              const siblingField =
+                context.locale &&
+                relatedResourceFields?.find(
+                  (f: any) =>
+                    f.translateField === fieldName &&
+                    f.translateTo &&
+                    f.translateTo.toLowerCase() ===
+                      context.locale.toLowerCase()
+                );
+              return siblingField
+                ? [`data.${fieldName}`, `data.${siblingField.name}`]
+                : [`data.${fieldName}`];
+            });
+          })
         );
         // Fetch records
         const relatedRecords = await Record.find(
