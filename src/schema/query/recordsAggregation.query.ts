@@ -85,6 +85,88 @@ const extractSourceFields = (filter: any, fields: string[] = []) => {
 };
 
 /**
+ * Builds the stage replacing, in the looked-up related records of a
+ * resource(s) question, every field having a sibling translation matching the
+ * user's locale by that sibling's value. The base field name is kept as key so
+ * downstream stages (group, sort, mapping) transparently read the localized
+ * value, mirroring what all.ts does when projecting related records.
+ *
+ * @param fieldName Name of the resource(s) question in the source resource.
+ * @param relatedFields Field definitions of the related structure.
+ * @param unwound Whether the looked-up data is a single document (resource question) or an array (resources question).
+ * @param locale User locale.
+ * @returns The $addFields stage to push, or null when no field has a translation for the locale.
+ */
+const getRelatedTranslationStage = (
+  fieldName: string,
+  relatedFields: any[] | undefined,
+  unwound: boolean,
+  locale?: string
+) => {
+  if (!locale || !relatedFields?.length) {
+    return null;
+  }
+  const translatedFields: Record<string, string> = relatedFields.reduce(
+    (o, f) => {
+      if (f?.name) {
+        const translatedField = getTranslatedFieldName(
+          f.name,
+          relatedFields,
+          locale
+        );
+        if (translatedField !== f.name) {
+          o[f.name] = translatedField;
+        }
+      }
+      return o;
+    },
+    {}
+  );
+  if (Object.keys(translatedFields).length === 0) {
+    return null;
+  }
+  if (unwound) {
+    return {
+      $addFields: Object.entries(translatedFields).reduce(
+        (o, [name, translated]) =>
+          Object.assign(o, {
+            [`data.${fieldName}.${name}`]: {
+              $ifNull: [
+                `$data.${fieldName}.${translated}`,
+                `$data.${fieldName}.${name}`,
+              ],
+            },
+          }),
+        {}
+      ),
+    };
+  }
+  return {
+    $addFields: {
+      [`data.${fieldName}`]: {
+        $map: {
+          input: `$data.${fieldName}`,
+          in: {
+            $mergeObjects: [
+              '$$this',
+              Object.entries(translatedFields).reduce(
+                (o, [name, translated]) =>
+                  Object.assign(o, {
+                    [name]: {
+                      $ifNull: [`$$this.${translated}`, `$$this.${name}`],
+                    },
+                  }),
+                {}
+              ),
+            ],
+          },
+        },
+      },
+    },
+  };
+};
+
+/**
  * Build At aggregation, filtering out items created after this date, and using version that matches date
  *
  * @param at Date
@@ -442,6 +524,21 @@ export default {
                 [`data.${fieldName}`]: `$data.${fieldName}.data`,
               },
             });
+            // Locale-based translation of the related resource fields
+            if (context.locale && field.resource) {
+              const relatedResource = await Resource.findById(field.resource, {
+                fields: 1,
+              });
+              const translationStage = getRelatedTranslationStage(
+                fieldName,
+                relatedResource?.fields,
+                field.type === 'resource',
+                context.locale
+              );
+              if (translationStage) {
+                pipeline.push(translationStage);
+              }
+            }
           }
           // If we have a field referring to another form with a question targeting our source
           if (!field) {
@@ -492,6 +589,21 @@ export default {
                   },
                 },
               ]);
+              // Locale-based translation of the related form fields
+              if (context.locale) {
+                const relatedForm = await Form.findById(relatedField.form, {
+                  fields: 1,
+                });
+                const translationStage = getRelatedTranslationStage(
+                  fieldName,
+                  relatedForm?.fields,
+                  false,
+                  context.locale
+                );
+                if (translationStage) {
+                  pipeline.push(translationStage);
+                }
+              }
             }
           }
           // If we have referenceData fields
