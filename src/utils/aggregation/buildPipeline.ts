@@ -219,6 +219,7 @@ const buildPipeline = (
         break;
       }
       case PipelineStage.GROUP: {
+        const locale = context?.locale;
         stage.form.groupBy.map((x) => {
           if (!x.field) {
             return;
@@ -245,7 +246,7 @@ const buildPipeline = (
                   parent,
                   nestedField,
                   relatedFields,
-                  context?.locale
+                  locale
                 );
               }
             }

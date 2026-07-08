@@ -645,7 +645,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           resourcesFields.concat(relatedFields).flatMap((x: any) => {
             const relatedResourceName =
               x.relatedEntityName ??
-              Object.keys(idsByName).find((key) => idsByName[key] == x.resource);
+              Object.keys(idsByName).find(
+                (key) => idsByName[key] == x.resource
+              );
             const relatedResourceFields = relatedResourceName
               ? fieldsByName[relatedResourceName]
               : undefined;
@@ -659,8 +661,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
                   (f: any) =>
                     f.translateField === fieldName &&
                     f.translateTo &&
-                    f.translateTo.toLowerCase() ===
-                      context.locale.toLowerCase()
+                    f.translateTo.toLowerCase() === context.locale.toLowerCase()
                 );
               return siblingField
                 ? [`data.${fieldName}`, `data.${siblingField.name}`]
