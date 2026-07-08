@@ -121,7 +121,9 @@ const unnestField = (
         locale
       );
       if (translatedField !== field.name) {
-        acc[`${parent}.${nestedField}.data.${field.name}`] = `$${parent}.${nestedField}.data.${translatedField}`;
+        acc[
+          `${parent}.${nestedField}.data.${field.name}`
+        ] = `$${parent}.${nestedField}.data.${translatedField}`;
       }
       return acc;
     }, {});
