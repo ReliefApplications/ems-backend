@@ -1,3 +1,10 @@
+# [2.17.0-rc.9](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.8...v2.17.0-rc.9) (2026-07-08)
+
+
+### Features
+
+* Can now use calculated fields in contextual dashboard title ([#1252](https://github.com/ReliefApplications/ems-backend/issues/1252)) ([7ebc092](https://github.com/ReliefApplications/ems-backend/commit/7ebc092deb15fe1de66fdc82276bf18fd0ca2a4b)), closes [AB#134728](https://github.com/AB/issues/134728)
+
 # [2.17.0-rc.8](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.7...v2.17.0-rc.8) (2026-07-08)
 
 
