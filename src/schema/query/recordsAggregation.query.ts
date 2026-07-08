@@ -14,7 +14,6 @@ import buildPipeline from '@utils/aggregation/buildPipeline';
 import buildReferenceDataAggregation from '@utils/aggregation/buildReferenceDataAggregation';
 import setDisplayText from '@utils/aggregation/setDisplayText';
 import getTranslatedFieldName from '@utils/schema/resolvers/Query/getTranslatedFieldName';
-import { PipelineStage } from '@const/aggregation';
 import { UserType } from '../types';
 import {
   defaultRecordFields,
@@ -554,45 +553,7 @@ export default {
       );
       // Build pipeline stages
       if (aggregationPipeline && aggregationPipeline.length) {
-        // Pre-fetch the field definitions of any resource referenced through
-        // a relationship in a GROUP stage's dot-notation groupBy field (e.g.
-        // "patient.name"), so buildPipeline can apply the same locale-based
-        // translation substitution to that relationship's fields as it
-        // already applies to the root resource's own fields. Without this,
-        // a grouped column sourced from a relationship always shows
-        // whichever field was stored as the base (untranslated) one,
-        // regardless of the request locale.
-        const relatedResourcesFieldsByPath: Record<string, any[]> = {};
-        const relationSegments = new Set<string>();
-        for (const stage of aggregationPipeline) {
-          if (stage.type !== PipelineStage.GROUP) continue;
-          for (const groupByField of stage.form?.groupBy || []) {
-            if (groupByField.field?.includes('.')) {
-              relationSegments.add(groupByField.field.split('.')[0]);
-            }
-          }
-        }
-        for (const segment of relationSegments) {
-          const relationField = (resource.fields as any[]).find(
-            (f: any) =>
-              f.name === segment && ['resource', 'resources'].includes(f.type)
-          );
-          if (relationField?.resource) {
-            const relatedResource = await Resource.findById(
-              relationField.resource
-            );
-            if (relatedResource) {
-              relatedResourcesFieldsByPath[segment] = relatedResource.fields;
-            }
-          }
-        }
-        buildPipeline(
-          pipeline,
-          aggregationPipeline,
-          resource,
-          context,
-          relatedResourcesFieldsByPath
-        );
+        buildPipeline(pipeline, aggregationPipeline, resource, context);
       }
       // Build mapping step
       if (args.mapping) {

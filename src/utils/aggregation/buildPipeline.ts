@@ -8,7 +8,6 @@ import {
 import getFilter from '../schema/resolvers/Query/getFilter';
 import { isEmpty } from 'lodash';
 import { selectableDefaultRecordFieldsFlat } from '@const/defaultRecordFields';
-import getTranslatedFieldName from '../schema/resolvers/Query/getTranslatedFieldName';
 
 /**
  * Unnests a nested field in a MongoDB aggregation pipeline and performs specified operations.
@@ -16,21 +15,9 @@ import getTranslatedFieldName from '../schema/resolvers/Query/getTranslatedField
  * @param {Array} pipeline - The MongoDB aggregation pipeline array to which stages will be added.
  * @param {string} parent - The parent field containing the nested array to be unnested.
  * @param {string} nestedField - The nested array field to be unnested.
- * @param {Array} [relatedFields] - Field definitions of the related resource `parent` points to,
- * when known. Used to apply the same locale-based translation substitution
- * ( `translateField` / `translateTo` ) applied to the root resource's own fields, so grid /
- * aggregation columns sourced from a relationship also respect the request locale instead of
- * always showing whichever field was stored as the base ( untranslated ) one.
- * @param {string} [locale] - Request locale, used to pick the right translated sibling field.
  * @returns {void}
  */
-const unnestField = (
-  pipeline,
-  parent,
-  nestedField,
-  relatedFields?: any[],
-  locale?: string
-) => {
+const unnestField = (pipeline, parent, nestedField) => {
   pipeline.push({
     $set: {
       [`${parent}.${nestedField}`]: {
@@ -105,32 +92,6 @@ const unnestField = (
       [`${parent}.${nestedField}`]: `$${parent}.${nestedField}.data`,
     },
   });
-  // Locale-based translation: for every field of the related resource that
-  // has a sibling translation matching the request locale, overwrite the
-  // base field with its translated value, keeping the original field name
-  // as the key so any later stage referencing it (group, sort, project…)
-  // transparently gets the localized value. Mirrors the substitution
-  // already applied to the root resource's own fields in
-  // recordsAggregation.query.ts.
-  if (locale && relatedFields?.length) {
-    const translationAddFields = relatedFields.reduce((acc, field: any) => {
-      if (!field?.name) return acc;
-      const translatedField = getTranslatedFieldName(
-        field.name,
-        relatedFields,
-        locale
-      );
-      if (translatedField !== field.name) {
-        acc[
-          `${parent}.${nestedField}.data.${field.name}`
-        ] = `$${parent}.${nestedField}.data.${translatedField}`;
-      }
-      return acc;
-    }, {});
-    if (Object.keys(translationAddFields).length) {
-      pipeline.push({ $addFields: translationAddFields });
-    }
-  }
   pipeline.push({
     $project: {
       [`${nestedField}`]: `$${parent}.${nestedField}`,
@@ -169,19 +130,12 @@ const addFields = (
  * @param settings Stage configurations.
  * @param resource Current resource.
  * @param context request context.
- * @param relatedResourcesFieldsByPath Optional map of the first path segment of a dot-notation
- * groupBy field (e.g. `patient` in `patient.name`) to the field definitions of the resource it
- * points to. When provided, locale-based translation (`translateField` / `translateTo`) is
- * applied to that relationship's fields the same way it already is for the root resource's own
- * fields, so a grouped column sourced from a relationship also respects the request locale.
- * Only the first hop of a multi-level relationship path is translated.
  */
 const buildPipeline = (
   pipeline: any[],
   settings: any[],
   resource: Resource,
-  context,
-  relatedResourcesFieldsByPath: Record<string, any[]> = {}
+  context
 ): any => {
   for (const stage of settings) {
     switch (stage.type) {
@@ -219,7 +173,6 @@ const buildPipeline = (
         break;
       }
       case PipelineStage.GROUP: {
-        const locale = context?.locale;
         stage.form.groupBy.map((x) => {
           if (!x.field) {
             return;
@@ -236,18 +189,7 @@ const buildPipeline = (
               for (let i = 0; i < fieldArray.length - 1; i++) {
                 parent = fieldArray[i];
                 nestedField = fieldArray[i + 1];
-                // Only the first hop's related resource is known ahead of
-                // time (see relatedResourcesFieldsByPath doc above); deeper
-                // chains are unnested as before, without translation.
-                const relatedFields =
-                  i === 0 ? relatedResourcesFieldsByPath[parent] : undefined;
-                unnestField(
-                  pipeline,
-                  parent,
-                  nestedField,
-                  relatedFields,
-                  locale
-                );
+                unnestField(pipeline, parent, nestedField);
               }
             }
             pipeline.push({
