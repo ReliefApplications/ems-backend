@@ -1,3 +1,10 @@
+# [2.17.0-rc.8](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.7...v2.17.0-rc.8) (2026-07-08)
+
+
+### Bug Fixes
+
+* Multiple issues with full dual language experience ([#1251](https://github.com/ReliefApplications/ems-backend/issues/1251)) ([753f3dd](https://github.com/ReliefApplications/ems-backend/commit/753f3ddb8750d159694c3456b864437f5fa3cbe4)), closes [AB#134863](https://github.com/AB/issues/134863)
+
 # [2.17.0-rc.7](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.6...v2.17.0-rc.7) (2026-07-07)
 
 
