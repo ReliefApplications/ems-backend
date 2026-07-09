@@ -354,14 +354,14 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // Build aggregation for calculated fields
       const calculatedFieldsAggregation: any[] = [];
+      // Calculated fields joining related records ($lookup) that are only
+      // displayed are computed after pagination, so the join only runs on the
+      // page rows instead of on every record of the resource
+      const pageCalculatedFieldsAggregation: any[] = [];
 
-      // only add calculated fields that are in the query
-      // in order to decrease the pipeline size
-      const shouldAddCalculatedFieldToPipeline = (field: any) => {
-        // If field is requested in the query
-        if (queryFields.findIndex((x) => x.name === field.name) > -1)
-          return true;
-
+      // A calculated field must be computed before the filter/sort stages
+      // when the query sorts, filters, styles or actions on it
+      const isNeededBeforeFilters = (field: any) => {
         // If sort field is a calculated field
         if (sortField === field.name) return true;
 
@@ -379,22 +379,30 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         // Check if the field is used in any actions' filters
         if (actions?.some((a) => isUsedInFilter(a.filter))) return true;
 
-        // If not used in any of the above, don't add it to the pipeline
         return false;
       };
 
       const calculatedFieldService = new CalculatedFieldService(
-        { fields, name: entityName },
+        { _id: id, fields, name: entityName },
         context,
         context.timeZone,
         context.user?.attributes || {}
       );
-      for (const f of fields.filter(
-        (x) => x.isCalculated && shouldAddCalculatedFieldToPipeline(x)
-      )) {
-        calculatedFieldsAggregation.push(
-          ...(await calculatedFieldService.build(f.expression, f.name))
-        );
+      for (const f of fields.filter((x) => x.isCalculated)) {
+        const neededBeforeFilters = isNeededBeforeFilters(f);
+        const requested = queryFields.findIndex((x) => x.name === f.name) > -1;
+        // only add calculated fields that are used by the query,
+        // in order to decrease the pipeline size
+        if (!neededBeforeFilters && !requested) continue;
+        const stages = await calculatedFieldService.build(f.expression, f.name);
+        if (
+          !neededBeforeFilters &&
+          CalculatedFieldService.hasRelatedOperation(f.expression)
+        ) {
+          pageCalculatedFieldsAggregation.push(...stages);
+        } else {
+          calculatedFieldsAggregation.push(...stages);
+        }
       }
 
       // Build linked records aggregations
@@ -474,6 +482,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             ...sort,
             { $skip: skip },
             { $limit: first + 1 },
+            ...pageCalculatedFieldsAggregation,
           ],
           totalCount: [
             {

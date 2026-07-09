@@ -2,6 +2,8 @@ import {
   SingleOperatorOperationsTypes,
   DoubleOperatorOperationsTypes,
   MultipleOperatorsOperationsTypes,
+  RelatedOperationTypes,
+  RelatedOperation,
   Operator,
   OperationTypes,
 } from '../../const/calculatedFields';
@@ -48,6 +50,17 @@ const MULTIPLE_OPERATORS_OPERATIONS: MultipleOperatorsOperationsTypes[] = [
   'substr',
 ];
 
+/** All the available operations aggregating over a related resource */
+const RELATED_OPERATIONS: RelatedOperationTypes[] = [
+  'relatedValue',
+  'relatedCount',
+  'relatedExists',
+  'relatedSum',
+  'relatedMin',
+  'relatedMax',
+  'relatedAvg',
+];
+
 /** Map of operations to field type */
 export const OperationTypeMap: { [key in OperationTypes]: string } = {
   add: 'numeric',
@@ -82,6 +95,13 @@ export const OperationTypeMap: { [key in OperationTypes]: string } = {
   includes: 'boolean',
   join: 'text',
   displayValue: 'text',
+  relatedValue: 'text',
+  relatedCount: 'numeric',
+  relatedExists: 'boolean',
+  relatedSum: 'numeric',
+  relatedMin: 'numeric',
+  relatedMax: 'numeric',
+  relatedAvg: 'numeric',
 };
 
 /** All the available operations */
@@ -195,6 +215,99 @@ const getArgs = (exp: string): string[] => {
 };
 
 /**
+ * Unquotes a literal argument of a related operation, throwing when the
+ * argument is not a quoted string.
+ *
+ * @param arg Raw argument as found in the expression
+ * @param operation Operation name, for the error message
+ * @param argName Argument name, for the error message
+ * @returns The unquoted argument value
+ */
+const unquoteRelatedArg = (
+  arg: string,
+  operation: string,
+  argName: string
+): string => {
+  const isQuoted =
+    (arg.startsWith('"') && arg.endsWith('"')) ||
+    (arg.startsWith("'") && arg.endsWith("'"));
+  if (!isQuoted)
+    throw new Error(
+      `Invalid ${argName} argument for operation ${operation}: expected a quoted string, got ${arg}`
+    );
+  return arg.substring(1, arg.length - 1);
+};
+
+/**
+ * Parses the arguments of a related-resource aggregation operation. All
+ * arguments are quoted literals (not sub-expressions):
+ * - relatedValue( relatedName ; valueField ; sortField ; sortOrder ; filter? )
+ * - relatedCount / relatedExists( relatedName ; filter? )
+ * - relatedSum / relatedMin / relatedMax / relatedAvg( relatedName ; valueField ; filter? )
+ *
+ * @param operation The related operation name
+ * @param rawArgs Raw `;`-separated arguments
+ * @returns The parsed related operation
+ */
+const solveRelatedExp = (
+  operation: RelatedOperationTypes,
+  rawArgs: string[]
+): RelatedOperation => {
+  const args = rawArgs.map((x) => x.trim()).filter((x) => x.length > 0);
+  const argRanges: { [key in RelatedOperationTypes]: [number, number] } = {
+    relatedValue: [4, 5],
+    relatedCount: [1, 2],
+    relatedExists: [1, 2],
+    relatedSum: [2, 3],
+    relatedMin: [2, 3],
+    relatedMax: [2, 3],
+    relatedAvg: [2, 3],
+  };
+  const [min, max] = argRanges[operation];
+  if (args.length < min || args.length > max)
+    throw new Error(
+      `Invalid number of arguments for operation ${operation}: ${args.length}. Expected ${min} to ${max}`
+    );
+
+  const result: RelatedOperation = {
+    operation,
+    relatedName: unquoteRelatedArg(args[0], operation, 'relatedName'),
+  };
+  let filterArg: string | undefined;
+  if (operation === 'relatedValue') {
+    result.valueField = unquoteRelatedArg(args[1], operation, 'valueField');
+    result.sortField = unquoteRelatedArg(args[2], operation, 'sortField');
+    const sortOrder = unquoteRelatedArg(
+      args[3],
+      operation,
+      'sortOrder'
+    ).toLowerCase();
+    if (sortOrder !== 'asc' && sortOrder !== 'desc')
+      throw new Error(
+        `Invalid sortOrder argument for operation ${operation}: expected 'asc' or 'desc', got ${args[3]}`
+      );
+    result.sortOrder = sortOrder;
+    filterArg = args[4];
+  } else if (operation === 'relatedCount' || operation === 'relatedExists') {
+    filterArg = args[1];
+  } else {
+    result.valueField = unquoteRelatedArg(args[1], operation, 'valueField');
+    filterArg = args[2];
+  }
+  if (filterArg) {
+    const rawFilter = unquoteRelatedArg(filterArg, operation, 'filter');
+    try {
+      result.filter = JSON.parse(rawFilter);
+    } catch {
+      throw new Error(
+        `Invalid filter argument for operation ${operation}: expected valid JSON, got ${rawFilter}`
+      );
+    }
+  }
+  return result;
+};
+
+/**
  * Parses a string into an operation
  *
  * @param exp The expression to parse
@@ -279,6 +392,17 @@ const solveExp = (exp: string): Operator => {
           operation: 'displayValue',
           fieldName: arg.substring(1, arg.length - 1),
         },
+      };
+    }
+
+    // Related-resource aggregations take literal arguments, not sub-expressions
+    if (RELATED_OPERATIONS.includes(operation)) {
+      return {
+        type: 'expression',
+        value: solveRelatedExp(
+          operation,
+          getArgs(exp.substring(exp.indexOf('(') + 1, exp.length - 1))
+        ),
       };
     }
 

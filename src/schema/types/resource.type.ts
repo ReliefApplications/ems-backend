@@ -1,5 +1,5 @@
 import { accessibleBy } from '@casl/mongoose';
-import { Form, Record } from '@models';
+import { Form, Record, Resource } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForRecords, {
   userHasRoleFor,
@@ -255,6 +255,39 @@ export const ResourceType = new GraphQLObjectType({
       },
     },
     fields: { type: GraphQLJSON },
+    relatedFields: {
+      type: GraphQLJSON,
+      async resolve(parent) {
+        // Reverse links: fields of other resources pointing at this resource
+        // with a relatedName. Used by the calculated-field builder to offer
+        // related-record aggregations. Fields metadata of the related
+        // resources is fetched separately through their own metadata
+        // resolver, so choice options are resolved as in grid filters.
+        const resourceId = String(parent._id ?? parent.id);
+        const resources = await Resource.find(
+          {
+            fields: {
+              $elemMatch: {
+                resource: resourceId,
+                relatedName: { $exists: true, $nin: [null, ''] },
+              },
+            },
+          },
+          { name: 1, fields: 1 }
+        );
+        return resources.flatMap((child: any) =>
+          child.fields
+            .filter((f: any) => f.resource === resourceId && f.relatedName)
+            .map((f: any) => ({
+              relatedName: f.relatedName,
+              fieldName: f.name,
+              resourceId: child._id,
+              resourceName: child.name,
+              fields: child.fields.filter((x: any) => !x.isCalculated),
+            }))
+        );
+      },
+    },
     canCreateRecords: {
       type: GraphQLBoolean,
       async resolve(parent, args, context) {

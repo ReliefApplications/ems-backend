@@ -6,12 +6,17 @@ import {
   MultipleOperatorsOperationsTypes,
   Operation,
   Operator,
+  RelatedOperation,
   SingleOperatorOperationsTypes,
 } from '@const/calculatedFields';
 import { referenceDataType } from '@const/enumTypes';
-import { getExpressionFromString } from '@utils/aggregation/expressionFromString';
+import {
+  getExpressionFromString,
+  OperationTypeMap,
+} from '@utils/aggregation/expressionFromString';
+import getFilter from '@utils/schema/resolvers/Query/getFilter';
 import { getFullChoices } from '@utils/form/getDisplayText';
-import { ApiConfiguration, ReferenceData } from '@models';
+import { ApiConfiguration, ReferenceData, Resource } from '@models';
 import { CustomAPI } from '@server/apollo/dataSources';
 import { Context } from '@server/apollo/context';
 import { logger } from '@services/logger.service';
@@ -20,9 +25,10 @@ import { resolveLocalizedString } from '@utils/i18n/resolveLocalizedString';
 
 /**
  * Minimal resource shape the service needs — just the field list, plus an
- * optional name for error messages. Accepts a full Resource document too.
+ * optional name for error messages and an optional _id (required to resolve
+ * `calc.related*(...)` reverse links). Accepts a full Resource document too.
  */
-type ResourceLike = { fields: any[]; name?: string } | null;
+type ResourceLike = { fields: any[]; name?: string; _id?: any } | null;
 
 type UserAttributes = Record<string, unknown>;
 
@@ -33,6 +39,38 @@ type Dependency = {
 
 /** Pre-fetched mapping of stored value → display label for a field */
 type ChoiceMap = { value: any; text: any }[];
+
+/** Pre-fetched resolution of a reverse link used by a `calc.related*` operation */
+type RelatedContext = {
+  /** _id of the resource whose records link to the current one */
+  childResourceId: any;
+  /** Name of the child field storing the current record's id */
+  childFieldName: string;
+  /** Child resource fields, used to compile the optional filter argument */
+  childFields: any[];
+};
+
+/** Record-level (non-data) fields accepted as value/sort fields of `calc.related*` */
+const RELATED_INFO_FIELDS: Record<string, string> = {
+  createdAt: 'createdAt',
+  modifiedAt: 'modifiedAt',
+  updatedAt: 'modifiedAt',
+  incrementalId: 'incrementalId',
+};
+
+/** Maps resource field types to calculated field types, for `relatedValue`/`relatedMin`/`relatedMax` */
+const FIELD_TYPE_TO_CALC_TYPE: Record<string, string> = {
+  date: 'date',
+  datetime: 'date',
+  'datetime-local': 'date',
+  time: 'date',
+  numeric: 'numeric',
+  decimal: 'numeric',
+  int: 'numeric',
+  integer: 'numeric',
+  number: 'numeric',
+  boolean: 'boolean',
+};
 
 /** Special date operators enum */
 enum infoOperators {
@@ -111,9 +149,17 @@ export class CalculatedFieldService {
     const referenced = new Set<string>();
     this.collectDisplayValueFields(parsed, referenced);
     const choiceMaps = await this.prefetchChoiceMaps(referenced);
+    const relatedNames = new Set<string>();
+    this.collectRelatedNames(parsed, relatedNames);
+    const relatedContexts = await this.prefetchRelatedContexts(relatedNames);
 
     if (parsed.type === 'expression') {
-      return this.buildPipeline(parsed.value, name, choiceMaps);
+      return this.buildPipeline(
+        parsed.value,
+        name,
+        choiceMaps,
+        relatedContexts
+      );
     }
     return [
       {
@@ -148,6 +194,138 @@ export class CalculatedFieldService {
       operation.operators.forEach((sub) =>
         this.collectDisplayValueFields(sub, acc)
       );
+  }
+
+  /**
+   * Checks whether an expression contains a `calc.related*(...)` operation,
+   * i.e. whether compiling it produces $lookup stages over related records.
+   *
+   * @param expression Calculated-field expression in string form
+   * @returns true when the expression aggregates over a related resource
+   */
+  static hasRelatedOperation(expression: string): boolean {
+    return /calc\.related(Value|Count|Exists|Sum|Min|Max|Avg)\s*\(/.test(
+      expression
+    );
+  }
+
+  /**
+   * Resolves the calculated-field type of an expression. Same as the static
+   * `OperationTypeMap`, except that `relatedValue` / `relatedMin` /
+   * `relatedMax` derive their type from the related resource's value field
+   * (e.g. the latest value of a date field is a date), so the grid offers the
+   * right sort/filter operators.
+   *
+   * @param expression Calculated-field expression in string form
+   * @returns The calculated field type ('text' | 'numeric' | 'boolean' | 'date')
+   */
+  async getExpressionType(expression: string): Promise<string> {
+    const parsed = getExpressionFromString(expression);
+    if (parsed.type !== 'expression') return 'text';
+    const operation = parsed.value;
+    if (
+      'relatedName' in operation &&
+      ['relatedValue', 'relatedMin', 'relatedMax'].includes(
+        operation.operation
+      ) &&
+      operation.valueField
+    ) {
+      if (RELATED_INFO_FIELDS[operation.valueField])
+        return operation.valueField === 'incrementalId' ? 'text' : 'date';
+      const relatedContexts = await this.prefetchRelatedContexts(
+        new Set([operation.relatedName])
+      );
+      const childField = relatedContexts[
+        operation.relatedName
+      ].childFields.find((f: any) => f.name === operation.valueField);
+      if (childField?.type && FIELD_TYPE_TO_CALC_TYPE[childField.type])
+        return FIELD_TYPE_TO_CALC_TYPE[childField.type];
+    }
+    return OperationTypeMap[operation.operation] ?? 'text';
+  }
+
+  /**
+   * Recursively collect every related name referenced by a `calc.related*(...)`
+   * inside the expression so the reverse links can be resolved upfront.
+   *
+   * @param op Operator subtree to walk
+   * @param acc Accumulator set, mutated in place with the related names found
+   */
+  private collectRelatedNames(op: Operator, acc: Set<string>) {
+    if (op.type !== 'expression') return;
+    const operation = op.value;
+    if ('relatedName' in operation) {
+      acc.add(operation.relatedName);
+      return;
+    }
+    if ('operator' in operation && operation.operator)
+      this.collectRelatedNames(operation.operator, acc);
+    if ('operator1' in operation)
+      this.collectRelatedNames(operation.operator1, acc);
+    if ('operator2' in operation)
+      this.collectRelatedNames(operation.operator2, acc);
+    if ('operators' in operation)
+      operation.operators.forEach((sub) => this.collectRelatedNames(sub, acc));
+  }
+
+  /**
+   * Resolve each referenced related name to the resource and field carrying
+   * the reverse link, by looking for a resource field that points at the
+   * current resource with that `relatedName`.
+   *
+   * @param relatedNames Related names referenced by `calc.related*(...)`
+   * @returns Map of related name → resolved related context
+   */
+  private async prefetchRelatedContexts(
+    relatedNames: Set<string>
+  ): Promise<Record<string, RelatedContext>> {
+    if (relatedNames.size === 0) return {};
+    const resource = this.resource;
+    if (!resource || !resource._id)
+      throw new Error(
+        'CalculatedFieldService: a Resource with an _id is required to resolve calc.related*(...)'
+      );
+    const resourceId = String(resource._id);
+
+    const entries = await Promise.all(
+      Array.from(relatedNames).map(async (relatedName) => {
+        const childResources = await Resource.find(
+          {
+            fields: { $elemMatch: { resource: resourceId, relatedName } },
+          },
+          { name: 1, fields: 1 }
+        );
+        const matches = childResources.flatMap((child: any) =>
+          child.fields
+            .filter(
+              (f: any) =>
+                f.resource === resourceId && f.relatedName === relatedName
+            )
+            .map((f: any) => ({ child, field: f }))
+        );
+        if (matches.length === 0)
+          throw new Error(
+            `calc.related*: unknown related name "${relatedName}" — no resource field points at resource ${
+              resource.name ?? resourceId
+            } with this related name`
+          );
+        if (matches.length > 1)
+          throw new Error(
+            `calc.related*: ambiguous related name "${relatedName}", defined by several fields (on ${matches
+              .map((m) => m.child.name)
+              .join(', ')})`
+          );
+        return [
+          relatedName,
+          {
+            childResourceId: matches[0].child._id,
+            childFieldName: matches[0].field.name,
+            childFields: matches[0].child.fields,
+          },
+        ] as const;
+      })
+    );
+    return Object.fromEntries(entries);
   }
 
   /**
@@ -352,6 +530,120 @@ export class CalculatedFieldService {
         },
       },
     };
+  }
+
+  /**
+   * Build the stages for a `related*` operation: a `$lookup` joining the
+   * records of the related resource that link back to the current record
+   * (child stores the parent id in `data.<childFieldName>`), whose
+   * sub-pipeline filters/sorts/aggregates on the child side so only the
+   * needed value is pulled, then an `$addFields` extracting it.
+   *
+   * @param op The related operation to compile
+   * @param path Target path (`data.<x>` or `aux.<x>`)
+   * @param relatedContexts Pre-fetched reverse-link resolutions by related name
+   * @returns Ordered pipeline stages producing the aggregated value
+   */
+  private buildRelatedStages(
+    op: RelatedOperation,
+    path: string,
+    relatedContexts: Record<string, RelatedContext>
+  ): PipelineStage[] {
+    const ctx = relatedContexts[op.relatedName];
+    const target = path.startsWith('aux.') ? path : `data.${path}`;
+    const joined = `aux.${path.replace(/[^a-zA-Z0-9_]/g, '_')}_related`;
+    // Value/sort fields address child data, except record-level info fields
+    const childPath = (field: string) =>
+      RELATED_INFO_FIELDS[field] ?? `data.${field}`;
+    for (const field of [op.valueField, op.sortField]) {
+      if (
+        field &&
+        !RELATED_INFO_FIELDS[field] &&
+        !ctx.childFields.some((f: any) => f.name === field)
+      )
+        throw new Error(
+          `calc.${op.operation}: unknown field "${field}" on the related resource of "${op.relatedName}"`
+        );
+    }
+
+    const baseMatch: any = {
+      resource: ctx.childResourceId,
+      archived: { $ne: true },
+    };
+    const filterMatch = op.filter
+      ? getFilter(op.filter, ctx.childFields, this.context)
+      : {};
+    const subPipeline: any[] = [
+      {
+        $match:
+          Object.keys(filterMatch).length > 0
+            ? { $and: [baseMatch, filterMatch] }
+            : baseMatch,
+      },
+    ];
+
+    let extract: any;
+    switch (op.operation) {
+      case 'relatedValue':
+        subPipeline.push(
+          {
+            $sort: {
+              [childPath(op.sortField)]: op.sortOrder === 'desc' ? -1 : 1,
+              // Tiebreaker keeps the picked record stable across queries
+              _id: op.sortOrder === 'desc' ? -1 : 1,
+            },
+          },
+          { $limit: 1 },
+          { $project: { _id: 0, v: `$${childPath(op.valueField)}` } }
+        );
+        extract = {
+          $ifNull: [{ $arrayElemAt: [`$${joined}.v`, 0] }, null],
+        };
+        break;
+      case 'relatedCount':
+        subPipeline.push({ $count: 'v' });
+        extract = {
+          $ifNull: [{ $arrayElemAt: [`$${joined}.v`, 0] }, 0],
+        };
+        break;
+      case 'relatedExists':
+        subPipeline.push({ $limit: 1 }, { $project: { _id: 1 } });
+        extract = { $gt: [{ $size: `$${joined}` }, 0] };
+        break;
+      default: {
+        // relatedSum / relatedMin / relatedMax / relatedAvg
+        const groupOperator = `$${op.operation
+          .replace('related', '')
+          .toLowerCase()}`;
+        subPipeline.push({
+          $group: {
+            _id: null,
+            v: { [groupOperator]: `$${childPath(op.valueField)}` },
+          },
+        });
+        extract = {
+          $ifNull: [
+            { $arrayElemAt: [`$${joined}.v`, 0] },
+            op.operation === 'relatedSum' ? 0 : null,
+          ],
+        };
+      }
+    }
+
+    return [
+      // Child records store the parent id as a string
+      { $addFields: { __recordId: { $toString: '$_id' } } },
+      {
+        $lookup: {
+          from: 'records',
+          localField: '__recordId',
+          foreignField: `data.${ctx.childFieldName}`,
+          as: joined,
+          pipeline: subPipeline,
+        },
+      },
+      { $addFields: { [target]: extract } },
+    ] as PipelineStage[];
   }
 
   /**
@@ -713,20 +1005,32 @@ export class CalculatedFieldService {
    * @param op Parsed operation to compile
    * @param path Target path for this operation's output (`data.<x>` or `aux.<x>`)
    * @param choiceMaps Pre-fetched choice maps consumed by `displayValue`
-   * @returns Ordered list of `$addFields` stages
+   * @param relatedContexts Pre-fetched reverse-link resolutions consumed by `related*`
+   * @returns Ordered list of pipeline stages
    */
   private buildPipeline(
     op: Operation,
     path: string,
-    choiceMaps: Record<string, ChoiceMap>
-  ): PipelineStage.AddFields[] {
-    const pipeline: PipelineStage.AddFields[] = [];
+    choiceMaps: Record<string, ChoiceMap>,
+    relatedContexts: Record<string, RelatedContext> = {}
+  ): PipelineStage[] {
+    const pipeline: PipelineStage[] = [];
 
     switch (op.operation) {
       case 'displayValue': {
         pipeline.push(
           this.buildDisplayValueStage(op.fieldName, path, choiceMaps)
         );
+        break;
+      }
+      case 'relatedValue':
+      case 'relatedCount':
+      case 'relatedExists':
+      case 'relatedSum':
+      case 'relatedMin':
+      case 'relatedMax':
+      case 'relatedAvg': {
+        pipeline.push(...this.buildRelatedStages(op, path, relatedContexts));
         break;
       }
       case 'add':
@@ -745,7 +1049,12 @@ export class CalculatedFieldService {
           pipeline.unshift(
             ...flattenDeep(
               dependencies.map((dep) =>
-                this.buildPipeline(dep.operation, `aux.${dep.path}`, choiceMaps)
+                this.buildPipeline(
+                  dep.operation,
+                  `aux.${dep.path}`,
+                  choiceMaps,
+                  relatedContexts
+                )
               )
             )
           );
@@ -773,7 +1082,12 @@ export class CalculatedFieldService {
           pipeline.unshift(
             ...flattenDeep(
               dependencies.map((dep) =>
-                this.buildPipeline(dep.operation, `aux.${dep.path}`, choiceMaps)
+                this.buildPipeline(
+                  dep.operation,
+                  `aux.${dep.path}`,
+                  choiceMaps,
+                  relatedContexts
+                )
               )
             )
           );
@@ -801,7 +1115,12 @@ export class CalculatedFieldService {
           pipeline.unshift(
             ...flattenDeep(
               dependencies.map((dep) =>
-                this.buildPipeline(dep.operation, `aux.${dep.path}`, choiceMaps)
+                this.buildPipeline(
+                  dep.operation,
+                  `aux.${dep.path}`,
+                  choiceMaps,
+                  relatedContexts
+                )
               )
             )
           );
@@ -817,7 +1136,12 @@ export class CalculatedFieldService {
           pipeline.unshift(
             ...flattenDeep(
               dependencies.map((dep) =>
-                this.buildPipeline(dep.operation, `aux.${dep.path}`, choiceMaps)
+                this.buildPipeline(
+                  dep.operation,
+                  `aux.${dep.path}`,
+                  choiceMaps,
+                  relatedContexts
+                )
               )
             )
           );

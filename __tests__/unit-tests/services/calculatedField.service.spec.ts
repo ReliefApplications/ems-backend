@@ -1,4 +1,5 @@
 import { CalculatedFieldService } from '@services/calculatedField.service';
+import { Resource } from '@models';
 
 /**
  * Thin helper to keep call sites readable: most existing tests don't need a
@@ -845,6 +846,321 @@ describe('CalculatedFieldService', () => {
           'result'
         )
       ).rejects.toThrow(/quoted field name/);
+    });
+  });
+
+  describe('calc.related* (related-resource aggregations)', () => {
+    /** The resource holding the calculated field */
+    const organization = {
+      _id: 'orgResourceId',
+      name: 'organization',
+      fields: [{ name: 'name' }],
+    };
+    /** A resource whose records point back at organization records */
+    const team = {
+      _id: 'teamResourceId',
+      name: 'team',
+      fields: [
+        {
+          name: 'organization',
+          type: 'resource',
+          resource: 'orgResourceId',
+          relatedName: 'teams',
+        },
+        { name: 'active', type: 'boolean' },
+        { name: 'grade', type: 'numeric' },
+        { name: 'graded_on', type: 'datetime' },
+      ],
+    };
+
+    let findSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      findSpy = jest.spyOn(Resource, 'find').mockResolvedValue([team] as any);
+    });
+
+    afterEach(() => {
+      findSpy.mockRestore();
+    });
+
+    const buildRelated = (expression: string, name: string) =>
+      new CalculatedFieldService(organization, null, 'UTC').build(
+        expression,
+        name
+      );
+
+    it('resolves the reverse link by querying resources pointing at this one', async () => {
+      await buildRelated("{{calc.relatedCount('teams')}}", 'team_count');
+      expect(findSpy).toHaveBeenCalledWith(
+        {
+          fields: {
+            $elemMatch: { resource: 'orgResourceId', relatedName: 'teams' },
+          },
+        },
+        { name: 1, fields: 1 }
+      );
+    });
+
+    it('compiles relatedCount to a $lookup counting the linked child records', async () => {
+      const pipeline = await buildRelated(
+        "{{calc.relatedCount('teams')}}",
+        'team_count'
+      );
+      expect(pipeline).toEqual([
+        { $addFields: { __recordId: { $toString: '$_id' } } },
+        {
+          $lookup: {
+            from: 'records',
+            localField: '__recordId',
+            foreignField: 'data.organization',
+            as: 'aux.team_count_related',
+            pipeline: [
+              {
+                $match: {
+                  resource: 'teamResourceId',
+                  archived: { $ne: true },
+                },
+              },
+              { $count: 'v' },
+            ],
+          },
+        },
+        {
+          $addFields: {
+            'data.team_count': {
+              $ifNull: [
+                { $arrayElemAt: ['$aux.team_count_related.v', 0] },
+                0,
+              ],
+            },
+          },
+        },
+      ]);
+    });
+
+    it('compiles relatedValue to a sorted, limited $lookup extracting one value', async () => {
+      const pipeline = await buildRelated(
+        "{{calc.relatedValue('teams'; 'grade'; 'graded_on'; 'desc')}}",
+        'latest_grade'
+      );
+      expect(pipeline).toHaveLength(3);
+      const lookup = (pipeline[1] as any).$lookup;
+      expect(lookup.pipeline).toEqual([
+        {
+          $match: { resource: 'teamResourceId', archived: { $ne: true } },
+        },
+        { $sort: { 'data.graded_on': -1, _id: -1 } },
+        { $limit: 1 },
+        { $project: { _id: 0, v: '$data.grade' } },
+      ]);
+      expect((pipeline[2] as any).$addFields['data.latest_grade']).toEqual({
+        $ifNull: [{ $arrayElemAt: ['$aux.latest_grade_related.v', 0] }, null],
+      });
+    });
+
+    it('sorts ascending when sortOrder is asc', async () => {
+      const pipeline = await buildRelated(
+        "{{calc.relatedValue('teams'; 'grade'; 'graded_on'; 'asc')}}",
+        'initial_grade'
+      );
+      expect((pipeline[1] as any).$lookup.pipeline[1]).toEqual({
+        $sort: { 'data.graded_on': 1, _id: 1 },
+      });
+    });
+
+    it('maps record-level info fields to their top-level path', async () => {
+      const pipeline = await buildRelated(
+        "{{calc.relatedValue('teams'; 'grade'; 'createdAt'; 'desc')}}",
+        'latest_grade'
+      );
+      expect((pipeline[1] as any).$lookup.pipeline[1]).toEqual({
+        $sort: { createdAt: -1, _id: -1 },
+      });
+    });
+
+    it('compiles relatedExists to a limited $lookup and a size check', async () => {
+      const pipeline = await buildRelated(
+        "{{calc.relatedExists('teams')}}",
+        'has_teams'
+      );
+      expect((pipeline[1] as any).$lookup.pipeline).toEqual([
+        {
+          $match: { resource: 'teamResourceId', archived: { $ne: true } },
+        },
+        { $limit: 1 },
+        { $project: { _id: 1 } },
+      ]);
+      expect((pipeline[2] as any).$addFields['data.has_teams']).toEqual({
+        $gt: [{ $size: '$aux.has_teams_related' }, 0],
+      });
+    });
+
+    it.each([
+      ['relatedSum', '$sum', 0],
+      ['relatedMin', '$min', null],
+      ['relatedMax', '$max', null],
+      ['relatedAvg', '$avg', null],
+    ])(
+      'compiles %s to a $lookup grouping with %s',
+      async (op, groupOperator, fallback) => {
+        const pipeline = await buildRelated(
+          `{{calc.${op}('teams'; 'grade')}}`,
+          'result'
+        );
+        expect((pipeline[1] as any).$lookup.pipeline[1]).toEqual({
+          $group: { _id: null, v: { [groupOperator]: '$data.grade' } },
+        });
+        expect((pipeline[2] as any).$addFields['data.result']).toEqual({
+          $ifNull: [{ $arrayElemAt: ['$aux.result_related.v', 0] }, fallback],
+        });
+      }
+    );
+
+    it('applies the optional filter argument inside the $lookup match', async () => {
+      const pipeline = await buildRelated(
+        '{{calc.relatedCount(\'teams\'; \'{"field":"active","operator":"eq","value":true}\')}}',
+        'active_teams'
+      );
+      const match = (pipeline[1] as any).$lookup.pipeline[0].$match;
+      expect(match.$and).toHaveLength(2);
+      expect(match.$and[0]).toEqual({
+        resource: 'teamResourceId',
+        archived: { $ne: true },
+      });
+      expect(JSON.stringify(match.$and[1])).toContain('data.active');
+    });
+
+    it('composes inside another operation by emitting the $lookup as an aux dependency', async () => {
+      const pipeline = await buildRelated(
+        "{{calc.gt({{calc.relatedCount('teams')}}; 0)}}",
+        'is_big'
+      );
+      // dependency stages first (addFields + lookup + extract), then the comparison
+      expect(pipeline).toHaveLength(4);
+      expect((pipeline[1] as any).$lookup.as).toBe('aux.aux_is_big_gt1_related');
+      expect((pipeline[2] as any).$addFields['aux.is_big-gt1']).toBeDefined();
+      expect((pipeline[3] as any).$addFields['data.is_big']).toEqual({
+        $gt: ['$aux.is_big-gt1', 0],
+      });
+    });
+
+    it('throws when the related name cannot be resolved', async () => {
+      findSpy.mockResolvedValue([] as any);
+      await expect(
+        buildRelated("{{calc.relatedCount('unknown')}}", 'result')
+      ).rejects.toThrow(/unknown related name/);
+    });
+
+    it('throws when the related name is ambiguous', async () => {
+      findSpy.mockResolvedValue([
+        team,
+        { ...team, _id: 'otherResourceId', name: 'squad' },
+      ] as any);
+      await expect(
+        buildRelated("{{calc.relatedCount('teams')}}", 'result')
+      ).rejects.toThrow(/ambiguous related name/);
+    });
+
+    it('throws when the value field does not exist on the related resource', async () => {
+      await expect(
+        buildRelated(
+          "{{calc.relatedValue('teams'; 'unknownField'; 'graded_on'; 'desc')}}",
+          'result'
+        )
+      ).rejects.toThrow(/unknown field "unknownField"/);
+    });
+
+    it('throws when the resource has no _id', async () => {
+      await expect(
+        new CalculatedFieldService(
+          { name: 'organization', fields: [] },
+          null,
+          'UTC'
+        ).build("{{calc.relatedCount('teams')}}", 'result')
+      ).rejects.toThrow(/_id/);
+    });
+
+    it('rejects an invalid sortOrder at parse time', async () => {
+      await expect(
+        buildRelated(
+          "{{calc.relatedValue('teams'; 'grade'; 'graded_on'; 'newest')}}",
+          'result'
+        )
+      ).rejects.toThrow(/sortOrder/);
+    });
+
+    it('rejects an unquoted argument at parse time', async () => {
+      await expect(
+        buildRelated('{{calc.relatedCount(teams)}}', 'result')
+      ).rejects.toThrow(/quoted string/);
+    });
+
+    it('rejects an invalid filter JSON at parse time', async () => {
+      await expect(
+        buildRelated("{{calc.relatedCount('teams'; 'not json')}}", 'result')
+      ).rejects.toThrow(/valid JSON/);
+    });
+
+    it('rejects a wrong number of arguments at parse time', async () => {
+      await expect(
+        buildRelated("{{calc.relatedValue('teams'; 'grade')}}", 'result')
+      ).rejects.toThrow(/number of arguments/);
+    });
+
+    describe('hasRelatedOperation', () => {
+      it('detects related operations in an expression', () => {
+        expect(
+          CalculatedFieldService.hasRelatedOperation(
+            "{{calc.relatedCount('teams')}}"
+          )
+        ).toBe(true);
+        expect(
+          CalculatedFieldService.hasRelatedOperation(
+            "{{calc.gt({{calc.relatedSum('teams'; 'grade')}}; 10)}}"
+          )
+        ).toBe(true);
+      });
+
+      it('returns false for expressions without related operations', () => {
+        expect(
+          CalculatedFieldService.hasRelatedOperation('{{calc.add(1; 2)}}')
+        ).toBe(false);
+      });
+    });
+
+    describe('getExpressionType', () => {
+      const service = () =>
+        new CalculatedFieldService(organization, null, 'UTC');
+
+      it('derives the type of relatedValue from the child value field', async () => {
+        expect(
+          await service().getExpressionType(
+            "{{calc.relatedValue('teams'; 'graded_on'; 'createdAt'; 'desc')}}"
+          )
+        ).toBe('date');
+        expect(
+          await service().getExpressionType(
+            "{{calc.relatedValue('teams'; 'grade'; 'createdAt'; 'desc')}}"
+          )
+        ).toBe('numeric');
+        expect(
+          await service().getExpressionType(
+            "{{calc.relatedValue('teams'; 'organization'; 'createdAt'; 'desc')}}"
+          )
+        ).toBe('text');
+      });
+
+      it('uses the static operation type for the other operations', async () => {
+        expect(
+          await service().getExpressionType("{{calc.relatedCount('teams')}}")
+        ).toBe('numeric');
+        expect(
+          await service().getExpressionType("{{calc.relatedExists('teams')}}")
+        ).toBe('boolean');
+        expect(await service().getExpressionType('{{calc.add(1; 2)}}')).toBe(
+          'numeric'
+        );
+      });
     });
   });
 });
