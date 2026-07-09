@@ -249,6 +249,69 @@ describe('calc.related* against a real database', () => {
     ).toEqual({ org1: true, org2: false, org3: false });
   });
 
+  it('aggregates over forward links (record ids stored on the current record)', async () => {
+    // The emergency stores its grade record ids in data.grade_history
+    const grade = await new Resource({
+      name: 'grade',
+      fields: [
+        { name: 'grades', type: 'text' },
+        { name: 'grading_date', type: 'date' },
+      ],
+    }).save();
+    const emergency = await new Resource({
+      name: 'emergency',
+      fields: [
+        { name: 'name', type: 'text' },
+        {
+          name: 'grade_history',
+          type: 'resources',
+          resource: String(grade._id),
+          relatedName: 'emergency_grade',
+        },
+      ],
+    }).save();
+
+    const [g1, g2, g3] = await Promise.all([
+      seedRecord(grade, {
+        grades: 'Grade 1',
+        grading_date: new Date('2026-01-01'),
+      }),
+      seedRecord(grade, {
+        grades: 'Grade 3',
+        grading_date: new Date('2026-05-01'),
+      }),
+      seedRecord(grade, {
+        grades: 'Grade 2',
+        grading_date: new Date('2026-03-01'),
+      }),
+    ]);
+    await Promise.all([
+      seedRecord(emergency, {
+        name: 'e1',
+        grade_history: [String(g1._id), String(g2._id), String(g3._id)],
+      }),
+      seedRecord(emergency, { name: 'e2', grade_history: [String(g1._id)] }),
+      seedRecord(emergency, { name: 'e3' }),
+    ]);
+
+    expect(
+      await compute(
+        emergency,
+        "{{calc.relatedValue('grade_history'; 'grades'; 'grading_date'; 'desc')}}",
+        'latest_grade',
+        'name'
+      )
+    ).toEqual({ e1: 'Grade 3', e2: 'Grade 1', e3: null });
+    expect(
+      await compute(
+        emergency,
+        "{{calc.relatedCount('grade_history')}}",
+        'grade_count',
+        'name'
+      )
+    ).toEqual({ e1: 3, e2: 1, e3: 0 });
+  });
+
   it('runs inside a $facet after pagination, as placed by the records query', async () => {
     // Mirrors the all.ts skip-based aggregation: display-only related fields
     // are appended after $skip/$limit inside the items facet

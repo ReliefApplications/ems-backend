@@ -40,12 +40,20 @@ type Dependency = {
 /** Pre-fetched mapping of stored value → display label for a field */
 type ChoiceMap = { value: any; text: any }[];
 
-/** Pre-fetched resolution of a reverse link used by a `calc.related*` operation */
+/** Pre-fetched resolution of a link used by a `calc.related*` operation */
 type RelatedContext = {
-  /** _id of the resource whose records link to the current one */
+  /** _id of the resource whose records are aggregated */
   childResourceId: any;
-  /** Name of the child field storing the current record's id */
-  childFieldName: string;
+  /**
+   * Reverse link: name of the child field storing the current record's id.
+   * Unset for forward links.
+   */
+  childFieldName?: string;
+  /**
+   * Forward link: name of the field on the current resource storing the
+   * linked record id(s). Unset for reverse links.
+   */
+  parentFieldName?: string;
   /** Child resource fields, used to compile the optional filter argument */
   childFields: any[];
 };
@@ -270,8 +278,11 @@ export class CalculatedFieldService {
 
   /**
    * Resolve each referenced related name to the resource and field carrying
-   * the reverse link, by looking for a resource field that points at the
-   * current resource with that `relatedName`.
+   * the link. A related name is either the name of a `resource`/`resources`
+   * field of the current resource (forward link — the current record stores
+   * the linked record ids), or the `relatedName` of a field of another
+   * resource pointing at the current one (reverse link — the linked records
+   * store the current record's id).
    *
    * @param relatedNames Related names referenced by `calc.related*(...)`
    * @returns Map of related name → resolved related context
@@ -289,6 +300,33 @@ export class CalculatedFieldService {
 
     const entries = await Promise.all(
       Array.from(relatedNames).map(async (relatedName) => {
+        // Forward link: a resource(s) field of the current resource
+        const ownField = resource.fields.find(
+          (f: any) =>
+            f.name === relatedName &&
+            ['resource', 'resources'].includes(f.type) &&
+            f.resource
+        );
+        if (ownField) {
+          const child = await Resource.findById(ownField.resource, {
+            name: 1,
+            fields: 1,
+          });
+          if (!child)
+            throw new Error(
+              `calc.related*: the resource targeted by field "${relatedName}" does not exist`
+            );
+          return [
+            relatedName,
+            {
+              childResourceId: child._id,
+              parentFieldName: ownField.name,
+              childFields: child.fields,
+            },
+          ] as const;
+        }
+
+        // Reverse link: a field of another resource pointing at this one
         const childResources = await Resource.find(
           {
             fields: { $elemMatch: { resource: resourceId, relatedName } },
@@ -305,9 +343,9 @@ export class CalculatedFieldService {
         );
         if (matches.length === 0)
           throw new Error(
-            `calc.related*: unknown related name "${relatedName}" — no resource field points at resource ${
+            `calc.related*: unknown related name "${relatedName}" — no resource field of ${
               resource.name ?? resourceId
-            } with this related name`
+            } or of another resource pointing at it matches this name`
           );
         if (matches.length > 1)
           throw new Error(
@@ -630,8 +668,50 @@ export class CalculatedFieldService {
       }
     }
 
+    if (ctx.parentFieldName) {
+      // Forward link: the current record stores the linked record id(s)
+      const stored = `$data.${ctx.parentFieldName}`;
+      const idsPath = `${joined}_ids`;
+      return [
+        {
+          $addFields: {
+            [idsPath]: {
+              $map: {
+                input: {
+                  $cond: {
+                    if: { $isArray: stored },
+                    then: stored,
+                    else: {
+                      $cond: {
+                        if: { $eq: [stored, null] },
+                        then: [],
+                        else: [stored],
+                      },
+                    },
+                  },
+                },
+                as: 'relId',
+                in: {
+                  $convert: { input: '$$relId', to: 'objectId', onError: null },
+                },
+              },
+            },
+          },
+        },
+        {
+          $lookup: {
+            from: 'records',
+            localField: idsPath,
+            foreignField: '_id',
+            as: joined,
+            pipeline: subPipeline,
+          },
+        },
+        { $addFields: { [target]: extract } },
+      ] as PipelineStage[];
+    }
     return [
-      // Child records store the parent id as a string
+      // Reverse link: child records store the parent id as a string
       { $addFields: { __recordId: { $toString: '$_id' } } },
       {
         $lookup: {

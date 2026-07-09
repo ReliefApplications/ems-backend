@@ -1044,6 +1044,114 @@ describe('CalculatedFieldService', () => {
       });
     });
 
+    describe('forward links (resource(s) fields of the current resource)', () => {
+      /** Resource holding the calculated field AND the link field */
+      const emergency = {
+        _id: 'emergencyResourceId',
+        name: 'emergency',
+        fields: [
+          {
+            name: 'grade_history',
+            type: 'resources',
+            resource: 'gradeResourceId',
+            relatedName: 'emergency_grade',
+          },
+        ],
+      };
+      const gradeResource = {
+        _id: 'gradeResourceId',
+        name: 'grade',
+        fields: [
+          { name: 'grades', type: 'text' },
+          { name: 'grading_date', type: 'date' },
+        ],
+      };
+
+      let findByIdSpy: jest.SpyInstance;
+
+      beforeEach(() => {
+        findByIdSpy = jest
+          .spyOn(Resource, 'findById')
+          .mockResolvedValue(gradeResource as any);
+      });
+
+      afterEach(() => {
+        findByIdSpy.mockRestore();
+      });
+
+      it('resolves the link from the field name, without scanning other resources', async () => {
+        await new CalculatedFieldService(emergency, null, 'UTC').build(
+          "{{calc.relatedValue('grade_history'; 'grades'; 'grading_date'; 'desc')}}",
+          'latest_grade'
+        );
+        expect(findByIdSpy).toHaveBeenCalledWith('gradeResourceId', {
+          name: 1,
+          fields: 1,
+        });
+        expect(findSpy).not.toHaveBeenCalled();
+      });
+
+      it('joins on the stored record ids, converted to ObjectIds', async () => {
+        const pipeline = await new CalculatedFieldService(
+          emergency,
+          null,
+          'UTC'
+        ).build(
+          "{{calc.relatedValue('grade_history'; 'grades'; 'grading_date'; 'desc')}}",
+          'latest_grade'
+        );
+        expect(pipeline).toHaveLength(3);
+        const stored = '$data.grade_history';
+        expect(
+          (pipeline[0] as any).$addFields['aux.latest_grade_related_ids']
+        ).toEqual({
+          $map: {
+            input: {
+              $cond: {
+                if: { $isArray: stored },
+                then: stored,
+                else: {
+                  $cond: {
+                    if: { $eq: [stored, null] },
+                    then: [],
+                    else: [stored],
+                  },
+                },
+              },
+            },
+            as: 'relId',
+            in: {
+              $convert: { input: '$$relId', to: 'objectId', onError: null },
+            },
+          },
+        });
+        expect((pipeline[1] as any).$lookup).toEqual({
+          from: 'records',
+          localField: 'aux.latest_grade_related_ids',
+          foreignField: '_id',
+          as: 'aux.latest_grade_related',
+          pipeline: [
+            {
+              $match: { resource: 'gradeResourceId', archived: { $ne: true } },
+            },
+            { $sort: { 'data.grading_date': -1, _id: -1 } },
+            { $limit: 1 },
+            { $project: { _id: 0, v: '$data.grades' } },
+          ],
+        });
+      });
+
+      it('throws when the targeted resource does not exist', async () => {
+        findByIdSpy.mockResolvedValue(null);
+        await expect(
+          new CalculatedFieldService(emergency, null, 'UTC').build(
+            "{{calc.relatedCount('grade_history')}}",
+            'result'
+          )
+        ).rejects.toThrow(/does not exist/);
+      });
+    });
+
     it('throws when the related name cannot be resolved', async () => {
       findSpy.mockResolvedValue([] as any);
       await expect(
