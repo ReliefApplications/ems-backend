@@ -17,6 +17,9 @@ const paths = {
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
+  // Suites connecting to the shared in-memory MongoDB can exceed the 5s
+  // default when several of them set their database up concurrently
+  testTimeout: 30000,
   setupFiles: ['dotenv/config'],
   globalSetup: '<rootDir>/__tests__/helpers/global-setup.ts',
   globalTeardown: '<rootDir>/__tests__/helpers/global-teardown.ts',

@@ -249,6 +249,131 @@ describe('calc.related* against a real database', () => {
     ).toEqual({ org1: true, org2: false, org3: false });
   });
 
+  it('computes averages over the related records', async () => {
+    expect(
+      await compute(
+        organization,
+        "{{calc.relatedAvg('teams'; 'grade')}}",
+        'grade_avg',
+        'name'
+      )
+    ).toEqual({ org1: 2, org2: 2, org3: null });
+  });
+
+  it('supports composite OR filters on the related records', async () => {
+    expect(
+      await compute(
+        organization,
+        '{{calc.relatedCount(\'teams\'; \'{"logic":"or","filters":[{"field":"active","operator":"eq","value":false},{"field":"grade","operator":"gte","value":3}]}\')}}',
+        'flagged_teams',
+        'name'
+      )
+    ).toEqual({ org1: 2, org2: 0, org3: 0 });
+  });
+
+  it('supports date operators in the related-record filter', async () => {
+    expect(
+      await compute(
+        organization,
+        '{{calc.relatedCount(\'teams\'; \'{"field":"graded_on","operator":"gte","value":"2026-02-01"}\')}}',
+        'recent_gradings',
+        'name'
+      )
+    ).toEqual({ org1: 2, org2: 0, org3: 0 });
+  });
+
+  it('picks a value using a record-level (createdAt) sort field', async () => {
+    expect(
+      await compute(
+        organization,
+        "{{calc.relatedValue('teams'; 'label'; 'createdAt'; 'desc')}}",
+        'newest_team',
+        'name'
+      )
+    ).toEqual({ org1: 't3', org2: 't4', org3: null });
+  });
+
+  it('supports sorting parents by the computed value, as the records query does', async () => {
+    const service = new CalculatedFieldService(organization, null, 'UTC');
+    const stages = await service.build(
+      "{{calc.relatedValue('teams'; 'grade'; 'graded_on'; 'desc')}}",
+      'latest_grade'
+    );
+    const sorted = await Record.aggregate([
+      { $match: { resource: organization._id } },
+      ...(stages as any[]),
+      { $sort: { 'data.latest_grade': -1, _id: 1 } },
+    ]);
+    // latest grades: org1 → 1, org2 → 2, org3 → null (sorted last on desc)
+    expect(sorted.map((r: any) => r.data.name)).toEqual([
+      'org2',
+      'org1',
+      'org3',
+    ]);
+  });
+
+  it('supports filtering parents on the computed value, as the records query does', async () => {
+    const service = new CalculatedFieldService(organization, null, 'UTC');
+    const stages = await service.build(
+      "{{calc.relatedCount('teams')}}",
+      'team_count'
+    );
+    const filtered = await Record.aggregate([
+      { $match: { resource: organization._id } },
+      ...(stages as any[]),
+      { $match: { 'data.team_count': { $gte: 2 } } },
+    ]);
+    expect(filtered.map((r: any) => r.data.name)).toEqual(['org1']);
+  });
+
+  it('aggregates over single-link (resource) fields and ignores dangling ids', async () => {
+    const profile = await new Resource({
+      name: 'profile',
+      fields: [{ name: 'level', type: 'numeric' }],
+    }).save();
+    const person = await new Resource({
+      name: 'person',
+      fields: [
+        { name: 'name', type: 'text' },
+        {
+          name: 'profile',
+          type: 'resource',
+          resource: String(profile._id),
+          relatedName: 'persons',
+        },
+      ],
+    }).save();
+
+    const p1Profile = await seedRecord(profile, { level: 5 });
+    await Promise.all([
+      seedRecord(person, { name: 'p1', profile: String(p1Profile._id) }),
+      seedRecord(person, { name: 'p2' }),
+      // Dangling id (deleted record) and a value that is not an ObjectId
+      seedRecord(person, {
+        name: 'p3',
+        profile: String(new mongoose.Types.ObjectId()),
+      }),
+      seedRecord(person, { name: 'p4', profile: 'garbage' }),
+    ]);
+
+    expect(
+      await compute(
+        person,
+        "{{calc.relatedValue('profile'; 'level'; 'createdAt'; 'desc')}}",
+        'profile_level',
+        'name'
+      )
+    ).toEqual({ p1: 5, p2: null, p3: null, p4: null });
+    expect(
+      await compute(
+        person,
+        "{{calc.relatedExists('profile')}}",
+        'has_profile',
+        'name'
+      )
+    ).toEqual({ p1: true, p2: false, p3: false, p4: false });
+  });
+
   it('aggregates over forward links (record ids stored on the current record)', async () => {
     // The emergency stores its grade record ids in data.grade_history
     const grade = await new Resource({

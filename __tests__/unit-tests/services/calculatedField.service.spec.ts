@@ -1152,6 +1152,62 @@ describe('CalculatedFieldService', () => {
       });
     });
 
+    it('combines two different related names in one expression', async () => {
+      const expert = {
+        _id: 'expertResourceId',
+        name: 'expert',
+        fields: [
+          {
+            name: 'organizations',
+            type: 'resources',
+            resource: 'orgResourceId',
+            relatedName: 'experts',
+          },
+        ],
+      };
+      findSpy.mockImplementation((query: any) =>
+        Promise.resolve(
+          query.fields.$elemMatch.relatedName === 'teams' ? [team] : [expert]
+        )
+      );
+      const pipeline = await buildRelated(
+        "{{calc.gt({{calc.relatedCount('teams')}}; {{calc.relatedCount('experts')}})}}",
+        'more_teams'
+      );
+      const lookups = pipeline.filter((s: any) => s.$lookup);
+      expect(lookups.map((s: any) => s.$lookup.foreignField).sort()).toEqual([
+        'data.organization',
+        'data.organizations',
+      ]);
+      const last = pipeline[pipeline.length - 1] as any;
+      expect(last.$addFields['data.more_teams']).toEqual({
+        $gt: ['$aux.more_teams-gt1', '$aux.more_teams-gt2'],
+      });
+    });
+
+    it('composes as an if condition', async () => {
+      const pipeline = await buildRelated(
+        "{{calc.if({{calc.relatedExists('teams')}}; 'active'; 'inactive')}}",
+        'state'
+      );
+      expect(pipeline).toHaveLength(4);
+      const last = pipeline[pipeline.length - 1] as any;
+      expect(last.$addFields['data.state']).toEqual({
+        $cond: ['$aux.state-if0', 'active', 'inactive'],
+      });
+    });
+
+    it('combines a filter with an info sort field', async () => {
+      const pipeline = await buildRelated(
+        '{{calc.relatedValue(\'teams\'; \'grade\'; \'createdAt\'; \'desc\'; \'{"field":"active","operator":"eq","value":true}\')}}',
+        'latest_active_grade'
+      );
+      const sub = (pipeline[1] as any).$lookup.pipeline;
+      expect(sub[0].$match.$and).toHaveLength(2);
+      expect(sub[1]).toEqual({ $sort: { createdAt: -1, _id: -1 } });
+      expect(sub[2]).toEqual({ $limit: 1 });
+    });
+
     it('throws when the related name cannot be resolved', async () => {
       findSpy.mockResolvedValue([] as any);
       await expect(

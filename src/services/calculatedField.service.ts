@@ -299,71 +299,84 @@ export class CalculatedFieldService {
     const resourceId = String(resource._id);
 
     const entries = await Promise.all(
-      Array.from(relatedNames).map(async (relatedName) => {
-        // Forward link: a resource(s) field of the current resource
-        const ownField = resource.fields.find(
-          (f: any) =>
-            f.name === relatedName &&
-            ['resource', 'resources'].includes(f.type) &&
-            f.resource
-        );
-        if (ownField) {
-          const child = await Resource.findById(ownField.resource, {
-            name: 1,
-            fields: 1,
-          });
-          if (!child)
-            throw new Error(
-              `calc.related*: the resource targeted by field "${relatedName}" does not exist`
-            );
-          return [
+      Array.from(relatedNames).map(
+        async (relatedName) =>
+          [
             relatedName,
-            {
-              childResourceId: child._id,
-              parentFieldName: ownField.name,
-              childFields: child.fields,
-            },
-          ] as const;
-        }
-
-        // Reverse link: a field of another resource pointing at this one
-        const childResources = await Resource.find(
-          {
-            fields: { $elemMatch: { resource: resourceId, relatedName } },
-          },
-          { name: 1, fields: 1 }
-        );
-        const matches = childResources.flatMap((child: any) =>
-          child.fields
-            .filter(
-              (f: any) =>
-                f.resource === resourceId && f.relatedName === relatedName
-            )
-            .map((f: any) => ({ child, field: f }))
-        );
-        if (matches.length === 0)
-          throw new Error(
-            `calc.related*: unknown related name "${relatedName}" — no resource field of ${
-              resource.name ?? resourceId
-            } or of another resource pointing at it matches this name`
-          );
-        if (matches.length > 1)
-          throw new Error(
-            `calc.related*: ambiguous related name "${relatedName}", defined by several fields (on ${matches
-              .map((m) => m.child.name)
-              .join(', ')})`
-          );
-        return [
-          relatedName,
-          {
-            childResourceId: matches[0].child._id,
-            childFieldName: matches[0].field.name,
-            childFields: matches[0].child.fields,
-          },
-        ] as const;
-      })
+            await this.resolveRelatedContext(resourceId, relatedName),
+          ] as const
+      )
     );
     return Object.fromEntries(entries);
+  }
+
+  /**
+   * Resolves a single related name to the resource and field carrying the
+   * link (see {@link prefetchRelatedContexts}).
+   *
+   * @param resourceId Id of the current resource, as a string
+   * @param relatedName Related name to resolve
+   * @returns The resolved related context
+   */
+  private async resolveRelatedContext(
+    resourceId: string,
+    relatedName: string
+  ): Promise<RelatedContext> {
+    const resource = this.resource;
+    // Forward link: a resource(s) field of the current resource
+    const ownField = resource.fields.find(
+      (f: any) =>
+        f.name === relatedName &&
+        ['resource', 'resources'].includes(f.type) &&
+        f.resource
+    );
+    if (ownField) {
+      const child = await Resource.findById(ownField.resource, {
+        name: 1,
+        fields: 1,
+      });
+      if (!child)
+        throw new Error(
+          `calc.related*: the resource targeted by field "${relatedName}" does not exist`
+        );
+      return {
+        childResourceId: child._id,
+        parentFieldName: ownField.name,
+        childFields: child.fields,
+      };
+    }
+
+    // Reverse link: a field of another resource pointing at this one
+    const childResources = await Resource.find(
+      {
+        fields: { $elemMatch: { resource: resourceId, relatedName } },
+      },
+      { name: 1, fields: 1 }
+    );
+    const matches = childResources.flatMap((child: any) =>
+      child.fields
+        .filter(
+          (f: any) => f.resource === resourceId && f.relatedName === relatedName
+        )
+        .map((f: any) => ({ child, field: f }))
+    );
+    if (matches.length === 0)
+      throw new Error(
+        `calc.related*: unknown related name "${relatedName}" — no resource field of ${
+          resource.name ?? resourceId
+        } or of another resource pointing at it matches this name`
+      );
+    if (matches.length > 1)
+      throw new Error(
+        `calc.related*: ambiguous related name "${relatedName}", defined by several fields (on ${matches
+          .map((m) => m.child.name)
+          .join(', ')})`
+      );
+    return {
+      childResourceId: matches[0].child._id,
+      childFieldName: matches[0].field.name,
+      childFields: matches[0].child.fields,
+    };
   }
 
   /**

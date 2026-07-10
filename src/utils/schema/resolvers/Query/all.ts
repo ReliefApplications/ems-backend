@@ -359,25 +359,30 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       // page rows instead of on every record of the resource
       const pageCalculatedFieldsAggregation: any[] = [];
 
+      // Whether a field is referenced by a composite filter
+      const isUsedInFilter = (qFilter: any, fieldName: string) => {
+        if (qFilter?.field) return qFilter.field === fieldName;
+        return (
+          qFilter?.filters?.some((f) => isUsedInFilter(f, fieldName)) ?? false
+        );
+      };
+
       // A calculated field must be computed before the filter/sort stages
       // when the query sorts, filters, styles or actions on it
       const isNeededBeforeFilters = (field: any) => {
         // If sort field is a calculated field
         if (sortField === field.name) return true;
 
-        const isUsedInFilter = (qFilter: any) => {
-          if (qFilter.field) return qFilter.field === field.name;
-          return qFilter.filters?.some((f) => isUsedInFilter(f)) ?? false;
-        };
-
         // Check if the field is used in the filter
-        if (isUsedInFilter(filter)) return true;
+        if (isUsedInFilter(filter, field.name)) return true;
 
         // Check if the field is used in any styles' filters
-        if (styles?.some((s) => isUsedInFilter(s.filter))) return true;
+        if (styles?.some((s) => isUsedInFilter(s.filter, field.name)))
+          return true;
 
         // Check if the field is used in any actions' filters
-        if (actions?.some((a) => isUsedInFilter(a.filter))) return true;
+        if (actions?.some((a) => isUsedInFilter(a.filter, field.name)))
+          return true;
 
         return false;
       };
@@ -466,6 +471,18 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           fields,
           context
         );
+        // When neither the query filter nor the permission filters reference
+        // a calculated field, filter before computing calculated fields, so
+        // that expensive stages (e.g. related-record lookups, when sorting by
+        // such a field) only run on the matching records
+        const calculatedFieldNames = fields
+          .filter((x) => x.isCalculated)
+          .map((x) => x.name);
+        const filtersUseCalculatedField =
+          calculatedFieldNames.some((name) => isUsedInFilter(filter, name)) ||
+          calculatedFieldNames.some((name) =>
+            JSON.stringify(permissionFilters || {}).includes(`data.${name}`)
+          );
         const pipeline = [
           ...(searchFilter ? [searchFilter] : []),
           { $match: basicFilters },
@@ -473,23 +490,28 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
           ...defaultRecordAggregation,
-          ...calculatedFieldsAggregation,
-          { $match: filters },
+          ...(filtersUseCalculatedField
+            ? [...calculatedFieldsAggregation, { $match: filters }]
+            : [{ $match: filters }, ...calculatedFieldsAggregation]),
         ];
-        const aggregation = await Record.aggregate(pipeline).facet({
-          items: [
-            ...projectAggregation,
-            ...sort,
-            { $skip: skip },
-            { $limit: first + 1 },
-            ...pageCalculatedFieldsAggregation,
-          ],
-          totalCount: [
-            {
-              $count: 'count',
-            },
-          ],
-        });
+        // Sorts on calculated fields cannot use an index; allow spilling to
+        // disk so large sorts do not hit the in-memory limit
+        const aggregation = await Record.aggregate(pipeline)
+          .allowDiskUse(true)
+          .facet({
+            items: [
+              ...projectAggregation,
+              ...sort,
+              { $skip: skip },
+              { $limit: first + 1 },
+              ...pageCalculatedFieldsAggregation,
+            ],
+            totalCount: [
+              {
+                $count: 'count',
+              },
+            ],
+          });
         items = aggregation[0].items;
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       } else {
