@@ -8,6 +8,7 @@ import {
   OperationTypeMap,
 } from '@utils/aggregation/expressionFromString';
 import { findDuplicateFields } from '@utils/form';
+import { CalculatedFieldService } from '@services/calculatedField.service';
 import { GraphQLError, GraphQLID, GraphQLList, GraphQLNonNull } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { get, has, isArray, isEqual, isNil } from 'lodash';
@@ -725,15 +726,37 @@ export default {
       if (args.calculatedField) {
         const calculatedField: CalculatedFieldChange = args.calculatedField;
 
+        // Validates an expression aggregating over a related resource —
+        // reverse link and child fields must exist — and derives its type
+        // from the child value field. Fails at save time rather than at
+        // query time.
+        const getRelatedExpressionType = async (expression: string) => {
+          const service = new CalculatedFieldService(
+            resource,
+            context,
+            context.timeZone,
+            context.user?.attributes || {}
+          );
+          try {
+            await service.build(expression, 'validation');
+            return await service.getExpressionType(expression);
+          } catch (err) {
+            throw new GraphQLError(getErrorMessage(err));
+          }
+        };
+
         // Add new calculated field
         if (calculatedField.add) {
           const expression = getExpressionFromString(
             calculatedField.add.expression
           );
-          const type =
-            expression.type === 'expression'
-              ? OperationTypeMap[expression.value.operation] ?? 'text'
-              : 'text';
+          const type = CalculatedFieldService.hasRelatedOperation(
+            calculatedField.add.expression
+          )
+            ? await getRelatedExpressionType(calculatedField.add.expression)
+            : expression.type === 'expression'
+            ? OperationTypeMap[expression.value.operation] ?? 'text'
+            : 'text';
           const pushCalculatedField = {
             fields: {
               isCalculated: true,
@@ -776,10 +799,13 @@ export default {
           const expression = getExpressionFromString(
             calculatedField.update.expression
           );
-          const type =
-            expression.type === 'expression'
-              ? OperationTypeMap[expression.value.operation] ?? 'text'
-              : 'text';
+          const type = CalculatedFieldService.hasRelatedOperation(
+            calculatedField.update.expression
+          )
+            ? await getRelatedExpressionType(calculatedField.update.expression)
+            : expression.type === 'expression'
+            ? OperationTypeMap[expression.value.operation] ?? 'text'
+            : 'text';
 
           const oldField = allResourceFields.find(
             (field) => field.name === calculatedField.update.oldName

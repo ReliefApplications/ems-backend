@@ -1,5 +1,5 @@
 import { accessibleBy } from '@casl/mongoose';
-import { Form, Record } from '@models';
+import { Form, Record, Resource } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForRecords, {
   userHasRoleFor,
@@ -255,6 +255,70 @@ export const ResourceType = new GraphQLObjectType({
       },
     },
     fields: { type: GraphQLJSON },
+    relatedFields: {
+      type: GraphQLJSON,
+      async resolve(parent) {
+        // Links usable by related-record aggregations in calculated fields:
+        // forward links (resource(s) fields of this resource, referenced by
+        // their field name) and reverse links (fields of other resources
+        // pointing at this resource, referenced by their relatedName).
+        // Fields metadata of the related resources is fetched separately
+        // through their own metadata resolver, so choice options are
+        // resolved as in grid filters.
+        const resourceId = String(parent._id ?? parent.id);
+        const related: any[] = [];
+
+        // Forward links
+        const ownLinkFields = (parent.fields || []).filter(
+          (f: any) => ['resource', 'resources'].includes(f.type) && f.resource
+        );
+        const targets = await Resource.find(
+          { _id: { $in: ownLinkFields.map((f: any) => f.resource) } },
+          { name: 1, fields: 1 }
+        );
+        for (const field of ownLinkFields) {
+          const target = targets.find(
+            (x: any) => String(x._id) === String(field.resource)
+          );
+          if (target) {
+            related.push({
+              relatedName: field.name,
+              fieldName: field.name,
+              resourceId: target._id,
+              resourceName: target.name,
+              fields: target.fields.filter((x: any) => !x.isCalculated),
+            });
+          }
+        }
+
+        // Reverse links
+        const resources = await Resource.find(
+          {
+            fields: {
+              $elemMatch: {
+                resource: resourceId,
+                relatedName: { $exists: true, $nin: [null, ''] },
+              },
+            },
+          },
+          { name: 1, fields: 1 }
+        );
+        related.push(
+          ...resources.flatMap((child: any) =>
+            child.fields
+              .filter((f: any) => f.resource === resourceId && f.relatedName)
+              .map((f: any) => ({
+                relatedName: f.relatedName,
+                fieldName: f.name,
+                resourceId: child._id,
+                resourceName: child.name,
+                fields: child.fields.filter((x: any) => !x.isCalculated),
+              }))
+          )
+        );
+        return related;
+      },
+    },
     canCreateRecords: {
       type: GraphQLBoolean,
       async resolve(parent, args, context) {
