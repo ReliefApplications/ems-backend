@@ -1,3 +1,10 @@
+# [2.17.0-rc.11](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.10...v2.17.0-rc.11) (2026-07-10)
+
+
+### Features
+
+* Can now use user attributes in filter ([#1254](https://github.com/ReliefApplications/ems-backend/issues/1254)) ([187e2f3](https://github.com/ReliefApplications/ems-backend/commit/187e2f346f4469775ec11f91b18bd61dbf69dfd9)), closes [AB#129134](https://github.com/AB/issues/129134)
+
 # [2.17.0-rc.10](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.9...v2.17.0-rc.10) (2026-07-10)
 
 
