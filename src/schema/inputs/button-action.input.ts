@@ -32,7 +32,7 @@ const sendNotificationFieldInputType = new GraphQLInputObjectType({
 const ActionButtonInputType = new GraphQLInputObjectType({
   name: 'ActionButtonInputType',
   fields: () => ({
-    text: { type: new GraphQLNonNull(GraphQLString) },
+    text: { type: new GraphQLNonNull(GraphQLJSON) },
     // Display
     variant: { type: new GraphQLNonNull(GraphQLString) },
     category: { type: new GraphQLNonNull(GraphQLString) },

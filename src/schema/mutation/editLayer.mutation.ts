@@ -5,6 +5,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import LayerInputType from '@schema/inputs/layer.input';
 import { graphQLAuthCheck } from '@schema/shared';
 import { logger } from '@services/logger.service';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Edit new layer.
@@ -36,7 +37,7 @@ export default {
         context.i18next.t('common.errors.permissionNotGranted')
       );
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

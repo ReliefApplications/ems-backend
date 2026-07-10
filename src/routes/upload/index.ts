@@ -10,7 +10,6 @@ import {
   Application,
 } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
-import { Types } from 'mongoose';
 import { getUploadColumns, loadRow, uploadFile } from '@utils/files';
 import { getNextId } from '@utils/form';
 import i18next from 'i18next';
@@ -21,6 +20,7 @@ import validator from 'email-validator';
 import { insertRecords as insertRecordsPulljob } from '@server/pullJobScheduler';
 import jwtDecode from 'jwt-decode';
 import { GraphQLError } from 'graphql';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** File size limit, in bytes  */
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
@@ -48,19 +48,27 @@ async function insertRecords(
   // Check if the user is authorized
   const ability: AppAbility = context.user.ability;
   let canCreate = false;
-  if (ability.can('create', 'Record')) {
+  if (ability.can('create', 'Record') || ability.can('upload', 'Record')) {
     canCreate = true;
   } else {
-    const roles = context.user.roles.map((x) => new Types.ObjectId(x._id));
-    const canCreateRoles = get(
+    // Populate resource on form if not populated to access permissions
+    if (form.resource && !form.resource.permissions) {
+      await form.populate('resource');
+    }
+    const roles = context.user.roles.map((x) => String(x._id));
+
+    const canUploadRoles = get(
       form,
-      'resource.permissions.canCreateRecords',
+      'resource.permissions.canUploadRecords',
       []
-    );
-    canCreate =
-      canCreateRoles.length > 0
-        ? canCreateRoles.some((x) => roles.includes(x))
-        : true;
+    ).map((x: any) => String(x.role || x));
+
+    const hasUploadRole =
+      canUploadRoles.length > 0
+        ? canUploadRoles.some((x) => roles.includes(x))
+        : false;
+
+    canCreate = hasUploadRole;
   }
   // Check unicity of record
   // TODO: this is always breaking
@@ -88,18 +96,21 @@ async function insertRecords(
       }
     });
 
+    // Resource may have been populated by the permission check above,
+    // so only keep its id
+    const structureId = String(
+      form.resource ? get(form.resource, '_id', form.resource) : form.id
+    );
     // Create records one by one so the incrementalId works correctly
     for (const dataSet of dataSets) {
       records.push(
         new Record({
-          incrementalId: await getNextId(
-            String(form.resource ? form.resource : form.id)
-          ),
+          incrementalId: await getNextId(structureId),
           form: form.id,
           // createdAt: new Date(),
           // modifiedAt: new Date(),
           data: dataSet.data,
-          resource: form.resource ? form.resource : null,
+          resource: form.resource ? structureId : null,
           createdBy: {
             positionAttributes: dataSet.positionAttributes,
             user: context.user._id,
@@ -128,7 +139,7 @@ async function insertRecords(
         Record.insertMany(records);
         return res.status(200).send({ status: 'OK' });
       } catch (err) {
-        logger.error(err.message, { stack: err.stack });
+        logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
         return res
           .status(500)
           .send(i18next.t('common.errors.internalServerError'));
@@ -173,7 +184,7 @@ router.post('/form/records/:id', async (req: any, res) => {
     // Insert records if authorized
     return await insertRecords(res, file, form, form.fields, req.context);
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -210,7 +221,7 @@ router.post('/resource/records/:id', async (req: any, res) => {
     // Insert records if authorized
     return await insertRecords(res, file, form, resource.fields, req.context);
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -245,7 +256,7 @@ router.post('/resource/insert', async (req: any, res) => {
     }
     return res.status(400).send(req.t('common.errors.permissionNotGranted'));
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -318,7 +329,7 @@ router.post('/application/:id/invite', async (req: any, res) => {
     });
     return res.status(200).send(data);
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -379,7 +390,7 @@ router.post('/invite', async (req: any, res) => {
     });
     return res.status(200).send(data);
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -412,8 +423,8 @@ router.post('/file/:form', async (req, res) => {
     const path = await uploadFile('forms', formID, file);
     return res.status(200).send({ path });
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
-    return res.status(500).send(err.message);
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
+    return res.status(500).send(getErrorMessage(err));
   }
 });
 
@@ -462,7 +473,7 @@ router.post('/style/:application', async (req, res) => {
         allowedExtensions: ['css', 'scss'],
       });
     } catch (err) {
-      throw new GraphQLError(err.message);
+      throw new GraphQLError(getErrorMessage(err));
     }
 
     await Application.updateOne(
@@ -472,7 +483,7 @@ router.post('/style/:application', async (req, res) => {
 
     return res.status(200).send({ path });
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -549,7 +560,7 @@ router.post('/distributionList', async (req: any, res) => {
     });
     res.status(200).send(emails);
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });

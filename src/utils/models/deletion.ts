@@ -1,5 +1,6 @@
 import { Query, Schema } from 'mongoose';
 import { logger } from '../../services/logger.service';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Add a callback function on a schema to be called before every deletion.
@@ -33,7 +34,9 @@ export const addOnBeforeDeleteMany = <DocType>(
         if (!doc) return logger.error('No document found');
         await callback([doc]);
       } catch (err) {
-        return logger.error(err.message, { stack: err.stack });
+        return logger.error(getErrorMessage(err), {
+          stack: getErrorStack(err),
+        });
       }
     }
   );
@@ -49,7 +52,9 @@ export const addOnBeforeDeleteMany = <DocType>(
         if (!docs.length) return logger.error('No documents found');
         await callback(docs);
       } catch (err) {
-        return logger.error(err.message, { stack: err.stack });
+        return logger.error(getErrorMessage(err), {
+          stack: getErrorStack(err),
+        });
       }
     }
   );

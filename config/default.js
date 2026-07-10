@@ -41,6 +41,8 @@ module.exports = {
       url: '',
       key: '',
     },
+    // Redis channel on which the email function publishes its email events.
+    eventsChannel: 'email-events',
   },
   database: {
     provider: '',
@@ -66,6 +68,10 @@ module.exports = {
   },
   blobStorage: {
     connectionString: '',
+  },
+  azureTranslator: {
+    key: '',
+    region: '',
   },
   rabbitMQ: {
     application: '',

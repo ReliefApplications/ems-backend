@@ -254,6 +254,9 @@
 						},
 						"updateRecords": {
 							"notVisible": "******"
+						},
+						"uploadRecords": {
+							"notVisible": "******"
 						}
 					}
 				}

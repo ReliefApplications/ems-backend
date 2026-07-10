@@ -6,6 +6,7 @@ import { MULTISELECT_TYPES } from '@const/fieldTypes';
 import get from 'lodash/get';
 import { isArray, isEqual, isObject } from 'lodash';
 import { logger } from '@services/logger.service';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Return reference data field resolver.
@@ -42,7 +43,7 @@ const getReferenceDataResolver =
       }
     } catch (err) {
       // Log error but continue execution
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     }
 
     if (MULTISELECT_TYPES.includes(field.type)) {

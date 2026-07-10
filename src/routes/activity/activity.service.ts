@@ -10,6 +10,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import ApiError from '../../abstractions/api-error';
 import { StatusCodes } from 'http-status-codes';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Activity creation attributes interface */
 export interface ActivityCreationAttributes {
@@ -128,7 +129,7 @@ export class ActivityService {
       await activity.save();
       return activity;
     } catch (error) {
-      logger.error(error.message, { stack: error.stack });
+      logger.error(getErrorMessage(error), { stack: getErrorStack(error) });
       throw error;
     }
   }
@@ -192,7 +193,7 @@ export class ActivityService {
         total: aggregation[0].totalCount,
       };
     } catch (error) {
-      logger.error(error.message, { stack: error.stack });
+      logger.error(getErrorMessage(error), { stack: getErrorStack(error) });
       throw error;
     }
   }
@@ -257,7 +258,7 @@ export class ActivityService {
         total: aggregation[0].totalCount,
       };
     } catch (error) {
-      logger.error(error.message, { stack: error.stack });
+      logger.error(getErrorMessage(error), { stack: getErrorStack(error) });
       throw error;
     }
   }
@@ -322,7 +323,7 @@ export class ActivityService {
         total: aggregation[0].totalCount,
       };
     } catch (error) {
-      logger.error(error.message, { stack: error.stack });
+      logger.error(getErrorMessage(error), { stack: getErrorStack(error) });
       throw error;
     }
   }
@@ -386,7 +387,7 @@ export class ActivityService {
       );
       return { fileName: this.listExportFileName, file };
     } catch (error) {
-      logger.error(error.message, { stack: error.stack });
+      logger.error(getErrorMessage(error), { stack: getErrorStack(error) });
       throw error;
     }
   }
@@ -431,7 +432,7 @@ export class ActivityService {
       );
       return { fileName: this.groupByUrlExportFileName, file };
     } catch (error) {
-      logger.error(error.message, { stack: error.stack });
+      logger.error(getErrorMessage(error), { stack: getErrorStack(error) });
       throw error;
     }
   }
@@ -477,7 +478,7 @@ export class ActivityService {
       );
       return { fileName: this.groupByUserExportFileName, file };
     } catch (error) {
-      logger.error(error.message, { stack: error.stack });
+      logger.error(getErrorMessage(error), { stack: getErrorStack(error) });
       throw error;
     }
   }

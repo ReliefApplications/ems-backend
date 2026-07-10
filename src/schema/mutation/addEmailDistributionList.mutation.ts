@@ -5,6 +5,7 @@ import { Context } from '@server/apollo/context';
 import { EmailDistributionListType } from '@schema/types/emailDistribution.type';
 import GraphQLJSON from 'graphql-type-json';
 import { EmailDistributionList } from '@models';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Mutation to add a new distribution list.
@@ -42,7 +43,7 @@ export default {
       await distributionList.save();
       return distributionList;
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

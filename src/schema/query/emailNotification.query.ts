@@ -6,6 +6,7 @@ import { EmailNotification } from '@models';
 import { EmailNotificationType } from '@schema/types';
 import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Email notification query resolver.
@@ -35,7 +36,7 @@ export default {
         );
       }
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

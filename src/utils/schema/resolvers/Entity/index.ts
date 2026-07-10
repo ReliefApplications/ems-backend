@@ -13,6 +13,7 @@ import get from 'lodash/get';
 import { logger } from '@services/logger.service';
 import { subject } from '@casl/ability';
 import { SortOrder } from 'mongoose';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Gets the resolvers for each field of the document for a given resource
@@ -122,7 +123,7 @@ export const getEntityResolver = (
                 return null;
               }
             } catch (err) {
-              logger.error(err.message, { stack: err.stack });
+              logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
               return null;
             }
           },
@@ -143,7 +144,25 @@ export const getEntityResolver = (
                   fieldName.endsWith(NameExtension.resource) ? -3 : -4
                 )
               : fieldName;
-            let value = get(entity.data, path, null);
+
+            let value = null;
+            if (context.locale && data[name]) {
+              // When possible, pick the translated version
+              const siblingField = data[name].find(
+                (f: any) =>
+                  f.translateField === path &&
+                  f.translateTo &&
+                  f.translateTo.toLowerCase() === context.locale.toLowerCase()
+              );
+              if (siblingField) {
+                value = get(entity.data, siblingField.name, null);
+              }
+            }
+
+            if (value === null || value === undefined || value === '') {
+              value = get(entity.data, path, null);
+            }
+
             // Removes duplicated values
             if (Array.isArray(value)) {
               value = [...new Set(value)];

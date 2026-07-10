@@ -47,50 +47,80 @@ export const RecordType = new GraphQLObjectType({
       type: GraphQLJSON,
       args: {
         display: { type: GraphQLBoolean },
+        replaceTranslations: {
+          type: GraphQLBoolean,
+          defaultValue: false,
+        },
       },
       async resolve(parent, args, context) {
-        if (args.display) {
-          const source = parent.resource
-            ? await Resource.findById(parent.resource)
-            : await Form.findById(parent.form);
-          if (source) {
-            const res = {};
-            for (const field of source.fields) {
-              const name = field.name;
-              if (parent.data[name]) {
-                res[name] = parent.data[name];
-                // Get the display field from the linked record if any
-                if (field.resource && field.displayField) {
-                  try {
-                    const record = await Record.findOne({
-                      _id: parent.data[name],
-                      archived: { $ne: true },
-                    });
-                    res[name] = record.data[field.displayField];
-                  } catch {
-                    res[name] = null;
-                  }
-                }
-                // Get the text instead of the value for choices, fetch it if needed.
+        let lang = context.locale;
+        if (lang) {
+          lang = lang.toLowerCase();
+        }
+
+        const source =
+          args.display || (lang && args.replaceTranslations)
+            ? parent.resource
+              ? await Resource.findById(parent.resource).select('fields')
+              : await Form.findById(parent.form).select('fields')
+            : null;
+
+        const data = parent.data ? { ...parent.data } : {};
+
+        // Replace fields with translated versions when available
+        if (lang && args.replaceTranslations && source && source.fields) {
+          for (const field of source.fields) {
+            if (field.translateField && field.translateTo) {
+              const targetLang = field.translateTo.toLowerCase();
+              if (targetLang === lang) {
+                const targetField = field.name;
+                const sourceField = field.translateField;
                 if (
-                  field.choices ||
-                  field.choicesByUrl ||
-                  field.choicesByGraphQL
+                  data[targetField] !== undefined &&
+                  data[targetField] !== null &&
+                  data[targetField] !== ''
                 ) {
-                  res[name] = await getDisplayText(
-                    field,
-                    parent.data[name],
-                    context
-                  );
+                  data[sourceField] = data[targetField];
                 }
-              } else {
-                res[name] = null;
+                delete data[targetField];
               }
             }
-            return res;
           }
         }
-        return parent.data;
+
+        if (args.display && source) {
+          const res = {};
+          for (const field of source.fields) {
+            const name = field.name;
+            if (data[name] !== undefined && data[name] !== null) {
+              res[name] = data[name];
+              // Get the display field from the linked record if any
+              if (field.resource && field.displayField) {
+                try {
+                  const record = await Record.findOne({
+                    _id: data[name],
+                    archived: { $ne: true },
+                  });
+                  res[name] = record.data[field.displayField];
+                } catch {
+                  res[name] = null;
+                }
+              }
+              // Get the text instead of the value for choices, fetch it if needed.
+              if (
+                field.choices ||
+                field.choicesByUrl ||
+                field.choicesByGraphQL
+              ) {
+                res[name] = await getDisplayText(field, data[name], context);
+              }
+            } else {
+              res[name] = null;
+            }
+          }
+          return res;
+        }
+        return data;
       },
     },
     versions: {

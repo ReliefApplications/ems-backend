@@ -8,6 +8,7 @@ import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Arguments for the editLayoutNotification mutation */
 type EditLayoutArgs = {
@@ -52,6 +53,8 @@ export default {
           );
         }
         resource.layouts.id(args.id).name = args.layout.name;
+        resource.layouts.id(args.id).nameTranslations =
+          args.layout.nameTranslations;
         resource.layouts.id(args.id).query = args.layout.query;
         resource.layouts.id(args.id).display = args.layout.display;
         await resource.save();
@@ -68,13 +71,15 @@ export default {
           );
         }
         form.layouts.id(args.id).name = args.layout.name;
+        form.layouts.id(args.id).nameTranslations =
+          args.layout.nameTranslations;
         form.layouts.id(args.id).query = args.layout.query;
         form.layouts.id(args.id).display = args.layout.display;
         await form.save();
         return form.layouts.id(args.id);
       }
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

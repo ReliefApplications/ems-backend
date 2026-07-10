@@ -5,6 +5,7 @@ import { azureFunctionHeaders } from '@utils/notification/util';
 import i18next from 'i18next';
 import axios from 'axios';
 import config from 'config';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Send email using SMTP email client
@@ -145,7 +146,7 @@ router.post('/:functionName/:configId?', async (req, res) => {
     );
     res.status(200).send(response.data);
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -171,7 +172,7 @@ router.get('/:functionName/:configId?', async (req, res) => {
 
     res.status(200).send(response.data);
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });

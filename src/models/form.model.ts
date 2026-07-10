@@ -9,6 +9,7 @@ import { Channel } from './channel.model';
 import { layoutSchema } from './layout.model';
 import { Record } from './record.model';
 import { Version } from './version.model';
+import { getErrorMessage } from '@utils/error';
 
 /** Form documents interface declaration */
 interface FormDocument extends Document {
@@ -177,7 +178,7 @@ addOnBeforeDeleteMany(schema, async (forms) => {
     await Channel.deleteMany({ form: { $in: forms } });
     await Version.deleteMany({ _id: { $in: versions } });
   } catch (err) {
-    logger.error(`Deletion of forms failed: ${err.message}`);
+    logger.error(`Deletion of forms failed: ${getErrorMessage(err)}`);
   }
 });
 

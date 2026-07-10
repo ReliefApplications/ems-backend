@@ -20,6 +20,8 @@ export type Metadata = {
   _field?: any;
   _referenceData?: ReferenceData;
   usedIn?: string[];
+  translateField?: string;
+  translateTo?: string;
 };
 
 /**
@@ -256,6 +258,8 @@ export const getMetaData = async (
       usedIn: forms
         .filter((form) => form.fields.find((x) => x.name === field.name))
         .map((form) => form.id),
+      ...(field.translateField && { translateField: field.translateField }),
+      ...(field.translateTo && { translateTo: field.translateTo }),
     };
     switch (field.type) {
       case 'radiogroup':

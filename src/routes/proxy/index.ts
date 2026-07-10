@@ -11,6 +11,7 @@ import { authType } from '@const/enumTypes';
 import jwtDecode from 'jwt-decode';
 import redis from '../../server/redis';
 import { RedisClientType } from 'redis';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Express router */
 const router = express.Router();
@@ -106,7 +107,7 @@ const proxyAPIRequest = async (
         });
     }
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 };
@@ -166,7 +167,7 @@ router.post('/ping/**', async (req: Request, res: Response) => {
       await proxyAPIRequest(req, res, parameters, api.pingUrl, true);
     }
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -186,7 +187,7 @@ router.all('/:name/**', async (req: Request, res: Response) => {
     const path = req.originalUrl.split(req.params.name).pop().substring(1);
     await proxyAPIRequest(req, res, api, path);
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });

@@ -4,6 +4,7 @@ import { Form, Resource } from '@models';
 import { logger } from '@services/logger.service';
 import merge from 'lodash/merge';
 import { graphQLAuthCheck } from '@schema/shared';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Gets a resolver that returns the fields of a form or resource
@@ -56,7 +57,7 @@ export default (id) => async (parent, args, context) => {
       );
     }
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     throw new GraphQLError(
       context.i18next.t('common.errors.internalServerError')
     );

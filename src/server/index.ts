@@ -13,7 +13,6 @@ import Backend from 'i18next-node-fs-backend';
 import i18nextMiddleware from 'i18next-http-middleware';
 import { logger } from '../services/logger.service';
 import { winstonLogger } from './middlewares/winston';
-import { Form, ReferenceData, Resource } from '@models';
 import buildSchema from '@utils/schema/buildSchema';
 import { GraphQLSchema } from 'graphql';
 import context, { Context } from './apollo/context';
@@ -26,8 +25,8 @@ import {
   IntrospectionResult as IntrospectionQueryResult,
 } from './apollo/queries/introspection.query';
 import { pluralize } from 'inflection';
-import { isEqual } from 'lodash';
 import registerRoutes from '@routes/index';
+import { listenToSchemaUpdateTriggers } from './schemaUpdateTriggers';
 
 /** List of user fields */
 const USER_FIELDS = ['id', 'name', 'username'];
@@ -53,78 +52,12 @@ class SafeServer {
 
   public status = new EventEmitter();
 
+  /** Timeout used to debounce schema reloads */
+  private updateTimeout: ReturnType<typeof setTimeout> | null = null;
+
   /** Adds listeners to relevant collections in order to rebuild schema */
   constructor() {
-    Form.watch().on('change', (data) => {
-      if (data.operationType === 'insert') {
-        // Reload schema on new form or form deletion
-        this.update();
-      } else if (data.operationType === 'update') {
-        // When a form is updated, only reload schema if name, structure or status were updated
-        const fieldsThatRequireSchemaUpdate = ['name', 'status', 'structure'];
-        const updatedDocFields = Object.keys(
-          data.updateDescription.updatedFields
-        );
-        if (
-          updatedDocFields.some((f) =>
-            fieldsThatRequireSchemaUpdate.includes(f)
-          )
-        ) {
-          this.update();
-        }
-      }
-    });
-
-    // All reference data changes require schema update
-    ReferenceData.watch().on('change', (data) => {
-      // this.update();
-      if (data.operationType === 'update') {
-        const fieldsThatRequireSchemaUpdate = [
-          'name',
-          'type',
-          'apiConfiguration',
-          'fields',
-          'data',
-        ];
-        const updatedDocFields = Object.keys(
-          data.updateDescription.updatedFields
-        );
-        if (
-          updatedDocFields.some((f) =>
-            fieldsThatRequireSchemaUpdate.includes(f)
-          )
-        ) {
-          this.update();
-        }
-      }
-    });
-
-    // All resource changes require schema update
-    Resource.watch().on('change', (data) => {
-      if (data.operationType === 'delete') {
-        // Reload schema on resource deletion
-        this.update();
-      }
-      if (data.operationType === 'update') {
-        // When a resource is updated, only reload if fields are updated
-        const fieldsThatRequireSchemaUpdate = ['fields'];
-        const updatedDocFields = Object.keys(
-          data.updateDescription.updatedFields
-        );
-        if (
-          updatedDocFields.some(
-            (f) =>
-              fieldsThatRequireSchemaUpdate.includes(f) &&
-              data.updateDescription.updatedFields[f].some(
-                (field) => field.isCalculated === true
-              )
-          ) ||
-          isEqual(updatedDocFields, ['modifiedAt']) // we only edit the modification date, if we delete a non-core form
-        ) {
-          this.update();
-        }
-      }
-    });
+    listenToSchemaUpdateTriggers(() => this.update());
   }
 
   /**
@@ -153,7 +86,7 @@ class SafeServer {
           loadPath: 'src/i18n/{{lng}}.json',
         },
         fallbackLng: 'en',
-        preload: ['en', 'test'],
+        preload: ['en', 'test', 'uk'],
       });
     this.app.use(corsMiddleware);
     this.app.use(authMiddleware);
@@ -250,8 +183,24 @@ class SafeServer {
     this.status.emit('ready');
   }
 
+  /**
+   * Schedules a server reload, debouncing changes received close together
+   * ( e.g. cascading form deletions when a resource is deleted ), so the
+   * server only reloads once.
+   */
+  private update(): void {
+    console.log('Updating...');
+    if (this.updateTimeout) {
+      clearTimeout(this.updateTimeout);
+    }
+    this.updateTimeout = setTimeout(() => {
+      this.updateTimeout = null;
+      this.reload();
+    }, 500);
+  }
+
   /** Re-launches the server with updated schema */
-  private async update(): Promise<void> {
+  private async reload(): Promise<void> {
     const schema = await buildSchema();
     this.httpServer.removeListener('request', this.app);
     this.httpServer.close();

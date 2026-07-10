@@ -56,7 +56,8 @@ export type Actions =
   | 'manage'
   // application specific
   | 'manageUsers'
-  | 'download';
+  | 'download'
+  | 'upload';
 
 /** Define subjects types for casl */
 type Models =
@@ -237,7 +238,7 @@ export default function defineUserAbility(user: User | Client): AppAbility {
   === */
   if (userGlobalPermissions.includes(permissions.canSeeResources)) {
     can('read', 'Resource');
-    can(['read', 'download'], 'Record');
+    can(['read', 'download', 'upload'], 'Record');
   } else {
     can('read', 'Resource', filters('canSee', user));
     can(
@@ -264,7 +265,7 @@ export default function defineUserAbility(user: User | Client): AppAbility {
   === */
   if (userGlobalPermissions.includes(permissions.canManageResources)) {
     can(['create', 'read', 'update', 'delete'], ['Resource', 'Record']);
-    can(['manage', 'download'], 'Record');
+    can(['manage', 'download', 'upload'], 'Record');
   } else {
     can('update', 'Resource', filters('canUpdate', user));
     can('delete', 'Resource', filters('canDelete', user));
@@ -338,6 +339,12 @@ export default function defineUserAbility(user: User | Client): AppAbility {
         )
         .flat(),
     },
+    seenBy: { $ne: user._id },
+  });
+  // User-targeted notifications (e.g. relayed email events) are only readable
+  // by the user they were generated for.
+  can(['read', 'update'], 'Notification', {
+    user: user._id,
     seenBy: { $ne: user._id },
   });
 

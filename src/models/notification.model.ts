@@ -6,10 +6,18 @@ const notificationSchema = new Schema(
   {
     action: String,
     content: mongoose.Schema.Types.Mixed,
+    // Channel-based notifications target every user subscribed to the channel.
+    // Either `channel` or `user` is set depending on how the notification was
+    // generated (channel broadcast vs. per-user delivery, e.g. email events).
     channel: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Channel',
-      required: true,
+    },
+    // User-targeted notifications are delivered to a single user (e.g. email
+    // events relayed from the email function).
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
     },
     seenBy: {
       type: [mongoose.Schema.Types.ObjectId],
@@ -33,6 +41,7 @@ export interface Notification extends Document {
   content: any;
   createdAt: Date;
   channel: any;
+  user: any;
   seenBy: any[];
 }
 

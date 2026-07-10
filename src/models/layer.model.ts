@@ -7,7 +7,7 @@ import { addOnBeforeDeleteOne } from '@utils/models/deletion';
  */
 export interface PopupElementText {
   type: 'text';
-  text?: string;
+  text?: string | Record<string, string>;
 }
 
 /**
@@ -125,7 +125,7 @@ export interface LayerDatasource {
 /** Layer documents interface declaration */
 export interface Layer extends Document {
   kind: 'Layer';
-  name: string;
+  name: string | Record<string, string>;
   type: string;
   sublayers?: any[];
   createdAt: Date;
@@ -142,7 +142,7 @@ export interface Layer extends Document {
 /** Mongoose layer schema declaration */
 const layerSchema = new Schema(
   {
-    name: String,
+    name: mongoose.Schema.Types.Mixed,
     type: String,
     sublayers: [
       {
@@ -159,8 +159,8 @@ const layerSchema = new Schema(
       drawingInfo: mongoose.Schema.Types.Mixed,
     },
     popupInfo: {
-      title: String,
-      description: String,
+      title: mongoose.Schema.Types.Mixed,
+      description: mongoose.Schema.Types.Mixed,
       popupElements: [mongoose.Schema.Types.Mixed],
       fieldsInfo: [mongoose.Schema.Types.Mixed],
     },

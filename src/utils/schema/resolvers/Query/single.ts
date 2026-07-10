@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import { Record } from '@models';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Returns a resolver that fetches a record if the users logged
@@ -19,7 +20,7 @@ export default () =>
       }
       return record;
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

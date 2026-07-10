@@ -27,6 +27,7 @@ import isEqual from 'lodash/isEqual';
 import unionWith from 'lodash/unionWith';
 import mongoose from 'mongoose';
 import { FormType } from '../types';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * List of keys of the structure's object which we want to inherit to the children forms when they are modified on the core form
@@ -213,7 +214,9 @@ export default {
         update.structure = args.structure;
         const structure = JSON.parse(args.structure);
         const fields = [];
-        for (const page of structure.pages) {
+        const pages =
+          structure && Array.isArray(structure.pages) ? structure.pages : [];
+        for (const page of pages) {
           await extractFields(page, fields, form.core);
           findDuplicateFields(fields);
           for (const field of fields.filter((x) =>
@@ -528,7 +531,7 @@ export default {
       // Return updated form
       return await Form.findByIdAndUpdate(args.id, update, { new: true });
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

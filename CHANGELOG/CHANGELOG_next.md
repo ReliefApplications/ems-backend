@@ -1,3 +1,84 @@
+# [2.17.0-rc.10](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.9...v2.17.0-rc.10) (2026-07-10)
+
+
+### Features
+
+* Calculated fields now working with related fields ([#1253](https://github.com/ReliefApplications/ems-backend/issues/1253)) ([b175c4d](https://github.com/ReliefApplications/ems-backend/commit/b175c4d2d998059b34a1e1364976f62f4f6f66f1)), closes [AB#129357](https://github.com/AB/issues/129357)
+
+# [2.17.0-rc.9](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.8...v2.17.0-rc.9) (2026-07-08)
+
+
+### Features
+
+* Can now use calculated fields in contextual dashboard title ([#1252](https://github.com/ReliefApplications/ems-backend/issues/1252)) ([7ebc092](https://github.com/ReliefApplications/ems-backend/commit/7ebc092deb15fe1de66fdc82276bf18fd0ca2a4b)), closes [AB#134728](https://github.com/AB/issues/134728)
+
+# [2.17.0-rc.8](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.7...v2.17.0-rc.8) (2026-07-08)
+
+
+### Bug Fixes
+
+* Multiple issues with full dual language experience ([#1251](https://github.com/ReliefApplications/ems-backend/issues/1251)) ([753f3dd](https://github.com/ReliefApplications/ems-backend/commit/753f3ddb8750d159694c3456b864437f5fa3cbe4)), closes [AB#134863](https://github.com/AB/issues/134863)
+
+# [2.17.0-rc.7](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.6...v2.17.0-rc.7) (2026-07-07)
+
+
+### Features
+
+* Add canUploadRecords permission ([#1247](https://github.com/ReliefApplications/ems-backend/issues/1247)) ([ddb5a0f](https://github.com/ReliefApplications/ems-backend/commit/ddb5a0fc52cfc836f4c507a055c3d7c66f6df7ca)), closes [AB#134543](https://github.com/AB/issues/134543)
+
+# [2.17.0-rc.6](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.5...v2.17.0-rc.6) (2026-07-01)
+
+
+### Features
+
+* Translate field choices ([#1246](https://github.com/ReliefApplications/ems-backend/issues/1246)) ([1123587](https://github.com/ReliefApplications/ems-backend/commit/1123587df8b64492e905fb5d782549227e14f70c)), closes [AB#134288](https://github.com/AB/issues/134288)
+
+# [2.17.0-rc.5](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.4...v2.17.0-rc.5) (2026-06-28)
+
+
+### Features
+
+* Email notifications now generate in-app notifications ([#1245](https://github.com/ReliefApplications/ems-backend/issues/1245)) ([fdbe2c4](https://github.com/ReliefApplications/ems-backend/commit/fdbe2c493009c3ff3f746f7597b5f28d2c07e64b)), closes [AB#133554](https://github.com/AB/issues/133554)
+
+# [2.17.0-rc.4](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.3...v2.17.0-rc.4) (2026-06-26)
+
+
+### Bug Fixes
+
+* record data in graphql could have blank fields due to auto translate feature ([c1d90d4](https://github.com/ReliefApplications/ems-backend/commit/c1d90d4e40fff8bd136691933c17f1b5b5be7b93))
+
+# [2.17.0-rc.3](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.2...v2.17.0-rc.3) (2026-06-25)
+
+
+### Features
+
+* Auto translated text fields in forms ([46be48f](https://github.com/ReliefApplications/ems-backend/commit/46be48fbbe4e56c51af36d6ba738430dab0a00a0)), closes [Ab#134348](https://github.com/Ab/issues/134348)
+
+# [2.17.0-rc.2](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.1...v2.17.0-rc.2) (2026-06-22)
+
+
+### Features
+
+* Add Ukrainian language ([e9054a3](https://github.com/ReliefApplications/ems-backend/commit/e9054a3f73755c6eda2bc49dc244ef961804bc67)), closes [Ab#133173](https://github.com/Ab/issues/133173)
+* Enable translation on widgets / pages of applications  ([#1238](https://github.com/ReliefApplications/ems-backend/issues/1238)) ([95fc6c7](https://github.com/ReliefApplications/ems-backend/commit/95fc6c7167024ab3318ee3b2d8713ce7ee1334fd)), closes [AB#133293](https://github.com/AB/issues/133293)
+
+# [2.17.0-rc.1](https://github.com/ReliefApplications/ems-backend/compare/v2.16.1...v2.17.0-rc.1) (2026-05-29)
+
+
+### Bug Fixes
+
+* filters configured from layout now taken into account in queries & export ([#1232](https://github.com/ReliefApplications/ems-backend/issues/1232)) ([5e6891e](https://github.com/ReliefApplications/ems-backend/commit/5e6891ea84c9d880c18913f9eb4a7c5793b7ce7d)), closes [AB#128560](https://github.com/AB/issues/128560)
+* some grids export could fail due to cell content too long ([d97e4f6](https://github.com/ReliefApplications/ems-backend/commit/d97e4f6ae62dd8556c1d794791b63dc39df710e1)), closes [AB#128561](https://github.com/AB/issues/128561)
+
+
+### Features
+
+* Add filters to grid actions ([#1218](https://github.com/ReliefApplications/ems-backend/issues/1218)) ([84ba849](https://github.com/ReliefApplications/ems-backend/commit/84ba849358d7dafd276938e5dcc33213c9719a42)), closes [AB#121666](https://github.com/AB/issues/121666)
+* Add join & displayValue to calculated fields ([#1234](https://github.com/ReliefApplications/ems-backend/issues/1234)) ([286ca6e](https://github.com/ReliefApplications/ems-backend/commit/286ca6ed67a735d83305dceff58619260832dbb6)), closes [Ab#129193](https://github.com/Ab/issues/129193)
+* Allow style rules in grids to use badge display ([#1223](https://github.com/ReliefApplications/ems-backend/issues/1223)) ([0bc4dc4](https://github.com/ReliefApplications/ems-backend/commit/0bc4dc488a34fa03bb14f8ecea660bffd3726e7c)), closes [AB#128960](https://github.com/AB/issues/128960)
+* Allow use of user attributes in calculated fields ([#1224](https://github.com/ReliefApplications/ems-backend/issues/1224)) ([e58562d](https://github.com/ReliefApplications/ems-backend/commit/e58562d044ff6c44cd51f06fbe9c33c65f1d7589)), closes [AB#128968](https://github.com/AB/issues/128968)
+* Make context.incrementalid available in context data ([#1226](https://github.com/ReliefApplications/ems-backend/issues/1226)) ([cc96f6d](https://github.com/ReliefApplications/ems-backend/commit/cc96f6dd3bb6648ab61dc3bf4b7809444fdbe428)), closes [AB#128988](https://github.com/AB/issues/128988)
+
 # [2.16.0-rc.13](https://github.com/ReliefApplications/ems-backend/compare/v2.16.0-rc.12...v2.16.0-rc.13) (2026-05-13)
 
 

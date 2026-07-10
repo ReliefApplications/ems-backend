@@ -7,6 +7,7 @@ import { downloadFile } from '@utils/files';
 import fs from 'fs';
 import sanitize from 'sanitize-filename';
 import { compileString } from 'sass';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Exports css or scss custom style files
@@ -39,7 +40,7 @@ router.get('/application/:id', async (req, res) => {
       res.status(201).send(i18next.t('routes.style.noStyle'));
     }
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     res.status(500).send(req.t('routes.style.errors.notFound'));
   }
 });
@@ -54,7 +55,7 @@ router.post('/scss-to-css', async (req, res) => {
     const scss = req.body.scss;
     res.status(200).send(compileString(scss).css);
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });

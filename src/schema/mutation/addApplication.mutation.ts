@@ -1,7 +1,5 @@
 import { GraphQLError } from 'graphql';
-import channels from '@const/channels';
-import { Application, Role, Notification, Channel } from '@models';
-import pubsub from '../../server/pubsub';
+import { Application, Role, Channel } from '@models';
 import { ApplicationType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { status } from '@const/enumTypes';
@@ -9,6 +7,7 @@ import permissions from '@const/permissions';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Arguments for the addApplication mutation */
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -73,17 +72,6 @@ export default {
           };
         }
         await application.save();
-        // Send notification
-        const channel = await Channel.findOne({ title: channels.applications });
-        const notification = new Notification({
-          action: 'Application created',
-          content: application,
-          channel: channel.id,
-          seenBy: [],
-        });
-        await notification.save();
-        const publisher = await pubsub();
-        publisher.publish(channel.id, { notification });
         // Create main channel
         const mainChannel = new Channel({
           title: 'main',
@@ -107,7 +95,7 @@ export default {
         );
       }
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

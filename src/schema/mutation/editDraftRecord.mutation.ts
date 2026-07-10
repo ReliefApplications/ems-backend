@@ -7,6 +7,7 @@ import { transformRecord } from '@utils/form';
 import { DraftRecord, Form } from '@models';
 import GraphQLJSON from 'graphql-type-json';
 import { Types } from 'mongoose';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Arguments for the editRecord mutation */
 type EditRecordArgs = {
@@ -54,7 +55,7 @@ export default {
       });
       return await draftRecord;
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

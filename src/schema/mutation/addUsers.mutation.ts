@@ -11,6 +11,7 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { UserArgs, UserInputType } from '@schema/inputs/user.input';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Arguments for the addUsers mutation */
 type AddUsersArgs = {
@@ -132,7 +133,7 @@ export default {
         match: { application: { $eq: args.application } },
       });
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

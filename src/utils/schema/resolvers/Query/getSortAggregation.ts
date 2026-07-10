@@ -2,6 +2,8 @@ import { MULTISELECT_TYPES } from '@const/fieldTypes';
 import { getFullChoices } from '../../../form';
 import getSortField from './getSortField';
 import getSortOrder from './getSortOrder';
+import getTranslatedFieldName from './getTranslatedFieldName';
+import { resolveLocalizedString } from '@utils/i18n/resolveLocalizedString';
 
 /**
  * Builds sort aggregation.
@@ -16,8 +18,12 @@ const getSortAggregation = async (
   sortField: string,
   sortOrder: string,
   fields: any[],
-  context
+  context: any
 ): Promise<any[]> => {
+  // Locale-based translation: replace the sort field with its sibling
+  // translation field when one matches the user's locale.
+  sortField = getTranslatedFieldName(sortField, fields, context?.locale);
+
   const field: any = fields.find((x) => x && x.name === sortField);
   const parentField: any =
     sortField && sortField.includes('.')
@@ -29,8 +35,19 @@ const getSortAggregation = async (
     field &&
     (field.choices || field.choicesByUrl || field.choicesByGraphQL)
   ) {
-    const choices = (await getFullChoices(field, context)) || [];
+    const rawChoices = (await getFullChoices(field, context)) || [];
+    // Resolve each choice's (possibly localized) text to the active locale so
+    // that we sort on the displayed value rather than the raw locale object.
+    const choices = rawChoices.map((choice: any) =>
+      choice && typeof choice === 'object'
+        ? {
+            ...choice,
+            text: resolveLocalizedString(choice.text, context?.locale),
+          }
+        : choice
+    );
     const choicesValue = choices.map((x) => x.value);
+    const choicesText = choices.map((x) => x?.text);
     // Create aggregation to have text instead of values
     if (MULTISELECT_TYPES.includes(field.type)) {
       aggregation.push({
@@ -82,27 +99,18 @@ const getSortAggregation = async (
           [`_${sortField}`]: {
             $let: {
               vars: {
-                choices,
+                choicesText,
                 choicesValue,
               },
+              // Resolve the choice value to its localized display text so the
+              // sort is performed on the translated label.
               in: {
                 $arrayElemAt: [
-                  '$$choices',
+                  '$$choicesText',
                   {
                     $indexOfArray: ['$$choicesValue', `$data.${sortField}`],
                   },
                 ],
-                // $getField: {
-                //   field: 'text',
-                //   input: {
-                //     $arrayElemAt: [
-                //       '$$choices',
-                //       {
-                //         $indexOfArray: ['$$choicesValue', `$data.${sortField}`],
-                //       },
-                //     ],
-                //   },
-                // },
               },
             },
           },

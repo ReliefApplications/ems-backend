@@ -7,4 +7,5 @@ export enum resourcePermission {
   UPDATE_RECORDS = 'canUpdateRecords',
   DELETE_RECORDS = 'canDeleteRecords',
   DOWNLOAD_RECORDS = 'canDownloadRecords',
+  UPLOAD_RECORDS = 'canUploadRecords',
 }

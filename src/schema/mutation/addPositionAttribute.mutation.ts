@@ -6,6 +6,7 @@ import { UserType } from '../types';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Arguments for the addPositionAttribute mutation */
 type AddPositionAttributeArgs = {
@@ -56,7 +57,7 @@ export default {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

@@ -8,6 +8,7 @@ import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 import { CompositeFilterDescriptor } from '../../types/filter';
 import { GraphQLJSON } from 'graphql-type-json';
 import { Context } from '@server/apollo/context';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Default filter fields */
 const FILTER_FIELDS: { name: string; type: string }[] = [
@@ -73,7 +74,7 @@ export default {
         .collation({ locale: 'en' })
         .sort(sortField.sort(sortOrder));
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

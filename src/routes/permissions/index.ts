@@ -1,6 +1,7 @@
 import express from 'express';
 import config from 'config';
 import { logger } from '@services/logger.service';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Routes for permissions
@@ -20,7 +21,7 @@ router.get('/configuration', async (req: any, res) => {
     };
     return res.status(200).send(data);
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -31,7 +32,7 @@ router.get('/attributes', async (req: any, res) => {
     const data = config.get('user.attributes.list') || [];
     return res.status(200).send(data);
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });

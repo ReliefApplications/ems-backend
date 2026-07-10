@@ -6,6 +6,7 @@ import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * List all workflows available for the logged user.
@@ -19,7 +20,7 @@ export default {
       const ability: AppAbility = context.user.ability;
       return await Workflow.find(accessibleBy(ability, 'read').Workflow);
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

@@ -4,6 +4,7 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 import GraphQLJSON from 'graphql-type-json';
 import { introspectionResult } from '@server/index';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Return the types to be used in the query builder.
@@ -26,7 +27,7 @@ export default {
     try {
       return introspectionResult;
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

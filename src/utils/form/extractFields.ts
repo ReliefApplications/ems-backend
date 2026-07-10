@@ -229,6 +229,14 @@ export const extractFields = async (object, fields, core): Promise<void> => {
         if (field.type === 'users') {
           Object.assign(field, { applications: element.applications });
         }
+        // ** Translation binding **
+        if (element.translateField) {
+          Object.assign(field, {
+            translateField: element.translateField,
+            translateTo: element.translateTo || null,
+            ...(element.translateIf && { translateIf: element.translateIf }),
+          });
+        }
         fields.push(field);
       }
     }

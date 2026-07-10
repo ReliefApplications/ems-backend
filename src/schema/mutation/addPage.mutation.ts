@@ -9,6 +9,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Arguments for the addDashboard mutation */
 export type AddPageArgs = {
@@ -110,7 +111,7 @@ export default {
       await application.updateOne(update);
       return page;
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

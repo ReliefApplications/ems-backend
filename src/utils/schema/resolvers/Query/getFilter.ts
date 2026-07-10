@@ -9,6 +9,7 @@ import {
 import { isNumber } from 'lodash';
 import { isUsingTodayPlaceholder } from '@const/placeholders';
 import { filterOperator } from '../../../../types';
+import getTranslatedFieldName from './getTranslatedFieldName';
 
 /** The default fields */
 const DEFAULT_FIELDS = [
@@ -131,15 +132,22 @@ const buildMongoFilter = (
     }
   } else {
     if (filter.field) {
+      // Locale-based translation: replace the field with its sibling
+      // translation field when one matches the user's locale.
+      const targetField = getTranslatedFieldName(
+        filter.field,
+        fields,
+        context?.locale
+      );
+
       // Get field name from filter field
-      let fieldName = FLAT_DEFAULT_FIELDS.includes(filter.field)
-        ? filter.field
-        : `${prefix}${filter.field}`;
+      let fieldName = FLAT_DEFAULT_FIELDS.includes(targetField)
+        ? targetField
+        : `${prefix}${targetField}`;
       // Get type of field from filter field
       let type: string =
         fields.find(
-          (x) =>
-            x.name === filter.field || x.name === filter.field.split('.')[0]
+          (x) => x.name === targetField || x.name === targetField.split('.')[0]
         )?.type || '';
 
       // If type is resource and refers to a nested field, get the type of the nested field

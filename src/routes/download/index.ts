@@ -35,6 +35,7 @@ import mongoose from 'mongoose';
 import sanitize from 'sanitize-filename';
 import { logger } from '../../services/logger.service';
 import { resourcePermission } from '../../types/permission';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwise
@@ -141,7 +142,8 @@ router.get('/form/records/:id', async (req, res) => {
         const records = await Record.find(filter);
         const rows = await getRows(
           columns,
-          getAccessibleFields(records, formAbility)
+          getAccessibleFields(records, formAbility),
+          req.context?.locale
         );
         const type = (req.query ? req.query.type : 'xlsx').toString();
         const filename = formatFilename(form.name);
@@ -151,7 +153,7 @@ router.get('/form/records/:id', async (req, res) => {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -187,19 +189,10 @@ router.get('/form/records/:id/history', async (req, res) => {
     const record: Record = await Record.findOne({
       _id: req.params.id,
       archived: { $ne: true },
-    })
-      .populate({
-        path: 'versions',
-        model: 'Version',
-        populate: {
-          path: 'createdBy',
-          model: 'User',
-        },
-      })
-      .populate({
-        path: 'resource',
-        model: 'Resource',
-      });
+    }).populate({
+      path: 'resource',
+      model: 'Resource',
+    });
     if (!record) {
       return res.status(404).send(req.t('common.errors.dataNotFound'));
     }
@@ -217,7 +210,7 @@ router.get('/form/records/:id/history', async (req, res) => {
     if (form) {
       record.form = form;
       const meta: RecordHistoryMeta = {
-        form: form.name,
+        form: form.name as string,
         record: record.incrementalId,
         fields: filters.fields?.join(',') || '',
         fromDate: filters.fromDate
@@ -242,6 +235,7 @@ router.get('/form/records/:id/history', async (req, res) => {
               } as any)
             )(),
             token: req.headers.authorization,
+            locale: req.context?.locale,
             ...(req.headers.accesstoken && {
               accesstoken: req.headers.accesstoken,
             }),
@@ -287,7 +281,7 @@ router.get('/form/records/:id/history', async (req, res) => {
       return res.status(404).send(req.t('common.errors.dataNotFound'));
     }
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -318,7 +312,7 @@ router.get('/resource/records/:id', async (req, res) => {
             archived: { $ne: true },
           });
         }
-        const rows = await getRows(columns, records);
+        const rows = await getRows(columns, records, req.context?.locale);
         const type = (req.query ? req.query.type : 'xlsx').toString();
         const filename = formatFilename(resource.name);
         return await fileBuilder(res, filename, columns, rows, type);
@@ -327,7 +321,7 @@ router.get('/resource/records/:id', async (req, res) => {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -437,7 +431,7 @@ router.post('/records', async (req, res) => {
       });
     }
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -458,7 +452,7 @@ router.get('/application/:id/invite', async (req, res) => {
 
     return await templateBuilder(res, `${application.name}-users`, fields);
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -472,7 +466,7 @@ router.get('/invite', async (req, res) => {
     const fields = await getUserTemplateFields(roles);
     return await templateBuilder(res, 'users', fields);
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -505,7 +499,7 @@ router.post('/users', async (req, res) => {
     }
     return res.status(404).send(i18next.t('common.errors.dataNotFound'));
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -517,7 +511,7 @@ router.get('/templates', async (req, res) => {
   try {
     return await templateExport(res);
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -572,7 +566,7 @@ router.post('/application/:id/users', async (req, res) => {
     }
     return res.status(404).send(i18next.t('common.errors.dataNotFound'));
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
@@ -610,7 +604,7 @@ router.get('/file/:form/:blob', async (req, res) => {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });

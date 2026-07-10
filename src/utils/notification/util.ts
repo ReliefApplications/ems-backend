@@ -3,6 +3,7 @@ import { Context } from '@server/apollo/context';
 import { logger } from '@services/logger.service';
 import axios from 'axios';
 import config from 'config';
+import { getErrorMessage } from '@utils/error';
 
 /**
  * Returns headers required for Azure Function
@@ -56,7 +57,10 @@ export async function deleteFile(
         );
       }
     } catch (error) {
-      logger.error(`Failed to delete file: ${fileName}`, error.message);
+      logger.error(
+        `Failed to delete file: ${fileName}`,
+        getErrorMessage(error)
+      );
     }
   });
 

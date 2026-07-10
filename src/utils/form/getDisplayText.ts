@@ -7,15 +7,22 @@ import get from 'lodash/get';
 import { JSONPath } from 'jsonpath-plus';
 import commonServices from '@server/common-services';
 import { AxiosCacheInstance } from 'axios-cache-interceptor';
+import { getErrorMessage, getErrorStack } from '@utils/error';
+import { resolveLocalizedString } from '@utils/i18n/resolveLocalizedString';
 
 /**
  * Gets display text from choice value.
  *
  * @param choices list of choices.
  * @param value choice value.
+ * @param locale Locale to translate to, when available
  * @returns display value of the value.
  */
-export const getText = (choices: any[], value: any): string => {
+export const getText = (
+  choices: any[],
+  value: any,
+  locale?: string
+): string => {
   if (value) {
     const choice = choices.find((x) =>
       x.value
@@ -23,11 +30,10 @@ export const getText = (choices: any[], value: any): string => {
         : x.toString() === value.toString()
     );
     if (choice != null) {
-      if (choice.text) {
-        if (choice.text.default) {
-          return choice.text.default;
-        }
-        return choice.text;
+      if (choice.text != null) {
+        // Use the value matching the requested locale when available,
+        // falling back to the default/other localized values otherwise.
+        return resolveLocalizedString(choice.text, locale);
       }
       return choice;
     }
@@ -161,7 +167,7 @@ export const getFullChoices = async (
       return field.choices;
     }
   } catch (err) {
-    logger.error(err.message, { stack: err.stack });
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return field.choices;
   }
 };
@@ -183,9 +189,9 @@ const getDisplayText = async (
     await getFullChoices(field, context);
   if (choices && choices.length) {
     if (Array.isArray(value)) {
-      return value.map((x) => getText(choices, x));
+      return value.map((x) => getText(choices, x, context?.locale));
     } else {
-      return getText(choices, value);
+      return getText(choices, value, context?.locale);
     }
   }
   return value;

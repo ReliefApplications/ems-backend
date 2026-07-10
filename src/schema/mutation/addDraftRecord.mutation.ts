@@ -8,6 +8,7 @@ import { Context } from '@server/apollo/context';
 import GraphQLJSON from 'graphql-type-json';
 import { DraftRecord, Form } from '@models';
 import { Types } from 'mongoose';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Arguments for the addDraftRecord mutation */
 type AddDraftRecordArgs = {
@@ -85,7 +86,7 @@ export default {
       await record.save();
       return record;
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

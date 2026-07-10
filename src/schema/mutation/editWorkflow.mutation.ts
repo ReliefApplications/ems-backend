@@ -5,6 +5,7 @@ import {
   GraphQLList,
   GraphQLError,
 } from 'graphql';
+import GraphQLJSON from 'graphql-type-json';
 import { WorkflowType } from '../types';
 import { Workflow, Page, Step } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
@@ -12,11 +13,13 @@ import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Arguments for the editWorkflow mutation */
 type EditWorkflowArgs = {
   id: string | Types.ObjectId;
   name?: string;
+  nameTranslations?: Record<string, string>;
   steps?: string[] | Types.ObjectId[];
 };
 
@@ -29,6 +32,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     name: { type: GraphQLString },
+    nameTranslations: { type: GraphQLJSON },
     steps: { type: new GraphQLList(GraphQLID) },
   },
   async resolve(parent, args: EditWorkflowArgs, context: Context) {
@@ -36,7 +40,7 @@ export default {
     try {
       const user = context.user;
       // check inputs
-      if (!args || (!args.name && !args.steps)) {
+      if (!args || (!args.name && !args.steps && !args.nameTranslations)) {
         throw new GraphQLError(
           context.i18next.t('mutations.workflow.edit.errors.invalidArguments')
         );
@@ -55,6 +59,7 @@ export default {
       const update = Object.assign(
         {},
         args.name && { name: args.name },
+        args.nameTranslations && { nameTranslations: args.nameTranslations },
         args.steps && { steps: args.steps }
       );
       logger.info('update ==>> ', update);
@@ -69,7 +74,7 @@ export default {
 
       return workflow;
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

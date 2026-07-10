@@ -40,6 +40,7 @@ module.exports = {
       url: 'MAIL_SERVERLESS_URL',
       key: 'MAIL_SERVERLESS_KEY',
     },
+    eventsChannel: 'REDIS_CHANNEL',
   },
   auth: {
     provider: 'AUTH_PROVIDER',
@@ -55,6 +56,10 @@ module.exports = {
   },
   blobStorage: {
     connectionString: 'BLOB_STORAGE_CONNECTION_STRING',
+  },
+  azureTranslator: {
+    key: 'AZURE_TRANSLATOR_KEY',
+    region: 'AZURE_TRANSLATOR_REGION',
   },
   rabbitMQ: {
     application: 'RABBITMQ_APPLICATION',

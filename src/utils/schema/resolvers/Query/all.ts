@@ -21,6 +21,7 @@ import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import NodeCache from 'node-cache';
 import { AppAbility } from '@security/defineUserAbility';
+import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -353,47 +354,60 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // Build aggregation for calculated fields
       const calculatedFieldsAggregation: any[] = [];
+      // Calculated fields joining related records ($lookup) that are only
+      // displayed are computed after pagination, so the join only runs on the
+      // page rows instead of on every record of the resource
+      const pageCalculatedFieldsAggregation: any[] = [];
 
-      // only add calculated fields that are in the query
-      // in order to decrease the pipeline size
-      const shouldAddCalculatedFieldToPipeline = (field: any) => {
-        // If field is requested in the query
-        if (queryFields.findIndex((x) => x.name === field.name) > -1)
-          return true;
+      // Whether a field is referenced by a composite filter
+      const isUsedInFilter = (qFilter: any, fieldName: string) => {
+        if (qFilter?.field) return qFilter.field === fieldName;
+        return (
+          qFilter?.filters?.some((f) => isUsedInFilter(f, fieldName)) ?? false
+        );
+      };
 
+      // A calculated field must be computed before the filter/sort stages
+      // when the query sorts, filters, styles or actions on it
+      const isNeededBeforeFilters = (field: any) => {
         // If sort field is a calculated field
         if (sortField === field.name) return true;
 
-        const isUsedInFilter = (qFilter: any) => {
-          if (qFilter.field) return qFilter.field === field.name;
-          return qFilter.filters?.some((f) => isUsedInFilter(f)) ?? false;
-        };
-
         // Check if the field is used in the filter
-        if (isUsedInFilter(filter)) return true;
+        if (isUsedInFilter(filter, field.name)) return true;
 
         // Check if the field is used in any styles' filters
-        if (styles?.some((s) => isUsedInFilter(s.filter))) return true;
+        if (styles?.some((s) => isUsedInFilter(s.filter, field.name)))
+          return true;
 
         // Check if the field is used in any actions' filters
-        if (actions?.some((a) => isUsedInFilter(a.filter))) return true;
+        if (actions?.some((a) => isUsedInFilter(a.filter, field.name)))
+          return true;
 
-        // If not used in any of the above, don't add it to the pipeline
         return false;
       };
 
       const calculatedFieldService = new CalculatedFieldService(
-        { fields, name: entityName },
+        { _id: id, fields, name: entityName },
         context,
         context.timeZone,
         context.user?.attributes || {}
       );
-      for (const f of fields.filter(
-        (x) => x.isCalculated && shouldAddCalculatedFieldToPipeline(x)
-      )) {
-        calculatedFieldsAggregation.push(
-          ...(await calculatedFieldService.build(f.expression, f.name))
-        );
+      for (const f of fields.filter((x) => x.isCalculated)) {
+        const neededBeforeFilters = isNeededBeforeFilters(f);
+        const requested = queryFields.findIndex((x) => x.name === f.name) > -1;
+        // only add calculated fields that are used by the query,
+        // in order to decrease the pipeline size
+        if (!neededBeforeFilters && !requested) continue;
+        const stages = await calculatedFieldService.build(f.expression, f.name);
+        if (
+          !neededBeforeFilters &&
+          CalculatedFieldService.hasRelatedOperation(f.expression)
+        ) {
+          pageCalculatedFieldsAggregation.push(...stages);
+        } else {
+          calculatedFieldsAggregation.push(...stages);
+        }
       }
 
       // Build linked records aggregations
@@ -457,6 +471,18 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           fields,
           context
         );
+        // When neither the query filter nor the permission filters reference
+        // a calculated field, filter before computing calculated fields, so
+        // that expensive stages (e.g. related-record lookups, when sorting by
+        // such a field) only run on the matching records
+        const calculatedFieldNames = fields
+          .filter((x) => x.isCalculated)
+          .map((x) => x.name);
+        const filtersUseCalculatedField =
+          calculatedFieldNames.some((name) => isUsedInFilter(filter, name)) ||
+          calculatedFieldNames.some((name) =>
+            JSON.stringify(permissionFilters || {}).includes(`data.${name}`)
+          );
         const pipeline = [
           ...(searchFilter ? [searchFilter] : []),
           { $match: basicFilters },
@@ -464,22 +490,28 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
           ...defaultRecordAggregation,
-          ...calculatedFieldsAggregation,
-          { $match: filters },
+          ...(filtersUseCalculatedField
+            ? [...calculatedFieldsAggregation, { $match: filters }]
+            : [{ $match: filters }, ...calculatedFieldsAggregation]),
         ];
-        const aggregation = await Record.aggregate(pipeline).facet({
-          items: [
-            ...projectAggregation,
-            ...sort,
-            { $skip: skip },
-            { $limit: first + 1 },
-          ],
-          totalCount: [
-            {
-              $count: 'count',
-            },
-          ],
-        });
+        // Sorts on calculated fields cannot use an index; allow spilling to
+        // disk so large sorts do not hit the in-memory limit
+        const aggregation = await Record.aggregate(pipeline)
+          .allowDiskUse(true)
+          .facet({
+            items: [
+              ...projectAggregation,
+              ...sort,
+              { $skip: skip },
+              { $limit: first + 1 },
+              ...pageCalculatedFieldsAggregation,
+            ],
+            totalCount: [
+              {
+                $count: 'count',
+              },
+            ],
+          });
         items = aggregation[0].items;
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       } else {
@@ -634,16 +666,39 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             itemsToUpdate.flatMap((x) => (x.record ? x.record : x.records))
           ),
         ];
-        // Build projection to fetch minimum data
+        // Build projection to fetch minimum data. For each requested field,
+        // also project its locale-translation sibling (translateField /
+        // translateTo), if the related resource has one matching the request
+        // locale. Otherwise the sibling's value is never fetched here, and
+        // the per-field resolver in Entity/index.ts silently falls back to
+        // the untranslated base value, even though it looks for that sibling.
         const projection: string[] = ['createdBy', 'form'].concat(
-          resourcesFields.concat(relatedFields).flatMap((x) =>
-            x.fields.map((fieldName: string) => {
+          resourcesFields.concat(relatedFields).flatMap((x: any) => {
+            const relatedResourceName =
+              x.relatedEntityName ??
+              Object.keys(idsByName).find(
+                (key) => idsByName[key] == x.resource
+              );
+            const relatedResourceFields = relatedResourceName
+              ? fieldsByName[relatedResourceName]
+              : undefined;
+            return x.fields.flatMap((fieldName: string) => {
               if (FLAT_DEFAULT_FIELDS.includes(fieldName)) {
-                return fieldName;
+                return [fieldName];
               }
-              return `data.${fieldName}`;
-            })
-          )
+              const siblingField =
+                context.locale &&
+                relatedResourceFields?.find(
+                  (f: any) =>
+                    f.translateField === fieldName &&
+                    f.translateTo &&
+                    f.translateTo.toLowerCase() === context.locale.toLowerCase()
+                );
+              return siblingField
+                ? [`data.${fieldName}`, `data.${siblingField.name}`]
+                : [`data.${fieldName}`];
+            });
+          })
         );
         // Fetch records
         const relatedRecords = await Record.find(
@@ -781,7 +836,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         _source: id,
       };
     } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }

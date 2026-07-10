@@ -2,6 +2,7 @@ import { SafeServer } from './server';
 import mongoose from 'mongoose';
 import pullJobScheduler from './server/pullJobScheduler';
 import customNotificationScheduler from './server/customNotificationScheduler';
+import emailEventSubscriber from './server/emailEventSubscriber';
 import { startDatabase } from './server/database';
 import config from 'config';
 import { logger } from './services/logger.service';
@@ -51,4 +52,5 @@ mongoose.connection.once('open', () => {
   // subscriberSafe();
   pullJobScheduler();
   customNotificationScheduler();
+  emailEventSubscriber();
 });

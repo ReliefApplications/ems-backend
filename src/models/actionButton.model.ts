@@ -13,7 +13,7 @@ interface Field {
 
 /** Mongoose button interface declaration */
 export interface Button {
-  text: string;
+  text: string | Record<string, string>;
   // Display
   variant: string;
   category: string;
@@ -80,7 +80,7 @@ sendNotificationFieldSchema.add({
 /** Mongoose button schema declaration */
 export const buttonSchema = new Schema<Button>(
   {
-    text: String,
+    text: Schema.Types.Mixed,
     // Display
     variant: String,
     category: String,
