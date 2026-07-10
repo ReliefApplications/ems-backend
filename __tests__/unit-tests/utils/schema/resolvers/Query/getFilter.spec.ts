@@ -14,6 +14,7 @@ const FIELDS = [
   { name: 'emergency', type: 'resource', resource: 'emergencyResourceId' },
   { name: 'focal_point', type: 'people-dropdown' },
   { name: 'team_members', type: 'people-tagbox' },
+  { name: 'documents', type: 'file' },
 ];
 
 /** Fields of the related (emergency) resource */
@@ -213,6 +214,16 @@ describe('getFilter - global search expansion', () => {
     expect(personRule.$and).toHaveLength(2);
     expect(JSON.stringify(personRule.$and[0])).toContain('john');
     expect(JSON.stringify(personRule.$and[1])).toContain('doe');
+  });
+
+  it('searches file fields on the file name', () => {
+    const filter = globalSearch([
+      { field: 'documents', operator: 'contains', value: 'report' },
+    ]);
+    const result = getFilter(filter, FIELDS, CONTEXT);
+    expect(result.$and[0].$or).toEqual([
+      { 'data.documents.name': { $regex: 'report', $options: 'i' } },
+    ]);
   });
 
   it('is not hijacked by a leading numeric rule (legacy behavior)', () => {

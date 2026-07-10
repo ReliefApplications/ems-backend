@@ -551,6 +551,12 @@ const buildMongoFilter = (
                   })),
                 })),
               };
+            } else if (type === 'file') {
+              // File fields store an array of file objects; match the file
+              // names, which is what the widgets display
+              return {
+                [`${fieldName}.name`]: { $regex: value, $options: 'i' },
+              };
             } else if (MULTISELECT_TYPES.includes(type)) {
               return { [fieldName]: { $all: value } };
             } else {
