@@ -189,7 +189,6 @@ class SafeServer {
    * server only reloads once.
    */
   private update(): void {
-    console.log('Updating...');
     if (this.updateTimeout) {
       clearTimeout(this.updateTimeout);
     }
