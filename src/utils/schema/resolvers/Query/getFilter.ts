@@ -6,10 +6,35 @@ import {
   DATE_TYPES,
   DATETIME_TYPES,
 } from '@const/fieldTypes';
-import { isNumber } from 'lodash';
+import { escapeRegExp } from 'lodash';
 import { isUsingTodayPlaceholder } from '@const/placeholders';
 import { filterOperator } from '../../../../types';
 import getTranslatedFieldName from './getTranslatedFieldName';
+
+/** Mongo filter that matches no document, used when an active global search cannot match any field */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const MATCH_NOTHING = { _id: { $exists: false } };
+
+/** Operators whose value ends up in a $regex expression */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const REGEX_OPERATORS: string[] = [
+  filterOperator.CONTAINS,
+  filterOperator.DOES_NOT_CONTAIN,
+  filterOperator.STARTS_WITH,
+  filterOperator.ENDS_WITH,
+];
+
+/** Field types storing people objects ({ userid, firstname, lastname, emailaddress }) */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const PEOPLE_TYPES: string[] = ['people-dropdown', 'people-tagbox'];
+
+/** Person subfields searched by a text contains on a people field */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const PEOPLE_SEARCH_FIELDS: string[] = [
+  'firstname',
+  'lastname',
+  'emailaddress',
+];
 
 /** The default fields */
 const DEFAULT_FIELDS = [
@@ -90,10 +115,36 @@ export const extractFilterFields = (filter: any): string[] => {
     }
   } else {
     if (filter.field) {
-      fields.push(filter.field);
+      if (filter.field === '_globalSearch' && Array.isArray(filter.value)) {
+        // Global search: the searched fields are carried by the per-field
+        // rules stored in `value`, not by the rule's own field name
+        fields.push(
+          ...filter.value.map((rule: any) => rule?.field).filter(Boolean)
+        );
+      } else {
+        fields.push(filter.field);
+      }
     }
   }
   return fields;
+};
+
+/**
+ * Checks whether a field is referenced by a composite filter, including
+ * inside the per-field rules of a global search rule.
+ *
+ * @param filter filter to inspect
+ * @param fieldName name of the field to look for
+ * @returns true if the field is referenced anywhere in the filter
+ */
+export const isUsedInFilter = (filter: any, fieldName: string): boolean => {
+  if (filter?.field) {
+    if (filter.field === '_globalSearch' && Array.isArray(filter.value)) {
+      return filter.value.some((rule: any) => rule?.field === fieldName);
+    }
+    return filter.field === fieldName;
+  }
+  return filter?.filters?.some((f) => isUsedInFilter(f, fieldName)) ?? false;
 };
 
 /**
@@ -445,27 +496,16 @@ const buildMongoFilter = (
             return { [fieldName]: { $regex: value + '$', $options: 'i' } };
           }
           case filterOperator.CONTAINS: {
-            if (MULTISELECT_TYPES.includes(type)) {
-              return { [fieldName]: { $all: value } };
-              // Check if a number has been searched globally
-              //  If so, perform an filterOperator.EQUAL_TO search
-            } else if (isNumber(value?.[0]?.value)) {
-              const eq = value.map((v) => {
-                return { [`data.${v.field}`]: { $eq: v.value } };
-              });
-              return { $or: eq };
-            } else if (
-              fieldName === 'data._globalSearch' &&
-              (type === 'text' || type === '')
-            ) {
+            if (filter.field === '_globalSearch') {
               // Global search: expand into an $or over each per-field rule
               // produced by the frontend `searchFilters()` helper. Each child
               // rule is delegated back to buildMongoFilter so all the existing
               // path-resolution + per-operator logic is reused (default fields
-              // stay flat, others get the `data.` prefix, multiselect uses
-              // $all, numeric uses $eq, etc.).
+              // stay flat, others get the `data.` prefix, dotted resource
+              // subfields map to the `_<resource>` lookup alias, multiselect
+              // uses $all, numeric uses $eq, etc.).
               if (!Array.isArray(value)) {
-                return;
+                return MATCH_NOTHING;
               }
               const subFilters = value
                 .map((rule: any) =>
@@ -473,7 +513,15 @@ const buildMongoFilter = (
                     {
                       field: rule.field,
                       operator: rule.operator,
-                      value: rule.value,
+                      // Regex operators receive raw user input here; escape it
+                      // so searching e.g. "(test" is treated literally instead
+                      // of breaking the query. Only done for global search, to
+                      // leave explicit column filters untouched.
+                      value:
+                        typeof rule.value === 'string' &&
+                        REGEX_OPERATORS.includes(rule.operator)
+                          ? escapeRegExp(rule.value)
+                          : rule.value,
                     },
                     fields,
                     context,
@@ -482,9 +530,29 @@ const buildMongoFilter = (
                 )
                 .filter((x: any) => x && !containsNullComparison(x));
               if (subFilters.length === 0) {
-                return;
+                // An active search that cannot match any field must return no
+                // records — dropping the filter would return all of them
+                return MATCH_NOTHING;
               }
               return { $or: subFilters };
+            } else if (PEOPLE_TYPES.includes(type)) {
+              // People fields store the person object(s) — search the name /
+              // email subfields the widgets display. Multi-word searches
+              // (e.g. "John Doe") require every word to match one of the
+              // subfields.
+              const tokens = String(value).trim().split(/\s+/).filter(Boolean);
+              if (tokens.length === 0) {
+                return;
+              }
+              return {
+                $and: tokens.map((token) => ({
+                  $or: PEOPLE_SEARCH_FIELDS.map((sub) => ({
+                    [`${fieldName}.${sub}`]: { $regex: token, $options: 'i' },
+                  })),
+                })),
+              };
+            } else if (MULTISELECT_TYPES.includes(type)) {
+              return { [fieldName]: { $all: value } };
             } else {
               return { [fieldName]: { $regex: value, $options: 'i' } };
             }

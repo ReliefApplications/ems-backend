@@ -6,6 +6,7 @@ import getReversedFields from '../../introspection/getReversedFields';
 import getFilter, {
   FLAT_DEFAULT_FIELDS,
   extractFilterFields,
+  isUsedInFilter,
 } from './getFilter';
 import getSearchFilter from './getSearchFilter';
 import getStyle from './getStyle';
@@ -358,14 +359,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       // displayed are computed after pagination, so the join only runs on the
       // page rows instead of on every record of the resource
       const pageCalculatedFieldsAggregation: any[] = [];
-
-      // Whether a field is referenced by a composite filter
-      const isUsedInFilter = (qFilter: any, fieldName: string) => {
-        if (qFilter?.field) return qFilter.field === fieldName;
-        return (
-          qFilter?.filters?.some((f) => isUsedInFilter(f, fieldName)) ?? false
-        );
-      };
 
       // A calculated field must be computed before the filter/sort stages
       // when the query sorts, filters, styles or actions on it
