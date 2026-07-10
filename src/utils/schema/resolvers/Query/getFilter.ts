@@ -6,10 +6,35 @@ import {
   DATE_TYPES,
   DATETIME_TYPES,
 } from '@const/fieldTypes';
-import { isNumber } from 'lodash';
+import { escapeRegExp } from 'lodash';
 import { isUsingTodayPlaceholder } from '@const/placeholders';
 import { filterOperator } from '../../../../types';
 import getTranslatedFieldName from './getTranslatedFieldName';
+
+/** Mongo filter that matches no document, used when an active global search cannot match any field */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const MATCH_NOTHING = { _id: { $exists: false } };
+
+/** Operators whose value ends up in a $regex expression */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const REGEX_OPERATORS: string[] = [
+  filterOperator.CONTAINS,
+  filterOperator.DOES_NOT_CONTAIN,
+  filterOperator.STARTS_WITH,
+  filterOperator.ENDS_WITH,
+];
+
+/** Field types storing people objects ({ userid, firstname, lastname, emailaddress }) */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const PEOPLE_TYPES: string[] = ['people-dropdown', 'people-tagbox'];
+
+/** Person subfields searched by a text contains on a people field */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const PEOPLE_SEARCH_FIELDS: string[] = [
+  'firstname',
+  'lastname',
+  'emailaddress',
+];
 
 /** The default fields */
 const DEFAULT_FIELDS = [
@@ -44,6 +69,39 @@ const DEFAULT_FIELDS = [
 export const FLAT_DEFAULT_FIELDS = DEFAULT_FIELDS.map((x) => x.name);
 
 /**
+ * Recursively detects whether a built mongo filter contains a comparison
+ * against `null` / `undefined` / invalid Date. Such comparisons (typically
+ * coming from date fields whose value did not parse, e.g. when a free-text
+ * global search is mapped onto a date field) match every document where the
+ * field is missing — which would explode the `$or` of the global-search
+ * expansion and effectively return every record.
+ *
+ * @param filter mongo filter fragment to inspect
+ * @returns true if the fragment compares to null/invalid Date anywhere
+ */
+const containsNullComparison = (filter: any): boolean => {
+  if (filter === null || filter === undefined) return true;
+  if (typeof filter !== 'object') return false;
+  if (filter instanceof Date) return isNaN(filter.getTime());
+  if (Array.isArray(filter)) return filter.some(containsNullComparison);
+  for (const key of Object.keys(filter)) {
+    const val = filter[key];
+    if (
+      ['$gte', '$lte', '$gt', '$lt', '$eq', '$ne'].includes(key) &&
+      (val === null ||
+        val === undefined ||
+        (val instanceof Date && isNaN(val.getTime())))
+    ) {
+      return true;
+    }
+    if (containsNullComparison(val)) {
+      return true;
+    }
+  }
+  return false;
+};
+
+/**
  * Fill passed array with fields used in filters
  *
  * @param filter filter to use for extraction
@@ -57,10 +115,36 @@ export const extractFilterFields = (filter: any): string[] => {
     }
   } else {
     if (filter.field) {
-      fields.push(filter.field);
+      if (filter.field === '_globalSearch' && Array.isArray(filter.value)) {
+        // Global search: the searched fields are carried by the per-field
+        // rules stored in `value`, not by the rule's own field name
+        fields.push(
+          ...filter.value.map((rule: any) => rule?.field).filter(Boolean)
+        );
+      } else {
+        fields.push(filter.field);
+      }
     }
   }
   return fields;
+};
+
+/**
+ * Checks whether a field is referenced by a composite filter, including
+ * inside the per-field rules of a global search rule.
+ *
+ * @param filter filter to inspect
+ * @param fieldName name of the field to look for
+ * @returns true if the field is referenced anywhere in the filter
+ */
+export const isUsedInFilter = (filter: any, fieldName: string): boolean => {
+  if (filter?.field) {
+    if (filter.field === '_globalSearch' && Array.isArray(filter.value)) {
+      return filter.value.some((rule: any) => rule?.field === fieldName);
+    }
+    return filter.field === fieldName;
+  }
+  return filter?.filters?.some((f) => isUsedInFilter(f, fieldName)) ?? false;
 };
 
 /**
@@ -188,17 +272,26 @@ const buildMongoFilter = (
           } else {
             // Recreate the field name in order to match with aggregation
             // Logic is: _resource_name.data.field, if not default field, else _resource_name.field
-            if (FLAT_DEFAULT_FIELDS.includes(filter.field.split('.')[1])) {
-              fieldName = `_${filter.field.split('.')[0]}.${
-                filter.field.split('.')[1]
-              }`;
-              type = DEFAULT_FIELDS.find(
-                (x) => x.name === filter.field.split('.')[1]
-              ).type;
+            const [resourceName, subFieldName] = filter.field.split('.');
+            if (FLAT_DEFAULT_FIELDS.includes(subFieldName)) {
+              fieldName = `_${resourceName}.${subFieldName}`;
+              type = DEFAULT_FIELDS.find((x) => x.name === subFieldName).type;
             } else {
-              fieldName = `_${filter.field.split('.')[0]}.data.${
-                filter.field.split('.')[1]
-              }`;
+              // Translation siblings of the subfield are declared on the
+              // related resource itself (translateField = bare subfield
+              // name), so the locale swap must be resolved against the
+              // related resource's own fields
+              const resourceField = fields.find(
+                (x) => x.name === resourceName && x.type === 'resource'
+              );
+              const relatedFields =
+                context?.resourceFieldsById?.[resourceField?.resource] || [];
+              const translatedSubField = getTranslatedFieldName(
+                subFieldName,
+                relatedFields,
+                context?.locale
+              );
+              fieldName = `_${resourceName}.data.${translatedSubField}`;
             }
           }
         }
@@ -412,20 +505,69 @@ const buildMongoFilter = (
             return { [fieldName]: { $regex: value + '$', $options: 'i' } };
           }
           case filterOperator.CONTAINS: {
-            if (MULTISELECT_TYPES.includes(type)) {
+            if (filter.field === '_globalSearch') {
+              // Global search: expand into an $or over each per-field rule
+              // produced by the frontend `searchFilters()` helper. Each child
+              // rule is delegated back to buildMongoFilter so all the existing
+              // path-resolution + per-operator logic is reused (default fields
+              // stay flat, others get the `data.` prefix, dotted resource
+              // subfields map to the `_<resource>` lookup alias, multiselect
+              // uses $all, numeric uses $eq, etc.).
+              if (!Array.isArray(value)) {
+                return MATCH_NOTHING;
+              }
+              const subFilters = value
+                .map((rule: any) =>
+                  buildMongoFilter(
+                    {
+                      field: rule.field,
+                      operator: rule.operator,
+                      // Regex operators receive raw user input here; escape it
+                      // so searching e.g. "(test" is treated literally instead
+                      // of breaking the query. Only done for global search, to
+                      // leave explicit column filters untouched.
+                      value:
+                        typeof rule.value === 'string' &&
+                        REGEX_OPERATORS.includes(rule.operator)
+                          ? escapeRegExp(rule.value)
+                          : rule.value,
+                    },
+                    fields,
+                    context,
+                    prefix
+                  )
+                )
+                .filter((x: any) => x && !containsNullComparison(x));
+              if (subFilters.length === 0) {
+                // An active search that cannot match any field must return no
+                // records — dropping the filter would return all of them
+                return MATCH_NOTHING;
+              }
+              return { $or: subFilters };
+            } else if (PEOPLE_TYPES.includes(type)) {
+              // People fields store the person object(s) — search the name /
+              // email subfields the widgets display. Multi-word searches
+              // (e.g. "John Doe") require every word to match one of the
+              // subfields.
+              const tokens = String(value).trim().split(/\s+/).filter(Boolean);
+              if (tokens.length === 0) {
+                return;
+              }
+              return {
+                $and: tokens.map((token) => ({
+                  $or: PEOPLE_SEARCH_FIELDS.map((sub) => ({
+                    [`${fieldName}.${sub}`]: { $regex: token, $options: 'i' },
+                  })),
+                })),
+              };
+            } else if (type === 'file') {
+              // File fields store an array of file objects; match the file
+              // names, which is what the widgets display
+              return {
+                [`${fieldName}.name`]: { $regex: value, $options: 'i' },
+              };
+            } else if (MULTISELECT_TYPES.includes(type)) {
               return { [fieldName]: { $all: value } };
-              // Check if a number has been searched globally
-              //  If so, perform an filterOperator.EQUAL_TO search
-            } else if (isNumber(value?.[0]?.value)) {
-              const eq = value.map((v) => {
-                return { [`data.${v.field}`]: { $eq: v.value } };
-              });
-              return { $or: eq };
-            } else if (
-              fieldName === 'data._globalSearch' &&
-              (type === 'text' || type === '')
-            ) {
-              return;
             } else {
               return { [fieldName]: { $regex: value, $options: 'i' } };
             }

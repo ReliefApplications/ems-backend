@@ -143,6 +143,12 @@ export const getMetaResolver = (
             default: {
               return {
                 name: fieldName,
+                // id / incrementalId are plain text identifiers; without a
+                // type, clients relying on the meta type (e.g. the global
+                // search of grid / summary-card widgets) would skip them
+                ...(['id', 'incrementalId'].includes(fieldName) && {
+                  type: 'text',
+                }),
                 readOnly: true,
                 permissions: {
                   canSee: true,

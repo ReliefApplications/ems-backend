@@ -6,8 +6,8 @@ import getReversedFields from '../../introspection/getReversedFields';
 import getFilter, {
   FLAT_DEFAULT_FIELDS,
   extractFilterFields,
+  isUsedInFilter,
 } from './getFilter';
-import getSearchFilter from './getSearchFilter';
 import getStyle from './getStyle';
 import getSortAggregation from './getSortAggregation';
 import mongoose from 'mongoose';
@@ -359,14 +359,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       // page rows instead of on every record of the resource
       const pageCalculatedFieldsAggregation: any[] = [];
 
-      // Whether a field is referenced by a composite filter
-      const isUsedInFilter = (qFilter: any, fieldName: string) => {
-        if (qFilter?.field) return qFilter.field === fieldName;
-        return (
-          qFilter?.filters?.some((f) => isUsedInFilter(f, fieldName)) ?? false
-        );
-      };
-
       // A calculated field must be computed before the filter/sort stages
       // when the query sorts, filters, styles or actions on it
       const isNeededBeforeFilters = (field: any) => {
@@ -457,8 +449,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         $and: [mongooseFilter, permissionFilters],
       };
 
-      const searchFilter = getSearchFilter(filter, fields, context);
-
       // === RUN AGGREGATION TO FETCH ITEMS ===
       let items: Record[] = [];
       let totalCount = 0;
@@ -484,7 +474,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             JSON.stringify(permissionFilters || {}).includes(`data.${name}`)
           );
         const pipeline = [
-          ...(searchFilter ? [searchFilter] : []),
           { $match: basicFilters },
           ...(at ? getAtAggregation(new Date(at)) : []),
           ...linkedRecordsAggregation,
