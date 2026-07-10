@@ -20,6 +20,7 @@ const FIELDS = [
 /** Fields of the related (emergency) resource */
 const EMERGENCY_FIELDS = [
   { name: 'name', type: 'text' },
+  { name: 'name_pt', type: 'text', translateField: 'name', translateTo: 'pt' },
   { name: 'grade', type: 'dropdown', choices: [] },
 ];
 
@@ -126,6 +127,22 @@ describe('getFilter - global search expansion', () => {
     const result = getFilter(filter, FIELDS, CONTEXT);
     expect(result.$and[0].$or).toEqual([
       { '_emergency.data.name': { $regex: 'cholera', $options: 'i' } },
+    ]);
+  });
+
+  it('resolves translation siblings of related-resource subfields', () => {
+    const filter = globalSearch([
+      { field: 'emergency.name', operator: 'contains', value: 'colera' },
+    ]);
+    // Locale with a translation sibling on the related resource
+    const result = getFilter(filter, FIELDS, { ...CONTEXT, locale: 'pt' });
+    expect(result.$and[0].$or).toEqual([
+      { '_emergency.data.name_pt': { $regex: 'colera', $options: 'i' } },
+    ]);
+    // Locale without a sibling falls back to the source subfield
+    const fallback = getFilter(filter, FIELDS, { ...CONTEXT, locale: 'fr' });
+    expect(fallback.$and[0].$or).toEqual([
+      { '_emergency.data.name': { $regex: 'colera', $options: 'i' } },
     ]);
   });
 

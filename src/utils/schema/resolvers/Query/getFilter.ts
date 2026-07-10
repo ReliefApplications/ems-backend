@@ -272,17 +272,26 @@ const buildMongoFilter = (
           } else {
             // Recreate the field name in order to match with aggregation
             // Logic is: _resource_name.data.field, if not default field, else _resource_name.field
-            if (FLAT_DEFAULT_FIELDS.includes(filter.field.split('.')[1])) {
-              fieldName = `_${filter.field.split('.')[0]}.${
-                filter.field.split('.')[1]
-              }`;
-              type = DEFAULT_FIELDS.find(
-                (x) => x.name === filter.field.split('.')[1]
-              ).type;
+            const [resourceName, subFieldName] = filter.field.split('.');
+            if (FLAT_DEFAULT_FIELDS.includes(subFieldName)) {
+              fieldName = `_${resourceName}.${subFieldName}`;
+              type = DEFAULT_FIELDS.find((x) => x.name === subFieldName).type;
             } else {
-              fieldName = `_${filter.field.split('.')[0]}.data.${
-                filter.field.split('.')[1]
-              }`;
+              // Translation siblings of the subfield are declared on the
+              // related resource itself (translateField = bare subfield
+              // name), so the locale swap must be resolved against the
+              // related resource's own fields
+              const resourceField = fields.find(
+                (x) => x.name === resourceName && x.type === 'resource'
+              );
+              const relatedFields =
+                context?.resourceFieldsById?.[resourceField?.resource] || [];
+              const translatedSubField = getTranslatedFieldName(
+                subFieldName,
+                relatedFields,
+                context?.locale
+              );
+              fieldName = `_${resourceName}.data.${translatedSubField}`;
             }
           }
         }
