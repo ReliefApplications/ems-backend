@@ -8,7 +8,6 @@ import getFilter, {
   extractFilterFields,
   isUsedInFilter,
 } from './getFilter';
-import getSearchFilter from './getSearchFilter';
 import getStyle from './getStyle';
 import getSortAggregation from './getSortAggregation';
 import mongoose from 'mongoose';
@@ -450,8 +449,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         $and: [mongooseFilter, permissionFilters],
       };
 
-      const searchFilter = getSearchFilter(filter, fields, context);
-
       // === RUN AGGREGATION TO FETCH ITEMS ===
       let items: Record[] = [];
       let totalCount = 0;
@@ -477,7 +474,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             JSON.stringify(permissionFilters || {}).includes(`data.${name}`)
           );
         const pipeline = [
-          ...(searchFilter ? [searchFilter] : []),
           { $match: basicFilters },
           ...(at ? getAtAggregation(new Date(at)) : []),
           ...linkedRecordsAggregation,
