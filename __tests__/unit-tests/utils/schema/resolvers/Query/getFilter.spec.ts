@@ -261,3 +261,262 @@ describe('getFilter - global search expansion', () => {
     });
   });
 });
+
+describe('getFilter - user attribute & people current-user filters', () => {
+  const USER_CONTEXT = {
+    ...CONTEXT,
+    user: {
+      oid: 'aad-object-id',
+      username: 'John.Doe@who.int',
+      attributes: {
+        region: 'North',
+        'country.iso3code': 'TUN',
+      },
+    },
+  };
+
+  it('resolves dot-notation attribute keys against user attributes', () => {
+    const filter = {
+      logic: 'and',
+      filters: [
+        { field: '$attribute.country.iso3code', operator: 'eq', value: 'title' },
+      ],
+    };
+    const result = getFilter(filter, FIELDS, USER_CONTEXT);
+    expect(result).toEqual({ $and: [{ 'data.title': 'TUN' }] });
+  });
+
+  it('matches nothing when an attribute filter has no user in context', () => {
+    const filter = {
+      logic: 'and',
+      filters: [
+        { field: '$attribute.region', operator: 'eq', value: 'title' },
+      ],
+    };
+    const result = getFilter(filter, FIELDS, CONTEXT);
+    expect(result).toEqual({ $and: [MATCH_NOTHING] });
+  });
+
+  it('resolves literal attribute comparisons to match-all or match-none', () => {
+    const matching = getFilter(
+      {
+        logic: 'and',
+        filters: [
+          {
+            field: '$attribute.region',
+            operator: 'eq',
+            value: 'North',
+            valueSource: 'literal',
+          },
+        ],
+      },
+      FIELDS,
+      USER_CONTEXT
+    );
+    expect(matching).toEqual({ $and: [{ _id: { $exists: true } }] });
+
+    const notMatching = getFilter(
+      {
+        logic: 'and',
+        filters: [
+          {
+            field: '$attribute.region',
+            operator: 'in',
+            value: 'South, East',
+            valueSource: 'literal',
+          },
+        ],
+      },
+      FIELDS,
+      USER_CONTEXT
+    );
+    expect(notMatching).toEqual({ $and: [MATCH_NOTHING] });
+  });
+
+  it('matches the connected user in people fields with the me value', () => {
+    const expected = (fieldName: string) => ({
+      $or: [
+        { [`data.${fieldName}.userid`]: 'aad-object-id' },
+        {
+          [`data.${fieldName}.emailaddress`]: {
+            $regex: '^John\\.Doe@who\\.int$',
+            $options: 'i',
+          },
+        },
+      ],
+    });
+    for (const fieldName of ['focal_point', 'team_members']) {
+      const result = getFilter(
+        {
+          logic: 'and',
+          filters: [{ field: fieldName, operator: 'eq', value: 'me' }],
+        },
+        FIELDS,
+        USER_CONTEXT
+      );
+      expect(result).toEqual({ $and: [expected(fieldName)] });
+    }
+  });
+
+  it('matches nothing on people me filters without a connected user', () => {
+    const result = getFilter(
+      {
+        logic: 'and',
+        filters: [{ field: 'focal_point', operator: 'eq', value: 'me' }],
+      },
+      FIELDS,
+      CONTEXT
+    );
+    expect(result).toEqual({ $and: [MATCH_NOTHING] });
+  });
+
+  it('keeps text searches for the word me on people fields unchanged', () => {
+    const result = getFilter(
+      {
+        logic: 'and',
+        filters: [{ field: 'focal_point', operator: 'contains', value: 'me' }],
+      },
+      FIELDS,
+      USER_CONTEXT
+    );
+    expect(result).toEqual({
+      $and: [
+        {
+          $and: [
+            {
+              $or: [
+                { 'data.focal_point.firstname': { $regex: 'me', $options: 'i' } },
+                { 'data.focal_point.lastname': { $regex: 'me', $options: 'i' } },
+                {
+                  'data.focal_point.emailaddress': {
+                    $regex: 'me',
+                    $options: 'i',
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+  });
+});
+
+describe('getFilter - attribute field comparisons robustness', () => {
+  const USER_CONTEXT = {
+    ...CONTEXT,
+    user: {
+      attributes: {
+        region: 'EURO',
+      },
+    },
+  };
+
+  it('builds an anchored string regex for field-mode in / notin', () => {
+    const inResult = getFilter(
+      {
+        logic: 'and',
+        filters: [{ field: '$attribute.region', operator: 'in', value: 'title' }],
+      },
+      FIELDS,
+      USER_CONTEXT
+    );
+    expect(inResult).toEqual({
+      $and: [{ 'data.title': { $regex: '^EURO$', $options: 'i' } }],
+    });
+
+    const notinResult = getFilter(
+      {
+        logic: 'and',
+        filters: [
+          { field: '$attribute.region', operator: 'notin', value: 'title' },
+        ],
+      },
+      FIELDS,
+      USER_CONTEXT
+    );
+    expect(notinResult).toEqual({
+      $and: [
+        { 'data.title': { $not: { $regex: '^EURO$', $options: 'i' } } },
+      ],
+    });
+  });
+
+  it('also matches the numeric form of numeric attributes (in / notin / eq)', () => {
+    const numericContext = {
+      ...CONTEXT,
+      user: { attributes: { 'region.id': '4' } },
+    };
+    const rule = (operator: string) => ({
+      logic: 'and',
+      filters: [
+        { field: '$attribute.region.id', operator, value: 'tags' },
+      ],
+    });
+
+    // record stores e.g. tags: [4, 3, 5] (numbers) or ['4'] (strings)
+    expect(getFilter(rule('in'), FIELDS, numericContext)).toEqual({
+      $and: [
+        {
+          $or: [
+            { 'data.tags': { $regex: '^4$', $options: 'i' } },
+            { 'data.tags': 4 },
+          ],
+        },
+      ],
+    });
+    expect(getFilter(rule('notin'), FIELDS, numericContext)).toEqual({
+      $and: [
+        {
+          $and: [
+            { 'data.tags': { $not: { $regex: '^4$', $options: 'i' } } },
+            { 'data.tags': { $ne: 4 } },
+          ],
+        },
+      ],
+    });
+    expect(getFilter(rule('eq'), FIELDS, numericContext)).toEqual({
+      $and: [
+        {
+          $or: [
+            { 'data.tags': { $eq: '4' } },
+            { 'data.tags': { $eq: 4 } },
+          ],
+        },
+      ],
+    });
+  });
+
+  it('matches nothing on field comparisons when the user lacks the attribute', () => {
+    for (const operator of ['eq', 'neq', 'in', 'notin']) {
+      const result = getFilter(
+        {
+          logic: 'and',
+          filters: [
+            // 'region.name' is not part of the user attributes
+            { field: '$attribute.region.name', operator, value: 'title' },
+          ],
+        },
+        FIELDS,
+        USER_CONTEXT
+      );
+      expect(result).toEqual({ $and: [MATCH_NOTHING] });
+    }
+  });
+
+  it('escapes regex metacharacters in attribute values', () => {
+    const result = getFilter(
+      {
+        logic: 'and',
+        filters: [{ field: '$attribute.region', operator: 'in', value: 'title' }],
+      },
+      FIELDS,
+      { ...CONTEXT, user: { attributes: { region: 'EURO (west)' } } }
+    );
+    expect(result).toEqual({
+      $and: [
+        { 'data.title': { $regex: '^EURO \\(west\\)$', $options: 'i' } },
+      ],
+    });
+  });
+});

@@ -6,7 +6,7 @@ import {
   DATE_TYPES,
   DATETIME_TYPES,
 } from '@const/fieldTypes';
-import { escapeRegExp } from 'lodash';
+import { escapeRegExp, isNil } from 'lodash';
 import { isUsingTodayPlaceholder } from '@const/placeholders';
 import { filterOperator } from '../../../../types';
 import getTranslatedFieldName from './getTranslatedFieldName';
@@ -14,6 +14,23 @@ import getTranslatedFieldName from './getTranslatedFieldName';
 /** Mongo filter that matches no document, used when an active global search cannot match any field */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const MATCH_NOTHING = { _id: { $exists: false } };
+
+/** Mongo filter that matches every document, used when a user-attribute condition is satisfied */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const MATCH_EVERYTHING = { _id: { $exists: true } };
+
+/** Prefix of filter fields targeting a user attribute */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const ATTRIBUTE_PREFIX = '$attribute.';
+
+/** Operators comparing a user attribute against another record field */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const ATTRIBUTE_FIELD_OPERATORS: string[] = [
+  filterOperator.EQUAL_TO,
+  filterOperator.NOT_EQUAL_TO,
+  filterOperator.IN,
+  filterOperator.NOT_IN,
+];
 
 /** Operators whose value ends up in a $regex expression */
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -148,6 +165,117 @@ export const isUsedInFilter = (filter: any, fieldName: string): boolean => {
 };
 
 /**
+ * Evaluates a user-attribute comparison that does not depend on record data
+ * (attribute compared to a literal value instead of another record field),
+ * returning a mongo filter that either matches all or no records.
+ *
+ * @param operator filter operator
+ * @param attributeValue current user's attribute value
+ * @param compareValue configured literal value
+ * @returns Mongo filter matching all or no records
+ */
+const buildLiteralAttributeFilter = (
+  operator: string,
+  attributeValue: any,
+  compareValue: any
+): any => {
+  const staticFilter = (matches: boolean) =>
+    matches ? MATCH_EVERYTHING : MATCH_NOTHING;
+  const attributeText = String(attributeValue ?? '');
+  const compareText = String(compareValue ?? '');
+  const attributeTextLower = attributeText.toLowerCase();
+  const compareTextLower = compareText.toLowerCase();
+  const compareValues = (
+    Array.isArray(compareValue)
+      ? compareValue
+      : compareText
+          .split(',')
+          .map((value) => value.trim())
+          .filter((value) => value !== '')
+  ).map((value) => String(value ?? ''));
+
+  switch (operator) {
+    case filterOperator.EQUAL_TO: {
+      return staticFilter(attributeText === compareText);
+    }
+    case filterOperator.NOT_EQUAL_TO: {
+      return staticFilter(attributeText !== compareText);
+    }
+    case filterOperator.CONTAINS: {
+      return staticFilter(attributeTextLower.includes(compareTextLower));
+    }
+    case filterOperator.DOES_NOT_CONTAIN: {
+      return staticFilter(!attributeTextLower.includes(compareTextLower));
+    }
+    case filterOperator.STARTS_WITH: {
+      return staticFilter(attributeTextLower.startsWith(compareTextLower));
+    }
+    case filterOperator.ENDS_WITH: {
+      return staticFilter(attributeTextLower.endsWith(compareTextLower));
+    }
+    case filterOperator.IN: {
+      return staticFilter(compareValues.includes(attributeText));
+    }
+    case filterOperator.NOT_IN: {
+      return staticFilter(!compareValues.includes(attributeText));
+    }
+    case filterOperator.IS_NULL: {
+      return staticFilter(
+        attributeValue === null || attributeValue === undefined
+      );
+    }
+    case filterOperator.IS_NOT_NULL: {
+      return staticFilter(
+        attributeValue !== null && attributeValue !== undefined
+      );
+    }
+    case filterOperator.IS_EMPTY: {
+      return staticFilter(attributeText === '');
+    }
+    case filterOperator.IS_NOT_EMPTY: {
+      return staticFilter(attributeText !== '');
+    }
+    default: {
+      return MATCH_NOTHING;
+    }
+  }
+};
+
+/**
+ * Builds the membership comparison of a user attribute against a record
+ * field (in / notin operators). Record fields — notably multiselect ones —
+ * can store values as strings or numbers, so string elements are matched
+ * with an anchored case-insensitive regex and, when the attribute is
+ * numeric, its number form is matched as well.
+ *
+ * @param fieldName resolved record field path
+ * @param attributeValue current user's attribute value
+ * @param negate whether to build the negated (notin) filter
+ * @returns Mongo filter matching records whose field contains the attribute
+ */
+const buildAttributeFieldComparison = (
+  fieldName: string,
+  attributeValue: any,
+  negate = false
+): any => {
+  const attributeText = String(attributeValue);
+  const numericValue = Number(attributeText);
+  const isNumeric = attributeText !== '' && !isNaN(numericValue);
+  const regex = {
+    $regex: `^${escapeRegExp(attributeText)}$`,
+    $options: 'i',
+  };
+  if (negate) {
+    const conditions: any[] = [{ [fieldName]: { $not: regex } }];
+    if (isNumeric) conditions.push({ [fieldName]: { $ne: numericValue } });
+    return conditions.length === 1 ? conditions[0] : { $and: conditions };
+  }
+  const conditions: any[] = [{ [fieldName]: regex }];
+  if (isNumeric) conditions.push({ [fieldName]: numericValue });
+  return conditions.length === 1 ? conditions[0] : { $or: conditions };
+};
+
+/**
  * Transforms query filter into mongo filter.
  *
  * @param filter filter to transform to mongo filter.
@@ -236,16 +364,69 @@ const buildMongoFilter = (
         fieldName = `_${field}.user.${subField}`;
       }
 
-      const isAttributeFilter = filter.field.startsWith('$attribute.');
+      const isAttributeFilter = filter.field.startsWith(ATTRIBUTE_PREFIX);
+      if (isAttributeFilter && !context?.user) {
+        // Attribute filters cannot be resolved without a connected user
+        return MATCH_NOTHING;
+      }
+      // Attribute keys can contain dots (e.g. 'country.iso2code'), so take
+      // everything after the prefix instead of splitting on '.'
       const attrValue = isAttributeFilter
-        ? context.user.attributes?.[filter.field.split('.')[1]]
+        ? context.user.attributes?.[
+            filter.field.substring(ATTRIBUTE_PREFIX.length)
+          ]
         : '';
-      if (isAttributeFilter)
+      if (isAttributeFilter) {
+        // Literal comparisons don't depend on record data: resolve them
+        // immediately to a match-all / match-none filter
+        if (
+          filter.valueSource === 'literal' ||
+          !ATTRIBUTE_FIELD_OPERATORS.includes(filter.operator)
+        ) {
+          return buildLiteralAttributeFilter(
+            filter.operator,
+            attrValue,
+            filter.value
+          );
+        }
+        if (isNil(attrValue)) {
+          // A user without the attribute never matches field comparisons —
+          // also prevents invalid mongo filters ($regex on undefined, or a
+          // null equality that would match records with an empty field)
+          return MATCH_NOTHING;
+        }
         fieldName = FLAT_DEFAULT_FIELDS.includes(filter.value)
           ? filter.value
           : `${prefix}${filter.value}`;
+      }
 
       if (filter.operator) {
+        // People fields: filtering on the special 'me' value matches the
+        // connected user inside the stored person object(s). Restricted to
+        // 'eq' so text searches for the word "me" keep their meaning.
+        if (
+          PEOPLE_TYPES.includes(type) &&
+          filter.operator === filterOperator.EQUAL_TO &&
+          (filter.value === 'me' ||
+            (Array.isArray(filter.value) && filter.value.includes('me')))
+        ) {
+          const meFilters = [];
+          if (context?.user?.oid) {
+            meFilters.push({ [`${fieldName}.userid`]: context.user.oid });
+          }
+          if (context?.user?.username) {
+            meFilters.push({
+              [`${fieldName}.emailaddress`]: {
+                $regex: `^${escapeRegExp(context.user.username)}$`,
+                $options: 'i',
+              },
+            });
+          }
+          if (meFilters.length === 0) {
+            return MATCH_NOTHING;
+          }
+          return { $or: meFilters };
+        }
         // Check linked resources
         // Doesn't take into consideration deep objects like users or resources or reference data, but allows resource
         if (
@@ -368,7 +549,19 @@ const buildMongoFilter = (
           case filterOperator.EQUAL_TO: {
             // user attributes
             if (isAttributeFilter) {
-              return { [fieldName]: attrValue };
+              const attrText = String(attrValue);
+              const numericAttr = Number(attrText);
+              if (attrText === '' || isNaN(numericAttr)) {
+                return { [fieldName]: attrValue };
+              }
+              // Compare both string & number forms, as multiselect fields
+              // can store numeric choice values
+              return {
+                $or: [
+                  { [fieldName]: { $eq: attrText } },
+                  { [fieldName]: { $eq: numericAttr } },
+                ],
+              };
             } else if (MULTISELECT_TYPES.includes(type)) {
               return { [fieldName]: { $size: value.length, $all: value } };
             } else if (DATETIME_TYPES.includes(type)) {
@@ -395,7 +588,19 @@ const buildMongoFilter = (
           case filterOperator.NOT_EQUAL_TO: {
             // user attributes
             if (isAttributeFilter) {
-              return { [fieldName]: { $ne: attrValue } };
+              const attrText = String(attrValue);
+              const numericAttr = Number(attrText);
+              if (attrText === '' || isNaN(numericAttr)) {
+                return { [fieldName]: { $ne: attrValue } };
+              }
+              // Compare both string & number forms, as multiselect fields
+              // can store numeric choice values
+              return {
+                $and: [
+                  { [fieldName]: { $ne: attrText } },
+                  { [fieldName]: { $ne: numericAttr } },
+                ],
+              };
             } else if (MULTISELECT_TYPES.includes(type)) {
               return {
                 [fieldName]: { $not: { $size: value.length, $all: value } },
@@ -583,9 +788,7 @@ const buildMongoFilter = (
           }
           case filterOperator.IN: {
             if (isAttributeFilter) {
-              return {
-                [fieldName]: { $regex: attrValue, $options: 'i' },
-              };
+              return buildAttributeFieldComparison(fieldName, attrValue);
             } else {
               // Allow values to be passed as string separated with ','
               if (typeof value === 'string') {
@@ -623,9 +826,7 @@ const buildMongoFilter = (
           }
           case filterOperator.NOT_IN: {
             if (isAttributeFilter) {
-              return {
-                [fieldName]: { $not: { $regex: attrValue, $options: 'i' } },
-              };
+              return buildAttributeFieldComparison(fieldName, attrValue, true);
             } else {
               // Allow values to be passed as string separated with ','
               if (typeof value === 'string') {

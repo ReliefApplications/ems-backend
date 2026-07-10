@@ -2,6 +2,7 @@ import express from 'express';
 import config from 'config';
 import { logger } from '@services/logger.service';
 import { getErrorMessage, getErrorStack } from '@utils/error';
+import { ENRICHED_ATTRIBUTES } from '@utils/user/enrichUserAttributes';
 
 /**
  * Routes for permissions
@@ -29,7 +30,16 @@ router.get('/configuration', async (req: any, res) => {
 /** Return available attributes */
 router.get('/attributes', async (req: any, res) => {
   try {
-    const data = config.get('user.attributes.list') || [];
+    const configured: { value: string; text: string }[] =
+      config.get('user.attributes.list') || [];
+    // Expose the login-time enriched attributes (country / region metadata)
+    // so they can be selected in access filters
+    const data = [
+      ...configured,
+      ...ENRICHED_ATTRIBUTES.filter(
+        (x) => !configured.some((y) => y.value === x.value)
+      ),
+    ];
     return res.status(200).send(data);
   } catch (err) {
     logger.error(getErrorMessage(err), { stack: getErrorStack(err) });

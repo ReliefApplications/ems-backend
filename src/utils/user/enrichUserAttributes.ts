@@ -4,15 +4,23 @@ import { logger } from '@services/logger.service';
 import { getToken, getGraphqlUrl } from '@utils/commonServices';
 import { getErrorMessage } from '@utils/error';
 
-/** Enriched keys (under user.attributes) managed by this module. */
-const ENRICHED_KEYS = [
-  'country.id',
-  'country.name',
-  'country.iso2code',
-  'country.iso3code',
-  'region.id',
-  'region.name',
+/**
+ * Enriched attributes (under user.attributes) managed by this module.
+ * Exposed through the /permissions/attributes route so they can be selected
+ * in access filters; `readonly` marks them as derived (not user-editable).
+ */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const ENRICHED_ATTRIBUTES = [
+  { value: 'country.id', text: 'Country (ID)', readonly: true },
+  { value: 'country.name', text: 'Country (name)', readonly: true },
+  { value: 'country.iso2code', text: 'Country (ISO2)', readonly: true },
+  { value: 'country.iso3code', text: 'Country (ISO3)', readonly: true },
+  { value: 'region.id', text: 'Region (ID)', readonly: true },
+  { value: 'region.name', text: 'Region (name)', readonly: true },
 ] as const;
+
+/** Enriched keys (under user.attributes) managed by this module. */
+const ENRICHED_KEYS = ENRICHED_ATTRIBUTES.map((x) => x.value);
 
 /** A country as returned by the common-services countrys query. */
 interface CountryRef {
@@ -104,13 +112,14 @@ const fetchRegions = async (): Promise<Record<string, RegionRef>> => {
 /**
  * Resolve common-services metadata for the user's country and region and
  * merge it into `user.attributes` as dot-notation keys
- * (e.g. `user.attributes['country.iso2code']`). These are persisted via the
- * existing `markModified('attributes')` flag set elsewhere in the login flow.
+ * (e.g. `user.attributes['country.iso2code']`). The auth flow persists them
+ * when this function reports a modification, so permission access filters
+ * can rely on them on every request.
  *
  * Failures are logged but never propagated — enrichment must not block login.
  *
  * @param user Logged user to enrich.
- * @returns true if any enrichment was applied.
+ * @returns true if the enriched attributes were modified.
  */
 export const enrichUserAttributes = async (user: User): Promise<boolean> => {
   try {
@@ -130,7 +139,7 @@ export const enrichUserAttributes = async (user: User): Promise<boolean> => {
 
     if (!countryName && !regionName) {
       if (hadEnrichedKeys) user.markModified('attributes');
-      return false;
+      return hadEnrichedKeys;
     }
 
     const [countries, regions] = await Promise.all([
@@ -173,7 +182,7 @@ export const enrichUserAttributes = async (user: User): Promise<boolean> => {
     }
 
     if (added || hadEnrichedKeys) user.markModified('attributes');
-    return added;
+    return added || hadEnrichedKeys;
   } catch (err) {
     logger.error(`enrichUserAttributes failed: ${getErrorMessage(err)}`);
     return false;

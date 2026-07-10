@@ -26,6 +26,7 @@ export const getFormPermissionFilter = (
           filter,
           x.access &&
             getFilter(x.access, object.fields, {
+              user,
               resourceFieldsById: {
                 [object instanceof Form ? object.resource : object.id]:
                   object.fields,
@@ -36,5 +37,6 @@ export const getFormPermissionFilter = (
       }
     });
   }
+  console.log(JSON.stringify(permissionFilters));
   return permissionFilters;
 };
