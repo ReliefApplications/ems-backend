@@ -1,3 +1,10 @@
+# [2.17.0-rc.10](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.9...v2.17.0-rc.10) (2026-07-10)
+
+
+### Features
+
+* Calculated fields now working with related fields ([#1253](https://github.com/ReliefApplications/ems-backend/issues/1253)) ([b175c4d](https://github.com/ReliefApplications/ems-backend/commit/b175c4d2d998059b34a1e1364976f62f4f6f66f1)), closes [AB#129357](https://github.com/AB/issues/129357)
+
 # [2.17.0-rc.9](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.8...v2.17.0-rc.9) (2026-07-08)
 
 
