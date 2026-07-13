@@ -213,6 +213,8 @@ export default {
       if (args.structure && !isEqual(form.structure, args.structure)) {
         update.structure = args.structure;
         const structure = JSON.parse(args.structure);
+        // Public status is defined in the form definition itself, extract it on save
+        update.isPublic = structure?.isPublic === true;
         const fields = [];
         const pages =
           structure && Array.isArray(structure.pages) ? structure.pages : [];

@@ -20,6 +20,7 @@ interface FormDocument extends Document {
   modifiedAt?: Date;
   structure?: any;
   core?: boolean;
+  isPublic?: boolean;
   status?: string;
   permissions?: {
     canSee?: any[];
@@ -54,6 +55,10 @@ const schema = new Schema<Form>(
     graphQLTypeName: String,
     structure: mongoose.Schema.Types.Mixed,
     core: Boolean,
+    isPublic: {
+      type: Boolean,
+      default: false,
+    },
     status: {
       type: String,
       enum: Object.values(status),
