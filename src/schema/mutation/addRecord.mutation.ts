@@ -1,4 +1,9 @@
-import { GraphQLID, GraphQLNonNull, GraphQLError } from 'graphql';
+import {
+  GraphQLID,
+  GraphQLNonNull,
+  GraphQLError,
+  GraphQLString,
+} from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { RecordType } from '../types';
 import { Form, Record, Notification, Channel } from '@models';
@@ -7,19 +12,23 @@ import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import pubsub from '../../server/pubsub';
 import { getFormPermissionFilter } from '@utils/filter';
 import { logger } from '@services/logger.service';
-import { graphQLAuthCheck } from '@schema/shared';
+import { verifyTurnstileToken } from '@utils/captcha';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Arguments for the addRecord mutation */
-type AddRecordArgs = {
+export type AddRecordArgs = {
   form?: string | Types.ObjectId;
   data: any;
+  captchaToken?: string;
 };
 
 /**
  * Add a record to a form, if user authorized.
+ * Unauthenticated users can add records to public forms, provided they pass
+ * a valid Cloudflare Turnstile captcha token. In that case, the ability check
+ * is skipped.
  * Throw a GraphQL error if not logged or authorized, or form not found.
  * TODO: we have to check form by form for that.
  */
@@ -28,9 +37,9 @@ export default {
   args: {
     form: { type: GraphQLID },
     data: { type: new GraphQLNonNull(GraphQLJSON) },
+    captchaToken: { type: GraphQLString },
   },
   async resolve(parent, args: AddRecordArgs, context: Context) {
-    graphQLAuthCheck(context);
     try {
       const user = context.user;
 
@@ -39,16 +48,35 @@ export default {
       if (!form)
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
 
-      // Check the ability with permissions for this form
-      const ability = await extendAbilityForRecords(user, form);
-      if (ability.cannot('create', 'Record')) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
+      if (user) {
+        // Check the ability with permissions for this form
+        const ability = await extendAbilityForRecords(user, form);
+        if (ability.cannot('create', 'Record')) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.permissionNotGranted')
+          );
+        }
+      } else {
+        // Unauthenticated users can only add records to public forms
+        if (!form.isPublic) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.userNotLogged')
+          );
+        }
+        // Captcha verification replaces the ability check
+        if (
+          !args.captchaToken ||
+          !(await verifyTurnstileToken(args.captchaToken))
+        ) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.invalidCaptcha')
+          );
+        }
       }
 
       // Check unicity of record
       if (
+        user &&
         form.permissions.recordsUnicity &&
         form.permissions.recordsUnicity.length > 0 &&
         form.permissions.recordsUnicity[0].role
@@ -84,24 +112,26 @@ export default {
         //modifiedAt: new Date(),
         data: args.data,
         resource: form.resource ? form.resource : null,
-        createdBy: {
-          user: user._id,
-          roles: user.roles.map((x) => x._id),
-          positionAttributes: user.positionAttributes.map((x) => {
-            return {
-              value: x.value,
-              category: x.category._id,
-            };
-          }),
-        },
-        lastUpdateForm: form.id,
-        _createdBy: {
-          user: {
-            _id: context.user._id,
-            name: context.user.name,
-            username: context.user.username,
+        ...(user && {
+          createdBy: {
+            user: user._id,
+            roles: user.roles.map((x) => x._id),
+            positionAttributes: user.positionAttributes.map((x) => {
+              return {
+                value: x.value,
+                category: x.category._id,
+              };
+            }),
           },
-        },
+          _createdBy: {
+            user: {
+              _id: user._id,
+              name: user.name,
+              username: user.username,
+            },
+          },
+        }),
+        lastUpdateForm: form.id,
         _form: {
           _id: form._id,
           name: form.name,

@@ -12,6 +12,7 @@
 			"fileTotalSizeLimitReached": "******",
 			"internalServerError": "******",
 			"invalidAPI": "******",
+			"invalidCaptcha": "******",
 			"invalidEmailsInput": "******",
 			"invalidGraphQLName": "******",
 			"maximumPaginationLimit": "****** {{paginationLimit}} ******",
