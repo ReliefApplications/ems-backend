@@ -197,4 +197,11 @@ module.exports = {
     url: '',
     enable: false,
   },
+  captcha: {
+    turnstile: {
+      // Cloudflare Turnstile secret key, used to verify captcha tokens
+      // sent by unauthenticated users on public forms.
+      secret: '',
+    },
+  },
 };

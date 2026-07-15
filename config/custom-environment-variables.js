@@ -87,4 +87,9 @@ module.exports = {
   publicStorage: {
     url: 'PUBLIC_STORAGE_URL',
   },
+  captcha: {
+    turnstile: {
+      secret: 'CAPTCHA_TURNSTILE_SECRET',
+    },
+  },
 };
