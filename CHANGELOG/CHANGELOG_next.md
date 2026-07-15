@@ -1,3 +1,10 @@
+# [2.17.0-rc.12](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.11...v2.17.0-rc.12) (2026-07-15)
+
+
+### Features
+
+* Enable public form submission ([#1255](https://github.com/ReliefApplications/ems-backend/issues/1255)) ([c215007](https://github.com/ReliefApplications/ems-backend/commit/c215007508967ddb2163fc327821b8e71bd147f4)), closes [AB#129136](https://github.com/AB/issues/129136)
+
 # [2.17.0-rc.11](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.10...v2.17.0-rc.11) (2026-07-10)
 
 
