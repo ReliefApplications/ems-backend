@@ -1,3 +1,10 @@
+# [2.17.0-rc.14](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.13...v2.17.0-rc.14) (2026-07-16)
+
+
+### Bug Fixes
+
+* Editing permissions could sometimes fail ([#1256](https://github.com/ReliefApplications/ems-backend/issues/1256)) ([de4b9fe](https://github.com/ReliefApplications/ems-backend/commit/de4b9fe77a08cc0dd7cdccb3cc02dc5880096457)), closes [AB#135254](https://github.com/AB/issues/135254)
+
 # [2.17.0-rc.13](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.12...v2.17.0-rc.13) (2026-07-16)
 
 
