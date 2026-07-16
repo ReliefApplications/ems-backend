@@ -37,6 +37,5 @@ export const getFormPermissionFilter = (
       }
     });
   }
-  console.log(JSON.stringify(permissionFilters));
   return permissionFilters;
 };
