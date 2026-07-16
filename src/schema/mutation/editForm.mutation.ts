@@ -291,7 +291,7 @@ export default {
               // Set default permissions based on access to the resource
               newField.permissions = {
                 canSee: resource.permissions.canSee,
-                canUpdate: resource.permissions.canSee,
+                canUpdate: resource.permissions.canUpdate,
               };
               oldFields.push(newField); // Add this field to the list of the resource's fields
             } else {
