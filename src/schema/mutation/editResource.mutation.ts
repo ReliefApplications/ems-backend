@@ -161,7 +161,11 @@ const checkFieldPermission = (
           )
         );
       }
-      if (!get(field, 'permissions.canSee', []).find((p) => p.equals(role))) {
+      if (
+        !get(field, 'permissions.canSee', []).find(
+          (p: any) => String(p) === String(role)
+        )
+      ) {
         throw new GraphQLError(
           context.i18next.t('mutations.resource.edit.errors.field.notVisible')
         );
@@ -388,9 +392,11 @@ const removeFieldPermission = (
 ) => {
   const fieldIndex = fields.findIndex((r) => r.name === fieldName);
   if (fieldIndex === -1) return;
+  // Roles can be stored as either strings or ObjectIds, so pull both forms
   const pullRoles = {
-    [`fields.${fieldIndex}.permissions.${permission}`]:
-      new mongoose.Types.ObjectId(role),
+    [`fields.${fieldIndex}.permissions.${permission}`]: {
+      $in: [role, new mongoose.Types.ObjectId(role)],
+    },
   };
 
   const hasFieldPermissions = !isNil(fields[fieldIndex].permissions);
