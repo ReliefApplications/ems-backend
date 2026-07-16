@@ -1,3 +1,10 @@
+# [2.17.0-rc.13](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.12...v2.17.0-rc.13) (2026-07-16)
+
+
+### Bug Fixes
+
+* add parameter to filter out enriched attributes ([a718db7](https://github.com/ReliefApplications/ems-backend/commit/a718db72f5ef9b557a3a8e2d1cffded6b01bece8))
+
 # [2.17.0-rc.12](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.11...v2.17.0-rc.12) (2026-07-15)
 
 
