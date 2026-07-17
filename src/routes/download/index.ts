@@ -176,10 +176,12 @@ router.get('/form/records/:id/history', async (req, res) => {
     } = {};
     if (req.query) {
       const { from, to, fields } = req.query as any;
+      const fromTimestamp = parseInt(from, 10);
+      const toTimestamp = parseInt(to, 10);
       filters = Object.assign(
         {},
-        from === 'NaN' ? null : { fromDate: new Date(parseInt(from, 10)) },
-        to === 'NaN' ? null : { toDate: new Date(parseInt(to, 10)) },
+        isNaN(fromTimestamp) ? null : { fromDate: new Date(fromTimestamp) },
+        isNaN(toTimestamp) ? null : { toDate: new Date(toTimestamp) },
         !fields ? null : { fields: fields.split(',') }
       );
 
