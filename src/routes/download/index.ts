@@ -184,8 +184,6 @@ router.get('/form/records/:id/history', async (req, res) => {
         isNaN(toTimestamp) ? null : { toDate: new Date(toTimestamp) },
         !fields ? null : { fields: fields.split(',') }
       );
-
-      if (filters.toDate) filters.toDate.setDate(filters.toDate.getDate() + 1);
     }
 
     const record: Record = await Record.findOne({
