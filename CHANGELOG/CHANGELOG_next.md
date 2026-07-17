@@ -1,3 +1,10 @@
+# [2.17.0-rc.15](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.14...v2.17.0-rc.15) (2026-07-17)
+
+
+### Bug Fixes
+
+* history download showing Invalid Dates ([6e54fa4](https://github.com/ReliefApplications/ems-backend/commit/6e54fa4cebf80174766a25e2c1470b8e4d732230))
+
 # [2.17.0-rc.14](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.13...v2.17.0-rc.14) (2026-07-16)
 
 
