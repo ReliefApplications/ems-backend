@@ -18,7 +18,7 @@ import {
 } from '.';
 import { Resource, Record, Version, Form } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
-import { getFormPermissionFilter } from '@utils/filter';
+import { getDraftRecordFilter, getFormPermissionFilter } from '@utils/filter';
 import { StatusEnumType } from '@const/enumTypes';
 import { Connection, decodeCursor, encodeCursor } from './pagination.type';
 import getFilter from '@utils/schema/resolvers/Query/getFilter';
@@ -93,7 +93,11 @@ export const FormType = new GraphQLObjectType({
         if (args.archived) {
           Object.assign(mongooseFilter, { archived: true });
         } else {
-          Object.assign(mongooseFilter, { archived: { $ne: true } });
+          Object.assign(
+            mongooseFilter,
+            { archived: { $ne: true } },
+            getDraftRecordFilter()
+          );
         }
         if (args.filter) {
           mongooseFilter = {
@@ -159,6 +163,7 @@ export const FormType = new GraphQLObjectType({
         const count = await Record.find({
           form: parent.id,
           archived: { $ne: true },
+          ...getDraftRecordFilter(),
           ...accessibleBy(ability, 'read').Record,
         }).count();
         return count;
@@ -227,7 +232,11 @@ export const FormType = new GraphQLObjectType({
           if (unicityFilters.length > 0) {
             const record = await Record.findOne({
               $and: [
-                { form: parent._id, archived: { $ne: true } },
+                {
+                  form: parent._id,
+                  archived: { $ne: true },
+                  ...getDraftRecordFilter(),
+                },
                 { $or: unicityFilters },
               ],
             });

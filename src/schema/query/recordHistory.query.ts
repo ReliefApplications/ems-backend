@@ -17,6 +17,7 @@ import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 import { getErrorMessage, getErrorStack } from '@utils/error';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
+import { getDraftRecordFilter } from '@utils/filter';
 
 /** Arguments for the recordHistory query */
 type RecordHistoryArgs = {
@@ -59,7 +60,10 @@ export default {
       const user = context.user;
       // Get data. Versions are fetched lazily by RecordHistory, only for the
       // requested page, instead of being populated in full here.
-      const record: Record = await Record.findById(args.id).populate({
+      const record: Record = await Record.findOne({
+        _id: args.id,
+        ...getDraftRecordFilter(),
+      }).populate({
         path: 'resource',
         model: 'Resource',
       });

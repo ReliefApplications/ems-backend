@@ -15,13 +15,14 @@ import { User } from './user.model';
 // eslint-disable-next-line deprecation/deprecation
 export interface Record extends AccessibleFieldsDocument {
   kind: 'Record';
-  incrementalId: string;
+  incrementalId?: string | null;
   form: any;
   _form: Form;
   resource: any;
   createdAt: Date;
   modifiedAt: Date;
   archived: boolean;
+  draft: boolean;
   data: any;
   versions: any;
   permissions: {
@@ -45,7 +46,7 @@ const recordSchema = new Schema<Record>(
   {
     incrementalId: {
       type: String,
-      required: true,
+      required: false,
     },
     form: {
       type: mongoose.Schema.Types.ObjectId,
@@ -97,6 +98,10 @@ const recordSchema = new Schema<Record>(
       type: Boolean,
       default: false,
     },
+    draft: {
+      type: Boolean,
+      default: false,
+    },
     data: {
       type: mongoose.Schema.Types.Mixed,
       required: true,
@@ -112,7 +117,14 @@ const recordSchema = new Schema<Record>(
 );
 recordSchema.index(
   { incrementalId: 1, resource: 1 },
-  { unique: true, partialFilterExpression: { resource: { $exists: true } } }
+  {
+    unique: true,
+    partialFilterExpression: {
+      resource: { $exists: true },
+      incrementalId: { $exists: true },
+      draft: false,
+    },
+  }
 );
 
 recordSchema.index({ '$**': 'text' });
@@ -120,6 +132,7 @@ recordSchema.index({ 'data.$**': 1 });
 
 recordSchema.index({ archived: 1, form: 1, resource: 1, createdAt: 1 });
 recordSchema.index({ resource: 1, archived: 1 });
+recordSchema.index({ draft: 1, form: 1, resource: 1, createdAt: 1 });
 recordSchema.index({ createdAt: 1 });
 recordSchema.index({ form: 1 });
 

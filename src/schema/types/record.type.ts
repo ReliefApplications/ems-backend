@@ -13,6 +13,7 @@ import { Connection } from './pagination.type';
 import getDisplayText from '@utils/form/getDisplayText';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { accessibleBy } from '@casl/mongoose';
+import { getDraftRecordFilter } from '@utils/filter';
 
 /** GraphQL Record type definition */
 export const RecordType = new GraphQLObjectType({
@@ -23,6 +24,7 @@ export const RecordType = new GraphQLObjectType({
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     archived: { type: GraphQLBoolean },
+    draft: { type: GraphQLBoolean },
     form: {
       type: FormType,
       async resolve(parent, args, context) {
@@ -100,6 +102,7 @@ export const RecordType = new GraphQLObjectType({
                   const record = await Record.findOne({
                     _id: data[name],
                     archived: { $ne: true },
+                    ...getDraftRecordFilter(),
                   });
                   res[name] = record.data[field.displayField];
                 } catch {

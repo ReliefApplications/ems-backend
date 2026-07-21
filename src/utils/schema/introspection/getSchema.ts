@@ -129,6 +129,8 @@ export const getSchema = (
             id: { type: new GraphQLNonNull(GraphQLID) },
             display: { type: GraphQLBoolean },
             data: { type: GraphQLJSON },
+            draft: { type: GraphQLBoolean },
+            allDrafts: { type: GraphQLBoolean },
           },
         };
         // === MULTI ENTITIES ===
@@ -145,6 +147,8 @@ export const getSchema = (
             styles: { type: GraphQLJSON },
             actions: { type: GraphQLJSON },
             at: { type: GraphQLDate },
+            draft: { type: GraphQLBoolean },
+            allDrafts: { type: GraphQLBoolean },
           },
         };
         // === META ===

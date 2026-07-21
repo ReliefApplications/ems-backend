@@ -24,6 +24,7 @@ import getSortAggregation from '@utils/schema/resolvers/Query/getSortAggregation
 import dataSources from '@server/apollo/dataSources';
 import sanitizeHtml from 'sanitize-html';
 import { getErrorMessage } from '@utils/error';
+import { getDraftRecordFilter } from '@utils/filter';
 
 /**
  * Export batch parameters interface
@@ -39,6 +40,8 @@ interface ExportBatchParams {
   timeZone: string;
   fileName?: string;
   limit?: number;
+  draft?: boolean;
+  allDrafts?: boolean;
 }
 
 /**
@@ -428,6 +431,7 @@ export default class Exporter {
     const basicFilters = {
       resource: this.resource._id,
       archived: { $not: { $eq: true } },
+      ...getDraftRecordFilter(this.params, context.user),
     };
     const permissionFilters = Record.find(
       accessibleBy(context.user.ability, 'read').Record
@@ -513,6 +517,7 @@ export default class Exporter {
               },
             },
             { archived: { $ne: true } },
+            getDraftRecordFilter(),
             permissionFilters,
             ...(extraMatch && Object.keys(extraMatch).length > 0
               ? [extraMatch]
@@ -605,6 +610,7 @@ export default class Exporter {
               resource: column.parent._id,
               [`data.${relatedFieldName}`]: record._id.toString(),
               archived: { $not: { $eq: true } },
+              ...getDraftRecordFilter(),
             },
             permissionFilters,
             ...(subFilter && Object.keys(subFilter).length > 0
