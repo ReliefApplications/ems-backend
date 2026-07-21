@@ -14,6 +14,7 @@ import { logger } from '@services/logger.service';
 import { subject } from '@casl/ability';
 import { SortOrder } from 'mongoose';
 import { getErrorMessage, getErrorStack } from '@utils/error';
+import { getDraftRecordFilter } from '@utils/filter';
 
 /**
  * Gets the resolvers for each field of the document for a given resource
@@ -61,7 +62,11 @@ export const getEntityResolver = (
             // Else, do db query
             const recordId = get(entity.data, fieldName.slice(0, -3), null);
             const record = recordId
-              ? await Record.findOne({ _id: recordId, archived: { $ne: true } })
+              ? await Record.findOne({
+                  _id: recordId,
+                  archived: { $ne: true },
+                  ...getDraftRecordFilter(),
+                })
               : null;
             return record;
           },
@@ -111,7 +116,8 @@ export const getEntityResolver = (
                 Object.assign(
                   mongooseFilter,
                   { _id: { $in: recordIds } },
-                  { archived: { $ne: true } }
+                  { archived: { $ne: true } },
+                  getDraftRecordFilter()
                 );
                 return await Record.find(mongooseFilter)
                   .sort([[getSortField(args.sortField), args.sortOrder]])
@@ -298,7 +304,8 @@ export const getEntityResolver = (
                         { form: ids[entityName] },
                       ],
                     },
-                    { archived: { $ne: true } }
+                    { archived: { $ne: true } },
+                    getDraftRecordFilter()
                   );
                   mongooseFilter[`data.${x.name}`] = entity.id.toString();
                   const records = await Record.find(mongooseFilter)

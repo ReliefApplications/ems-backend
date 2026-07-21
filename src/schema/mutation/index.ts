@@ -84,9 +84,9 @@ import editLayer from './editLayer.mutation';
 import deleteLayer from './deleteLayer.mutation';
 import editPageContext from './editPageContext.mutation';
 import restorePage from './restorePage.mutation';
-import addDraftRecord from './addDraftRecord.mutation';
-import deleteDraftRecord from './deleteDraftRecord.mutation';
-import editDraftRecord from './editDraftRecord.mutation';
+// import addDraftRecord from './addDraftRecord.mutation';
+// import deleteDraftRecord from './deleteDraftRecord.mutation';
+// import editDraftRecord from './editDraftRecord.mutation';
 import addDashboardTemplate from './addDashboardTemplate.mutation';
 import deleteDashboardTemplates from './deleteDashboardTemplates.mutation';
 import addEmailNotification from './addEmailNotification.mutation';
@@ -189,9 +189,9 @@ const Mutation = new GraphQLObjectType({
     editLayer,
     deleteLayer,
     restorePage,
-    addDraftRecord,
-    deleteDraftRecord,
-    editDraftRecord,
+    // addDraftRecord,
+    // deleteDraftRecord,
+    // editDraftRecord,
     addEmailDistributionList,
     editEmailDistributionList,
     addCustomTemplate,

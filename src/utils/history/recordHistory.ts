@@ -18,6 +18,7 @@ import {
 import { getFullChoices } from '@utils/form';
 import { accessibleBy } from '@casl/mongoose';
 import { resolveLocalizedString } from '@utils/i18n/resolveLocalizedString';
+import { getDraftRecordFilter } from '@utils/filter';
 
 /**
  * Class used to get a record's history
@@ -564,7 +565,11 @@ export class RecordHistory {
       const recordFilters = Record.find(
         accessibleBy(this.options.ability, 'read').Record
       )
-        .where({ _id: { $in: ids }, archived: { $ne: true } })
+        .where({
+          _id: { $in: ids },
+          archived: { $ne: true },
+          ...getDraftRecordFilter(),
+        })
         .getFilter();
       const records: Record[] = await Record.find(recordFilters);
       return records.map((record) => record.incrementalId);

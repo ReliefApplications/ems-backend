@@ -22,6 +22,7 @@ import { graphQLAuthCheck } from '@schema/shared';
 import NodeCache from 'node-cache';
 import { AppAbility } from '@security/defineUserAbility';
 import { getErrorMessage, getErrorStack } from '@utils/error';
+import { getDraftRecordFilter } from '@utils/filter';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -59,6 +60,7 @@ const projectAggregation = [
         },
       },
       modifiedAt: 1,
+      draft: 1,
       _lastUpdatedBy: {
         user: {
           id: 1,
@@ -230,6 +232,8 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       styles = [],
       actions = [],
       at,
+      draft,
+      allDrafts,
     },
     context,
     info
@@ -421,6 +425,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       const basicFilters = {
         $or: [{ resource: id }, { form: id }],
         archived: { $not: { $eq: true } },
+        ...getDraftRecordFilter({ draft, allDrafts }, user),
       };
 
       // Additional filter from the user permissions
@@ -694,6 +699,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           {
             $or: [{ _id: { $in: relatedIds } }, ...relatedFilters],
             archived: { $ne: true },
+            ...getDraftRecordFilter(),
           },
           projection
         );

@@ -3,6 +3,7 @@ import { Record } from '@models';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { getErrorMessage, getErrorStack } from '@utils/error';
+import { getDraftRecordFilter } from '@utils/filter';
 
 /**
  * Returns a resolver that fetches a record if the users logged
@@ -11,10 +12,14 @@ import { getErrorMessage, getErrorStack } from '@utils/error';
  * @returns A resolver function that fetches a record by id
  */
 export default () =>
-  async (_, { id, data }, context) => {
+  async (_, { id, data, draft, allDrafts }, context) => {
     graphQLAuthCheck(context);
     try {
-      const record = await Record.findOne({ _id: id, archived: { $ne: true } });
+      const record = await Record.findOne({
+        _id: id,
+        archived: { $ne: true },
+        ...getDraftRecordFilter({ draft, allDrafts }, context.user),
+      });
       if (data) {
         record.data = data;
       }
