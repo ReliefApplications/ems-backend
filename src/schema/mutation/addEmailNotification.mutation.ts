@@ -68,6 +68,7 @@ export default {
         createdBy: { name: context.user.name, email: context.user.username },
         applicationId: args.notification.applicationId,
         notificationType: args.notification.notificationType,
+        language: args.notification.language,
         datasets: args.notification.datasets,
         emailLayout: args.notification.emailLayout,
         emailDistributionList: args.notification.emailDistributionList,

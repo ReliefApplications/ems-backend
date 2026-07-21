@@ -80,6 +80,7 @@ export const EmailNotificationType = new GraphQLObjectType({
     createdBy: { type: GraphQLJSON },
     schedule: { type: ScheduleType },
     notificationType: { type: GraphQLString },
+    language: { type: GraphQLString },
     datasets: { type: new GraphQLList(DatasetType) },
     emailLayout: { type: GraphQLID },
     emailDistributionList: { type: GraphQLID },

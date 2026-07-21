@@ -84,6 +84,7 @@ export interface EmailNotification extends Document {
   applicationId: mongoose.Schema.Types.ObjectId;
   createdBy: { name: string; email: string };
   notificationType: string;
+  language?: string;
   datasets: Dataset[];
   emailDistributionList: mongoose.Schema.Types.ObjectId | EmailDistributionList; // Reference to EmailDistributionList
   subscriptionList: string[];
@@ -116,6 +117,9 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
       type: String,
       enum: Object.values(notificationsType),
       required: true,
+    },
+    language: {
+      type: String,
     },
     schedule: {
       scheduleEnabled: { type: mongoose.Schema.Types.Boolean },
