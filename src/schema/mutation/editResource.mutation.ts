@@ -46,8 +46,8 @@ type PermissionChange = {
 
 /** Simple resource field permission change type */
 type SimpleFieldPermissionChange = {
-  add?: { field: string; role: string };
-  remove?: { field: string; role: string };
+  add?: { field: string; role: string } | { field: string; role: string }[];
+  remove?: { field: string; role: string } | { field: string; role: string }[];
 };
 
 /** Type for the fieldPermission argument */
@@ -683,33 +683,39 @@ export default {
         const permissions: FieldPermissionChange = args.fieldsPermissions;
         for (const permission in permissions) {
           const obj: SimpleFieldPermissionChange = permissions[permission];
-          // Add permission on target field
+          // Add permission on target field(s)
           if (obj.add) {
-            checkFieldPermission(
-              context,
-              get(resource, 'permissions'),
-              allResourceFields,
-              obj.add.field,
-              obj.add.role,
-              permission
-            );
-            addFieldPermission(
-              update,
-              allResourceFields,
-              obj.add.field,
-              obj.add.role,
-              permission
-            );
+            const additions = isArray(obj.add) ? obj.add : [obj.add];
+            additions.forEach((addition) => {
+              checkFieldPermission(
+                context,
+                get(resource, 'permissions'),
+                allResourceFields,
+                addition.field,
+                addition.role,
+                permission
+              );
+              addFieldPermission(
+                update,
+                allResourceFields,
+                addition.field,
+                addition.role,
+                permission
+              );
+            });
           }
-          // Remove permission on target field
+          // Remove permission on target field(s)
           if (obj.remove) {
-            removeFieldPermission(
-              update,
-              allResourceFields,
-              obj.remove.field,
-              obj.remove.role,
-              permission
-            );
+            const removals = isArray(obj.remove) ? obj.remove : [obj.remove];
+            removals.forEach((removal) => {
+              removeFieldPermission(
+                update,
+                allResourceFields,
+                removal.field,
+                removal.role,
+                permission
+              );
+            });
           }
         }
       }
