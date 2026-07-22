@@ -11,6 +11,7 @@ import roles from './roles';
 import gis from './gis';
 import style from './style';
 import notification from './notification';
+import publicRoutes from './public';
 import config from 'config';
 import { RouteDefinition } from 'types/route-definition';
 import { logger } from '@services/logger.service';
@@ -71,6 +72,8 @@ export default function registerRoutes(): Router | undefined {
     if (config.get('server.rateLimit.enable')) {
       router.use(rateLimitMiddleware);
     }
+    // Public routes, mounted before restMiddleware so no authentication is required
+    router.use('/public', publicRoutes);
     router.use(restMiddleware);
     router.use('/download', download);
     router.use('/proxy', proxy);

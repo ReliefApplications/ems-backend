@@ -1,13 +1,10 @@
-import {
-  ApiConfiguration,
-  Dashboard,
-  Page,
-  Record,
-  ReferenceData,
-} from '@models';
+import { ApiConfiguration, Dashboard, Page, ReferenceData } from '@models';
+import { Context } from '@server/apollo/context';
 import { CustomAPI } from '@server/apollo/dataSources';
 import { get } from 'lodash';
 import { Types } from 'mongoose';
+import { getContextDataForRecord } from './getContextData';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
 
 /**
  * Get the name of the new dashboard, based on the context.
@@ -15,14 +12,14 @@ import { Types } from 'mongoose';
  * @param dashboard The dashboard being duplicated
  * @param context The context of the dashboard
  * @param id The id of the record or element
- * @param dataSources The data sources
+ * @param gqlContext Graphql context
  * @returns The name of the new dashboard
  */
 export const getNewDashboardName = async (
   dashboard: Dashboard,
   context: Page['context'],
   id: string | Types.ObjectId,
-  dataSources: any
+  gqlContext: Context
 ) => {
   if ('refData' in context && context.refData) {
     // Get items from reference data
@@ -32,15 +29,22 @@ export const getNewDashboardName = async (
     );
     const data = apiConfiguration
       ? await (
-          dataSources[apiConfiguration.name] as CustomAPI
+          gqlContext.dataSources[apiConfiguration.name] as CustomAPI
         ).getReferenceDataItems(referenceData, apiConfiguration)
       : referenceData.data;
 
     const item = data.find((x) => get(x, referenceData.valueField) == id);
     return get(item, context.displayField);
   } else if ('resource' in context && context.resource) {
-    const record = await Record.findById(id);
-    return `${record.data[context.displayField]}`;
+    // Reuse the same logic used for widget context data, so that
+    // calculated display fields are resolved instead of coming back undefined
+    gqlContext.user.ability = await extendAbilityForRecords(gqlContext.user);
+    const data = await getContextDataForRecord(
+      context.resource,
+      id as Types.ObjectId,
+      gqlContext
+    );
+    return get(data, context.displayField);
   }
 
   // Default return, should never happen

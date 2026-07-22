@@ -1,3 +1,66 @@
+# [2.17.0-rc.15](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.14...v2.17.0-rc.15) (2026-07-17)
+
+
+### Bug Fixes
+
+* history download showing Invalid Dates ([6e54fa4](https://github.com/ReliefApplications/ems-backend/commit/6e54fa4cebf80174766a25e2c1470b8e4d732230))
+
+# [2.17.0-rc.14](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.13...v2.17.0-rc.14) (2026-07-16)
+
+
+### Bug Fixes
+
+* Editing permissions could sometimes fail ([#1256](https://github.com/ReliefApplications/ems-backend/issues/1256)) ([de4b9fe](https://github.com/ReliefApplications/ems-backend/commit/de4b9fe77a08cc0dd7cdccb3cc02dc5880096457)), closes [AB#135254](https://github.com/AB/issues/135254)
+
+# [2.17.0-rc.13](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.12...v2.17.0-rc.13) (2026-07-16)
+
+
+### Bug Fixes
+
+* add parameter to filter out enriched attributes ([a718db7](https://github.com/ReliefApplications/ems-backend/commit/a718db72f5ef9b557a3a8e2d1cffded6b01bece8))
+
+# [2.17.0-rc.12](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.11...v2.17.0-rc.12) (2026-07-15)
+
+
+### Features
+
+* Enable public form submission ([#1255](https://github.com/ReliefApplications/ems-backend/issues/1255)) ([c215007](https://github.com/ReliefApplications/ems-backend/commit/c215007508967ddb2163fc327821b8e71bd147f4)), closes [AB#129136](https://github.com/AB/issues/129136)
+
+# [2.17.0-rc.11](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.10...v2.17.0-rc.11) (2026-07-10)
+
+
+### Features
+
+* Can now use user attributes in filter ([#1254](https://github.com/ReliefApplications/ems-backend/issues/1254)) ([187e2f3](https://github.com/ReliefApplications/ems-backend/commit/187e2f346f4469775ec11f91b18bd61dbf69dfd9)), closes [AB#129134](https://github.com/AB/issues/129134)
+
+# [2.17.0-rc.10](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.9...v2.17.0-rc.10) (2026-07-10)
+
+
+### Features
+
+* Calculated fields now working with related fields ([#1253](https://github.com/ReliefApplications/ems-backend/issues/1253)) ([b175c4d](https://github.com/ReliefApplications/ems-backend/commit/b175c4d2d998059b34a1e1364976f62f4f6f66f1)), closes [AB#129357](https://github.com/AB/issues/129357)
+
+# [2.17.0-rc.9](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.8...v2.17.0-rc.9) (2026-07-08)
+
+
+### Features
+
+* Can now use calculated fields in contextual dashboard title ([#1252](https://github.com/ReliefApplications/ems-backend/issues/1252)) ([7ebc092](https://github.com/ReliefApplications/ems-backend/commit/7ebc092deb15fe1de66fdc82276bf18fd0ca2a4b)), closes [AB#134728](https://github.com/AB/issues/134728)
+
+# [2.17.0-rc.8](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.7...v2.17.0-rc.8) (2026-07-08)
+
+
+### Bug Fixes
+
+* Multiple issues with full dual language experience ([#1251](https://github.com/ReliefApplications/ems-backend/issues/1251)) ([753f3dd](https://github.com/ReliefApplications/ems-backend/commit/753f3ddb8750d159694c3456b864437f5fa3cbe4)), closes [AB#134863](https://github.com/AB/issues/134863)
+
+# [2.17.0-rc.7](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.6...v2.17.0-rc.7) (2026-07-07)
+
+
+### Features
+
+* Add canUploadRecords permission ([#1247](https://github.com/ReliefApplications/ems-backend/issues/1247)) ([ddb5a0f](https://github.com/ReliefApplications/ems-backend/commit/ddb5a0fc52cfc836f4c507a055c3d7c66f6df7ca)), closes [AB#134543](https://github.com/AB/issues/134543)
+
 # [2.17.0-rc.6](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.5...v2.17.0-rc.6) (2026-07-01)
 
 

@@ -12,6 +12,7 @@
 			"fileTotalSizeLimitReached": "******",
 			"internalServerError": "******",
 			"invalidAPI": "******",
+			"invalidCaptcha": "******",
 			"invalidEmailsInput": "******",
 			"invalidGraphQLName": "******",
 			"maximumPaginationLimit": "****** {{paginationLimit}} ******",
@@ -257,6 +258,9 @@
 							"notVisible": "******"
 						},
 						"updateRecords": {
+							"notVisible": "******"
+						},
+						"uploadRecords": {
 							"notVisible": "******"
 						}
 					}

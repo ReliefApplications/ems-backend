@@ -128,7 +128,7 @@ export default {
             mainDashboard,
             page.context,
             args.contextEl,
-            context.dataSources
+            context
           ),
           defaultTemplate: true,
         });

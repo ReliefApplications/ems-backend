@@ -22,6 +22,7 @@ export type OperationTypes =
   | SingleOperatorOperationsTypes
   | DoubleOperatorOperationsTypes
   | MultipleOperatorsOperationsTypes
+  | RelatedOperationTypes
   | 'today'
   | 'displayValue';
 
@@ -29,6 +30,34 @@ export type OperationTypes =
 interface DisplayValueOperation {
   operation: 'displayValue';
   fieldName: string;
+}
+
+export type RelatedOperationTypes =
+  | 'relatedValue'
+  | 'relatedCount'
+  | 'relatedExists'
+  | 'relatedSum'
+  | 'relatedMin'
+  | 'relatedMax'
+  | 'relatedAvg';
+
+/**
+ * Operation that aggregates over the records of a related resource linking to
+ * the current record through a reverse link (`relatedName`). All arguments are
+ * literals resolved at build time, not sub-expressions.
+ */
+export interface RelatedOperation {
+  operation: RelatedOperationTypes;
+  /** Reverse link name (the `relatedName` of a resource field pointing at this resource) */
+  relatedName: string;
+  /** Child field whose value is extracted/aggregated (all but relatedCount/relatedExists) */
+  valueField?: string;
+  /** Child field the related records are sorted by before picking the first one (relatedValue) */
+  sortField?: string;
+  /** Sort direction (relatedValue) */
+  sortOrder?: 'asc' | 'desc';
+  /** Optional composite filter (same JSON format as grid filters) applied to the related records */
+  filter?: any;
 }
 
 /** Interface for the 'today' operation */
@@ -97,4 +126,5 @@ export type Operation =
   | TodayOperation
   | SingleOperatorOperation
   | DoubleOperatorOperation
-  | DisplayValueOperation;
+  | DisplayValueOperation
+  | RelatedOperation;

@@ -176,32 +176,23 @@ router.get('/form/records/:id/history', async (req, res) => {
     } = {};
     if (req.query) {
       const { from, to, fields } = req.query as any;
+      const fromTimestamp = parseInt(from, 10);
+      const toTimestamp = parseInt(to, 10);
       filters = Object.assign(
         {},
-        from === 'NaN' ? null : { fromDate: new Date(parseInt(from, 10)) },
-        to === 'NaN' ? null : { toDate: new Date(parseInt(to, 10)) },
+        isNaN(fromTimestamp) ? null : { fromDate: new Date(fromTimestamp) },
+        isNaN(toTimestamp) ? null : { toDate: new Date(toTimestamp) },
         !fields ? null : { fields: fields.split(',') }
       );
-
-      if (filters.toDate) filters.toDate.setDate(filters.toDate.getDate() + 1);
     }
 
     const record: Record = await Record.findOne({
       _id: req.params.id,
       archived: { $ne: true },
-    })
-      .populate({
-        path: 'versions',
-        model: 'Version',
-        populate: {
-          path: 'createdBy',
-          model: 'User',
-        },
-      })
-      .populate({
-        path: 'resource',
-        model: 'Resource',
-      });
+    }).populate({
+      path: 'resource',
+      model: 'Resource',
+    });
     if (!record) {
       return res.status(404).send(req.t('common.errors.dataNotFound'));
     }
@@ -219,7 +210,7 @@ router.get('/form/records/:id/history', async (req, res) => {
     if (form) {
       record.form = form;
       const meta: RecordHistoryMeta = {
-        form: form.name,
+        form: form.name as string,
         record: record.incrementalId,
         fields: filters.fields?.join(',') || '',
         fromDate: filters.fromDate

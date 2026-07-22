@@ -72,6 +72,12 @@ export const FormType = new GraphQLObjectType({
         return parent.core ? parent.core : false;
       },
     },
+    isPublic: {
+      type: GraphQLBoolean,
+      resolve(parent) {
+        return parent.isPublic ? parent.isPublic : false;
+      },
+    },
     records: {
       type: RecordConnectionType,
       args: {

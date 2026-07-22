@@ -8,6 +8,7 @@ import {
   OperationTypeMap,
 } from '@utils/aggregation/expressionFromString';
 import { findDuplicateFields } from '@utils/form';
+import { CalculatedFieldService } from '@services/calculatedField.service';
 import { GraphQLError, GraphQLID, GraphQLList, GraphQLNonNull } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { get, has, isArray, isEqual, isNil } from 'lodash';
@@ -160,7 +161,11 @@ const checkFieldPermission = (
           )
         );
       }
-      if (!get(field, 'permissions.canSee', []).find((p) => p.equals(role))) {
+      if (
+        !get(field, 'permissions.canSee', []).find(
+          (p: any) => String(p) === String(role)
+        )
+      ) {
         throw new GraphQLError(
           context.i18next.t('mutations.resource.edit.errors.field.notVisible')
         );
@@ -210,6 +215,7 @@ const checkPermission = (
 ) => {
   switch (permission) {
     case resourcePermission.DOWNLOAD_RECORDS:
+    case resourcePermission.UPLOAD_RECORDS:
     case resourcePermission.UPDATE_RECORDS: {
       // If there is a global see permission for this role it should be okay.
       if (
@@ -237,6 +243,12 @@ const checkPermission = (
         throw new GraphQLError(
           context.i18next.t(
             'mutations.resource.edit.errors.permission.downloadRecords.notVisible'
+          )
+        );
+      } else if (permission === resourcePermission.UPLOAD_RECORDS) {
+        throw new GraphQLError(
+          context.i18next.t(
+            'mutations.resource.edit.errors.permission.uploadRecords.notVisible'
           )
         );
       } else {
@@ -380,9 +392,11 @@ const removeFieldPermission = (
 ) => {
   const fieldIndex = fields.findIndex((r) => r.name === fieldName);
   if (fieldIndex === -1) return;
+  // Roles can be stored as either strings or ObjectIds, so pull both forms
   const pullRoles = {
-    [`fields.${fieldIndex}.permissions.${permission}`]:
-      new mongoose.Types.ObjectId(role),
+    [`fields.${fieldIndex}.permissions.${permission}`]: {
+      $in: [role, new mongoose.Types.ObjectId(role)],
+    },
   };
 
   const hasFieldPermissions = !isNil(fields[fieldIndex].permissions);
@@ -724,15 +738,37 @@ export default {
       if (args.calculatedField) {
         const calculatedField: CalculatedFieldChange = args.calculatedField;
 
+        // Validates an expression aggregating over a related resource —
+        // reverse link and child fields must exist — and derives its type
+        // from the child value field. Fails at save time rather than at
+        // query time.
+        const getRelatedExpressionType = async (expression: string) => {
+          const service = new CalculatedFieldService(
+            resource,
+            context,
+            context.timeZone,
+            context.user?.attributes || {}
+          );
+          try {
+            await service.build(expression, 'validation');
+            return await service.getExpressionType(expression);
+          } catch (err) {
+            throw new GraphQLError(getErrorMessage(err));
+          }
+        };
+
         // Add new calculated field
         if (calculatedField.add) {
           const expression = getExpressionFromString(
             calculatedField.add.expression
           );
-          const type =
-            expression.type === 'expression'
-              ? OperationTypeMap[expression.value.operation] ?? 'text'
-              : 'text';
+          const type = CalculatedFieldService.hasRelatedOperation(
+            calculatedField.add.expression
+          )
+            ? await getRelatedExpressionType(calculatedField.add.expression)
+            : expression.type === 'expression'
+            ? OperationTypeMap[expression.value.operation] ?? 'text'
+            : 'text';
           const pushCalculatedField = {
             fields: {
               isCalculated: true,
@@ -775,10 +811,13 @@ export default {
           const expression = getExpressionFromString(
             calculatedField.update.expression
           );
-          const type =
-            expression.type === 'expression'
-              ? OperationTypeMap[expression.value.operation] ?? 'text'
-              : 'text';
+          const type = CalculatedFieldService.hasRelatedOperation(
+            calculatedField.update.expression
+          )
+            ? await getRelatedExpressionType(calculatedField.update.expression)
+            : expression.type === 'expression'
+            ? OperationTypeMap[expression.value.operation] ?? 'text'
+            : 'text';
 
           const oldField = allResourceFields.find(
             (field) => field.name === calculatedField.update.oldName

@@ -213,6 +213,8 @@ export default {
       if (args.structure && !isEqual(form.structure, args.structure)) {
         update.structure = args.structure;
         const structure = JSON.parse(args.structure);
+        // Public status is defined in the form definition itself, extract it on save
+        update.isPublic = structure?.isPublic === true;
         const fields = [];
         const pages =
           structure && Array.isArray(structure.pages) ? structure.pages : [];
@@ -289,7 +291,7 @@ export default {
               // Set default permissions based on access to the resource
               newField.permissions = {
                 canSee: resource.permissions.canSee,
-                canUpdate: resource.permissions.canSee,
+                canUpdate: resource.permissions.canUpdate,
               };
               oldFields.push(newField); // Add this field to the list of the resource's fields
             } else {

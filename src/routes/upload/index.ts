@@ -10,7 +10,6 @@ import {
   Application,
 } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
-import { Types } from 'mongoose';
 import { getUploadColumns, loadRow, uploadFile } from '@utils/files';
 import { getNextId } from '@utils/form';
 import i18next from 'i18next';
@@ -49,19 +48,27 @@ async function insertRecords(
   // Check if the user is authorized
   const ability: AppAbility = context.user.ability;
   let canCreate = false;
-  if (ability.can('create', 'Record')) {
+  if (ability.can('create', 'Record') || ability.can('upload', 'Record')) {
     canCreate = true;
   } else {
-    const roles = context.user.roles.map((x) => new Types.ObjectId(x._id));
-    const canCreateRoles = get(
+    // Populate resource on form if not populated to access permissions
+    if (form.resource && !form.resource.permissions) {
+      await form.populate('resource');
+    }
+    const roles = context.user.roles.map((x) => String(x._id));
+
+    const canUploadRoles = get(
       form,
-      'resource.permissions.canCreateRecords',
+      'resource.permissions.canUploadRecords',
       []
-    );
-    canCreate =
-      canCreateRoles.length > 0
-        ? canCreateRoles.some((x) => roles.includes(x))
-        : true;
+    ).map((x: any) => String(x.role || x));
+
+    const hasUploadRole =
+      canUploadRoles.length > 0
+        ? canUploadRoles.some((x) => roles.includes(x))
+        : false;
+
+    canCreate = hasUploadRole;
   }
   // Check unicity of record
   // TODO: this is always breaking
@@ -89,18 +96,21 @@ async function insertRecords(
       }
     });
 
+    // Resource may have been populated by the permission check above,
+    // so only keep its id
+    const structureId = String(
+      form.resource ? get(form.resource, '_id', form.resource) : form.id
+    );
     // Create records one by one so the incrementalId works correctly
     for (const dataSet of dataSets) {
       records.push(
         new Record({
-          incrementalId: await getNextId(
-            String(form.resource ? form.resource : form.id)
-          ),
+          incrementalId: await getNextId(structureId),
           form: form.id,
           // createdAt: new Date(),
           // modifiedAt: new Date(),
           data: dataSet.data,
-          resource: form.resource ? form.resource : null,
+          resource: form.resource ? structureId : null,
           createdBy: {
             positionAttributes: dataSet.positionAttributes,
             user: context.user._id,

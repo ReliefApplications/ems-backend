@@ -20,7 +20,6 @@ import { getRowsFromMeta } from './getRowsFromMeta';
 import { Response } from 'express';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { accessibleBy } from '@casl/mongoose';
-import getSearchFilter from '@utils/schema/resolvers/Query/getSearchFilter';
 import getSortAggregation from '@utils/schema/resolvers/Query/getSortAggregation';
 import dataSources from '@server/apollo/dataSources';
 import sanitizeHtml from 'sanitize-html';
@@ -442,13 +441,7 @@ export default class Exporter {
     const filters = {
       $and: [basicFilters, mongooseFilter, permissionFilters],
     };
-    const searchFilter = getSearchFilter(
-      this.params.filter,
-      this.resource.fields,
-      context
-    );
     const pipeline: any = [
-      ...(searchFilter ? [searchFilter] : []),
       { $match: filters },
       { $limit: this.params.limit || Number.MAX_SAFE_INTEGER },
     ];

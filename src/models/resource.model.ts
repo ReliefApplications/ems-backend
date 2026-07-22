@@ -23,6 +23,7 @@ export interface Resource extends Document {
     canUpdateRecords?: any[];
     canDeleteRecords?: any[];
     canDownloadRecords?: any[];
+    canUploadRecords?: any[];
   };
   fields: {
     permissions?: {
@@ -103,6 +104,16 @@ const resourceSchema = new Schema<Resource>(
         },
       ],
       canDownloadRecords: [
+        {
+          role: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role',
+          },
+          access: mongoose.Schema.Types.Mixed,
+          _id: false,
+        },
+      ],
+      canUploadRecords: [
         {
           role: {
             type: mongoose.Schema.Types.ObjectId,
