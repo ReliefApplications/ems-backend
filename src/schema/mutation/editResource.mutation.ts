@@ -57,6 +57,18 @@ type FieldPermissionChange = {
   canUpdate?: SimpleFieldPermissionChange;
 };
 
+/** Simple fields auto-grant permission change type */
+type SimpleFieldsAutoGrantChange = {
+  add?: string[];
+  remove?: string[];
+};
+
+/** Type for the fieldsAutoGrant argument */
+type FieldsAutoGrantChange = {
+  canSee?: SimpleFieldsAutoGrantChange;
+  canUpdate?: SimpleFieldsAutoGrantChange;
+};
+
 /** Type for the calculated field argument */
 type CalculatedFieldChange = {
   add?: { name: string; expression: string };
@@ -175,6 +187,42 @@ const checkFieldPermission = (
     default: {
       break;
     }
+  }
+};
+
+/**
+ * Check that a role attempting to (re-)enable a fields-auto-grant permission
+ * already has the corresponding view/edit permission on the resource's
+ * records, either globally or via a filter.
+ *
+ * @param context graphql context
+ * @param resourcePermissions resource permissions
+ * @param role role to check
+ * @param permission fields-auto-grant permission to enable ( canSee or canUpdate )
+ */
+const checkFieldsAutoGrantPermission = (
+  context: any,
+  resourcePermissions: any,
+  role: string,
+  permission: 'canSee' | 'canUpdate'
+) => {
+  const requiredFamilies =
+    permission === 'canSee'
+      ? [resourcePermission.SEE_RECORDS, resourcePermission.CREATE_RECORDS]
+      : [resourcePermission.UPDATE_RECORDS, resourcePermission.CREATE_RECORDS];
+
+  const hasPermission = requiredFamilies.some((family) =>
+    get(resourcePermissions, family, []).find((p) => p.role.equals(role))
+  );
+
+  if (!hasPermission) {
+    throw new GraphQLError(
+      context.i18next.t(
+        permission === 'canSee'
+          ? 'mutations.resource.edit.errors.fieldsAutoGrant.missingReadPermissionOnResource'
+          : 'mutations.resource.edit.errors.fieldsAutoGrant.missingWritePermissionOnResource'
+      )
+    );
   }
 };
 
@@ -452,6 +500,31 @@ const removeResourcePermission = (
 };
 
 /**
+ * Remove a role from a fields-auto-grant opt-out list, so that if the role's
+ * view/edit permission is re-granted later, auto-grant of new fields starts
+ * fresh at the default ( on ) rather than remembering a stale opt-out.
+ *
+ * @param update update document
+ * @param role role to clear the opt-out for
+ * @param permission fields-auto-grant permission to clear ( canSee or canUpdate )
+ */
+const clearFieldsAutoGrantOptOut = (
+  update: any,
+  role: string,
+  permission: 'canSee' | 'canUpdate'
+) => {
+  const key =
+    permission === 'canSee'
+      ? 'fieldsAutoGrantCanSeeOptOut'
+      : 'fieldsAutoGrantCanUpdateOptOut';
+  const pullRoles = {
+    [`permissions.${key}`]: new mongoose.Types.ObjectId(role),
+  };
+  if (update.$pull) Object.assign(update.$pull, pullRoles);
+  else Object.assign(update, { $pull: pullRoles });
+};
+
+/**
  * Apply common sense rules on fields.
  * If user cannot edit nor create new records, it should be not able to edit the fields
  * If user cannot see records, it should not be able to see the fields
@@ -496,6 +569,7 @@ const clearFieldsPermission = (
               'canUpdate'
             )
           );
+        clearFieldsAutoGrantOptOut(update, change.role, 'canUpdate');
       }
       break;
     }
@@ -522,6 +596,7 @@ const clearFieldsPermission = (
               'canUpdate'
             )
           );
+        clearFieldsAutoGrantOptOut(update, change.role, 'canUpdate');
       }
       // Make sure that user does not have any see permission on resource
       if (
@@ -545,6 +620,7 @@ const clearFieldsPermission = (
               'canSee'
             )
           );
+        clearFieldsAutoGrantOptOut(update, change.role, 'canSee');
       }
       break;
     }
@@ -571,6 +647,7 @@ const clearFieldsPermission = (
               'canSee'
             )
           );
+        clearFieldsAutoGrantOptOut(update, change.role, 'canSee');
       }
       break;
     }
@@ -586,6 +663,7 @@ type EditResourceArgs = {
   fields: any;
   permissions?: any;
   fieldsPermissions?: any;
+  fieldsAutoGrant?: any;
   calculatedField?: any;
 };
 
@@ -600,6 +678,7 @@ export default {
     fields: { type: new GraphQLList(GraphQLJSON) },
     permissions: { type: GraphQLJSON },
     fieldsPermissions: { type: GraphQLJSON },
+    fieldsAutoGrant: { type: GraphQLJSON },
     calculatedField: { type: GraphQLJSON },
   },
   async resolve(parent, args: EditResourceArgs, context: Context) {
@@ -611,7 +690,8 @@ export default {
         (!args.fields &&
           !args.permissions &&
           !args.calculatedField &&
-          !args.fieldsPermissions)
+          !args.fieldsPermissions &&
+          !args.fieldsAutoGrant)
       ) {
         throw new GraphQLError(
           context.i18next.t('mutations.resource.edit.errors.invalidArguments')
@@ -730,6 +810,35 @@ export default {
                 permission
               );
             });
+          }
+        }
+      }
+
+      // Updating fields auto-grant ( opt-out of the default auto-grant behavior )
+      if (args.fieldsAutoGrant) {
+        const permissions: FieldsAutoGrantChange = args.fieldsAutoGrant;
+        for (const permission of ['canSee', 'canUpdate'] as const) {
+          const obj = permissions[permission];
+          if (!obj) continue;
+          const optOutKey =
+            permission === 'canSee'
+              ? 'fieldsAutoGrantCanSeeOptOut'
+              : 'fieldsAutoGrantCanUpdateOptOut';
+          // Enabling auto-grant: opt the role(s) back in ( remove from opt-out list )
+          if (obj.add && obj.add.length) {
+            obj.add.forEach((role) =>
+              checkFieldsAutoGrantPermission(
+                context,
+                get(resource, 'permissions'),
+                role,
+                permission
+              )
+            );
+            removeResourcePermission(update, obj.add, optOutKey);
+          }
+          // Disabling auto-grant: opt the role(s) out
+          if (obj.remove && obj.remove.length) {
+            addResourcePermission(update, obj.remove, optOutKey);
           }
         }
       }

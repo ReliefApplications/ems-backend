@@ -31,6 +31,34 @@ import { resourcePermission } from '../../types/permission';
 import { Connection, decodeCursor, encodeCursor } from './pagination.type';
 
 /**
+ * Resolve whether a role has an effective fields-auto-grant permission.
+ * Auto-grant is opt-out: it's implicitly on for any role that has the
+ * corresponding record permission (global or filtered), unless the role
+ * has been explicitly added to the opt-out list.
+ *
+ * @param resourcePermissions resource permissions
+ * @param recordPermissionNames record permission(s) that make the role eligible
+ * @param optOutKey name of the opt-out array on resourcePermissions
+ * @param role active role
+ * @returns whether auto-grant is currently effective for this role
+ */
+const fieldsAutoGrantResolver = (
+  resourcePermissions: any,
+  recordPermissionNames: string[],
+  optOutKey: string,
+  role: string
+) => {
+  const isEligible = recordPermissionNames.some((name) =>
+    get(resourcePermissions, name, []).some((p: any) => p.role.equals(role))
+  );
+  if (!isEligible) return false;
+  const isOptedOut = get(resourcePermissions, optOutKey, []).some((r: any) =>
+    r.equals(role)
+  );
+  return !isOptedOut;
+};
+
+/**
  * Resolve single permission
  *
  * @param name name of permission
@@ -130,6 +158,24 @@ export const ResourceType = new GraphQLObjectType({
             canUploadRecords: rolePermissionResolver(
               resourcePermission.UPLOAD_RECORDS,
               parent.permissions,
+              args.role
+            ),
+            autoGrantFieldsCanSee: fieldsAutoGrantResolver(
+              parent.permissions,
+              [
+                resourcePermission.SEE_RECORDS,
+                resourcePermission.CREATE_RECORDS,
+              ],
+              'fieldsAutoGrantCanSeeOptOut',
+              args.role
+            ),
+            autoGrantFieldsCanUpdate: fieldsAutoGrantResolver(
+              parent.permissions,
+              [
+                resourcePermission.UPDATE_RECORDS,
+                resourcePermission.CREATE_RECORDS,
+              ],
+              'fieldsAutoGrantCanUpdateOptOut',
               args.role
             ),
           };
