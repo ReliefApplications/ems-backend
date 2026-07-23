@@ -2,6 +2,7 @@ import axios from 'axios';
 import config from 'config';
 import NodeCache from 'node-cache';
 import { logger } from '@services/logger.service';
+import { getToken } from '@utils/commonServices';
 
 /** In-memory cache for service tokens keyed by clientId + scope */
 const cache = new NodeCache();
@@ -76,14 +77,13 @@ const fetchToken = async (
 };
 
 /**
- * Get both tokens needed by the Function:
- * - Authorization: token to call our backend API (backendScope)
- * - accesstoken: token to call Common Services API (csScope)
- */
-/**
  * Get both tokens needed by the Azure Function execution:
- * - authorization: token to call our backend API
- * - accesstoken: token to call Common Services API
+ * - authorization: token the Function uses to call our backend API and fetch
+ *   resource data (audience api://{clientId})
+ * - accesstoken: token the Function uses to call the Common Services API
+ *
+ * Both are minted from the shared Common Services credentials; the Common
+ * Services token is delegated to the established commonServices.getToken().
  *
  * @returns object with optional authorization and accesstoken
  */
@@ -92,31 +92,16 @@ export const getAzureFunctionTokens = async (): Promise<{
   accesstoken?: string;
 }> => {
   const creds: ClientCredentialsConfig = {
-    tokenUrl: config.get<string>('email.serverless.auth.accessTokenUrl'),
-    clientId: config.get<string>('email.serverless.auth.clientId'),
-    clientSecret: config.get<string>('email.serverless.auth.clientSecret'),
+    tokenUrl: config.get<string>('commonServices.tokenEndpoint'),
+    clientId: config.get<string>('commonServices.clientId'),
+    clientSecret: config.get<string>('commonServices.clientSecret'),
   };
+  const backendScope = `api://${creds.clientId}/.default`;
 
-  // Build backend scope from CLIENT_ID
-  const resolvedBackendScope = `api://${creds.clientId}/.default`;
-  // CS scope from config
-  const resolvedCsScope = config.get<string>('email.serverless.auth.csScope');
+  const [authorization, accesstoken] = await Promise.all([
+    fetchToken(creds, backendScope),
+    getToken(),
+  ]);
 
-  let authToken: string | undefined;
-  let csToken: string | undefined;
-  if (resolvedBackendScope && resolvedBackendScope === resolvedCsScope) {
-    const token = await fetchToken(creds, resolvedBackendScope);
-    authToken = token;
-    csToken = token;
-  } else {
-    [authToken, csToken] = await Promise.all([
-      fetchToken(creds, resolvedBackendScope),
-      fetchToken(creds, resolvedCsScope),
-    ]);
-  }
-
-  return {
-    authorization: authToken,
-    accesstoken: csToken,
-  };
+  return { authorization, accesstoken };
 };
