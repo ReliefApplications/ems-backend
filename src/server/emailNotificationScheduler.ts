@@ -1,5 +1,6 @@
 import { EmailNotification } from '@models';
 import type { EmailNotification as EmailNotificationDoc } from '@models/emailNotification.model';
+import { customNotificationLastExecutionStatus } from '@const/enumTypes';
 import { logger } from '@services/logger.service';
 import axios from 'axios';
 import config from 'config';
@@ -64,14 +65,20 @@ export const createCronJob = (notification: EmailNotificationDoc) => {
         }
 
         await EmailNotification.findByIdAndUpdate(id, {
-          $set: { lastExecution: new Date(), lastExecutionStatus: 'success' },
+          $set: {
+            lastExecution: new Date(),
+            lastExecutionStatus: customNotificationLastExecutionStatus.success,
+          },
         }).exec();
       } catch (error) {
         logger.error(`Scheduled email failed for ${id}: ${error.message}`, {
           stack: error.stack,
         });
         await EmailNotification.findByIdAndUpdate(id, {
-          $set: { lastExecution: new Date(), lastExecutionStatus: 'failed' },
+          $set: {
+            lastExecution: new Date(),
+            lastExecutionStatus: customNotificationLastExecutionStatus.error,
+          },
         }).exec();
       }
     },
