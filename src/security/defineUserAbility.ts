@@ -57,7 +57,10 @@ export type Actions =
   // application specific
   | 'manageUsers'
   | 'download'
-  | 'upload';
+  | 'upload'
+  // allowed to delete already-persisted files on a field (as opposed to
+  // only flagging them as outdated), see the "outdated files" file field option
+  | 'deleteFiles';
 
 /** Define subjects types for casl */
 type Models =

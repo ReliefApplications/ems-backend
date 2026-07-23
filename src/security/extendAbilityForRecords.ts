@@ -28,15 +28,21 @@ const appAbility = Ability as AbilityClass<AppAbility>;
  * @returns A boolean indicating if the user has the permission
  */
 function userCanAccessField(
-  type: 'read' | 'update',
+  type: 'read' | 'update' | 'deleteFiles',
   user: User,
   field: any
 ): boolean {
   if (field === undefined) return false;
-  const arrayToCheck = type === 'read' ? 'canSee' : 'canUpdate';
+  const arrayToCheck =
+    type === 'read'
+      ? 'canSee'
+      : type === 'deleteFiles'
+      ? 'canDeleteFiles'
+      : 'canUpdate';
 
   // If the readOnly property of the field is true, ignore the permission check to update the records
-  if (arrayToCheck === 'canUpdate') {
+  // (also applies to deleting files: a read-only field cannot be modified at all)
+  if (arrayToCheck === 'canUpdate' || arrayToCheck === 'canDeleteFiles') {
     if (field.readOnly) {
       return false;
     }
@@ -83,7 +89,7 @@ export function userHasRoleFor(
  * @returns list of accessible fields for type
  */
 function getAccessibleFields(
-  type: 'read' | 'update',
+  type: 'read' | 'update' | 'deleteFiles',
   user: User,
   resource: Resource
 ): string[] {
@@ -158,6 +164,13 @@ function extendAbilityForRecordsOnForm(
     // Get all accessible fields
     const readableFields = getAccessibleFields('read', user, resource);
     const editableFields = getAccessibleFields('update', user, resource);
+    // Fields (file questions) on which the user is allowed to delete files
+    // outright, rather than only flag them as outdated
+    const fileDeletableFields = getAccessibleFields(
+      'deleteFiles',
+      user,
+      resource
+    );
 
     // create a new record
     if (userHasRoleFor(resourcePermission.CREATE_RECORDS, user, resource)) {
@@ -236,6 +249,14 @@ function extendAbilityForRecordsOnForm(
     if (editableFields.length > 0) {
       can('update', 'Resource', editableFields, { _id: resource._id });
       can('update', 'Form', editableFields, { _id: form._id });
+    }
+    // Fields on which the user can delete already-persisted files (as
+    // opposed to only flagging them as outdated)
+    if (fileDeletableFields.length > 0) {
+      can('deleteFiles', 'Resource', fileDeletableFields, {
+        _id: resource._id,
+      });
+      can('deleteFiles', 'Form', fileDeletableFields, { _id: form._id });
     }
 
     // return the new ability instance

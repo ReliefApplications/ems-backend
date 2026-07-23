@@ -55,6 +55,7 @@ type SimpleFieldPermissionChange = {
 type FieldPermissionChange = {
   canSee?: SimpleFieldPermissionChange;
   canUpdate?: SimpleFieldPermissionChange;
+  canDeleteFiles?: SimpleFieldPermissionChange;
 };
 
 /** Type for the calculated field argument */
@@ -89,6 +90,7 @@ const addFieldPermission = (
       [`fields.${fieldIndex}.permissions`]: {
         canSee: [],
         canUpdate: [],
+        canDeleteFiles: [],
       },
     };
     if (update.$set) Object.assign(update.$set, newPermission);
@@ -146,7 +148,8 @@ const checkFieldPermission = (
       }
       break;
     }
-    case 'canUpdate': {
+    case 'canUpdate':
+    case 'canDeleteFiles': {
       if (
         !get(resourcePermissions, resourcePermission.CREATE_RECORDS, []).find(
           (p) => p.role.equals(role)
