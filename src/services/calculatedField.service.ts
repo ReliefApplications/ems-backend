@@ -14,7 +14,9 @@ import {
   getExpressionFromString,
   OperationTypeMap,
 } from '@utils/aggregation/expressionFromString';
-import getFilter from '@utils/schema/resolvers/Query/getFilter';
+import getFilter, {
+  extractFilterFields,
+} from '@utils/schema/resolvers/Query/getFilter';
 import { getFullChoices } from '@utils/form/getDisplayText';
 import { ApiConfiguration, ReferenceData, Resource } from '@models';
 import { CustomAPI } from '@server/apollo/dataSources';
@@ -56,6 +58,13 @@ type RelatedContext = {
   parentFieldName?: string;
   /** Child resource fields, used to compile the optional filter argument */
   childFields: any[];
+  /**
+   * Fields of the resources targeted by the child's own `resource` fields
+   * used with dot notation in the filter argument, keyed by resource id.
+   * Consumed by getFilter to resolve the type of `<linkedField>.<subField>`
+   * filter paths.
+   */
+  childResourceFieldsById: Record<string, any[]>;
 };
 
 /** Record-level (non-data) fields accepted as value/sort fields of `calc.related*` */
@@ -157,9 +166,11 @@ export class CalculatedFieldService {
     const referenced = new Set<string>();
     this.collectDisplayValueFields(parsed, referenced);
     const choiceMaps = await this.prefetchChoiceMaps(referenced);
-    const relatedNames = new Set<string>();
-    this.collectRelatedNames(parsed, relatedNames);
-    const relatedContexts = await this.prefetchRelatedContexts(relatedNames);
+    const relatedOperations: RelatedOperation[] = [];
+    this.collectRelatedOperations(parsed, relatedOperations);
+    const relatedContexts = await this.prefetchRelatedContexts(
+      relatedOperations
+    );
 
     if (parsed.type === 'expression') {
       return this.buildPipeline(
@@ -240,9 +251,7 @@ export class CalculatedFieldService {
     ) {
       if (RELATED_INFO_FIELDS[operation.valueField])
         return operation.valueField === 'incrementalId' ? 'text' : 'date';
-      const relatedContexts = await this.prefetchRelatedContexts(
-        new Set([operation.relatedName])
-      );
+      const relatedContexts = await this.prefetchRelatedContexts([operation]);
       const childField = relatedContexts[
         operation.relatedName
       ].childFields.find((f: any) => f.name === operation.valueField);
@@ -253,27 +262,30 @@ export class CalculatedFieldService {
   }
 
   /**
-   * Recursively collect every related name referenced by a `calc.related*(...)`
-   * inside the expression so the reverse links can be resolved upfront.
+   * Recursively collect every `calc.related*(...)` operation inside the
+   * expression so the links (and the linked fields used by their filters) can
+   * be resolved upfront.
    *
    * @param op Operator subtree to walk
-   * @param acc Accumulator set, mutated in place with the related names found
+   * @param acc Accumulator array, mutated in place with the operations found
    */
-  private collectRelatedNames(op: Operator, acc: Set<string>) {
+  private collectRelatedOperations(op: Operator, acc: RelatedOperation[]) {
     if (op.type !== 'expression') return;
     const operation = op.value;
     if ('relatedName' in operation) {
-      acc.add(operation.relatedName);
+      acc.push(operation);
       return;
     }
     if ('operator' in operation && operation.operator)
-      this.collectRelatedNames(operation.operator, acc);
+      this.collectRelatedOperations(operation.operator, acc);
     if ('operator1' in operation)
-      this.collectRelatedNames(operation.operator1, acc);
+      this.collectRelatedOperations(operation.operator1, acc);
     if ('operator2' in operation)
-      this.collectRelatedNames(operation.operator2, acc);
+      this.collectRelatedOperations(operation.operator2, acc);
     if ('operators' in operation)
-      operation.operators.forEach((sub) => this.collectRelatedNames(sub, acc));
+      operation.operators.forEach((sub) =>
+        this.collectRelatedOperations(sub, acc)
+      );
   }
 
   /**
@@ -284,13 +296,13 @@ export class CalculatedFieldService {
    * resource pointing at the current one (reverse link — the linked records
    * store the current record's id).
    *
-   * @param relatedNames Related names referenced by `calc.related*(...)`
+   * @param relatedOperations `calc.related*(...)` operations found in the expression
    * @returns Map of related name → resolved related context
    */
   private async prefetchRelatedContexts(
-    relatedNames: Set<string>
+    relatedOperations: RelatedOperation[]
   ): Promise<Record<string, RelatedContext>> {
-    if (relatedNames.size === 0) return {};
+    if (relatedOperations.length === 0) return {};
     const resource = this.resource;
     if (!resource || !resource._id)
       throw new Error(
@@ -298,16 +310,86 @@ export class CalculatedFieldService {
       );
     const resourceId = String(resource._id);
 
+    const operationsByName = new Map<string, RelatedOperation[]>();
+    for (const operation of relatedOperations) {
+      operationsByName.set(operation.relatedName, [
+        ...(operationsByName.get(operation.relatedName) || []),
+        operation,
+      ]);
+    }
+
     const entries = await Promise.all(
-      Array.from(relatedNames).map(
-        async (relatedName) =>
-          [
-            relatedName,
-            await this.resolveRelatedContext(resourceId, relatedName),
-          ] as const
+      Array.from(operationsByName.entries()).map(
+        async ([relatedName, operations]) => {
+          const relatedContext = await this.resolveRelatedContext(
+            resourceId,
+            relatedName
+          );
+          relatedContext.childResourceFieldsById =
+            await this.prefetchChildLinkedFields(relatedContext, operations);
+          return [relatedName, relatedContext] as const;
+        }
       )
     );
     return Object.fromEntries(entries);
+  }
+
+  /**
+   * Resolve the fields of the resources targeted by the child's own
+   * `resource` fields used with dot notation in the filter arguments (e.g. a
+   * filter on `country.name` needs the fields of the resource targeted by the
+   * child's `country` field), so getFilter can type the nested filter paths.
+   *
+   * @param relatedContext Resolved related context (for the child fields)
+   * @param operations Operations aggregating over this related name
+   * @returns Map of linked resource id → its fields
+   */
+  private async prefetchChildLinkedFields(
+    relatedContext: RelatedContext,
+    operations: RelatedOperation[]
+  ): Promise<Record<string, any[]>> {
+    const linkedFields = this.getLinkedChildFields(
+      relatedContext.childFields,
+      operations
+    );
+    if (linkedFields.length === 0) return {};
+    const linkedResources = await Resource.find(
+      {
+        _id: {
+          $in: [...new Set(linkedFields.map((f: any) => String(f.resource)))],
+        },
+      },
+      { fields: 1 }
+    );
+    return Object.fromEntries(
+      linkedResources.map((linked: any) => [String(linked._id), linked.fields])
+    );
+  }
+
+  /**
+   * Lists the child's `resource` fields used with dot notation
+   * (`<linkedField>.<subField>`) by the filter argument of the given
+   * operations — the fields whose linked record must be joined inside the
+   * lookup sub-pipeline for the filter to resolve.
+   *
+   * @param childFields Fields of the related (child) resource
+   * @param operations Operations whose filters should be inspected
+   * @returns The child's `resource` fields used by the filters
+   */
+  private getLinkedChildFields(
+    childFields: any[],
+    operations: RelatedOperation[]
+  ): any[] {
+    const usedNames = new Set<string>();
+    for (const operation of operations) {
+      if (!operation.filter) continue;
+      for (const field of extractFilterFields(operation.filter)) {
+        if (field.includes('.')) usedNames.add(field.split('.')[0]);
+      }
+    }
+    return childFields.filter(
+      (f: any) => usedNames.has(f.name) && f.type === 'resource' && f.resource
+    );
   }
 
   /**
@@ -343,6 +425,7 @@ export class CalculatedFieldService {
         childResourceId: child._id,
         parentFieldName: ownField.name,
         childFields: child.fields,
+        childResourceFieldsById: {},
       };
     }
 
@@ -376,6 +459,7 @@ export class CalculatedFieldService {
       childResourceId: matches[0].child._id,
       childFieldName: matches[0].field.name,
       childFields: matches[0].child.fields,
+      childResourceFieldsById: {},
     };
   }
 
@@ -584,6 +668,52 @@ export class CalculatedFieldService {
   }
 
   /**
+   * Build the sub-pipeline stages joining the record linked through a child
+   * `resource` field into a `_<fieldName>` alias — the same alias (and
+   * stages) the records query builds — so a filter on
+   * `<fieldName>.<subField>` (rewritten by getFilter to
+   * `_<fieldName>.data.<subField>` or `_<fieldName>.<subField>`) resolves
+   * inside the `calc.related*` lookup sub-pipeline.
+   *
+   * @param fieldName Name of the child `resource` field carrying the link
+   * @returns Aggregation stages populating the `_<fieldName>` alias
+   */
+  private buildChildLinkedRecordStages(fieldName: string): any[] {
+    return [
+      {
+        $addFields: {
+          [`data.${fieldName}_id`]: {
+            $convert: {
+              input: `$data.${fieldName}`,
+              to: 'objectId',
+              onError: null,
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: 'records',
+          localField: `data.${fieldName}_id`,
+          foreignField: '_id',
+          as: `_${fieldName}`,
+        },
+      },
+      {
+        $unwind: {
+          path: `$_${fieldName}`,
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $addFields: {
+          [`_${fieldName}.id`]: { $toString: `$_${fieldName}._id` },
+        },
+      },
+    ];
+  }
+
+  /**
    * Build the stages for a `related*` operation: a `$lookup` joining the
    * records of the related resource that link back to the current record
    * (child stores the parent id in `data.<childFieldName>`), whose
@@ -621,17 +751,38 @@ export class CalculatedFieldService {
       resource: ctx.childResourceId,
       archived: { $ne: true },
     };
+    // Child `resource` fields used with dot notation by the filter need their
+    // linked record joined inside the sub-pipeline (same `_<field>` alias the
+    // records query builds), so getFilter's rewritten paths resolve
+    const linkedChildFields = op.filter
+      ? this.getLinkedChildFields(ctx.childFields, [op])
+      : [];
+    const linkedChildStages = linkedChildFields.flatMap((field: any) =>
+      this.buildChildLinkedRecordStages(field.name)
+    );
     const filterMatch = op.filter
-      ? getFilter(op.filter, ctx.childFields, this.context)
+      ? getFilter(op.filter, ctx.childFields, {
+          ...this.context,
+          resourceFieldsById: ctx.childResourceFieldsById,
+        })
       : {};
-    const subPipeline: any[] = [
-      {
-        $match:
-          Object.keys(filterMatch).length > 0
-            ? { $and: [baseMatch, filterMatch] }
-            : baseMatch,
-      },
-    ];
+    const subPipeline: any[] =
+      linkedChildStages.length > 0
+        ? [
+            { $match: baseMatch },
+            ...linkedChildStages,
+            ...(Object.keys(filterMatch).length > 0
+              ? [{ $match: filterMatch }]
+              : []),
+          ]
+        : [
+            {
+              $match:
+                Object.keys(filterMatch).length > 0
+                  ? { $and: [baseMatch, filterMatch] }
+                  : baseMatch,
+            },
+          ];
 
     let extract: any;
     switch (op.operation) {

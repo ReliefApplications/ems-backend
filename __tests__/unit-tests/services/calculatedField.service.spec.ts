@@ -870,6 +870,7 @@ describe('CalculatedFieldService', () => {
         { name: 'active', type: 'boolean' },
         { name: 'grade', type: 'numeric' },
         { name: 'graded_on', type: 'datetime' },
+        { name: 'country', type: 'resource', resource: 'countryResourceId' },
       ],
     };
 
@@ -1028,6 +1029,56 @@ describe('CalculatedFieldService', () => {
         archived: { $ne: true },
       });
       expect(JSON.stringify(match.$and[1])).toContain('data.active');
+    });
+
+    it('joins the child linked record inside the sub-pipeline to filter on a resource subfield', async () => {
+      findSpy.mockImplementation((query: any) =>
+        Promise.resolve(
+          query._id
+            ? [
+                {
+                  _id: 'countryResourceId',
+                  fields: [{ name: 'name', type: 'text' }],
+                },
+              ]
+            : [team]
+        )
+      );
+      const pipeline = await buildRelated(
+        '{{calc.relatedCount(\'teams\'; \'{"field":"country.name","operator":"eq","value":"France"}\')}}',
+        'french_teams'
+      );
+      // The fields of the linked resource are prefetched to type the filter
+      expect(findSpy).toHaveBeenCalledWith(
+        { _id: { $in: ['countryResourceId'] } },
+        { fields: 1 }
+      );
+      expect((pipeline[1] as any).$lookup.pipeline).toEqual([
+        { $match: { resource: 'teamResourceId', archived: { $ne: true } } },
+        {
+          $addFields: {
+            'data.country_id': {
+              $convert: {
+                input: '$data.country',
+                to: 'objectId',
+                onError: null,
+              },
+            },
+          },
+        },
+        {
+          $lookup: {
+            from: 'records',
+            localField: 'data.country_id',
+            foreignField: '_id',
+            as: '_country',
+          },
+        },
+        { $unwind: { path: '$_country', preserveNullAndEmptyArrays: true } },
+        { $addFields: { '_country.id': { $toString: '$_country._id' } } },
+        { $match: { '_country.data.name': { $eq: 'France' } } },
+        { $count: 'v' },
+      ]);
     });
 
     it('composes inside another operation by emitting the $lookup as an aux dependency', async () => {

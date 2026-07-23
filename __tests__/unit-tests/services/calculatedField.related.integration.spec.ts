@@ -66,6 +66,10 @@ describe('calc.related* against a real database', () => {
       name: 'organization',
       fields: [{ name: 'name', type: 'text' }],
     }).save();
+    const country = await new Resource({
+      name: 'country',
+      fields: [{ name: 'name', type: 'text' }],
+    }).save();
     const team = await new Resource({
       name: 'team',
       fields: [
@@ -79,6 +83,7 @@ describe('calc.related* against a real database', () => {
         { name: 'active', type: 'boolean' },
         { name: 'grade', type: 'numeric' },
         { name: 'graded_on', type: 'date' },
+        { name: 'country', type: 'resource', resource: String(country._id) },
       ],
     }).save();
     // A resource linking to organizations through a multi-select (array) field
@@ -100,6 +105,11 @@ describe('calc.related* against a real database', () => {
     ]);
     await seedRecord(organization, { name: 'org3' });
 
+    const [france, spain] = await Promise.all([
+      seedRecord(country, { name: 'France' }),
+      seedRecord(country, { name: 'Spain' }),
+    ]);
+
     // org1: three teams (one inactive), grades over time + one archived team
     await seedRecord(team, {
       organization: String(org1._id),
@@ -107,6 +117,7 @@ describe('calc.related* against a real database', () => {
       active: true,
       grade: 3,
       graded_on: new Date('2026-01-01'),
+      country: String(france._id),
     });
     await seedRecord(team, {
       organization: String(org1._id),
@@ -114,6 +125,7 @@ describe('calc.related* against a real database', () => {
       active: true,
       grade: 1,
       graded_on: new Date('2026-03-01'),
+      country: String(spain._id),
     });
     await seedRecord(team, {
       organization: String(org1._id),
@@ -121,6 +133,7 @@ describe('calc.related* against a real database', () => {
       active: false,
       grade: 2,
       graded_on: new Date('2026-02-01'),
+      country: String(france._id),
     });
     await seedRecord(
       team,
@@ -130,6 +143,7 @@ describe('calc.related* against a real database', () => {
         active: true,
         grade: 5,
         graded_on: new Date('2026-04-01'),
+        country: String(france._id),
       },
       true
     );
@@ -140,6 +154,7 @@ describe('calc.related* against a real database', () => {
       active: true,
       grade: 2,
       graded_on: new Date('2026-01-15'),
+      country: String(france._id),
     });
 
     // experts linked to organizations through an array field
@@ -173,6 +188,42 @@ describe('calc.related* against a real database', () => {
         'name'
       )
     ).toEqual({ org1: 2, org2: 1, org3: 0 });
+  });
+
+  it('relatedCount filters on a subfield of a linked record (resource field)', async () => {
+    // org1: t1 & t3 are French (t2 is Spanish, archived one ignored), org2: t4 is French
+    expect(
+      await compute(
+        organization,
+        '{{calc.relatedCount(\'teams\'; \'{"field":"country.name","operator":"eq","value":"France"}\')}}',
+        'french_teams',
+        'name'
+      )
+    ).toEqual({ org1: 2, org2: 1, org3: 0 });
+  });
+
+  it('combines linked-record subfield filters with plain child filters', async () => {
+    // org1: only t1 is both active and French (t3 is inactive)
+    expect(
+      await compute(
+        organization,
+        '{{calc.relatedCount(\'teams\'; \'{"logic":"and","filters":[{"field":"active","operator":"eq","value":true},{"field":"country.name","operator":"eq","value":"France"}]}\')}}',
+        'active_french_teams',
+        'name'
+      )
+    ).toEqual({ org1: 1, org2: 1, org3: 0 });
+  });
+
+  it('relatedValue applies a linked-record subfield filter before picking a value', async () => {
+    // org1 French teams: t1 (grade 3, Jan) & t3 (grade 2, Feb) → latest is t3
+    expect(
+      await compute(
+        organization,
+        '{{calc.relatedValue(\'teams\'; \'grade\'; \'graded_on\'; \'desc\'; \'{"field":"country.name","operator":"eq","value":"France"}\')}}',
+        'latest_french_grade',
+        'name'
+      )
+    ).toEqual({ org1: 2, org2: 2, org3: null });
   });
 
   it('relatedValue picks the value of the latest record by sort field', async () => {
