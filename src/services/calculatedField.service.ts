@@ -65,6 +65,19 @@ type RelatedContext = {
    * filter paths.
    */
   childResourceFieldsById: Record<string, any[]>;
+  /**
+   * Stages computing the child's own calculated fields used by the
+   * operations (as filter, value or sort field). Calculated values are not
+   * stored, so they must be computed inside the lookup sub-pipeline before
+   * being read.
+   */
+  childCalculatedStages: PipelineStage[];
+  /**
+   * Same, for the calculated fields of the records linked through the
+   * child's own `resource` fields used with dot notation by the filters,
+   * keyed by the name of the child field carrying the link.
+   */
+  linkedCalculatedStagesByFieldName: Record<string, PipelineStage[]>;
 };
 
 /** Record-level (non-data) fields accepted as value/sort fields of `calc.related*` */
@@ -145,12 +158,16 @@ export class CalculatedFieldService {
    * @param context GraphQL context (needed to fetch choices/refData via data sources)
    * @param timeZone User timezone, used by date operations
    * @param userAttributes Logged-in user contextual attributes for `{{user.X}}` placeholders
+   * @param buildingCalculatedFields `<resourceId>:<fieldName>` keys of the calculated
+   *   fields being compiled up the call chain — guards against infinite recursion
+   *   when calculated fields reference each other through `calc.related*` filters
    */
   constructor(
     private resource: ResourceLike,
     private context: Context | null,
     private timeZone: string,
-    private userAttributes: UserAttributes = {}
+    private userAttributes: UserAttributes = {},
+    private buildingCalculatedFields: Set<string> = new Set()
   ) {}
 
   /**
@@ -327,11 +344,147 @@ export class CalculatedFieldService {
           );
           relatedContext.childResourceFieldsById =
             await this.prefetchChildLinkedFields(relatedContext, operations);
+          relatedContext.childCalculatedStages =
+            await this.prefetchChildCalculatedStages(
+              relatedContext,
+              operations
+            );
+          relatedContext.linkedCalculatedStagesByFieldName =
+            await this.prefetchLinkedCalculatedStages(
+              relatedContext,
+              operations
+            );
           return [relatedName, relatedContext] as const;
         }
       )
     );
     return Object.fromEntries(entries);
+  }
+
+  /**
+   * Compile the pipeline stages of calculated fields so they can run inside
+   * a `calc.related*` lookup sub-pipeline (their values are not stored).
+   * Circular references between calculated fields are skipped with a warning
+   * instead of recursing forever.
+   *
+   * @param resourceLike Resource the calculated fields belong to
+   * @param resourceLike._id Resource id, used by the circular-reference guard
+   * @param resourceLike.fields Resource field definitions
+   * @param resourceLike.name Optional resource name, used in warnings
+   * @param calculatedFields Calculated field definitions to compile
+   * @returns Ordered stages computing `data.<name>` for each field
+   */
+  private async compileCalculatedFields(
+    resourceLike: { _id: any; fields: any[]; name?: string },
+    calculatedFields: any[]
+  ): Promise<PipelineStage[]> {
+    const stages: PipelineStage[] = [];
+    for (const field of calculatedFields) {
+      const key = `${String(resourceLike._id)}:${field.name}`;
+      if (this.buildingCalculatedFields.has(key)) {
+        logger.warn(
+          `calc.related*: skipping calculated field "${
+            field.name
+          }" of resource ${
+            resourceLike.name ?? resourceLike._id
+          } — circular reference between calculated fields`
+        );
+        continue;
+      }
+      const service = new CalculatedFieldService(
+        resourceLike,
+        this.context,
+        this.timeZone,
+        this.userAttributes,
+        new Set([...this.buildingCalculatedFields, key])
+      );
+      stages.push(...(await service.build(field.expression, field.name)));
+    }
+    return stages;
+  }
+
+  /**
+   * Compile the child's own calculated fields used by the operations — as a
+   * plain (non-dotted) filter field, or as value/sort field — so the lookup
+   * sub-pipeline can compute them before reading `data.<name>`.
+   *
+   * @param relatedContext Resolved related context (for the child fields)
+   * @param operations Operations aggregating over this related name
+   * @returns Stages computing the used child calculated fields
+   */
+  private async prefetchChildCalculatedStages(
+    relatedContext: RelatedContext,
+    operations: RelatedOperation[]
+  ): Promise<PipelineStage[]> {
+    const usedNames = new Set<string>();
+    for (const operation of operations) {
+      if (operation.filter) {
+        for (const field of extractFilterFields(operation.filter)) {
+          if (!field.includes('.')) usedNames.add(field);
+        }
+      }
+      for (const field of ['valueField', 'sortField'] as const) {
+        if (operation[field] && !RELATED_INFO_FIELDS[operation[field]])
+          usedNames.add(operation[field]);
+      }
+    }
+    const usedCalculatedFields = relatedContext.childFields.filter(
+      (f: any) => f.isCalculated && usedNames.has(f.name)
+    );
+    if (usedCalculatedFields.length === 0) return [];
+    return this.compileCalculatedFields(
+      {
+        _id: relatedContext.childResourceId,
+        fields: relatedContext.childFields,
+      },
+      usedCalculatedFields
+    );
+  }
+
+  /**
+   * Compile the calculated fields of the records linked through the child's
+   * own `resource` fields, when used with dot notation
+   * (`<linkedField>.<calculatedField>`) by the filters — they must be
+   * computed inside the `_<linkedField>` join of the lookup sub-pipeline.
+   *
+   * @param relatedContext Resolved related context (child linked fields already prefetched)
+   * @param operations Operations aggregating over this related name
+   * @returns Map of child field name → stages computing its used calculated subfields
+   */
+  private async prefetchLinkedCalculatedStages(
+    relatedContext: RelatedContext,
+    operations: RelatedOperation[]
+  ): Promise<Record<string, PipelineStage[]>> {
+    const linkedFields = this.getLinkedChildFields(
+      relatedContext.childFields,
+      operations
+    );
+    const usedSubFields = new Set<string>();
+    for (const operation of operations) {
+      if (!operation.filter) continue;
+      for (const field of extractFilterFields(operation.filter)) {
+        if (field.includes('.')) usedSubFields.add(field);
+      }
+    }
+    const entries = await Promise.all(
+      linkedFields.map(async (field: any) => {
+        const linkedResourceFields =
+          relatedContext.childResourceFieldsById[String(field.resource)] || [];
+        const usedCalculatedFields = linkedResourceFields.filter(
+          (f: any) =>
+            f.isCalculated && usedSubFields.has(`${field.name}.${f.name}`)
+        );
+        if (usedCalculatedFields.length === 0) return null;
+        return [
+          field.name,
+          await this.compileCalculatedFields(
+            { _id: field.resource, fields: linkedResourceFields },
+            usedCalculatedFields
+          ),
+        ] as const;
+      })
+    );
+    return Object.fromEntries(entries.filter(Boolean));
   }
 
   /**
@@ -426,6 +579,8 @@ export class CalculatedFieldService {
         parentFieldName: ownField.name,
         childFields: child.fields,
         childResourceFieldsById: {},
+        childCalculatedStages: [],
+        linkedCalculatedStagesByFieldName: {},
       };
     }
 
@@ -460,6 +615,8 @@ export class CalculatedFieldService {
       childFieldName: matches[0].field.name,
       childFields: matches[0].child.fields,
       childResourceFieldsById: {},
+      childCalculatedStages: [],
+      linkedCalculatedStagesByFieldName: {},
     };
   }
 
@@ -676,9 +833,14 @@ export class CalculatedFieldService {
    * inside the `calc.related*` lookup sub-pipeline.
    *
    * @param fieldName Name of the child `resource` field carrying the link
+   * @param calculatedStages Stages computing the calculated fields of the
+   *   linked record used by the filter, run inside the join
    * @returns Aggregation stages populating the `_<fieldName>` alias
    */
-  private buildChildLinkedRecordStages(fieldName: string): any[] {
+  private buildChildLinkedRecordStages(
+    fieldName: string,
+    calculatedStages: PipelineStage[] = []
+  ): any[] {
     return [
       {
         $addFields: {
@@ -697,6 +859,7 @@ export class CalculatedFieldService {
           localField: `data.${fieldName}_id`,
           foreignField: '_id',
           as: `_${fieldName}`,
+          ...(calculatedStages.length > 0 && { pipeline: calculatedStages }),
         },
       },
       {
@@ -758,8 +921,14 @@ export class CalculatedFieldService {
       ? this.getLinkedChildFields(ctx.childFields, [op])
       : [];
     const linkedChildStages = linkedChildFields.flatMap((field: any) =>
-      this.buildChildLinkedRecordStages(field.name)
+      this.buildChildLinkedRecordStages(
+        field.name,
+        ctx.linkedCalculatedStagesByFieldName[field.name]
+      )
     );
+    // Calculated fields are not stored: the used ones must be computed
+    // before the filter reads them
+    const preStages = [...ctx.childCalculatedStages, ...linkedChildStages];
     const filterMatch = op.filter
       ? getFilter(op.filter, ctx.childFields, {
           ...this.context,
@@ -767,10 +936,10 @@ export class CalculatedFieldService {
         })
       : {};
     const subPipeline: any[] =
-      linkedChildStages.length > 0
+      preStages.length > 0
         ? [
             { $match: baseMatch },
-            ...linkedChildStages,
+            ...preStages,
             ...(Object.keys(filterMatch).length > 0
               ? [{ $match: filterMatch }]
               : []),

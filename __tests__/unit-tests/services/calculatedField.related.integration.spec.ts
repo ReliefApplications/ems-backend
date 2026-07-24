@@ -488,6 +488,201 @@ describe('calc.related* against a real database', () => {
     ).toEqual({ e1: 3, e2: 1, e3: 0 });
   });
 
+  it('filters the related records on a calculated field of the child resource', async () => {
+    const org = await new Resource({
+      name: 'org_tfp',
+      fields: [{ name: 'name', type: 'text' }],
+    }).save();
+    const assignment = await new Resource({
+      name: 'assignment_expert_resource',
+      fields: [
+        {
+          name: 'organization',
+          type: 'resource',
+          resource: String(org._id),
+          relatedName: 'assignment_expert',
+        },
+        { name: 'actual', type: 'boolean' },
+        {
+          name: 'is_tfp',
+          type: 'boolean',
+          isCalculated: true,
+          expression:
+            '{{calc.and( {{calc.exists( {{data.organization}} )}} ; {{calc.eq( {{data.actual}} ; true )}})}}',
+        },
+      ],
+    }).save();
+
+    const [o1, o2] = await Promise.all([
+      seedRecord(org, { name: 'o1' }),
+      seedRecord(org, { name: 'o2' }),
+    ]);
+    await seedRecord(org, { name: 'o3' });
+    await Promise.all([
+      seedRecord(assignment, { organization: String(o1._id), actual: true }),
+      seedRecord(assignment, { organization: String(o1._id), actual: false }),
+      seedRecord(assignment, { organization: String(o1._id), actual: true }),
+      seedRecord(assignment, { organization: String(o2._id), actual: false }),
+    ]);
+
+    expect(
+      await compute(
+        org,
+        '{{calc.relatedCount(\'assignment_expert\'; \'{"logic":"and","filters":[{"field":"is_tfp","operator":"eq","value":true}]}\')}}',
+        'tfp_experts',
+        'name'
+      )
+    ).toEqual({ o1: 2, o2: 0, o3: 0 });
+  });
+
+  it('aggregates a calculated value field of the child resource', async () => {
+    const shop = await new Resource({
+      name: 'shop',
+      fields: [{ name: 'name', type: 'text' }],
+    }).save();
+    const sale = await new Resource({
+      name: 'sale',
+      fields: [
+        {
+          name: 'shop',
+          type: 'resource',
+          resource: String(shop._id),
+          relatedName: 'sales',
+        },
+        { name: 'amount', type: 'numeric' },
+        {
+          name: 'amount_x2',
+          type: 'numeric',
+          isCalculated: true,
+          expression: '{{calc.mul({{data.amount}}; 2)}}',
+        },
+      ],
+    }).save();
+
+    const [s1] = await Promise.all([
+      seedRecord(shop, { name: 's1' }),
+      seedRecord(shop, { name: 's2' }),
+    ]);
+    await Promise.all([
+      seedRecord(sale, { shop: String(s1._id), amount: 2 }),
+      seedRecord(sale, { shop: String(s1._id), amount: 3 }),
+    ]);
+
+    expect(
+      await compute(
+        shop,
+        "{{calc.relatedSum('sales'; 'amount_x2')}}",
+        'total_x2',
+        'name'
+      )
+    ).toEqual({ s1: 10, s2: 0 });
+  });
+
+  it('filters on a calculated field of a record linked to the child (dot notation)', async () => {
+    const countryWithCalc = await new Resource({
+      name: 'country_with_calc',
+      fields: [
+        { name: 'name', type: 'text' },
+        { name: 'population', type: 'numeric' },
+        {
+          name: 'is_big',
+          type: 'boolean',
+          isCalculated: true,
+          expression: '{{calc.gte({{data.population}}; 1000)}}',
+        },
+      ],
+    }).save();
+    const club = await new Resource({
+      name: 'club',
+      fields: [{ name: 'name', type: 'text' }],
+    }).save();
+    const member = await new Resource({
+      name: 'member',
+      fields: [
+        {
+          name: 'club',
+          type: 'resource',
+          resource: String(club._id),
+          relatedName: 'members',
+        },
+        {
+          name: 'country',
+          type: 'resource',
+          resource: String(countryWithCalc._id),
+        },
+      ],
+    }).save();
+
+    const [big, small, c1, c2] = await Promise.all([
+      seedRecord(countryWithCalc, { name: 'big', population: 2000 }),
+      seedRecord(countryWithCalc, { name: 'small', population: 10 }),
+      seedRecord(club, { name: 'c1' }),
+      seedRecord(club, { name: 'c2' }),
+    ]);
+    await Promise.all([
+      seedRecord(member, { club: String(c1._id), country: String(big._id) }),
+      seedRecord(member, { club: String(c1._id), country: String(big._id) }),
+      seedRecord(member, { club: String(c1._id), country: String(small._id) }),
+      seedRecord(member, { club: String(c2._id), country: String(small._id) }),
+    ]);
+
+    expect(
+      await compute(
+        club,
+        '{{calc.relatedCount(\'members\'; \'{"field":"country.is_big","operator":"eq","value":true}\')}}',
+        'big_country_members',
+        'name'
+      )
+    ).toEqual({ c1: 2, c2: 0 });
+  });
+
+  it('terminates when calculated fields reference each other through related filters', async () => {
+    const resourceA = await new Resource({
+      name: 'circular_a',
+      fields: [
+        { name: 'name', type: 'text' },
+        {
+          name: 'valid_items',
+          type: 'numeric',
+          isCalculated: true,
+          expression:
+            '{{calc.relatedCount(\'items\'; \'{"field":"is_valid","operator":"eq","value":true}\')}}',
+        },
+      ],
+    }).save();
+    const resourceB = await new Resource({
+      name: 'circular_b',
+      fields: [
+        {
+          name: 'a',
+          type: 'resource',
+          resource: String(resourceA._id),
+          relatedName: 'items',
+        },
+        {
+          name: 'is_valid',
+          type: 'boolean',
+          isCalculated: true,
+          expression:
+            "{{calc.gt({{calc.relatedValue('a'; 'valid_items'; 'createdAt'; 'desc')}}; 0)}}",
+        },
+      ],
+    }).save();
+
+    const a1 = await seedRecord(resourceA, { name: 'a1' });
+    await seedRecord(resourceB, { a: String(a1._id) });
+
+    // The circular branch is skipped with a warning instead of recursing
+    // forever; the computation still resolves to a number
+    const result = await compute(
+      resourceA,
+      '{{calc.relatedCount(\'items\'; \'{"field":"is_valid","operator":"eq","value":true}\')}}',
+      'valid_items',
+      'name'
+    );
+    expect(typeof result.a1).toBe('number');
+  });
+
   it('runs inside a $facet after pagination, as placed by the records query', async () => {
     // Mirrors the all.ts skip-based aggregation: display-only related fields
     // are appended after $skip/$limit inside the items facet

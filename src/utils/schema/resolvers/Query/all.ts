@@ -279,6 +279,39 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       let linkedRecordsAggregation = [];
       for (const resource of resourcesToQuery) {
+        const resourceId = fields.find((f) => f.name === resource).resource;
+        const resourceName = Object.keys(idsByName).find(
+          (key) => idsByName[key] == resourceId
+        );
+        const resourceFields = fieldsByName[resourceName];
+        const usedResourceFields = usedFields
+          .filter((x) => x.startsWith(`${resource}.`))
+          .map((x) => x.split('.')[1]);
+
+        // Calculated fields of the linked resource are not stored on the
+        // record: compute the used ones inside the lookup sub-pipeline so
+        // filters/sorts on `_<resource>.data.<calculatedField>` can resolve
+        const linkedCalculatedStages = [];
+        const usedCalculatedFields = resourceFields.filter(
+          (x) => x.isCalculated && usedResourceFields.includes(x.name)
+        );
+        if (usedCalculatedFields.length > 0) {
+          const linkedCalculatedFieldService = new CalculatedFieldService(
+            { _id: resourceId, fields: resourceFields, name: resourceName },
+            context,
+            context.timeZone,
+            context.user?.attributes || {}
+          );
+          for (const f of usedCalculatedFields) {
+            linkedCalculatedStages.push(
+              ...(await linkedCalculatedFieldService.build(
+                f.expression,
+                f.name
+              ))
+            );
+          }
+        }
+
         // Build linked records aggregations
         linkedRecordsAggregation = linkedRecordsAggregation.concat([
           {
@@ -298,6 +331,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               localField: `data.${resource}_id`,
               foreignField: '_id',
               as: `_${resource}`,
+              ...(linkedCalculatedStages.length > 0 && {
+                pipeline: linkedCalculatedStages,
+              }),
             },
           },
           {
@@ -314,14 +350,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         ]);
 
         // Build linked records filter
-        const resourceId = fields.find((f) => f.name === resource).resource;
-        const resourceName = Object.keys(idsByName).find(
-          (key) => idsByName[key] == resourceId
-        );
-        const resourceFields = fieldsByName[resourceName];
-        const usedResourceFields = usedFields
-          .filter((x) => x.startsWith(`${resource}.`))
-          .map((x) => x.split('.')[1]);
         resourceFields
           .filter((x) => usedResourceFields.includes(x.name))
           .map((x) =>
@@ -385,7 +413,11 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         context.timeZone,
         context.user?.attributes || {}
       );
-      for (const f of fields.filter((x) => x.isCalculated)) {
+      // Dotted names are linked-resource calculated subfields (pushed above),
+      // computed inside the linked-record lookup — not on this resource
+      for (const f of fields.filter(
+        (x) => x.isCalculated && !x.name.includes('.')
+      )) {
         const neededBeforeFilters = isNeededBeforeFilters(f);
         const requested = queryFields.findIndex((x) => x.name === f.name) > -1;
         // only add calculated fields that are used by the query,
@@ -466,7 +498,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         // that expensive stages (e.g. related-record lookups, when sorting by
         // such a field) only run on the matching records
         const calculatedFieldNames = fields
-          .filter((x) => x.isCalculated)
+          .filter((x) => x.isCalculated && !x.name.includes('.'))
           .map((x) => x.name);
         const filtersUseCalculatedField =
           calculatedFieldNames.some((name) => isUsedInFilter(filter, name)) ||
