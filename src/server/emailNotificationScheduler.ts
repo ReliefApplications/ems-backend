@@ -1,11 +1,11 @@
 import { EmailNotification } from '@models';
 import type { EmailNotification as EmailNotificationDoc } from '@models/emailNotification.model';
 import { customNotificationLastExecutionStatus } from '@const/enumTypes';
+import { isValidCronExpression } from '@utils/validators';
 import { logger } from '@services/logger.service';
 import axios from 'axios';
 import config from 'config';
 import { CronJob } from 'cron';
-import * as cronValidator from 'cron-validator';
 import { getAzureFunctionTokens } from '@utils/notification/schedulerAuth';
 
 /**
@@ -23,7 +23,7 @@ export const createCronJob = (notification: EmailNotificationDoc) => {
   const schedule = notification?.schedule?.cronValue || '';
   const enabled = !!notification?.schedule?.scheduleEnabled;
   if (!enabled || !schedule) return;
-  if (!cronValidator.isValidCron(schedule)) {
+  if (!isValidCronExpression(schedule)) {
     logger.info(`Invalid cron schedule provided for ID: ${id} -> ${schedule}`);
     return;
   }
