@@ -526,9 +526,9 @@ const buildMongoFilter = (
           }
           case filterOperator.IS_NOT_EMPTY: {
             if (MULTISELECT_TYPES.includes(type)) {
-              return { [fieldName]: { $exists: true, $ne: [] } };
+              return { [fieldName]: { $exists: true, $nin: [null, []] } };
             } else {
-              return { [fieldName]: { $exists: true, $ne: '' } };
+              return { [fieldName]: { $exists: true, $nin: [null, ''] } };
             }
           }
           case 'inthelast': {
