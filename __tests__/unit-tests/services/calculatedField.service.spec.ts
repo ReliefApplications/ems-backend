@@ -870,6 +870,14 @@ describe('CalculatedFieldService', () => {
         { name: 'active', type: 'boolean' },
         { name: 'grade', type: 'numeric' },
         { name: 'graded_on', type: 'datetime' },
+        { name: 'country', type: 'resource', resource: 'countryResourceId' },
+        {
+          name: 'is_tfp',
+          type: 'boolean',
+          isCalculated: true,
+          expression:
+            '{{calc.and( {{calc.exists( {{data.organization}} )}} ; {{calc.eq( {{data.active}} ; true )}})}}',
+        },
       ],
     };
 
@@ -928,10 +936,7 @@ describe('CalculatedFieldService', () => {
         {
           $addFields: {
             'data.team_count': {
-              $ifNull: [
-                { $arrayElemAt: ['$aux.team_count_related.v', 0] },
-                0,
-              ],
+              $ifNull: [{ $arrayElemAt: ['$aux.team_count_related.v', 0] }, 0],
             },
           },
         },
@@ -1030,6 +1035,81 @@ describe('CalculatedFieldService', () => {
       expect(JSON.stringify(match.$and[1])).toContain('data.active');
     });
 
+    it('joins the child linked record inside the sub-pipeline to filter on a resource subfield', async () => {
+      findSpy.mockImplementation((query: any) =>
+        Promise.resolve(
+          query._id
+            ? [
+                {
+                  _id: 'countryResourceId',
+                  fields: [{ name: 'name', type: 'text' }],
+                },
+              ]
+            : [team]
+        )
+      );
+      const pipeline = await buildRelated(
+        '{{calc.relatedCount(\'teams\'; \'{"field":"country.name","operator":"eq","value":"France"}\')}}',
+        'french_teams'
+      );
+      // The fields of the linked resource are prefetched to type the filter
+      expect(findSpy).toHaveBeenCalledWith(
+        { _id: { $in: ['countryResourceId'] } },
+        { fields: 1 }
+      );
+      expect((pipeline[1] as any).$lookup.pipeline).toEqual([
+        { $match: { resource: 'teamResourceId', archived: { $ne: true } } },
+        {
+          $addFields: {
+            'data.country_id': {
+              $convert: {
+                input: '$data.country',
+                to: 'objectId',
+                onError: null,
+              },
+            },
+          },
+        },
+        {
+          $lookup: {
+            from: 'records',
+            localField: 'data.country_id',
+            foreignField: '_id',
+            as: '_country',
+          },
+        },
+        { $unwind: { path: '$_country', preserveNullAndEmptyArrays: true } },
+        { $addFields: { '_country.id': { $toString: '$_country._id' } } },
+        { $match: { '_country.data.name': { $eq: 'France' } } },
+        { $count: 'v' },
+      ]);
+    });
+
+    it('computes a calculated child field inside the sub-pipeline before filtering on it', async () => {
+      const pipeline = await buildRelated(
+        '{{calc.relatedCount(\'teams\'; \'{"logic":"and","filters":[{"field":"is_tfp","operator":"eq","value":true}]}\')}}',
+        'tfp_teams'
+      );
+      const sub = (pipeline[1] as any).$lookup.pipeline;
+      expect(sub[0]).toEqual({
+        $match: { resource: 'teamResourceId', archived: { $ne: true } },
+      });
+      // The child's calculated field is computed before the filter reads it
+      const calculatedIndex = sub.findIndex(
+        (stage: any) => stage.$addFields && 'data.is_tfp' in stage.$addFields
+      );
+      const filterIndex = sub.findIndex(
+        (stage: any) =>
+          stage.$match && JSON.stringify(stage.$match).includes('data.is_tfp')
+      );
+      expect(calculatedIndex).toBeGreaterThan(0);
+      expect(filterIndex).toBeGreaterThan(calculatedIndex);
+      expect(sub[filterIndex].$match).toEqual({
+        $and: [{ 'data.is_tfp': { $eq: true } }],
+      });
+      expect(sub[sub.length - 1]).toEqual({ $count: 'v' });
+    });
+
     it('composes inside another operation by emitting the $lookup as an aux dependency', async () => {
       const pipeline = await buildRelated(
         "{{calc.gt({{calc.relatedCount('teams')}}; 0)}}",
@@ -1037,7 +1117,9 @@ describe('CalculatedFieldService', () => {
       );
       // dependency stages first (addFields + lookup + extract), then the comparison
       expect(pipeline).toHaveLength(4);
-      expect((pipeline[1] as any).$lookup.as).toBe('aux.aux_is_big_gt1_related');
+      expect((pipeline[1] as any).$lookup.as).toBe(
+        'aux.aux_is_big_gt1_related'
+      );
       expect((pipeline[2] as any).$addFields['aux.is_big-gt1']).toBeDefined();
       expect((pipeline[3] as any).$addFields['data.is_big']).toEqual({
         $gt: ['$aux.is_big-gt1', 0],
