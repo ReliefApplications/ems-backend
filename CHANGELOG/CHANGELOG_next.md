@@ -1,3 +1,10 @@
+# [2.17.0-rc.17](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.16...v2.17.0-rc.17) (2026-07-24)
+
+
+### Bug Fixes
+
+* edit resource not adding correct back-office roles ([fd305e0](https://github.com/ReliefApplications/ems-backend/commit/fd305e0987ae15a04add3fecd507d9fc69bf8660))
+
 # [2.17.0-rc.16](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.15...v2.17.0-rc.16) (2026-07-24)
 
 
