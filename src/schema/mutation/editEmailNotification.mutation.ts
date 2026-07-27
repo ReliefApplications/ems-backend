@@ -94,6 +94,7 @@ export default {
           },
           notificationType: args.notification.notificationType,
           applicationId: args.notification.applicationId,
+          language: args.notification.language,
           datasets: args.notification.datasets,
           emailLayout: args.notification.emailLayout,
           emailDistributionList: args.notification.emailDistributionList,
