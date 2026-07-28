@@ -1,3 +1,10 @@
+## [2.17.1](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0...v2.17.1) (2026-07-28)
+
+
+### Bug Fixes
+
+* is not empty operator not working fine for multi select ([#1264](https://github.com/ReliefApplications/ems-backend/issues/1264)) ([c1348c2](https://github.com/ReliefApplications/ems-backend/commit/c1348c26d2f0680978bfdcdfc961cfba6ab53bb9))
+
 # [2.17.0](https://github.com/ReliefApplications/ems-backend/compare/v2.16.1...v2.17.0) (2026-05-29)
 
 
