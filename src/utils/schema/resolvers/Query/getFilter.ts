@@ -337,9 +337,9 @@ const buildMongoFilter = (
 
         if (resourceField?.resource) {
           // find the nested field
-          const nestedField = context.resourceFieldsById[
-            resourceField.resource
-          ].find((x) => x.name === filter.field.split('.')[1]);
+          const nestedField = (
+            context.resourceFieldsById[resourceField.resource] || []
+          ).find((x) => x.name === filter.field.split('.')[1]);
           // get the type of the nested field
           type = nestedField?.type || type;
         }
@@ -877,9 +877,9 @@ const buildMongoFilter = (
           }
           case filterOperator.IS_NOT_EMPTY: {
             if (MULTISELECT_TYPES.includes(type)) {
-              return { [fieldName]: { $exists: true, $ne: [] } };
+              return { [fieldName]: { $exists: true, $nin: [null, []] } };
             } else {
-              return { [fieldName]: { $exists: true, $ne: '' } };
+              return { [fieldName]: { $exists: true, $nin: [null, ''] } };
             }
           }
           case 'inthelast': {

@@ -11,7 +11,7 @@ import { findDuplicateFields } from '@utils/form';
 import { CalculatedFieldService } from '@services/calculatedField.service';
 import { GraphQLError, GraphQLID, GraphQLList, GraphQLNonNull } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { get, has, isArray, isEqual, isNil } from 'lodash';
+import { get, has, isArray, isEmpty, isEqual, isNil } from 'lodash';
 import mongoose from 'mongoose';
 import { resourcePermission } from '../../types/permission';
 import { ResourceType } from '../types';
@@ -660,7 +660,7 @@ const clearFieldsPermission = (
 /** Arguments for the editResource mutation */
 type EditResourceArgs = {
   id: string | mongoose.Types.ObjectId;
-  fields: any;
+  fields?: any;
   permissions?: any;
   fieldsPermissions?: any;
   fieldsAutoGrant?: any;
@@ -956,16 +956,20 @@ export default {
       }
 
       // Split the request in three parts, to avoid conflict
-      if (!!update.$set) {
-        await Resource.findByIdAndUpdate(args.id, { $set: update.$set });
+      // Plain keys ( modifiedAt, fields, permission replacements ) must be
+      // applied through $set, otherwise they are dropped
+      const { $set, $pull, $addToSet, ...plainKeys } = update;
+      const setUpdate = { ...plainKeys, ...$set };
+      if (!isEmpty(setUpdate)) {
+        await Resource.findByIdAndUpdate(args.id, { $set: setUpdate });
       }
 
-      if (!!update.$pull) {
-        await Resource.findByIdAndUpdate(args.id, { $pull: update.$pull });
+      if (!!$pull) {
+        await Resource.findByIdAndUpdate(args.id, { $pull });
       }
       return await Resource.findByIdAndUpdate(
         args.id,
-        update.$addToSet ? { $addToSet: update.$addToSet } : {},
+        $addToSet ? { $addToSet } : {},
         { new: true }
       );
     } catch (err) {

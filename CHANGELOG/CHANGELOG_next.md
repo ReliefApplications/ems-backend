@@ -1,3 +1,17 @@
+# [2.17.0-rc.17](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.16...v2.17.0-rc.17) (2026-07-24)
+
+
+### Bug Fixes
+
+* edit resource not adding correct back-office roles ([fd305e0](https://github.com/ReliefApplications/ems-backend/commit/fd305e0987ae15a04add3fecd507d9fc69bf8660))
+
+# [2.17.0-rc.16](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.15...v2.17.0-rc.16) (2026-07-24)
+
+
+### Bug Fixes
+
+* is not empty operator not working fine for multi select ([b9222e0](https://github.com/ReliefApplications/ems-backend/commit/b9222e0ca2b72f6e73f3733b0da732c12922f812))
+
 # [2.17.0-rc.15](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.14...v2.17.0-rc.15) (2026-07-17)
 
 
