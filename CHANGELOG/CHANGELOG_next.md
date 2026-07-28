@@ -1,3 +1,30 @@
+# [2.18.0-rc.1](https://github.com/ReliefApplications/ems-backend/compare/v2.17.1...v2.18.0-rc.1) (2026-07-28)
+
+
+### Bug Fixes
+
+* add parameter to filter out enriched attributes ([a718db7](https://github.com/ReliefApplications/ems-backend/commit/a718db72f5ef9b557a3a8e2d1cffded6b01bece8))
+* edit resource not adding correct back-office roles ([fd305e0](https://github.com/ReliefApplications/ems-backend/commit/fd305e0987ae15a04add3fecd507d9fc69bf8660))
+* Editing permissions could sometimes fail ([#1256](https://github.com/ReliefApplications/ems-backend/issues/1256)) ([de4b9fe](https://github.com/ReliefApplications/ems-backend/commit/de4b9fe77a08cc0dd7cdccb3cc02dc5880096457)), closes [AB#135254](https://github.com/AB/issues/135254)
+* history download showing Invalid Dates ([6e54fa4](https://github.com/ReliefApplications/ems-backend/commit/6e54fa4cebf80174766a25e2c1470b8e4d732230))
+* is not empty operator not working fine for multi select ([b9222e0](https://github.com/ReliefApplications/ems-backend/commit/b9222e0ca2b72f6e73f3733b0da732c12922f812))
+* Multiple issues with full dual language experience ([#1251](https://github.com/ReliefApplications/ems-backend/issues/1251)) ([753f3dd](https://github.com/ReliefApplications/ems-backend/commit/753f3ddb8750d159694c3456b864437f5fa3cbe4)), closes [AB#134863](https://github.com/AB/issues/134863)
+* record data in graphql could have blank fields due to auto translate feature ([c1d90d4](https://github.com/ReliefApplications/ems-backend/commit/c1d90d4e40fff8bd136691933c17f1b5b5be7b93))
+
+
+### Features
+
+* Add canUploadRecords permission ([#1247](https://github.com/ReliefApplications/ems-backend/issues/1247)) ([ddb5a0f](https://github.com/ReliefApplications/ems-backend/commit/ddb5a0fc52cfc836f4c507a055c3d7c66f6df7ca)), closes [AB#134543](https://github.com/AB/issues/134543)
+* Add Ukrainian language ([e9054a3](https://github.com/ReliefApplications/ems-backend/commit/e9054a3f73755c6eda2bc49dc244ef961804bc67)), closes [Ab#133173](https://github.com/Ab/issues/133173)
+* Auto translated text fields in forms ([46be48f](https://github.com/ReliefApplications/ems-backend/commit/46be48fbbe4e56c51af36d6ba738430dab0a00a0)), closes [Ab#134348](https://github.com/Ab/issues/134348)
+* Calculated fields now working with related fields ([#1253](https://github.com/ReliefApplications/ems-backend/issues/1253)) ([b175c4d](https://github.com/ReliefApplications/ems-backend/commit/b175c4d2d998059b34a1e1364976f62f4f6f66f1)), closes [AB#129357](https://github.com/AB/issues/129357)
+* Can now use calculated fields in contextual dashboard title ([#1252](https://github.com/ReliefApplications/ems-backend/issues/1252)) ([7ebc092](https://github.com/ReliefApplications/ems-backend/commit/7ebc092deb15fe1de66fdc82276bf18fd0ca2a4b)), closes [AB#134728](https://github.com/AB/issues/134728)
+* Can now use user attributes in filter ([#1254](https://github.com/ReliefApplications/ems-backend/issues/1254)) ([187e2f3](https://github.com/ReliefApplications/ems-backend/commit/187e2f346f4469775ec11f91b18bd61dbf69dfd9)), closes [AB#129134](https://github.com/AB/issues/129134)
+* Email notifications now generate in-app notifications ([#1245](https://github.com/ReliefApplications/ems-backend/issues/1245)) ([fdbe2c4](https://github.com/ReliefApplications/ems-backend/commit/fdbe2c493009c3ff3f746f7597b5f28d2c07e64b)), closes [AB#133554](https://github.com/AB/issues/133554)
+* Enable public form submission ([#1255](https://github.com/ReliefApplications/ems-backend/issues/1255)) ([c215007](https://github.com/ReliefApplications/ems-backend/commit/c215007508967ddb2163fc327821b8e71bd147f4)), closes [AB#129136](https://github.com/AB/issues/129136)
+* Enable translation on widgets / pages of applications  ([#1238](https://github.com/ReliefApplications/ems-backend/issues/1238)) ([95fc6c7](https://github.com/ReliefApplications/ems-backend/commit/95fc6c7167024ab3318ee3b2d8713ce7ee1334fd)), closes [AB#133293](https://github.com/AB/issues/133293)
+* Translate field choices ([#1246](https://github.com/ReliefApplications/ems-backend/issues/1246)) ([1123587](https://github.com/ReliefApplications/ems-backend/commit/1123587df8b64492e905fb5d782549227e14f70c)), closes [AB#134288](https://github.com/AB/issues/134288)
+
 # [2.17.0-rc.17](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0-rc.16...v2.17.0-rc.17) (2026-07-24)
 
 
