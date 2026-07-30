@@ -17,6 +17,7 @@ import extendAbilityForApplications from '@security/extendAbilityForApplication'
 import { CustomTemplate } from '@models/customTemplate.model';
 import { deleteFile } from '@utils/notification/util';
 import { getErrorMessage, getErrorStack } from '@utils/error';
+import { deleteCronJob } from '@server/emailNotificationScheduler';
 
 /** Arguments for the deleteEmailNotification mutation */
 type DeleteEmailNotificationArgs = {
@@ -85,7 +86,8 @@ export default {
         logger.warn(message);
         return { success: false, message };
       }
-
+      // Remove the scheduled cron job
+      deleteCronJob(args.id);
       logger.info(`EmailNotification with ID: ${args.id} successfully deleted`);
       // delete custom template mapped to this email notification
       if (emailNotification.emailLayout) {
