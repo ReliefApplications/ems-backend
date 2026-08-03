@@ -6,7 +6,7 @@ import {
   GraphQLError,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { get, has } from 'lodash';
+import { get, has, isEqual } from 'lodash';
 import { Role } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { RoleType } from '../types';
@@ -28,6 +28,30 @@ type EditRoleArgs = {
 };
 
 /**
+ * Removes transient query-builder controls before comparing assignment rules.
+ *
+ * @param value rule value to normalize
+ * @returns normalized rule value
+ */
+const normalizeAutoAssignmentRule = (value: unknown): unknown => {
+  if (Array.isArray(value)) {
+    return value.map(normalizeAutoAssignmentRule);
+  }
+  if (value && typeof value === 'object') {
+    return Object.entries(value).reduce<Record<string, unknown>>(
+      (rule, [key, item]) => {
+        if (key !== 'inTheLast') {
+          rule[key] = normalizeAutoAssignmentRule(item);
+        }
+        return rule;
+      },
+      {}
+    );
+  }
+  return value;
+};
+
+/**
  * Edit a role's admin permissions, providing its id and the list of admin permissions.
  * Throw an error if not logged or authorized.
  */
@@ -43,7 +67,7 @@ export default {
       type: GraphQLJSON,
     },
   },
-  async resolve(parent, args: EditRoleArgs, context: Context) {
+  async resolve(_parent: unknown, args: EditRoleArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const autoAssignmentUpdate: any = {};
@@ -51,14 +75,9 @@ export default {
         if (has(args.autoAssignment, 'add')) {
           Object.assign(autoAssignmentUpdate, {
             $addToSet: {
-              autoAssignment: get(args.autoAssignment, 'add'),
-            },
-          });
-        }
-        if (has(args.autoAssignment, 'remove')) {
-          Object.assign(autoAssignmentUpdate, {
-            $pull: {
-              autoAssignment: get(args.autoAssignment, 'remove'),
+              autoAssignment: normalizeAutoAssignmentRule(
+                get(args.autoAssignment, 'add')
+              ),
             },
           });
         }
@@ -71,8 +90,7 @@ export default {
         args.permissions && { permissions: args.permissions },
         args.channels && { channels: args.channels },
         args.title && { title: args.title },
-        args.description && { description: args.description },
-        autoAssignmentUpdate.$pull && { $pull: autoAssignmentUpdate.$pull }
+        args.description && { description: args.description }
       );
 
       const filters = Role.find(accessibleBy(ability, 'update').Role)
@@ -81,6 +99,27 @@ export default {
 
       // Save operations. Adding try / catch to detect duplication issues.
       try {
+        if (has(args.autoAssignment, 'remove')) {
+          const role = await Role.findOne(filters).select('autoAssignment');
+          if (!role) {
+            throw new GraphQLError(
+              context.i18next.t('common.errors.permissionNotGranted')
+            );
+          }
+          const ruleToRemove = role.autoAssignment.find((rule) =>
+            isEqual(
+              normalizeAutoAssignmentRule(rule),
+              normalizeAutoAssignmentRule(get(args.autoAssignment, 'remove'))
+            )
+          );
+          if (ruleToRemove) {
+            Object.assign(autoAssignmentUpdate, {
+              $pull: { autoAssignment: ruleToRemove },
+            });
+            Object.assign(update, { $pull: autoAssignmentUpdate.$pull });
+          }
+        }
+
         // doing a separate update to avoid the following error:
         // Updating the path 'x' would create a conflict at 'x'
         if (autoAssignmentUpdate.$addToSet) {
