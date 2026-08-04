@@ -1,8 +1,10 @@
 import mongoose from 'mongoose';
+import { Ability } from '@casl/ability';
 import { Record, Resource } from '@models';
 import { CalculatedFieldService } from '@services/calculatedField.service';
 import getFilter from '@utils/schema/resolvers/Query/getFilter';
 import getSortAggregation from '@utils/schema/resolvers/Query/getSortAggregation';
+import all from '@utils/schema/resolvers/Query/all';
 import { DatabaseHelpers } from '../../../../../helpers/database-helpers';
 
 let databaseHelpers: DatabaseHelpers;
@@ -170,6 +172,49 @@ describe('filtering on a linked record calculated field, as the records query do
         value: 'France',
       })
     ).toEqual(['t1', 't2']);
+  });
+
+  it('filters linked text columns through the records grid resolver', async () => {
+    const queryTeams = all(
+      'team',
+      { team: team.fields, country: country.fields },
+      { team: team._id, country: country._id }
+    );
+    const context = {
+      user: {
+        _id: new mongoose.Types.ObjectId(),
+        ability: new Ability([{ action: 'manage', subject: 'all' }]),
+      },
+      i18next: { t: (key: string) => key },
+    };
+    const info = { fieldNodes: [] };
+
+    for (const [operator, value] of [
+      ['contains', 'Fran'],
+      ['eq', 'France'],
+    ]) {
+      const result = await queryTeams(
+        null,
+        {
+          sortField: undefined,
+          first: 10,
+          skip: 0,
+          afterCursor: undefined,
+          at: undefined,
+          filter: {
+            logic: 'and',
+            filters: [{ field: 'country.name', operator, value }],
+          },
+        },
+        context,
+        info
+      );
+
+      expect(result.edges.map((edge) => edge.node.data.label)).toEqual([
+        't1',
+        't2',
+      ]);
+    }
   });
 
   it('filters on a calculated field of the linked record', async () => {
