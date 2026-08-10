@@ -54,6 +54,18 @@ export const FieldMetaDataType = new GraphQLObjectType({
         }
       },
     },
+    canDeleteFiles: {
+      type: GraphQLBoolean,
+      resolve: (parent, _, context) => {
+        const ability: AppAbility = context.user._abilityForRecords;
+        const ogParent: Form | Resource = context._parent;
+        if (selectableDefaultRecordFieldsFlat.includes(parent.name)) {
+          return false;
+        } else {
+          return ability.can('deleteFiles', ogParent, `data.${parent.name}`);
+        }
+      },
+    },
     options: {
       type: GraphQLJSON,
       resolve: async (parent, _, context) => {

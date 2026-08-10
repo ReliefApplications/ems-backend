@@ -29,6 +29,7 @@ export interface Resource extends Document {
     permissions?: {
       canSee: any[];
       canUpdate: any[];
+      canDeleteFiles?: any[];
     };
     [key: string]: any;
   }[];

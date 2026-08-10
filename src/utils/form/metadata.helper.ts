@@ -13,6 +13,7 @@ export type Metadata = {
   filter?: { defaultOperator?: string; operators: string[] };
   canSee?: boolean;
   canUpdate?: boolean;
+  canDeleteFiles?: boolean;
   multiSelect?: boolean;
   filterable?: boolean;
   options?: { text: string; value: any }[];

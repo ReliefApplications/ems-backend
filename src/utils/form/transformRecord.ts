@@ -3,6 +3,27 @@ import { getDateForMongo } from '../filter/getDateForMongo';
 import { getTimeForMongo } from '../filter/getTimeForMongo';
 import isNil from 'lodash/isNil';
 
+/** Stored file field value. */
+type FileValue = {
+  name: string;
+  content: unknown;
+  type?: string;
+  outdated?: boolean;
+};
+
+/**
+ * Formats file metadata for storage while preserving display/status fields.
+ *
+ * @param file File value
+ * @returns Stored file value
+ */
+const formatFileValue = (file: FileValue): FileValue => ({
+  name: file.name,
+  content: file.content,
+  ...(file.type && { type: file.type }),
+  ...(file.outdated === true && { outdated: true }),
+});
+
 /**
  * Format passed value to comply with field definition.
  *
@@ -40,7 +61,7 @@ export const formatValue = (field: any, value: any): any => {
       break;
     case 'file':
       if (!isNil(value)) {
-        return value.map((x) => ({ name: x.name, content: x.content }));
+        return value.map(formatFileValue);
       }
       break;
     case 'resource':
