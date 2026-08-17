@@ -10,7 +10,6 @@ import {
   EmailNotificationInputType,
 } from '@schema/inputs/emailNotification.input';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
-import { cloneDeep } from 'lodash';
 import { getErrorMessage, getErrorStack } from '@utils/error';
 import { createCronJob } from '@server/emailNotificationScheduler';
 import { isValidCronExpression } from '@utils/validators';
@@ -42,13 +41,11 @@ export default {
       //     );
       //   }
       // }
-      // Only count as a dataset if it has a resource
-      const datasetsCount = cloneDeep(args.notification.datasets).filter(
-        ({ resource, reference }) => resource || reference
-      ).length;
-      // Individual email count
+      // A notification needs at least one recipient source: a distribution
+      // list, or at least one send-separate dataset (which supplies its own
+      // per-row recipients).
       let individualCount = 0;
-      for (const dataset of args.notification.datasets) {
+      for (const dataset of args.notification.datasets ?? []) {
         if (
           (dataset.resource || dataset.reference) &&
           dataset.individualEmail
@@ -56,18 +53,10 @@ export default {
           individualCount += 1;
         }
       }
-      let allSeparate = false;
-      if (datasetsCount === individualCount) {
-        allSeparate = true;
-      }
 
       if (
         !(args.notification.isDraft || args.notification.isDeleted === 1) &&
-        // (!args.notification.emailDistributionList.name ||
-        //   (!args.notification.emailDistributionList.to.resource &&
-        //     args.notification.emailDistributionList.to.inputEmails.length ===
-        //       0)) &&
-        !allSeparate &&
+        individualCount === 0 &&
         !args.notification.emailDistributionList
       ) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
