@@ -36,6 +36,7 @@ export interface Dataset {
   sendAsAttachment: boolean;
   individualEmail: boolean;
   individualEmailFields?: any[];
+  individualEmailToDistributionList?: boolean;
   csFilter?: any;
   navigateToPage: boolean;
   navigateSettings: {
