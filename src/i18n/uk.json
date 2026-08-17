@@ -142,7 +142,7 @@
 		"emailNotification": {
 			"add": {
 				"errors": {
-					"invalidCron": "The cron expression used in the scheduler is invalid"
+					"invalidCron": "Вираз cron, використаний у планувальнику, недійсний"
 				}
 			}
 		},
