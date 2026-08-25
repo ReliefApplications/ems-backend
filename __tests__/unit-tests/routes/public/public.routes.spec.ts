@@ -28,6 +28,7 @@ let databaseHelpers: DatabaseHelpers;
 let request: supertest.SuperTest<supertest.Test>;
 let publicForm: Form;
 let privateForm: Form;
+let archivedPublicForm: Form;
 
 describe('Public routes', () => {
   beforeAll(async () => {
@@ -49,6 +50,14 @@ describe('Public routes', () => {
       name: 'Private form',
       graphQLTypeName: 'PrivateForm',
       status: status.active,
+      structure: { pages: [] },
+      fields: [],
+    });
+    archivedPublicForm = await Form.create({
+      name: 'Archived public form',
+      graphQLTypeName: 'ArchivedPublicForm',
+      status: status.archived,
+      isPublic: true,
       structure: { pages: [] },
       fields: [],
     });
@@ -87,6 +96,14 @@ describe('Public routes', () => {
 
     it('should return 404 for a form not marked as public', async () => {
       const response = await request.get(`/public/forms/${privateForm.id}`);
+
+      expect(response.status).toBe(404);
+    });
+
+    it('should return 404 for a public form that is not active', async () => {
+      const response = await request.get(
+        `/public/forms/${archivedPublicForm.id}`
+      );
 
       expect(response.status).toBe(404);
     });

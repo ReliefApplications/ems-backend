@@ -262,6 +262,58 @@ describe('getFilter - global search expansion', () => {
   });
 });
 
+describe('getFilter - isempty / isnotempty operators', () => {
+  it('isnotempty on a tagbox field excludes null values and empty arrays', () => {
+    const result = getFilter(
+      {
+        logic: 'and',
+        filters: [{ field: 'tags', operator: 'isnotempty', value: null }],
+      },
+      FIELDS,
+      CONTEXT
+    );
+    expect(result).toEqual({
+      $and: [{ 'data.tags': { $exists: true, $nin: [null, []] } }],
+    });
+  });
+
+  it('isnotempty on a text field excludes null values and empty strings', () => {
+    const result = getFilter(
+      {
+        logic: 'and',
+        filters: [{ field: 'title', operator: 'isnotempty', value: null }],
+      },
+      FIELDS,
+      CONTEXT
+    );
+    expect(result).toEqual({
+      $and: [{ 'data.title': { $exists: true, $nin: [null, ''] } }],
+    });
+  });
+
+  it('isempty on a tagbox field matches missing, null and empty array values', () => {
+    const result = getFilter(
+      {
+        logic: 'and',
+        filters: [{ field: 'tags', operator: 'isempty', value: null }],
+      },
+      FIELDS,
+      CONTEXT
+    );
+    expect(result).toEqual({
+      $and: [
+        {
+          $or: [
+            { 'data.tags': { $exists: true, $size: 0 } },
+            { 'data.tags': { $exists: false } },
+            { 'data.tags': { $eq: null } },
+          ],
+        },
+      ],
+    });
+  });
+});
+
 describe('getFilter - user attribute & people current-user filters', () => {
   const USER_CONTEXT = {
     ...CONTEXT,

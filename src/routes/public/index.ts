@@ -1,4 +1,5 @@
 import express from 'express';
+import { status } from '@const/enumTypes';
 import { Form } from '@models';
 import { logger } from '@services/logger.service';
 import { getErrorMessage, getErrorStack } from '@utils/error';
@@ -31,6 +32,7 @@ router.get('/forms/:id', async (req, res) => {
     const form = await Form.findOne({
       _id: req.params.id,
       isPublic: true,
+      status: status.active,
     }).select(PUBLIC_FORM_FIELDS);
     if (!form) {
       return res.status(404).send(req.t('common.errors.dataNotFound'));
