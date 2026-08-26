@@ -927,6 +927,7 @@ describe('CalculatedFieldService', () => {
                 $match: {
                   resource: 'teamResourceId',
                   archived: { $ne: true },
+                  draft: { $ne: true },
                 },
               },
               { $count: 'v' },
@@ -952,7 +953,11 @@ describe('CalculatedFieldService', () => {
       const lookup = (pipeline[1] as any).$lookup;
       expect(lookup.pipeline).toEqual([
         {
-          $match: { resource: 'teamResourceId', archived: { $ne: true } },
+          $match: {
+            resource: 'teamResourceId',
+            archived: { $ne: true },
+            draft: { $ne: true },
+          },
         },
         { $sort: { 'data.graded_on': -1, _id: -1 } },
         { $limit: 1 },
@@ -990,7 +995,11 @@ describe('CalculatedFieldService', () => {
       );
       expect((pipeline[1] as any).$lookup.pipeline).toEqual([
         {
-          $match: { resource: 'teamResourceId', archived: { $ne: true } },
+          $match: {
+            resource: 'teamResourceId',
+            archived: { $ne: true },
+            draft: { $ne: true },
+          },
         },
         { $limit: 1 },
         { $project: { _id: 1 } },
@@ -1031,6 +1040,7 @@ describe('CalculatedFieldService', () => {
       expect(match.$and[0]).toEqual({
         resource: 'teamResourceId',
         archived: { $ne: true },
+        draft: { $ne: true },
       });
       expect(JSON.stringify(match.$and[1])).toContain('data.active');
     });
@@ -1058,7 +1068,13 @@ describe('CalculatedFieldService', () => {
         { fields: 1 }
       );
       expect((pipeline[1] as any).$lookup.pipeline).toEqual([
-        { $match: { resource: 'teamResourceId', archived: { $ne: true } } },
+        {
+          $match: {
+            resource: 'teamResourceId',
+            archived: { $ne: true },
+            draft: { $ne: true },
+          },
+        },
         {
           $addFields: {
             'data.country_id': {
@@ -1092,7 +1108,11 @@ describe('CalculatedFieldService', () => {
       );
       const sub = (pipeline[1] as any).$lookup.pipeline;
       expect(sub[0]).toEqual({
-        $match: { resource: 'teamResourceId', archived: { $ne: true } },
+        $match: {
+          resource: 'teamResourceId',
+          archived: { $ne: true },
+          draft: { $ne: true },
+        },
       });
       // The child's calculated field is computed before the filter reads it
       const calculatedIndex = sub.findIndex(
@@ -1214,7 +1234,11 @@ describe('CalculatedFieldService', () => {
           as: 'aux.latest_grade_related',
           pipeline: [
             {
-              $match: { resource: 'gradeResourceId', archived: { $ne: true } },
+              $match: {
+                resource: 'gradeResourceId',
+                archived: { $ne: true },
+                draft: { $ne: true },
+              },
             },
             { $sort: { 'data.grading_date': -1, _id: -1 } },
             { $limit: 1 },

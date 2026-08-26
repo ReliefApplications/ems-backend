@@ -24,6 +24,7 @@ import { Context } from '@server/apollo/context';
 import { logger } from '@services/logger.service';
 import { getErrorMessage, getErrorStack } from '@utils/error';
 import { resolveLocalizedString } from '@utils/i18n/resolveLocalizedString';
+import { getDraftRecordFilter } from '@utils/filter';
 
 /**
  * Minimal resource shape the service needs — just the field list, plus an
@@ -913,6 +914,7 @@ export class CalculatedFieldService {
     const baseMatch: any = {
       resource: ctx.childResourceId,
       archived: { $ne: true },
+      ...getDraftRecordFilter(),
     };
     // Child `resource` fields used with dot notation by the filter need their
     // linked record joined inside the sub-pipeline (same `_<field>` alias the

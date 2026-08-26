@@ -1,4 +1,9 @@
-import { GraphQLID, GraphQLObjectType, GraphQLString } from 'graphql';
+import {
+  GraphQLBoolean,
+  GraphQLID,
+  GraphQLObjectType,
+  GraphQLString,
+} from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Connection } from './pagination.type';
 
@@ -19,6 +24,8 @@ export const LayoutType = new GraphQLObjectType({
     createdAt: { type: GraphQLString },
     query: { type: GraphQLJSON },
     display: { type: GraphQLJSON },
+    draft: { type: GraphQLBoolean },
+    allDrafts: { type: GraphQLBoolean },
   }),
 });
 

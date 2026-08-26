@@ -14,6 +14,14 @@ export const layoutSchema = new Schema(
     display: {
       type: mongoose.Schema.Types.Mixed,
     },
+    draft: {
+      type: Boolean,
+      default: false,
+    },
+    allDrafts: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
@@ -29,4 +37,6 @@ export interface Layout extends Document {
   modifiedAt?: Date;
   query?: any;
   display?: any;
+  draft?: boolean;
+  allDrafts?: boolean;
 }

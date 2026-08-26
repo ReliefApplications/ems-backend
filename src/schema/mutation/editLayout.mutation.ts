@@ -57,6 +57,18 @@ export default {
           args.layout.nameTranslations;
         resource.layouts.id(args.id).query = args.layout.query;
         resource.layouts.id(args.id).display = args.layout.display;
+        if (args.layout.draft !== undefined) {
+          resource.layouts.id(args.id).draft = args.layout.draft;
+        }
+        if (
+          args.layout.allDrafts !== undefined ||
+          args.layout.draft === false
+        ) {
+          resource.layouts.id(args.id).allDrafts = resource.layouts.id(args.id)
+            .draft
+            ? args.layout.allDrafts ?? false
+            : false;
+        }
         await resource.save();
         return resource.layouts.id(args.id);
       } else {
@@ -75,6 +87,17 @@ export default {
           args.layout.nameTranslations;
         form.layouts.id(args.id).query = args.layout.query;
         form.layouts.id(args.id).display = args.layout.display;
+        if (args.layout.draft !== undefined) {
+          form.layouts.id(args.id).draft = args.layout.draft;
+        }
+        if (
+          args.layout.allDrafts !== undefined ||
+          args.layout.draft === false
+        ) {
+          form.layouts.id(args.id).allDrafts = form.layouts.id(args.id).draft
+            ? args.layout.allDrafts ?? false
+            : false;
+        }
         await form.save();
         return form.layouts.id(args.id);
       }

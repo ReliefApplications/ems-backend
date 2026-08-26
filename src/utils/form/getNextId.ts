@@ -4,6 +4,7 @@ import i18next from 'i18next';
 import { BaseRedisCache } from 'apollo-server-cache-redis';
 import Redis from 'ioredis';
 import config from 'config';
+import { getDraftRecordFilter } from '@utils/filter';
 
 /** Redis caching initialization */
 const nextIdCache = new BaseRedisCache({
@@ -33,7 +34,10 @@ export const getNextId = async (structureId: string): Promise<string> => {
   // If not cached, get it from the DB
   if (!previousId) {
     const lastRecord = await Record.findOne(
-      { $or: [{ resource: structureId }, { form: structureId }] },
+      {
+        $or: [{ resource: structureId }, { form: structureId }],
+        ...getDraftRecordFilter(),
+      },
       'incrementalId'
     )
       .sort({ _id: -1 })
@@ -52,7 +56,10 @@ export const getNextId = async (structureId: string): Promise<string> => {
       // If previous records does not have an incremental ID, update them with incremental IDs
       if (lastRecord && !lastRecord.incrementalId) {
         const records = await Record.find(
-          { $or: [{ resource: structureId }, { form: structureId }] },
+          {
+            $or: [{ resource: structureId }, { form: structureId }],
+            ...getDraftRecordFilter(),
+          },
           'id'
         ).sort({ createdAt: 1 });
         const bulkUpdateOps = [];

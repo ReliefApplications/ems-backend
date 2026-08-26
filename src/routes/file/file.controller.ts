@@ -3,6 +3,7 @@ import { RouteDefinition } from 'types/route-definition';
 import BaseController from '../../abstractions/base.controller';
 import { Record, Resource } from '@models';
 import { Types } from 'mongoose';
+import { getDraftRecordFilter } from '@utils/filter';
 
 /**
  * File controller
@@ -78,6 +79,7 @@ export default class FileController extends BaseController {
       const associatedRecord = await Record.findOne({
         resource: new Types.ObjectId(String(resourceId)),
         archived: { $ne: true },
+        ...getDraftRecordFilter(),
         $or: fileFieldQueries,
       }).select('_id');
 

@@ -3,6 +3,7 @@ import {
   GraphQLNonNull,
   GraphQLError,
   GraphQLString,
+  GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { RecordType } from '../types';
@@ -22,6 +23,7 @@ export type AddRecordArgs = {
   form?: string | Types.ObjectId;
   data: any;
   captchaToken?: string;
+  draft?: boolean;
 };
 
 /**
@@ -38,6 +40,7 @@ export default {
     form: { type: GraphQLID },
     data: { type: new GraphQLNonNull(GraphQLJSON) },
     captchaToken: { type: GraphQLString },
+    draft: { type: GraphQLBoolean },
   },
   async resolve(parent, args: AddRecordArgs, context: Context) {
     try {
@@ -47,6 +50,12 @@ export default {
       const form = await Form.findById(args.form);
       if (!form)
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+
+      if (args.draft && !user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
 
       if (user) {
         // Check the ability with permissions for this form
@@ -77,6 +86,7 @@ export default {
       // Check unicity of record
       if (
         user &&
+        !args.draft &&
         form.permissions.recordsUnicity &&
         form.permissions.recordsUnicity.length > 0 &&
         form.permissions.recordsUnicity[0].role
@@ -89,7 +99,7 @@ export default {
         if (unicityFilters.length > 0) {
           const uniqueRecordAlreadyExists = await Record.exists({
             $and: [
-              { form: form._id, archived: { $ne: true } },
+              { form: form._id, archived: { $ne: true }, draft: { $ne: true } },
               { $or: unicityFilters },
             ],
           });
@@ -104,9 +114,9 @@ export default {
       // Create the record instance
       transformRecord(args.data, form.fields);
       const record = new Record({
-        incrementalId: await getNextId(
-          String(form.resource ? form.resource : args.form)
-        ),
+        incrementalId: args.draft
+          ? null
+          : await getNextId(String(form.resource ? form.resource : args.form)),
         form: args.form,
         //createdAt: new Date(),
         //modifiedAt: new Date(),
@@ -140,6 +150,7 @@ export default {
           _id: form._id,
           name: form.name,
         },
+        draft: args.draft || false,
       });
       // Update the createdBy property if we pass some owner data
       const ownership = getOwnership(form.fields, args.data);
@@ -147,18 +158,20 @@ export default {
         record.createdBy = { ...record.createdBy, ...ownership };
       }
       // send notifications to channel
-      const channel = await Channel.findOne({ form: form._id });
-      if (channel) {
-        const notification = new Notification({
-          action: `New record - ${form.name}`,
-          content: record,
-          //createdAt: new Date(),
-          channel: channel.id,
-          seenBy: [],
-        });
-        await notification.save();
-        const publisher = await pubsub();
-        publisher.publish(channel.id, { notification });
+      if (!args.draft) {
+        const channel = await Channel.findOne({ form: form._id });
+        if (channel) {
+          const notification = new Notification({
+            action: `New record - ${form.name}`,
+            content: record,
+            //createdAt: new Date(),
+            channel: channel.id,
+            seenBy: [],
+          });
+          await notification.save();
+          const publisher = await pubsub();
+          publisher.publish(channel.id, { notification });
+        }
       }
       await record.save();
       return record;
