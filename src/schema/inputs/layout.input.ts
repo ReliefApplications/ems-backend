@@ -62,6 +62,8 @@ export type LayoutArgs = {
   nameTranslations?: Record<string, string>;
   query: LayoutQueryArgs;
   display: LayoutDisplayArgs;
+  draft?: boolean;
+  allDrafts?: boolean;
 };
 
 /** GraphQL Input Type of Layout */
@@ -72,5 +74,7 @@ export const LayoutInputType = new GraphQLInputObjectType({
     nameTranslations: { type: GraphQLJSON },
     query: { type: new GraphQLNonNull(LayoutQueryInputType) },
     display: { type: new GraphQLNonNull(LayoutDisplayInputType) },
+    draft: { type: GraphQLBoolean },
+    allDrafts: { type: GraphQLBoolean },
   }),
 });

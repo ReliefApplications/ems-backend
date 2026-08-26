@@ -1068,7 +1068,13 @@ describe('CalculatedFieldService', () => {
         { fields: 1 }
       );
       expect((pipeline[1] as any).$lookup.pipeline).toEqual([
-        { $match: { resource: 'teamResourceId', archived: { $ne: true } } },
+        {
+          $match: {
+            resource: 'teamResourceId',
+            archived: { $ne: true },
+            draft: { $ne: true },
+          },
+        },
         {
           $addFields: {
             'data.country_id': {
@@ -1102,7 +1108,11 @@ describe('CalculatedFieldService', () => {
       );
       const sub = (pipeline[1] as any).$lookup.pipeline;
       expect(sub[0]).toEqual({
-        $match: { resource: 'teamResourceId', archived: { $ne: true } },
+        $match: {
+          resource: 'teamResourceId',
+          archived: { $ne: true },
+          draft: { $ne: true },
+        },
       });
       // The child's calculated field is computed before the filter reads it
       const calculatedIndex = sub.findIndex(
