@@ -11,7 +11,7 @@ import {
 } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { getUploadColumns, loadRow, uploadFile } from '@utils/files';
-import { getNextId } from '@utils/form';
+import { getInvalidResourceField, getNextId } from '@utils/form';
 import i18next from 'i18next';
 import get from 'lodash/get';
 import { logger } from '@services/logger.service';
@@ -101,6 +101,17 @@ async function insertRecords(
     const structureId = String(
       form.resource ? get(form.resource, '_id', form.resource) : form.id
     );
+    const invalidDataSet = dataSets.find((dataSet) =>
+      getInvalidResourceField(dataSet.data, fields)
+    );
+    if (invalidDataSet) {
+      return res.status(400).send(
+        i18next.t('routes.upload.errors.invalidResourceReference', {
+          field: getInvalidResourceField(invalidDataSet.data, fields),
+        })
+      );
+    }
+
     // Create records one by one so the incrementalId works correctly
     for (const dataSet of dataSets) {
       records.push(

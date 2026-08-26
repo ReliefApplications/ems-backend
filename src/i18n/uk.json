@@ -345,6 +345,7 @@
 		},
 		"upload": {
 			"errors": {
+				"invalidResourceReference": "Значення поля ресурсу {{field}} має бути дійсним ідентифікатором запису.",
 				"invalidUserUpload": "Будь ласка, вкажіть email та Роль для кожного користувача.",
 				"missingFile": "Файл не виявлено.",
 				"noRecordsToInsert": "Не було надано записів для вставки."

@@ -345,6 +345,7 @@
 		},
 		"upload": {
 			"errors": {
+				"invalidResourceReference": "****** {{field}} ******",
 				"invalidUserUpload": "******",
 				"missingFile": "******",
 				"noRecordsToInsert": "******"

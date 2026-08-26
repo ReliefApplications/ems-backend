@@ -345,6 +345,7 @@
 		},
 		"upload": {
 			"errors": {
+				"invalidResourceReference": "The value for resource field {{field}} must be a valid record identifier.",
 				"invalidUserUpload": "Please provide email and role for each user.",
 				"missingFile": "No file detected.",
 				"noRecordsToInsert": "No records were provided for insertion."
