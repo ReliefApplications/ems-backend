@@ -1,4 +1,8 @@
-import { formatValue, transformRecord } from '@utils/form/transformRecord';
+import {
+  formatValue,
+  getInvalidResourceField,
+  transformRecord,
+} from '@utils/form/transformRecord';
 
 describe('formatValue', () => {
   it('converts date-like fields to Date objects', () => {
@@ -41,16 +45,46 @@ describe('formatValue', () => {
     expect(formatValue({ type: 'resource' }, 'aaaaaaaaaaaa')).toBeNull();
   });
 
+  it('drops malformed resource ids without throwing', () => {
+    expect(formatValue({ type: 'resource' }, 'not-a-resource-id')).toBeNull();
+  });
+
   it('filters invalid ids out of resources arrays', () => {
     const validId = '507f1f77bcf86cd799439011';
-    expect(formatValue({ type: 'resources' }, [validId, 'aaaaaaaaaaaa'])).toEqual(
-      [validId]
-    );
+    expect(
+      formatValue({ type: 'resources' }, [validId, 'aaaaaaaaaaaa'])
+    ).toEqual([validId]);
   });
 
   it('returns unchanged values for unknown field types', () => {
     expect(formatValue({ type: 'boolean' }, true)).toBe(true);
     expect(formatValue({ type: 'numeric' }, 42)).toBe(42);
+  });
+});
+
+describe('getInvalidResourceField', () => {
+  const fields = [
+    { name: 'linkedRecord', type: 'resource' },
+    { name: 'description', type: 'text' },
+  ];
+
+  it('returns the resource field with an invalid record id', () => {
+    expect(
+      getInvalidResourceField({ linkedRecord: 'not-a-resource-id' }, fields)
+    ).toBe('linkedRecord');
+  });
+
+  it('accepts empty and valid resource values', () => {
+    expect(getInvalidResourceField({}, fields)).toBeUndefined();
+    expect(
+      getInvalidResourceField({ linkedRecord: '' }, fields)
+    ).toBeUndefined();
+    expect(
+      getInvalidResourceField(
+        { linkedRecord: '507f1f77bcf86cd799439011' },
+        fields
+      )
+    ).toBeUndefined();
   });
 });
 

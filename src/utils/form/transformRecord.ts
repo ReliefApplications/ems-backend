@@ -3,6 +3,42 @@ import { getDateForMongo } from '../filter/getDateForMongo';
 import { getTimeForMongo } from '../filter/getTimeForMongo';
 import isNil from 'lodash/isNil';
 
+type FieldDefinition = {
+  name: string;
+  type: string;
+};
+
+/**
+ * Check whether a value is a canonical MongoDB ObjectId string.
+ *
+ * @param value candidate resource record identifier
+ * @returns whether the value can safely be used as a resource record id
+ */
+export const isValidResourceId = (value: unknown): value is string =>
+  typeof value === 'string' &&
+  mongoose.isValidObjectId(value) &&
+  new mongoose.Types.ObjectId(value).toString() === value;
+
+/**
+ * Get the resource field containing an invalid imported record identifier.
+ *
+ * @param record imported record data
+ * @param fields form or resource field definitions
+ * @returns invalid resource field name, if any
+ */
+export const getInvalidResourceField = (
+  record: Record<string, unknown>,
+  fields: FieldDefinition[]
+): string | undefined =>
+  fields.find(
+    (field) =>
+      field.type === 'resource' &&
+      record[field.name] !== undefined &&
+      record[field.name] !== null &&
+      record[field.name] !== '' &&
+      !isValidResourceId(record[field.name])
+  )?.name;
+
 /**
  * Format passed value to comply with field definition.
  *
@@ -45,20 +81,14 @@ export const formatValue = (field: any, value: any): any => {
       break;
     case 'resource':
       if (!isNil(value)) {
-        //checks if the id is a valid mongo id
-        return new mongoose.Types.ObjectId(value).toString() === value
-          ? value
-          : null;
+        return isValidResourceId(value) ? value : null;
       }
       break;
 
     case 'resources':
       if (!isNil(value) && Array.isArray(value)) {
         //returns only valid ids from an array of ids
-        return value.filter(
-          (resourceId) =>
-            new mongoose.Types.ObjectId(resourceId).toString() === resourceId
-        );
+        return value.filter((resourceId) => isValidResourceId(resourceId));
       }
       break;
     case 'people-dropdown':
