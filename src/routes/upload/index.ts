@@ -11,7 +11,7 @@ import {
 } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { getUploadColumns, loadRow, uploadFile } from '@utils/files';
-import { getNextId } from '@utils/form';
+import { getNextId, normalizeUploadedResourceFields } from '@utils/form';
 import i18next from 'i18next';
 import get from 'lodash/get';
 import { logger } from '@services/logger.service';
@@ -103,6 +103,7 @@ async function insertRecords(
     );
     // Create records one by one so the incrementalId works correctly
     for (const dataSet of dataSets) {
+      await normalizeUploadedResourceFields(dataSet.data, fields);
       records.push(
         new Record({
           incrementalId: await getNextId(structureId),
@@ -136,7 +137,7 @@ async function insertRecords(
     }
     if (records.length > 0) {
       try {
-        Record.insertMany(records);
+        await Record.insertMany(records);
         return res.status(200).send({ status: 'OK' });
       } catch (err) {
         logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
