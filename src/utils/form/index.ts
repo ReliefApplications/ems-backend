@@ -9,6 +9,7 @@ export * from './hasInaccessibleFields';
 
 // === RECORDS ===
 export * from './transformRecord';
+export * from './normalizeUploadedResourceFields';
 export * from './getOwnership';
 export * from './getNextId';
 export * from './getDisplayText';
