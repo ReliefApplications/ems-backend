@@ -647,7 +647,10 @@ export default {
             ...rule.fields,
             ...(rule.condition || []).map((c) => c.field),
             ...(rule.dateIntersection
-              ? [rule.dateIntersection.startField, rule.dateIntersection.endField]
+              ? [
+                  rule.dateIntersection.startField,
+                  rule.dateIntersection.endField,
+                ]
               : []),
           ];
           const unknownField = referencedFields.find(
