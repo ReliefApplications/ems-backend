@@ -3,11 +3,17 @@ import {
   GraphQLNonNull,
   GraphQLError,
   GraphQLString,
+  GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { RecordType } from '../types';
-import { Form, Record, Notification, Channel } from '@models';
-import { transformRecord, getOwnership, getNextId } from '@utils/form';
+import { Form, Record, Notification, Channel, Resource } from '@models';
+import {
+  transformRecord,
+  getOwnership,
+  getNextId,
+  validateUniqueness,
+} from '@utils/form';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import pubsub from '../../server/pubsub';
 import { getFormPermissionFilter } from '@utils/filter';
@@ -22,6 +28,7 @@ export type AddRecordArgs = {
   form?: string | Types.ObjectId;
   data: any;
   captchaToken?: string;
+  skipValidation?: boolean;
 };
 
 /**
@@ -38,6 +45,7 @@ export default {
     form: { type: GraphQLID },
     data: { type: new GraphQLNonNull(GraphQLJSON) },
     captchaToken: { type: GraphQLString },
+    skipValidation: { type: GraphQLBoolean, defaultValue: false },
   },
   async resolve(parent, args: AddRecordArgs, context: Context) {
     try {
@@ -103,6 +111,23 @@ export default {
 
       // Create the record instance
       transformRecord(args.data, form.fields);
+
+      // Check uniqueness rules configured on the resource, if any
+      const resource = form.resource
+        ? await Resource.findById(form.resource)
+        : null;
+      const uniquenessResult = await validateUniqueness(
+        args.data,
+        resource,
+        undefined,
+        context.i18next.t.bind(context.i18next)
+      );
+      if (uniquenessResult.errors.length) {
+        throw new GraphQLError(
+          uniquenessResult.errors.map((e) => e.errors.join(' ')).join(' ')
+        );
+      }
+
       const record = new Record({
         incrementalId: await getNextId(
           String(form.resource ? form.resource : args.form)
@@ -141,6 +166,12 @@ export default {
           name: form.name,
         },
       });
+      // Warn about (non-blocking) duplicates, unless the user chose to save anyway
+      if (uniquenessResult.warnings.length && !args.skipValidation) {
+        return Object.assign(record, {
+          validationErrors: uniquenessResult.warnings,
+        });
+      }
       // Update the createdBy property if we pass some owner data
       const ownership = getOwnership(form.fields, args.data);
       if (ownership) {

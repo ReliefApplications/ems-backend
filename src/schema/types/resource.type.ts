@@ -26,6 +26,7 @@ import {
   FormType,
   LayoutConnectionType,
   RecordConnectionType,
+  UniquenessRuleType,
 } from '.';
 import { resourcePermission } from '../../types/permission';
 import { Connection, decodeCursor, encodeCursor } from './pagination.type';
@@ -255,6 +256,7 @@ export const ResourceType = new GraphQLObjectType({
       },
     },
     fields: { type: GraphQLJSON },
+    uniquenessRules: { type: new GraphQLList(UniquenessRuleType) },
     relatedFields: {
       type: GraphQLJSON,
       async resolve(parent) {
