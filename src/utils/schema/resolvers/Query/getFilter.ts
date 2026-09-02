@@ -282,17 +282,21 @@ const buildAttributeFieldComparison = (
  * @param fields list of structure fields
  * @param context request context
  * @param prefix prefix to access field
+ * @param isGlobalSearch whether the rule belongs to a global-search expansion
  * @returns Mongo filter.
  */
 const buildMongoFilter = (
   filter: any,
   fields: any[],
   context: any,
-  prefix = ''
+  prefix = '',
+  isGlobalSearch = false
 ): any => {
   if (filter.filters) {
     const filters = filter.filters
-      .map((x: any) => buildMongoFilter(x, fields, context, prefix))
+      .map((x: any) =>
+        buildMongoFilter(x, fields, context, prefix, isGlobalSearch)
+      )
       .filter((x) => x);
     if (filters.length > 0) {
       switch (filter.logic) {
@@ -323,6 +327,12 @@ const buildMongoFilter = (
       let fieldName = FLAT_DEFAULT_FIELDS.includes(targetField)
         ? targetField
         : `${prefix}${targetField}`;
+      let fallbackFieldName =
+        targetField !== filter.field
+          ? FLAT_DEFAULT_FIELDS.includes(filter.field)
+            ? filter.field
+            : `${prefix}${filter.field}`
+          : undefined;
       // Get type of field from filter field
       let type: string =
         fields.find(
@@ -473,6 +483,10 @@ const buildMongoFilter = (
                 context?.locale
               );
               fieldName = `_${resourceName}.data.${translatedSubField}`;
+              fallbackFieldName =
+                translatedSubField !== subFieldName
+                  ? `_${resourceName}.data.${subFieldName}`
+                  : undefined;
             }
           }
         }
@@ -739,7 +753,8 @@ const buildMongoFilter = (
                     },
                     fields,
                     context,
-                    prefix
+                    prefix,
+                    true
                   )
                 )
                 .filter((x: any) => x && !containsNullComparison(x));
@@ -749,6 +764,47 @@ const buildMongoFilter = (
                 return MATCH_NOTHING;
               }
               return { $or: subFilters };
+            } else if (
+              isGlobalSearch &&
+              fallbackFieldName &&
+              typeof value === 'string'
+            ) {
+              // Entity resolvers display the source value when the localized
+              // sibling is missing, null or empty. Apply the regex to that
+              // same per-record value so global search matches what is shown.
+              const translatedValue = `$${fieldName}`;
+              return {
+                $expr: {
+                  $regexMatch: {
+                    input: {
+                      $convert: {
+                        input: {
+                          $cond: [
+                            {
+                              $or: [
+                                {
+                                  $in: [
+                                    { $type: translatedValue },
+                                    ['missing', 'null'],
+                                  ],
+                                },
+                                { $eq: [translatedValue, ''] },
+                              ],
+                            },
+                            `$${fallbackFieldName}`,
+                            translatedValue,
+                          ],
+                        },
+                        to: 'string',
+                        onError: '',
+                        onNull: '',
+                      },
+                    },
+                    regex: value,
+                    options: 'i',
+                  },
+                },
+              };
             } else if (PEOPLE_TYPES.includes(type)) {
               // People fields store the person object(s) — search the name /
               // email subfields the widgets display. Multi-word searches

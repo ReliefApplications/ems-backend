@@ -6,6 +6,7 @@ import getFilter, {
 /** Fields of the queried resource */
 const FIELDS = [
   { name: 'title', type: 'text' },
+  { name: 'title_en', type: 'text', translateField: 'title', translateTo: 'en' },
   { name: 'count', type: 'numeric' },
   { name: 'status', type: 'dropdown', choices: [] },
   { name: 'tags', type: 'tagbox', choices: [] },
@@ -136,14 +137,87 @@ describe('getFilter - global search expansion', () => {
     ]);
     // Locale with a translation sibling on the related resource
     const result = getFilter(filter, FIELDS, { ...CONTEXT, locale: 'pt' });
-    expect(result.$and[0].$or).toEqual([
-      { '_emergency.data.name_pt': { $regex: 'colera', $options: 'i' } },
+    expect(result.$and[0].$or[0].$expr.$regexMatch).toMatchObject({
+      regex: 'colera',
+      options: 'i',
+    });
+    expect(
+      result.$and[0].$or[0].$expr.$regexMatch.input.$convert.input.$cond
+    ).toEqual([
+      {
+        $or: [
+          {
+            $in: [
+              { $type: '$_emergency.data.name_pt' },
+              ['missing', 'null'],
+            ],
+          },
+          { $eq: ['$_emergency.data.name_pt', ''] },
+        ],
+      },
+      '$_emergency.data.name',
+      '$_emergency.data.name_pt',
     ]);
     // Locale without a sibling falls back to the source subfield
     const fallback = getFilter(filter, FIELDS, { ...CONTEXT, locale: 'fr' });
     expect(fallback.$and[0].$or).toEqual([
       { '_emergency.data.name': { $regex: 'colera', $options: 'i' } },
     ]);
+  });
+
+  it('searches the displayed source value when a translation is empty', () => {
+    const filter = globalSearch([
+      { field: 'title', operator: 'contains', value: 'Коваленко' },
+    ]);
+    const result = getFilter(filter, FIELDS, { ...CONTEXT, locale: 'en' });
+    const regexMatch = result.$and[0].$or[0].$expr.$regexMatch;
+
+    expect(regexMatch).toMatchObject({
+      regex: 'Коваленко',
+      options: 'i',
+    });
+    expect(regexMatch.input.$convert.input.$cond).toEqual([
+      {
+        $or: [
+          { $in: [{ $type: '$data.title_en' }, ['missing', 'null']] },
+          { $eq: ['$data.title_en', ''] },
+        ],
+      },
+      '$data.title',
+      '$data.title_en',
+    ]);
+  });
+
+  it('keeps regular contains filters scoped to the translated field', () => {
+    const direct = getFilter(
+      {
+        logic: 'and',
+        filters: [{ field: 'title', operator: 'contains', value: 'patient' }],
+      },
+      FIELDS,
+      { ...CONTEXT, locale: 'en' }
+    );
+    expect(direct).toEqual({
+      $and: [{ 'data.title_en': { $regex: 'patient', $options: 'i' } }],
+    });
+
+    const related = getFilter(
+      {
+        logic: 'and',
+        filters: [
+          { field: 'emergency.name', operator: 'contains', value: 'colera' },
+        ],
+      },
+      FIELDS,
+      { ...CONTEXT, locale: 'pt' }
+    );
+    expect(related).toEqual({
+      $and: [
+        {
+          '_emergency.data.name_pt': { $regex: 'colera', $options: 'i' },
+        },
+      ],
+    });
   });
 
   it('supports in operator for choice values matched by display text', () => {
