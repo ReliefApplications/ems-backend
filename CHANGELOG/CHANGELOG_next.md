@@ -1,3 +1,10 @@
+# [2.18.0-rc.3](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.2...v2.18.0-rc.3) (2026-09-06)
+
+
+### Bug Fixes
+
+* apply translation fallback to all filter operators and to sorting ([#1272](https://github.com/ReliefApplications/ems-backend/issues/1272)) ([e7bd1d8](https://github.com/ReliefApplications/ems-backend/commit/e7bd1d8e651ed6bb7fc86f47b3b2dbd91dee8f57)), closes [AB#137461](https://github.com/AB/issues/137461)
+
 # [2.18.0-rc.2](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.1...v2.18.0-rc.2) (2026-09-06)
 
 
