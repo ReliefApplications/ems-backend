@@ -8,6 +8,56 @@ import { resolveLocalizedString } from '@utils/i18n/resolveLocalizedString';
 import { SortDescriptor } from './normalizeSortDescriptors';
 
 /**
+ * Resolves the translation sibling of a sort field for the user's locale.
+ *
+ * Top-level fields carry their siblings in the structure fields; subfields of
+ * a related resource (`<resource>.<subfield>`) carry them on the related
+ * resource's own fields, exposed through `context.resourceFieldsById`.
+ *
+ * @param sortField Sort by field
+ * @param fields Structure fields
+ * @param context Request context
+ * @returns Translated field name, plus the document paths of the translation and of its source when a sibling exists
+ */
+const resolveTranslation = (
+  sortField: string,
+  fields: any[],
+  context: any
+): { name: string; translatedPath?: string; sourcePath?: string } => {
+  const locale = context?.locale;
+  if (sortField && sortField.includes('.')) {
+    const [resourceName, subField] = sortField.split('.');
+    const resourceField = fields.find(
+      (x) => x && x.name === resourceName && x.type === 'resource'
+    );
+    const relatedFields =
+      context?.resourceFieldsById?.[resourceField?.resource] || [];
+    const translatedSubField = getTranslatedFieldName(
+      subField,
+      relatedFields,
+      locale
+    );
+    if (translatedSubField === subField) {
+      return { name: sortField };
+    }
+    return {
+      name: `${resourceName}.${translatedSubField}`,
+      translatedPath: `_${resourceName}.data.${translatedSubField}`,
+      sourcePath: `_${resourceName}.data.${subField}`,
+    };
+  }
+  const translated = getTranslatedFieldName(sortField, fields, locale);
+  if (translated === sortField) {
+    return { name: sortField };
+  }
+  return {
+    name: translated,
+    translatedPath: `data.${translated}`,
+    sourcePath: `data.${sortField}`,
+  };
+};
+
+/**
  * Builds the aggregation stages (choice-resolution + sort) for a single sort
  * descriptor, and adds its resolved path/order to the shared sort stage.
  *
@@ -27,19 +77,46 @@ const buildSortDescriptorAggregation = async (
 ): Promise<any[]> => {
   // Locale-based translation: replace the sort field with its sibling
   // translation field when one matches the user's locale.
-  sortField = getTranslatedFieldName(sortField, fields, context?.locale);
+  const translation = resolveTranslation(sortField, fields, context);
+  sortField = translation.name;
 
   const field: any = fields.find((x) => x && x.name === sortField);
+  const hasChoices =
+    field && (field.choices || field.choicesByUrl || field.choicesByGraphQL);
+
+  // Translated text fields: sort on the displayed value, i.e. the translation
+  // sibling when set, otherwise the source field (same fallback as the entity
+  // resolvers and as getFilter)
+  if (translation.translatedPath && !hasChoices) {
+    const alias = `_${sortField.replace('.', '_')}`;
+    const translatedValue = `$${translation.translatedPath}`;
+    sortStage[alias] = getSortOrder(sortOrder);
+    return [
+      {
+        $addFields: {
+          [alias]: {
+            $cond: [
+              {
+                $or: [
+                  { $in: [{ $type: translatedValue }, ['missing', 'null']] },
+                  { $eq: [translatedValue, ''] },
+                ],
+              },
+              `$${translation.sourcePath}`,
+              translatedValue,
+            ],
+          },
+        },
+      },
+    ];
+  }
   const parentField: any =
     sortField && sortField.includes('.')
       ? fields.find((x) => x && x.name === sortField.split('.')[0])
       : '';
   const aggregation = [];
   // If we need to populate choices to sort on the text value
-  if (
-    field &&
-    (field.choices || field.choicesByUrl || field.choicesByGraphQL)
-  ) {
+  if (hasChoices) {
     const rawChoices = (await getFullChoices(field, context)) || [];
     // Resolve each choice's (possibly localized) text to the active locale so
     // that we sort on the displayed value rather than the raw locale object.
