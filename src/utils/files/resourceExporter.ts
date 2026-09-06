@@ -21,6 +21,7 @@ import { Response } from 'express';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { accessibleBy } from '@casl/mongoose';
 import getSortAggregation from '@utils/schema/resolvers/Query/getSortAggregation';
+import normalizeSortDescriptors from '@utils/schema/resolvers/Query/normalizeSortDescriptors';
 import dataSources from '@server/apollo/dataSources';
 import sanitizeHtml from 'sanitize-html';
 import { getErrorMessage } from '@utils/error';
@@ -35,6 +36,7 @@ interface ExportBatchParams {
   query: any;
   sortField?: string;
   sortOrder?: 'asc' | 'desc';
+  sortFields?: { field: string; order?: string }[];
   resource?: string;
   timeZone: string;
   fileName?: string;
@@ -294,8 +296,11 @@ export default class Exporter {
       set(this.req.context, 'accesstoken', this.req.headers.accesstoken);
     }
     const sort = await getSortAggregation(
-      this.params.sortField,
-      this.params.sortOrder,
+      normalizeSortDescriptors(
+        this.params.sortField,
+        this.params.sortOrder,
+        this.params.sortFields
+      ),
       this.resource.fields,
       this.req.context
     );
