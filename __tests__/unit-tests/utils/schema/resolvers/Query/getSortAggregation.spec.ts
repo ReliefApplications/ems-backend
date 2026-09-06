@@ -160,3 +160,115 @@ describe('getSortAggregation - compound sort', () => {
     });
   });
 });
+
+describe('getSortAggregation - translated text fields', () => {
+  afterEach(() => jest.clearAllMocks());
+
+  const FIELDS = [
+    { name: 'title', type: 'text' },
+    {
+      name: 'title_en',
+      type: 'text',
+      translateField: 'title',
+      translateTo: 'en',
+    },
+    { name: 'emergency', type: 'resource', resource: 'emergencyResourceId' },
+  ];
+  const EMERGENCY_FIELDS = [
+    { name: 'name', type: 'text' },
+    {
+      name: 'name_pt',
+      type: 'text',
+      translateField: 'name',
+      translateTo: 'pt',
+    },
+  ];
+  const CONTEXT = {
+    resourceFieldsById: { emergencyResourceId: EMERGENCY_FIELDS },
+  };
+
+  /**
+   * Expected displayed value expression for a translated field.
+   *
+   * @param translated path of the translation sibling
+   * @param source path of the source field
+   * @returns expected $cond expression
+   */
+  const displayedValue = (translated: string, source: string) => ({
+    $cond: [
+      {
+        $or: [
+          { $in: [{ $type: `$${translated}` }, ['missing', 'null']] },
+          { $eq: [`$${translated}`, ''] },
+        ],
+      },
+      `$${source}`,
+      `$${translated}`,
+    ],
+  });
+
+  it('sorts on the translation, falling back to the source when empty', async () => {
+    const aggregation = await getSortAggregation(
+      [{ field: 'title', order: 'asc' }],
+      FIELDS,
+      { ...CONTEXT, locale: 'en' }
+    );
+    expect(aggregation).toEqual([
+      {
+        $addFields: {
+          _title_en: displayedValue('data.title_en', 'data.title'),
+        },
+      },
+      { $sort: { _title_en: 1 } },
+    ]);
+  });
+
+  it('sorts on the source field when no sibling matches the locale', async () => {
+    const aggregation = await getSortAggregation(
+      [{ field: 'title', order: 'desc' }],
+      FIELDS,
+      { ...CONTEXT, locale: 'fr' }
+    );
+    expect(aggregation).toEqual([{ $sort: { 'data.title': -1 } }]);
+  });
+
+  it('resolves translation siblings of related-resource subfields', async () => {
+    const aggregation = await getSortAggregation(
+      [{ field: 'emergency.name', order: 'asc' }],
+      FIELDS,
+      { ...CONTEXT, locale: 'pt' }
+    );
+    expect(aggregation).toEqual([
+      {
+        $addFields: {
+          _emergency_name_pt: displayedValue(
+            '_emergency.data.name_pt',
+            '_emergency.data.name'
+          ),
+        },
+      },
+      { $sort: { _emergency_name_pt: 1 } },
+    ]);
+
+    const fallback = await getSortAggregation(
+      [{ field: 'emergency.name', order: 'asc' }],
+      FIELDS,
+      { ...CONTEXT, locale: 'fr' }
+    );
+    expect(fallback).toEqual([{ $sort: { '_emergency.data.name': 1 } }]);
+  });
+
+  it('combines a translated field with other sort fields in priority order', async () => {
+    const aggregation = await getSortAggregation(
+      [
+        { field: 'title', order: 'asc' },
+        { field: 'createdAt', order: 'desc' },
+      ],
+      FIELDS,
+      { ...CONTEXT, locale: 'en' }
+    );
+    expect(aggregation[aggregation.length - 1]).toEqual({
+      $sort: { _title_en: 1, createdAt: -1 },
+    });
+  });
+});

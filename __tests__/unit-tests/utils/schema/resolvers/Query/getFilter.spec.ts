@@ -6,7 +6,12 @@ import getFilter, {
 /** Fields of the queried resource */
 const FIELDS = [
   { name: 'title', type: 'text' },
-  { name: 'title_en', type: 'text', translateField: 'title', translateTo: 'en' },
+  {
+    name: 'title_en',
+    type: 'text',
+    translateField: 'title',
+    translateTo: 'en',
+  },
   { name: 'count', type: 'numeric' },
   { name: 'status', type: 'dropdown', choices: [] },
   { name: 'tags', type: 'tagbox', choices: [] },
@@ -40,6 +45,26 @@ const globalSearch = (rules: any[]) => ({
   logic: 'and',
   filters: [
     { logic: 'or', field: '_globalSearch', operator: 'contains', value: rules },
+  ],
+});
+
+/**
+ * Expected shape of a rule applied to the displayed value of a translated
+ * field: the translation sibling when set, otherwise the source field.
+ *
+ * @param translated path of the translation sibling
+ * @param source path of the source field
+ * @param build builds the rule for a given field path
+ * @returns expected mongo filter
+ */
+const displayedValue = (
+  translated: string,
+  source: string,
+  build: (name: string) => any
+) => ({
+  $or: [
+    { $and: [{ [translated]: { $nin: [null, ''] } }, build(translated)] },
+    { $and: [{ [translated]: { $in: [null, ''] } }, build(source)] },
   ],
 });
 
@@ -102,10 +127,7 @@ describe('getFilter - global search expansion', () => {
       { 'data.title': { $regex: 'cholera', $options: 'i' } },
       // numeric eq matches both string and number storage
       {
-        $or: [
-          { 'data.count': { $eq: '12' } },
-          { 'data.count': { $eq: 12 } },
-        ],
+        $or: [{ 'data.count': { $eq: '12' } }, { 'data.count': { $eq: 12 } }],
       },
       { 'data.tags': { $all: ['cholera'] } },
     ]);
@@ -137,26 +159,12 @@ describe('getFilter - global search expansion', () => {
     ]);
     // Locale with a translation sibling on the related resource
     const result = getFilter(filter, FIELDS, { ...CONTEXT, locale: 'pt' });
-    expect(result.$and[0].$or[0].$expr.$regexMatch).toMatchObject({
-      regex: 'colera',
-      options: 'i',
-    });
-    expect(
-      result.$and[0].$or[0].$expr.$regexMatch.input.$convert.input.$cond
-    ).toEqual([
-      {
-        $or: [
-          {
-            $in: [
-              { $type: '$_emergency.data.name_pt' },
-              ['missing', 'null'],
-            ],
-          },
-          { $eq: ['$_emergency.data.name_pt', ''] },
-        ],
-      },
-      '$_emergency.data.name',
-      '$_emergency.data.name_pt',
+    expect(result.$and[0].$or).toEqual([
+      displayedValue(
+        '_emergency.data.name_pt',
+        '_emergency.data.name',
+        (name) => ({ [name]: { $regex: 'colera', $options: 'i' } })
+      ),
     ]);
     // Locale without a sibling falls back to the source subfield
     const fallback = getFilter(filter, FIELDS, { ...CONTEXT, locale: 'fr' });
@@ -170,54 +178,22 @@ describe('getFilter - global search expansion', () => {
       { field: 'title', operator: 'contains', value: 'Коваленко' },
     ]);
     const result = getFilter(filter, FIELDS, { ...CONTEXT, locale: 'en' });
-    const regexMatch = result.$and[0].$or[0].$expr.$regexMatch;
-
-    expect(regexMatch).toMatchObject({
-      regex: 'Коваленко',
-      options: 'i',
-    });
-    expect(regexMatch.input.$convert.input.$cond).toEqual([
-      {
-        $or: [
-          { $in: [{ $type: '$data.title_en' }, ['missing', 'null']] },
-          { $eq: ['$data.title_en', ''] },
-        ],
-      },
-      '$data.title',
-      '$data.title_en',
+    expect(result.$and[0].$or).toEqual([
+      displayedValue('data.title_en', 'data.title', (name) => ({
+        [name]: { $regex: 'Коваленко', $options: 'i' },
+      })),
     ]);
   });
 
-  it('keeps regular contains filters scoped to the translated field', () => {
-    const direct = getFilter(
-      {
-        logic: 'and',
-        filters: [{ field: 'title', operator: 'contains', value: 'patient' }],
-      },
-      FIELDS,
-      { ...CONTEXT, locale: 'en' }
-    );
-    expect(direct).toEqual({
-      $and: [{ 'data.title_en': { $regex: 'patient', $options: 'i' } }],
-    });
-
-    const related = getFilter(
-      {
-        logic: 'and',
-        filters: [
-          { field: 'emergency.name', operator: 'contains', value: 'colera' },
-        ],
-      },
-      FIELDS,
-      { ...CONTEXT, locale: 'pt' }
-    );
-    expect(related).toEqual({
-      $and: [
-        {
-          '_emergency.data.name_pt': { $regex: 'colera', $options: 'i' },
-        },
-      ],
-    });
+  it('does not drop translated rules from the global search expansion', () => {
+    // The `$in: [null, '']` used to detect an empty translation must not be
+    // mistaken for a failed date parse
+    const filter = globalSearch([
+      { field: 'title', operator: 'contains', value: 'patient' },
+    ]);
+    const result = getFilter(filter, FIELDS, { ...CONTEXT, locale: 'en' });
+    expect(result.$and[0].$or).toHaveLength(1);
+    expect(result.$and[0]).not.toEqual(MATCH_NOTHING);
   });
 
   it('supports in operator for choice values matched by display text', () => {
@@ -241,7 +217,7 @@ describe('getFilter - global search expansion', () => {
       { 'data.title': { $regex: '\\(test', $options: 'i' } },
     ]);
     // the escaped pattern must be a valid regex matching the literal string
-    const pattern = result.$and[0].$or[0]["data.title"].$regex;
+    const pattern = result.$and[0].$or[0]['data.title'].$regex;
     expect(new RegExp(pattern).test('a (test b')).toBe(true);
   });
 
@@ -336,6 +312,161 @@ describe('getFilter - global search expansion', () => {
   });
 });
 
+describe('getFilter - filters on translated text fields', () => {
+  const direct = (rule: any, locale: string) =>
+    getFilter({ logic: 'and', filters: [rule] }, FIELDS, {
+      ...CONTEXT,
+      locale,
+    });
+
+  it('applies contains to the displayed value', () => {
+    const result = direct(
+      { field: 'title', operator: 'contains', value: 'patient' },
+      'en'
+    );
+    expect(result).toEqual({
+      $and: [
+        displayedValue('data.title_en', 'data.title', (name) => ({
+          [name]: { $regex: 'patient', $options: 'i' },
+        })),
+      ],
+    });
+  });
+
+  it('applies eq / neq to the displayed value', () => {
+    const eq = direct(
+      { field: 'title', operator: 'eq', value: 'Cholera' },
+      'en'
+    );
+    expect(eq).toEqual({
+      $and: [
+        displayedValue('data.title_en', 'data.title', (name) => ({
+          [name]: { $eq: 'Cholera' },
+        })),
+      ],
+    });
+    const neq = direct(
+      { field: 'title', operator: 'neq', value: 'Cholera' },
+      'en'
+    );
+    expect(neq).toEqual({
+      $and: [
+        displayedValue('data.title_en', 'data.title', (name) => ({
+          [name]: { $ne: 'Cholera' },
+        })),
+      ],
+    });
+  });
+
+  it('applies startswith / endswith / doesnotcontain to the displayed value', () => {
+    const startsWith = direct(
+      { field: 'title', operator: 'startswith', value: 'Cho' },
+      'en'
+    );
+    expect(startsWith).toEqual({
+      $and: [
+        displayedValue('data.title_en', 'data.title', (name) => ({
+          [name]: { $regex: '^Cho', $options: 'i' },
+        })),
+      ],
+    });
+    const endsWith = direct(
+      { field: 'title', operator: 'endswith', value: 'era' },
+      'en'
+    );
+    expect(endsWith).toEqual({
+      $and: [
+        displayedValue('data.title_en', 'data.title', (name) => ({
+          [name]: { $regex: 'era$', $options: 'i' },
+        })),
+      ],
+    });
+    const doesNotContain = direct(
+      { field: 'title', operator: 'doesnotcontain', value: 'era' },
+      'en'
+    );
+    expect(doesNotContain).toEqual({
+      $and: [
+        displayedValue('data.title_en', 'data.title', (name) => ({
+          [name]: { $not: { $regex: 'era', $options: 'i' } },
+        })),
+      ],
+    });
+  });
+
+  it('applies isempty / isnotempty / isnull / isnotnull to the displayed value', () => {
+    const isEmpty = direct({ field: 'title', operator: 'isempty' }, 'en');
+    expect(isEmpty).toEqual({
+      $and: [
+        displayedValue('data.title_en', 'data.title', (name) => ({
+          [name]: { $exists: true, $eq: '' },
+        })),
+      ],
+    });
+    const isNotEmpty = direct({ field: 'title', operator: 'isnotempty' }, 'en');
+    expect(isNotEmpty).toEqual({
+      $and: [
+        displayedValue('data.title_en', 'data.title', (name) => ({
+          [name]: { $exists: true, $nin: [null, ''] },
+        })),
+      ],
+    });
+    const isNull = direct({ field: 'title', operator: 'isnull' }, 'en');
+    expect(isNull).toEqual({
+      $and: [
+        displayedValue('data.title_en', 'data.title', (name) => ({
+          $or: [{ [name]: { $exists: false } }, { [name]: { $eq: null } }],
+        })),
+      ],
+    });
+    const isNotNull = direct({ field: 'title', operator: 'isnotnull' }, 'en');
+    expect(isNotNull).toEqual({
+      $and: [
+        displayedValue('data.title_en', 'data.title', (name) => ({
+          [name]: { $exists: true, $ne: null },
+        })),
+      ],
+    });
+  });
+
+  it('applies rules on related-resource subfields to the displayed value', () => {
+    const result = direct(
+      { field: 'emergency.name', operator: 'contains', value: 'colera' },
+      'pt'
+    );
+    expect(result).toEqual({
+      $and: [
+        displayedValue(
+          '_emergency.data.name_pt',
+          '_emergency.data.name',
+          (name) => ({ [name]: { $regex: 'colera', $options: 'i' } })
+        ),
+      ],
+    });
+  });
+
+  it('leaves fields untouched when no sibling matches the locale', () => {
+    const result = direct(
+      { field: 'title', operator: 'contains', value: 'patient' },
+      'fr'
+    );
+    expect(result).toEqual({
+      $and: [{ 'data.title': { $regex: 'patient', $options: 'i' } }],
+    });
+    const noLocale = getFilter(
+      {
+        logic: 'and',
+        filters: [{ field: 'title', operator: 'contains', value: 'patient' }],
+      },
+      FIELDS,
+      CONTEXT
+    );
+    expect(noLocale).toEqual({
+      $and: [{ 'data.title': { $regex: 'patient', $options: 'i' } }],
+    });
+  });
+});
+
 describe('getFilter - isempty / isnotempty operators', () => {
   it('isnotempty on a tagbox field excludes null values and empty arrays', () => {
     const result = getFilter(
@@ -405,7 +536,11 @@ describe('getFilter - user attribute & people current-user filters', () => {
     const filter = {
       logic: 'and',
       filters: [
-        { field: '$attribute.country.iso3code', operator: 'eq', value: 'title' },
+        {
+          field: '$attribute.country.iso3code',
+          operator: 'eq',
+          value: 'title',
+        },
       ],
     };
     const result = getFilter(filter, FIELDS, USER_CONTEXT);
@@ -415,9 +550,7 @@ describe('getFilter - user attribute & people current-user filters', () => {
   it('matches nothing when an attribute filter has no user in context', () => {
     const filter = {
       logic: 'and',
-      filters: [
-        { field: '$attribute.region', operator: 'eq', value: 'title' },
-      ],
+      filters: [{ field: '$attribute.region', operator: 'eq', value: 'title' }],
     };
     const result = getFilter(filter, FIELDS, CONTEXT);
     expect(result).toEqual({ $and: [MATCH_NOTHING] });
@@ -511,8 +644,12 @@ describe('getFilter - user attribute & people current-user filters', () => {
           $and: [
             {
               $or: [
-                { 'data.focal_point.firstname': { $regex: 'me', $options: 'i' } },
-                { 'data.focal_point.lastname': { $regex: 'me', $options: 'i' } },
+                {
+                  'data.focal_point.firstname': { $regex: 'me', $options: 'i' },
+                },
+                {
+                  'data.focal_point.lastname': { $regex: 'me', $options: 'i' },
+                },
                 {
                   'data.focal_point.emailaddress': {
                     $regex: 'me',
@@ -542,7 +679,9 @@ describe('getFilter - attribute field comparisons robustness', () => {
     const inResult = getFilter(
       {
         logic: 'and',
-        filters: [{ field: '$attribute.region', operator: 'in', value: 'title' }],
+        filters: [
+          { field: '$attribute.region', operator: 'in', value: 'title' },
+        ],
       },
       FIELDS,
       USER_CONTEXT
@@ -562,9 +701,7 @@ describe('getFilter - attribute field comparisons robustness', () => {
       USER_CONTEXT
     );
     expect(notinResult).toEqual({
-      $and: [
-        { 'data.title': { $not: { $regex: '^EURO$', $options: 'i' } } },
-      ],
+      $and: [{ 'data.title': { $not: { $regex: '^EURO$', $options: 'i' } } }],
     });
   });
 
@@ -575,9 +712,7 @@ describe('getFilter - attribute field comparisons robustness', () => {
     };
     const rule = (operator: string) => ({
       logic: 'and',
-      filters: [
-        { field: '$attribute.region.id', operator, value: 'tags' },
-      ],
+      filters: [{ field: '$attribute.region.id', operator, value: 'tags' }],
     });
 
     // record stores e.g. tags: [4, 3, 5] (numbers) or ['4'] (strings)
@@ -604,10 +739,7 @@ describe('getFilter - attribute field comparisons robustness', () => {
     expect(getFilter(rule('eq'), FIELDS, numericContext)).toEqual({
       $and: [
         {
-          $or: [
-            { 'data.tags': { $eq: '4' } },
-            { 'data.tags': { $eq: 4 } },
-          ],
+          $or: [{ 'data.tags': { $eq: '4' } }, { 'data.tags': { $eq: 4 } }],
         },
       ],
     });
@@ -634,15 +766,15 @@ describe('getFilter - attribute field comparisons robustness', () => {
     const result = getFilter(
       {
         logic: 'and',
-        filters: [{ field: '$attribute.region', operator: 'in', value: 'title' }],
+        filters: [
+          { field: '$attribute.region', operator: 'in', value: 'title' },
+        ],
       },
       FIELDS,
       { ...CONTEXT, user: { attributes: { region: 'EURO (west)' } } }
     );
     expect(result).toEqual({
-      $and: [
-        { 'data.title': { $regex: '^EURO \\(west\\)$', $options: 'i' } },
-      ],
+      $and: [{ 'data.title': { $regex: '^EURO \\(west\\)$', $options: 'i' } }],
     });
   });
 });
