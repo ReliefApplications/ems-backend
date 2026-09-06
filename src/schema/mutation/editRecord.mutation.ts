@@ -14,6 +14,7 @@ import {
   checkRecordValidation,
   checkRecordTriggers,
   hasInaccessibleFields,
+  validateUniqueness,
 } from '@utils/form';
 import { RecordType } from '../types';
 import { Types } from 'mongoose';
@@ -69,7 +70,7 @@ export default {
       );
       const parentResource: Resource = await Resource.findById(
         parentForm.resource,
-        'fields'
+        'fields uniquenessRules'
       );
       if (!oldRecord || !parentForm || !parentResource) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
@@ -111,6 +112,23 @@ export default {
       } catch (err) {
         logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       }
+      validationErrors = validationErrors || [];
+
+      // Check uniqueness rules configured on the resource, if any
+      const mergedData = { ...oldRecord.data, ...args.data };
+      const uniquenessResult = await validateUniqueness(
+        mergedData,
+        parentResource,
+        oldRecord._id,
+        context.i18next.t.bind(context.i18next)
+      );
+      if (uniquenessResult.errors.length) {
+        throw new GraphQLError(
+          uniquenessResult.errors.map((e) => e.errors.join(' ')).join(' ')
+        );
+      }
+      validationErrors = [...validationErrors, ...uniquenessResult.warnings];
+
       if (validationErrors.length && !args.skipValidation) {
         return Object.assign(oldRecord, { validationErrors });
       }

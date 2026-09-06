@@ -11,7 +11,12 @@ import {
 } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { getUploadColumns, loadRow, uploadFile } from '@utils/files';
-import { getNextId } from '@utils/form';
+import {
+  getNextId,
+  Translator,
+  validateBatchUniqueness,
+  validateUniqueness,
+} from '@utils/form';
 import i18next from 'i18next';
 import get from 'lodash/get';
 import { logger } from '@services/logger.service';
@@ -31,19 +36,29 @@ const router = express.Router();
 /**
  * Insert records from file if authorized.
  *
+ * If the resource has uniqueness rules configured, every row is checked
+ * both against already-persisted records and against the rest of the file;
+ * if any row violates an error-severity rule, the whole file is rejected
+ * and nothing is inserted. Warning-severity violations do not block the
+ * import, but are reported back alongside the success response.
+ *
  * @param res Request's response.
  * @param file File with records to insert.
  * @param form Form template for records.
  * @param fields Fields template for records.
  * @param context Context
+ * @param resource Resource the records belong to, if any (used for uniqueness rules and upload permission)
+ * @param t Translator, used to localize user-facing messages
  * @returns request with success status
  */
-async function insertRecords(
+export async function insertRecords(
   res: any,
   file: any,
   form: Form,
   fields: any[],
-  context: any
+  context: any,
+  resource: Resource | null,
+  t: Translator
 ) {
   // Check if the user is authorized
   const ability: AppAbility = context.user.ability;
@@ -51,15 +66,11 @@ async function insertRecords(
   if (ability.can('create', 'Record') || ability.can('upload', 'Record')) {
     canCreate = true;
   } else {
-    // Populate resource on form if not populated to access permissions
-    if (form.resource && !form.resource.permissions) {
-      await form.populate('resource');
-    }
     const roles = context.user.roles.map((x) => String(x._id));
 
     const canUploadRoles = get(
-      form,
-      'resource.permissions.canUploadRecords',
+      resource,
+      'permissions.canUploadRecords',
       []
     ).map((x: any) => String(x.role || x));
 
@@ -70,85 +81,103 @@ async function insertRecords(
 
     canCreate = hasUploadRole;
   }
-  // Check unicity of record
-  // TODO: this is always breaking
-  // if (form.permissions.recordsUnicity) {
-  //     const unicityFilter = getRecordAccessFilter(form.permissions.recordsUnicity, Record, req.context.user);
-  //     if (unicityFilter) {
-  //         const uniqueRecordAlreadyExists = await Record.exists({ $and: [{ form: form._id }, unicityFilter] });
-  //         canCreate = !uniqueRecordAlreadyExists;
-  //     }
-  // }
-  if (canCreate) {
-    const records: Record[] = [];
-    const dataSets: { data: any; positionAttributes: PositionAttribute[] }[] =
-      [];
-    const workbook = new Workbook();
-    await workbook.xlsx.load(file.data);
-    const worksheet = workbook.getWorksheet(1);
-    let columns = [];
-    worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
-      const values = JSON.parse(JSON.stringify(row.values));
-      if (rowNumber === 1) {
-        columns = getUploadColumns(fields, values);
-      } else {
-        dataSets.push(loadRow(columns, values));
-      }
-    });
+  if (!canCreate) {
+    return res.status(403).send(t('common.errors.dataNotFound'));
+  }
 
-    // Resource may have been populated by the permission check above,
-    // so only keep its id
-    const structureId = String(
-      form.resource ? get(form.resource, '_id', form.resource) : form.id
-    );
-    // Create records one by one so the incrementalId works correctly
-    for (const dataSet of dataSets) {
-      records.push(
-        new Record({
-          incrementalId: await getNextId(structureId),
-          form: form.id,
-          // createdAt: new Date(),
-          // modifiedAt: new Date(),
-          data: dataSet.data,
-          resource: form.resource ? structureId : null,
-          createdBy: {
-            positionAttributes: dataSet.positionAttributes,
-            user: context.user._id,
-          },
-          lastUpdateForm: form.id,
-          _createdBy: {
-            user: {
-              _id: context.user._id,
-              name: context.user.name,
-              username: context.user.username,
-            },
-          },
-          _form: {
-            _id: form._id,
-            name: form.name,
-          },
-          _lastUpdateForm: {
-            _id: form._id,
-            name: form.name,
-          },
-        })
-      );
-    }
-    if (records.length > 0) {
-      try {
-        Record.insertMany(records);
-        return res.status(200).send({ status: 'OK' });
-      } catch (err) {
-        logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
-        return res
-          .status(500)
-          .send(i18next.t('common.errors.internalServerError'));
-      }
+  const dataSets: {
+    data: any;
+    positionAttributes: PositionAttribute[];
+    rowNumber: number;
+  }[] = [];
+  const workbook = new Workbook();
+  await workbook.xlsx.load(file.data);
+  const worksheet = workbook.getWorksheet(1);
+  let columns = [];
+  worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
+    const values = JSON.parse(JSON.stringify(row.values));
+    if (rowNumber === 1) {
+      columns = getUploadColumns(fields, values);
     } else {
-      return res.status(200).send({ status: 'No record added.' });
+      dataSets.push({ ...loadRow(columns, values), rowNumber });
     }
-  } else {
-    return res.status(403).send(i18next.t('common.errors.dataNotFound'));
+  });
+
+  if (dataSets.length === 0) {
+    return res.status(200).send({ status: 'No record added.' });
+  }
+
+  // Check uniqueness rules configured on the resource, if any: both within
+  // the file itself, and against already-persisted records.
+  const rowsData = dataSets.map((d) => d.data);
+  const batchResults = validateBatchUniqueness(rowsData, resource, t);
+  const rowResults = await Promise.all(
+    rowsData.map(async (data, index) => {
+      const dbResult = await validateUniqueness(data, resource, undefined, t);
+      return {
+        errors: [...batchResults[index].errors, ...dbResult.errors],
+        warnings: [...batchResults[index].warnings, ...dbResult.warnings],
+      };
+    })
+  );
+
+  const errorRows = dataSets
+    .map((dataSet, index) => ({ row: dataSet.rowNumber, ...rowResults[index] }))
+    .filter((r) => r.errors.length > 0);
+  if (errorRows.length > 0) {
+    return res.status(400).send({
+      status: 'error',
+      message: t('routes.upload.errors.uniquenessViolation'),
+      errors: errorRows.map((r) => ({ row: r.row, errors: r.errors })),
+    });
+  }
+
+  const warningRows = dataSets
+    .map((dataSet, index) => ({ row: dataSet.rowNumber, ...rowResults[index] }))
+    .filter((r) => r.warnings.length > 0)
+    .map((r) => ({ row: r.row, warnings: r.warnings }));
+
+  const structureId = String(resource ? resource._id : form.id);
+  // Create records one by one so the incrementalId works correctly
+  const records: Record[] = [];
+  for (const dataSet of dataSets) {
+    records.push(
+      new Record({
+        incrementalId: await getNextId(structureId),
+        form: form.id,
+        // createdAt: new Date(),
+        // modifiedAt: new Date(),
+        data: dataSet.data,
+        resource: resource ? structureId : null,
+        createdBy: {
+          positionAttributes: dataSet.positionAttributes,
+          user: context.user._id,
+        },
+        lastUpdateForm: form.id,
+        _createdBy: {
+          user: {
+            _id: context.user._id,
+            name: context.user.name,
+            username: context.user.username,
+          },
+        },
+        _form: {
+          _id: form._id,
+          name: form.name,
+        },
+        _lastUpdateForm: {
+          _id: form._id,
+          name: form.name,
+        },
+      })
+    );
+  }
+  try {
+    await Record.insertMany(records);
+    return res.status(200).send({ status: 'OK', warnings: warningRows });
+  } catch (err) {
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
+    return res.status(500).send(t('common.errors.internalServerError'));
   }
 }
 
@@ -181,8 +210,20 @@ router.post('/form/records/:id', async (req: any, res) => {
     if (!form)
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
 
+    const resource = form.resource
+      ? await Resource.findById(form.resource)
+      : null;
+
     // Insert records if authorized
-    return await insertRecords(res, file, form, form.fields, req.context);
+    return await insertRecords(
+      res,
+      file,
+      form,
+      form.fields,
+      req.context,
+      resource,
+      req.t
+    );
   } catch (err) {
     logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
@@ -219,7 +260,15 @@ router.post('/resource/records/:id', async (req: any, res) => {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
 
     // Insert records if authorized
-    return await insertRecords(res, file, form, resource.fields, req.context);
+    return await insertRecords(
+      res,
+      file,
+      form,
+      resource.fields,
+      req.context,
+      resource,
+      req.t
+    );
   } catch (err) {
     logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));

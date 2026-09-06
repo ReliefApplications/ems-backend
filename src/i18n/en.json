@@ -223,6 +223,12 @@
 					"invalidArguments": "Either data or version must be provided.",
 					"wrongTemplateProvided": "Template must sharing the same resource as the parent form of the edited record."
 				}
+			},
+			"uniqueness": {
+				"errors": {
+					"dateIntersection": "This would overlap with another record on the same {{fields}}.",
+					"duplicate": "A record with the same {{fields}} already exists."
+				}
 			}
 		},
 		"reference": {
@@ -347,7 +353,8 @@
 			"errors": {
 				"invalidUserUpload": "Please provide email and role for each user.",
 				"missingFile": "No file detected.",
-				"noRecordsToInsert": "No records were provided for insertion."
+				"noRecordsToInsert": "No records were provided for insertion.",
+				"uniquenessViolation": "The file was not imported: some rows violate a uniqueness rule. Fix the highlighted rows and upload again."
 			}
 		}
 	},
