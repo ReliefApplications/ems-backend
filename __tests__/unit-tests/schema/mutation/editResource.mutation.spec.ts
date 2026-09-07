@@ -259,6 +259,248 @@ describe('editResource Resolver', () => {
     });
   });
 
+  describe('Fields permissions ( batched )', () => {
+    it('should grant a field permission to several roles in one request', async () => {
+      await Resource.findByIdAndUpdate(resource.id, {
+        $push: { 'permissions.canSeeRecords': { role: roleB } },
+      });
+      const updated = await editResource.resolve(
+        null,
+        {
+          id: resource.id,
+          fieldsPermissions: {
+            canSee: {
+              add: [
+                { field: 'name', role: String(roleA) },
+                { field: 'name', role: String(roleB) },
+              ],
+            },
+          },
+        },
+        context
+      );
+      const name = updated.fields.find((f: any) => f.name === 'name');
+      expect(ids(name.permissions.canSee).sort()).toEqual(
+        [String(roleA), String(roleB)].sort()
+      );
+    });
+
+    it('should remove a field permission from several roles in one request', async () => {
+      await Resource.findByIdAndUpdate(resource.id, {
+        $set: {
+          'fields.0.permissions': { canSee: [roleA, roleB], canUpdate: [] },
+        },
+      });
+      const updated = await editResource.resolve(
+        null,
+        {
+          id: resource.id,
+          fieldsPermissions: {
+            canSee: {
+              remove: [
+                { field: 'name', role: String(roleA) },
+                { field: 'name', role: String(roleB) },
+              ],
+            },
+          },
+        },
+        context
+      );
+      const name = updated.fields.find((f: any) => f.name === 'name');
+      expect(ids(name.permissions.canSee)).toEqual([]);
+    });
+
+    it('should accept canSee & canUpdate grants on the same field / role in one request', async () => {
+      await Resource.findByIdAndUpdate(resource.id, {
+        $push: { 'permissions.canCreateRecords': { role: roleA } },
+      });
+      const updated = await editResource.resolve(
+        null,
+        {
+          id: resource.id,
+          fieldsPermissions: {
+            canSee: { add: { field: 'name', role: String(roleA) } },
+            canUpdate: { add: { field: 'name', role: String(roleA) } },
+          },
+        },
+        context
+      );
+      const name = updated.fields.find((f: any) => f.name === 'name');
+      expect(ids(name.permissions.canSee)).toEqual([String(roleA)]);
+      expect(ids(name.permissions.canUpdate)).toEqual([String(roleA)]);
+    });
+  });
+
+  describe('Fields auto-grant', () => {
+    it('should opt a role out, then back in', async () => {
+      let updated = await editResource.resolve(
+        null,
+        {
+          id: resource.id,
+          fieldsAutoGrant: { canSee: { remove: [String(roleA)] } },
+        },
+        context
+      );
+      expect(ids(updated.permissions.fieldsAutoGrantCanSeeOptOut)).toEqual([
+        String(roleA),
+      ]);
+      updated = await editResource.resolve(
+        null,
+        {
+          id: resource.id,
+          fieldsAutoGrant: { canSee: { add: [String(roleA)] } },
+        },
+        context
+      );
+      expect(ids(updated.permissions.fieldsAutoGrantCanSeeOptOut)).toEqual([]);
+    });
+
+    it('should refuse to opt in a role that cannot see records', async () => {
+      const result = editResource.resolve(
+        null,
+        {
+          id: resource.id,
+          fieldsAutoGrant: { canSee: { add: [String(roleB)] } },
+        },
+        context
+      );
+      await expect(result).rejects.toThrow(GraphQLError);
+      expect(context.i18next.t).toHaveBeenCalledWith(
+        'mutations.resource.edit.errors.fieldsAutoGrant.missingReadPermissionOnResource'
+      );
+    });
+
+    it('should accept an opt in together with the records permission grant', async () => {
+      await Resource.findByIdAndUpdate(resource.id, {
+        $push: { 'permissions.fieldsAutoGrantCanSeeOptOut': roleB },
+      });
+      const updated = await editResource.resolve(
+        null,
+        {
+          id: resource.id,
+          permissions: { canSeeRecords: { add: [{ role: String(roleB) }] } },
+          fieldsAutoGrant: { canSee: { add: [String(roleB)] } },
+        },
+        context
+      );
+      expect(ids(updated.permissions.fieldsAutoGrantCanSeeOptOut)).toEqual([]);
+    });
+
+    it('should opt a role out of canUpdate auto-grant, and refuse to opt in without write access', async () => {
+      await Resource.findByIdAndUpdate(resource.id, {
+        $push: { 'permissions.canUpdateRecords': { role: roleA } },
+      });
+      const updated = await editResource.resolve(
+        null,
+        {
+          id: resource.id,
+          fieldsAutoGrant: { canUpdate: { remove: [String(roleA)] } },
+        },
+        context
+      );
+      expect(ids(updated.permissions.fieldsAutoGrantCanUpdateOptOut)).toEqual([
+        String(roleA),
+      ]);
+      // roleB cannot update nor create records
+      const result = editResource.resolve(
+        null,
+        {
+          id: resource.id,
+          fieldsAutoGrant: { canUpdate: { add: [String(roleB)] } },
+        },
+        context
+      );
+      await expect(result).rejects.toThrow(GraphQLError);
+      expect(context.i18next.t).toHaveBeenCalledWith(
+        'mutations.resource.edit.errors.fieldsAutoGrant.missingWritePermissionOnResource'
+      );
+    });
+
+    it('should keep fields permissions and opt-out when removing a filtered rule while a global one remains', async () => {
+      const access = { logic: 'and', filters: [] };
+      await Resource.findByIdAndUpdate(resource.id, {
+        $push: {
+          'permissions.canSeeRecords': { role: roleA, access },
+          'permissions.fieldsAutoGrantCanSeeOptOut': roleA,
+        },
+        $set: {
+          'fields.0.permissions': { canSee: [roleA], canUpdate: [] },
+        },
+      });
+      const updated = await editResource.resolve(
+        null,
+        {
+          id: resource.id,
+          permissions: {
+            canSeeRecords: { remove: [{ role: String(roleA), access }] },
+          },
+        },
+        context
+      );
+      // Global rule remains, so nothing else should be cleared
+      expect(
+        updated.permissions.canSeeRecords.map((x: any) => String(x.role))
+      ).toEqual([String(roleA)]);
+      expect(ids(updated.fields[0].permissions.canSee)).toEqual([
+        String(roleA),
+      ]);
+      expect(ids(updated.permissions.fieldsAutoGrantCanSeeOptOut)).toEqual([
+        String(roleA),
+      ]);
+    });
+
+    it('should not let another role filtered rule prevent clearing fields permissions', async () => {
+      const access = { logic: 'and', filters: [] };
+      await Resource.findByIdAndUpdate(resource.id, {
+        $push: {
+          'permissions.canSeeRecords': { role: roleB, access },
+          'permissions.fieldsAutoGrantCanSeeOptOut': roleA,
+        },
+        $set: {
+          'fields.0.permissions': { canSee: [roleA, roleB], canUpdate: [] },
+        },
+      });
+      const updated = await editResource.resolve(
+        null,
+        {
+          id: resource.id,
+          permissions: {
+            canSeeRecords: { remove: [{ role: String(roleA) }] },
+          },
+        },
+        context
+      );
+      // roleA has no see access left: its fields permissions & opt-out are cleared
+      expect(ids(updated.fields[0].permissions.canSee)).toEqual([
+        String(roleB),
+      ]);
+      expect(ids(updated.permissions.fieldsAutoGrantCanSeeOptOut)).toEqual([]);
+    });
+
+    it('should clear the opt-out of every role losing see access in one request', async () => {
+      await Resource.findByIdAndUpdate(resource.id, {
+        $push: {
+          'permissions.canSeeRecords': { role: roleB },
+          'permissions.fieldsAutoGrantCanSeeOptOut': { $each: [roleA, roleB] },
+        },
+      });
+      const updated = await editResource.resolve(
+        null,
+        {
+          id: resource.id,
+          permissions: {
+            canSeeRecords: {
+              remove: [{ role: String(roleA) }, { role: String(roleB) }],
+            },
+          },
+        },
+        context
+      );
+      expect(updated.permissions.canSeeRecords).toEqual([]);
+      expect(ids(updated.permissions.fieldsAutoGrantCanSeeOptOut)).toEqual([]);
+    });
+  });
+
   describe('Fields update', () => {
     it('should replace the fields of the resource', async () => {
       const newFields = [
