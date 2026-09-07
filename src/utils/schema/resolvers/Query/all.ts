@@ -10,6 +10,7 @@ import getFilter, {
 } from './getFilter';
 import getStyle from './getStyle';
 import getSortAggregation from './getSortAggregation';
+import normalizeSortDescriptors from './normalizeSortDescriptors';
 import mongoose from 'mongoose';
 import buildReferenceDataAggregation from '@utils/aggregation/buildReferenceDataAggregation';
 import { getAccessibleFields } from '@utils/form';
@@ -222,6 +223,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     {
       sortField,
       sortOrder = 'asc',
+      sortFields,
       first = DEFAULT_FIRST,
       skip = 0,
       afterCursor,
@@ -250,11 +252,18 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         context.display = true;
       }
 
+      // Normalize legacy sortField/sortOrder and the new sortFields array
+      // into a single ordered list of sort descriptors (sortFields wins when
+      // non-empty), so single- and multi-field sort share the same pipeline.
+      const sortDescriptors = normalizeSortDescriptors(
+        sortField,
+        sortOrder,
+        sortFields
+      );
+
       // === FILTERING ===
       const usedFields = extractFilterFields(filter);
-      if (sortField) {
-        usedFields.push(sortField);
-      }
+      sortDescriptors.forEach((s) => usedFields.push(s.field));
 
       // Get list of needed resources for the aggregation
       const resourcesToQuery = [
@@ -391,7 +400,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       // when the query sorts, filters, styles or actions on it
       const isNeededBeforeFilters = (field: any) => {
         // If sort field is a calculated field
-        if (sortField === field.name) return true;
+        if (sortDescriptors.some((s) => s.field === field.name)) return true;
 
         // Check if the field is used in the filter
         if (isUsedInFilter(filter, field.name)) return true;
@@ -487,12 +496,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // If we're using skip parameter, include them into the aggregation
       if (skip || skip === 0) {
-        const sort = await getSortAggregation(
-          sortField,
-          sortOrder,
-          fields,
-          context
-        );
+        const sort = await getSortAggregation(sortDescriptors, fields, context);
         // When neither the query filter nor the permission filters reference
         // a calculated field, filter before computing calculated fields, so
         // that expensive stages (e.g. related-record lookups, when sorting by
@@ -552,12 +556,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           {
             $facet: {
               results: [
-                ...(await getSortAggregation(
-                  sortField,
-                  sortOrder,
-                  fields,
-                  context
-                )),
+                ...(await getSortAggregation(sortDescriptors, fields, context)),
                 { $limit: first + 1 },
               ],
               totalCount: [

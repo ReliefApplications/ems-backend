@@ -111,6 +111,11 @@ const containsNullComparison = (filter: any): boolean => {
     ) {
       return true;
     }
+    // Explicit value lists (e.g. `$in: [null, '']` used to detect an empty
+    // translation) are intentional and never come from a failed date parse
+    if (['$in', '$nin', '$all'].includes(key)) {
+      continue;
+    }
     if (containsNullComparison(val)) {
       return true;
     }
@@ -276,6 +281,39 @@ const buildAttributeFieldComparison = (
 };
 
 /**
+ * Applies a rule to the value the entity resolvers display for a translated
+ * field: the translation sibling when it is set, otherwise the source field.
+ *
+ * The two branches are mutually exclusive, so the rule (including negative
+ * operators such as notequal / doesnotcontain / isnull) is evaluated on
+ * exactly one field per record, the one that is shown to the user.
+ *
+ * @param translatedField path of the translation sibling
+ * @param sourceField path of the source field
+ * @param build builds the rule for a given field path
+ * @returns Mongo filter matching the rule on the displayed value
+ */
+const withTranslationFallback = (
+  translatedField: string,
+  sourceField: string,
+  build: (fieldName: string) => any
+): any => {
+  const translatedFilter = build(translatedField);
+  const sourceFilter = build(sourceField);
+  if (!translatedFilter || !sourceFilter) {
+    return translatedFilter;
+  }
+  return {
+    $or: [
+      {
+        $and: [{ [translatedField]: { $nin: [null, ''] } }, translatedFilter],
+      },
+      { $and: [{ [translatedField]: { $in: [null, ''] } }, sourceFilter] },
+    ],
+  };
+};
+
+/**
  * Transforms query filter into mongo filter.
  *
  * @param filter filter to transform to mongo filter.
@@ -323,6 +361,12 @@ const buildMongoFilter = (
       let fieldName = FLAT_DEFAULT_FIELDS.includes(targetField)
         ? targetField
         : `${prefix}${targetField}`;
+      let fallbackFieldName =
+        targetField !== filter.field
+          ? FLAT_DEFAULT_FIELDS.includes(filter.field)
+            ? filter.field
+            : `${prefix}${filter.field}`
+          : undefined;
       // Get type of field from filter field
       let type: string =
         fields.find(
@@ -473,6 +517,10 @@ const buildMongoFilter = (
                 context?.locale
               );
               fieldName = `_${resourceName}.data.${translatedSubField}`;
+              fallbackFieldName =
+                translatedSubField !== subFieldName
+                  ? `_${resourceName}.data.${subFieldName}`
+                  : undefined;
             }
           }
         }
@@ -545,395 +593,399 @@ const buildMongoFilter = (
               break;
             }
         }
-        switch (filter.operator) {
-          case filterOperator.EQUAL_TO: {
-            // user attributes
-            if (isAttributeFilter) {
-              const attrText = String(attrValue);
-              const numericAttr = Number(attrText);
-              if (attrText === '' || isNaN(numericAttr)) {
-                return { [fieldName]: attrValue };
+        /**
+         * Builds the rule for a given field path, so it can be applied to
+         * both a translation sibling and its source field.
+         *
+         * @param fieldPath path of the field to filter on
+         * @returns Mongo filter for the rule
+         */
+        const buildOperatorFilter = (fieldPath: string): any => {
+          switch (filter.operator) {
+            case filterOperator.EQUAL_TO: {
+              // user attributes
+              if (isAttributeFilter) {
+                const attrText = String(attrValue);
+                const numericAttr = Number(attrText);
+                if (attrText === '' || isNaN(numericAttr)) {
+                  return { [fieldPath]: attrValue };
+                }
+                // Compare both string & number forms, as multiselect fields
+                // can store numeric choice values
+                return {
+                  $or: [
+                    { [fieldPath]: { $eq: attrText } },
+                    { [fieldPath]: { $eq: numericAttr } },
+                  ],
+                };
+              } else if (MULTISELECT_TYPES.includes(type)) {
+                return { [fieldPath]: { $size: value.length, $all: value } };
+              } else if (DATETIME_TYPES.includes(type)) {
+                return {
+                  [fieldPath]: { $gte: startDatetime, $lte: endDatetime },
+                };
+              } else {
+                if (DATE_TYPES.includes(type)) {
+                  return { [fieldPath]: { $gte: value, $lte: endDate } };
+                }
+                if (isNaN(intValue)) {
+                  return { [fieldPath]: { $eq: value } };
+                } else {
+                  return {
+                    $or: [
+                      // Make sure that we compare both strings & numbers
+                      { [fieldPath]: { $eq: String(value) } },
+                      { [fieldPath]: { $eq: intValue } },
+                    ],
+                  };
+                }
               }
-              // Compare both string & number forms, as multiselect fields
-              // can store numeric choice values
+            }
+            case filterOperator.NOT_EQUAL_TO: {
+              // user attributes
+              if (isAttributeFilter) {
+                const attrText = String(attrValue);
+                const numericAttr = Number(attrText);
+                if (attrText === '' || isNaN(numericAttr)) {
+                  return { [fieldPath]: { $ne: attrValue } };
+                }
+                // Compare both string & number forms, as multiselect fields
+                // can store numeric choice values
+                return {
+                  $and: [
+                    { [fieldPath]: { $ne: attrText } },
+                    { [fieldPath]: { $ne: numericAttr } },
+                  ],
+                };
+              } else if (MULTISELECT_TYPES.includes(type)) {
+                return {
+                  [fieldPath]: { $not: { $size: value.length, $all: value } },
+                };
+              } else if (DATETIME_TYPES.includes(type)) {
+                return {
+                  [fieldPath]: {
+                    $not: { $gte: startDatetime, $lte: endDatetime },
+                  },
+                };
+              } else if (DATE_TYPES.includes(type)) {
+                return {
+                  [fieldPath]: { $not: { $gte: value, $lte: endDate } },
+                };
+              } else {
+                if (isNaN(intValue)) {
+                  return { [fieldPath]: { $ne: value } };
+                } else {
+                  return {
+                    $and: [
+                      { [fieldPath]: { $ne: String(value) } },
+                      { [fieldPath]: { $ne: intValue } },
+                    ],
+                  };
+                }
+              }
+            }
+            case filterOperator.IS_NULL: {
               return {
                 $or: [
-                  { [fieldName]: { $eq: attrText } },
-                  { [fieldName]: { $eq: numericAttr } },
+                  { [fieldPath]: { $exists: false } },
+                  { [fieldPath]: { $eq: null } },
                 ],
               };
-            } else if (MULTISELECT_TYPES.includes(type)) {
-              return { [fieldName]: { $size: value.length, $all: value } };
-            } else if (DATETIME_TYPES.includes(type)) {
-              return {
-                [fieldName]: { $gte: startDatetime, $lte: endDatetime },
-              };
-            } else {
+            }
+            case filterOperator.IS_NOT_NULL: {
+              return { [fieldPath]: { $exists: true, $ne: null } };
+            }
+            case filterOperator.LESS_THAN: {
               if (DATE_TYPES.includes(type)) {
-                return { [fieldName]: { $gte: value, $lte: endDate } };
-              }
-              if (isNaN(intValue)) {
-                return { [fieldName]: { $eq: value } };
+                return { [fieldPath]: { $lt: value } };
+              } else if (DATETIME_TYPES.includes(type)) {
+                return { [fieldPath]: { $lt: startDatetime } };
+              } else if (isNaN(intValue)) {
+                return { [fieldPath]: { $lt: value } };
               } else {
                 return {
                   $or: [
-                    // Make sure that we compare both strings & numbers
-                    { [fieldName]: { $eq: String(value) } },
-                    { [fieldName]: { $eq: intValue } },
+                    { [fieldPath]: { $lt: String(value) } },
+                    { [fieldPath]: { $lt: intValue } },
                   ],
                 };
               }
             }
-          }
-          case filterOperator.NOT_EQUAL_TO: {
-            // user attributes
-            if (isAttributeFilter) {
-              const attrText = String(attrValue);
-              const numericAttr = Number(attrText);
-              if (attrText === '' || isNaN(numericAttr)) {
-                return { [fieldName]: { $ne: attrValue } };
-              }
-              // Compare both string & number forms, as multiselect fields
-              // can store numeric choice values
-              return {
-                $and: [
-                  { [fieldName]: { $ne: attrText } },
-                  { [fieldName]: { $ne: numericAttr } },
-                ],
-              };
-            } else if (MULTISELECT_TYPES.includes(type)) {
-              return {
-                [fieldName]: { $not: { $size: value.length, $all: value } },
-              };
-            } else if (DATETIME_TYPES.includes(type)) {
-              return {
-                [fieldName]: {
-                  $not: { $gte: startDatetime, $lte: endDatetime },
-                },
-              };
-            } else if (DATE_TYPES.includes(type)) {
-              return {
-                [fieldName]: { $not: { $gte: value, $lte: endDate } },
-              };
-            } else {
-              if (isNaN(intValue)) {
-                return { [fieldName]: { $ne: value } };
+            case filterOperator.LESS_THAN_OR_EQUAL: {
+              if (DATE_TYPES.includes(type)) {
+                return { [fieldPath]: { $lte: endDate } };
+              } else if (DATETIME_TYPES.includes(type)) {
+                return { [fieldPath]: { $lte: endDatetime } };
+              } else if (isNaN(intValue)) {
+                return { [fieldPath]: { $lte: value } };
               } else {
                 return {
-                  $and: [
-                    { [fieldName]: { $ne: String(value) } },
-                    { [fieldName]: { $ne: intValue } },
+                  $or: [
+                    { [fieldPath]: { $lte: String(value) } },
+                    { [fieldPath]: { $lte: intValue } },
                   ],
                 };
               }
             }
-          }
-          case filterOperator.IS_NULL: {
-            return {
-              $or: [
-                { [fieldName]: { $exists: false } },
-                { [fieldName]: { $eq: null } },
-              ],
-            };
-          }
-          case filterOperator.IS_NOT_NULL: {
-            return { [fieldName]: { $exists: true, $ne: null } };
-          }
-          case filterOperator.LESS_THAN: {
-            if (DATE_TYPES.includes(type)) {
-              return { [fieldName]: { $lt: value } };
-            } else if (DATETIME_TYPES.includes(type)) {
-              return { [fieldName]: { $lt: startDatetime } };
-            } else if (isNaN(intValue)) {
-              return { [fieldName]: { $lt: value } };
-            } else {
-              return {
-                $or: [
-                  { [fieldName]: { $lt: String(value) } },
-                  { [fieldName]: { $lt: intValue } },
-                ],
-              };
-            }
-          }
-          case filterOperator.LESS_THAN_OR_EQUAL: {
-            if (DATE_TYPES.includes(type)) {
-              return { [fieldName]: { $lte: endDate } };
-            } else if (DATETIME_TYPES.includes(type)) {
-              return { [fieldName]: { $lte: endDatetime } };
-            } else if (isNaN(intValue)) {
-              return { [fieldName]: { $lte: value } };
-            } else {
-              return {
-                $or: [
-                  { [fieldName]: { $lte: String(value) } },
-                  { [fieldName]: { $lte: intValue } },
-                ],
-              };
-            }
-          }
-          case filterOperator.GREATER_THAN: {
-            if (DATE_TYPES.includes(type)) {
-              return { [fieldName]: { $gt: endDate } };
-            } else if (DATETIME_TYPES.includes(type)) {
-              return { [fieldName]: { $gt: endDatetime } };
-            } else if (isNaN(intValue)) {
-              return { [fieldName]: { $gt: value } };
-            } else {
-              return {
-                $or: [
-                  { [fieldName]: { $gt: String(value) } },
-                  { [fieldName]: { $gt: intValue } },
-                ],
-              };
-            }
-          }
-          case filterOperator.GREATER_THAN_OR_EQUAL: {
-            if (DATE_TYPES.includes(type)) {
-              return { [fieldName]: { $gte: value } };
-            } else if (DATETIME_TYPES.includes(type)) {
-              return { [fieldName]: { $gte: startDatetime } };
-            } else if (isNaN(intValue)) {
-              return { [fieldName]: { $gte: value } };
-            } else {
-              return {
-                $or: [
-                  { [fieldName]: { $gte: String(value) } },
-                  { [fieldName]: { $gte: intValue } },
-                ],
-              };
-            }
-          }
-          case filterOperator.STARTS_WITH: {
-            return { [fieldName]: { $regex: '^' + value, $options: 'i' } };
-          }
-          case filterOperator.ENDS_WITH: {
-            return { [fieldName]: { $regex: value + '$', $options: 'i' } };
-          }
-          case filterOperator.CONTAINS: {
-            if (filter.field === '_globalSearch') {
-              // Global search: expand into an $or over each per-field rule
-              // produced by the frontend `searchFilters()` helper. Each child
-              // rule is delegated back to buildMongoFilter so all the existing
-              // path-resolution + per-operator logic is reused (default fields
-              // stay flat, others get the `data.` prefix, dotted resource
-              // subfields map to the `_<resource>` lookup alias, multiselect
-              // uses $all, numeric uses $eq, etc.).
-              if (!Array.isArray(value)) {
-                return MATCH_NOTHING;
+            case filterOperator.GREATER_THAN: {
+              if (DATE_TYPES.includes(type)) {
+                return { [fieldPath]: { $gt: endDate } };
+              } else if (DATETIME_TYPES.includes(type)) {
+                return { [fieldPath]: { $gt: endDatetime } };
+              } else if (isNaN(intValue)) {
+                return { [fieldPath]: { $gt: value } };
+              } else {
+                return {
+                  $or: [
+                    { [fieldPath]: { $gt: String(value) } },
+                    { [fieldPath]: { $gt: intValue } },
+                  ],
+                };
               }
-              const subFilters = value
-                .map((rule: any) =>
-                  buildMongoFilter(
-                    {
-                      field: rule.field,
-                      operator: rule.operator,
-                      // Regex operators receive raw user input here; escape it
-                      // so searching e.g. "(test" is treated literally instead
-                      // of breaking the query. Only done for global search, to
-                      // leave explicit column filters untouched.
-                      value:
-                        typeof rule.value === 'string' &&
-                        REGEX_OPERATORS.includes(rule.operator)
-                          ? escapeRegExp(rule.value)
-                          : rule.value,
-                    },
-                    fields,
-                    context,
-                    prefix
+            }
+            case filterOperator.GREATER_THAN_OR_EQUAL: {
+              if (DATE_TYPES.includes(type)) {
+                return { [fieldPath]: { $gte: value } };
+              } else if (DATETIME_TYPES.includes(type)) {
+                return { [fieldPath]: { $gte: startDatetime } };
+              } else if (isNaN(intValue)) {
+                return { [fieldPath]: { $gte: value } };
+              } else {
+                return {
+                  $or: [
+                    { [fieldPath]: { $gte: String(value) } },
+                    { [fieldPath]: { $gte: intValue } },
+                  ],
+                };
+              }
+            }
+            case filterOperator.STARTS_WITH: {
+              return { [fieldPath]: { $regex: '^' + value, $options: 'i' } };
+            }
+            case filterOperator.ENDS_WITH: {
+              return { [fieldPath]: { $regex: value + '$', $options: 'i' } };
+            }
+            case filterOperator.CONTAINS: {
+              if (filter.field === '_globalSearch') {
+                // Global search: expand into an $or over each per-field rule
+                // produced by the frontend `searchFilters()` helper. Each child
+                // rule is delegated back to buildMongoFilter so all the existing
+                // path-resolution + per-operator logic is reused (default fields
+                // stay flat, others get the `data.` prefix, dotted resource
+                // subfields map to the `_<resource>` lookup alias, multiselect
+                // uses $all, numeric uses $eq, etc.).
+                if (!Array.isArray(value)) {
+                  return MATCH_NOTHING;
+                }
+                const subFilters = value
+                  .map((rule: any) =>
+                    buildMongoFilter(
+                      {
+                        field: rule.field,
+                        operator: rule.operator,
+                        // Regex operators receive raw user input here; escape it
+                        // so searching e.g. "(test" is treated literally instead
+                        // of breaking the query. Only done for global search, to
+                        // leave explicit column filters untouched.
+                        value:
+                          typeof rule.value === 'string' &&
+                          REGEX_OPERATORS.includes(rule.operator)
+                            ? escapeRegExp(rule.value)
+                            : rule.value,
+                      },
+                      fields,
+                      context,
+                      prefix
+                    )
                   )
-                )
-                .filter((x: any) => x && !containsNullComparison(x));
-              if (subFilters.length === 0) {
-                // An active search that cannot match any field must return no
-                // records — dropping the filter would return all of them
-                return MATCH_NOTHING;
+                  .filter((x: any) => x && !containsNullComparison(x));
+                if (subFilters.length === 0) {
+                  // An active search that cannot match any field must return no
+                  // records — dropping the filter would return all of them
+                  return MATCH_NOTHING;
+                }
+                return { $or: subFilters };
+              } else if (PEOPLE_TYPES.includes(type)) {
+                // People fields store the person object(s) — search the name /
+                // email subfields the widgets display. Multi-word searches
+                // (e.g. "John Doe") require every word to match one of the
+                // subfields.
+                const tokens = String(value)
+                  .trim()
+                  .split(/\s+/)
+                  .filter(Boolean);
+                if (tokens.length === 0) {
+                  return;
+                }
+                return {
+                  $and: tokens.map((token) => ({
+                    $or: PEOPLE_SEARCH_FIELDS.map((sub) => ({
+                      [`${fieldPath}.${sub}`]: { $regex: token, $options: 'i' },
+                    })),
+                  })),
+                };
+              } else if (type === 'file') {
+                // File fields store an array of file objects; match the file
+                // names, which is what the widgets display
+                return {
+                  [`${fieldPath}.name`]: { $regex: value, $options: 'i' },
+                };
+              } else if (MULTISELECT_TYPES.includes(type)) {
+                return { [fieldPath]: { $all: value } };
+              } else {
+                return { [fieldPath]: { $regex: value, $options: 'i' } };
               }
-              return { $or: subFilters };
-            } else if (PEOPLE_TYPES.includes(type)) {
-              // People fields store the person object(s) — search the name /
-              // email subfields the widgets display. Multi-word searches
-              // (e.g. "John Doe") require every word to match one of the
-              // subfields.
-              const tokens = String(value).trim().split(/\s+/).filter(Boolean);
-              if (tokens.length === 0) {
+            }
+            case filterOperator.DOES_NOT_CONTAIN: {
+              if (MULTISELECT_TYPES.includes(type)) {
+                return { [fieldPath]: { $not: { $in: value } } };
+              } else {
+                return {
+                  [fieldPath]: { $not: { $regex: value, $options: 'i' } },
+                };
+              }
+            }
+            case filterOperator.IN: {
+              if (isAttributeFilter) {
+                return buildAttributeFieldComparison(fieldPath, attrValue);
+              } else {
+                // Allow values to be passed as string separated with ','
+                if (typeof value === 'string') {
+                  value = value.split(',').map((x) => x.trim());
+                }
+                value = Array.isArray(value) ? value : [value];
+                // Use _id field for objectId filtering
+                if (fieldPath === 'id') {
+                  fieldPath = '_id';
+                }
+                // Try to cast values as object ids if possible
+                try {
+                  return {
+                    $or: [
+                      {
+                        [fieldPath]: {
+                          $in: value.map((x) => new mongoose.Types.ObjectId(x)),
+                        },
+                      },
+                      {
+                        [fieldPath]: {
+                          $in: value,
+                        },
+                      },
+                    ],
+                  };
+                } catch {
+                  return {
+                    [fieldPath]: {
+                      $in: value,
+                    },
+                  };
+                }
+              }
+            }
+            case filterOperator.NOT_IN: {
+              if (isAttributeFilter) {
+                return buildAttributeFieldComparison(
+                  fieldPath,
+                  attrValue,
+                  true
+                );
+              } else {
+                // Allow values to be passed as string separated with ','
+                if (typeof value === 'string') {
+                  value = value.split(',').map((x) => x.trim());
+                }
+                value = Array.isArray(value) ? value : [value];
+                // Use _id field for objectId filtering
+                if (fieldPath === 'id') {
+                  fieldPath = '_id';
+                }
+                // Try to cast values as object ids if possible
+                try {
+                  return {
+                    $and: [
+                      {
+                        [fieldPath]: {
+                          $nin: value.map(
+                            (x) => new mongoose.Types.ObjectId(x)
+                          ),
+                        },
+                      },
+                      {
+                        [fieldPath]: {
+                          $nin: value,
+                        },
+                      },
+                    ],
+                  };
+                } catch {
+                  return {
+                    [fieldPath]: {
+                      $nin: value,
+                    },
+                  };
+                }
+              }
+            }
+            case filterOperator.IS_EMPTY: {
+              if (MULTISELECT_TYPES.includes(type)) {
+                return {
+                  $or: [
+                    { [fieldPath]: { $exists: true, $size: 0 } },
+                    { [fieldPath]: { $exists: false } },
+                    { [fieldPath]: { $eq: null } },
+                  ],
+                };
+              } else {
+                return { [fieldPath]: { $exists: true, $eq: '' } };
+              }
+            }
+            case filterOperator.IS_NOT_EMPTY: {
+              if (MULTISELECT_TYPES.includes(type)) {
+                return { [fieldPath]: { $exists: true, $nin: [null, []] } };
+              } else {
+                return { [fieldPath]: { $exists: true, $nin: [null, ''] } };
+              }
+            }
+            case 'inthelast': {
+              if ([...DATE_TYPES, ...DATETIME_TYPES].includes(type)) {
+                const now = Date.now();
+                const withinTheLastMs = value * 60 * 1000;
+                const dateLowerLimit = new Date(now - withinTheLastMs);
+                return { [fieldPath]: { $gte: dateLowerLimit } };
+              } else {
                 return;
               }
+            }
+            case 'near': {
               return {
-                $and: tokens.map((token) => ({
-                  $or: PEOPLE_SEARCH_FIELDS.map((sub) => ({
-                    [`${fieldName}.${sub}`]: { $regex: token, $options: 'i' },
-                  })),
-                })),
-              };
-            } else if (type === 'file') {
-              // File fields store an array of file objects; match the file
-              // names, which is what the widgets display
-              return {
-                [`${fieldName}.name`]: { $regex: value, $options: 'i' },
-              };
-            } else if (MULTISELECT_TYPES.includes(type)) {
-              return { [fieldName]: { $all: value } };
-            } else {
-              return { [fieldName]: { $regex: value, $options: 'i' } };
-            }
-          }
-          case filterOperator.DOES_NOT_CONTAIN: {
-            if (MULTISELECT_TYPES.includes(type)) {
-              return { [fieldName]: { $not: { $in: value } } };
-            } else {
-              return {
-                [fieldName]: { $not: { $regex: value, $options: 'i' } },
-              };
-            }
-          }
-          case filterOperator.IN: {
-            if (isAttributeFilter) {
-              return buildAttributeFieldComparison(fieldName, attrValue);
-            } else {
-              // Allow values to be passed as string separated with ','
-              if (typeof value === 'string') {
-                value = value.split(',').map((x) => x.trim());
-              }
-              value = Array.isArray(value) ? value : [value];
-              // Use _id field for objectId filtering
-              if (fieldName === 'id') {
-                fieldName = '_id';
-              }
-              // Try to cast values as object ids if possible
-              try {
-                return {
-                  $or: [
-                    {
-                      [fieldName]: {
-                        $in: value.map((x) => new mongoose.Types.ObjectId(x)),
-                      },
+                [fieldPath]: {
+                  $near: {
+                    $geometry: {
+                      type: 'Point',
+                      coordinates: value.geometry,
                     },
-                    {
-                      [fieldName]: {
-                        $in: value,
-                      },
-                    },
-                  ],
-                };
-              } catch {
-                return {
-                  [fieldName]: {
-                    $in: value,
-                  },
-                };
-              }
-            }
-          }
-          case filterOperator.NOT_IN: {
-            if (isAttributeFilter) {
-              return buildAttributeFieldComparison(fieldName, attrValue, true);
-            } else {
-              // Allow values to be passed as string separated with ','
-              if (typeof value === 'string') {
-                value = value.split(',').map((x) => x.trim());
-              }
-              value = Array.isArray(value) ? value : [value];
-              // Use _id field for objectId filtering
-              if (fieldName === 'id') {
-                fieldName = '_id';
-              }
-              // Try to cast values as object ids if possible
-              try {
-                return {
-                  $and: [
-                    {
-                      [fieldName]: {
-                        $nin: value.map((x) => new mongoose.Types.ObjectId(x)),
-                      },
-                    },
-                    {
-                      [fieldName]: {
-                        $nin: value,
-                      },
-                    },
-                  ],
-                };
-              } catch {
-                return {
-                  [fieldName]: {
-                    $nin: value,
-                  },
-                };
-              }
-            }
-          }
-          case filterOperator.IS_EMPTY: {
-            if (MULTISELECT_TYPES.includes(type)) {
-              return {
-                $or: [
-                  { [fieldName]: { $exists: true, $size: 0 } },
-                  { [fieldName]: { $exists: false } },
-                  { [fieldName]: { $eq: null } },
-                ],
-              };
-            } else {
-              return { [fieldName]: { $exists: true, $eq: '' } };
-            }
-          }
-          case filterOperator.IS_NOT_EMPTY: {
-            if (MULTISELECT_TYPES.includes(type)) {
-              return { [fieldName]: { $exists: true, $nin: [null, []] } };
-            } else {
-              return { [fieldName]: { $exists: true, $nin: [null, ''] } };
-            }
-          }
-          case 'inthelast': {
-            if ([...DATE_TYPES, ...DATETIME_TYPES].includes(type)) {
-              const now = Date.now();
-              const withinTheLastMs = value * 60 * 1000;
-              const dateLowerLimit = new Date(now - withinTheLastMs);
-              return { [fieldName]: { $gte: dateLowerLimit } };
-            } else {
-              return;
-            }
-          }
-          case 'near': {
-            return {
-              [fieldName]: {
-                $near: {
-                  $geometry: {
-                    type: 'Point',
-                    coordinates: value.geometry,
-                  },
-                  $maxDistance: value.distance,
-                },
-              },
-            };
-          }
-          case 'notnear': {
-            return {
-              [fieldName]: {
-                $near: {
-                  $geometry: {
-                    type: 'Point',
-                    coordinates: value.geometry,
-                  },
-                  $minDistance: value.distance,
-                },
-              },
-            };
-          }
-          case 'intersects': {
-            return {
-              [fieldName]: {
-                $geoIntersects: {
-                  $geometry: {
-                    type: 'Polygon',
-                    coordinates: value.geometry,
+                    $maxDistance: value.distance,
                   },
                 },
-              },
-            };
-          }
-          case 'notintersects': {
-            return {
-              [fieldName]: {
-                $not: {
+              };
+            }
+            case 'notnear': {
+              return {
+                [fieldPath]: {
+                  $near: {
+                    $geometry: {
+                      type: 'Point',
+                      coordinates: value.geometry,
+                    },
+                    $minDistance: value.distance,
+                  },
+                },
+              };
+            }
+            case 'intersects': {
+              return {
+                [fieldPath]: {
                   $geoIntersects: {
                     $geometry: {
                       type: 'Polygon',
@@ -941,13 +993,37 @@ const buildMongoFilter = (
                     },
                   },
                 },
-              },
-            };
+              };
+            }
+            case 'notintersects': {
+              return {
+                [fieldPath]: {
+                  $not: {
+                    $geoIntersects: {
+                      $geometry: {
+                        type: 'Polygon',
+                        coordinates: value.geometry,
+                      },
+                    },
+                  },
+                },
+              };
+            }
+            default: {
+              return;
+            }
           }
-          default: {
-            return;
-          }
+        };
+        // Translated text fields: match the displayed value, i.e. the
+        // translation sibling when set, otherwise the source field
+        if (fallbackFieldName) {
+          return withTranslationFallback(
+            fieldName,
+            fallbackFieldName,
+            buildOperatorFilter
+          );
         }
+        return buildOperatorFilter(fieldName);
       } else {
         return;
       }
