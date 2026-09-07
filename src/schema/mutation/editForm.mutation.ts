@@ -12,6 +12,7 @@ import {
   replaceField,
 } from '@utils/form';
 import checkDefaultFields from '@utils/form/checkDefaultFields';
+import { getDefaultFieldPermissions } from '@utils/form/fieldsAutoGrant';
 import { validateGraphQLTypeName } from '@utils/validators';
 import {
   GraphQLError,
@@ -24,7 +25,6 @@ import i18next from 'i18next';
 import { get, isArray } from 'lodash';
 import differenceWith from 'lodash/differenceWith';
 import isEqual from 'lodash/isEqual';
-import uniqBy from 'lodash/uniqBy';
 import unionWith from 'lodash/unionWith';
 import mongoose from 'mongoose';
 import { FormType } from '../types';
@@ -67,34 +67,6 @@ type PermissionChange = {
   canUpdateRecords?: AccessPermissionChange;
   canDeleteRecords?: AccessPermissionChange;
   recordsUnicity?: AccessPermissionChange;
-};
-
-/**
- * Compute the list of role ids that should have a permission auto-granted on
- * newly created resource fields: roles eligible via the given record
- * permission(s), minus those that opted out of the ( otherwise default-on )
- * fields auto-grant behavior.
- *
- * @param resourcePermissions resource permissions
- * @param recordPermissionNames record permission(s) that make a role eligible
- * @param optOutKey name of the opt-out array on resourcePermissions
- * @returns list of role ids to grant the field permission to
- */
-const getAutoGrantedFieldRoles = (
-  resourcePermissions: any,
-  recordPermissionNames: string[],
-  optOutKey: string
-) => {
-  const eligibleRoles = uniqBy(
-    recordPermissionNames
-      .map((name) => get(resourcePermissions, name, []).map((p: any) => p.role))
-      .flat(),
-    (role: any) => role.toString()
-  );
-  const optOut = get(resourcePermissions, optOutKey, []);
-  return eligibleRoles.filter(
-    (role: any) => !optOut.some((r: any) => r.equals(role))
-  );
 };
 
 /** Arguments for the editForm mutation */
@@ -308,6 +280,11 @@ export default {
             .map((x) => x.fields)
             .flat()
             .concat(fields);
+          // Default permissions of new fields: roles with access to the
+          // resource, plus roles that auto-grant new fields
+          const defaultFieldPermissions = getDefaultFieldPermissions(
+            resource.permissions
+          );
           // Check fields against the resource to add new ones or edit old ones
           for (const field of fields) {
             // For each field in the form being saved
@@ -317,18 +294,9 @@ export default {
               const newField: any = Object.assign({}, field); // Create a copy of the form's field
               newField.isRequired =
                 form.core && field.isRequired ? true : false; // If it's a core form and the field isRequired, copy this property
-              // Set default permissions based on roles that auto-grant new fields
               newField.permissions = {
-                canSee: getAutoGrantedFieldRoles(
-                  resource.permissions,
-                  ['canSeeRecords', 'canCreateRecords'],
-                  'fieldsAutoGrantCanSeeOptOut'
-                ),
-                canUpdate: getAutoGrantedFieldRoles(
-                  resource.permissions,
-                  ['canUpdateRecords', 'canCreateRecords'],
-                  'fieldsAutoGrantCanUpdateOptOut'
-                ),
+                canSee: [...defaultFieldPermissions.canSee],
+                canUpdate: [...defaultFieldPermissions.canUpdate],
               };
               oldFields.push(newField); // Add this field to the list of the resource's fields
             } else {
