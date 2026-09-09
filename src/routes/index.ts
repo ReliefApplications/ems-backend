@@ -12,6 +12,7 @@ import gis from './gis';
 import style from './style';
 import notification from './notification';
 import publicRoutes from './public';
+import layouts from './layouts';
 import config from 'config';
 import { RouteDefinition } from 'types/route-definition';
 import { logger } from '@services/logger.service';
@@ -85,6 +86,7 @@ export default function registerRoutes(): Router | undefined {
     router.use('/gis', gis);
     router.use('/style', style);
     router.use('/notification', notification);
+    router.use('/layouts', layouts);
 
     // Define an array of controller objects
     const controllers = [
