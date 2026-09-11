@@ -349,6 +349,9 @@
 		},
 		"upload": {
 			"errors": {
+				"duplicateCustomId": "****** {{row}} ****** {{value}} ******",
+				"existingCustomId": "****** {{row}} ****** {{value}} ******",
+				"invalidCustomId": "****** {{row}} ****** {{value}} ******",
 				"invalidUserUpload": "******",
 				"missingFile": "******",
 				"noRecordsToInsert": "******"
