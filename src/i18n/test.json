@@ -248,6 +248,10 @@
 						"notFound": "******",
 						"notVisible": "******"
 					},
+					"fieldsAutoGrant": {
+						"missingReadPermissionOnResource": "******",
+						"missingWritePermissionOnResource": "******"
+					},
 					"invalidArguments": "******",
 					"permission": {
 						"downloadRecords": {

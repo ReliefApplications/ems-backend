@@ -248,6 +248,10 @@
 						"notFound": "Field does not exist.",
 						"notVisible": "Please set field as visible before setting it as editable."
 					},
+					"fieldsAutoGrant": {
+						"missingReadPermissionOnResource": "Please provide permission to read or create records before enabling auto-grant of view access to new fields.",
+						"missingWritePermissionOnResource": "Please provide permission to update or create records before enabling auto-grant of edit access to new fields."
+					},
 					"invalidArguments": "Either fields or permissions must be provided.",
 					"permission": {
 						"downloadRecords": {

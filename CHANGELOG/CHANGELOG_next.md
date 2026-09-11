@@ -1,3 +1,17 @@
+# [2.18.0-rc.5](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.4...v2.18.0-rc.5) (2026-09-11)
+
+
+### Features
+
+* In Layout, add possibility to quickly add all fields to a grid, in the order they appear in a form ([#1274](https://github.com/ReliefApplications/ems-backend/issues/1274)) ([9a3437a](https://github.com/ReliefApplications/ems-backend/commit/9a3437a0388e7935590df0c1c637fcd59fd81c07)), closes [AB#137662](https://github.com/AB/issues/137662)
+
+# [2.18.0-rc.4](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.3...v2.18.0-rc.4) (2026-09-07)
+
+
+### Features
+
+* Roles can now automatically grant permissions on new fields ([#1259](https://github.com/ReliefApplications/ems-backend/issues/1259)) ([de12832](https://github.com/ReliefApplications/ems-backend/commit/de1283225a45fb02374c7f6c4eab08426f497e10)), closes [AB#135264](https://github.com/AB/issues/135264)
+
 # [2.18.0-rc.3](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.2...v2.18.0-rc.3) (2026-09-06)
 
 

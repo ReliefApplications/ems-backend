@@ -7,11 +7,16 @@ import {
   getExpressionFromString,
   OperationTypeMap,
 } from '@utils/aggregation/expressionFromString';
-import { findDuplicateFields } from '@utils/form';
+import {
+  fieldsAutoGrantOptOutKey,
+  FieldPermission,
+  findDuplicateFields,
+  isRoleEligibleForFieldPermission,
+} from '@utils/form';
 import { CalculatedFieldService } from '@services/calculatedField.service';
 import { GraphQLError, GraphQLID, GraphQLList, GraphQLNonNull } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { get, has, isArray, isEmpty, isEqual, isNil } from 'lodash';
+import { castArray, get, has, isArray, isEmpty, isEqual, isNil } from 'lodash';
 import mongoose from 'mongoose';
 import { resourcePermission } from '../../types/permission';
 import { ResourceType } from '../types';
@@ -47,8 +52,8 @@ type PermissionChange = {
 
 /** Simple resource field permission change type */
 type SimpleFieldPermissionChange = {
-  add?: { field: string; role: string };
-  remove?: { field: string; role: string };
+  add?: { field: string; role: string } | { field: string; role: string }[];
+  remove?: { field: string; role: string } | { field: string; role: string }[];
 };
 
 /** Type for the fieldPermission argument */
@@ -57,11 +62,51 @@ type FieldPermissionChange = {
   canUpdate?: SimpleFieldPermissionChange;
 };
 
+/** Simple fields auto-grant permission change type */
+type SimpleFieldsAutoGrantChange = {
+  add?: string[];
+  remove?: string[];
+};
+
+/** Type for the fieldsAutoGrant argument */
+type FieldsAutoGrantChange = {
+  canSee?: SimpleFieldsAutoGrantChange;
+  canUpdate?: SimpleFieldsAutoGrantChange;
+};
+
 /** Type for the calculated field argument */
 type CalculatedFieldChange = {
   add?: { name: string; expression: string };
   remove?: { name: string };
   update?: { oldName: string; name: string; expression: string };
+};
+
+/**
+ * Queue values to add ( $addToSet ) to the array at the given path, merging
+ * with values already queued for the same path in this update.
+ *
+ * @param update update document
+ * @param path path of the array
+ * @param values values to add
+ */
+const pushToPath = (update: any, path: string, values: any[]) => {
+  if (!update.$addToSet) update.$addToSet = {};
+  const queued: any[] = get(update.$addToSet, [path, '$each'], []);
+  update.$addToSet[path] = { $each: [...queued, ...values] };
+};
+
+/**
+ * Queue values to remove ( $pull ) from the array at the given path, merging
+ * with values already queued for the same path in this update.
+ *
+ * @param update update document
+ * @param path path of the array
+ * @param values values to remove
+ */
+const pullFromPath = (update: any, path: string, values: any[]) => {
+  if (!update.$pull) update.$pull = {};
+  const queued: any[] = get(update.$pull, [path, '$in'], []);
+  update.$pull[path] = { $in: [...queued, ...values] };
 };
 
 /**
@@ -95,13 +140,9 @@ const addFieldPermission = (
     else Object.assign(update, { $set: newPermission });
   }
 
-  const pushRoles = {
-    [`fields.${fieldIndex}.permissions.${permission}`]:
-      new mongoose.Types.ObjectId(role),
-  };
-
-  if (update.$addToSet) Object.assign(update.$addToSet, pushRoles);
-  else Object.assign(update, { $addToSet: pushRoles });
+  pushToPath(update, `fields.${fieldIndex}.permissions.${permission}`, [
+    new mongoose.Types.ObjectId(role),
+  ]);
 };
 
 /**
@@ -113,6 +154,7 @@ const addFieldPermission = (
  * @param fieldName field name
  * @param role current role to edit permissions of
  * @param permission field permission to add
+ * @param pendingCanSee canSee grants queued by the same request ( `${field}:${role}` )
  */
 const checkFieldPermission = (
   context: any,
@@ -120,7 +162,8 @@ const checkFieldPermission = (
   fields: any[],
   fieldName: string,
   role: string,
-  permission: string
+  permission: FieldPermission,
+  pendingCanSee: Set<string> = new Set()
 ) => {
   const field = fields.find((r) => r.name === fieldName);
   if (!field) {
@@ -131,12 +174,7 @@ const checkFieldPermission = (
   switch (permission) {
     case 'canSee': {
       if (
-        !get(resourcePermissions, resourcePermission.SEE_RECORDS, []).find(
-          (p) => p.role.equals(role)
-        ) &&
-        !get(resourcePermissions, resourcePermission.CREATE_RECORDS, []).find(
-          (p) => p.role.equals(role)
-        )
+        !isRoleEligibleForFieldPermission(resourcePermissions, role, 'canSee')
       ) {
         throw new GraphQLError(
           context.i18next.t(
@@ -148,11 +186,10 @@ const checkFieldPermission = (
     }
     case 'canUpdate': {
       if (
-        !get(resourcePermissions, resourcePermission.CREATE_RECORDS, []).find(
-          (p) => p.role.equals(role)
-        ) &&
-        !get(resourcePermissions, resourcePermission.UPDATE_RECORDS, []).find(
-          (p) => p.role.equals(role)
+        !isRoleEligibleForFieldPermission(
+          resourcePermissions,
+          role,
+          'canUpdate'
         )
       ) {
         throw new GraphQLError(
@@ -162,6 +199,7 @@ const checkFieldPermission = (
         );
       }
       if (
+        !pendingCanSee.has(`${fieldName}:${role}`) &&
         !get(field, 'permissions.canSee', []).find(
           (p: any) => String(p) === String(role)
         )
@@ -179,6 +217,59 @@ const checkFieldPermission = (
 };
 
 /**
+ * Merge record permissions granted by the current request into the stored
+ * resource permissions, so that checks can rely on a grant of the same request.
+ *
+ * @param resourcePermissions stored resource permissions
+ * @param permissionsArgs `permissions` argument of the mutation
+ * @returns resource permissions including pending additions
+ */
+const withPendingPermissions = (
+  resourcePermissions: any,
+  permissionsArgs: any
+) => {
+  const merged: any = { ...(resourcePermissions ?? {}) };
+  for (const permission in permissionsArgs ?? {}) {
+    const change = permissionsArgs[permission];
+    if (isArray(change)) {
+      merged[permission] = change;
+    } else if (change?.add?.length) {
+      merged[permission] = [...get(merged, permission, []), ...change.add];
+    }
+  }
+  return merged;
+};
+
+/**
+ * Check that a role attempting to (re-)enable a fields-auto-grant permission
+ * already has the corresponding view/edit permission on the resource's
+ * records, either globally or via a filter ( including grants of the same request ).
+ *
+ * @param context graphql context
+ * @param resourcePermissions resource permissions ( including pending additions )
+ * @param role role to check
+ * @param permission fields-auto-grant permission to enable ( canSee or canUpdate )
+ */
+const checkFieldsAutoGrantPermission = (
+  context: any,
+  resourcePermissions: any,
+  role: string,
+  permission: FieldPermission
+) => {
+  if (
+    !isRoleEligibleForFieldPermission(resourcePermissions, role, permission)
+  ) {
+    throw new GraphQLError(
+      context.i18next.t(
+        permission === 'canSee'
+          ? 'mutations.resource.edit.errors.fieldsAutoGrant.missingReadPermissionOnResource'
+          : 'mutations.resource.edit.errors.fieldsAutoGrant.missingWritePermissionOnResource'
+      )
+    );
+  }
+};
+
+/**
  * Add resource permission
  *
  * @param update update document
@@ -186,12 +277,7 @@ const checkFieldPermission = (
  * @param permission permission to add
  */
 const addResourcePermission = (update: any, add: any, permission: string) => {
-  const pushRoles = {
-    [`permissions.${permission}`]: { $each: add },
-  };
-
-  if (update.$addToSet) Object.assign(update.$addToSet, pushRoles);
-  else Object.assign(update, { $addToSet: pushRoles });
+  pushToPath(update, `permissions.${permission}`, add);
 };
 
 /**
@@ -392,20 +478,16 @@ const removeFieldPermission = (
 ) => {
   const fieldIndex = fields.findIndex((r) => r.name === fieldName);
   if (fieldIndex === -1) return;
-  // Roles can be stored as either strings or ObjectIds, so pull both forms
-  const pullRoles = {
-    [`fields.${fieldIndex}.permissions.${permission}`]: {
-      $in: [role, new mongoose.Types.ObjectId(role)],
-    },
-  };
-
   const hasFieldPermissions = !isNil(fields[fieldIndex].permissions);
   // If no permissions on field, no need to remove anything
   // This prevents an error on the $pull operation
   if (!hasFieldPermissions) return;
 
-  if (update.$pull) Object.assign(update.$pull, pullRoles);
-  else Object.assign(update, { $pull: pullRoles });
+  // Roles can be stored as either strings or ObjectIds, so pull both forms
+  pullFromPath(update, `fields.${fieldIndex}.permissions.${permission}`, [
+    role,
+    new mongoose.Types.ObjectId(role),
+  ]);
 };
 
 /**
@@ -420,20 +502,12 @@ const removeResourcePermission = (
   remove: any,
   permission: string
 ) => {
-  let pullRoles: any;
-
-  if (typeof remove[0] === 'string') {
-    // CanSee, canUpdate, canDelete
-    pullRoles = {
-      [`permissions.${permission}`]: {
-        $in: remove.map((role: any) => new mongoose.Types.ObjectId(role)),
-      },
-    };
-  } else {
-    // canCreateRecords, canSeeRecords, canUpdateRecords, canDeleteRecords, canDownloadRecords
-    pullRoles = {
-      [`permissions.${permission}`]: {
-        $in: remove.map((perm: any) =>
+  const values =
+    typeof remove[0] === 'string'
+      ? // CanSee, canUpdate, canDelete, fields auto-grant opt-outs
+        remove.map((role: any) => new mongoose.Types.ObjectId(role))
+      : // canCreateRecords, canSeeRecords, canUpdateRecords, canDeleteRecords, canDownloadRecords
+        remove.map((perm: any) =>
           perm.access
             ? {
                 role: new mongoose.Types.ObjectId(perm.role),
@@ -442,13 +516,8 @@ const removeResourcePermission = (
             : {
                 role: new mongoose.Types.ObjectId(perm.role),
               }
-        ),
-      },
-    };
-  }
-
-  if (update.$pull) Object.assign(update.$pull, pullRoles);
-  else Object.assign(update, { $pull: pullRoles });
+        );
+  pullFromPath(update, `permissions.${permission}`, values);
 };
 
 /**
@@ -478,7 +547,8 @@ const clearFieldsPermission = (
       if (
         !get(resourcePermissions, resourcePermission.UPDATE_RECORDS, []).find(
           (p) =>
-            p.role.equals(change.role) && hasAccessFilter ? !p.access : p.access
+            p.role.equals(change.role) &&
+            (hasAccessFilter ? !p.access : p.access)
         ) &&
         !get(resourcePermissions, resourcePermission.CREATE_RECORDS, []).find(
           (p) => p.role.equals(change.role)
@@ -496,6 +566,12 @@ const clearFieldsPermission = (
               'canUpdate'
             )
           );
+        // Start fresh at the default ( on ) if write access is granted again
+        removeResourcePermission(
+          update,
+          [change.role],
+          fieldsAutoGrantOptOutKey.canUpdate
+        );
       }
       break;
     }
@@ -507,7 +583,8 @@ const clearFieldsPermission = (
         ) &&
         !get(resourcePermissions, resourcePermission.CREATE_RECORDS, []).find(
           (p) =>
-            p.role.equals(change.role) && hasAccessFilter ? !p.access : p.access
+            p.role.equals(change.role) &&
+            (hasAccessFilter ? !p.access : p.access)
         )
       ) {
         // Remove update permission to all fields.
@@ -522,6 +599,12 @@ const clearFieldsPermission = (
               'canUpdate'
             )
           );
+        // Start fresh at the default ( on ) if write access is granted again
+        removeResourcePermission(
+          update,
+          [change.role],
+          fieldsAutoGrantOptOutKey.canUpdate
+        );
       }
       // Make sure that user does not have any see permission on resource
       if (
@@ -530,7 +613,8 @@ const clearFieldsPermission = (
         ) &&
         !get(resourcePermissions, resourcePermission.CREATE_RECORDS, []).find(
           (p) =>
-            p.role.equals(change.role) && hasAccessFilter ? !p.access : p.access
+            p.role.equals(change.role) &&
+            (hasAccessFilter ? !p.access : p.access)
         )
       ) {
         // Remove see permission to all fields.
@@ -545,6 +629,12 @@ const clearFieldsPermission = (
               'canSee'
             )
           );
+        // Start fresh at the default ( on ) if see access is granted again
+        removeResourcePermission(
+          update,
+          [change.role],
+          fieldsAutoGrantOptOutKey.canSee
+        );
       }
       break;
     }
@@ -553,7 +643,8 @@ const clearFieldsPermission = (
       if (
         !get(resourcePermissions, resourcePermission.SEE_RECORDS, []).find(
           (p) =>
-            p.role.equals(change.role) && hasAccessFilter ? !p.access : p.access
+            p.role.equals(change.role) &&
+            (hasAccessFilter ? !p.access : p.access)
         ) &&
         !get(resourcePermissions, resourcePermission.CREATE_RECORDS, []).find(
           (p) => p.role.equals(change.role)
@@ -571,6 +662,12 @@ const clearFieldsPermission = (
               'canSee'
             )
           );
+        // Start fresh at the default ( on ) if see access is granted again
+        removeResourcePermission(
+          update,
+          [change.role],
+          fieldsAutoGrantOptOutKey.canSee
+        );
       }
       break;
     }
@@ -586,6 +683,7 @@ type EditResourceArgs = {
   fields?: any;
   permissions?: any;
   fieldsPermissions?: any;
+  fieldsAutoGrant?: FieldsAutoGrantChange;
   calculatedField?: any;
 };
 
@@ -600,6 +698,7 @@ export default {
     fields: { type: new GraphQLList(GraphQLJSON) },
     permissions: { type: GraphQLJSON },
     fieldsPermissions: { type: GraphQLJSON },
+    fieldsAutoGrant: { type: GraphQLJSON },
     calculatedField: { type: GraphQLJSON },
   },
   async resolve(parent, args: EditResourceArgs, context: Context) {
@@ -611,7 +710,8 @@ export default {
         (!args.fields &&
           !args.permissions &&
           !args.calculatedField &&
-          !args.fieldsPermissions)
+          !args.fieldsPermissions &&
+          !args.fieldsAutoGrant)
       ) {
         throw new GraphQLError(
           context.i18next.t('mutations.resource.edit.errors.invalidArguments')
@@ -695,35 +795,79 @@ export default {
       // Updating field permissions
       if (args.fieldsPermissions) {
         const permissions: FieldPermissionChange = args.fieldsPermissions;
-        for (const permission in permissions) {
+        // canSee grants queued by this request, so that a canUpdate grant
+        // on the same field / role in the same request is accepted
+        const pendingCanSee = new Set<string>();
+        // canSee is processed first for the same reason
+        for (const permission of ['canSee', 'canUpdate'] as const) {
           const obj: SimpleFieldPermissionChange = permissions[permission];
-          // Add permission on target field
+          if (!obj) continue;
+          // Add permission on target field(s)
           if (obj.add) {
-            checkFieldPermission(
-              context,
-              get(resource, 'permissions'),
-              allResourceFields,
-              obj.add.field,
-              obj.add.role,
-              permission
-            );
-            addFieldPermission(
-              update,
-              allResourceFields,
-              obj.add.field,
-              obj.add.role,
-              permission
-            );
+            castArray(obj.add).forEach((addition) => {
+              checkFieldPermission(
+                context,
+                get(resource, 'permissions'),
+                allResourceFields,
+                addition.field,
+                addition.role,
+                permission,
+                pendingCanSee
+              );
+              addFieldPermission(
+                update,
+                allResourceFields,
+                addition.field,
+                addition.role,
+                permission
+              );
+              if (permission === 'canSee') {
+                pendingCanSee.add(`${addition.field}:${addition.role}`);
+              }
+            });
           }
-          // Remove permission on target field
+          // Remove permission on target field(s)
           if (obj.remove) {
-            removeFieldPermission(
-              update,
-              allResourceFields,
-              obj.remove.field,
-              obj.remove.role,
-              permission
+            castArray(obj.remove).forEach((removal) => {
+              removeFieldPermission(
+                update,
+                allResourceFields,
+                removal.field,
+                removal.role,
+                permission
+              );
+            });
+          }
+        }
+      }
+
+      // Updating fields auto-grant ( opt-out of the default auto-grant behavior )
+      if (args.fieldsAutoGrant) {
+        const permissions: FieldsAutoGrantChange = args.fieldsAutoGrant;
+        // Record permissions granted by this same request count as well
+        const effectivePermissions = withPendingPermissions(
+          get(resource, 'permissions'),
+          args.permissions
+        );
+        for (const permission of ['canSee', 'canUpdate'] as const) {
+          const obj = permissions[permission];
+          if (!obj) continue;
+          const optOutKey = fieldsAutoGrantOptOutKey[permission];
+          // Enabling auto-grant: opt the role(s) back in ( remove from opt-out list )
+          if (obj.add && obj.add.length) {
+            obj.add.forEach((role) =>
+              checkFieldsAutoGrantPermission(
+                context,
+                effectivePermissions,
+                role,
+                permission
+              )
             );
+            removeResourcePermission(update, obj.add, optOutKey);
+          }
+          // Disabling auto-grant: opt the role(s) out
+          if (obj.remove && obj.remove.length) {
+            addResourcePermission(update, obj.remove, optOutKey);
           }
         }
       }

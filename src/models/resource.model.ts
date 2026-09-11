@@ -24,6 +24,8 @@ export interface Resource extends Document {
     canDeleteRecords?: any[];
     canDownloadRecords?: any[];
     canUploadRecords?: any[];
+    fieldsAutoGrantCanSeeOptOut?: any[];
+    fieldsAutoGrantCanUpdateOptOut?: any[];
   };
   fields: {
     permissions?: {
@@ -121,6 +123,18 @@ const resourceSchema = new Schema<Resource>(
           },
           access: mongoose.Schema.Types.Mixed,
           _id: false,
+        },
+      ],
+      fieldsAutoGrantCanSeeOptOut: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Role',
+        },
+      ],
+      fieldsAutoGrantCanUpdateOptOut: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Role',
         },
       ],
     },
