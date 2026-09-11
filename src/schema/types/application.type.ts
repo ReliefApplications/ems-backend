@@ -584,6 +584,7 @@ export const ApplicationType = new GraphQLObjectType({
       },
     },
     shortcut: { type: GraphQLString },
+    additionalLanguages: { type: new GraphQLList(GraphQLString) },
   }),
 });
 

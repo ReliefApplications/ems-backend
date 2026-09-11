@@ -51,6 +51,7 @@ export interface Application extends Document {
   contextualFilter?: any;
   contextualFilterPosition?: string;
   shortcut?: string;
+  additionalLanguages?: string[];
 }
 
 /** Mongoose application schema declaration */
@@ -120,6 +121,7 @@ const applicationSchema = new Schema<Application>(
     contextualFilter: mongoose.Schema.Types.Mixed,
     contextualFilterPosition: String,
     shortcut: String,
+    additionalLanguages: [String],
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
