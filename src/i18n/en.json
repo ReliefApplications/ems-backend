@@ -349,6 +349,9 @@
 		},
 		"upload": {
 			"errors": {
+				"duplicateCustomId": "Row {{row}}: the _id value \"{{value}}\" is duplicated within the file. Each _id must be unique.",
+				"existingCustomId": "Row {{row}}: a record with _id \"{{value}}\" already exists in the system.",
+				"invalidCustomId": "Row {{row}}: the value \"{{value}}\" in the _id column is not a valid 24-character hexadecimal MongoDB ID.",
 				"invalidUserUpload": "Please provide email and role for each user.",
 				"missingFile": "No file detected.",
 				"noRecordsToInsert": "No records were provided for insertion."
