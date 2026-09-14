@@ -34,6 +34,7 @@ type EditApplicationArgs = {
   settings?: any;
   permissions?: any;
   shortcut?: string;
+  additionalLanguages?: string[];
 };
 
 /**
@@ -82,6 +83,7 @@ export default {
     settings: { type: GraphQLJSON },
     permissions: { type: GraphQLJSON },
     shortcut: { type: GraphQLString },
+    additionalLanguages: { type: new GraphQLList(GraphQLString) },
   },
   async resolve(parent, args: EditApplicationArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -132,7 +134,10 @@ export default {
         !isNil(args.sideMenu) && { sideMenu: args.sideMenu },
         !isNil(args.topMenu) && { topMenu: args.topMenu },
         !isNil(args.hideMenu) && { hideMenu: args.hideMenu },
-        !isNil(args.shortcut) && { shortcut: args.shortcut }
+        !isNil(args.shortcut) && { shortcut: args.shortcut },
+        args.additionalLanguages && {
+          additionalLanguages: args.additionalLanguages,
+        }
       );
 
       application = await Application.findOneAndUpdate(filters, update, {

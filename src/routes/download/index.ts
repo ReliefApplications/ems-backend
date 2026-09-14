@@ -341,6 +341,7 @@ router.get('/resource/records/:id', async (req, res) => {
  *    query: any                          // Query parameters to build it
  *    sortField?: string
  *    sortOrder?: 'asc' | 'desc'
+ *    sortFields?: { field: string, order?: 'asc' | 'desc' }[]  // takes precedence over sortField/sortOrder when non-empty
  * }
  */
 router.post('/records', async (req, res) => {

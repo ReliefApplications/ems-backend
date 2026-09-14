@@ -3,6 +3,7 @@ import { Record, Resource } from '@models';
 import { CalculatedFieldService } from '@services/calculatedField.service';
 import getFilter from '@utils/schema/resolvers/Query/getFilter';
 import getSortAggregation from '@utils/schema/resolvers/Query/getSortAggregation';
+import normalizeSortDescriptors from '@utils/schema/resolvers/Query/normalizeSortDescriptors';
 import { DatabaseHelpers } from '../../../../../helpers/database-helpers';
 
 let databaseHelpers: DatabaseHelpers;
@@ -106,7 +107,11 @@ describe('filtering on a linked record calculated field, as the records query do
       ...(await buildLinkedRecordsAggregation(usedSubFields)),
       { $match: mongooseFilter },
       ...(sort
-        ? await getSortAggregation(sort[0], sort[1], fields, context)
+        ? await getSortAggregation(
+            normalizeSortDescriptors(sort[0], sort[1]),
+            fields,
+            context
+          )
         : [{ $sort: { incrementalId: 1 } }]),
     ]);
     return results.map((r: any) => r.data.label);

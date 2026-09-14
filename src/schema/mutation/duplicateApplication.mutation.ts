@@ -23,7 +23,7 @@ import {
   GraphQLNonNull,
   GraphQLString,
 } from 'graphql';
-import { Types } from 'mongoose';
+import { isObjectIdOrHexString, Types } from 'mongoose';
 import { duplicatePages } from '../../services/page.service';
 import { resourcePermission } from '../../types/permission';
 import { ApplicationType } from '../types';
@@ -35,6 +35,16 @@ type ResourcePermission =
       access?: any;
     }
   | Types.ObjectId;
+
+/**
+ * Whether a permission entry is a plain role id, rather than a { role, access } rule.
+ * Duck-typed, as ids loaded from the database may not share the ObjectId class.
+ *
+ * @param perm permission entry
+ * @returns true if the entry is a plain role id
+ */
+const isPlainRole = (perm: ResourcePermission): perm is Types.ObjectId =>
+  isObjectIdOrHexString(perm);
 
 /** Arguments for the duplicateApplication mutation */
 type DuplicateApplicationArgs = {
@@ -164,23 +174,27 @@ export default {
                 resourcePermission.UPDATE_RECORDS,
                 resourcePermission.DELETE_RECORDS,
                 resourcePermission.DOWNLOAD_RECORDS,
+                resourcePermission.UPLOAD_RECORDS,
+                'fieldsAutoGrantCanSeeOptOut',
+                'fieldsAutoGrantCanUpdateOptOut',
               ] as const
             ).forEach((permType) => {
               const permissions = resource.permissions[permType] ?? [];
               const oldPermissions: ResourcePermission[] = permissions
                 .filter((perm: ResourcePermission) => {
-                  return !!(perm instanceof Types.ObjectId
+                  return !!(isPlainRole(perm)
                     ? oldRoles.includes(perm.toString())
                     : perm.role && oldRoles.includes(perm.role.toString()));
                 })
-                .map((x) => x._doc);
+                // Plain role ids have no sub-document to unwrap
+                .map((x) => (isPlainRole(x) ? x : x._doc));
 
               if (!oldPermissions.length) {
                 return;
               }
 
               const addedPermissions = oldPermissions.map((oldPermission) =>
-                oldPermission instanceof Types.ObjectId
+                isPlainRole(oldPermission)
                   ? new Types.ObjectId(roleMapping[oldPermission.toString()])
                   : {
                       ...oldPermission,

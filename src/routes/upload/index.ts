@@ -1,5 +1,6 @@
 import express from 'express';
 import { Workbook } from 'exceljs';
+import { Types } from 'mongoose';
 import {
   Form,
   PositionAttribute,
@@ -10,7 +11,12 @@ import {
   Application,
 } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
-import { getUploadColumns, loadRow, uploadFile } from '@utils/files';
+import {
+  getUploadColumns,
+  loadRow,
+  uploadFile,
+  validateCustomIds,
+} from '@utils/files';
 import {
   getNextId,
   Translator,
@@ -94,14 +100,41 @@ export async function insertRecords(
   await workbook.xlsx.load(file.data);
   const worksheet = workbook.getWorksheet(1);
   let columns = [];
+  // Detection of an exact, case-sensitive "_id" header column: if present,
+  // the file is requesting custom Mongo ids rather than server-generated ones.
+  let customIdColumnIndex = -1;
+  const customIdRows: { rowNumber: number; rawValue: any }[] = [];
   worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
     const values = JSON.parse(JSON.stringify(row.values));
     if (rowNumber === 1) {
       columns = getUploadColumns(fields, values);
+      customIdColumnIndex = values.indexOf('_id');
     } else {
       dataSets.push({ ...loadRow(columns, values), rowNumber });
+      if (customIdColumnIndex > 0) {
+        customIdRows.push({
+          rowNumber,
+          rawValue: values[customIdColumnIndex],
+        });
+      }
     }
   });
+
+  let customIds: string[] | null = null;
+  if (customIdColumnIndex > 0) {
+    const customIdResult = await validateCustomIds(customIdRows);
+    if (customIdResult.error) {
+      return res
+        .status(400)
+        .send(
+          i18next.t(
+            `routes.upload.errors.${customIdResult.error.key}`,
+            customIdResult.error.params
+          )
+        );
+    }
+    customIds = customIdResult.ids;
+  }
 
   if (dataSets.length === 0) {
     return res.status(200).send({ status: 'No record added.' });
@@ -140,9 +173,11 @@ export async function insertRecords(
   const structureId = String(resource ? resource._id : form.id);
   // Create records one by one so the incrementalId works correctly
   const records: Record[] = [];
-  for (const dataSet of dataSets) {
+  for (let i = 0; i < dataSets.length; i++) {
+    const dataSet = dataSets[i];
     records.push(
       new Record({
+        ...(customIds ? { _id: new Types.ObjectId(customIds[i]) } : {}),
         incrementalId: await getNextId(structureId),
         form: form.id,
         // createdAt: new Date(),

@@ -140,6 +140,11 @@ export const getSchema = (
             skip: { type: GraphQLInt },
             sortField: { type: GraphQLString },
             sortOrder: { type: GraphQLString },
+            // Array of { field: string, order: 'asc' | 'desc' }, takes
+            // precedence over sortField/sortOrder when non-empty, enabling
+            // compound (multi-field) sorting while keeping single-field
+            // callers working unchanged.
+            sortFields: { type: GraphQLJSON },
             filter: { type: GraphQLJSON },
             display: { type: GraphQLBoolean },
             styles: { type: GraphQLJSON },

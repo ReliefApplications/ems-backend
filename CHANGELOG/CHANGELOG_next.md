@@ -1,3 +1,38 @@
+# [2.18.0-rc.6](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.5...v2.18.0-rc.6) (2026-09-14)
+
+
+### Features
+
+* It is now possible to upload custom _id in upload files ([#1275](https://github.com/ReliefApplications/ems-backend/issues/1275)) ([209302b](https://github.com/ReliefApplications/ems-backend/commit/209302b7f66d8dbfa752c466e0ceb7e47792151a)), closes [Ab#137745](https://github.com/Ab/issues/137745)
+
+# [2.18.0-rc.5](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.4...v2.18.0-rc.5) (2026-09-11)
+
+
+### Features
+
+* In Layout, add possibility to quickly add all fields to a grid, in the order they appear in a form ([#1274](https://github.com/ReliefApplications/ems-backend/issues/1274)) ([9a3437a](https://github.com/ReliefApplications/ems-backend/commit/9a3437a0388e7935590df0c1c637fcd59fd81c07)), closes [AB#137662](https://github.com/AB/issues/137662)
+
+# [2.18.0-rc.4](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.3...v2.18.0-rc.4) (2026-09-07)
+
+
+### Features
+
+* Roles can now automatically grant permissions on new fields ([#1259](https://github.com/ReliefApplications/ems-backend/issues/1259)) ([de12832](https://github.com/ReliefApplications/ems-backend/commit/de1283225a45fb02374c7f6c4eab08426f497e10)), closes [AB#135264](https://github.com/AB/issues/135264)
+
+# [2.18.0-rc.3](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.2...v2.18.0-rc.3) (2026-09-06)
+
+
+### Bug Fixes
+
+* apply translation fallback to all filter operators and to sorting ([#1272](https://github.com/ReliefApplications/ems-backend/issues/1272)) ([e7bd1d8](https://github.com/ReliefApplications/ems-backend/commit/e7bd1d8e651ed6bb7fc86f47b3b2dbd91dee8f57)), closes [AB#137461](https://github.com/AB/issues/137461)
+
+# [2.18.0-rc.2](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.1...v2.18.0-rc.2) (2026-09-06)
+
+
+### Features
+
+* Allow sorting query layouts by more than one field ([#1267](https://github.com/ReliefApplications/ems-backend/issues/1267)) ([484952c](https://github.com/ReliefApplications/ems-backend/commit/484952c2dfc0ebc73b3ecc4d0b42d35626408a55)), closes [AB#135743](https://github.com/AB/issues/135743)
+
 # [2.18.0-rc.1](https://github.com/ReliefApplications/ems-backend/compare/v2.17.1...v2.18.0-rc.1) (2026-07-28)
 
 

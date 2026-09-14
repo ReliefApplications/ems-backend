@@ -29,6 +29,7 @@ import {
   UniquenessRuleType,
 } from '.';
 import { resourcePermission } from '../../types/permission';
+import { isFieldsAutoGrantActive } from '@utils/form/fieldsAutoGrant';
 import { Connection, decodeCursor, encodeCursor } from './pagination.type';
 
 /**
@@ -132,6 +133,16 @@ export const ResourceType = new GraphQLObjectType({
               resourcePermission.UPLOAD_RECORDS,
               parent.permissions,
               args.role
+            ),
+            autoGrantFieldsCanSee: isFieldsAutoGrantActive(
+              parent.permissions,
+              args.role,
+              'canSee'
+            ),
+            autoGrantFieldsCanUpdate: isFieldsAutoGrantActive(
+              parent.permissions,
+              args.role,
+              'canUpdate'
             ),
           };
         } else {
