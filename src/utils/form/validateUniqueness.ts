@@ -178,9 +178,7 @@ export const renderScope = (
 ): string => {
   const scopeFields = rule.fields.slice(1);
   if (!scopeFields.length) {
-    return t
-      ? t('mutations.record.uniqueness.wholeResource')
-      : 'this resource';
+    return t ? t('mutations.record.uniqueness.wholeResource') : 'this resource';
   }
   return scopeFields.map((field) => `${field}: ${data[field]}`).join(', ');
 };
@@ -191,6 +189,9 @@ export const renderScope = (
  *
  * @param template the message template
  * @param tokens the token values
+ * @param tokens.fields the rule's fields, joined
+ * @param tokens.scope the rule's scope, rendered as text
+ * @param tokens.matchCount the number of matching records found
  * @returns the interpolated message
  */
 export const interpolateMessage = (

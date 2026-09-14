@@ -132,7 +132,13 @@ export const validateBatchUniqueness = (
               )
             );
           if (overlapsEarlier) {
-            pushViolation(results[current], rule, rows[current], indices.length, t);
+            pushViolation(
+              results[current],
+              rule,
+              rows[current],
+              indices.length,
+              t
+            );
           }
         }
       }
@@ -141,7 +147,13 @@ export const validateBatchUniqueness = (
       for (const indices of groups.values()) {
         for (let i = 1; i < indices.length; i++) {
           const current = indices[i];
-          pushViolation(results[current], rule, rows[current], indices.length, t);
+          pushViolation(
+            results[current],
+            rule,
+            rows[current],
+            indices.length,
+            t
+          );
         }
       }
     }
