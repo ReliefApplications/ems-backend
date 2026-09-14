@@ -1,3 +1,10 @@
+# [2.18.0-rc.6](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.5...v2.18.0-rc.6) (2026-09-14)
+
+
+### Features
+
+* It is now possible to upload custom _id in upload files ([#1275](https://github.com/ReliefApplications/ems-backend/issues/1275)) ([209302b](https://github.com/ReliefApplications/ems-backend/commit/209302b7f66d8dbfa752c466e0ceb7e47792151a)), closes [Ab#137745](https://github.com/Ab/issues/137745)
+
 # [2.18.0-rc.5](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.4...v2.18.0-rc.5) (2026-09-11)
 
 
