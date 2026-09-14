@@ -223,6 +223,13 @@
 					"invalidArguments": "******",
 					"wrongTemplateProvided": "******"
 				}
+			},
+			"uniqueness": {
+				"errors": {
+					"dateIntersection": "****** {{fields}} ******",
+					"duplicate": "****** {{fields}} ******"
+				},
+				"wholeResource": "******"
 			}
 		},
 		"reference": {
@@ -347,7 +354,8 @@
 			"errors": {
 				"invalidUserUpload": "******",
 				"missingFile": "******",
-				"noRecordsToInsert": "******"
+				"noRecordsToInsert": "******",
+				"uniquenessViolation": "******"
 			}
 		}
 	},

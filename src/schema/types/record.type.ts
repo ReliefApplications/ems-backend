@@ -4,10 +4,11 @@ import {
   GraphQLString,
   GraphQLBoolean,
   GraphQLList,
+  GraphQLInt,
 } from 'graphql';
 import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
-import { FormType, UserType, VersionType } from '.';
+import { FormType, UserType, VersionType, UniquenessMatchType } from '.';
 import { Form, Resource, Record, Version, User } from '@models';
 import { Connection } from './pagination.type';
 import getDisplayText from '@utils/form/getDisplayText';
@@ -167,6 +168,8 @@ export const RecordType = new GraphQLObjectType({
           fields: () => ({
             question: { type: GraphQLString },
             errors: { type: new GraphQLList(GraphQLString) },
+            matches: { type: new GraphQLList(UniquenessMatchType) },
+            hiddenMatchCount: { type: GraphQLInt },
           }),
         })
       ),

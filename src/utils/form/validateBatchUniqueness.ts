@@ -5,9 +5,11 @@ import {
   UniquenessRule,
   UniquenessViolation,
   defaultMessage,
+  interpolateMessage,
   isEmptyValue,
   matchesCondition,
   rangesOverlap,
+  renderScope,
   toTime,
 } from './validateUniqueness';
 
@@ -16,16 +18,27 @@ import {
  *
  * @param result the row's result to update, in place
  * @param rule the violated rule
+ * @param row the row's data, used to render the `{scope}` message token
+ * @param matchCount number of rows in the batch sharing the same scope, used for the `{matchCount}` message token
  * @param t optional translator used to localize default violation messages
  */
 const pushViolation = (
   result: UniquenessCheckResult,
   rule: UniquenessRule,
+  row: any,
+  matchCount: number,
   t?: Translator
 ) => {
+  const message = rule.message
+    ? interpolateMessage(rule.message, {
+        fields: rule.fields.join(', '),
+        scope: renderScope(rule, row, t),
+        matchCount,
+      })
+    : defaultMessage(rule, t);
   const violation: UniquenessViolation = {
     question: rule.name || rule.fields.join(' + '),
-    errors: [rule.message || defaultMessage(rule, t)],
+    errors: [message],
   };
   result[rule.severity === 'warning' ? 'warnings' : 'errors'].push(violation);
 };
@@ -89,6 +102,7 @@ export const validateBatchUniqueness = (
   }
 
   for (const rule of rules) {
+    if (rule.active === false) continue;
     if (!rule.fields?.length) continue;
 
     if (rule.dateIntersection?.startField && rule.dateIntersection?.endField) {
@@ -118,7 +132,7 @@ export const validateBatchUniqueness = (
               )
             );
           if (overlapsEarlier) {
-            pushViolation(results[current], rule, t);
+            pushViolation(results[current], rule, rows[current], indices.length, t);
           }
         }
       }
@@ -126,7 +140,8 @@ export const validateBatchUniqueness = (
       const groups = groupByScope(rows, rule);
       for (const indices of groups.values()) {
         for (let i = 1; i < indices.length; i++) {
-          pushViolation(results[indices[i]], rule, t);
+          const current = indices[i];
+          pushViolation(results[current], rule, rows[current], indices.length, t);
         }
       }
     }

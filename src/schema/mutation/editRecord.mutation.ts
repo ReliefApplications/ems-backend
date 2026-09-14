@@ -120,7 +120,8 @@ export default {
         mergedData,
         parentResource,
         oldRecord._id,
-        context.i18next.t.bind(context.i18next)
+        context.i18next.t.bind(context.i18next),
+        ability
       );
       if (uniquenessResult.errors.length) {
         throw new GraphQLError(

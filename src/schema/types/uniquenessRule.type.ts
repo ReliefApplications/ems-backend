@@ -26,6 +26,15 @@ export const UniquenessDateIntersectionType = new GraphQLObjectType({
   }),
 });
 
+/** GraphQL type for a single matching record surfaced by a uniqueness violation */
+export const UniquenessMatchType = new GraphQLObjectType({
+  name: 'UniquenessMatchType',
+  fields: () => ({
+    id: { type: GraphQLString },
+    incrementalId: { type: GraphQLString },
+  }),
+});
+
 /** GraphQL uniqueness rule type definition */
 export const UniquenessRuleType = new GraphQLObjectType({
   name: 'UniquenessRuleType',
@@ -34,6 +43,8 @@ export const UniquenessRuleType = new GraphQLObjectType({
     fields: { type: new GraphQLList(GraphQLString) },
     severity: { type: GraphQLString },
     message: { type: GraphQLString },
+    active: { type: GraphQLBoolean },
+    showMatches: { type: GraphQLBoolean },
     condition: { type: new GraphQLList(UniquenessConditionType) },
     dateIntersection: { type: UniquenessDateIntersectionType },
   }),
