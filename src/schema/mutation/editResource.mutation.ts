@@ -20,6 +20,7 @@ import { castArray, get, has, isArray, isEmpty, isEqual, isNil } from 'lodash';
 import mongoose from 'mongoose';
 import { resourcePermission } from '../../types/permission';
 import { ResourceType } from '../types';
+import { UniquenessRuleInputType, UniquenessRuleArgs } from '../inputs';
 import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Simple resource permission change type */
@@ -685,6 +686,7 @@ type EditResourceArgs = {
   fieldsPermissions?: any;
   fieldsAutoGrant?: FieldsAutoGrantChange;
   calculatedField?: any;
+  uniquenessRules?: UniquenessRuleArgs[];
 };
 
 /**
@@ -700,6 +702,7 @@ export default {
     fieldsPermissions: { type: GraphQLJSON },
     fieldsAutoGrant: { type: GraphQLJSON },
     calculatedField: { type: GraphQLJSON },
+    uniquenessRules: { type: new GraphQLList(UniquenessRuleInputType) },
   },
   async resolve(parent, args: EditResourceArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -711,6 +714,7 @@ export default {
           !args.permissions &&
           !args.calculatedField &&
           !args.fieldsPermissions &&
+          !args.uniquenessRules &&
           !args.fieldsAutoGrant)
       ) {
         throw new GraphQLError(
@@ -734,6 +738,32 @@ export default {
       Object.assign(update, args.fields && { fields: args.fields });
 
       const allResourceFields = resource.fields;
+
+      // Update uniqueness rules
+      if (args.uniquenessRules) {
+        const fieldNames = allResourceFields.map((f) => f.name);
+        for (const rule of args.uniquenessRules) {
+          const referencedFields = [
+            ...rule.fields,
+            ...(rule.condition || []).map((c) => c.field),
+            ...(rule.dateIntersection
+              ? [
+                  rule.dateIntersection.startField,
+                  rule.dateIntersection.endField,
+                ]
+              : []),
+          ];
+          const unknownField = referencedFields.find(
+            (f) => !fieldNames.includes(f)
+          );
+          if (unknownField) {
+            throw new GraphQLError(
+              context.i18next.t('mutations.resource.edit.errors.field.notFound')
+            );
+          }
+        }
+        update.uniquenessRules = args.uniquenessRules;
+      }
 
       // Update permissions
       if (args.permissions) {
