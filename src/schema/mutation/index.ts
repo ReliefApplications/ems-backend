@@ -10,6 +10,7 @@ import editRecords from './editRecords.mutation';
 import deleteRecord from './deleteRecord.mutation';
 import deleteRecords from './deleteRecords.mutation';
 import convertRecord from './convertRecord.mutation';
+import cloneRecordWithNewId from './cloneRecordWithNewId.mutation';
 import restoreRecord from './restoreRecord.mutation';
 import addDashboard from './addDashboard.mutation';
 import editDashboard from './editDashboard.mutation';
@@ -123,6 +124,7 @@ const Mutation = new GraphQLObjectType({
     addEmailTemplate,
     addUsers,
     addWorkflow,
+    cloneRecordWithNewId,
     convertRecord,
     deleteApiConfiguration,
     deleteApplication,

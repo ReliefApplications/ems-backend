@@ -17,7 +17,7 @@ import {
   uploadFile,
   validateCustomIds,
 } from '@utils/files';
-import { getNextId } from '@utils/form';
+import { getNextId, applyConditionalIds } from '@utils/form';
 import i18next from 'i18next';
 import get from 'lodash/get';
 import { logger } from '@services/logger.service';
@@ -137,6 +137,7 @@ async function insertRecords(
     // Create records one by one so the incrementalId works correctly
     for (let i = 0; i < dataSets.length; i++) {
       const dataSet = dataSets[i];
+      await applyConditionalIds(fields, dataSet.data, structureId);
       records.push(
         new Record({
           ...(customIds ? { _id: new Types.ObjectId(customIds[i]) } : {}),

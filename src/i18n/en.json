@@ -220,6 +220,7 @@
 			},
 			"edit": {
 				"errors": {
+					"conditionalIdSourceFieldChanged": "This field cannot be changed on an existing record. Clone the record instead to get a new id.",
 					"invalidArguments": "Either data or version must be provided.",
 					"wrongTemplateProvided": "Template must sharing the same resource as the parent form of the edited record."
 				}
@@ -392,6 +393,11 @@
 			"findDuplicateFields": {
 				"errors": {
 					"dataFieldDuplicated": "Data name duplicated : {{name}}. Please provide different value names for all questions."
+				}
+			},
+			"getNextConditionalId": {
+				"errors": {
+					"conditionalIdError": "Error with the conditional ID for records"
 				}
 			},
 			"getNextId": {

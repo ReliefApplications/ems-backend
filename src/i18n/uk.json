@@ -221,7 +221,8 @@
 			"edit": {
 				"errors": {
 					"invalidArguments": "Необхідно надати data або version.",
-					"wrongTemplateProvided": "Шаблон має використовувати той самий Ресурс, що й батьківська форма відредагованого запису."
+					"wrongTemplateProvided": "Шаблон має використовувати той самий Ресурс, що й батьківська форма відредагованого запису.",
+					"conditionalIdSourceFieldChanged": "Це поле не можна змінити в існуючому записі. Клонуйте запис, щоб отримати новий ідентифікатор."
 				}
 			}
 		},
@@ -397,6 +398,11 @@
 			"getNextId": {
 				"errors": {
 					"incrementalIdError": "Помилка з інкрементним ID для записів"
+				}
+			},
+			"getNextConditionalId": {
+				"errors": {
+					"conditionalIdError": "Помилка з умовним ID для записів"
 				}
 			}
 		},

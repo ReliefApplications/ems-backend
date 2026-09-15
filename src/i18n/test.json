@@ -220,6 +220,7 @@
 			},
 			"edit": {
 				"errors": {
+					"conditionalIdSourceFieldChanged": "******",
 					"invalidArguments": "******",
 					"wrongTemplateProvided": "******"
 				}
@@ -392,6 +393,11 @@
 			"findDuplicateFields": {
 				"errors": {
 					"dataFieldDuplicated": "****** {{name}} ******"
+				}
+			},
+			"getNextConditionalId": {
+				"errors": {
+					"conditionalIdError": "******"
 				}
 			},
 			"getNextId": {

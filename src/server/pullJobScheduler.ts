@@ -19,6 +19,7 @@ import mongoose from 'mongoose';
 import { getToken } from '@utils/proxy';
 import {
   getNextId,
+  applyConditionalIds,
   transformRecord,
   checkRecordExpressions,
 } from '@utils/form';
@@ -541,10 +542,12 @@ export const insertRecords = async (
     // If everything is fine, push it in the array for saving
     if (!isDuplicate) {
       transformRecord(mappedElement, form.fields);
+      const structureId = String(
+        form.resource ? form.resource : pullJob.convertTo
+      );
+      await applyConditionalIds(form.fields, mappedElement, structureId);
       let record = new RecordModel({
-        incrementalId: await getNextId(
-          String(form.resource ? form.resource : pullJob.convertTo)
-        ),
+        incrementalId: await getNextId(structureId),
         form: pullJob.convertTo,
         data: mappedElement,
         resource: form.resource ? form.resource : null,

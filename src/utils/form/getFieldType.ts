@@ -92,6 +92,8 @@ export const getFieldType = async (question: {
     case 'people-tagbox': {
       return 'people-tagbox';
     }
+    case 'conditionalid':
+      return 'conditionalid';
     default:
       return 'text';
   }

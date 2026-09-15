@@ -14,6 +14,8 @@ import {
   getOwnership,
   checkRecordValidation,
   hasInaccessibleFields,
+  stripConditionalIdFields,
+  getChangedConditionalIdSourceField,
 } from '@utils/form';
 import { RecordType } from '../types';
 import { logger } from '@services/logger.service';
@@ -109,6 +111,28 @@ export default {
               }
               fields = template.fields;
             }
+            const changedConditionalIdField =
+              getChangedConditionalIdSourceField(fields, record.data, data);
+            if (changedConditionalIdField) {
+              // Skip only this record rather than aborting the whole batch -
+              // consistent with how validation errors are handled just above.
+              records.push(
+                Object.assign(record, {
+                  validationErrors: [
+                    {
+                      question: changedConditionalIdField.name,
+                      errors: [
+                        context.i18next.t(
+                          'mutations.record.edit.errors.conditionalIdSourceFieldChanged'
+                        ),
+                      ],
+                    },
+                  ],
+                })
+              );
+              continue;
+            }
+            stripConditionalIdFields(fields, data);
             transformRecord(data, fields);
             const version = new Version({
               createdAt: record.modifiedAt

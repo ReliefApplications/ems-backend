@@ -47,6 +47,7 @@ describe('getFieldType', () => {
     'editor',
     'people-dropdown',
     'people-tagbox',
+    'conditionalid',
   ])('maps %s questions to their own type', async (type) => {
     expect(await getFieldType({ type })).toBe(type);
   });

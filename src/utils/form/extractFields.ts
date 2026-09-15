@@ -229,6 +229,16 @@ export const extractFields = async (object, fields, core): Promise<void> => {
         if (field.type === 'users') {
           Object.assign(field, { applications: element.applications });
         }
+        // ** Conditional ID **
+        if (field.type === 'conditionalid') {
+          Object.assign(field, {
+            sourceField: element.sourceField,
+            truePrefix: element.truePrefix,
+            trueDigits: element.trueDigits,
+            falsePrefix: element.falsePrefix,
+            falseDigits: element.falseDigits,
+          });
+        }
         // ** Translation binding **
         if (element.translateField) {
           Object.assign(field, {

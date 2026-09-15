@@ -14,6 +14,8 @@ import {
   checkRecordValidation,
   checkRecordTriggers,
   hasInaccessibleFields,
+  stripConditionalIdFields,
+  getChangedConditionalIdSourceField,
 } from '@utils/form';
 import { RecordType } from '../types';
 import { Types } from 'mongoose';
@@ -153,6 +155,19 @@ export default {
       }
       // Classic edition
       if (!args.version) {
+        const changedConditionalIdField = getChangedConditionalIdSourceField(
+          fields,
+          oldRecord.data,
+          args.data
+        );
+        if (changedConditionalIdField) {
+          throw new GraphQLError(
+            context.i18next.t(
+              'mutations.record.edit.errors.conditionalIdSourceFieldChanged'
+            )
+          );
+        }
+        stripConditionalIdFields(fields, args.data);
         transformRecord(args.data, fields);
         const update: any = {
           data: { ...oldRecord.data, ...args.data },

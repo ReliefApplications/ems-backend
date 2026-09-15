@@ -7,7 +7,12 @@ import {
 import GraphQLJSON from 'graphql-type-json';
 import { RecordType } from '../types';
 import { Form, Record, Notification, Channel } from '@models';
-import { transformRecord, getOwnership, getNextId } from '@utils/form';
+import {
+  transformRecord,
+  getOwnership,
+  getNextId,
+  applyConditionalIds,
+} from '@utils/form';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import pubsub from '../../server/pubsub';
 import { getFormPermissionFilter } from '@utils/filter';
@@ -103,10 +108,10 @@ export default {
 
       // Create the record instance
       transformRecord(args.data, form.fields);
+      const structureId = String(form.resource ? form.resource : args.form);
+      await applyConditionalIds(form.fields, args.data, structureId);
       const record = new Record({
-        incrementalId: await getNextId(
-          String(form.resource ? form.resource : args.form)
-        ),
+        incrementalId: await getNextId(structureId),
         form: args.form,
         //createdAt: new Date(),
         //modifiedAt: new Date(),
