@@ -213,6 +213,12 @@
 			}
 		},
 		"record": {
+			"add": {
+				"errors": {
+					"invalidCloneRecordId": "The record to clone must be a valid record id.",
+					"invalidCloneRecordResource": "The record to clone must belong to the same resource as the new record."
+				}
+			},
 			"convert": {
 				"errors": {
 					"invalidConversion": "Cannot convert this record to this target form type."
