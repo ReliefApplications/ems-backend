@@ -110,7 +110,7 @@ describe('formChangeRequiresSchemaReload', () => {
     );
   });
 
-  it.each(['name', 'status', 'structure'])(
+  it.each(['name', 'status', 'fields'])(
     'should reload when %s is updated',
     (key) => {
       const data = {
@@ -121,6 +121,17 @@ describe('formChangeRequiresSchemaReload', () => {
       expect(formChangeRequiresSchemaReload(data)).toBe(true);
     }
   );
+
+  it('should not reload when only presentation structure is updated', () => {
+    const data = {
+      operationType: 'update',
+      updateDescription: {
+        updatedFields: { structure: '{"pages":[]}' },
+      },
+    };
+
+    expect(formChangeRequiresSchemaReload(data)).toBe(false);
+  });
 
   it('should not reload when only unrelated fields are updated', () => {
     const data = {
@@ -133,15 +144,15 @@ describe('formChangeRequiresSchemaReload', () => {
     expect(formChangeRequiresSchemaReload(data)).toBe(false);
   });
 
-  it('should only match whole-field updates, not dotted keys', () => {
+  it('should reload for positional field updates', () => {
     const data = {
       operationType: 'update',
       updateDescription: {
-        updatedFields: { 'structure.pages': [] },
+        updatedFields: { 'fields.0.type': 'text' },
       },
     };
 
-    expect(formChangeRequiresSchemaReload(data)).toBe(false);
+    expect(formChangeRequiresSchemaReload(data)).toBe(true);
   });
 });
 

@@ -37,6 +37,29 @@ describe('editForm Resolver', () => {
       ],
     });
 
+  /** @returns structure with one data question and a Field history question */
+  const structureWithFieldHistory = () =>
+    JSON.stringify({
+      pages: [
+        {
+          name: 'page1',
+          elements: [
+            {
+              type: 'text',
+              name: 'name',
+              valueName: 'name',
+            },
+            {
+              type: 'field-history',
+              name: 'name_history',
+              field: 'question:name',
+              title: 'Name history',
+            },
+          ],
+        },
+      ],
+    });
+
   /** @returns the ids, as strings, sorted, of the given list */
   const ids = (list: any[]) => list.map((x) => String(x)).sort();
 
@@ -153,5 +176,93 @@ describe('editForm Resolver', () => {
         ids(country.permissions.canUpdate)
       );
     });
+  });
+
+  it('should not rewrite schema fields for a Field history-only change', async () => {
+    const standaloneForm = await Form.create({
+      name: `Standalone Form ${counter}`,
+      graphQLTypeName: `StandaloneForm${counter}`,
+      core: false,
+      structure: structureWith(['name']),
+      fields: [
+        {
+          type: 'text',
+          name: 'name',
+          isRequired: false,
+          readOnly: false,
+          isCore: false,
+        },
+      ],
+    });
+    const updateSpy = jest.spyOn(Form, 'findByIdAndUpdate');
+
+    await editForm.resolve(
+      null,
+      { id: standaloneForm.id, structure: structureWithFieldHistory() },
+      context
+    );
+
+    expect(updateSpy).toHaveBeenCalledTimes(1);
+    expect(updateSpy.mock.calls[0][1]).not.toHaveProperty('fields');
+    updateSpy.mockRestore();
+  });
+
+  it('should not rewrite inherited schema fields for a Field history-only change', async () => {
+    const permissions = { canSee: [roleA], canUpdate: [roleA] };
+    const resourceField = {
+      type: 'text',
+      name: 'name',
+      isRequired: false,
+      readOnly: false,
+      isCore: true,
+      permissions,
+    };
+    await Resource.findByIdAndUpdate(resource.id, { fields: [resourceField] });
+    await Form.findByIdAndUpdate(form.id, { fields: [resourceField] });
+    const childField = { ...resourceField, defaultValue: 'Child default' };
+    const child = await Form.create({
+      name: `Child Form ${counter}`,
+      graphQLTypeName: `ChildForm${counter}`,
+      core: false,
+      resource: resource._id,
+      structure: JSON.stringify({
+        pages: [
+          {
+            name: 'page1',
+            elements: [
+              {
+                type: 'text',
+                name: 'name',
+                valueName: 'name',
+                defaultValue: 'Child default',
+              },
+            ],
+          },
+        ],
+      }),
+      fields: [childField],
+    });
+    const formUpdateSpy = jest.spyOn(Form, 'findByIdAndUpdate');
+    const bulkWriteSpy = jest.spyOn(Form, 'bulkWrite');
+    const resourceUpdateSpy = jest.spyOn(Resource, 'findByIdAndUpdate');
+
+    await editForm.resolve(
+      null,
+      { id: form.id, structure: structureWithFieldHistory() },
+      context
+    );
+
+    expect(formUpdateSpy).toHaveBeenCalledTimes(1);
+    expect(formUpdateSpy.mock.calls[0][1]).not.toHaveProperty('fields');
+    expect(resourceUpdateSpy).not.toHaveBeenCalled();
+    expect(bulkWriteSpy).not.toHaveBeenCalled();
+    const unchangedChild = await Form.findById(child.id);
+    expect(ids(unchangedChild.fields[0].permissions.canSee)).toEqual(
+      ids(permissions.canSee)
+    );
+    expect(unchangedChild.fields[0].defaultValue).toBe('Child default');
+    formUpdateSpy.mockRestore();
+    bulkWriteSpy.mockRestore();
+    resourceUpdateSpy.mockRestore();
   });
 });

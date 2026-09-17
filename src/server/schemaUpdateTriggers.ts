@@ -37,7 +37,7 @@ export const resourceUpdateRequiresSchemaReload = (
 /**
  * Checks whether a form change requires the GraphQL schema to be rebuilt.
  * Insertions and deletions always do; updates only when the name, status or
- * structure changed.
+ * generated fields changed.
  *
  * @param data change event from the form collection watch stream
  * @returns true if the schema should be reloaded
@@ -49,9 +49,12 @@ export const formChangeRequiresSchemaReload = (
     return true;
   }
   if (data.operationType === 'update') {
-    const fieldsThatRequireSchemaUpdate = ['name', 'status', 'structure'];
     return Object.keys(data.updateDescription?.updatedFields ?? {}).some(
-      (key) => fieldsThatRequireSchemaUpdate.includes(key)
+      (key) =>
+        key === 'name' ||
+        key === 'status' ||
+        key === 'fields' ||
+        key.startsWith('fields.')
     );
   }
   return false;

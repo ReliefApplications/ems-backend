@@ -17,6 +17,9 @@ export const extractFields = async (object, fields, core): Promise<void> => {
       if (element.type === 'panel') {
         await extractFields(element, fields, core);
       } else {
+        if (element.type === 'field-history') {
+          continue;
+        }
         if (element.type === 'resources' && element.displayOnly) {
           // Don't store as field if question is display only
           continue;

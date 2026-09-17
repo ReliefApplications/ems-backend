@@ -273,9 +273,21 @@ export default {
             resource: form.resource,
             _id: { $ne: new mongoose.Types.ObjectId(args.id) },
           }).select('_id structure fields');
-          const oldFields: any[] = resource.fields
+          const templateSnapshots = new Map(
+            templates.map((template) => [
+              template.id,
+              {
+                structure: JSON.parse(template.structure || '{}'),
+                fields: JSON.parse(JSON.stringify(template.fields || [])),
+              },
+            ])
+          );
+          const storedResourceFields: any[] = resource.fields
             ? JSON.parse(JSON.stringify(resource.fields))
             : [];
+          const oldFields: any[] = JSON.parse(
+            JSON.stringify(storedResourceFields)
+          );
           const usedFields = templates
             .map((x) => x.fields)
             .flat()
@@ -506,27 +518,53 @@ export default {
           // Build bulk update of non-core templates
           const bulkUpdate = [];
           for (const template of templates) {
-            bulkUpdate.push({
-              updateOne: {
-                filter: { _id: template._id },
-                update: {
-                  structure: template.structure,
-                  fields: template.fields,
+            const snapshot = templateSnapshots.get(template.id);
+            const templateUpdate: {
+              structure?: typeof template.structure;
+              fields?: typeof template.fields;
+            } = {};
+            if (
+              !isEqual(
+                snapshot?.structure,
+                JSON.parse(template.structure || '{}')
+              )
+            ) {
+              templateUpdate.structure = template.structure;
+            }
+            if (
+              !isEqual(
+                snapshot?.fields,
+                JSON.parse(JSON.stringify(template.fields || []))
+              )
+            ) {
+              templateUpdate.fields = template.fields;
+            }
+            if (Object.keys(templateUpdate).length > 0) {
+              bulkUpdate.push({
+                updateOne: {
+                  filter: { _id: template._id },
+                  update: templateUpdate,
                 },
-              },
-            });
+              });
+            }
           }
           if (bulkUpdate.length > 0) {
             // Update all child form for addition/deletion/structure changes
             await Form.bulkWrite(bulkUpdate);
           }
 
-          // Update resource fields
-          await Resource.findByIdAndUpdate(form.resource, {
-            fields: oldFields,
-          });
+          const updatedResourceFields = JSON.parse(JSON.stringify(oldFields));
+          if (!isEqual(storedResourceFields, updatedResourceFields)) {
+            await Resource.findByIdAndUpdate(form.resource, {
+              fields: oldFields,
+            });
+          }
         }
-        update.fields = fields;
+        const storedFormFields = JSON.parse(JSON.stringify(form.fields || []));
+        const updatedFormFields = JSON.parse(JSON.stringify(fields));
+        if (!isEqual(storedFormFields, updatedFormFields)) {
+          update.fields = fields;
+        }
         // Update version
         const version = new Version({
           //createdAt: form.modifiedAt ? form.modifiedAt : form.createdAt,
