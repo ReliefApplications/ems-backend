@@ -213,6 +213,12 @@
 			}
 		},
 		"record": {
+			"add": {
+				"errors": {
+					"invalidCloneRecordId": "******",
+					"invalidCloneRecordResource": "******"
+				}
+			},
 			"convert": {
 				"errors": {
 					"invalidConversion": "******"

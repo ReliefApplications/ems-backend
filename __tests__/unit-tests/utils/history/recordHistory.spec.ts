@@ -287,6 +287,68 @@ describe('RecordHistory Class Unit Tests', () => {
     expect(secondPage).toEqual([]);
   });
 
+  it('should not report a deletion when a nil value becomes a missing key', async () => {
+    // Updates store empty questions as null, while inserts omit them: this is
+    // what a cloned record looks like compared to the version it starts from
+    const versionData = { name: 'Alice', age: null };
+    (Version.find as jest.Mock).mockReturnValue({
+      populate: jest.fn().mockResolvedValue([
+        {
+          _id: 'versionId1',
+          createdAt: new Date('2026-07-02T12:00:00Z'),
+          data: versionData,
+          toObject: jest.fn().mockReturnValue({
+            _id: 'versionId1',
+            createdAt: new Date('2026-07-02T12:00:00Z'),
+            data: versionData,
+          }),
+        },
+      ]),
+    });
+    const clonedRecord = {
+      ...record,
+      versions: ['versionId1'],
+      data: { name: 'Alice' },
+    };
+    const recordHistory = new RecordHistory(clonedRecord, options);
+
+    const history = await recordHistory.getHistory();
+
+    expect(history.length).toBe(2);
+    expect(history[0].changes).toEqual([]);
+  });
+
+  it('should still report a deletion when a set value becomes a missing key', async () => {
+    const versionData = { name: 'Alice', age: 30 };
+    (Version.find as jest.Mock).mockReturnValue({
+      populate: jest.fn().mockResolvedValue([
+        {
+          _id: 'versionId1',
+          createdAt: new Date('2026-07-02T12:00:00Z'),
+          data: versionData,
+          toObject: jest.fn().mockReturnValue({
+            _id: 'versionId1',
+            createdAt: new Date('2026-07-02T12:00:00Z'),
+            data: versionData,
+          }),
+        },
+      ]),
+    });
+    const clonedRecord = {
+      ...record,
+      versions: ['versionId1'],
+      data: { name: 'Alice' },
+    };
+    const recordHistory = new RecordHistory(clonedRecord, options);
+
+    const history = await recordHistory.getHistory();
+
+    expect(history[0].changes.length).toBe(1);
+    expect(history[0].changes[0].type).toBe('remove');
+    expect(history[0].changes[0].field).toBe('age');
+    expect(history[0].changes[0].old).toBe(30);
+  });
+
   it('should leave a boolean value unchanged when no label is configured', async () => {
     const booleanRecord = {
       ...record,
