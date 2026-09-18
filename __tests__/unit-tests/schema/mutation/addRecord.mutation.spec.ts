@@ -195,16 +195,35 @@ describe('addRecord Resolver', () => {
       ]);
     });
 
-    it('should not share the versions with the cloned record', async () => {
+    it('should reuse the versions of the cloned record, without duplicating them', async () => {
+      const versionsBefore = await Version.countDocuments();
       const record = await addRecord.resolve(null, args, context);
-      record.versions.forEach((id: any) => {
-        expect(clonedVersions.some((version) => version._id.equals(id))).toBe(
-          false
-        );
+      clonedVersions.forEach((version, index) => {
+        expect(version._id.equals(record.versions[index])).toBe(true);
       });
+      // Only the version storing the data of the cloned record is created
+      expect(await Version.countDocuments()).toEqual(versionsBefore + 1);
       // The cloned record keeps its own versions
       const source = await Record.findById(clonedRecord._id);
       expect(source.versions).toHaveLength(clonedVersions.length);
+    });
+
+    it('should keep the shared versions when one of the records is deleted', async () => {
+      const record = await addRecord.resolve(null, args, context);
+      await Record.deleteOne({ _id: record._id });
+      // Versions still used by the cloned record are kept
+      for (const version of clonedVersions) {
+        expect(await Version.exists({ _id: version._id })).toBeTruthy();
+      }
+      // The version only used by the deleted record is removed
+      const ownVersion = record.versions[record.versions.length - 1];
+      expect(await Version.exists({ _id: ownVersion })).toBeNull();
+
+      // Once no record uses them anymore, shared versions are removed
+      await Record.deleteOne({ _id: clonedRecord._id });
+      for (const version of clonedVersions) {
+        expect(await Version.exists({ _id: version._id })).toBeNull();
+      }
     });
 
     it('should clone a record of a form without resource', async () => {

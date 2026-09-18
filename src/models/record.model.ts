@@ -122,11 +122,25 @@ recordSchema.index({ archived: 1, form: 1, resource: 1, createdAt: 1 });
 recordSchema.index({ resource: 1, archived: 1 });
 recordSchema.index({ createdAt: 1 });
 recordSchema.index({ form: 1 });
+recordSchema.index({ versions: 1 });
 
 // handle cascading deletion
 addOnBeforeDeleteMany(recordSchema, async (records) => {
-  const versions = records.reduce((acc, rec) => acc.concat(rec.versions), []);
-  if (versions) await Version.deleteMany({ _id: { $in: versions } });
+  const versions = records.reduce(
+    (acc, rec) => acc.concat(rec.versions || []),
+    []
+  );
+  if (!versions.length) return;
+  // Cloned & converted records share versions with their source record, so
+  // only delete the versions that no remaining record still uses
+  const sharedVersions = await Record.distinct('versions', {
+    _id: { $nin: records.map((rec) => rec._id) },
+    versions: { $in: versions },
+  });
+  const shared = new Set(sharedVersions.map((x) => String(x)));
+  await Version.deleteMany({
+    _id: { $in: versions.filter((x) => !shared.has(String(x))) },
+  });
 });
 
 recordSchema.index({ incrementalId: 1, form: 1 });

@@ -4,7 +4,7 @@ import {
   GraphQLError,
   GraphQLBoolean,
 } from 'graphql';
-import { copyRecordVersions, getNextId } from '@utils/form';
+import { getNextId } from '@utils/form';
 import { Form, Record } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { RecordType } from '../types';
@@ -61,7 +61,7 @@ export default {
       // Convert the record
       if (args.copyRecord) {
         const data = oldRecord.data;
-        const copiedVersions = await copyRecordVersions(oldRecord);
+        const oldVersions = oldRecord.versions;
         const targetRecord = new Record({
           incrementalId: await getNextId(
             String(oldForm.resource ? oldForm.resource : args.form)
@@ -71,7 +71,7 @@ export default {
           //modifiedAt: new Date(),
           data,
           resource: oldForm.resource,
-          versions: copiedVersions,
+          versions: oldVersions,
           lastUpdateForm: targetForm.id,
           _createdBy: {
             user: {

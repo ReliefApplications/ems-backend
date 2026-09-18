@@ -7,12 +7,7 @@ import {
 import GraphQLJSON from 'graphql-type-json';
 import { RecordType } from '../types';
 import { Form, Record, Notification, Channel, Version } from '@models';
-import {
-  transformRecord,
-  getOwnership,
-  getNextId,
-  copyRecordVersions,
-} from '@utils/form';
+import { transformRecord, getOwnership, getNextId } from '@utils/form';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import pubsub from '../../server/pubsub';
 import { getFormPermissionFilter } from '@utils/filter';
@@ -35,7 +30,7 @@ export type AddRecordArgs = {
  * Unauthenticated users can add records to public forms, provided they pass
  * a valid Cloudflare Turnstile captcha token. In that case, the ability check
  * is skipped.
- * If a record to clone is provided, its history is copied into the new record.
+ * If a record to clone is provided, the new record reuses its history.
  * Throw a GraphQL error if not logged or authorized, or form not found.
  * TODO: we have to check form by form for that.
  */
@@ -109,8 +104,9 @@ export default {
         }
       }
 
-      // If a record to clone is provided, duplicate its history into the new record
+      // If a record to clone is provided, the new record reuses its history
       let versions: Types.ObjectId[] = [];
+      let clonedDataVersion: Version;
       if (args.cloneRecordId) {
         // Cloning is not part of the public form flow
         if (!user) {
@@ -151,12 +147,17 @@ export default {
             context.i18next.t('common.errors.permissionNotGranted')
           );
         }
-        // Also store the current data of the cloned record as a new version,
-        // so the history of the new record displays what changed since then
-        versions = await copyRecordVersions(clonedRecord, {
-          appendCurrentData: true,
+        // Versions are not duplicated: both records reference the same ones.
+        // The current data of the cloned record is stored as a new version, so
+        // the history of the new record displays what changed since then
+        clonedDataVersion = new Version({
+          data: clonedRecord.data,
+          createdAt: clonedRecord.modifiedAt
+            ? clonedRecord.modifiedAt
+            : clonedRecord.createdAt,
           createdBy: user._id,
         });
+        versions = [...(clonedRecord.versions || []), clonedDataVersion._id];
       }
 
       // Create the record instance
@@ -219,14 +220,10 @@ export default {
         const publisher = await pubsub();
         publisher.publish(channel.id, { notification });
       }
-      try {
-        await record.save();
-      } catch (err) {
-        // Don't leave the duplicated versions behind if the record isn't saved
-        if (versions.length) {
-          await Version.deleteMany({ _id: { $in: versions } });
-        }
-        throw err;
+      await record.save();
+      // Only store the new version once the record is saved
+      if (clonedDataVersion) {
+        await clonedDataVersion.save();
       }
       return record;
     } catch (err) {

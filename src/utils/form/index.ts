@@ -9,7 +9,6 @@ export * from './hasInaccessibleFields';
 
 // === RECORDS ===
 export * from './transformRecord';
-export * from './copyRecordVersions';
 export * from './getOwnership';
 export * from './getNextId';
 export * from './getDisplayText';
