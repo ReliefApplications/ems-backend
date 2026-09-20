@@ -24,12 +24,25 @@ export type OperationTypes =
   | MultipleOperatorsOperationsTypes
   | RelatedOperationTypes
   | 'today'
-  | 'displayValue';
+  | 'displayValue'
+  | 'translate';
 
 /** Operation that resolves a choice/refData field stored value to its display label */
 interface DisplayValueOperation {
   operation: 'displayValue';
   fieldName: string;
+}
+
+/**
+ * Operation that resolves a field to its translated value, i.e. the value of
+ * its sibling field configured with `translateField` / `translateTo` for the
+ * target locale (request locale by default, or the locale given as the
+ * second argument), falling back to the source field's own value.
+ */
+interface TranslateOperation {
+  operation: 'translate';
+  fieldName: string;
+  locale?: string;
 }
 
 export type RelatedOperationTypes =
@@ -127,4 +140,5 @@ export type Operation =
   | SingleOperatorOperation
   | DoubleOperatorOperation
   | DisplayValueOperation
+  | TranslateOperation
   | RelatedOperation;
