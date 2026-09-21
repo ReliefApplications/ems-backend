@@ -1,3 +1,10 @@
+# [2.18.0-rc.7](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.6...v2.18.0-rc.7) (2026-09-21)
+
+
+### Features
+
+* Improve record type, adding option to get calculated fields ([#1283](https://github.com/ReliefApplications/ems-backend/issues/1283)) ([26265a5](https://github.com/ReliefApplications/ems-backend/commit/26265a5896bdc873c41d3cfe59cb76711f41a87c)), closes [AB#133920](https://github.com/AB/issues/133920)
+
 # [2.18.0-rc.6](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.5...v2.18.0-rc.6) (2026-09-14)
 
 
