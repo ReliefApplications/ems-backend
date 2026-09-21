@@ -825,6 +825,71 @@ export class CalculatedFieldService {
   }
 
   /**
+   * Build the `$addFields` stage for the `translate` operation. Resolves the
+   * field's sibling translation field for the target locale (the locale
+   * argument when given, otherwise the request locale) and falls back to the
+   * source field's own value when no sibling is configured, no sibling
+   * matches the locale, or the sibling has no value.
+   *
+   * @param op The translate operation to compile
+   * @param op.fieldName Source field whose translated value should be resolved
+   * @param op.locale Optional locale override (defaults to the request locale)
+   * @param path Target path in the pipeline (`data.<x>` or `aux.<x>`)
+   * @returns A single `$addFields` stage performing the lookup
+   */
+  private buildTranslateStage(
+    op: { fieldName: string; locale?: string },
+    path: string
+  ): PipelineStage.AddFields {
+    const targetPath = path.startsWith('aux.') ? path : `data.${path}`;
+    const resource = this.resource;
+    if (!resource)
+      throw new Error(
+        'CalculatedFieldService: a Resource is required to resolve calc.translate(...)'
+      );
+    const field = resource.fields.find((f: any) => f.name === op.fieldName);
+    if (!field)
+      throw new Error(
+        `calc.translate: unknown field "${op.fieldName}" on resource ${
+          resource.name ?? ''
+        }`
+      );
+
+    const locale = op.locale ?? this.context?.locale;
+    const sourceValue = `$data.${op.fieldName}`;
+    const sibling = locale
+      ? resource.fields.find(
+          (f: any) =>
+            f.translateField === op.fieldName &&
+            f.translateTo &&
+            f.translateTo.toLowerCase() === locale.toLowerCase()
+        )
+      : undefined;
+
+    if (!sibling) {
+      return { $addFields: { [targetPath]: sourceValue } };
+    }
+    // A missing key or an empty string are both treated as "no value",
+    // consistent with withTranslationFallback (getFilter.ts) and the
+    // data(replaceTranslations) resolver (record.type.ts). $ifNull first
+    // normalizes a missing key to null — $in alone would not, since Mongo
+    // only matches null against an *explicit* null, not a missing field.
+    const siblingValue = `$data.${sibling.name}`;
+    const normalizedSiblingValue = { $ifNull: [siblingValue, null] };
+    return {
+      $addFields: {
+        [targetPath]: {
+          $cond: {
+            if: { $in: [normalizedSiblingValue, [null, '']] },
+            then: sourceValue,
+            else: normalizedSiblingValue,
+          },
+        },
+      },
+    };
+  }
+
+  /**
    * Build the sub-pipeline stages joining the record linked through a child
    * `resource` field into a `_<fieldName>` alias — the same alias (and
    * stages) the records query builds — so a filter on
@@ -1434,6 +1499,10 @@ export class CalculatedFieldService {
         pipeline.push(
           this.buildDisplayValueStage(op.fieldName, path, choiceMaps)
         );
+        break;
+      }
+      case 'translate': {
+        pipeline.push(this.buildTranslateStage(op, path));
         break;
       }
       case 'relatedValue':
