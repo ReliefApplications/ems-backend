@@ -1,3 +1,10 @@
+# [2.18.0-rc.8](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.7...v2.18.0-rc.8) (2026-09-21)
+
+
+### Features
+
+* Enable calculated fields to translate fields that support translations ([#1282](https://github.com/ReliefApplications/ems-backend/issues/1282)) ([8a3d383](https://github.com/ReliefApplications/ems-backend/commit/8a3d3832505c1d5bbe793c22a9ce092cd91838a5)), closes [AB#138076](https://github.com/AB/issues/138076)
+
 # [2.18.0-rc.7](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.6...v2.18.0-rc.7) (2026-09-21)
 
 
