@@ -28,15 +28,20 @@ const appAbility = Ability as AbilityClass<AppAbility>;
  * @returns A boolean indicating if the user has the permission
  */
 function userCanAccessField(
-  type: 'read' | 'update',
+  type: 'read' | 'update' | 'deleteFiles',
   user: User,
   field: any
 ): boolean {
   if (field === undefined) return false;
-  const arrayToCheck = type === 'read' ? 'canSee' : 'canUpdate';
+  const arrayToCheck =
+    type === 'read'
+      ? 'canSee'
+      : type === 'update'
+      ? 'canUpdate'
+      : 'canDeleteFiles';
 
   // If the readOnly property of the field is true, ignore the permission check to update the records
-  if (arrayToCheck === 'canUpdate') {
+  if (arrayToCheck !== 'canSee') {
     if (field.readOnly) {
       return false;
     }
@@ -50,6 +55,21 @@ function userCanAccessField(
         ? new Types.ObjectId(perm).equals(role._id)
         : perm.equals(role._id)
     )
+  );
+}
+
+/**
+ * Check if a user can permanently remove the files of a file field, which
+ * also requires the permission to update the field.
+ *
+ * @param user The user instance
+ * @param field The field to check
+ * @returns A boolean indicating if the user has the permission
+ */
+export function userCanDeleteFieldFiles(user: User, field: any): boolean {
+  return (
+    userCanAccessField('update', user, field) &&
+    userCanAccessField('deleteFiles', user, field)
   );
 }
 

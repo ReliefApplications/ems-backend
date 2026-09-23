@@ -251,6 +251,7 @@
 					"field": {
 						"missingReadPermissionOnResource": "Please provide permission to read or create records before setting visible fields.",
 						"missingWritePermissionOnResource": "Please provide permission to update or create records before setting editable fields.",
+						"notEditable": "Please set field as editable before allowing this role to delete its files.",
 						"notFound": "Field does not exist.",
 						"notVisible": "Please set field as visible before setting it as editable."
 					},

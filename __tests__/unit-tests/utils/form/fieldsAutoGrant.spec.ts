@@ -126,6 +126,15 @@ describe('fieldsAutoGrant helpers', () => {
       expect(ids(defaults.canUpdate)).toEqual(ids([roleA]));
     });
 
+    it('should grant files deletion to the roles allowed to edit', () => {
+      const defaults = getDefaultFieldPermissions({
+        ...permissions,
+        canUpdateRecords: [{ role: roleB }],
+      });
+      expect(ids(defaults.canUpdate)).toEqual(ids([roleA, roleB]));
+      expect(ids(defaults.canDeleteFiles)).toEqual(ids([roleA, roleB]));
+    });
+
     it('should not duplicate a role that has both', () => {
       const defaults = getDefaultFieldPermissions({
         canSee: [roleB],

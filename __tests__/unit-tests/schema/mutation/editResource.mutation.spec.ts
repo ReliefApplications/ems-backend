@@ -259,6 +259,94 @@ describe('editResource Resolver', () => {
     });
   });
 
+  describe('Files deletion field permission', () => {
+    beforeEach(async () => {
+      await Resource.findByIdAndUpdate(resource.id, {
+        $push: { 'permissions.canUpdateRecords': { role: roleA } },
+        $set: {
+          'fields.0.permissions': { canSee: [roleA], canUpdate: [] },
+        },
+      });
+    });
+
+    it('should refuse files deletion on a field the role cannot edit', async () => {
+      const result = editResource.resolve(
+        null,
+        {
+          id: resource.id,
+          fieldsPermissions: {
+            canDeleteFiles: { add: { field: 'name', role: String(roleA) } },
+          },
+        },
+        context
+      );
+      await expect(result).rejects.toThrow(GraphQLError);
+      expect(context.i18next.t).toHaveBeenCalledWith(
+        'mutations.resource.edit.errors.field.notEditable'
+      );
+    });
+
+    it('should accept files deletion backed by an edit grant of the same request', async () => {
+      const updated = await editResource.resolve(
+        null,
+        {
+          id: resource.id,
+          fieldsPermissions: {
+            canDeleteFiles: { add: { field: 'name', role: String(roleA) } },
+            canUpdate: { add: { field: 'name', role: String(roleA) } },
+          },
+        },
+        context
+      );
+      const name = updated.fields.find((f: any) => f.name === 'name');
+      expect(ids(name.permissions.canUpdate)).toEqual([String(roleA)]);
+      expect(ids(name.permissions.canDeleteFiles)).toEqual([String(roleA)]);
+    });
+
+    it('should revoke files deletion along with edit access', async () => {
+      await Resource.findByIdAndUpdate(resource.id, {
+        $set: {
+          'fields.0.permissions': {
+            canSee: [roleA],
+            canUpdate: [roleA],
+            canDeleteFiles: [roleA],
+          },
+        },
+      });
+      const updated = await editResource.resolve(
+        null,
+        {
+          id: resource.id,
+          fieldsPermissions: {
+            canUpdate: { remove: { field: 'name', role: String(roleA) } },
+          },
+        },
+        context
+      );
+      const name = updated.fields.find((f: any) => f.name === 'name');
+      expect(name.permissions.canUpdate).toEqual([]);
+      expect(name.permissions.canDeleteFiles).toEqual([]);
+    });
+
+    it('should grant files deletion on all fields along with update records access', async () => {
+      await Resource.findByIdAndUpdate(resource.id, {
+        $push: { 'permissions.canSeeRecords': { role: roleB } },
+      });
+      const updated = await editResource.resolve(
+        null,
+        {
+          id: resource.id,
+          permissions: { canUpdateRecords: { add: [{ role: String(roleB) }] } },
+        },
+        context
+      );
+      for (const field of updated.fields) {
+        expect(ids(field.permissions.canUpdate)).toContain(String(roleB));
+        expect(ids(field.permissions.canDeleteFiles)).toContain(String(roleB));
+      }
+    });
+  });
+
   describe('Fields permissions ( batched )', () => {
     it('should grant a field permission to several roles in one request', async () => {
       await Resource.findByIdAndUpdate(resource.id, {
