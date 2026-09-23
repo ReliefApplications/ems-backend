@@ -3,8 +3,13 @@ import uniqBy from 'lodash/uniqBy';
 import { isObjectIdOrHexString } from 'mongoose';
 import { resourcePermission } from '../../types/permission';
 
-/** Permissions that can be set on a resource field */
-export type FieldPermission = 'canSee' | 'canUpdate';
+/**
+ * Permissions that can be set on a resource field.
+ * canDeleteFiles ( file fields ): permanently remove files from records,
+ * instead of marking them as outdated. It follows canUpdate for eligibility
+ * and auto-grant.
+ */
+export type FieldPermission = 'canSee' | 'canUpdate' | 'canDeleteFiles';
 
 /**
  * Record permission families that make a role eligible for a field permission.
@@ -19,12 +24,18 @@ export const fieldPermissionPrerequisites: Record<
     resourcePermission.UPDATE_RECORDS,
     resourcePermission.CREATE_RECORDS,
   ],
+  canDeleteFiles: [
+    resourcePermission.UPDATE_RECORDS,
+    resourcePermission.CREATE_RECORDS,
+  ],
 };
 
 /** Name of the opt-out list, on resource permissions, per field permission */
 export const fieldsAutoGrantOptOutKey: Record<FieldPermission, string> = {
   canSee: 'fieldsAutoGrantCanSeeOptOut',
   canUpdate: 'fieldsAutoGrantCanUpdateOptOut',
+  // Files deletion follows the edit auto-grant
+  canDeleteFiles: 'fieldsAutoGrantCanUpdateOptOut',
 };
 
 /**
@@ -137,19 +148,20 @@ export const getAutoGrantedFieldRoles = (
  */
 export const getDefaultFieldPermissions = (
   resourcePermissions: any
-): Record<FieldPermission, any[]> => ({
-  canSee: uniqBy(
-    [
-      ...get(resourcePermissions, 'canSee', []),
-      ...getAutoGrantedFieldRoles(resourcePermissions, 'canSee'),
-    ],
-    String
-  ),
-  canUpdate: uniqBy(
-    [
-      ...get(resourcePermissions, 'canUpdate', []),
-      ...getAutoGrantedFieldRoles(resourcePermissions, 'canUpdate'),
-    ],
-    String
-  ),
-});
+): Record<FieldPermission, any[]> => {
+  const defaultRoles = (permission: 'canSee' | 'canUpdate') =>
+    uniqBy(
+      [
+        ...get(resourcePermissions, permission, []),
+        ...getAutoGrantedFieldRoles(resourcePermissions, permission),
+      ],
+      String
+    );
+  const canUpdate = defaultRoles('canUpdate');
+  return {
+    canSee: defaultRoles('canSee'),
+    canUpdate,
+    // Roles allowed to edit a new field can delete its files by default
+    canDeleteFiles: canUpdate,
+  };
+};

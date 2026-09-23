@@ -251,6 +251,7 @@
 					"field": {
 						"missingReadPermissionOnResource": "******",
 						"missingWritePermissionOnResource": "******",
+						"notEditable": "******",
 						"notFound": "******",
 						"notVisible": "******"
 					},

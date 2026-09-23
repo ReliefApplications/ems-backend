@@ -297,6 +297,7 @@ export default {
               newField.permissions = {
                 canSee: [...defaultFieldPermissions.canSee],
                 canUpdate: [...defaultFieldPermissions.canUpdate],
+                canDeleteFiles: [...defaultFieldPermissions.canDeleteFiles],
               };
               oldFields.push(newField); // Add this field to the list of the resource's fields
             } else {
@@ -311,14 +312,18 @@ export default {
                     'permissions.canUpdate',
                     []
                   );
+                  const oldCanDeleteFiles = get(
+                    oldField,
+                    'permissions.canDeleteFiles',
+                    []
+                  );
+                  const toObjectId = (p: any) =>
+                    typeof p === 'string' ? new mongoose.Types.ObjectId(p) : p;
                   // Inherit the field's permissions
                   field.permissions = {
-                    canSee: oldCanSee.map((p) =>
-                      typeof p === 'string' ? new mongoose.Types.ObjectId(p) : p
-                    ),
-                    canUpdate: oldCanUpdate.map((p) =>
-                      typeof p === 'string' ? new mongoose.Types.ObjectId(p) : p
-                    ),
+                    canSee: oldCanSee.map(toObjectId),
+                    canUpdate: oldCanUpdate.map(toObjectId),
+                    canDeleteFiles: oldCanDeleteFiles.map(toObjectId),
                   };
                   // If the resource's field and the current form's field are different
                   const index = oldFields.findIndex(
