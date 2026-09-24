@@ -1,3 +1,10 @@
+# [2.18.0-rc.9](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.8...v2.18.0-rc.9) (2026-09-24)
+
+
+### Features
+
+* Allow outdated files ([#1284](https://github.com/ReliefApplications/ems-backend/issues/1284)) ([2414623](https://github.com/ReliefApplications/ems-backend/commit/2414623e0e55daff80850199f4508806a910a5fe)), closes [AB#134566](https://github.com/AB/issues/134566)
+
 # [2.18.0-rc.8](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.7...v2.18.0-rc.8) (2026-09-21)
 
 
