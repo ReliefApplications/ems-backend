@@ -45,6 +45,8 @@ export const formatValue = (field: any, value: any): any => {
           content: x.content,
           // Files can be marked as outdated instead of being deleted
           ...(x.outdated ? { outdated: true, outdatedAt: x.outdatedAt } : {}),
+          // Language tagged by the Files upload widget (ABC-138121)
+          ...(x.language ? { language: x.language } : {}),
         }));
       }
       break;

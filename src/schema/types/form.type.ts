@@ -182,6 +182,7 @@ export const FormType = new GraphQLObjectType({
       },
     },
     fields: { type: GraphQLJSON },
+    languages: { type: new GraphQLList(GraphQLString) },
     canSee: {
       type: GraphQLBoolean,
       async resolve(parent: Form, args, context) {

@@ -3,6 +3,7 @@ import {
   GraphQLString,
   GraphQLID,
   GraphQLError,
+  GraphQLList,
 } from 'graphql';
 import { validateGraphQLTypeName } from '@utils/validators';
 import { Resource, Form, Role, ReferenceData } from '@models';
@@ -20,6 +21,7 @@ type AddFormArgs = {
   name: string;
   resource?: string | Types.ObjectId;
   template?: string | Types.ObjectId;
+  languages?: string[];
 };
 
 /**
@@ -32,6 +34,7 @@ export default {
     name: { type: new GraphQLNonNull(GraphQLString) },
     resource: { type: GraphQLID },
     template: { type: GraphQLID },
+    languages: { type: new GraphQLList(GraphQLString) },
   },
   async resolve(parent, args: AddFormArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -122,6 +125,7 @@ export default {
             resource,
             core: true,
             permissions: defaultFormPermissions,
+            languages: args.languages,
           });
           await form.save();
           return form;
@@ -151,6 +155,7 @@ export default {
             structure,
             fields,
             permissions: defaultFormPermissions,
+            languages: args.languages,
           });
           await form.save();
           return form;

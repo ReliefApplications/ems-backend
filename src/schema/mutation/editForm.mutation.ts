@@ -17,6 +17,7 @@ import { validateGraphQLTypeName } from '@utils/validators';
 import {
   GraphQLError,
   GraphQLID,
+  GraphQLList,
   GraphQLNonNull,
   GraphQLString,
 } from 'graphql';
@@ -76,6 +77,7 @@ type EditFormArgs = {
   status?: StatusType;
   name?: string;
   permissions?: any;
+  languages?: string[];
 };
 
 /**
@@ -90,6 +92,7 @@ export default {
     status: { type: StatusEnumType },
     name: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
+    languages: { type: new GraphQLList(GraphQLString) },
   },
   async resolve(parent, args: EditFormArgs, context: Context) {
     graphQLAuthCheck(context);
@@ -154,6 +157,11 @@ export default {
             update.channel = [];
           }
         }
+      }
+
+      // Update languages
+      if (args.languages) {
+        update.languages = args.languages;
       }
 
       // Update permissions

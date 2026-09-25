@@ -33,6 +33,7 @@ interface FormDocument extends Document {
     recordsUnicity?: any[];
   };
   fields?: any[];
+  languages?: string[];
   resource?: any;
   versions?: any[];
   channel?: any;
@@ -131,6 +132,10 @@ const schema = new Schema<Form>(
     fields: {
       // name of field, id if external resource
       type: mongoose.Schema.Types.Mixed,
+      default: [],
+    },
+    languages: {
+      type: [String],
       default: [],
     },
     resource: {
