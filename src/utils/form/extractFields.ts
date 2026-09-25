@@ -25,6 +25,15 @@ export const extractFields = async (object, fields, core): Promise<void> => {
         if (element.type === 'field-history') {
           continue;
         }
+        // Files upload / management widgets are purely front-end helpers
+        // that place files into other file fields; they hold no data of
+        // their own and don't need to be saved in the list of fields.
+        if (
+          element.type === 'filesupload' ||
+          element.type === 'filesmanagement'
+        ) {
+          continue;
+        }
         if (!element.valueName) {
           throw new GraphQLError(
             i18next.t('utils.form.extractFields.errors.missingDataField')
