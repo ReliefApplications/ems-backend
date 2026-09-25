@@ -11,12 +11,88 @@ import i18next from 'i18next';
 import mongoose from 'mongoose';
 import { logger } from '@services/logger.service';
 import axios from 'axios';
-import { isEqual, get, omit, isEmpty } from 'lodash';
+import { isEqual, get, omit, isEmpty, pick } from 'lodash';
 import turf, { Feature, booleanPointInPolygon } from '@turf/turf';
 import { CustomAPI, buildDataSource } from '@server/apollo/dataSources';
 import { getAdmin0Polygons } from '@utils/gis/getCountryPolygons';
 import filterReferenceData from '@utils/referenceData/referenceDataFilter.util';
 import { getErrorMessage, getErrorStack } from '@utils/error';
+import redis from '@server/redis';
+import { v4 as uuidv4 } from 'uuid';
+
+/** Redis key prefix for popup feature collections. */
+const POPUP_CACHE_PREFIX = 'gis:popup:';
+/** Lifetime for cached popup feature collections. */
+const POPUP_CACHE_TTL_SECONDS = 15 * 60;
+/** Internal property sent with compact map features. */
+const POPUP_REFERENCE_FIELD = '__oortPopup';
+
+type PopupReference = {
+  cacheKey: string;
+  featureIndex: number;
+};
+
+type PopupCacheEntry = {
+  features: Feature[];
+  popupFields: string[];
+  owner: string;
+};
+
+type PopupRequest = {
+  cacheKey?: string;
+  featureIndexes?: number[];
+};
+
+/**
+ * Cache complete feature properties and return the key used by popup lookups.
+ *
+ * @param features Complete features generated for a map layer.
+ * @param popupFields Fields required by the configured popup.
+ * @param owner User that can retrieve the cached feature data.
+ * @returns Cache key when Redis is available, otherwise undefined.
+ */
+const cachePopupFeatures = async (
+  features: Feature[],
+  popupFields: string[],
+  owner: string
+) => {
+  try {
+    const client = await redis();
+    if (!client) {
+      return undefined;
+    }
+    const cacheKey = `${POPUP_CACHE_PREFIX}${uuidv4()}`;
+    const cacheEntry: PopupCacheEntry = { features, popupFields, owner };
+    await client.set(cacheKey, JSON.stringify(cacheEntry), {
+      EX: POPUP_CACHE_TTL_SECONDS,
+    });
+    return cacheKey;
+  } catch (err) {
+    logger.error(`Failed to cache GIS popup data: ${getErrorMessage(err)}`);
+    return undefined;
+  }
+};
+
+/**
+ * Replace popup-only properties with a reference to their server-side cache.
+ *
+ * @param features Complete features generated for a map layer.
+ * @param cacheKey Key for the complete feature collection in Redis.
+ * @param displayFields Fields required to render the layer before a popup opens.
+ * @returns Compact features for the initial map response.
+ */
+const compactFeaturesForMap = (
+  features: Feature[],
+  cacheKey: string,
+  displayFields: string[]
+) =>
+  features.map((feature, featureIndex) => ({
+    ...feature,
+    properties: {
+      ...pick(feature.properties || {}, displayFields),
+      [POPUP_REFERENCE_FIELD]: { cacheKey, featureIndex } as PopupReference,
+    },
+  }));
 
 /**
  * Endpoint for custom feature layers
@@ -229,6 +305,48 @@ const gqlQuery = (
   });
 
 /**
+ * Get complete properties for features from a cached map layer.
+ */
+router.post('/feature/popup', async (req, res) => {
+  const { cacheKey, featureIndexes } = req.body as PopupRequest;
+  if (
+    typeof cacheKey !== 'string' ||
+    !Array.isArray(featureIndexes) ||
+    featureIndexes.some(
+      (featureIndex) => !Number.isInteger(featureIndex) || featureIndex < 0
+    )
+  ) {
+    return res.status(400).send(i18next.t('common.errors.dataNotFound'));
+  }
+
+  try {
+    const client = await redis();
+    const cacheData = client ? await client.get(cacheKey) : null;
+    if (!cacheData) {
+      return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    }
+
+    const cacheEntry = JSON.parse(cacheData) as PopupCacheEntry;
+    if (cacheEntry.owner !== req.context.user._id.toString()) {
+      return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    }
+    const features = featureIndexes
+      .map((featureIndex) => cacheEntry.features[featureIndex])
+      .filter((feature): feature is Feature => Boolean(feature))
+      .map((feature) => ({
+        ...feature,
+        properties: pick(feature.properties || {}, cacheEntry.popupFields),
+      }));
+    return res.send({ features });
+  } catch (err) {
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
+    return res
+      .status(500)
+      .send(i18next.t('routes.gis.feature.errors.unexpected'));
+  }
+});
+
+/**
  * Build endpoint
  *
  * @param req current http request
@@ -250,6 +368,13 @@ router.post('/feature', async (req, res) => {
     const contextFilters = JSON.parse(get(req, 'body.contextFilters', null));
     const queryParams = JSON.parse(get(req, 'body.queryParams', null));
     const at = get(req, 'body.at') as string | undefined;
+    const hasPopupData = get(req, 'body.hasPopupData', false) === true;
+    const popupFields = get(req, 'body.popupFields', []).filter(
+      (field: unknown): field is string => typeof field === 'string'
+    );
+    const displayFields = get(req, 'body.displayFields', []).filter(
+      (field: unknown): field is string => typeof field === 'string'
+    );
     if (!geoField && !(latitudeField && longitudeField)) {
       return res
         .status(400)
@@ -427,6 +552,20 @@ router.post('/feature', async (req, res) => {
       }
     } else {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    }
+    if (hasPopupData) {
+      const cacheKey = await cachePopupFeatures(
+        featureCollection.features,
+        popupFields,
+        req.context.user._id.toString()
+      );
+      if (cacheKey) {
+        featureCollection.features = compactFeaturesForMap(
+          featureCollection.features,
+          cacheKey,
+          displayFields
+        );
+      }
     }
     return res.send(featureCollection);
   } catch (err) {
