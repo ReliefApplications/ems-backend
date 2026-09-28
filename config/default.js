@@ -24,6 +24,9 @@ module.exports = {
     uri: '',
   },
   email: {
+    // Whether emails are actually sent to the SMTP server. When false,
+    // email-templates only generates a preview of the message.
+    send: process.env.NODE_ENV === 'production',
     sendInvite: false,
     from: '',
     fromPrefix: 'No reply',
@@ -33,6 +36,7 @@ module.exports = {
     port: '',
     user: '',
     pass: '',
+    requireTls: true,
     blobStorage: {
       connectionString: '',
       container: '',
