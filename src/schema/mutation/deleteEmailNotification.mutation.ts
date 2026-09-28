@@ -85,7 +85,6 @@ export default {
         logger.warn(message);
         return { success: false, message };
       }
-
       logger.info(`EmailNotification with ID: ${args.id} successfully deleted`);
       // delete custom template mapped to this email notification
       if (emailNotification.emailLayout) {

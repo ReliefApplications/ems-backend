@@ -63,6 +63,12 @@ export interface EmailNotificationFile {
   modifiedDate?: string;
 }
 
+/** Model for schedule response */
+export interface EmailNotificationSchedule {
+  scheduleEnabled: boolean;
+  cronValue: string;
+}
+
 /** Model for email File attachement response */
 export interface EmailNotificationAttachment {
   sendAsAttachment: boolean;
@@ -73,7 +79,7 @@ export interface EmailNotification extends Document {
   kind: 'EmailNotification';
   name: string;
   description: string;
-  schedule: string;
+  schedule: EmailNotificationSchedule;
   applicationId: mongoose.Schema.Types.ObjectId;
   createdBy: { name: string; email: string };
   notificationType: string;
@@ -111,7 +117,8 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
       required: true,
     },
     schedule: {
-      type: String,
+      scheduleEnabled: { type: mongoose.Schema.Types.Boolean },
+      cronValue: String,
     },
     applicationId: {
       type: mongoose.Schema.Types.ObjectId,

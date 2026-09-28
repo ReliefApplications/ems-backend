@@ -14,6 +14,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { EmailNotificationReturn } from '@schema/types/emailNotification.type';
 import { cloneDeep } from 'lodash';
 import { getErrorMessage, getErrorStack } from '@utils/error';
+import { isValidCronExpression } from '@utils/validators';
 
 /**
  * Interface for the arguments required to update a custom notification.
@@ -126,6 +127,17 @@ export default {
           );
         }
 
+        const schedule = args.notification.schedule;
+        if (schedule?.scheduleEnabled) {
+          const cron = schedule.cronValue?.trim?.() ?? '';
+          if (!cron || !isValidCronExpression(cron)) {
+            throw new GraphQLError(
+              context.i18next.t(
+                'mutations.emailNotification.add.errors.invalidCron'
+              )
+            );
+          }
+        }
         const updatedData = await EmailNotification.findByIdAndUpdate(
           args.id,
           { $set: updateFields },

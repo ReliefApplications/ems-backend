@@ -12,6 +12,7 @@ import {
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { cloneDeep } from 'lodash';
 import { getErrorMessage, getErrorStack } from '@utils/error';
+import { isValidCronExpression } from '@utils/validators';
 
 /** Arguments for the addCustomNotification mutation */
 type AddCustomNotificationArgs = {
@@ -103,11 +104,24 @@ export default {
         );
       }
 
+      const schedule = args.notification.schedule;
+      if (schedule?.scheduleEnabled) {
+        const cron = schedule.cronValue?.trim?.() ?? '';
+        if (!cron || !isValidCronExpression(cron)) {
+          throw new GraphQLError(
+            context.i18next.t(
+              'mutations.emailNotification.add.errors.invalidCron'
+            )
+          );
+        }
+      }
+
       update.datasets = update.datasets.filter(
         (block) => block.resource !== null || block.reference !== null
       );
       const emailNotification = new EmailNotification(update);
       await emailNotification.save();
+
       const response = emailNotification as EmailNotificationReturn;
       return response;
     } catch (err) {
