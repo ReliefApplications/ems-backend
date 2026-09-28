@@ -14,10 +14,6 @@ import { AppAbility } from '@security/defineUserAbility';
 import { EmailNotificationReturn } from '@schema/types/emailNotification.type';
 import { cloneDeep } from 'lodash';
 import { getErrorMessage, getErrorStack } from '@utils/error';
-import {
-  createCronJob,
-  deleteCronJob,
-} from '@server/emailNotificationScheduler';
 import { isValidCronExpression } from '@utils/validators';
 
 /**
@@ -147,20 +143,6 @@ export default {
           { $set: updateFields },
           { new: true } // Return the modified document
         );
-        // Schedule/unschedule based on updated document
-        if (updatedData) {
-          if (
-            updatedData.isDeleted === 1 ||
-            !updatedData.schedule?.scheduleEnabled ||
-            !updatedData.schedule?.cronValue
-          ) {
-            deleteCronJob(args.id);
-            logger.info(`Removed cron job for ${args.id}`);
-          } else {
-            createCronJob(updatedData);
-            logger.info(`Scheduled/Updated cron job for ${args.id}`);
-          }
-        }
         const response = updatedData as EmailNotificationReturn;
         response.userSubscribed = userIsSubscribed;
         return response;
