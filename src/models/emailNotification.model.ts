@@ -36,6 +36,8 @@ export interface Dataset {
   sendAsAttachment: boolean;
   individualEmail: boolean;
   individualEmailFields?: any[];
+  individualEmailToDistributionList?: boolean;
+  csFilter?: any;
   navigateToPage: boolean;
   navigateSettings: {
     field: string;
@@ -134,12 +136,14 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
           filter: { type: mongoose.Schema.Types.Mixed },
         },
         individualEmailFields: [{ type: mongoose.Schema.Types.Mixed }],
+        csFilter: { type: mongoose.Schema.Types.Mixed },
         pageSize: { type: mongoose.Schema.Types.Number },
         tableStyle: { type: mongoose.Schema.Types.Mixed },
         blockType: { type: mongoose.Schema.Types.Mixed },
         textStyle: { type: mongoose.Schema.Types.Mixed },
         sendAsAttachment: { type: Boolean, default: false },
         individualEmail: { type: Boolean, default: false },
+        individualEmailToDistributionList: { type: Boolean, default: false },
         navigateToPage: {
           type: Boolean,
           default: false,
