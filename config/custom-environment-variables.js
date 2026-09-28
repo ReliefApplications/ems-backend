@@ -25,6 +25,10 @@ module.exports = {
     sslCA: 'DB_SSL_CA',
   },
   email: {
+    send: {
+      __name: 'MAIL_SEND',
+      __format: 'boolean',
+    },
     from: 'MAIL_FROM',
     fromPrefix: 'MAIL_FROM_PREFIX',
     replyTo: 'MAIL_REPLY_TO',
@@ -32,6 +36,10 @@ module.exports = {
     port: 'MAIL_PORT',
     user: 'MAIL_USER',
     pass: 'MAIL_PASS',
+    requireTls: {
+      __name: 'MAIL_REQUIRE_TLS',
+      __format: 'boolean',
+    },
     blobStorage: {
       connectionString: 'MAIL_BLOB_STORAGE_CONNECTION_STRING',
       container: 'MAIL_BLOB_STORAGE_CONTAINER',

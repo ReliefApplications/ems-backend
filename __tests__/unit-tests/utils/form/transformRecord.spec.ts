@@ -34,6 +34,27 @@ describe('formatValue', () => {
     ]);
   });
 
+  it('keeps the outdated state of file fields', () => {
+    const files = [
+      {
+        name: 'a.txt',
+        content: 'abc',
+        outdated: true,
+        outdatedAt: '2026-01-01',
+      },
+      { name: 'b.txt', content: 'def', outdated: false, outdatedAt: 'x' },
+    ];
+    expect(formatValue({ type: 'file' }, files)).toEqual([
+      {
+        name: 'a.txt',
+        content: 'abc',
+        outdated: true,
+        outdatedAt: '2026-01-01',
+      },
+      { name: 'b.txt', content: 'def' },
+    ]);
+  });
+
   it('keeps valid resource ids and drops malformed 12-character ones', () => {
     const validId = '507f1f77bcf86cd799439011';
     expect(formatValue({ type: 'resource' }, validId)).toBe(validId);
@@ -43,9 +64,9 @@ describe('formatValue', () => {
 
   it('filters invalid ids out of resources arrays', () => {
     const validId = '507f1f77bcf86cd799439011';
-    expect(formatValue({ type: 'resources' }, [validId, 'aaaaaaaaaaaa'])).toEqual(
-      [validId]
-    );
+    expect(
+      formatValue({ type: 'resources' }, [validId, 'aaaaaaaaaaaa'])
+    ).toEqual([validId]);
   });
 
   it('returns unchanged values for unknown field types', () => {

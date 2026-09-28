@@ -7,6 +7,7 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { AppAbility } from 'security/defineUserAbility';
+import { userCanDeleteFieldFiles } from '@security/extendAbilityForRecords';
 import { selectableDefaultRecordFieldsFlat } from '@const/defaultRecordFields';
 import { get, sortBy } from 'lodash';
 import { getFullChoices } from '@utils/form';
@@ -52,6 +53,21 @@ export const FieldMetaDataType = new GraphQLObjectType({
         } else {
           return ability.can('update', ogParent, `data.${parent.name}`);
         }
+      },
+    },
+    canDeleteFiles: {
+      type: GraphQLBoolean,
+      description:
+        'File fields: whether the user can permanently remove files, instead of marking them as outdated',
+      resolve: (parent, _, context) => {
+        if (parent.type !== 'file' || !parent._field) {
+          return false;
+        }
+        const ability: AppAbility = context.user._abilityForRecords;
+        if (ability.can('manage', 'Record')) {
+          return true;
+        }
+        return userCanDeleteFieldFiles(context.user, parent._field);
       },
     },
     options: {

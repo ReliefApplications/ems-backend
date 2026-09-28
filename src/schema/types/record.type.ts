@@ -13,6 +13,74 @@ import { Connection } from './pagination.type';
 import getDisplayText from '@utils/form/getDisplayText';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { accessibleBy } from '@casl/mongoose';
+import { subject } from '@casl/ability';
+import { CalculatedFieldService } from '@services/calculatedField.service';
+import { logger } from '@services/logger.service';
+import { getErrorMessage, getErrorStack } from '@utils/error';
+import get from 'lodash/get';
+
+/**
+ * Computes the calculated fields of a record, for the fields the user can read.
+ *
+ * Calculated fields are not stored on the record, they are built from their
+ * expression by the resource queries. The generic record query does not use
+ * these queries, so the calculated fields must be computed on the fly when
+ * they are requested.
+ *
+ * @param record Record to compute the calculated fields of
+ * @param source Form or resource the record belongs to
+ * @param context GraphQL context
+ * @returns Values of the accessible calculated fields, by field name
+ */
+const getCalculatedFieldsValues = async (
+  record: any,
+  source: Form | Resource,
+  context: any
+): Promise<{ [name: string]: any }> => {
+  const calculatedFields = (source.fields || []).filter(
+    (field: any) => field.isCalculated && field.expression && field.name
+  );
+  if (calculatedFields.length === 0) {
+    return {};
+  }
+  try {
+    // Same field-level permissions as the ones applied on stored fields
+    const ability = await extendAbilityForRecords(context.user, source);
+    const accessibleFields = calculatedFields.filter((field: any) =>
+      ability.can('read', subject('Record', record), `data.${field.name}`)
+    );
+    if (accessibleFields.length === 0) {
+      return {};
+    }
+    const calculatedFieldService = new CalculatedFieldService(
+      { _id: source._id, fields: source.fields, name: source.name },
+      context,
+      context.timeZone,
+      context.user?.attributes || {}
+    );
+    const stages = [];
+    for (const field of accessibleFields) {
+      stages.push(
+        ...(await calculatedFieldService.build(field.expression, field.name))
+      );
+    }
+    const [computed] = await Record.aggregate([
+      { $match: { _id: record._id ?? record.id } },
+      ...stages,
+    ]);
+    return accessibleFields.reduce(
+      (values, field: any) => ({
+        ...values,
+        [field.name]: get(computed, `data.${field.name}`, null),
+      }),
+      {}
+    );
+  } catch (err) {
+    // A broken expression should not prevent the record from being displayed
+    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
+    return {};
+  }
+};
 
 /** GraphQL Record type definition */
 export const RecordType = new GraphQLObjectType({
@@ -51,6 +119,10 @@ export const RecordType = new GraphQLObjectType({
           type: GraphQLBoolean,
           defaultValue: false,
         },
+        calculatedFields: {
+          type: GraphQLBoolean,
+          defaultValue: false,
+        },
       },
       async resolve(parent, args, context) {
         let lang = context.locale;
@@ -59,13 +131,27 @@ export const RecordType = new GraphQLObjectType({
         }
 
         const source =
-          args.display || (lang && args.replaceTranslations)
+          args.display ||
+          args.calculatedFields ||
+          (lang && args.replaceTranslations)
             ? parent.resource
-              ? await Resource.findById(parent.resource).select('fields')
-              : await Form.findById(parent.form).select('fields')
+              ? await Resource.findById(parent.resource).select(
+                  'name fields permissions'
+                )
+              : await Form.findById(parent.form).select(
+                  'name fields permissions resource'
+                )
             : null;
 
         const data = parent.data ? { ...parent.data } : {};
+
+        // Calculated fields are not stored: only compute them when requested
+        if (args.calculatedFields && source) {
+          Object.assign(
+            data,
+            await getCalculatedFieldsValues(parent, source, context)
+          );
+        }
 
         // Replace fields with translated versions when available
         if (lang && args.replaceTranslations && source && source.fields) {

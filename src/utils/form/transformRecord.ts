@@ -40,7 +40,12 @@ export const formatValue = (field: any, value: any): any => {
       break;
     case 'file':
       if (!isNil(value)) {
-        return value.map((x) => ({ name: x.name, content: x.content }));
+        return value.map((x) => ({
+          name: x.name,
+          content: x.content,
+          // Files can be marked as outdated instead of being deleted
+          ...(x.outdated ? { outdated: true, outdatedAt: x.outdatedAt } : {}),
+        }));
       }
       break;
     case 'resource':
