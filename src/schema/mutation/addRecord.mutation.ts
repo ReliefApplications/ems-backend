@@ -6,14 +6,14 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { RecordType } from '../types';
-import { Form, Record, Notification, Channel } from '@models';
+import { Form, Record, Notification, Channel, Version } from '@models';
 import { transformRecord, getOwnership, getNextId } from '@utils/form';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import pubsub from '../../server/pubsub';
 import { getFormPermissionFilter } from '@utils/filter';
 import { logger } from '@services/logger.service';
 import { verifyTurnstileToken } from '@utils/captcha';
-import { Types } from 'mongoose';
+import { isObjectIdOrHexString, Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 import { getErrorMessage, getErrorStack } from '@utils/error';
 
@@ -22,6 +22,7 @@ export type AddRecordArgs = {
   form?: string | Types.ObjectId;
   data: any;
   captchaToken?: string;
+  cloneRecordId?: string | Types.ObjectId;
 };
 
 /**
@@ -29,6 +30,7 @@ export type AddRecordArgs = {
  * Unauthenticated users can add records to public forms, provided they pass
  * a valid Cloudflare Turnstile captcha token. In that case, the ability check
  * is skipped.
+ * If a record to clone is provided, the new record reuses its history.
  * Throw a GraphQL error if not logged or authorized, or form not found.
  * TODO: we have to check form by form for that.
  */
@@ -38,6 +40,7 @@ export default {
     form: { type: GraphQLID },
     data: { type: new GraphQLNonNull(GraphQLJSON) },
     captchaToken: { type: GraphQLString },
+    cloneRecordId: { type: GraphQLID },
   },
   async resolve(parent, args: AddRecordArgs, context: Context) {
     try {
@@ -101,6 +104,62 @@ export default {
         }
       }
 
+      // If a record to clone is provided, the new record reuses its history
+      let versions: Types.ObjectId[] = [];
+      let clonedDataVersion: Version;
+      if (args.cloneRecordId) {
+        // Cloning is not part of the public form flow
+        if (!user) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.userNotLogged')
+          );
+        }
+        if (!isObjectIdOrHexString(args.cloneRecordId)) {
+          throw new GraphQLError(
+            context.i18next.t(
+              'mutations.record.add.errors.invalidCloneRecordId'
+            )
+          );
+        }
+        const clonedRecord = await Record.findById(args.cloneRecordId);
+        // The cloned record must belong to the same resource, or, for forms
+        // without a resource, to the same form
+        const sameFamily = form.resource
+          ? form.resource.equals(clonedRecord?.resource)
+          : form._id.equals(clonedRecord?.form);
+        if (!clonedRecord || !sameFamily) {
+          throw new GraphQLError(
+            context.i18next.t(
+              'mutations.record.add.errors.invalidCloneRecordResource'
+            )
+          );
+        }
+        // Check that the user can see the record they clone the history from
+        const clonedForm = form._id.equals(clonedRecord.form)
+          ? form
+          : await Form.findById(clonedRecord.form);
+        const clonedRecordAbility = await extendAbilityForRecords(
+          user,
+          clonedForm
+        );
+        if (clonedRecordAbility.cannot('read', clonedRecord)) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.permissionNotGranted')
+          );
+        }
+        // Versions are not duplicated: both records reference the same ones.
+        // The current data of the cloned record is stored as a new version, so
+        // the history of the new record displays what changed since then
+        clonedDataVersion = new Version({
+          data: clonedRecord.data,
+          createdAt: clonedRecord.modifiedAt
+            ? clonedRecord.modifiedAt
+            : clonedRecord.createdAt,
+          createdBy: user._id,
+        });
+        versions = [...(clonedRecord.versions || []), clonedDataVersion._id];
+      }
+
       // Create the record instance
       transformRecord(args.data, form.fields);
       const record = new Record({
@@ -112,6 +171,7 @@ export default {
         //modifiedAt: new Date(),
         data: args.data,
         resource: form.resource ? form.resource : null,
+        versions,
         ...(user && {
           createdBy: {
             user: user._id,
@@ -161,6 +221,10 @@ export default {
         publisher.publish(channel.id, { notification });
       }
       await record.save();
+      // Only store the new version once the record is saved
+      if (clonedDataVersion) {
+        await clonedDataVersion.save();
+      }
       return record;
     } catch (err) {
       logger.error(getErrorMessage(err), { stack: getErrorStack(err) });

@@ -12,6 +12,7 @@ import {
   replaceField,
 } from '@utils/form';
 import checkDefaultFields from '@utils/form/checkDefaultFields';
+import { getDefaultFieldPermissions } from '@utils/form/fieldsAutoGrant';
 import { validateGraphQLTypeName } from '@utils/validators';
 import {
   GraphQLError,
@@ -279,6 +280,11 @@ export default {
             .map((x) => x.fields)
             .flat()
             .concat(fields);
+          // Default permissions of new fields: roles with access to the
+          // resource, plus roles that auto-grant new fields
+          const defaultFieldPermissions = getDefaultFieldPermissions(
+            resource.permissions
+          );
           // Check fields against the resource to add new ones or edit old ones
           for (const field of fields) {
             // For each field in the form being saved
@@ -288,10 +294,10 @@ export default {
               const newField: any = Object.assign({}, field); // Create a copy of the form's field
               newField.isRequired =
                 form.core && field.isRequired ? true : false; // If it's a core form and the field isRequired, copy this property
-              // Set default permissions based on access to the resource
               newField.permissions = {
-                canSee: resource.permissions.canSee,
-                canUpdate: resource.permissions.canUpdate,
+                canSee: [...defaultFieldPermissions.canSee],
+                canUpdate: [...defaultFieldPermissions.canUpdate],
+                canDeleteFiles: [...defaultFieldPermissions.canDeleteFiles],
               };
               oldFields.push(newField); // Add this field to the list of the resource's fields
             } else {
@@ -306,14 +312,18 @@ export default {
                     'permissions.canUpdate',
                     []
                   );
+                  const oldCanDeleteFiles = get(
+                    oldField,
+                    'permissions.canDeleteFiles',
+                    []
+                  );
+                  const toObjectId = (p: any) =>
+                    typeof p === 'string' ? new mongoose.Types.ObjectId(p) : p;
                   // Inherit the field's permissions
                   field.permissions = {
-                    canSee: oldCanSee.map((p) =>
-                      typeof p === 'string' ? new mongoose.Types.ObjectId(p) : p
-                    ),
-                    canUpdate: oldCanUpdate.map((p) =>
-                      typeof p === 'string' ? new mongoose.Types.ObjectId(p) : p
-                    ),
+                    canSee: oldCanSee.map(toObjectId),
+                    canUpdate: oldCanUpdate.map(toObjectId),
+                    canDeleteFiles: oldCanDeleteFiles.map(toObjectId),
                   };
                   // If the resource's field and the current form's field are different
                   const index = oldFields.findIndex(

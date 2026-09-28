@@ -17,6 +17,7 @@ import { RouteDefinition } from 'types/route-definition';
 import { logger } from '@services/logger.service';
 import ActivityController from './activity/activity.controller';
 import FileController from './file/file.controller';
+import ResourceController from './resource/resource.controller';
 import TranslationController from './translation/translation.controller';
 
 /**
@@ -90,6 +91,7 @@ export default function registerRoutes(): Router | undefined {
     const controllers = [
       new ActivityController(),
       new FileController(),
+      new ResourceController(),
       new TranslationController(),
     ];
 
