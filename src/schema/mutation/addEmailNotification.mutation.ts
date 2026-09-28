@@ -11,7 +11,6 @@ import {
 } from '@schema/inputs/emailNotification.input';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { getErrorMessage, getErrorStack } from '@utils/error';
-import { createCronJob } from '@server/emailNotificationScheduler';
 import { isValidCronExpression } from '@utils/validators';
 
 /** Arguments for the addCustomNotification mutation */
@@ -112,14 +111,6 @@ export default {
       );
       const emailNotification = new EmailNotification(update);
       await emailNotification.save();
-
-      // If schedule is provided, create cron job
-      if (
-        emailNotification.schedule.scheduleEnabled &&
-        emailNotification.schedule.cronValue.length
-      ) {
-        createCronJob(emailNotification);
-      }
 
       const response = emailNotification as EmailNotificationReturn;
       return response;
