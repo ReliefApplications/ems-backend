@@ -48,6 +48,91 @@ describe('replaceField', () => {
     });
   });
 
+  it('keeps the outdated files display option set on the child form', () => {
+    const edited = {
+      pages: [
+        {
+          elements: [
+            question('documents', { type: 'file', showOutdatedFiles: true }),
+          ],
+        },
+      ],
+    };
+    const reference = {
+      pages: [
+        {
+          elements: [
+            question('documents', {
+              type: 'file',
+              title: 'New title',
+              allowOutdatedFiles: true,
+              showOutdatedFiles: false,
+            }),
+          ],
+        },
+      ],
+    };
+    const prevReference = {
+      pages: [
+        {
+          elements: [
+            question('documents', {
+              type: 'file',
+              allowOutdatedFiles: true,
+              showOutdatedFiles: false,
+            }),
+          ],
+        },
+      ],
+    };
+
+    expect(replaceField('documents', edited, reference, prevReference)).toBe(
+      true
+    );
+    expect(edited.pages[0].elements[0]).toMatchObject({
+      title: 'New title',
+      allowOutdatedFiles: true,
+      showOutdatedFiles: true,
+    });
+  });
+
+  it('follows the core outdated files display option when the child did not customize it', () => {
+    const edited = {
+      pages: [
+        {
+          elements: [
+            question('documents', { type: 'file', showOutdatedFiles: false }),
+          ],
+        },
+      ],
+    };
+    const reference = {
+      pages: [
+        {
+          elements: [
+            question('documents', { type: 'file', showOutdatedFiles: true }),
+          ],
+        },
+      ],
+    };
+    const prevReference = {
+      pages: [
+        {
+          elements: [
+            question('documents', { type: 'file', showOutdatedFiles: false }),
+          ],
+        },
+      ],
+    };
+
+    expect(replaceField('documents', edited, reference, prevReference)).toBe(
+      true
+    );
+    expect(edited.pages[0].elements[0]).toMatchObject({
+      showOutdatedFiles: true,
+    });
+  });
+
   it('adopts the new default when the local default matched the previous core one', () => {
     const edited = {
       pages: [{ elements: [question('status', { defaultValue: 'core-v1' })] }],

@@ -211,8 +211,11 @@ export class RecordHistory {
             // Cannot be converted to a field
             return;
           }
+          const previousValue = get(previous, key);
           const nextValue = get(next, key);
-          if (isNil(nextValue)) {
+          // A nil value that becomes a missing key (or the opposite) is not a
+          // deletion: both mean that the question is empty
+          if (isNil(nextValue) && !isNil(previousValue)) {
             changes.push(this.deleteEntry(key, previous));
           } else {
             // Already tracked by previous block
