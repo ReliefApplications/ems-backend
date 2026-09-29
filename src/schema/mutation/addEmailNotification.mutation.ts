@@ -10,8 +10,8 @@ import {
   EmailNotificationInputType,
 } from '@schema/inputs/emailNotification.input';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
-import { cloneDeep } from 'lodash';
 import { getErrorMessage, getErrorStack } from '@utils/error';
+import { isValidCronExpression } from '@utils/validators';
 
 /** Arguments for the addCustomNotification mutation */
 type AddCustomNotificationArgs = {
@@ -40,13 +40,11 @@ export default {
       //     );
       //   }
       // }
-      // Only count as a dataset if it has a resource
-      const datasetsCount = cloneDeep(args.notification.datasets).filter(
-        ({ resource, reference }) => resource || reference
-      ).length;
-      // Individual email count
+      // A notification needs at least one recipient source: a distribution
+      // list, or at least one send-separate dataset (which supplies its own
+      // per-row recipients).
       let individualCount = 0;
-      for (const dataset of args.notification.datasets) {
+      for (const dataset of args.notification.datasets ?? []) {
         if (
           (dataset.resource || dataset.reference) &&
           dataset.individualEmail
@@ -54,18 +52,10 @@ export default {
           individualCount += 1;
         }
       }
-      let allSeparate = false;
-      if (datasetsCount === individualCount) {
-        allSeparate = true;
-      }
 
       if (
         !(args.notification.isDraft || args.notification.isDeleted === 1) &&
-        // (!args.notification.emailDistributionList.name ||
-        //   (!args.notification.emailDistributionList.to.resource &&
-        //     args.notification.emailDistributionList.to.inputEmails.length ===
-        //       0)) &&
-        !allSeparate &&
+        individualCount === 0 &&
         !args.notification.emailDistributionList
       ) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
@@ -77,6 +67,7 @@ export default {
         createdBy: { name: context.user.name, email: context.user.username },
         applicationId: args.notification.applicationId,
         notificationType: args.notification.notificationType,
+        language: args.notification.language,
         datasets: args.notification.datasets,
         emailLayout: args.notification.emailLayout,
         emailDistributionList: args.notification.emailDistributionList,
@@ -103,11 +94,24 @@ export default {
         );
       }
 
+      const schedule = args.notification.schedule;
+      if (schedule?.scheduleEnabled) {
+        const cron = schedule.cronValue?.trim?.() ?? '';
+        if (!cron || !isValidCronExpression(cron)) {
+          throw new GraphQLError(
+            context.i18next.t(
+              'mutations.emailNotification.add.errors.invalidCron'
+            )
+          );
+        }
+      }
+
       update.datasets = update.datasets.filter(
         (block) => block.resource !== null || block.reference !== null
       );
       const emailNotification = new EmailNotification(update);
       await emailNotification.save();
+
       const response = emailNotification as EmailNotificationReturn;
       return response;
     } catch (err) {

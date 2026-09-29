@@ -43,9 +43,23 @@ export const DatasetType = new GraphQLObjectType({
     sendAsAttachment: { type: GraphQLBoolean },
     individualEmail: { type: GraphQLBoolean },
     individualEmailFields: { type: new GraphQLList(GraphQLJSON) },
+    individualEmailToDistributionList: { type: GraphQLBoolean },
+    csFilter: { type: GraphQLJSON },
     pageSize: { type: GraphQLInt },
     navigateToPage: { type: GraphQLBoolean, defaultValue: false },
     navigateSettings: { type: GraphQLJSON },
+  }),
+});
+
+/**
+ * Schedule type - used to define the schedule applied to an email notification
+ */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const ScheduleType = new GraphQLObjectType({
+  name: 'Schedule',
+  fields: () => ({
+    scheduleEnabled: { type: GraphQLBoolean },
+    cronValue: { type: GraphQLString },
   }),
 });
 
@@ -64,8 +78,9 @@ export const EmailNotificationType = new GraphQLObjectType({
     name: { type: GraphQLString },
     applicationId: { type: GraphQLID },
     createdBy: { type: GraphQLJSON },
-    schedule: { type: GraphQLString },
+    schedule: { type: ScheduleType },
     notificationType: { type: GraphQLString },
+    language: { type: GraphQLString },
     datasets: { type: new GraphQLList(DatasetType) },
     emailLayout: { type: GraphQLID },
     emailDistributionList: { type: GraphQLID },
