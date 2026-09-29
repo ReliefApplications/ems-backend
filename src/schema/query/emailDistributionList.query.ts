@@ -67,12 +67,12 @@ export default {
 
       return {
         pageInfo: {
-          hasNextPage: edges.length === args.limit,
+          hasNextPage: args.limit > 0 && edges.length === args.limit,
           startCursor: edges.length > 0 ? edges[0].cursor : null,
           endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
         },
         edges,
-        totalCount: await EmailDistributionList.countDocuments(),
+        totalCount: await EmailDistributionList.countDocuments(query),
       };
     } catch (err) {
       logger.error(getErrorMessage(err), { stack: getErrorStack(err) });

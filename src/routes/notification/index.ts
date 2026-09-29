@@ -12,6 +12,38 @@ import { getErrorMessage, getErrorStack } from '@utils/error';
  */
 const router = express.Router();
 
+/**
+ * Return an Azure Function error without hiding its status or response body.
+ *
+ * @param err Proxy request error
+ * @param req Express request
+ * @param res Express response
+ * @returns Express response
+ */
+const handleServerlessError = (
+  err: unknown,
+  req: express.Request,
+  res: express.Response
+) => {
+  logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
+  if (axios.isAxiosError(err) && err.response) {
+    const { data, status } = err.response;
+    if (typeof data === 'string') {
+      return res.status(status).type('text/plain').send(data);
+    }
+    if (
+      typeof data === 'object' &&
+      data !== null &&
+      'message' in data &&
+      typeof data.message === 'string'
+    ) {
+      return res.status(status).json({ message: data.message });
+    }
+    return res.status(status).type('text/plain').send('Request failed');
+  }
+  return res.status(500).send(req.t('common.errors.internalServerError'));
+};
+
 router.post('/add-subscription', async (req, res) => {
   let configId = '';
   let userEmail = '';
@@ -146,8 +178,7 @@ router.post('/:functionName/:configId?', async (req, res) => {
     );
     res.status(200).send(response.data);
   } catch (err) {
-    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
-    res.status(500).send(req.t('common.errors.internalServerError'));
+    return handleServerlessError(err, req, res);
   }
 });
 
@@ -172,8 +203,7 @@ router.get('/:functionName/:configId?', async (req, res) => {
 
     res.status(200).send(response.data);
   } catch (err) {
-    logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
-    res.status(500).send(req.t('common.errors.internalServerError'));
+    return handleServerlessError(err, req, res);
   }
 });
 
