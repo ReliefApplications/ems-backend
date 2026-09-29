@@ -1,3 +1,12 @@
+# [2.18.0-rc.10](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.9...v2.18.0-rc.10) (2026-09-29)
+
+
+### Features
+
+* Now possible to bind email dataset with CS filters ([#1262](https://github.com/ReliefApplications/ems-backend/issues/1262)) ([b3ed60a](https://github.com/ReliefApplications/ems-backend/commit/b3ed60a411f81a30232bd39480e6891820d6669c))
+* now possible to schedule emails ([#1261](https://github.com/ReliefApplications/ems-backend/issues/1261)) ([eda63ab](https://github.com/ReliefApplications/ems-backend/commit/eda63ab8c72642cff7c233fbdc16a6ea64610aff))
+* Now possible to select language email notifications will be sent with ([#1263](https://github.com/ReliefApplications/ems-backend/issues/1263)) ([6dc3db5](https://github.com/ReliefApplications/ems-backend/commit/6dc3db51408d877ac863c5eb08ef8b25d7a1866b))
+
 # [2.18.0-rc.9](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.8...v2.18.0-rc.9) (2026-09-24)
 
 
