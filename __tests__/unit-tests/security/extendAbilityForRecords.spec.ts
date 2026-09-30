@@ -103,6 +103,36 @@ describe('extendAbilityForRecords', () => {
     );
   });
 
+  it('should apply access filters on the draft status of records', async () => {
+    const roleId = new Types.ObjectId();
+    const user = buildUser(roleId);
+    // Role can only see submitted records
+    const { form, resource } = await createFormAndResource('drafts', {
+      canSeeRecords: [
+        {
+          role: roleId,
+          access: {
+            logic: 'and',
+            filters: [{ field: 'draft', operator: 'eq', value: false }],
+          },
+        },
+      ],
+    });
+
+    const ability = await extendAbilityForRecords(user, form);
+
+    expect(
+      ability.can('read', new Record({ resource: resource._id, draft: false }))
+    ).toBe(true);
+    // Records created before drafts existed have no flag, they are submitted
+    expect(ability.can('read', new Record({ resource: resource._id }))).toBe(
+      true
+    );
+    expect(
+      ability.can('read', new Record({ resource: resource._id, draft: true }))
+    ).toBe(false);
+  });
+
   it('should hide archived records from users who cannot update the form', async () => {
     const roleId = new Types.ObjectId();
     const user = buildUser(roleId);

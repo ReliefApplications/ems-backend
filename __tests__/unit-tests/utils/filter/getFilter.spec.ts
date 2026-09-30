@@ -1,4 +1,5 @@
 import getFilter from '@utils/filter/getFilter';
+import getRecordFilter from '@utils/schema/resolvers/Query/getFilter';
 
 /** Fields of the filtered entity */
 const FIELDS = [
@@ -52,5 +53,53 @@ describe('getFilter - isempty / isnotempty operators', () => {
         },
       ],
     });
+  });
+});
+
+describe('getFilter - draft default field', () => {
+  /**
+   * Builds a filter on the draft default field.
+   *
+   * @param operator filter operator
+   * @param value filter value
+   * @returns mongo filter
+   */
+  const draftFilter = (operator: string, value: boolean | string | null) =>
+    getRecordFilter(
+      { logic: 'and', filters: [{ field: 'draft', operator, value }] },
+      FIELDS
+    );
+
+  it('matches submitted records, including records without the flag, for draft eq false', () => {
+    expect(draftFilter('eq', false)).toEqual({
+      $and: [{ draft: { $ne: true } }],
+    });
+    expect(draftFilter('neq', true)).toEqual({
+      $and: [{ draft: { $ne: true } }],
+    });
+  });
+
+  it('matches only drafts for draft eq true', () => {
+    expect(draftFilter('eq', true)).toEqual({ $and: [{ draft: true }] });
+    expect(draftFilter('neq', false)).toEqual({ $and: [{ draft: true }] });
+  });
+
+  it('treats a null value like false', () => {
+    expect(draftFilter('eq', null)).toEqual({
+      $and: [{ draft: { $ne: true } }],
+    });
+    expect(draftFilter('neq', null)).toEqual({ $and: [{ draft: true }] });
+  });
+
+  it('accepts string boolean values', () => {
+    expect(draftFilter('eq', 'false')).toEqual({
+      $and: [{ draft: { $ne: true } }],
+    });
+    expect(draftFilter('eq', 'true')).toEqual({ $and: [{ draft: true }] });
+  });
+
+  it('does not treat draft as a data field', () => {
+    const result = draftFilter('eq', true);
+    expect(JSON.stringify(result)).not.toContain('data.draft');
   });
 });
