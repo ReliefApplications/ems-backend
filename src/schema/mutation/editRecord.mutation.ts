@@ -223,14 +223,18 @@ export default {
       if (validationErrors.length && !args.skipValidation) {
         return Object.assign(oldRecord, { validationErrors });
       }
-      // Generate new version, from current data
-      const version = new Version({
-        createdAt: oldRecord.modifiedAt
-          ? oldRecord.modifiedAt
-          : oldRecord.createdAt,
-        data: oldRecord.data,
-        createdBy: user._id,
-      });
+      // Generate new version, from current data. Drafts have no history:
+      // every auto-save would otherwise add a version, so the record is
+      // edited in place until it is published
+      const version = oldRecord.draft
+        ? null
+        : new Version({
+            createdAt: oldRecord.modifiedAt
+              ? oldRecord.modifiedAt
+              : oldRecord.createdAt,
+            data: oldRecord.data,
+            createdBy: user._id,
+          });
       let template: Form | Resource;
       let fields: any[] = [];
       if (args.template && parentForm.resource) {
@@ -266,7 +270,7 @@ export default {
         const update: any = {
           data: { ...oldRecord.data, ...args.data },
           lastUpdateForm: args.template,
-          $push: { versions: version._id },
+          ...(version && { $push: { versions: version._id } }),
           _lastUpdateForm: {
             _id: template._id,
             name: template.name,
@@ -300,7 +304,9 @@ export default {
         const record = await Record.findByIdAndUpdate(args.id, update, {
           new: true,
         });
-        await version.save();
+        if (version) {
+          await version.save();
+        }
         if (publishingDraft && record) {
           await publishDraftSubmissionNotification(record, parentForm);
         }
@@ -331,7 +337,7 @@ export default {
               username: user.username,
             },
           },
-          $push: { versions: version._id },
+          ...(version && { $push: { versions: version._id } }),
         };
         if (args.updateDraftStatus !== undefined) {
           Object.assign(
@@ -347,7 +353,9 @@ export default {
           );
         }
         const record = Record.findByIdAndUpdate(args.id, update, { new: true });
-        await version.save();
+        if (version) {
+          await version.save();
+        }
         const updatedRecord = await record;
         if (publishingDraft && updatedRecord) {
           await publishDraftSubmissionNotification(updatedRecord, parentForm);

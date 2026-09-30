@@ -1,4 +1,4 @@
-import { Form, Record, Resource } from '@models';
+import { Form, Record, Resource, Version } from '@models';
 import editRecord, {
   EditRecordArgs,
 } from '@schema/mutation/editRecord.mutation';
@@ -123,6 +123,45 @@ describe('editRecord Resolver', () => {
       expect(record.data.description).toEqual('edited');
       expect(checkRecordValidation).not.toHaveBeenCalled();
       expect(getNextId).not.toHaveBeenCalled();
+    });
+
+    it('should edit a draft in place, without creating a version', async () => {
+      const draft = await createRecord(true);
+      const versionsBefore = await Version.countDocuments();
+      const record = await editRecord.resolve(
+        null,
+        buildArgs({ id: draft.id, data: { description: 'auto-saved' } }),
+        context
+      );
+      expect(record.versions).toHaveLength(0);
+      expect(await Version.countDocuments()).toEqual(versionsBefore);
+    });
+
+    it('should start the history of a published draft from its publication', async () => {
+      const draft = await createRecord(true);
+      const versionsBefore = await Version.countDocuments();
+      const published = await editRecord.resolve(
+        null,
+        buildArgs({
+          id: draft.id,
+          data: { description: 'published' },
+          updateDraftStatus: false,
+        }),
+        context
+      );
+      expect(published.versions).toHaveLength(0);
+      expect(await Version.countDocuments()).toEqual(versionsBefore);
+
+      // Once published, edits are versioned as for any record
+      const edited = await editRecord.resolve(
+        null,
+        buildArgs({ id: draft.id, data: { description: 'edited' } }),
+        context
+      );
+      expect(edited.versions).toHaveLength(1);
+      expect(await Version.countDocuments()).toEqual(versionsBefore + 1);
+      const version = await Version.findById(edited.versions[0]);
+      expect(version.data.description).toEqual('published');
     });
 
     it('should publish a draft, with validation and an incremental id', async () => {
