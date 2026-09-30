@@ -234,8 +234,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       styles = [],
       actions = [],
       at,
-      draft,
-      allDrafts,
+      recordVisibility,
     },
     context,
     info
@@ -466,7 +465,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       const basicFilters = {
         $or: [{ resource: id }, { form: id }],
         archived: { $not: { $eq: true } },
-        ...getDraftRecordFilter({ draft, allDrafts }, user),
+        ...getDraftRecordFilter({ recordVisibility }, user),
       };
 
       // Additional filter from the user permissions

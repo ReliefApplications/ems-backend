@@ -26,6 +26,7 @@ import dataSources from '@server/apollo/dataSources';
 import sanitizeHtml from 'sanitize-html';
 import { getErrorMessage } from '@utils/error';
 import { getDraftRecordFilter } from '@utils/filter';
+import { RecordVisibility } from '@const/enumTypes';
 
 /**
  * Export batch parameters interface
@@ -42,8 +43,7 @@ interface ExportBatchParams {
   timeZone: string;
   fileName?: string;
   limit?: number;
-  draft?: boolean;
-  allDrafts?: boolean;
+  recordVisibility?: RecordVisibility;
 }
 
 /**

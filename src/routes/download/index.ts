@@ -346,6 +346,7 @@ router.get('/resource/records/:id', async (req, res) => {
  *    sortField?: string
  *    sortOrder?: 'asc' | 'desc'
  *    sortFields?: { field: string, order?: 'asc' | 'desc' }[]  // takes precedence over sortField/sortOrder when non-empty
+ *    recordVisibility?: 'submitted' | 'ownDrafts' | 'allDrafts'  // which records to export, submitted by default
  * }
  */
 router.post('/records', async (req, res) => {

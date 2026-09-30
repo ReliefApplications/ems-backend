@@ -1,14 +1,10 @@
-import {
-  GraphQLNonNull,
-  GraphQLID,
-  GraphQLError,
-  GraphQLBoolean,
-} from 'graphql';
+import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { Form, Record } from '@models';
 import { RecordType } from '../types';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { getAccessibleFields } from '@utils/form';
-import { getDraftRecordFilter } from '@utils/filter';
+import { DraftRecordFilterArgs, getDraftRecordFilter } from '@utils/filter';
+import { RecordVisibilityEnumType } from '@const/enumTypes';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
@@ -16,10 +12,8 @@ import { Context } from '@server/apollo/context';
 import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** Arguments for the record query */
-type RecordArgs = {
+type RecordArgs = DraftRecordFilterArgs & {
   id: string | Types.ObjectId;
-  draft?: boolean;
-  allDrafts?: boolean;
 };
 
 /**
@@ -30,8 +24,7 @@ export default {
   type: RecordType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
-    draft: { type: GraphQLBoolean },
-    allDrafts: { type: GraphQLBoolean },
+    recordVisibility: { type: RecordVisibilityEnumType },
   },
   async resolve(parent, args: RecordArgs, context: Context) {
     graphQLAuthCheck(context);

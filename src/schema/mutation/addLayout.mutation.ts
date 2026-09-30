@@ -9,6 +9,7 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 import { getErrorMessage, getErrorStack } from '@utils/error';
+import { recordVisibility } from '@const/enumTypes';
 
 /** Arguments for the addLayout mutation */
 type AddLayoutArgs = {
@@ -42,8 +43,8 @@ export default {
       const ability: AppAbility = user.ability;
       const layout = {
         ...args.layout,
-        draft: args.layout.draft ?? false,
-        allDrafts: !!args.layout.draft && !!args.layout.allDrafts,
+        recordVisibility:
+          args.layout.recordVisibility ?? recordVisibility.submitted,
       };
       // Edition of a resource
       if (args.resource) {

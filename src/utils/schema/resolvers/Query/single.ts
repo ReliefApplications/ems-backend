@@ -12,13 +12,13 @@ import { getDraftRecordFilter } from '@utils/filter';
  * @returns A resolver function that fetches a record by id
  */
 export default () =>
-  async (_, { id, data, draft, allDrafts }, context) => {
+  async (_, { id, data, recordVisibility }, context) => {
     graphQLAuthCheck(context);
     try {
       const record = await Record.findOne({
         _id: id,
         archived: { $ne: true },
-        ...getDraftRecordFilter({ draft, allDrafts }, context.user),
+        ...getDraftRecordFilter({ recordVisibility }, context.user),
       });
       if (data) {
         record.data = data;

@@ -1,4 +1,4 @@
-import { GraphQLError, GraphQLBoolean, GraphQLID, GraphQLList } from 'graphql';
+import { GraphQLError, GraphQLID, GraphQLList } from 'graphql';
 import { RecordType } from '../types';
 import { Record } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
@@ -9,6 +9,7 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 import { getErrorMessage, getErrorStack } from '@utils/error';
 import { DraftRecordFilterArgs, getDraftRecordFilter } from '@utils/filter';
+import { RecordVisibilityEnumType } from '@const/enumTypes';
 
 /** Arguments for the records query. */
 type RecordsArgs = DraftRecordFilterArgs & {
@@ -25,8 +26,7 @@ export default {
   args: {
     form: { type: GraphQLID },
     resource: { type: GraphQLID },
-    draft: { type: GraphQLBoolean },
-    allDrafts: { type: GraphQLBoolean },
+    recordVisibility: { type: RecordVisibilityEnumType },
   },
   async resolve(parent, args: RecordsArgs, context: Context) {
     graphQLAuthCheck(context);

@@ -29,6 +29,7 @@ import { ReferenceData } from '@models';
 import { NameExtension } from './getFieldName';
 import { logger } from '@services/logger.service';
 import { GraphQLDate } from 'graphql-scalars';
+import { RecordVisibilityEnumType } from '@const/enumTypes';
 
 /**
  * Transform a string into a GraphQL All Entities query name.
@@ -129,8 +130,7 @@ export const getSchema = (
             id: { type: new GraphQLNonNull(GraphQLID) },
             display: { type: GraphQLBoolean },
             data: { type: GraphQLJSON },
-            draft: { type: GraphQLBoolean },
-            allDrafts: { type: GraphQLBoolean },
+            recordVisibility: { type: RecordVisibilityEnumType },
           },
         };
         // === MULTI ENTITIES ===
@@ -152,8 +152,7 @@ export const getSchema = (
             styles: { type: GraphQLJSON },
             actions: { type: GraphQLJSON },
             at: { type: GraphQLDate },
-            draft: { type: GraphQLBoolean },
-            allDrafts: { type: GraphQLBoolean },
+            recordVisibility: { type: RecordVisibilityEnumType },
           },
         };
         // === META ===
