@@ -59,6 +59,7 @@ The server checks the following keys at startup ([checkConfig.util.ts](../src/ut
 
 | Variable | Config key | Default | Description |
 | --- | --- | --- | --- |
+| `MAIL_SEND` | `email.send` | `true` if `NODE_ENV` is `production` | Actually send emails to the SMTP server; otherwise email-templates only generates a preview |
 | `MAIL_FROM` | `email.from` | – | Sender address |
 | `MAIL_FROM_PREFIX` | `email.fromPrefix` | `No reply` | Display name of the sender |
 | `MAIL_REPLY_TO` | `email.replyTo` | – | Reply-to address |
@@ -66,6 +67,7 @@ The server checks the following keys at startup ([checkConfig.util.ts](../src/ut
 | `MAIL_PORT` | `email.port` | – | SMTP port |
 | `MAIL_USER` | `email.user` | – | SMTP user |
 | `MAIL_PASS` | `email.pass` | – | SMTP password |
+| `MAIL_REQUIRE_TLS` | `email.requireTls` | `true` | Require STARTTLS when connecting to the SMTP server (disable only for local email testing, e.g. with Mailpit) |
 | `MAIL_BLOB_STORAGE_CONNECTION_STRING` | `email.blobStorage.connectionString` | – | Blob storage connection used for email attachments |
 | `MAIL_BLOB_STORAGE_CONTAINER` | `email.blobStorage.container` | – | Blob storage container used for email attachments |
 | `MAIL_SERVERLESS_URL` | `email.serverless.url` | – | URL of the serverless email service |

@@ -22,6 +22,7 @@ export const LayoutType = new GraphQLObjectType({
     name: { type: GraphQLString },
     nameTranslations: { type: GraphQLJSON },
     createdAt: { type: GraphQLString },
+    modifiedAt: { type: GraphQLString },
     query: { type: GraphQLJSON },
     display: { type: GraphQLJSON },
     draft: { type: GraphQLBoolean },

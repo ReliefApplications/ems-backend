@@ -18,7 +18,7 @@ const MAX_RECIPIENTS: number = config.get('email.maxRecipients');
 const TRANSPORT_OPTIONS = {
   host: config.get('email.host'),
   port: config.get('email.port'),
-  requireTLS: true,
+  requireTLS: config.get<boolean>('email.requireTls'),
   auth: {
     user: config.get('email.user'),
     pass: config.get('email.pass'),
@@ -32,7 +32,7 @@ const email = new Email({
     from: EMAIL_FROM,
     replyTo: EMAIL_REPLY_TO,
   },
-  send: process.env.NODE_ENV === 'production',
+  send: config.get<boolean>('email.send'),
   views: { root: 'src/assets/emails' },
   juice: true,
   juiceResources: {

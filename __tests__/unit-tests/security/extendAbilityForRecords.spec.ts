@@ -1,6 +1,8 @@
 import { Form, Record, Resource, User } from '@models';
 import defineUserAbility from '@security/defineUserAbility';
-import extendAbilityForRecords from '@security/extendAbilityForRecords';
+import extendAbilityForRecords, {
+  userCanDeleteFieldFiles,
+} from '@security/extendAbilityForRecords';
 import { Types } from 'mongoose';
 import { DatabaseHelpers } from '../../helpers/database-helpers';
 
@@ -199,9 +201,9 @@ describe('extendAbilityForRecords', () => {
     expect(ability.can('download', record)).toBe(true);
     expect(ability.can('upload', record)).toBe(true);
     expect(ability.can('delete', record)).toBe(true);
-    expect(ability.can('create', new Record({ form: new Types.ObjectId() }))).toBe(
-      false
-    );
+    expect(
+      ability.can('create', new Record({ form: new Types.ObjectId() }))
+    ).toBe(false);
   });
 
   it('should not extend anything when the user roles have no permission', async () => {
@@ -253,5 +255,46 @@ describe('extendAbilityForRecords', () => {
     await expect(
       extendAbilityForRecords(user, { name: 'not a model' } as any)
     ).rejects.toThrow('Unexpected type');
+  });
+
+  describe('userCanDeleteFieldFiles', () => {
+    const roleId = new Types.ObjectId();
+    const user = buildUser(roleId);
+
+    it('should require both edit and files deletion access on the field', () => {
+      expect(
+        userCanDeleteFieldFiles(user, {
+          permissions: { canUpdate: [roleId], canDeleteFiles: [roleId] },
+        })
+      ).toBe(true);
+      expect(
+        userCanDeleteFieldFiles(user, {
+          permissions: { canUpdate: [roleId], canDeleteFiles: [] },
+        })
+      ).toBe(false);
+      expect(
+        userCanDeleteFieldFiles(user, {
+          permissions: { canUpdate: [], canDeleteFiles: [roleId] },
+        })
+      ).toBe(false);
+    });
+
+    it('should accept roles stored as strings and refuse read-only fields', () => {
+      expect(
+        userCanDeleteFieldFiles(user, {
+          permissions: {
+            canUpdate: [String(roleId)],
+            canDeleteFiles: [String(roleId)],
+          },
+        })
+      ).toBe(true);
+      expect(
+        userCanDeleteFieldFiles(user, {
+          readOnly: true,
+          permissions: { canUpdate: [roleId], canDeleteFiles: [roleId] },
+        })
+      ).toBe(false);
+      expect(userCanDeleteFieldFiles(user, undefined)).toBe(false);
+    });
   });
 });

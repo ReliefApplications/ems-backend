@@ -139,6 +139,13 @@
 				"emailDistributionListNameExist": "******"
 			}
 		},
+		"emailNotification": {
+			"add": {
+				"errors": {
+					"invalidCron": "******"
+				}
+			}
+		},
 		"form": {
 			"add": {
 				"errors": {
@@ -213,6 +220,12 @@
 			}
 		},
 		"record": {
+			"add": {
+				"errors": {
+					"invalidCloneRecordId": "******",
+					"invalidCloneRecordResource": "******"
+				}
+			},
 			"convert": {
 				"errors": {
 					"invalidConversion": "******"
@@ -245,8 +258,13 @@
 					"field": {
 						"missingReadPermissionOnResource": "******",
 						"missingWritePermissionOnResource": "******",
+						"notEditable": "******",
 						"notFound": "******",
 						"notVisible": "******"
+					},
+					"fieldsAutoGrant": {
+						"missingReadPermissionOnResource": "******",
+						"missingWritePermissionOnResource": "******"
 					},
 					"invalidArguments": "******",
 					"permission": {
@@ -345,6 +363,9 @@
 		},
 		"upload": {
 			"errors": {
+				"duplicateCustomId": "****** {{row}} ****** {{value}} ******",
+				"existingCustomId": "****** {{row}} ****** {{value}} ******",
+				"invalidCustomId": "****** {{row}} ****** {{value}} ******",
 				"invalidUserUpload": "******",
 				"missingFile": "******",
 				"noRecordsToInsert": "******"

@@ -1,3 +1,68 @@
+# [2.18.0-rc.10](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.9...v2.18.0-rc.10) (2026-09-29)
+
+
+### Features
+
+* Now possible to bind email dataset with CS filters ([#1262](https://github.com/ReliefApplications/ems-backend/issues/1262)) ([b3ed60a](https://github.com/ReliefApplications/ems-backend/commit/b3ed60a411f81a30232bd39480e6891820d6669c))
+* now possible to schedule emails ([#1261](https://github.com/ReliefApplications/ems-backend/issues/1261)) ([eda63ab](https://github.com/ReliefApplications/ems-backend/commit/eda63ab8c72642cff7c233fbdc16a6ea64610aff))
+* Now possible to select language email notifications will be sent with ([#1263](https://github.com/ReliefApplications/ems-backend/issues/1263)) ([6dc3db5](https://github.com/ReliefApplications/ems-backend/commit/6dc3db51408d877ac863c5eb08ef8b25d7a1866b))
+
+# [2.18.0-rc.9](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.8...v2.18.0-rc.9) (2026-09-24)
+
+
+### Features
+
+* Allow outdated files ([#1284](https://github.com/ReliefApplications/ems-backend/issues/1284)) ([2414623](https://github.com/ReliefApplications/ems-backend/commit/2414623e0e55daff80850199f4508806a910a5fe)), closes [AB#134566](https://github.com/AB/issues/134566)
+
+# [2.18.0-rc.8](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.7...v2.18.0-rc.8) (2026-09-21)
+
+
+### Features
+
+* Enable calculated fields to translate fields that support translations ([#1282](https://github.com/ReliefApplications/ems-backend/issues/1282)) ([8a3d383](https://github.com/ReliefApplications/ems-backend/commit/8a3d3832505c1d5bbe793c22a9ce092cd91838a5)), closes [AB#138076](https://github.com/AB/issues/138076)
+
+# [2.18.0-rc.7](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.6...v2.18.0-rc.7) (2026-09-21)
+
+
+### Features
+
+* Improve record type, adding option to get calculated fields ([#1283](https://github.com/ReliefApplications/ems-backend/issues/1283)) ([26265a5](https://github.com/ReliefApplications/ems-backend/commit/26265a5896bdc873c41d3cfe59cb76711f41a87c)), closes [AB#133920](https://github.com/AB/issues/133920)
+
+# [2.18.0-rc.6](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.5...v2.18.0-rc.6) (2026-09-14)
+
+
+### Features
+
+* It is now possible to upload custom _id in upload files ([#1275](https://github.com/ReliefApplications/ems-backend/issues/1275)) ([209302b](https://github.com/ReliefApplications/ems-backend/commit/209302b7f66d8dbfa752c466e0ceb7e47792151a)), closes [Ab#137745](https://github.com/Ab/issues/137745)
+
+# [2.18.0-rc.5](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.4...v2.18.0-rc.5) (2026-09-11)
+
+
+### Features
+
+* In Layout, add possibility to quickly add all fields to a grid, in the order they appear in a form ([#1274](https://github.com/ReliefApplications/ems-backend/issues/1274)) ([9a3437a](https://github.com/ReliefApplications/ems-backend/commit/9a3437a0388e7935590df0c1c637fcd59fd81c07)), closes [AB#137662](https://github.com/AB/issues/137662)
+
+# [2.18.0-rc.4](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.3...v2.18.0-rc.4) (2026-09-07)
+
+
+### Features
+
+* Roles can now automatically grant permissions on new fields ([#1259](https://github.com/ReliefApplications/ems-backend/issues/1259)) ([de12832](https://github.com/ReliefApplications/ems-backend/commit/de1283225a45fb02374c7f6c4eab08426f497e10)), closes [AB#135264](https://github.com/AB/issues/135264)
+
+# [2.18.0-rc.3](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.2...v2.18.0-rc.3) (2026-09-06)
+
+
+### Bug Fixes
+
+* apply translation fallback to all filter operators and to sorting ([#1272](https://github.com/ReliefApplications/ems-backend/issues/1272)) ([e7bd1d8](https://github.com/ReliefApplications/ems-backend/commit/e7bd1d8e651ed6bb7fc86f47b3b2dbd91dee8f57)), closes [AB#137461](https://github.com/AB/issues/137461)
+
+# [2.18.0-rc.2](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.1...v2.18.0-rc.2) (2026-09-06)
+
+
+### Features
+
+* Allow sorting query layouts by more than one field ([#1267](https://github.com/ReliefApplications/ems-backend/issues/1267)) ([484952c](https://github.com/ReliefApplications/ems-backend/commit/484952c2dfc0ebc73b3ecc4d0b42d35626408a55)), closes [AB#135743](https://github.com/AB/issues/135743)
+
 # [2.18.0-rc.1](https://github.com/ReliefApplications/ems-backend/compare/v2.17.1...v2.18.0-rc.1) (2026-07-28)
 
 

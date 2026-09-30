@@ -113,6 +113,41 @@ If Jest runs out of memory, raise the heap size with the `NODE_OPTIONS` environm
 NODE_OPTIONS=--max-old-space-size=8192 npm run test
 ```
 
+## Email testing with Mailpit
+
+[Mailpit](https://mailpit.axllent.org) is a local SMTP server with a web UI: it catches every email the API sends, instead of delivering it to real recipients. It is the easiest way to test email sending (user invitations, notifications, email templates...) during development.
+
+Two default behaviors of the code base must be overridden for this to work (see [src/utils/email/sendEmail.ts](src/utils/email/sendEmail.ts)):
+
+*   Outside of production (`NODE_ENV`), emails are not handed to the SMTP transport: [email-templates](https://www.npmjs.com/package/email-templates) runs in preview mode instead. Set `MAIL_SEND=true` to actually send them.
+*   The nodemailer transport requires STARTTLS, which Mailpit does not offer out of the box. Set `MAIL_REQUIRE_TLS=false` to allow the plain connection (never do this against a real SMTP server).
+
+### 1. Run Mailpit
+
+```
+docker run -d --name mailpit -p 8025:8025 -p 1025:1025 axllent/mailpit
+```
+
+Port 1025 is the SMTP server, port 8025 the web UI.
+
+### 2. Configure the API
+
+In your `.env` file:
+
+```
+MAIL_SEND=true
+MAIL_HOST=localhost
+MAIL_PORT=1025
+MAIL_FROM=no-reply@example.com
+MAIL_USER=
+MAIL_PASS=
+MAIL_REQUIRE_TLS=false
+```
+
+`MAIL_USER` / `MAIL_PASS` can stay empty: Mailpit does not require authentication, and nodemailer skips the login step when the server does not advertise it.
+
+Then start the server, trigger an email (e.g. a user invitation with `email.sendInvite` enabled), and open the Mailpit UI at [http://localhost:8025](http://localhost:8025) to inspect the message.
+
 ## Migrations
 
 Database migrations live in the [migrations/](migrations/) directory and are run with the [migrate](https://www.npmjs.com/package/migrate) package:

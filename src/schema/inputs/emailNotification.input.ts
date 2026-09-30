@@ -1,4 +1,7 @@
-import { EmailNotificationAttachment } from '@models';
+import {
+  EmailNotificationAttachment,
+  EmailNotificationSchedule,
+} from '@models';
 import {
   GraphQLInputObjectType,
   GraphQLString,
@@ -14,8 +17,9 @@ import { Types } from 'mongoose';
 /** Custom Notification type for queries/mutations argument */
 export type EmailNotificationArgs = {
   name: string;
-  schedule: string;
+  schedule: EmailNotificationSchedule;
   notificationType: string;
+  language?: string;
   applicationId: string | Types.ObjectId;
   datasets: any[];
   emailLayout: string | Types.ObjectId;
@@ -61,6 +65,8 @@ export const DatasetInputType = new GraphQLInputObjectType({
     sendAsAttachment: { type: GraphQLBoolean },
     individualEmail: { type: GraphQLBoolean },
     individualEmailFields: { type: new GraphQLList(GraphQLJSON) },
+    individualEmailToDistributionList: { type: GraphQLBoolean },
+    csFilter: { type: GraphQLJSON },
     pageSize: { type: GraphQLInt },
     navigateToPage: { type: GraphQLBoolean, defaultValue: false },
     navigateSettings: { type: GraphQLJSON },
@@ -98,6 +104,18 @@ export const EmailNotificationFileInputType = new GraphQLInputObjectType({
 });
 
 /**
+ * Schedule type - used to define the schedule applied to an email notification
+ */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const EmailNotificationScheduleInputType = new GraphQLInputObjectType({
+  name: 'EmailNotificationScheduleInputType',
+  fields: () => ({
+    scheduleEnabled: { type: GraphQLBoolean },
+    cronValue: { type: GraphQLString },
+  }),
+});
+
+/**
  * Input type for email notification attachment details.
  */
 export const EmailNotificationAttachmentInputType = new GraphQLInputObjectType({
@@ -114,9 +132,10 @@ export const EmailNotificationInputType = new GraphQLInputObjectType({
   name: 'EmailNotificationInputType',
   fields: () => ({
     name: { type: GraphQLString },
-    schedule: { type: GraphQLString },
+    schedule: { type: EmailNotificationScheduleInputType },
     applicationId: { type: new GraphQLNonNull(GraphQLID) },
     notificationType: { type: GraphQLString },
+    language: { type: GraphQLString },
     datasets: { type: new GraphQLList(DatasetInputType) },
     emailLayout: { type: GraphQLID },
     emailDistributionList: {

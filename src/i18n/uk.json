@@ -139,6 +139,13 @@
 				"emailDistributionListNameExist": "Назва списку розсилки електронної пошти вже існує"
 			}
 		},
+		"emailNotification": {
+			"add": {
+				"errors": {
+					"invalidCron": "Вираз cron, використаний у планувальнику, недійсний"
+				}
+			}
+		},
 		"form": {
 			"add": {
 				"errors": {

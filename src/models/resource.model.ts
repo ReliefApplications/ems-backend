@@ -24,11 +24,15 @@ export interface Resource extends Document {
     canDeleteRecords?: any[];
     canDownloadRecords?: any[];
     canUploadRecords?: any[];
+    fieldsAutoGrantCanSeeOptOut?: any[];
+    fieldsAutoGrantCanUpdateOptOut?: any[];
   };
   fields: {
     permissions?: {
       canSee: any[];
       canUpdate: any[];
+      /** File fields: roles allowed to permanently remove files */
+      canDeleteFiles?: any[];
     };
     [key: string]: any;
   }[];
@@ -121,6 +125,18 @@ const resourceSchema = new Schema<Resource>(
           },
           access: mongoose.Schema.Types.Mixed,
           _id: false,
+        },
+      ],
+      fieldsAutoGrantCanSeeOptOut: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Role',
+        },
+      ],
+      fieldsAutoGrantCanUpdateOptOut: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Role',
         },
       ],
     },

@@ -139,6 +139,13 @@
 				"emailDistributionListNameExist": "Email distribution list title already exist"
 			}
 		},
+		"emailNotification": {
+			"add": {
+				"errors": {
+					"invalidCron": "The cron expression used in the scheduler is invalid"
+				}
+			}
+		},
 		"form": {
 			"add": {
 				"errors": {
@@ -213,6 +220,12 @@
 			}
 		},
 		"record": {
+			"add": {
+				"errors": {
+					"invalidCloneRecordId": "The record to clone must be a valid record id.",
+					"invalidCloneRecordResource": "The record to clone must belong to the same resource as the new record."
+				}
+			},
 			"convert": {
 				"errors": {
 					"invalidConversion": "Cannot convert this record to this target form type."
@@ -245,8 +258,13 @@
 					"field": {
 						"missingReadPermissionOnResource": "Please provide permission to read or create records before setting visible fields.",
 						"missingWritePermissionOnResource": "Please provide permission to update or create records before setting editable fields.",
+						"notEditable": "Please set field as editable before allowing this role to delete its files.",
 						"notFound": "Field does not exist.",
 						"notVisible": "Please set field as visible before setting it as editable."
+					},
+					"fieldsAutoGrant": {
+						"missingReadPermissionOnResource": "Please provide permission to read or create records before enabling auto-grant of view access to new fields.",
+						"missingWritePermissionOnResource": "Please provide permission to update or create records before enabling auto-grant of edit access to new fields."
 					},
 					"invalidArguments": "Either fields or permissions must be provided.",
 					"permission": {
@@ -345,6 +363,9 @@
 		},
 		"upload": {
 			"errors": {
+				"duplicateCustomId": "Row {{row}}: the _id value \"{{value}}\" is duplicated within the file. Each _id must be unique.",
+				"existingCustomId": "Row {{row}}: a record with _id \"{{value}}\" already exists in the system.",
+				"invalidCustomId": "Row {{row}}: the value \"{{value}}\" in the _id column is not a valid 24-character hexadecimal MongoDB ID.",
 				"invalidUserUpload": "Please provide email and role for each user.",
 				"missingFile": "No file detected.",
 				"noRecordsToInsert": "No records were provided for insertion."
