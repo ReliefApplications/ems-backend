@@ -8,7 +8,7 @@ import axios from 'axios';
 import { logger } from '@services/logger.service';
 import { Parser } from 'json2csv';
 import { DataTransformer, Record, Resource } from '@models';
-import mongoose from 'mongoose';
+import mongoose, { FilterQuery } from 'mongoose';
 import { defaultRecordFields } from '@const/defaultRecordFields';
 import getFilter from '@utils/schema/resolvers/Query/getFilter';
 import { CalculatedFieldService } from '@services/calculatedField.service';
@@ -480,14 +480,21 @@ export default class Exporter {
    * @param resource resource whose fields define the calculated-field context (defaults to the exporter's own resource; pass a related resource when building a sub-pipeline for resource/resources columns)
    * @param resource.fields field definitions used to compile calculated fields
    * @param resource.name optional resource name, used only in error messages
+   * @param relatedRecords true when the pipeline fetches records related to the exported ones
    * @returns a built pipeline
    */
   private buildPipeline = async (
     columns: Column[],
     ids: mongoose.Types.ObjectId[],
     extraMatch?: any,
-    resource: { fields: any[]; name?: string } = this.resource
+    resource: { fields: any[]; name?: string } = this.resource,
+    relatedRecords = false
   ) => {
+    // Related records are always submitted ones, only the exported records
+    // themselves follow the requested visibility
+    const draftFilter: FilterQuery<Record> = relatedRecords
+      ? getDraftRecordFilter()
+      : getDraftRecordFilter(this.params, this.req.context.user);
     const permissionFilters = Record.find(
       accessibleBy(this.req.context.user.ability, 'read').Record
     ).getFilter();
@@ -522,7 +529,7 @@ export default class Exporter {
               },
             },
             { archived: { $ne: true } },
-            getDraftRecordFilter(),
+            draftFilter,
             permissionFilters,
             ...(extraMatch && Object.keys(extraMatch).length > 0
               ? [extraMatch]
@@ -1154,7 +1161,8 @@ export default class Exporter {
                 .map((id: any) => new mongoose.Types.ObjectId(id))
             : [new mongoose.Types.ObjectId(columnValue)],
           subFilter,
-          column.relatedResource
+          column.relatedResource,
+          true
         )
       ).then(async (relatedRecords) => {
         if (relatedRecords.length > 0) {
