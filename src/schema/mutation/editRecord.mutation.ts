@@ -33,7 +33,7 @@ import { getErrorMessage, getErrorStack } from '@utils/error';
 import pubsub from '../../server/pubsub';
 
 /** Arguments for the editRecord mutation */
-type EditRecordArgs = {
+export type EditRecordArgs = {
   id: string | Types.ObjectId;
   data?: any;
   version?: string | Types.ObjectId;
@@ -191,6 +191,13 @@ export default {
           context
         );
         return triggeredRecord;
+      }
+
+      // A submitted record cannot be turned back into a draft
+      if (args.updateDraftStatus === true && oldRecord.draft !== true) {
+        throw new GraphQLError(
+          context.i18next.t('mutations.record.edit.errors.cannotDemoteToDraft')
+        );
       }
 
       const publishingDraft =
