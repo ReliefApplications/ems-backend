@@ -9,6 +9,7 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Types } from 'mongoose';
+import { RecordVisibility, RecordVisibilityEnumType } from '@const/enumTypes';
 
 /** LayoutQuery type for queries/mutations argument */
 type LayoutQueryArgs = {
@@ -62,6 +63,7 @@ export type LayoutArgs = {
   nameTranslations?: Record<string, string>;
   query: LayoutQueryArgs;
   display: LayoutDisplayArgs;
+  recordVisibility?: RecordVisibility;
 };
 
 /** GraphQL Input Type of Layout */
@@ -72,5 +74,6 @@ export const LayoutInputType = new GraphQLInputObjectType({
     nameTranslations: { type: GraphQLJSON },
     query: { type: new GraphQLNonNull(LayoutQueryInputType) },
     display: { type: new GraphQLNonNull(LayoutDisplayInputType) },
+    recordVisibility: { type: RecordVisibilityEnumType },
   }),
 });

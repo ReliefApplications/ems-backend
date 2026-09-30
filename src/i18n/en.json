@@ -233,6 +233,7 @@
 			},
 			"edit": {
 				"errors": {
+					"cannotDemoteToDraft": "A submitted record cannot be turned into a draft.",
 					"invalidArguments": "Either data or version must be provided.",
 					"wrongTemplateProvided": "Template must sharing the same resource as the parent form of the edited record."
 				}
