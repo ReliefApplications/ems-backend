@@ -147,6 +147,39 @@ describe('addRecord Resolver', () => {
     });
   });
 
+  describe('Draft record', () => {
+    beforeEach(() => {
+      args = { ...args, form: resourceForm.id, draft: true };
+    });
+
+    it('should store the draft without incremental id', async () => {
+      const record = await addRecord.resolve(null, args, context);
+      expect(record.draft).toBe(true);
+      expect(record.incrementalId).toBeUndefined();
+      expect(getNextId).not.toHaveBeenCalled();
+      // The field must be absent, not null, so the draft is excluded from the
+      // partial unique index on incrementalId
+      const stored = await Record.collection.findOne({ _id: record._id });
+      expect(stored).not.toHaveProperty('incrementalId');
+    });
+
+    it('should allow several drafts on the same resource', async () => {
+      const first = await addRecord.resolve(null, args, context);
+      const second = await addRecord.resolve(null, args, context);
+      expect(first.resource).toEqual(second.resource);
+      expect(
+        await Record.countDocuments({ resource, draft: true })
+      ).toBeGreaterThanOrEqual(2);
+    });
+
+    it('should throw an error if the user is not logged', async () => {
+      context.user = undefined;
+      await expect(addRecord.resolve(null, args, context)).rejects.toThrow(
+        'common.errors.userNotLogged'
+      );
+    });
+  });
+
   describe('Cloning a record', () => {
     let clonedRecord: Record;
     let clonedVersions: Version[];

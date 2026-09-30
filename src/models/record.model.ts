@@ -15,7 +15,7 @@ import { User } from './user.model';
 // eslint-disable-next-line deprecation/deprecation
 export interface Record extends AccessibleFieldsDocument {
   kind: 'Record';
-  incrementalId?: string | null;
+  incrementalId?: string;
   form: any;
   _form: Form;
   resource: any;
@@ -119,10 +119,10 @@ recordSchema.index(
   { incrementalId: 1, resource: 1 },
   {
     unique: true,
+    // Drafts are excluded: they are stored without incremental id
     partialFilterExpression: {
       resource: { $exists: true },
       incrementalId: { $exists: true },
-      draft: false,
     },
   }
 );

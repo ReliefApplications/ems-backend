@@ -173,9 +173,13 @@ export default {
       // Create the record instance
       transformRecord(args.data, form.fields);
       const record = new Record({
-        incrementalId: args.draft
-          ? null
-          : await getNextId(String(form.resource ? form.resource : args.form)),
+        // Drafts do not have an incremental id: the field is left out so they
+        // are excluded from the unique incremental id index
+        ...(!args.draft && {
+          incrementalId: await getNextId(
+            String(form.resource ? form.resource : args.form)
+          ),
+        }),
         form: args.form,
         //createdAt: new Date(),
         //modifiedAt: new Date(),

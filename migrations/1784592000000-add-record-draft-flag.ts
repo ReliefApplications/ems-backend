@@ -3,7 +3,7 @@ import { startDatabaseForMigration } from '../src/migrations/database.helper';
 
 /** Migration description */
 export const description =
-  'Add draft flag to records and update record id index.';
+  'Exclude draft records from the unique incremental id index.';
 
 /** Existing unique incremental id index name. */
 const RECORD_INCREMENTAL_ID_INDEX = 'incrementalId_1_resource_1';
@@ -39,17 +39,15 @@ const dropIndexIfExists = async (indexName: string): Promise<void> => {
 };
 
 /**
- * Adds the draft flag and recreates the unique incremental id index so draft
- * records, which do not receive an incremental id, are excluded from it.
+ * Recreates the unique incremental id index so it only covers records that
+ * have an incremental id. Draft records are stored without one, so they are
+ * excluded from it, whatever the value of their draft flag.
+ *
+ * Mongoose cannot change the options of an existing index on startup, so the
+ * index has to be dropped and created again here.
  */
 export const up = async () => {
   await startDatabaseForMigration();
-
-  await Record.updateMany(
-    { draft: { $exists: false } },
-    { $set: { draft: false } },
-    { timestamps: false }
-  );
 
   await dropIndexIfExists(RECORD_INCREMENTAL_ID_INDEX);
   await Record.collection.createIndex(
@@ -60,14 +58,8 @@ export const up = async () => {
       partialFilterExpression: {
         resource: { $exists: true },
         incrementalId: { $exists: true },
-        draft: false,
       },
     }
-  );
-
-  await Record.collection.createIndex(
-    { draft: 1, form: 1, resource: 1, createdAt: 1 },
-    { name: 'draft_1_form_1_resource_1_createdAt_1' }
   );
 };
 
@@ -77,7 +69,6 @@ export const up = async () => {
 export const down = async () => {
   await startDatabaseForMigration();
 
-  await dropIndexIfExists('draft_1_form_1_resource_1_createdAt_1');
   await dropIndexIfExists(RECORD_INCREMENTAL_ID_INDEX);
   await Record.collection.createIndex(
     { incrementalId: 1, resource: 1 },
