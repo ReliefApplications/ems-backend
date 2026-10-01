@@ -377,7 +377,7 @@
 				"invalidUserUpload": "Please provide email and role for each user.",
 				"missingFile": "No file detected.",
 				"noRecordsToInsert": "No records were provided for insertion.",
-				"uniquenessViolation": "The file was not imported: some rows violate a uniqueness rule. Fix the highlighted rows and upload again."
+				"uniquenessViolation": "The file was not imported: some rows violate a uniqueness rule. Fix the listed rows and upload again."
 			}
 		}
 	},

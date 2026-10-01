@@ -5,12 +5,13 @@ import {
   UniquenessRule,
   UniquenessViolation,
   defaultMessage,
+  getRange,
   interpolateMessage,
   isEmptyValue,
   matchesCondition,
+  normalizeValue,
   rangesOverlap,
   renderScope,
-  toTime,
 } from './validateUniqueness';
 
 /**
@@ -39,6 +40,7 @@ const pushViolation = (
   const violation: UniquenessViolation = {
     question: rule.name || rule.fields.join(' + '),
     errors: [message],
+    severity: rule.severity === 'warning' ? 'warning' : 'error',
   };
   result[rule.severity === 'warning' ? 'warnings' : 'errors'].push(violation);
 };
@@ -59,7 +61,9 @@ const groupByScope = (
   rows.forEach((row, index) => {
     if (!matchesCondition(row, rule.condition)) return;
     if (rule.fields.some((field) => isEmptyValue(row[field]))) return;
-    const key = JSON.stringify(rule.fields.map((field) => row[field]));
+    const key = JSON.stringify(
+      rule.fields.map((field) => normalizeValue(row[field]))
+    );
     const group = groups.get(key);
     if (group) {
       group.push(index);
@@ -80,7 +84,8 @@ const groupByScope = (
  * For a plain rule, every row sharing the same scope field values as an
  * earlier row in the batch is flagged. For a date-intersection rule, rows
  * sharing the same scope field values are flagged if their date range
- * overlaps an earlier row's range.
+ * overlaps an earlier row's range. Values are compared the same way as in
+ * {@link validateUniqueness}.
  *
  * @param rows row data of the batch being imported
  * @param resource the resource the rows belong to, or null if none
@@ -107,27 +112,20 @@ export const validateBatchUniqueness = (
 
     if (rule.dateIntersection?.startField && rule.dateIntersection?.endField) {
       const { startField, endField, allowAdjacent } = rule.dateIntersection;
+      const ranges = rows.map((row) => getRange(row, startField, endField));
       const groups = groupByScope(
-        rows.map((row) =>
-          toTime(row[startField]) !== null && toTime(row[endField]) !== null
-            ? row
-            : {}
-        ),
+        rows.map((row, index) => (ranges[index] ? row : {})),
         rule
       );
       for (const indices of groups.values()) {
         for (let i = 1; i < indices.length; i++) {
           const current = indices[i];
-          const currentStart = toTime(rows[current][startField]) as number;
-          const currentEnd = toTime(rows[current][endField]) as number;
           const overlapsEarlier = indices
             .slice(0, i)
             .some((earlier) =>
               rangesOverlap(
-                currentStart,
-                currentEnd,
-                toTime(rows[earlier][startField]) as number,
-                toTime(rows[earlier][endField]) as number,
+                ...ranges[current],
+                ...ranges[earlier],
                 allowAdjacent
               )
             );

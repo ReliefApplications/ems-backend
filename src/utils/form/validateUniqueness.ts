@@ -1,5 +1,8 @@
 import { Record as RecordModel, Resource } from '@models';
 import { Types } from 'mongoose';
+import { castArray, escapeRegExp } from 'lodash';
+import { GraphQLError } from 'graphql';
+import { logger } from '@services/logger.service';
 import { AppAbility } from '@security/defineUserAbility';
 
 /** Translator function, as exposed by i18next (context.i18next.t / req.t) */
@@ -15,6 +18,8 @@ export interface UniquenessMatch {
 export type UniquenessViolation = {
   question: string;
   errors: string[];
+  /** Severity of the violated rule: warnings can be bypassed by the user, errors cannot */
+  severity?: 'error' | 'warning';
   /** Matching records the requesting user is allowed to read, if `rule.showMatches` is set */
   matches?: UniquenessMatch[];
   /** Number of additional matching records the requesting user cannot read */
@@ -52,6 +57,37 @@ export interface UniquenessRule {
   };
 }
 
+/**
+ * Error thrown when a record cannot be saved because of blocking uniqueness
+ * rules. This is an expected outcome of the validation, reported to the user,
+ * and not a failure of the server: see {@link logUniquenessError}.
+ */
+export class UniquenessError extends GraphQLError {
+  /**
+   * Error thrown when a record cannot be saved because of blocking uniqueness
+   * rules.
+   *
+   * @param violations violated rules, or the message to display to the user
+   */
+  constructor(violations: UniquenessViolation[] | string) {
+    super(
+      typeof violations === 'string'
+        ? violations
+        : violations.map((x) => x.errors.join(' ')).join(' ')
+    );
+  }
+}
+
+/**
+ * Logs a record rejected because of blocking uniqueness rules. As the request
+ * did not fail, this is not logged as an error, and has no stack trace.
+ *
+ * @param err uniqueness error to log
+ */
+export const logUniquenessError = (err: UniquenessError): void => {
+  logger.warn(`Record not saved, uniqueness rule violated: ${err.message}`);
+};
+
 /** Max number of matching record documents fetched when `showMatches` is set */
 const MATCH_FETCH_LIMIT = 20;
 /** Max number of matching records actually surfaced in a violation */
@@ -64,7 +100,41 @@ const MATCH_DISPLAY_LIMIT = 5;
  * @returns true if the value should be treated as absent
  */
 export const isEmptyValue = (value: any): boolean =>
-  value === undefined || value === null || value === '';
+  value === undefined ||
+  value === null ||
+  (typeof value === 'string' && value.trim() === '');
+
+/**
+ * Normalizes a value before comparing it to another one: texts are compared
+ * regardless of their case and of leading, trailing or repeated whitespaces,
+ * so that 'John  Smith ' and 'john smith' are seen as duplicates.
+ *
+ * @param value value to normalize
+ * @returns the normalized value
+ */
+export const normalizeValue = (value: any): any =>
+  typeof value === 'string'
+    ? value.trim().replace(/\s+/g, ' ').toLowerCase()
+    : value;
+
+/**
+ * Builds the Mongo filter matching the records with the same value, using
+ * the same rules as {@link normalizeValue} for texts.
+ *
+ * @param value value to match
+ * @returns a Mongo filter on the value
+ */
+const toMatchFilter = (value: any): any =>
+  typeof value === 'string'
+    ? {
+        $regex: `^\\s*${value
+          .trim()
+          .split(/\s+/)
+          .map(escapeRegExp)
+          .join('\\s+')}\\s*$`,
+        $options: 'i',
+      }
+    : value;
 
 /**
  * Whether the given data satisfies a rule's 'only apply when' conditions.
@@ -109,6 +179,29 @@ export const toTime = (value: any): number | null => {
   if (isEmptyValue(value)) return null;
   const time = new Date(value).getTime();
   return isNaN(time) ? null : time;
+};
+
+/**
+ * Gets the date range of a record, for a date-intersection rule. A missing
+ * start or end date makes the range open-ended on that side ( e.g. an
+ * assignment without end date is still ongoing ).
+ *
+ * @param data record data
+ * @param startField name of the field storing the start of the range
+ * @param endField name of the field storing the end of the range
+ * @returns start and end of the range, or null if it cannot be evaluated ( both dates missing, or an invalid date )
+ */
+export const getRange = (
+  data: any,
+  startField: string,
+  endField: string
+): [number, number] | null => {
+  const hasStart = !isEmptyValue(data?.[startField]);
+  const hasEnd = !isEmptyValue(data?.[endField]);
+  if (!hasStart && !hasEnd) return null;
+  const start = hasStart ? toTime(data[startField]) : -Infinity;
+  const end = hasEnd ? toTime(data[endField]) : Infinity;
+  return start === null || end === null ? null : [start, end];
 };
 
 /**
@@ -237,13 +330,16 @@ const buildMatches = (
  *
  * A rule only applies to records matching its 'only apply when' conditions,
  * if any, and only when it is active. It is skipped entirely if any of its
- * scope fields (or, for a date-intersection rule, its start/end fields) is
- * missing from the data, as uniqueness cannot be meaningfully evaluated on
- * incomplete values.
+ * scope fields (or, for a date-intersection rule, both its start and end
+ * fields) is missing from the data, as uniqueness cannot be meaningfully
+ * evaluated on incomplete values.
+ *
+ * Text values are compared regardless of their case and of extra
+ * whitespaces. Draft records are ignored.
  *
  * @param data full record data (existing data merged with the proposed update)
  * @param resource the resource the record belongs to, or null if none
- * @param currentRecordId id of the record being edited, excluded from the duplicate search
+ * @param excludedRecordIds id(s) of the record(s) being edited, excluded from the duplicate search
  * @param t optional translator used to localize default violation messages
  * @param ability optional requesting user's ability, used to filter which matching records ('showMatches') can be shown to them
  * @returns errors (blocking) and warnings (non-blocking) violations found
@@ -251,7 +347,7 @@ const buildMatches = (
 export const validateUniqueness = async (
   data: any,
   resource: Resource | null,
-  currentRecordId?: string | Types.ObjectId,
+  excludedRecordIds?: string | Types.ObjectId | (string | Types.ObjectId)[],
   t?: Translator,
   ability?: AppAbility
 ): Promise<UniquenessCheckResult> => {
@@ -274,11 +370,11 @@ export const validateUniqueness = async (
       draft: { $ne: true },
       ...conditionToMongoFilter(rule.condition),
     };
-    if (currentRecordId) {
-      query._id = { $ne: currentRecordId };
+    if (excludedRecordIds) {
+      query._id = { $nin: castArray(excludedRecordIds) };
     }
     for (const field of rule.fields) {
-      query[`data.${field}`] = data[field];
+      query[`data.${field}`] = toMatchFilter(data[field]);
     }
 
     let matchCount = 0;
@@ -287,22 +383,16 @@ export const validateUniqueness = async (
 
     if (rule.dateIntersection?.startField && rule.dateIntersection?.endField) {
       const { startField, endField, allowAdjacent } = rule.dateIntersection;
-      const start = toTime(data[startField]);
-      const end = toTime(data[endField]);
-      if (start === null || end === null) continue;
+      const range = getRange(data, startField, endField);
+      if (!range) continue;
       // The exact-match filter above only scopes candidates by `fields`;
       // the range comparison itself has to happen in JS.
       const candidates = await RecordModel.find(query);
       const overlapping = candidates.filter((candidate) => {
-        const candidateStart = toTime(candidate.data?.[startField]);
-        const candidateEnd = toTime(candidate.data?.[endField]);
-        if (candidateStart === null || candidateEnd === null) return false;
-        return rangesOverlap(
-          start,
-          end,
-          candidateStart,
-          candidateEnd,
-          allowAdjacent
+        const candidateRange = getRange(candidate.data, startField, endField);
+        return (
+          !!candidateRange &&
+          rangesOverlap(...range, ...candidateRange, allowAdjacent)
         );
       });
       matchCount = overlapping.length;
@@ -330,6 +420,7 @@ export const validateUniqueness = async (
       const violation: UniquenessViolation = {
         question: rule.name || rule.fields.join(' + '),
         errors: [message],
+        severity: rule.severity === 'warning' ? 'warning' : 'error',
         ...(matches && { matches }),
         ...(hiddenMatchCount !== undefined && { hiddenMatchCount }),
       };

@@ -131,6 +131,7 @@ describe('validateUniqueness', () => {
       {
         question: 'first_name + last_name + dob',
         errors: ['A person with the same identity already exists.'],
+        severity: 'warning',
       },
     ]);
   });
@@ -211,6 +212,103 @@ describe('validateUniqueness', () => {
 
     const result = await validateUniqueness({ org_code: 'ABC' }, resource);
     expect(result.errors).toEqual([]);
+  });
+
+  it('compares texts regardless of case and extra whitespaces', async () => {
+    const resource = await Resource.create({
+      name: 'Person',
+      fields: [{ name: 'first_name' }, { name: 'last_name' }],
+      uniquenessRules: [
+        { fields: ['first_name', 'last_name'], severity: 'warning' },
+      ],
+    });
+    await Record.create({
+      incrementalId: '1',
+      form: resource._id,
+      _form: { _id: resource._id, name: resource.name },
+      resource: resource._id,
+      data: { first_name: 'John', last_name: 'Van  Damme ' },
+    });
+
+    const duplicate = await validateUniqueness(
+      { first_name: ' john', last_name: 'van damme' },
+      resource
+    );
+    expect(duplicate.warnings).toHaveLength(1);
+
+    // A text only containing the other one is not a duplicate
+    const different = await validateUniqueness(
+      { first_name: 'Johnny', last_name: 'van damme' },
+      resource
+    );
+    expect(different.warnings).toEqual([]);
+  });
+
+  it('does not interpret special characters of a text', async () => {
+    const resource = await Resource.create({
+      name: 'Organization',
+      fields: [{ name: 'org_code' }],
+      uniquenessRules: [{ fields: ['org_code'], severity: 'error' }],
+    });
+    await Record.create({
+      incrementalId: '1',
+      form: resource._id,
+      _form: { _id: resource._id, name: resource.name },
+      resource: resource._id,
+      data: { org_code: 'ABC' },
+    });
+
+    const wildcard = await validateUniqueness({ org_code: 'A.C' }, resource);
+    expect(wildcard.errors).toEqual([]);
+  });
+
+  it('skips a rule when one of its fields only contains whitespaces', async () => {
+    const resource = await Resource.create({
+      name: 'Organization',
+      fields: [{ name: 'org_code' }],
+      uniquenessRules: [{ fields: ['org_code'], severity: 'error' }],
+    });
+    await Record.create({
+      incrementalId: '1',
+      form: resource._id,
+      _form: { _id: resource._id, name: resource.name },
+      resource: resource._id,
+      data: { org_code: '  ' },
+    });
+
+    const result = await validateUniqueness({ org_code: ' ' }, resource);
+    expect(result.errors).toEqual([]);
+  });
+
+  it('excludes several records when a list of ids is given', async () => {
+    const resource = await Resource.create({
+      name: 'Organization',
+      fields: [{ name: 'org_code' }],
+      uniquenessRules: [{ fields: ['org_code'], severity: 'error' }],
+    });
+    const records = await Record.create(
+      ['1', '2'].map((incrementalId) => ({
+        incrementalId,
+        form: resource._id,
+        _form: { _id: resource._id, name: resource.name },
+        resource: resource._id,
+        data: { org_code: 'ABC' },
+      }))
+    );
+
+    const excluded = await validateUniqueness(
+      { org_code: 'ABC' },
+      resource,
+      records.map((x) => x._id)
+    );
+    expect(excluded.errors).toEqual([]);
+
+    const partlyExcluded = await validateUniqueness(
+      { org_code: 'ABC' },
+      resource,
+      [records[0]._id]
+    );
+    expect(partlyExcluded.errors).toHaveLength(1);
   });
 
   describe('conditional uniqueness', () => {
@@ -351,6 +449,104 @@ describe('validateUniqueness', () => {
         resource
       );
       expect(result.errors).toHaveLength(1);
+    });
+
+    it('treats a missing end date as an ongoing period', async () => {
+      const resource = await buildResource();
+      await Record.create({
+        incrementalId: '1',
+        form: resource._id,
+        _form: { _id: resource._id, name: resource.name },
+        resource: resource._id,
+        data: { expert: 'alice', country: 'CH', start_date: '2026-01-01' },
+      });
+
+      // Starts while the existing, ongoing, period is running
+      const overlapping = await validateUniqueness(
+        {
+          expert: 'alice',
+          country: 'CH',
+          start_date: '2027-06-01',
+          end_date: '2027-07-01',
+        },
+        resource
+      );
+      expect(overlapping.errors).toHaveLength(1);
+
+      // Ends before the existing period starts
+      const earlier = await validateUniqueness(
+        {
+          expert: 'alice',
+          country: 'CH',
+          start_date: '2025-01-01',
+          end_date: '2025-12-01',
+        },
+        resource
+      );
+      expect(earlier.errors).toEqual([]);
+
+      // A new ongoing period overlaps the existing one
+      const ongoing = await validateUniqueness(
+        { expert: 'alice', country: 'CH', start_date: '2028-01-01' },
+        resource
+      );
+      expect(ongoing.errors).toHaveLength(1);
+    });
+
+    it('treats a missing start date as a period without beginning', async () => {
+      const resource = await buildResource();
+      await Record.create({
+        incrementalId: '1',
+        form: resource._id,
+        _form: { _id: resource._id, name: resource.name },
+        resource: resource._id,
+        data: { expert: 'alice', country: 'CH', end_date: '2026-03-01' },
+      });
+
+      const overlapping = await validateUniqueness(
+        {
+          expert: 'alice',
+          country: 'CH',
+          start_date: '2025-01-01',
+          end_date: '2025-02-01',
+        },
+        resource
+      );
+      expect(overlapping.errors).toHaveLength(1);
+
+      const later = await validateUniqueness(
+        {
+          expert: 'alice',
+          country: 'CH',
+          start_date: '2026-04-01',
+          end_date: '2026-05-01',
+        },
+        resource
+      );
+      expect(later.errors).toEqual([]);
+    });
+
+    it('skips the rule when both dates are missing, or one is invalid', async () => {
+      const resource = await buildResource();
+      await Record.create({
+        incrementalId: '1',
+        form: resource._id,
+        _form: { _id: resource._id, name: resource.name },
+        resource: resource._id,
+        data: { expert: 'alice', country: 'CH', start_date: '2026-01-01' },
+      });
+
+      const withoutDates = await validateUniqueness(
+        { expert: 'alice', country: 'CH' },
+        resource
+      );
+      expect(withoutDates.errors).toEqual([]);
+
+      const invalidDate = await validateUniqueness(
+        { expert: 'alice', country: 'CH', start_date: 'not a date' },
+        resource
+      );
+      expect(invalidDate.errors).toEqual([]);
     });
 
     it('does not flag non-overlapping periods', async () => {

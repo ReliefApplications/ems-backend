@@ -21,6 +21,8 @@ import {
   getNextId,
   validateUniqueness,
   UniquenessCheckResult,
+  UniquenessError,
+  logUniquenessError,
 } from '@utils/form';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { AppAbility } from '@security/defineUserAbility';
@@ -212,8 +214,19 @@ export default {
         );
       }
       if (uniquenessResult.errors.length) {
-        throw new GraphQLError(
-          uniquenessResult.errors.map((e) => e.errors.join(' ')).join(' ')
+        throw new UniquenessError(uniquenessResult.errors);
+      }
+      // Warn about (non-blocking) duplicates, unless the user chose to save
+      // anyway. Nothing is saved, so no incremental id is used. Unauthenticated
+      // users are not warned: they must not learn about the existing records
+      if (uniquenessResult.warnings.length && !args.skipValidation && user) {
+        return Object.assign(
+          new Record({
+            form: args.form,
+            data: args.data,
+            resource: form.resource ? form.resource : null,
+          }),
+          { validationErrors: uniquenessResult.warnings }
         );
       }
 
@@ -261,12 +274,6 @@ export default {
         },
         draft: args.draft || false,
       });
-      // Warn about (non-blocking) duplicates, unless the user chose to save anyway
-      if (uniquenessResult.warnings.length && !args.skipValidation) {
-        return Object.assign(record, {
-          validationErrors: uniquenessResult.warnings,
-        });
-      }
       // Update the createdBy property if we pass some owner data
       const ownership = getOwnership(form.fields, args.data);
       if (ownership) {
@@ -295,6 +302,10 @@ export default {
       }
       return record;
     } catch (err) {
+      if (err instanceof UniquenessError) {
+        logUniquenessError(err);
+        throw new GraphQLError(err.message);
+      }
       logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);

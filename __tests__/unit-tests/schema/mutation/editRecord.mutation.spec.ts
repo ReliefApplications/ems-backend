@@ -8,6 +8,7 @@ import { GraphQLError } from 'graphql';
 import { Context } from '@server/apollo/context';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { checkRecordValidation, getNextId } from '@utils/form';
+import { logger } from '@services/logger.service';
 
 jest.mock('@services/logger.service');
 
@@ -288,6 +289,9 @@ describe('editRecord Resolver', () => {
         context
       );
       await expect(result).rejects.toThrow(GraphQLError);
+      // The request did not fail: it must not be logged as an error
+      expect(logger.error).not.toHaveBeenCalled();
+      expect(logger.warn).toHaveBeenCalledTimes(1);
     });
 
     it('allows the update when the value is not a duplicate', async () => {
@@ -337,6 +341,77 @@ describe('editRecord Resolver', () => {
       );
       const updated = await Record.findById(record.id);
       expect(updated.data.org_code).toEqual('ABC');
+    });
+
+    it('detects a duplicate on a date field, sent as text by the client', async () => {
+      const fields = [
+        { name: 'name', type: 'text' },
+        { name: 'dob', type: 'date' },
+      ];
+      uniqueResource.fields = fields;
+      uniqueResource.uniquenessRules = [
+        { fields: ['name', 'dob'], severity: 'error' },
+      ];
+      await uniqueResource.save();
+      await Form.updateOne({ _id: uniqueForm._id }, { fields });
+      const createPerson = (name: string) =>
+        Record.create({
+          incrementalId: `2026-U${String(++nextIdCounter).padStart(8, '0')}`,
+          form: uniqueForm._id,
+          _form: { _id: uniqueForm._id, name: uniqueForm.name },
+          resource: uniqueResource._id,
+          // Dates are stored as dates, not as the text sent by the client
+          data: { name, dob: new Date('1990-05-01') },
+        });
+      await createPerson('John');
+      const jane = await createPerson('Jane');
+
+      const result = editRecord.resolve(
+        null,
+        buildArgs({ id: jane.id, data: { name: 'John', dob: '1990-05-01' } }),
+        context
+      );
+      await expect(result).rejects.toThrow(GraphQLError);
+      const stored = await Record.findById(jane._id);
+      expect(stored.data.name).toEqual('Jane');
+    });
+
+    it('should not revert to a version duplicating another record', async () => {
+      const version = await Version.create({
+        data: { org_code: 'ABC' },
+        createdBy: context.user._id,
+      });
+      await Record.updateOne(
+        { _id: record._id },
+        { $push: { versions: version._id } }
+      );
+
+      const result = editRecord.resolve(
+        null,
+        buildArgs({ id: record.id, version: version.id }),
+        context
+      );
+      await expect(result).rejects.toThrow(GraphQLError);
+      const stored = await Record.findById(record._id);
+      expect(stored.data.org_code).toEqual('XYZ');
+    });
+
+    it('should revert to a version which is not a duplicate', async () => {
+      const version = await Version.create({
+        data: { org_code: 'OLD' },
+        createdBy: context.user._id,
+      });
+      await Record.updateOne(
+        { _id: record._id },
+        { $push: { versions: version._id } }
+      );
+
+      const reverted = await editRecord.resolve(
+        null,
+        buildArgs({ id: record.id, version: version.id }),
+        context
+      );
+      expect(reverted.data.org_code).toEqual('OLD');
     });
 
     it('should save a draft with a duplicate value, without checking the rules', async () => {

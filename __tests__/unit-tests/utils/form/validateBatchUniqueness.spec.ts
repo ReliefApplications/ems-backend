@@ -44,6 +44,57 @@ describe('validateBatchUniqueness', () => {
     expect(results[2].errors).toHaveLength(1);
   });
 
+  it('compares texts regardless of case and extra whitespaces', async () => {
+    const resource = await Resource.create({
+      name: 'Organization',
+      fields: [{ name: 'name' }],
+      uniquenessRules: [{ fields: ['name'], severity: 'error' }],
+    });
+    const results = validateBatchUniqueness(
+      [
+        { name: 'Red Cross' },
+        { name: ' red  cross' },
+        { name: 'Red Crescent' },
+      ],
+      resource
+    );
+    expect(results[0].errors).toEqual([]);
+    expect(results[1].errors).toHaveLength(1);
+    expect(results[2].errors).toEqual([]);
+  });
+
+  it('treats a missing end date as an ongoing period', async () => {
+    const resource = await Resource.create({
+      name: 'Assignment',
+      fields: [
+        { name: 'expert' },
+        { name: 'start_date' },
+        { name: 'end_date' },
+      ],
+      uniquenessRules: [
+        {
+          fields: ['expert'],
+          severity: 'error',
+          dateIntersection: { startField: 'start_date', endField: 'end_date' },
+        },
+      ],
+    });
+    const results = validateBatchUniqueness(
+      [
+        { expert: 'alice', start_date: '2026-01-01' },
+        { expert: 'alice', start_date: '2027-01-01', end_date: '2027-02-01' },
+        { expert: 'alice', start_date: '2025-01-01', end_date: '2025-02-01' },
+        { expert: 'alice' },
+      ],
+      resource
+    );
+    expect(results[0].errors).toEqual([]);
+    expect(results[1].errors).toHaveLength(1);
+    expect(results[2].errors).toEqual([]);
+    // Without any date, the rule cannot be evaluated
+    expect(results[3].errors).toEqual([]);
+  });
+
   it('does not flag rows with different composite field values', async () => {
     const resource = await Resource.create({
       name: 'Organization',

@@ -14,13 +14,19 @@ import {
   getOwnership,
   checkRecordValidation,
   hasInaccessibleFields,
+  validateUniqueness,
+  validateBatchUniqueness,
+  UniquenessError,
+  logUniquenessError,
 } from '@utils/form';
 import { RecordType } from '../types';
+import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 import { getErrorMessage, getErrorStack } from '@utils/error';
+import { groupBy } from 'lodash';
 
 /** Interface for records with an error */
 interface RecordWithError extends Record {
@@ -37,6 +43,17 @@ type EditRecordsArgs = {
   template?: string | Types.ObjectId;
   lang?: string;
   skipValidation: boolean;
+};
+
+/** Edition of a record, prepared before being checked and applied */
+type RecordEdition = {
+  record: RecordWithError;
+  ability: AppAbility;
+  resource: Resource | null;
+  template: Form;
+  /** Data of the record, once updated */
+  data: any;
+  validationErrors: RecordWithError['validationErrors'];
 };
 
 /**
@@ -70,11 +87,14 @@ export default {
         path: 'form',
         model: 'Form',
       });
+
+      // Prepare the edition of each record the user can update
+      const editions: RecordEdition[] = [];
       for (const record of oldRecords) {
         const ability = await extendAbilityForRecords(user, record.form);
         const parentResource: Resource = await Resource.findById(
           record.form.resource,
-          'fields'
+          'fields uniquenessRules'
         );
         if (
           ability.can('update', record) &&
@@ -88,9 +108,14 @@ export default {
             args.lang
           );
           if (validationErrors.length && !args.skipValidation) {
-            records.push(
-              Object.assign(record, { validationErrors: validationErrors })
-            );
+            editions.push({
+              record,
+              ability,
+              resource: parentResource,
+              template: record.form,
+              data: record.data,
+              validationErrors,
+            });
           } else {
             const data = { ...args.data };
             let fields = record.form.fields;
@@ -110,48 +135,116 @@ export default {
               fields = template.fields;
             }
             transformRecord(data, fields);
-            const version = new Version({
-              createdAt: record.modifiedAt
-                ? record.modifiedAt
-                : record.createdAt,
-              data: record.data,
-              createdBy: user._id,
-            });
-            const update: any = {
+            editions.push({
+              record,
+              ability,
+              resource: parentResource,
+              template,
               data: { ...record.data, ...data },
-              lastUpdateForm: args.template,
-              _lastUpdateForm: {
-                _id: template._id,
-                name: template.name,
-              },
-              _lastUpdatedBy: {
-                user: {
-                  _id: user._id,
-                  name: user.name,
-                  username: user.username,
-                },
-              },
-              $push: { versions: version._id },
-            };
-            const ownership = getOwnership(record.form.fields, args.data); // Update with template during merge
-            Object.assign(
-              update,
-              ownership && { createdBy: { ...record.createdBy, ...ownership } }
-            );
-            const newRecord = await Record.findByIdAndUpdate(
-              record.id,
-              update,
-              {
-                new: true,
-              }
-            );
-            await version.save();
-            records.push(newRecord);
+              validationErrors: [],
+            });
           }
         }
       }
+
+      // Check uniqueness rules configured on the resources, if any, before
+      // updating anything: both against the other records of the resource, and
+      // between the edited records themselves
+      const t = context.i18next.t.bind(context.i18next);
+      const toCheck = editions.filter(
+        (x) => !x.validationErrors.length && !x.record.draft
+      );
+      const uniquenessErrors: string[] = [];
+      for (const resourceEditions of Object.values(
+        groupBy(toCheck, (x) => String(x.resource?._id))
+      )) {
+        const resource = resourceEditions[0].resource;
+        if (!resource?.uniquenessRules?.length) {
+          continue;
+        }
+        const batchResults = validateBatchUniqueness(
+          resourceEditions.map((x) => x.data),
+          resource,
+          t
+        );
+        const editedIds = resourceEditions.map((x) => x.record._id);
+        for (const [index, edition] of resourceEditions.entries()) {
+          const result = await validateUniqueness(
+            edition.data,
+            resource,
+            editedIds,
+            t,
+            edition.ability
+          );
+          const errors = [...batchResults[index].errors, ...result.errors];
+          if (errors.length) {
+            uniquenessErrors.push(
+              `${edition.record.incrementalId}: ${errors
+                .map((e) => e.errors.join(' '))
+                .join(' ')}`
+            );
+          }
+          if (!args.skipValidation) {
+            edition.validationErrors = [
+              ...batchResults[index].warnings,
+              ...result.warnings,
+            ];
+          }
+        }
+      }
+      if (uniquenessErrors.length) {
+        throw new UniquenessError(uniquenessErrors.join('\n'));
+      }
+
+      // Apply the editions
+      for (const edition of editions) {
+        const { record, template } = edition;
+        if (edition.validationErrors.length) {
+          records.push(
+            Object.assign(record, {
+              validationErrors: edition.validationErrors,
+            })
+          );
+          continue;
+        }
+        const version = new Version({
+          createdAt: record.modifiedAt ? record.modifiedAt : record.createdAt,
+          data: record.data,
+          createdBy: user._id,
+        });
+        const update: any = {
+          data: edition.data,
+          lastUpdateForm: args.template,
+          _lastUpdateForm: {
+            _id: template._id,
+            name: template.name,
+          },
+          _lastUpdatedBy: {
+            user: {
+              _id: user._id,
+              name: user.name,
+              username: user.username,
+            },
+          },
+          $push: { versions: version._id },
+        };
+        const ownership = getOwnership(record.form.fields, args.data); // Update with template during merge
+        Object.assign(
+          update,
+          ownership && { createdBy: { ...record.createdBy, ...ownership } }
+        );
+        const newRecord = await Record.findByIdAndUpdate(record.id, update, {
+          new: true,
+        });
+        await version.save();
+        records.push(newRecord);
+      }
       return records;
     } catch (err) {
+      if (err instanceof UniquenessError) {
+        logUniquenessError(err);
+        throw new GraphQLError(err.message);
+      }
       logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);

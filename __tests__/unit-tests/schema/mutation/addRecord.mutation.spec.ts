@@ -427,6 +427,9 @@ describe('addRecord Resolver', () => {
 
       const result = addRecord.resolve(null, args, context);
       await expect(result).rejects.toThrow(GraphQLError);
+      // The request did not fail: it must not be logged as an error
+      expect(logger.error).not.toHaveBeenCalled();
+      expect(logger.warn).toHaveBeenCalledTimes(1);
     });
 
     it('allows the record when the field value is not a duplicate', async () => {
@@ -450,6 +453,9 @@ describe('addRecord Resolver', () => {
 
       const record: any = await addRecord.resolve(null, args, context);
       expect(record.validationErrors).toHaveLength(1);
+      expect(record.validationErrors[0].severity).toEqual('warning');
+      // Nothing is saved, so no incremental id must be used
+      expect(getNextId).not.toHaveBeenCalled();
       const saved = await Record.findOne({
         resource: uniqueResource._id,
         'data.org_code': 'ABC',
@@ -472,6 +478,31 @@ describe('addRecord Resolver', () => {
       args.skipValidation = true;
 
       await addRecord.resolve(null, args, context);
+      const count = await Record.countDocuments({
+        resource: uniqueResource._id,
+        'data.org_code': 'ABC',
+      });
+      expect(count).toEqual(2);
+    });
+
+    it('saves the record of an unauthenticated user despite a warning-severity duplicate', async () => {
+      uniqueResource.uniquenessRules = [
+        { fields: ['org_code'], severity: 'warning' },
+      ];
+      await uniqueResource.save();
+      await Form.updateOne({ _id: formWithResource._id }, { isPublic: true });
+      await Record.create({
+        incrementalId: '1',
+        form: formWithResource._id,
+        _form: { _id: formWithResource._id, name: formWithResource.name },
+        resource: uniqueResource._id,
+        data: { org_code: 'ABC' },
+      });
+      context = { ...context, user: null } as unknown as Context;
+      args.captchaToken = 'captcha-token';
+
+      const record: any = await addRecord.resolve(null, args, context);
+      expect(record.validationErrors).toBeUndefined();
       const count = await Record.countDocuments({
         resource: uniqueResource._id,
         'data.org_code': 'ABC',
