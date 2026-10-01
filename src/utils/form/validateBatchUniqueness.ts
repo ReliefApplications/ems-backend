@@ -4,14 +4,12 @@ import {
   UniquenessCheckResult,
   UniquenessRule,
   UniquenessViolation,
-  defaultMessage,
   getRange,
-  interpolateMessage,
+  getViolationMessage,
   isEmptyValue,
   matchesCondition,
   normalizeValue,
   rangesOverlap,
-  renderScope,
 } from './validateUniqueness';
 
 /**
@@ -22,21 +20,17 @@ import {
  * @param row the row's data, used to render the `{scope}` message token
  * @param matchCount number of rows in the batch sharing the same scope, used for the `{matchCount}` message token
  * @param t optional translator used to localize default violation messages
+ * @param locale optional locale of the user, used to pick the translation of custom violation messages
  */
 const pushViolation = (
   result: UniquenessCheckResult,
   rule: UniquenessRule,
   row: any,
   matchCount: number,
-  t?: Translator
+  t?: Translator,
+  locale?: string
 ) => {
-  const message = rule.message
-    ? interpolateMessage(rule.message, {
-        fields: rule.fields.join(', '),
-        scope: renderScope(rule, row, t),
-        matchCount,
-      })
-    : defaultMessage(rule, t);
+  const message = getViolationMessage(rule, row, matchCount, t, locale);
   const violation: UniquenessViolation = {
     question: rule.name || rule.fields.join(' + '),
     errors: [message],
@@ -90,12 +84,14 @@ const groupByScope = (
  * @param rows row data of the batch being imported
  * @param resource the resource the rows belong to, or null if none
  * @param t optional translator used to localize default violation messages
+ * @param locale optional locale of the user, used to pick the translation of custom violation messages
  * @returns one result per row, in the same order as `rows`
  */
 export const validateBatchUniqueness = (
   rows: any[],
   resource: Resource | null,
-  t?: Translator
+  t?: Translator,
+  locale?: string
 ): UniquenessCheckResult[] => {
   const results: UniquenessCheckResult[] = rows.map(() => ({
     errors: [],
@@ -135,7 +131,8 @@ export const validateBatchUniqueness = (
               rule,
               rows[current],
               indices.length,
-              t
+              t,
+              locale
             );
           }
         }
@@ -150,7 +147,8 @@ export const validateBatchUniqueness = (
             rule,
             rows[current],
             indices.length,
-            t
+            t,
+            locale
           );
         }
       }

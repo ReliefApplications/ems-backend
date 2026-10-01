@@ -95,6 +95,32 @@ describe('validateBatchUniqueness', () => {
     expect(results[3].errors).toEqual([]);
   });
 
+  it('uses the translation of a custom message in the language of the user', async () => {
+    const resource = await Resource.create({
+      name: 'Organization',
+      fields: [{ name: 'org_code' }],
+      uniquenessRules: [
+        {
+          fields: ['org_code'],
+          severity: 'error',
+          message: 'Code already used',
+          messageTranslations: {
+            en: 'Code already used',
+            fr: 'Code déjà utilisé',
+          },
+        },
+      ],
+    });
+    const rows = [{ org_code: 'ABC' }, { org_code: 'ABC' }];
+    expect(
+      validateBatchUniqueness(rows, resource, undefined, 'fr')[1].errors[0]
+        .errors
+    ).toEqual(['Code déjà utilisé']);
+    expect(validateBatchUniqueness(rows, resource)[1].errors[0].errors).toEqual(
+      ['Code already used']
+    );
+  });
+
   it('does not flag rows with different composite field values', async () => {
     const resource = await Resource.create({
       name: 'Organization',

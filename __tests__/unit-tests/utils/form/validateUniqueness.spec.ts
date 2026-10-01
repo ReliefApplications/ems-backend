@@ -700,6 +700,92 @@ describe('validateUniqueness', () => {
     });
   });
 
+  describe('translated custom message', () => {
+    let resourceCounter = 0;
+
+    /**
+     * Creates a resource with a rule whose message is translated, and a record
+     * violating it.
+     *
+     * @param rule Options of the rule
+     * @returns the created resource
+     */
+    const buildResource = async (rule: any) => {
+      const resource = await Resource.create({
+        // Resource names are unique
+        name: `Organization ${++resourceCounter}`,
+        fields: [{ name: 'org_code' }],
+        uniquenessRules: [{ fields: ['org_code'], severity: 'error', ...rule }],
+      });
+      await Record.create({
+        incrementalId: '1',
+        form: resource._id,
+        _form: { _id: resource._id, name: resource.name },
+        resource: resource._id,
+        data: { org_code: 'ABC' },
+      });
+      return resource;
+    };
+
+    /**
+     * Gets the message of the violation, for a user of the given locale.
+     *
+     * @param resource Resource to check the rules of
+     * @param locale Locale of the user
+     * @returns message displayed to the user
+     */
+    const getMessage = async (resource: Resource, locale?: string) => {
+      const result = await validateUniqueness(
+        { org_code: 'ABC' },
+        resource,
+        undefined,
+        undefined,
+        locale
+      );
+      return result.errors[0].errors[0];
+    };
+
+    it('uses the translation of the message in the language of the user', async () => {
+      const resource = await buildResource({
+        message: 'Code already used',
+        messageTranslations: {
+          en: 'Code already used',
+          fr: 'Code déjà utilisé ({matchCount})',
+        },
+      });
+      expect(await getMessage(resource, 'fr')).toEqual('Code déjà utilisé (1)');
+      expect(await getMessage(resource, 'en')).toEqual('Code already used');
+    });
+
+    it('falls back to another translation when the language of the user has none', async () => {
+      const resource = await buildResource({
+        message: 'Code déjà utilisé',
+        messageTranslations: { en: 'Code already used', fr: 'Code déjà utilisé' },
+      });
+      expect(await getMessage(resource, 'uk')).toEqual('Code already used');
+      expect(await getMessage(resource)).toEqual('Code already used');
+    });
+
+    it('uses the message when it has no translation', async () => {
+      const resource = await buildResource({ message: 'Code already used' });
+      expect(await getMessage(resource, 'fr')).toEqual('Code already used');
+      const emptyTranslations = await buildResource({
+        message: 'Code already used',
+        messageTranslations: {},
+      });
+      expect(await getMessage(emptyTranslations, 'fr')).toEqual(
+        'Code already used'
+      );
+    });
+
+    it('uses the default message when the rule has no message at all', async () => {
+      const resource = await buildResource({});
+      expect(await getMessage(resource, 'fr')).toEqual(
+        'A record with the same org_code already exists.'
+      );
+    });
+  });
+
   describe('custom message token interpolation', () => {
     it('replaces {fields}, {scope} and {matchCount} in a custom message', async () => {
       const resource = await Resource.create({

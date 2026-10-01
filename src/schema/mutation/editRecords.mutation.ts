@@ -161,7 +161,8 @@ export default {
         const batchResults = validateBatchUniqueness(
           resourceEditions.map((x) => x.data),
           resource,
-          t
+          t,
+          context.locale
         );
         const editedIds = resourceEditions.map((x) => x.record._id);
         for (const [index, edition] of resourceEditions.entries()) {
@@ -169,7 +170,8 @@ export default {
             edition.data,
             resource,
             editedIds,
-            t
+            t,
+            context.locale
           );
           const errors = [...batchResults[index].errors, ...result.errors];
           if (errors.length) {

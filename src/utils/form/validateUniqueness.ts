@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { castArray, escapeRegExp } from 'lodash';
 import { GraphQLError } from 'graphql';
 import { logger } from '@services/logger.service';
+import { resolveLocalizedString } from '@utils/i18n/resolveLocalizedString';
 
 /** Translator function, as exposed by i18next (context.i18next.t / req.t) */
 export type Translator = (key: string, options?: Record<string, any>) => string;
@@ -34,6 +35,8 @@ export interface UniquenessRule {
   fields: string[];
   severity: 'error' | 'warning';
   message?: string;
+  /** Translations of the message, by locale. The message is used when there is none. */
+  messageTranslations?: Record<string, string>;
   /** Whether the rule is enforced. Defaults to true; set to false to keep a rule without deleting it. */
   active?: boolean;
   condition?: UniquenessCondition[];
@@ -308,6 +311,36 @@ export const interpolateMessage = (
     .replace(/{matchCount}/g, String(tokens.matchCount));
 
 /**
+ * Gets the message to display to the user for a violated rule: the custom
+ * message of the rule, in the language of the user when it is translated, or
+ * the default message when the rule has none.
+ *
+ * @param rule the violated rule
+ * @param data the record data, used to render the `{scope}` message token
+ * @param matchCount number of matching records, used for the `{matchCount}` message token
+ * @param t optional translator used to localize default violation messages
+ * @param locale optional locale of the user, used to pick the translation of a custom message
+ * @returns the message to display
+ */
+export const getViolationMessage = (
+  rule: UniquenessRule,
+  data: any,
+  matchCount: number,
+  t?: Translator,
+  locale?: string
+): string => {
+  const template =
+    resolveLocalizedString(rule.messageTranslations, locale) || rule.message;
+  return template
+    ? interpolateMessage(template, {
+        fields: rule.fields.join(', '),
+        scope: renderScope(rule, data, t),
+        matchCount,
+      })
+    : defaultMessage(rule, t);
+};
+
+/**
  * Checks the uniqueness rules configured on a resource against the given
  * record data, and reports any duplicate found among existing records of
  * that resource.
@@ -325,13 +358,15 @@ export const interpolateMessage = (
  * @param resource the resource the record belongs to, or null if none
  * @param excludedRecordIds id(s) of the record(s) being edited, excluded from the duplicate search
  * @param t optional translator used to localize default violation messages
+ * @param locale optional locale of the user, used to pick the translation of custom violation messages
  * @returns errors (blocking) and warnings (non-blocking) violations found
  */
 export const validateUniqueness = async (
   data: any,
   resource: Resource | null,
   excludedRecordIds?: string | Types.ObjectId | (string | Types.ObjectId)[],
-  t?: Translator
+  t?: Translator,
+  locale?: string
 ): Promise<UniquenessCheckResult> => {
   const result: UniquenessCheckResult = { errors: [], warnings: [] };
   const rules: UniquenessRule[] = resource?.uniquenessRules || [];
@@ -381,13 +416,7 @@ export const validateUniqueness = async (
     }
 
     if (matchCount > 0) {
-      const message = rule.message
-        ? interpolateMessage(rule.message, {
-            fields: rule.fields.join(', '),
-            scope: renderScope(rule, data, t),
-            matchCount,
-          })
-        : defaultMessage(rule, t);
+      const message = getViolationMessage(rule, data, matchCount, t, locale);
       const violation: UniquenessViolation = {
         question: rule.name || rule.fields.join(' + '),
         errors: [message],

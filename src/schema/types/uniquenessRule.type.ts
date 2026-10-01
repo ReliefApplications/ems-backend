@@ -41,6 +41,7 @@ export const UniquenessRuleType = new GraphQLObjectType({
     fields: { type: new GraphQLList(GraphQLString) },
     severity: { type: GraphQLString },
     message: { type: GraphQLString },
+    messageTranslations: { type: GraphQLJSON },
     active: { type: GraphQLBoolean },
     condition: { type: new GraphQLList(UniquenessConditionType) },
     dateIntersection: {

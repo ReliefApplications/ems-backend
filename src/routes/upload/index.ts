@@ -143,10 +143,21 @@ export async function insertRecords(
   // Check uniqueness rules configured on the resource, if any: both within
   // the file itself, and against already-persisted records.
   const rowsData = dataSets.map((d) => d.data);
-  const batchResults = validateBatchUniqueness(rowsData, resource, t);
+  const batchResults = validateBatchUniqueness(
+    rowsData,
+    resource,
+    t,
+    context.locale
+  );
   const rowResults = await Promise.all(
     rowsData.map(async (data, index) => {
-      const dbResult = await validateUniqueness(data, resource, undefined, t);
+      const dbResult = await validateUniqueness(
+        data,
+        resource,
+        undefined,
+        t,
+        context.locale
+      );
       return {
         errors: [...batchResults[index].errors, ...dbResult.errors],
         warnings: [...batchResults[index].warnings, ...dbResult.warnings],

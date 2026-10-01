@@ -47,6 +47,7 @@ export type UniquenessRuleArgs = {
   fields: string[];
   severity: 'error' | 'warning';
   message?: string;
+  messageTranslations?: Record<string, string>;
   active?: boolean;
   condition?: UniquenessConditionArgs[];
   dateIntersection?: UniquenessDateIntersectionArgs;
@@ -60,6 +61,7 @@ export const UniquenessRuleInputType = new GraphQLInputObjectType({
     fields: { type: new GraphQLNonNull(new GraphQLList(GraphQLString)) },
     severity: { type: GraphQLString, defaultValue: 'error' },
     message: { type: GraphQLString },
+    messageTranslations: { type: GraphQLJSON },
     active: { type: GraphQLBoolean, defaultValue: true },
     condition: { type: new GraphQLList(UniquenessConditionInputType) },
     dateIntersection: { type: UniquenessDateIntersectionInputType },

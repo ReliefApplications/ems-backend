@@ -42,6 +42,8 @@ export interface Resource extends Document {
     fields: string[];
     severity: 'error' | 'warning';
     message?: string;
+    // Translations of the message, by locale
+    messageTranslations?: { [locale: string]: string };
     // Whether the rule is enforced. Defaults to true; set to false to
     // keep a rule around without deleting it.
     active?: boolean;
@@ -180,6 +182,10 @@ const resourceSchema = new Schema<Resource>(
           default: 'error',
         },
         message: String,
+        messageTranslations: {
+          type: mongoose.Schema.Types.Mixed,
+          default: undefined,
+        },
         active: {
           type: Boolean,
           default: true,

@@ -288,7 +288,8 @@ export default {
           newData,
           parentResource,
           oldRecord._id,
-          context.i18next.t.bind(context.i18next)
+          context.i18next.t.bind(context.i18next),
+          context.locale
         );
         if (uniquenessResult.errors.length) {
           throw new UniquenessError(uniquenessResult.errors);
