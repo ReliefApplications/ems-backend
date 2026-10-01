@@ -13,6 +13,7 @@ export type Metadata = {
   filter?: { defaultOperator?: string; operators: string[] };
   canSee?: boolean;
   canUpdate?: boolean;
+  canDeleteFiles?: boolean;
   multiSelect?: boolean;
   filterable?: boolean;
   options?: { text: string; value: any }[];
@@ -245,6 +246,19 @@ export const getMetaData = async (
     });
   }
 
+  // Draft status, so permissions and filters can target draft records
+  metaData.push({
+    automated: true,
+    name: 'draft',
+    type: 'boolean',
+    editor: 'boolean',
+    filter: {
+      defaultOperator: filterOperator.EQUAL_TO,
+      operators: [filterOperator.EQUAL_TO, filterOperator.NOT_EQUAL_TO],
+    },
+    canUpdate: false,
+  });
+
   /**
    * Generic field metadata
    *
@@ -325,6 +339,8 @@ export const getMetaData = async (
           defaultOperator: filterOperator.IS_NOT_NULL,
           operators: [filterOperator.IS_NULL, filterOperator.IS_NOT_NULL],
         };
+        // Needed to resolve the files deletion permission
+        fieldMeta._field = field;
         break;
       }
       case 'users': {

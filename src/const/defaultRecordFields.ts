@@ -110,6 +110,12 @@ export const defaultRecordFields: {
     selectable: true,
   },
   {
+    field: 'draft',
+    type: GraphQLBoolean,
+    filterType: GraphQLBoolean,
+    selectable: true,
+  },
+  {
     field: 'createdBy',
     type: UserType,
     filterType: GraphQLID,
@@ -176,6 +182,7 @@ export const defaultMetaFields: { field: string; type: GraphQLType }[] = [
   { field: 'lastUpdateForm', type: GraphQLJSON },
   { field: 'createdAt', type: GraphQLJSON },
   { field: 'modifiedAt', type: GraphQLJSON },
+  { field: 'draft', type: GraphQLJSON },
   { field: 'createdBy', type: UserMetaType },
   { field: 'lastUpdatedBy', type: UserMetaType },
   { field: 'canUpdate', type: GraphQLJSON },

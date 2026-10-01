@@ -139,6 +139,13 @@
 				"emailDistributionListNameExist": "Email distribution list title already exist"
 			}
 		},
+		"emailNotification": {
+			"add": {
+				"errors": {
+					"invalidCron": "The cron expression used in the scheduler is invalid"
+				}
+			}
+		},
 		"form": {
 			"add": {
 				"errors": {
@@ -213,6 +220,12 @@
 			}
 		},
 		"record": {
+			"add": {
+				"errors": {
+					"invalidCloneRecordId": "The record to clone must be a valid record id.",
+					"invalidCloneRecordResource": "The record to clone must belong to the same resource as the new record."
+				}
+			},
 			"convert": {
 				"errors": {
 					"invalidConversion": "Cannot convert this record to this target form type."
@@ -220,6 +233,7 @@
 			},
 			"edit": {
 				"errors": {
+					"cannotDemoteToDraft": "A submitted record cannot be turned into a draft.",
 					"invalidArguments": "Either data or version must be provided.",
 					"wrongTemplateProvided": "Template must sharing the same resource as the parent form of the edited record."
 				}
@@ -252,6 +266,7 @@
 					"field": {
 						"missingReadPermissionOnResource": "Please provide permission to read or create records before setting visible fields.",
 						"missingWritePermissionOnResource": "Please provide permission to update or create records before setting editable fields.",
+						"notEditable": "Please set field as editable before allowing this role to delete its files.",
 						"notFound": "Field does not exist.",
 						"notVisible": "Please set field as visible before setting it as editable."
 					},

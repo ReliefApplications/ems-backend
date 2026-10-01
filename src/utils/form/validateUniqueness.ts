@@ -270,6 +270,8 @@ export const validateUniqueness = async (
     const query: Record<string, any> = {
       resource: resource._id,
       archived: { $ne: true },
+      // Drafts are not submitted yet, so they cannot be duplicates
+      draft: { $ne: true },
       ...conditionToMongoFilter(rule.condition),
     };
     if (currentRecordId) {

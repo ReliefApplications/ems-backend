@@ -36,6 +36,8 @@ export interface Dataset {
   sendAsAttachment: boolean;
   individualEmail: boolean;
   individualEmailFields?: any[];
+  individualEmailToDistributionList?: boolean;
+  csFilter?: any;
   navigateToPage: boolean;
   navigateSettings: {
     field: string;
@@ -63,6 +65,12 @@ export interface EmailNotificationFile {
   modifiedDate?: string;
 }
 
+/** Model for schedule response */
+export interface EmailNotificationSchedule {
+  scheduleEnabled: boolean;
+  cronValue: string;
+}
+
 /** Model for email File attachement response */
 export interface EmailNotificationAttachment {
   sendAsAttachment: boolean;
@@ -73,10 +81,11 @@ export interface EmailNotification extends Document {
   kind: 'EmailNotification';
   name: string;
   description: string;
-  schedule: string;
+  schedule: EmailNotificationSchedule;
   applicationId: mongoose.Schema.Types.ObjectId;
   createdBy: { name: string; email: string };
   notificationType: string;
+  language?: string;
   datasets: Dataset[];
   emailDistributionList: mongoose.Schema.Types.ObjectId | EmailDistributionList; // Reference to EmailDistributionList
   subscriptionList: string[];
@@ -110,8 +119,12 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
       enum: Object.values(notificationsType),
       required: true,
     },
-    schedule: {
+    language: {
       type: String,
+    },
+    schedule: {
+      scheduleEnabled: { type: mongoose.Schema.Types.Boolean },
+      cronValue: String,
     },
     applicationId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -127,12 +140,14 @@ export const emailNotificationSchema = new Schema<EmailNotification>(
           filter: { type: mongoose.Schema.Types.Mixed },
         },
         individualEmailFields: [{ type: mongoose.Schema.Types.Mixed }],
+        csFilter: { type: mongoose.Schema.Types.Mixed },
         pageSize: { type: mongoose.Schema.Types.Number },
         tableStyle: { type: mongoose.Schema.Types.Mixed },
         blockType: { type: mongoose.Schema.Types.Mixed },
         textStyle: { type: mongoose.Schema.Types.Mixed },
         sendAsAttachment: { type: Boolean, default: false },
         individualEmail: { type: Boolean, default: false },
+        individualEmailToDistributionList: { type: Boolean, default: false },
         navigateToPage: {
           type: Boolean,
           default: false,

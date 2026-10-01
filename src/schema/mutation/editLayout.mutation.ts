@@ -57,6 +57,10 @@ export default {
           args.layout.nameTranslations;
         resource.layouts.id(args.id).query = args.layout.query;
         resource.layouts.id(args.id).display = args.layout.display;
+        if (args.layout.recordVisibility !== undefined) {
+          resource.layouts.id(args.id).recordVisibility =
+            args.layout.recordVisibility;
+        }
         await resource.save();
         return resource.layouts.id(args.id);
       } else {
@@ -75,6 +79,10 @@ export default {
           args.layout.nameTranslations;
         form.layouts.id(args.id).query = args.layout.query;
         form.layouts.id(args.id).display = args.layout.display;
+        if (args.layout.recordVisibility !== undefined) {
+          form.layouts.id(args.id).recordVisibility =
+            args.layout.recordVisibility;
+        }
         await form.save();
         return form.layouts.id(args.id);
       }

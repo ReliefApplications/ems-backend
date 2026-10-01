@@ -12,8 +12,8 @@ import { Types } from 'mongoose';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { AppAbility } from '@security/defineUserAbility';
 import { EmailNotificationReturn } from '@schema/types/emailNotification.type';
-import { cloneDeep } from 'lodash';
 import { getErrorMessage, getErrorStack } from '@utils/error';
+import { isValidCronExpression } from '@utils/validators';
 
 /**
  * Interface for the arguments required to update a custom notification.
@@ -54,36 +54,22 @@ export default {
       //   }
       // }
       if (args.notification) {
-        // Can't do this type of type check on type level
-        let allSeparate = false;
-        // Only count as a dataset if it has a resource
-        if (args.notification.datasets) {
-          const datasetsCount =
-            cloneDeep(args.notification.datasets)?.filter(
-              ({ resource, reference }) => resource || reference
-            ).length ?? 0;
-          // Individual email count
-          let individualCount = 0;
-          for (const dataset of args.notification.datasets) {
-            if (
-              (dataset.resource || dataset.reference) &&
-              dataset.individualEmail
-            ) {
-              individualCount += 1;
-            }
-          }
-          if (datasetsCount === individualCount) {
-            allSeparate = true;
+        // A notification needs at least one recipient source: a distribution
+        // list, or at least one send-separate dataset (which supplies its own
+        // per-row recipients).
+        let individualCount = 0;
+        for (const dataset of args.notification.datasets ?? []) {
+          if (
+            (dataset.resource || dataset.reference) &&
+            dataset.individualEmail
+          ) {
+            individualCount += 1;
           }
         }
 
         if (
           !(args.notification.isDraft || args.notification.isDeleted === 1) &&
-          // (!args.notification.emailDistributionList.name ||
-          //   (!args.notification.emailDistributionList.to.resource &&
-          //     args.notification.emailDistributionList.to.inputEmails.length ===
-          //       0)) &&
-          !allSeparate &&
+          individualCount === 0 &&
           !args.notification.emailDistributionList
         ) {
           throw new GraphQLError(
@@ -104,6 +90,7 @@ export default {
           },
           notificationType: args.notification.notificationType,
           applicationId: args.notification.applicationId,
+          language: args.notification.language,
           datasets: args.notification.datasets,
           emailLayout: args.notification.emailLayout,
           emailDistributionList: args.notification.emailDistributionList,
@@ -126,6 +113,17 @@ export default {
           );
         }
 
+        const schedule = args.notification.schedule;
+        if (schedule?.scheduleEnabled) {
+          const cron = schedule.cronValue?.trim?.() ?? '';
+          if (!cron || !isValidCronExpression(cron)) {
+            throw new GraphQLError(
+              context.i18next.t(
+                'mutations.emailNotification.add.errors.invalidCron'
+              )
+            );
+          }
+        }
         const updatedData = await EmailNotification.findByIdAndUpdate(
           args.id,
           { $set: updateFields },

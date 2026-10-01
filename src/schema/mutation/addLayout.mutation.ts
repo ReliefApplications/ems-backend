@@ -9,6 +9,7 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 import { getErrorMessage, getErrorStack } from '@utils/error';
+import { recordVisibility } from '@const/enumTypes';
 
 /** Arguments for the addLayout mutation */
 type AddLayoutArgs = {
@@ -40,6 +41,11 @@ export default {
       }
       const user = context.user;
       const ability: AppAbility = user.ability;
+      const layout = {
+        ...args.layout,
+        recordVisibility:
+          args.layout.recordVisibility ?? recordVisibility.submitted,
+      };
       // Edition of a resource
       if (args.resource) {
         const filters = Resource.find(accessibleBy(ability, 'update').Resource)
@@ -51,7 +57,7 @@ export default {
             context.i18next.t('common.errors.permissionNotGranted')
           );
         }
-        resource.layouts.push(args.layout);
+        resource.layouts.push(layout);
         await resource.save();
         return resource.layouts.pop();
       } else {
@@ -65,7 +71,7 @@ export default {
             context.i18next.t('common.errors.permissionNotGranted')
           );
         }
-        form.layouts.push(args.layout);
+        form.layouts.push(layout);
         await form.save();
         return form.layouts.pop();
       }

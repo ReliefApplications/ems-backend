@@ -14,6 +14,7 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 import { getErrorMessage, getErrorStack } from '@utils/error';
+import { getDraftRecordFilter } from '@utils/filter';
 
 /** Arguments for the publish mutation */
 type PublishArgs = {
@@ -47,7 +48,7 @@ export default {
         );
       }
 
-      const records = await Record.find({})
+      const records = await Record.find(getDraftRecordFilter())
         .where('_id')
         .in(args.ids)
         .select('data');

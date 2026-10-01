@@ -849,6 +849,131 @@ describe('CalculatedFieldService', () => {
     });
   });
 
+  describe('calc.translate (locale-based field translation)', () => {
+    const resource = {
+      name: 'tasks',
+      fields: [
+        { name: 'title' },
+        { name: 'title_fr', translateField: 'title', translateTo: 'fr' },
+        { name: 'code' },
+      ],
+    };
+
+    it('falls back to the source field when it has no associated translation field at all', async () => {
+      const pipeline = await new CalculatedFieldService(
+        resource,
+        { locale: 'fr' } as any,
+        'UTC'
+      ).build("{{calc.translate('code')}}", 'result');
+
+      expect(pipeline).toHaveLength(1);
+      expect((pipeline[0] as any).$addFields['data.result']).toBe(
+        '$data.code'
+      );
+    });
+
+    it('uses the request locale to find the associated field, with fallback to the source value', async () => {
+      const pipeline = await new CalculatedFieldService(
+        resource,
+        { locale: 'fr' } as any,
+        'UTC'
+      ).build("{{calc.translate('title')}}", 'result');
+
+      expect(pipeline).toHaveLength(1);
+      expect((pipeline[0] as any).$addFields['data.result']).toEqual({
+        $cond: {
+          if: { $in: [{ $ifNull: ['$data.title_fr', null] }, [null, '']] },
+          then: '$data.title',
+          else: { $ifNull: ['$data.title_fr', null] },
+        },
+      });
+    });
+
+    it('falls back to the source field when no sibling matches the request locale', async () => {
+      const pipeline = await new CalculatedFieldService(
+        resource,
+        { locale: 'en' } as any,
+        'UTC'
+      ).build("{{calc.translate('title')}}", 'result');
+
+      expect(pipeline).toHaveLength(1);
+      expect((pipeline[0] as any).$addFields['data.result']).toBe(
+        '$data.title'
+      );
+    });
+
+    it('uses an explicit locale argument instead of the request locale', async () => {
+      const pipeline = await new CalculatedFieldService(
+        resource,
+        { locale: 'en' } as any,
+        'UTC'
+      ).build("{{calc.translate('title'; 'fr')}}", 'result');
+
+      expect(pipeline).toHaveLength(1);
+      expect((pipeline[0] as any).$addFields['data.result']).toEqual({
+        $cond: {
+          if: { $in: [{ $ifNull: ['$data.title_fr', null] }, [null, '']] },
+          then: '$data.title',
+          else: { $ifNull: ['$data.title_fr', null] },
+        },
+      });
+    });
+
+    it('falls back to the source field when there is no request locale and no explicit locale', async () => {
+      const pipeline = await new CalculatedFieldService(
+        resource,
+        null,
+        'UTC'
+      ).build("{{calc.translate('title')}}", 'result');
+
+      expect(pipeline).toHaveLength(1);
+      expect((pipeline[0] as any).$addFields['data.result']).toBe(
+        '$data.title'
+      );
+    });
+
+    it('composes inside calc.concat by emitting an aux dependency first', async () => {
+      const pipeline = await new CalculatedFieldService(
+        resource,
+        { locale: 'fr' } as any,
+        'UTC'
+      ).build(
+        "{{calc.concat({{calc.translate('title')}}; ' ('; {{data.code}}; ')')}}",
+        'label'
+      );
+
+      expect(pipeline).toHaveLength(2);
+      expect(Object.keys((pipeline[0] as any).$addFields)[0]).toBe(
+        'aux.label-concat0'
+      );
+      expect((pipeline[0] as any).$addFields['aux.label-concat0']).toEqual({
+        $cond: {
+          if: { $in: [{ $ifNull: ['$data.title_fr', null] }, [null, '']] },
+          then: '$data.title',
+          else: { $ifNull: ['$data.title_fr', null] },
+        },
+      });
+    });
+
+    it('throws when called against an unknown field', async () => {
+      await expect(
+        new CalculatedFieldService(resource, null, 'UTC').build(
+          "{{calc.translate('unknownField')}}",
+          'result'
+        )
+      ).rejects.toThrow(/unknown field/);
+    });
+
+    it('rejects an unquoted argument at parse time', async () => {
+      await expect(
+        new CalculatedFieldService(resource, null, 'UTC').build(
+          '{{calc.translate(title)}}',
+          'result'
+        )
+      ).rejects.toThrow(/expected a quoted string/);
+    });
+  });
+
   describe('calc.related* (related-resource aggregations)', () => {
     /** The resource holding the calculated field */
     const organization = {
@@ -927,6 +1052,7 @@ describe('CalculatedFieldService', () => {
                 $match: {
                   resource: 'teamResourceId',
                   archived: { $ne: true },
+                  draft: { $ne: true },
                 },
               },
               { $count: 'v' },
@@ -952,7 +1078,11 @@ describe('CalculatedFieldService', () => {
       const lookup = (pipeline[1] as any).$lookup;
       expect(lookup.pipeline).toEqual([
         {
-          $match: { resource: 'teamResourceId', archived: { $ne: true } },
+          $match: {
+            resource: 'teamResourceId',
+            archived: { $ne: true },
+            draft: { $ne: true },
+          },
         },
         { $sort: { 'data.graded_on': -1, _id: -1 } },
         { $limit: 1 },
@@ -990,7 +1120,11 @@ describe('CalculatedFieldService', () => {
       );
       expect((pipeline[1] as any).$lookup.pipeline).toEqual([
         {
-          $match: { resource: 'teamResourceId', archived: { $ne: true } },
+          $match: {
+            resource: 'teamResourceId',
+            archived: { $ne: true },
+            draft: { $ne: true },
+          },
         },
         { $limit: 1 },
         { $project: { _id: 1 } },
@@ -1031,6 +1165,7 @@ describe('CalculatedFieldService', () => {
       expect(match.$and[0]).toEqual({
         resource: 'teamResourceId',
         archived: { $ne: true },
+        draft: { $ne: true },
       });
       expect(JSON.stringify(match.$and[1])).toContain('data.active');
     });
@@ -1058,7 +1193,13 @@ describe('CalculatedFieldService', () => {
         { fields: 1 }
       );
       expect((pipeline[1] as any).$lookup.pipeline).toEqual([
-        { $match: { resource: 'teamResourceId', archived: { $ne: true } } },
+        {
+          $match: {
+            resource: 'teamResourceId',
+            archived: { $ne: true },
+            draft: { $ne: true },
+          },
+        },
         {
           $addFields: {
             'data.country_id': {
@@ -1092,7 +1233,11 @@ describe('CalculatedFieldService', () => {
       );
       const sub = (pipeline[1] as any).$lookup.pipeline;
       expect(sub[0]).toEqual({
-        $match: { resource: 'teamResourceId', archived: { $ne: true } },
+        $match: {
+          resource: 'teamResourceId',
+          archived: { $ne: true },
+          draft: { $ne: true },
+        },
       });
       // The child's calculated field is computed before the filter reads it
       const calculatedIndex = sub.findIndex(
@@ -1214,7 +1359,11 @@ describe('CalculatedFieldService', () => {
           as: 'aux.latest_grade_related',
           pipeline: [
             {
-              $match: { resource: 'gradeResourceId', archived: { $ne: true } },
+              $match: {
+                resource: 'gradeResourceId',
+                archived: { $ne: true },
+                draft: { $ne: true },
+              },
             },
             { $sort: { 'data.grading_date': -1, _id: -1 } },
             { $limit: 1 },

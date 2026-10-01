@@ -61,7 +61,15 @@ type SimpleFieldPermissionChange = {
 type FieldPermissionChange = {
   canSee?: SimpleFieldPermissionChange;
   canUpdate?: SimpleFieldPermissionChange;
+  canDeleteFiles?: SimpleFieldPermissionChange;
 };
+
+/** Order in which field permissions are processed: each one requires the previous */
+const FIELD_PERMISSIONS_ORDER = [
+  'canSee',
+  'canUpdate',
+  'canDeleteFiles',
+] as const;
 
 /** Simple fields auto-grant permission change type */
 type SimpleFieldsAutoGrantChange = {
@@ -135,6 +143,7 @@ const addFieldPermission = (
       [`fields.${fieldIndex}.permissions`]: {
         canSee: [],
         canUpdate: [],
+        canDeleteFiles: [],
       },
     };
     if (update.$set) Object.assign(update.$set, newPermission);
@@ -155,7 +164,7 @@ const addFieldPermission = (
  * @param fieldName field name
  * @param role current role to edit permissions of
  * @param permission field permission to add
- * @param pendingCanSee canSee grants queued by the same request ( `${field}:${role}` )
+ * @param pending grants queued by the same request ( `${permission}:${field}:${role}` )
  */
 const checkFieldPermission = (
   context: any,
@@ -164,7 +173,7 @@ const checkFieldPermission = (
   fieldName: string,
   role: string,
   permission: FieldPermission,
-  pendingCanSee: Set<string> = new Set()
+  pending: Set<string> = new Set()
 ) => {
   const field = fields.find((r) => r.name === fieldName);
   if (!field) {
@@ -172,6 +181,17 @@ const checkFieldPermission = (
       context.i18next.t('mutations.resource.edit.errors.field.notFound')
     );
   }
+  /**
+   * Whether the role holds ( or is being granted ) a permission on the field
+   *
+   * @param required permission to check
+   * @returns true if granted or pending
+   */
+  const hasFieldPermission = (required: FieldPermission) =>
+    pending.has(`${required}:${fieldName}:${role}`) ||
+    !!get(field, `permissions.${required}`, []).find(
+      (p: any) => String(p) === String(role)
+    );
   switch (permission) {
     case 'canSee': {
       if (
@@ -199,14 +219,30 @@ const checkFieldPermission = (
           )
         );
       }
+      if (!hasFieldPermission('canSee')) {
+        throw new GraphQLError(
+          context.i18next.t('mutations.resource.edit.errors.field.notVisible')
+        );
+      }
+      break;
+    }
+    case 'canDeleteFiles': {
       if (
-        !pendingCanSee.has(`${fieldName}:${role}`) &&
-        !get(field, 'permissions.canSee', []).find(
-          (p: any) => String(p) === String(role)
+        !isRoleEligibleForFieldPermission(
+          resourcePermissions,
+          role,
+          'canDeleteFiles'
         )
       ) {
         throw new GraphQLError(
-          context.i18next.t('mutations.resource.edit.errors.field.notVisible')
+          context.i18next.t(
+            'mutations.resource.edit.errors.field.missingWritePermissionOnResource'
+          )
+        );
+      }
+      if (!hasFieldPermission('canUpdate')) {
+        throw new GraphQLError(
+          context.i18next.t('mutations.resource.edit.errors.field.notEditable')
         );
       }
       break;
@@ -380,18 +416,25 @@ const automateFieldsPermission = (
           (p) => p.role.equals(change.role)
         )
       ) {
-        // Add update permission to all fields.
+        // Add update ( and files deletion ) permission to all fields.
         resourceFields
           .map((f) => f.name)
-          .forEach((f) =>
+          .forEach((f) => {
             addFieldPermission(
               update,
               resourceFields,
               f,
               change.role,
               'canUpdate'
-            )
-          );
+            );
+            addFieldPermission(
+              update,
+              resourceFields,
+              f,
+              change.role,
+              'canDeleteFiles'
+            );
+          });
       }
       break;
     }
@@ -405,18 +448,25 @@ const automateFieldsPermission = (
           (p) => p.role.equals(change.role)
         )
       ) {
-        // Add update permission to all fields.
+        // Add update ( and files deletion ) permission to all fields.
         resourceFields
           .map((f) => f.name)
-          .forEach((f) =>
+          .forEach((f) => {
             addFieldPermission(
               update,
               resourceFields,
               f,
               change.role,
               'canUpdate'
-            )
-          );
+            );
+            addFieldPermission(
+              update,
+              resourceFields,
+              f,
+              change.role,
+              'canDeleteFiles'
+            );
+          });
       }
       // Make sure that user does not have any read permission on resource
       if (
@@ -489,6 +539,13 @@ const removeFieldPermission = (
     role,
     new mongoose.Types.ObjectId(role),
   ]);
+  // Files deletion requires edit access
+  if (permission === 'canUpdate') {
+    pullFromPath(update, `fields.${fieldIndex}.permissions.canDeleteFiles`, [
+      role,
+      new mongoose.Types.ObjectId(role),
+    ]);
+  }
 };
 
 /**
@@ -825,11 +882,12 @@ export default {
       // Updating field permissions
       if (args.fieldsPermissions) {
         const permissions: FieldPermissionChange = args.fieldsPermissions;
-        // canSee grants queued by this request, so that a canUpdate grant
+        // Grants queued by this request, so that a grant requiring another one
         // on the same field / role in the same request is accepted
-        const pendingCanSee = new Set<string>();
-        // canSee is processed first for the same reason
-        for (const permission of ['canSee', 'canUpdate'] as const) {
+        // ( canUpdate requires canSee, canDeleteFiles requires canUpdate ).
+        // Permissions are processed in that order for the same reason.
+        const pending = new Set<string>();
+        for (const permission of FIELD_PERMISSIONS_ORDER) {
           const obj: SimpleFieldPermissionChange = permissions[permission];
           if (!obj) continue;
           // Add permission on target field(s)
@@ -842,7 +900,7 @@ export default {
                 addition.field,
                 addition.role,
                 permission,
-                pendingCanSee
+                pending
               );
               addFieldPermission(
                 update,
@@ -851,9 +909,7 @@ export default {
                 addition.role,
                 permission
               );
-              if (permission === 'canSee') {
-                pendingCanSee.add(`${addition.field}:${addition.role}`);
-              }
+              pending.add(`${permission}:${addition.field}:${addition.role}`);
             });
           }
           // Remove permission on target field(s)

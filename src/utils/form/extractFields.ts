@@ -21,6 +21,10 @@ export const extractFields = async (object, fields, core): Promise<void> => {
           // Don't store as field if question is display only
           continue;
         }
+        // Field history fields don't need to be saved in the list of fields.
+        if (element.type === 'field-history') {
+          continue;
+        }
         if (!element.valueName) {
           throw new GraphQLError(
             i18next.t('utils.form.extractFields.errors.missingDataField')

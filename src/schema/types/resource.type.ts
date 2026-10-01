@@ -7,6 +7,7 @@ import extendAbilityForRecords, {
 import { getAccessibleFields } from '@utils/form';
 import { getMetaData } from '@utils/form/metadata.helper';
 import getFilter from '@utils/schema/resolvers/Query/getFilter';
+import { getDraftRecordFilter } from '@utils/filter';
 import {
   GraphQLBoolean,
   GraphQLID,
@@ -200,7 +201,11 @@ export const ResourceType = new GraphQLObjectType({
         if (args.archived) {
           Object.assign(mongooseFilter, { archived: true });
         } else {
-          Object.assign(mongooseFilter, { archived: { $ne: true } });
+          Object.assign(
+            mongooseFilter,
+            { archived: { $ne: true } },
+            getDraftRecordFilter()
+          );
         }
         if (args.filter) {
           mongooseFilter = {
@@ -261,6 +266,7 @@ export const ResourceType = new GraphQLObjectType({
         const count = await Record.find({
           resource: parent.id,
           archived: { $ne: true },
+          ...getDraftRecordFilter(),
           ...accessibleBy(ability, 'read').Record,
         }).count();
         return count;

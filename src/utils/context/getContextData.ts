@@ -14,6 +14,7 @@ import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { Context } from '@server/apollo/context';
 import { CustomAPI } from '@server/apollo/dataSources';
 import { logger } from '@services/logger.service';
+import { getDraftRecordFilter } from '@utils/filter';
 
 /** Maximum recursion depth for getting the context data */
 const MAX_DEPTH = 10;
@@ -39,7 +40,9 @@ export const getContextDataForRecord = async (
       : await Resource.findById(resourceID);
 
   const record = (
-    recordID instanceof Record ? recordID : await Record.findById(recordID)
+    recordID instanceof Record
+      ? recordID
+      : await Record.findOne({ _id: recordID, ...getDraftRecordFilter() })
   ) as Record;
 
   if (!resource || depth > MAX_DEPTH || !record?.data) {
@@ -58,7 +61,7 @@ export const getContextDataForRecord = async (
         continue;
       }
       const refRecord = getAccessibleFields(
-        await Record.findById(refRecordID),
+        await Record.findOne({ _id: refRecordID, ...getDraftRecordFilter() }),
         context.user.ability
       );
 
@@ -106,6 +109,7 @@ export const getContextDataForRecord = async (
               $and: [
                 {
                   _id: record._id,
+                  ...getDraftRecordFilter(),
                 },
                 permissionFilters,
               ],

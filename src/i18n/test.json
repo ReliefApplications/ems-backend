@@ -139,6 +139,13 @@
 				"emailDistributionListNameExist": "******"
 			}
 		},
+		"emailNotification": {
+			"add": {
+				"errors": {
+					"invalidCron": "******"
+				}
+			}
+		},
 		"form": {
 			"add": {
 				"errors": {
@@ -213,6 +220,12 @@
 			}
 		},
 		"record": {
+			"add": {
+				"errors": {
+					"invalidCloneRecordId": "******",
+					"invalidCloneRecordResource": "******"
+				}
+			},
 			"convert": {
 				"errors": {
 					"invalidConversion": "******"
@@ -220,6 +233,7 @@
 			},
 			"edit": {
 				"errors": {
+					"cannotDemoteToDraft": "******",
 					"invalidArguments": "******",
 					"wrongTemplateProvided": "******"
 				}
@@ -252,6 +266,7 @@
 					"field": {
 						"missingReadPermissionOnResource": "******",
 						"missingWritePermissionOnResource": "******",
+						"notEditable": "******",
 						"notFound": "******",
 						"notVisible": "******"
 					},

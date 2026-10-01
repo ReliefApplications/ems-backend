@@ -7,12 +7,20 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { RecordType } from '../types';
-import { Form, Record, Notification, Channel, Resource } from '@models';
+import {
+  Form,
+  Record,
+  Notification,
+  Channel,
+  Resource,
+  Version,
+} from '@models';
 import {
   transformRecord,
   getOwnership,
   getNextId,
   validateUniqueness,
+  UniquenessCheckResult,
 } from '@utils/form';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { AppAbility } from '@security/defineUserAbility';
@@ -20,7 +28,7 @@ import pubsub from '../../server/pubsub';
 import { getFormPermissionFilter } from '@utils/filter';
 import { logger } from '@services/logger.service';
 import { verifyTurnstileToken } from '@utils/captcha';
-import { Types } from 'mongoose';
+import { isObjectIdOrHexString, Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 import { getErrorMessage, getErrorStack } from '@utils/error';
 
@@ -30,6 +38,8 @@ export type AddRecordArgs = {
   data: any;
   captchaToken?: string;
   skipValidation?: boolean;
+  draft?: boolean;
+  cloneRecordId?: string | Types.ObjectId;
 };
 
 /**
@@ -37,6 +47,7 @@ export type AddRecordArgs = {
  * Unauthenticated users can add records to public forms, provided they pass
  * a valid Cloudflare Turnstile captcha token. In that case, the ability check
  * is skipped.
+ * If a record to clone is provided, the new record reuses its history.
  * Throw a GraphQL error if not logged or authorized, or form not found.
  * TODO: we have to check form by form for that.
  */
@@ -47,6 +58,8 @@ export default {
     data: { type: new GraphQLNonNull(GraphQLJSON) },
     captchaToken: { type: GraphQLString },
     skipValidation: { type: GraphQLBoolean, defaultValue: false },
+    draft: { type: GraphQLBoolean },
+    cloneRecordId: { type: GraphQLID },
   },
   async resolve(parent, args: AddRecordArgs, context: Context) {
     try {
@@ -56,6 +69,12 @@ export default {
       const form = await Form.findById(args.form);
       if (!form)
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+
+      if (args.draft && !user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
 
       // Used to filter which matching records (if any) can be shown back to
       // the user for a uniqueness violation; left undefined for
@@ -90,6 +109,7 @@ export default {
       // Check unicity of record
       if (
         user &&
+        !args.draft &&
         form.permissions.recordsUnicity &&
         form.permissions.recordsUnicity.length > 0 &&
         form.permissions.recordsUnicity[0].role
@@ -102,7 +122,7 @@ export default {
         if (unicityFilters.length > 0) {
           const uniqueRecordAlreadyExists = await Record.exists({
             $and: [
-              { form: form._id, archived: { $ne: true } },
+              { form: form._id, archived: { $ne: true }, draft: { $ne: true } },
               { $or: unicityFilters },
             ],
           });
@@ -114,20 +134,83 @@ export default {
         }
       }
 
+      // If a record to clone is provided, the new record reuses its history
+      let versions: Types.ObjectId[] = [];
+      let clonedDataVersion: Version;
+      if (args.cloneRecordId) {
+        // Cloning is not part of the public form flow
+        if (!user) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.userNotLogged')
+          );
+        }
+        if (!isObjectIdOrHexString(args.cloneRecordId)) {
+          throw new GraphQLError(
+            context.i18next.t(
+              'mutations.record.add.errors.invalidCloneRecordId'
+            )
+          );
+        }
+        const clonedRecord = await Record.findById(args.cloneRecordId);
+        // The cloned record must belong to the same resource, or, for forms
+        // without a resource, to the same form
+        const sameFamily = form.resource
+          ? form.resource.equals(clonedRecord?.resource)
+          : form._id.equals(clonedRecord?.form);
+        if (!clonedRecord || !sameFamily) {
+          throw new GraphQLError(
+            context.i18next.t(
+              'mutations.record.add.errors.invalidCloneRecordResource'
+            )
+          );
+        }
+        // Check that the user can see the record they clone the history from
+        const clonedForm = form._id.equals(clonedRecord.form)
+          ? form
+          : await Form.findById(clonedRecord.form);
+        const clonedRecordAbility = await extendAbilityForRecords(
+          user,
+          clonedForm
+        );
+        if (clonedRecordAbility.cannot('read', clonedRecord)) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.permissionNotGranted')
+          );
+        }
+        // Versions are not duplicated: both records reference the same ones.
+        // The current data of the cloned record is stored as a new version, so
+        // the history of the new record displays what changed since then
+        clonedDataVersion = new Version({
+          data: clonedRecord.data,
+          createdAt: clonedRecord.modifiedAt
+            ? clonedRecord.modifiedAt
+            : clonedRecord.createdAt,
+          createdBy: user._id,
+        });
+        versions = [...(clonedRecord.versions || []), clonedDataVersion._id];
+      }
+
       // Create the record instance
       transformRecord(args.data, form.fields);
 
-      // Check uniqueness rules configured on the resource, if any
-      const resource = form.resource
-        ? await Resource.findById(form.resource)
-        : null;
-      const uniquenessResult = await validateUniqueness(
-        args.data,
-        resource,
-        undefined,
-        context.i18next.t.bind(context.i18next),
-        ability
-      );
+      // Check uniqueness rules configured on the resource, if any. Drafts are
+      // not checked: as for the records unicity, they are once published
+      let uniquenessResult: UniquenessCheckResult = {
+        errors: [],
+        warnings: [],
+      };
+      if (!args.draft) {
+        const resource = form.resource
+          ? await Resource.findById(form.resource)
+          : null;
+        uniquenessResult = await validateUniqueness(
+          args.data,
+          resource,
+          undefined,
+          context.i18next.t.bind(context.i18next),
+          ability
+        );
+      }
       if (uniquenessResult.errors.length) {
         throw new GraphQLError(
           uniquenessResult.errors.map((e) => e.errors.join(' ')).join(' ')
@@ -135,14 +218,19 @@ export default {
       }
 
       const record = new Record({
-        incrementalId: await getNextId(
-          String(form.resource ? form.resource : args.form)
-        ),
+        // Drafts do not have an incremental id: the field is left out so they
+        // are excluded from the unique incremental id index
+        ...(!args.draft && {
+          incrementalId: await getNextId(
+            String(form.resource ? form.resource : args.form)
+          ),
+        }),
         form: args.form,
         //createdAt: new Date(),
         //modifiedAt: new Date(),
         data: args.data,
         resource: form.resource ? form.resource : null,
+        versions,
         ...(user && {
           createdBy: {
             user: user._id,
@@ -171,6 +259,7 @@ export default {
           _id: form._id,
           name: form.name,
         },
+        draft: args.draft || false,
       });
       // Warn about (non-blocking) duplicates, unless the user chose to save anyway
       if (uniquenessResult.warnings.length && !args.skipValidation) {
@@ -184,20 +273,26 @@ export default {
         record.createdBy = { ...record.createdBy, ...ownership };
       }
       // send notifications to channel
-      const channel = await Channel.findOne({ form: form._id });
-      if (channel) {
-        const notification = new Notification({
-          action: `New record - ${form.name}`,
-          content: record,
-          //createdAt: new Date(),
-          channel: channel.id,
-          seenBy: [],
-        });
-        await notification.save();
-        const publisher = await pubsub();
-        publisher.publish(channel.id, { notification });
+      if (!args.draft) {
+        const channel = await Channel.findOne({ form: form._id });
+        if (channel) {
+          const notification = new Notification({
+            action: `New record - ${form.name}`,
+            content: record,
+            //createdAt: new Date(),
+            channel: channel.id,
+            seenBy: [],
+          });
+          await notification.save();
+          const publisher = await pubsub();
+          publisher.publish(channel.id, { notification });
+        }
       }
       await record.save();
+      // Only store the new version once the record is saved
+      if (clonedDataVersion) {
+        await clonedDataVersion.save();
+      }
       return record;
     } catch (err) {
       logger.error(getErrorMessage(err), { stack: getErrorStack(err) });

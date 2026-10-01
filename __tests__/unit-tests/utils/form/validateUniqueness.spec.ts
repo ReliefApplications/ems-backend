@@ -195,6 +195,24 @@ describe('validateUniqueness', () => {
     expect(result.errors).toEqual([]);
   });
 
+  it('ignores draft records when checking for duplicates', async () => {
+    const resource = await Resource.create({
+      name: 'Organization',
+      fields: [{ name: 'org_code' }],
+      uniquenessRules: [{ fields: ['org_code'], severity: 'error' }],
+    });
+    await Record.create({
+      form: resource._id,
+      _form: { _id: resource._id, name: resource.name },
+      resource: resource._id,
+      data: { org_code: 'ABC' },
+      draft: true,
+    });
+
+    const result = await validateUniqueness({ org_code: 'ABC' }, resource);
+    expect(result.errors).toEqual([]);
+  });
+
   describe('conditional uniqueness', () => {
     it('only enforces the rule when the condition is met (case_status open example)', async () => {
       const resource = await Resource.create({

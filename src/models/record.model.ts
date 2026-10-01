@@ -15,13 +15,14 @@ import { User } from './user.model';
 // eslint-disable-next-line deprecation/deprecation
 export interface Record extends AccessibleFieldsDocument {
   kind: 'Record';
-  incrementalId: string;
+  incrementalId?: string;
   form: any;
   _form: Form;
   resource: any;
   createdAt: Date;
   modifiedAt: Date;
   archived: boolean;
+  draft: boolean;
   data: any;
   versions: any;
   permissions: {
@@ -45,7 +46,7 @@ const recordSchema = new Schema<Record>(
   {
     incrementalId: {
       type: String,
-      required: true,
+      required: false,
     },
     form: {
       type: mongoose.Schema.Types.ObjectId,
@@ -97,6 +98,10 @@ const recordSchema = new Schema<Record>(
       type: Boolean,
       default: false,
     },
+    draft: {
+      type: Boolean,
+      default: false,
+    },
     data: {
       type: mongoose.Schema.Types.Mixed,
       required: true,
@@ -112,7 +117,14 @@ const recordSchema = new Schema<Record>(
 );
 recordSchema.index(
   { incrementalId: 1, resource: 1 },
-  { unique: true, partialFilterExpression: { resource: { $exists: true } } }
+  {
+    unique: true,
+    // Drafts are excluded: they are stored without incremental id
+    partialFilterExpression: {
+      resource: { $exists: true },
+      incrementalId: { $exists: true },
+    },
+  }
 );
 
 recordSchema.index({ '$**': 'text' });
@@ -120,13 +132,28 @@ recordSchema.index({ 'data.$**': 1 });
 
 recordSchema.index({ archived: 1, form: 1, resource: 1, createdAt: 1 });
 recordSchema.index({ resource: 1, archived: 1 });
+recordSchema.index({ draft: 1, form: 1, resource: 1, createdAt: 1 });
 recordSchema.index({ createdAt: 1 });
 recordSchema.index({ form: 1 });
+recordSchema.index({ versions: 1 });
 
 // handle cascading deletion
 addOnBeforeDeleteMany(recordSchema, async (records) => {
-  const versions = records.reduce((acc, rec) => acc.concat(rec.versions), []);
-  if (versions) await Version.deleteMany({ _id: { $in: versions } });
+  const versions = records.reduce(
+    (acc, rec) => acc.concat(rec.versions || []),
+    []
+  );
+  if (!versions.length) return;
+  // Cloned & converted records share versions with their source record, so
+  // only delete the versions that no remaining record still uses
+  const sharedVersions = await Record.distinct('versions', {
+    _id: { $nin: records.map((rec) => rec._id) },
+    versions: { $in: versions },
+  });
+  const shared = new Set(sharedVersions.map((x) => String(x)));
+  await Version.deleteMany({
+    _id: { $in: versions.filter((x) => !shared.has(String(x))) },
+  });
 });
 
 recordSchema.index({ incrementalId: 1, form: 1 });

@@ -31,6 +31,8 @@ export interface Resource extends Document {
     permissions?: {
       canSee: any[];
       canUpdate: any[];
+      /** File fields: roles allowed to permanently remove files */
+      canDeleteFiles?: any[];
     };
     [key: string]: any;
   }[];

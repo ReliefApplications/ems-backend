@@ -1,3 +1,40 @@
+# [2.18.0-rc.11](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.10...v2.18.0-rc.11) (2026-09-30)
+
+
+### Features
+
+* Enable records to be saved as draft ([#1211](https://github.com/ReliefApplications/ems-backend/issues/1211)) ([f899f5c](https://github.com/ReliefApplications/ems-backend/commit/f899f5ca719c8da2040e0d03bb2551267b80e1ae))
+
+# [2.18.0-rc.10](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.9...v2.18.0-rc.10) (2026-09-29)
+
+
+### Features
+
+* Now possible to bind email dataset with CS filters ([#1262](https://github.com/ReliefApplications/ems-backend/issues/1262)) ([b3ed60a](https://github.com/ReliefApplications/ems-backend/commit/b3ed60a411f81a30232bd39480e6891820d6669c))
+* now possible to schedule emails ([#1261](https://github.com/ReliefApplications/ems-backend/issues/1261)) ([eda63ab](https://github.com/ReliefApplications/ems-backend/commit/eda63ab8c72642cff7c233fbdc16a6ea64610aff))
+* Now possible to select language email notifications will be sent with ([#1263](https://github.com/ReliefApplications/ems-backend/issues/1263)) ([6dc3db5](https://github.com/ReliefApplications/ems-backend/commit/6dc3db51408d877ac863c5eb08ef8b25d7a1866b))
+
+# [2.18.0-rc.9](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.8...v2.18.0-rc.9) (2026-09-24)
+
+
+### Features
+
+* Allow outdated files ([#1284](https://github.com/ReliefApplications/ems-backend/issues/1284)) ([2414623](https://github.com/ReliefApplications/ems-backend/commit/2414623e0e55daff80850199f4508806a910a5fe)), closes [AB#134566](https://github.com/AB/issues/134566)
+
+# [2.18.0-rc.8](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.7...v2.18.0-rc.8) (2026-09-21)
+
+
+### Features
+
+* Enable calculated fields to translate fields that support translations ([#1282](https://github.com/ReliefApplications/ems-backend/issues/1282)) ([8a3d383](https://github.com/ReliefApplications/ems-backend/commit/8a3d3832505c1d5bbe793c22a9ce092cd91838a5)), closes [AB#138076](https://github.com/AB/issues/138076)
+
+# [2.18.0-rc.7](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.6...v2.18.0-rc.7) (2026-09-21)
+
+
+### Features
+
+* Improve record type, adding option to get calculated fields ([#1283](https://github.com/ReliefApplications/ems-backend/issues/1283)) ([26265a5](https://github.com/ReliefApplications/ems-backend/commit/26265a5896bdc873c41d3cfe59cb76711f41a87c)), closes [AB#133920](https://github.com/AB/issues/133920)
+
 # [2.18.0-rc.6](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.5...v2.18.0-rc.6) (2026-09-14)
 
 

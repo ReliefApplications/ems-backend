@@ -18,6 +18,7 @@ import {
 import { getFullChoices } from '@utils/form';
 import { accessibleBy } from '@casl/mongoose';
 import { resolveLocalizedString } from '@utils/i18n/resolveLocalizedString';
+import { getDraftRecordFilter } from '@utils/filter';
 
 /**
  * Class used to get a record's history
@@ -211,8 +212,11 @@ export class RecordHistory {
             // Cannot be converted to a field
             return;
           }
+          const previousValue = get(previous, key);
           const nextValue = get(next, key);
-          if (isNil(nextValue)) {
+          // A nil value that becomes a missing key (or the opposite) is not a
+          // deletion: both mean that the question is empty
+          if (isNil(nextValue) && !isNil(previousValue)) {
             changes.push(this.deleteEntry(key, previous));
           } else {
             // Already tracked by previous block
@@ -564,7 +568,11 @@ export class RecordHistory {
       const recordFilters = Record.find(
         accessibleBy(this.options.ability, 'read').Record
       )
-        .where({ _id: { $in: ids }, archived: { $ne: true } })
+        .where({
+          _id: { $in: ids },
+          archived: { $ne: true },
+          ...getDraftRecordFilter(),
+        })
         .getFilter();
       const records: Record[] = await Record.find(recordFilters);
       return records.map((record) => record.incrementalId);

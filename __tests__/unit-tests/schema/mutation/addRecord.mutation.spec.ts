@@ -1,7 +1,5 @@
-import { Form, Record, Resource } from '@models';
-import addRecord, {
-  AddRecordArgs,
-} from '@schema/mutation/addRecord.mutation';
+import { Form, Record, Resource, Version } from '@models';
+import addRecord, { AddRecordArgs } from '@schema/mutation/addRecord.mutation';
 import { Types } from 'mongoose';
 import { DatabaseHelpers } from '../../../helpers/database-helpers';
 import { GraphQLError } from 'graphql';
@@ -37,7 +35,11 @@ describe('addRecord Resolver', () => {
   let databaseHelpers: DatabaseHelpers;
   let publicForm: Form;
   let privateForm: Form;
+  let resourceForm: Form;
+  let otherResourceForm: Form;
   let nextIdCounter = 0;
+  const resource = new Types.ObjectId();
+  const otherResource = new Types.ObjectId();
 
   beforeAll(async () => {
     databaseHelpers = new DatabaseHelpers();
@@ -51,6 +53,18 @@ describe('addRecord Resolver', () => {
     privateForm = await Form.create({
       name: 'Private form',
       graphQLTypeName: 'PrivateForm',
+      fields: [{ name: 'description', type: 'text' }],
+    });
+    resourceForm = await Form.create({
+      name: 'Resource form',
+      graphQLTypeName: 'ResourceForm',
+      resource,
+      fields: [{ name: 'description', type: 'text' }],
+    });
+    otherResourceForm = await Form.create({
+      name: 'Other resource form',
+      graphQLTypeName: 'OtherResourceForm',
+      resource: otherResource,
       fields: [{ name: 'description', type: 'text' }],
     });
   });
@@ -133,6 +147,198 @@ describe('addRecord Resolver', () => {
     });
   });
 
+  describe('Draft record', () => {
+    beforeEach(() => {
+      args = { ...args, form: resourceForm.id, draft: true };
+    });
+
+    it('should store the draft without incremental id', async () => {
+      const record = await addRecord.resolve(null, args, context);
+      expect(record.draft).toBe(true);
+      expect(record.incrementalId).toBeUndefined();
+      expect(getNextId).not.toHaveBeenCalled();
+      // The field must be absent, not null, so the draft is excluded from the
+      // partial unique index on incrementalId
+      const stored = await Record.collection.findOne({ _id: record._id });
+      expect(stored).not.toHaveProperty('incrementalId');
+    });
+
+    it('should allow several drafts on the same resource', async () => {
+      const first = await addRecord.resolve(null, args, context);
+      const second = await addRecord.resolve(null, args, context);
+      expect(first.resource).toEqual(second.resource);
+      expect(
+        await Record.countDocuments({ resource, draft: true })
+      ).toBeGreaterThanOrEqual(2);
+    });
+
+    it('should throw an error if the user is not logged', async () => {
+      context.user = undefined;
+      await expect(addRecord.resolve(null, args, context)).rejects.toThrow(
+        'common.errors.userNotLogged'
+      );
+    });
+  });
+
+  describe('Cloning a record', () => {
+    let clonedRecord: Record;
+    let clonedVersions: Version[];
+
+    /**
+     * Create a record with two versions, to clone from.
+     *
+     * @param form form of the record
+     * @returns the created record
+     */
+    const createRecordWithHistory = async (form: Form) => {
+      clonedVersions = await Version.create([
+        { data: { description: 'v1' }, createdBy: new Types.ObjectId() },
+        { data: { description: 'v2' }, createdBy: new Types.ObjectId() },
+      ]);
+      return Record.create({
+        incrementalId: `2026-C${String(++nextIdCounter).padStart(8, '0')}`,
+        form: form._id,
+        _form: { _id: form._id, name: form.name },
+        resource: form.resource,
+        data: { description: 'cloned record' },
+        versions: clonedVersions.map((x) => x._id),
+      });
+    };
+
+    beforeEach(async () => {
+      clonedRecord = await createRecordWithHistory(resourceForm);
+      args = {
+        form: resourceForm.id,
+        data: { description: 'clone' },
+        cloneRecordId: clonedRecord.id,
+      };
+    });
+
+    it('should copy the history of the cloned record, plus its current data', async () => {
+      const record = await addRecord.resolve(null, args, context);
+      expect(record.versions).toHaveLength(clonedVersions.length + 1);
+
+      const versions = await Promise.all(
+        record.versions.map((id: any) => Version.findById(id))
+      );
+      expect(versions.map((x) => x.data.description)).toEqual([
+        'v1',
+        'v2',
+        'cloned record',
+      ]);
+    });
+
+    it('should reuse the versions of the cloned record, without duplicating them', async () => {
+      const versionsBefore = await Version.countDocuments();
+      const record = await addRecord.resolve(null, args, context);
+      clonedVersions.forEach((version, index) => {
+        expect(version._id.equals(record.versions[index])).toBe(true);
+      });
+      // Only the version storing the data of the cloned record is created
+      expect(await Version.countDocuments()).toEqual(versionsBefore + 1);
+      // The cloned record keeps its own versions
+      const source = await Record.findById(clonedRecord._id);
+      expect(source.versions).toHaveLength(clonedVersions.length);
+    });
+
+    it('should keep the shared versions when one of the records is deleted', async () => {
+      const record = await addRecord.resolve(null, args, context);
+      await Record.deleteOne({ _id: record._id });
+      // Versions still used by the cloned record are kept
+      for (const version of clonedVersions) {
+        expect(await Version.exists({ _id: version._id })).toBeTruthy();
+      }
+      // The version only used by the deleted record is removed
+      const ownVersion = record.versions[record.versions.length - 1];
+      expect(await Version.exists({ _id: ownVersion })).toBeNull();
+
+      // Once no record uses them anymore, shared versions are removed
+      await Record.deleteOne({ _id: clonedRecord._id });
+      for (const version of clonedVersions) {
+        expect(await Version.exists({ _id: version._id })).toBeNull();
+      }
+    });
+
+    it('should clone a record of a form without resource', async () => {
+      const recordToClone = await createRecordWithHistory(privateForm);
+      args = {
+        form: privateForm.id,
+        data: { description: 'clone' },
+        cloneRecordId: recordToClone.id,
+      };
+      const record = await addRecord.resolve(null, args, context);
+      expect(record.versions).toHaveLength(clonedVersions.length + 1);
+    });
+
+    it('should throw an error if the id is not a valid record id', async () => {
+      args.cloneRecordId = 'not-an-id';
+      const result = addRecord.resolve(null, args, context);
+      await expect(result).rejects.toThrow(GraphQLError);
+      expect(context.i18next.t).toHaveBeenCalledWith(
+        'mutations.record.add.errors.invalidCloneRecordId'
+      );
+    });
+
+    it('should throw an error if the record does not exist', async () => {
+      args.cloneRecordId = new Types.ObjectId().toHexString();
+      const result = addRecord.resolve(null, args, context);
+      await expect(result).rejects.toThrow(GraphQLError);
+      expect(context.i18next.t).toHaveBeenCalledWith(
+        'mutations.record.add.errors.invalidCloneRecordResource'
+      );
+    });
+
+    it('should throw an error if the record belongs to another resource', async () => {
+      const recordToClone = await createRecordWithHistory(otherResourceForm);
+      args.cloneRecordId = recordToClone.id;
+      const result = addRecord.resolve(null, args, context);
+      await expect(result).rejects.toThrow(GraphQLError);
+      expect(context.i18next.t).toHaveBeenCalledWith(
+        'mutations.record.add.errors.invalidCloneRecordResource'
+      );
+    });
+
+    it('should throw an error if the user cannot read the cloned record', async () => {
+      (extendAbilityForRecords as jest.Mock)
+        // Creation of the new record is allowed
+        .mockResolvedValueOnce({
+          can: jest.fn().mockReturnValue(true),
+          cannot: jest.fn().mockReturnValue(false),
+        })
+        // But the cloned record cannot be read
+        .mockResolvedValueOnce({
+          can: jest.fn().mockReturnValue(false),
+          cannot: jest.fn().mockReturnValue(true),
+        });
+      const result = addRecord.resolve(null, args, context);
+      await expect(result).rejects.toThrow(GraphQLError);
+      expect(context.i18next.t).toHaveBeenCalledWith(
+        'common.errors.permissionNotGranted'
+      );
+    });
+
+    it('should throw an error if the user is not logged', async () => {
+      context = { ...context, user: null } as unknown as Context;
+      args.form = publicForm.id;
+      args.captchaToken = 'captcha-token';
+      const result = addRecord.resolve(null, args, context);
+      await expect(result).rejects.toThrow(GraphQLError);
+      expect(context.i18next.t).toHaveBeenCalledWith(
+        'common.errors.userNotLogged'
+      );
+    });
+
+    it('should not create any version if the record cannot be saved', async () => {
+      jest
+        .spyOn(Record.prototype, 'save')
+        .mockRejectedValue(new Error('unexpected error'));
+      const versionsBefore = await Version.countDocuments();
+      const result = addRecord.resolve(null, args, context);
+      await expect(result).rejects.toThrow(GraphQLError);
+      expect(await Version.countDocuments()).toEqual(versionsBefore);
+    });
+  });
+
   describe('Unauthenticated user', () => {
     beforeEach(() => {
       context = { ...context, user: null } as unknown as Context;
@@ -189,11 +395,11 @@ describe('addRecord Resolver', () => {
   });
 
   describe('Uniqueness rules', () => {
-    let resource: Resource;
+    let uniqueResource: Resource;
     let formWithResource: Form;
 
     beforeEach(async () => {
-      resource = await Resource.create({
+      uniqueResource = await Resource.create({
         name: `Organization-${new Types.ObjectId()}`,
         fields: [{ name: 'org_code' }],
         uniquenessRules: [{ fields: ['org_code'], severity: 'error' }],
@@ -201,7 +407,7 @@ describe('addRecord Resolver', () => {
       formWithResource = await Form.create({
         name: 'Organization form',
         graphQLTypeName: `Organization${new Types.ObjectId()}`,
-        resource: resource._id,
+        resource: uniqueResource._id,
         fields: [{ name: 'org_code' }],
       });
       args = {
@@ -215,7 +421,7 @@ describe('addRecord Resolver', () => {
         incrementalId: '1',
         form: formWithResource._id,
         _form: { _id: formWithResource._id, name: formWithResource.name },
-        resource: resource._id,
+        resource: uniqueResource._id,
         data: { org_code: 'ABC' },
       });
 
@@ -230,43 +436,62 @@ describe('addRecord Resolver', () => {
     });
 
     it('returns validationErrors without saving when a warning-severity rule is violated', async () => {
-      resource.uniquenessRules = [{ fields: ['org_code'], severity: 'warning' }];
-      await resource.save();
+      uniqueResource.uniquenessRules = [
+        { fields: ['org_code'], severity: 'warning' },
+      ];
+      await uniqueResource.save();
       await Record.create({
         incrementalId: '1',
         form: formWithResource._id,
         _form: { _id: formWithResource._id, name: formWithResource.name },
-        resource: resource._id,
+        resource: uniqueResource._id,
         data: { org_code: 'ABC' },
       });
 
       const record: any = await addRecord.resolve(null, args, context);
       expect(record.validationErrors).toHaveLength(1);
       const saved = await Record.findOne({
-        resource: resource._id,
+        resource: uniqueResource._id,
         'data.org_code': 'ABC',
       }).countDocuments();
       expect(saved).toEqual(1); // only the pre-existing one, nothing new saved
     });
 
     it('saves the record when skipValidation is set despite a warning-severity duplicate', async () => {
-      resource.uniquenessRules = [{ fields: ['org_code'], severity: 'warning' }];
-      await resource.save();
+      uniqueResource.uniquenessRules = [
+        { fields: ['org_code'], severity: 'warning' },
+      ];
+      await uniqueResource.save();
       await Record.create({
         incrementalId: '1',
         form: formWithResource._id,
         _form: { _id: formWithResource._id, name: formWithResource.name },
-        resource: resource._id,
+        resource: uniqueResource._id,
         data: { org_code: 'ABC' },
       });
       args.skipValidation = true;
 
       await addRecord.resolve(null, args, context);
       const count = await Record.countDocuments({
-        resource: resource._id,
+        resource: uniqueResource._id,
         'data.org_code': 'ABC',
       });
       expect(count).toEqual(2);
+    });
+
+    it('saves a draft with a duplicate value, without checking the rules', async () => {
+      await Record.create({
+        incrementalId: '1',
+        form: formWithResource._id,
+        _form: { _id: formWithResource._id, name: formWithResource.name },
+        resource: uniqueResource._id,
+        data: { org_code: 'ABC' },
+      });
+      args.draft = true;
+
+      const record = await addRecord.resolve(null, args, context);
+      expect(record.draft).toBe(true);
+      expect(record.data.org_code).toEqual('ABC');
     });
   });
 

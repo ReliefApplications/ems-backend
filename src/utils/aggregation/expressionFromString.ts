@@ -95,6 +95,7 @@ export const OperationTypeMap: { [key in OperationTypes]: string } = {
   includes: 'boolean',
   join: 'text',
   displayValue: 'text',
+  translate: 'text',
   relatedValue: 'text',
   relatedCount: 'numeric',
   relatedExists: 'boolean',
@@ -391,6 +392,35 @@ const solveExp = (exp: string): Operator => {
         value: {
           operation: 'displayValue',
           fieldName: arg.substring(1, arg.length - 1),
+        },
+      };
+    }
+
+    // translate takes a literal field name (string) and an optional literal
+    // locale (string), not generic operators
+    if (operation === 'translate') {
+      const rawArgs = getArgs(
+        exp.substring(exp.indexOf('(') + 1, exp.length - 1)
+      );
+      if (rawArgs.length < 1 || rawArgs.length > 2)
+        throw new Error(
+          `Invalid number of arguments for operation translate: ${rawArgs.length}. Expected 1 to 2`
+        );
+      const fieldName = unquoteRelatedArg(
+        rawArgs[0].trim(),
+        operation,
+        'fieldName'
+      );
+      const locale =
+        rawArgs.length === 2
+          ? unquoteRelatedArg(rawArgs[1].trim(), operation, 'locale')
+          : undefined;
+      return {
+        type: 'expression',
+        value: {
+          operation: 'translate',
+          fieldName,
+          ...(locale && { locale }),
         },
       };
     }

@@ -2,6 +2,13 @@ import { getQuestion } from './getQuestion';
 import isEqual from 'lodash/isEqual';
 
 /**
+ * Question properties a child form can set on a core field. A child value
+ * survives a core form save when it differs from the previous core value
+ * ( i.e. it was customized on the child ); otherwise it follows the core.
+ */
+const CHILD_OVERRIDABLE_PROPERTIES = ['defaultValue', 'showOutdatedFiles'];
+
+/**
  * Check if the structure is correct and replace the chosen field by the corresponding one in the referenceStructure.
  * Function by induction.
  *
@@ -51,21 +58,24 @@ export const replaceField = (
               prevReferenceStructure,
               fieldName
             );
-            // If the edited structure's field has a defaultValue, and this defaultValue
-            // isn't equal to the previous version of the reference structure's field's defaultValue
-            if (
-              element.hasOwnProperty('defaultValue') &&
-              !isEqual(element.defaultValue, prevReferenceField?.defaultValue)
-            ) {
-              // Copy the reference structure's field into the edited structure's field, except for its defaultValue
-              editedStructure.elements[elementIndex] = {
-                ...referenceField,
-                defaultValue: element.defaultValue,
-              };
-            } else {
-              // Completely replace the edited structure's field by the reference structure's field
-              editedStructure.elements[elementIndex] = referenceField;
-            }
+            // Replace the edited structure's field by the reference structure's
+            // field, keeping the properties customized on the edited structure
+            // ( set, and different from the previous version of the reference
+            // structure's field )
+            const overrides = CHILD_OVERRIDABLE_PROPERTIES.filter(
+              (property) =>
+                element.hasOwnProperty(property) &&
+                !isEqual(element[property], prevReferenceField?.[property])
+            );
+            editedStructure.elements[elementIndex] =
+              overrides.length > 0
+                ? {
+                    ...referenceField,
+                    ...Object.fromEntries(
+                      overrides.map((property) => [property, element[property]])
+                    ),
+                  }
+                : referenceField;
             return true;
           }
         }
