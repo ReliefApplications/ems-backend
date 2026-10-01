@@ -28,6 +28,7 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 import { CompositeFilterDescriptor } from '../../types/filter';
 import { getErrorMessage, getErrorStack } from '@utils/error';
+import { getDraftRecordFilter } from '@utils/filter';
 
 /** Pagination default items per query */
 const DEFAULT_FIRST = 10;
@@ -297,7 +298,8 @@ export default {
         Object.assign(
           mongooseFilter,
           { resource: new mongoose.Types.ObjectId(args.resource) },
-          { archived: { $ne: true } }
+          { archived: { $ne: true } },
+          getDraftRecordFilter()
         );
       } else {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));

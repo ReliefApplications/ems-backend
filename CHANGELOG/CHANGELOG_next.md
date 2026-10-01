@@ -1,3 +1,10 @@
+# [2.18.0-rc.11](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.10...v2.18.0-rc.11) (2026-09-30)
+
+
+### Features
+
+* Enable records to be saved as draft ([#1211](https://github.com/ReliefApplications/ems-backend/issues/1211)) ([f899f5c](https://github.com/ReliefApplications/ems-backend/commit/f899f5ca719c8da2040e0d03bb2551267b80e1ae))
+
 # [2.18.0-rc.10](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.9...v2.18.0-rc.10) (2026-09-29)
 
 
