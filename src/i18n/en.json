@@ -242,8 +242,7 @@
 				"errors": {
 					"dateIntersection": "This would overlap with another record on the same {{fields}}.",
 					"duplicate": "A record with the same {{fields}} already exists."
-				},
-				"wholeResource": "this resource"
+				}
 			}
 		},
 		"reference": {

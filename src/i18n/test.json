@@ -242,8 +242,7 @@
 				"errors": {
 					"dateIntersection": "****** {{fields}} ******",
 					"duplicate": "****** {{fields}} ******"
-				},
-				"wholeResource": "******"
+				}
 			}
 		},
 		"reference": {

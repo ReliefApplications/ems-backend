@@ -750,10 +750,10 @@ describe('validateUniqueness', () => {
         message: 'Code already used',
         messageTranslations: {
           en: 'Code already used',
-          fr: 'Code déjà utilisé ({matchCount})',
+          fr: 'Code déjà utilisé',
         },
       });
-      expect(await getMessage(resource, 'fr')).toEqual('Code déjà utilisé (1)');
+      expect(await getMessage(resource, 'fr')).toEqual('Code déjà utilisé');
       expect(await getMessage(resource, 'en')).toEqual('Code already used');
     });
 
@@ -778,67 +778,20 @@ describe('validateUniqueness', () => {
       );
     });
 
+    it('displays the message as it is, without replacing anything in it', async () => {
+      const resource = await buildResource({
+        message: 'Duplicate {fields} in {scope} ({matchCount})',
+      });
+      expect(await getMessage(resource, 'en')).toEqual(
+        'Duplicate {fields} in {scope} ({matchCount})'
+      );
+    });
+
     it('uses the default message when the rule has no message at all', async () => {
       const resource = await buildResource({});
       expect(await getMessage(resource, 'fr')).toEqual(
         'A record with the same org_code already exists.'
       );
-    });
-  });
-
-  describe('custom message token interpolation', () => {
-    it('replaces {fields}, {scope} and {matchCount} in a custom message', async () => {
-      const resource = await Resource.create({
-        name: 'Beneficiary',
-        fields: [{ name: 'nationalId' }, { name: 'country' }],
-        uniquenessRules: [
-          {
-            fields: ['nationalId', 'country'],
-            severity: 'error',
-            message:
-              'Duplicate {fields} found in {scope} ({matchCount} match(es)).',
-          },
-        ],
-      });
-      await Record.create({
-        incrementalId: '1',
-        form: resource._id,
-        _form: { _id: resource._id, name: resource.name },
-        resource: resource._id,
-        data: { nationalId: 'X123', country: 'Kenya' },
-      });
-
-      const result = await validateUniqueness(
-        { nationalId: 'X123', country: 'Kenya' },
-        resource
-      );
-      expect(result.errors[0].errors[0]).toEqual(
-        'Duplicate nationalId, country found in country: Kenya (1 match(es)).'
-      );
-    });
-
-    it("renders the 'whole resource' fallback when the rule has a single field", async () => {
-      const resource = await Resource.create({
-        name: 'Organization',
-        fields: [{ name: 'org_code' }],
-        uniquenessRules: [
-          {
-            fields: ['org_code'],
-            severity: 'error',
-            message: 'Duplicate in {scope}.',
-          },
-        ],
-      });
-      await Record.create({
-        incrementalId: '1',
-        form: resource._id,
-        _form: { _id: resource._id, name: resource.name },
-        resource: resource._id,
-        data: { org_code: 'ABC' },
-      });
-
-      const result = await validateUniqueness({ org_code: 'ABC' }, resource);
-      expect(result.errors[0].errors[0]).toEqual('Duplicate in this resource.');
     });
   });
 });

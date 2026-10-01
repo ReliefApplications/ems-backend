@@ -17,20 +17,16 @@ import {
  *
  * @param result the row's result to update, in place
  * @param rule the violated rule
- * @param row the row's data, used to render the `{scope}` message token
- * @param matchCount number of rows in the batch sharing the same scope, used for the `{matchCount}` message token
  * @param t optional translator used to localize default violation messages
  * @param locale optional locale of the user, used to pick the translation of custom violation messages
  */
 const pushViolation = (
   result: UniquenessCheckResult,
   rule: UniquenessRule,
-  row: any,
-  matchCount: number,
   t?: Translator,
   locale?: string
 ) => {
-  const message = getViolationMessage(rule, row, matchCount, t, locale);
+  const message = getViolationMessage(rule, t, locale);
   const violation: UniquenessViolation = {
     question: rule.name || rule.fields.join(' + '),
     errors: [message],
@@ -126,14 +122,7 @@ export const validateBatchUniqueness = (
               )
             );
           if (overlapsEarlier) {
-            pushViolation(
-              results[current],
-              rule,
-              rows[current],
-              indices.length,
-              t,
-              locale
-            );
+            pushViolation(results[current], rule, t, locale);
           }
         }
       }
@@ -142,14 +131,7 @@ export const validateBatchUniqueness = (
       for (const indices of groups.values()) {
         for (let i = 1; i < indices.length; i++) {
           const current = indices[i];
-          pushViolation(
-            results[current],
-            rule,
-            rows[current],
-            indices.length,
-            t,
-            locale
-          );
+          pushViolation(results[current], rule, t, locale);
         }
       }
     }

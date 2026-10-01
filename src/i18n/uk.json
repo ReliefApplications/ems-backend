@@ -236,8 +236,7 @@
 				"errors": {
 					"dateIntersection": "Це перетинатиметься з іншим записом за тими самими {{fields}}.",
 					"duplicate": "Запис із такими самими значеннями {{fields}} вже існує."
-				},
-				"wholeResource": "цей ресурс"
+				}
 			}
 		},
 		"reference": {

@@ -267,78 +267,23 @@ export const defaultMessage = (
 };
 
 /**
- * Renders a rule's scope for the `{scope}` message token. By convention the
- * first field of a rule is the value being checked for uniqueness, and any
- * remaining fields form the scope it is grouped by (e.g. for
- * `fields: ['nationalId', 'country']`, a duplicate nationalId is only a
- * violation within the same country, so the scope is that country).
- *
- * @param rule the violated rule
- * @param data the record data, used to read the actual scope values
- * @param t optional translator, used for the 'whole resource' fallback
- * @returns a human readable description of the scope
- */
-export const renderScope = (
-  rule: UniquenessRule,
-  data: any,
-  t?: Translator
-): string => {
-  const scopeFields = rule.fields.slice(1);
-  if (!scopeFields.length) {
-    return t ? t('mutations.record.uniqueness.wholeResource') : 'this resource';
-  }
-  return scopeFields.map((field) => `${field}: ${data[field]}`).join(', ');
-};
-
-/**
- * Replaces the `{fields}`, `{scope}` and `{matchCount}` tokens in a
- * custom, admin-authored violation message.
- *
- * @param template the message template
- * @param tokens the token values
- * @param tokens.fields the rule's fields, joined
- * @param tokens.scope the rule's scope, rendered as text
- * @param tokens.matchCount the number of matching records found
- * @returns the interpolated message
- */
-export const interpolateMessage = (
-  template: string,
-  tokens: { fields: string; scope: string; matchCount: number }
-): string =>
-  template
-    .replace(/{fields}/g, tokens.fields)
-    .replace(/{scope}/g, tokens.scope)
-    .replace(/{matchCount}/g, String(tokens.matchCount));
-
-/**
  * Gets the message to display to the user for a violated rule: the custom
  * message of the rule, in the language of the user when it is translated, or
  * the default message when the rule has none.
  *
  * @param rule the violated rule
- * @param data the record data, used to render the `{scope}` message token
- * @param matchCount number of matching records, used for the `{matchCount}` message token
  * @param t optional translator used to localize default violation messages
  * @param locale optional locale of the user, used to pick the translation of a custom message
  * @returns the message to display
  */
 export const getViolationMessage = (
   rule: UniquenessRule,
-  data: any,
-  matchCount: number,
   t?: Translator,
   locale?: string
-): string => {
-  const template =
-    resolveLocalizedString(rule.messageTranslations, locale) || rule.message;
-  return template
-    ? interpolateMessage(template, {
-        fields: rule.fields.join(', '),
-        scope: renderScope(rule, data, t),
-        matchCount,
-      })
-    : defaultMessage(rule, t);
-};
+): string =>
+  resolveLocalizedString(rule.messageTranslations, locale) ||
+  rule.message ||
+  defaultMessage(rule, t);
 
 /**
  * Checks the uniqueness rules configured on a resource against the given
@@ -394,7 +339,7 @@ export const validateUniqueness = async (
       query[`data.${field}`] = toMatchFilter(data[field]);
     }
 
-    let matchCount = 0;
+    let isViolated = false;
 
     if (rule.dateIntersection?.startField && rule.dateIntersection?.endField) {
       const { startField, endField, allowAdjacent } = rule.dateIntersection;
@@ -410,13 +355,13 @@ export const validateUniqueness = async (
           rangesOverlap(...range, ...candidateRange, allowAdjacent)
         );
       });
-      matchCount = overlapping.length;
+      isViolated = overlapping.length > 0;
     } else {
-      matchCount = await RecordModel.countDocuments(query);
+      isViolated = !!(await RecordModel.exists(query));
     }
 
-    if (matchCount > 0) {
-      const message = getViolationMessage(rule, data, matchCount, t, locale);
+    if (isViolated) {
+      const message = getViolationMessage(rule, t, locale);
       const violation: UniquenessViolation = {
         question: rule.name || rule.fields.join(' + '),
         errors: [message],
