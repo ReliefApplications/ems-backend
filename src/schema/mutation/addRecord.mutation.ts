@@ -7,8 +7,23 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { RecordType } from '../types';
-import { Form, Record, Notification, Channel, Version } from '@models';
-import { transformRecord, getOwnership, getNextId } from '@utils/form';
+import {
+  Form,
+  Record,
+  Notification,
+  Channel,
+  Resource,
+  Version,
+} from '@models';
+import {
+  transformRecord,
+  getOwnership,
+  getNextId,
+  validateUniqueness,
+  UniquenessCheckResult,
+  UniquenessError,
+  logUniquenessError,
+} from '@utils/form';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import pubsub from '../../server/pubsub';
 import { getFormPermissionFilter } from '@utils/filter';
@@ -23,6 +38,7 @@ export type AddRecordArgs = {
   form?: string | Types.ObjectId;
   data: any;
   captchaToken?: string;
+  skipValidation?: boolean;
   draft?: boolean;
   cloneRecordId?: string | Types.ObjectId;
 };
@@ -42,6 +58,7 @@ export default {
     form: { type: GraphQLID },
     data: { type: new GraphQLNonNull(GraphQLJSON) },
     captchaToken: { type: GraphQLString },
+    skipValidation: { type: GraphQLBoolean, defaultValue: false },
     draft: { type: GraphQLBoolean },
     cloneRecordId: { type: GraphQLID },
   },
@@ -172,6 +189,42 @@ export default {
 
       // Create the record instance
       transformRecord(args.data, form.fields);
+
+      // Check uniqueness rules configured on the resource, if any. Drafts are
+      // not checked: as for the records unicity, they are once published
+      let uniquenessResult: UniquenessCheckResult = {
+        errors: [],
+        warnings: [],
+      };
+      if (!args.draft) {
+        const resource = form.resource
+          ? await Resource.findById(form.resource)
+          : null;
+        uniquenessResult = await validateUniqueness(
+          args.data,
+          resource,
+          undefined,
+          context.i18next.t.bind(context.i18next),
+          context
+        );
+      }
+      if (uniquenessResult.errors.length) {
+        throw new UniquenessError(uniquenessResult.errors);
+      }
+      // Warn about (non-blocking) duplicates, unless the user chose to save
+      // anyway. Nothing is saved, so no incremental id is used. Unauthenticated
+      // users are not warned: they must not learn about the existing records
+      if (uniquenessResult.warnings.length && !args.skipValidation && user) {
+        return Object.assign(
+          new Record({
+            form: args.form,
+            data: args.data,
+            resource: form.resource ? form.resource : null,
+          }),
+          { validationErrors: uniquenessResult.warnings }
+        );
+      }
+
       const record = new Record({
         // Drafts do not have an incremental id: the field is left out so they
         // are excluded from the unique incremental id index
@@ -244,6 +297,10 @@ export default {
       }
       return record;
     } catch (err) {
+      if (err instanceof UniquenessError) {
+        logUniquenessError(err);
+        throw new GraphQLError(err.message);
+      }
       logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);

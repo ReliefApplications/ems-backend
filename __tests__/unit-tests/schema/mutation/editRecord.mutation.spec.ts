@@ -8,6 +8,7 @@ import { GraphQLError } from 'graphql';
 import { Context } from '@server/apollo/context';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { checkRecordValidation, getNextId } from '@utils/form';
+import { logger } from '@services/logger.service';
 
 jest.mock('@services/logger.service');
 
@@ -231,6 +232,213 @@ describe('editRecord Resolver', () => {
       expect(record.incrementalId).toEqual(submitted.incrementalId);
       expect(record.data.description).toEqual('edited');
       expect(checkRecordValidation).toHaveBeenCalled();
+    });
+  });
+
+  describe('Uniqueness rules', () => {
+    let uniqueResource: Resource;
+    let uniqueForm: Form;
+    let record: Record;
+
+    /**
+     * Creates a record of the form with uniqueness rules.
+     *
+     * @param orgCode Value of the unique field
+     * @param draft Whether the record is a draft
+     * @returns the created record
+     */
+    const createUniqueRecord = async (orgCode: string, draft = false) =>
+      Record.create({
+        ...(!draft && {
+          incrementalId: `2026-U${String(++nextIdCounter).padStart(8, '0')}`,
+        }),
+        form: uniqueForm._id,
+        _form: { _id: uniqueForm._id, name: uniqueForm.name },
+        resource: uniqueResource._id,
+        data: { org_code: orgCode },
+        draft,
+      });
+
+    beforeEach(async () => {
+      uniqueResource = await Resource.create({
+        name: `Organization-${new Types.ObjectId()}`,
+        fields: [{ name: 'org_code' }],
+        uniquenessRules: [{ fields: ['org_code'], severity: 'error' }],
+      });
+      uniqueForm = await Form.create({
+        name: 'Organization form',
+        graphQLTypeName: `Organization${new Types.ObjectId()}`,
+        resource: uniqueResource._id,
+        core: true,
+        fields: [{ name: 'org_code' }],
+      });
+      await createUniqueRecord('ABC');
+      record = await createUniqueRecord('XYZ');
+    });
+
+    afterEach(async () => {
+      await Record.deleteMany({ resource: uniqueResource._id });
+      await Form.deleteMany({ _id: uniqueForm._id });
+      await Resource.deleteMany({ _id: uniqueResource._id });
+    });
+
+    it('throws a GraphQLError when the new value collides with another record (error severity)', async () => {
+      const result = editRecord.resolve(
+        null,
+        buildArgs({ id: record.id, data: { org_code: 'ABC' } }),
+        context
+      );
+      await expect(result).rejects.toThrow(GraphQLError);
+      // The request did not fail: it must not be logged as an error
+      expect(logger.error).not.toHaveBeenCalled();
+      expect(logger.warn).toHaveBeenCalledTimes(1);
+    });
+
+    it('allows the update when the value is not a duplicate', async () => {
+      const updated = await editRecord.resolve(
+        null,
+        buildArgs({ id: record.id, data: { org_code: 'NEW' } }),
+        context
+      );
+      expect(updated.data.org_code).toEqual('NEW');
+    });
+
+    it('allows re-saving the record with its own unchanged value', async () => {
+      const updated = await editRecord.resolve(
+        null,
+        buildArgs({ id: record.id, data: { org_code: 'XYZ' } }),
+        context
+      );
+      expect(updated.data.org_code).toEqual('XYZ');
+    });
+
+    it('returns validationErrors without saving for a warning-severity duplicate', async () => {
+      uniqueResource.uniquenessRules = [
+        { fields: ['org_code'], severity: 'warning' },
+      ];
+      await uniqueResource.save();
+
+      const updated = (await editRecord.resolve(
+        null,
+        buildArgs({ id: record.id, data: { org_code: 'ABC' } }),
+        context
+      )) as RecordWithValidationErrors;
+      expect(updated.validationErrors).toHaveLength(1);
+      const unchanged = await Record.findById(record.id);
+      expect(unchanged.data.org_code).toEqual('XYZ');
+    });
+
+    it('saves the record when skipValidation is set despite a warning-severity duplicate', async () => {
+      uniqueResource.uniquenessRules = [
+        { fields: ['org_code'], severity: 'warning' },
+      ];
+      await uniqueResource.save();
+
+      await editRecord.resolve(
+        null,
+        { id: record.id, data: { org_code: 'ABC' }, skipValidation: true },
+        context
+      );
+      const updated = await Record.findById(record.id);
+      expect(updated.data.org_code).toEqual('ABC');
+    });
+
+    it('detects a duplicate on a date field, sent as text by the client', async () => {
+      const fields = [
+        { name: 'name', type: 'text' },
+        { name: 'dob', type: 'date' },
+      ];
+      uniqueResource.fields = fields;
+      uniqueResource.uniquenessRules = [
+        { fields: ['name', 'dob'], severity: 'error' },
+      ];
+      await uniqueResource.save();
+      await Form.updateOne({ _id: uniqueForm._id }, { fields });
+      const createPerson = (name: string) =>
+        Record.create({
+          incrementalId: `2026-U${String(++nextIdCounter).padStart(8, '0')}`,
+          form: uniqueForm._id,
+          _form: { _id: uniqueForm._id, name: uniqueForm.name },
+          resource: uniqueResource._id,
+          // Dates are stored as dates, not as the text sent by the client
+          data: { name, dob: new Date('1990-05-01') },
+        });
+      await createPerson('John');
+      const jane = await createPerson('Jane');
+
+      const result = editRecord.resolve(
+        null,
+        buildArgs({ id: jane.id, data: { name: 'John', dob: '1990-05-01' } }),
+        context
+      );
+      await expect(result).rejects.toThrow(GraphQLError);
+      const stored = await Record.findById(jane._id);
+      expect(stored.data.name).toEqual('Jane');
+    });
+
+    it('should not revert to a version duplicating another record', async () => {
+      const version = await Version.create({
+        data: { org_code: 'ABC' },
+        createdBy: context.user._id,
+      });
+      await Record.updateOne(
+        { _id: record._id },
+        { $push: { versions: version._id } }
+      );
+
+      const result = editRecord.resolve(
+        null,
+        buildArgs({ id: record.id, version: version.id }),
+        context
+      );
+      await expect(result).rejects.toThrow(GraphQLError);
+      const stored = await Record.findById(record._id);
+      expect(stored.data.org_code).toEqual('XYZ');
+    });
+
+    it('should revert to a version which is not a duplicate', async () => {
+      const version = await Version.create({
+        data: { org_code: 'OLD' },
+        createdBy: context.user._id,
+      });
+      await Record.updateOne(
+        { _id: record._id },
+        { $push: { versions: version._id } }
+      );
+
+      const reverted = await editRecord.resolve(
+        null,
+        buildArgs({ id: record.id, version: version.id }),
+        context
+      );
+      expect(reverted.data.org_code).toEqual('OLD');
+    });
+
+    it('should save a draft with a duplicate value, without checking the rules', async () => {
+      const draft = await createUniqueRecord('DRAFT', true);
+      const updated = await editRecord.resolve(
+        null,
+        buildArgs({ id: draft.id, data: { org_code: 'ABC' } }),
+        context
+      );
+      expect(updated.draft).toBe(true);
+      expect(updated.data.org_code).toEqual('ABC');
+    });
+
+    it('should not publish a draft with a duplicate value', async () => {
+      const draft = await createUniqueRecord('ABC', true);
+      const result = editRecord.resolve(
+        null,
+        buildArgs({
+          id: draft.id,
+          data: { org_code: 'ABC' },
+          updateDraftStatus: false,
+        }),
+        context
+      );
+      await expect(result).rejects.toThrow(GraphQLError);
+      const stored = await Record.findById(draft._id);
+      expect(stored.draft).toBe(true);
     });
   });
 });

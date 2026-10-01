@@ -27,6 +27,7 @@ import {
   FormType,
   LayoutConnectionType,
   RecordConnectionType,
+  UniquenessRuleType,
 } from '.';
 import { resourcePermission } from '../../types/permission';
 import { isFieldsAutoGrantActive } from '@utils/form/fieldsAutoGrant';
@@ -272,6 +273,7 @@ export const ResourceType = new GraphQLObjectType({
       },
     },
     fields: { type: GraphQLJSON },
+    uniquenessRules: { type: new GraphQLList(UniquenessRuleType) },
     relatedFields: {
       type: GraphQLJSON,
       async resolve(parent) {

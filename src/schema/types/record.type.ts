@@ -256,6 +256,7 @@ export const RecordType = new GraphQLObjectType({
           fields: () => ({
             question: { type: GraphQLString },
             errors: { type: new GraphQLList(GraphQLString) },
+            severity: { type: GraphQLString },
           }),
         })
       ),
