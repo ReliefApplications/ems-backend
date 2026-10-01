@@ -20,7 +20,6 @@ import {
   logUniquenessError,
 } from '@utils/form';
 import { RecordType } from '../types';
-import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
@@ -48,7 +47,6 @@ type EditRecordsArgs = {
 /** Edition of a record, prepared before being checked and applied */
 type RecordEdition = {
   record: RecordWithError;
-  ability: AppAbility;
   resource: Resource | null;
   template: Form;
   /** Data of the record, once updated */
@@ -110,7 +108,6 @@ export default {
           if (validationErrors.length && !args.skipValidation) {
             editions.push({
               record,
-              ability,
               resource: parentResource,
               template: record.form,
               data: record.data,
@@ -137,7 +134,6 @@ export default {
             transformRecord(data, fields);
             editions.push({
               record,
-              ability,
               resource: parentResource,
               template,
               data: { ...record.data, ...data },
@@ -173,8 +169,7 @@ export default {
             edition.data,
             resource,
             editedIds,
-            t,
-            edition.ability
+            t
           );
           const errors = [...batchResults[index].errors, ...result.errors];
           if (errors.length) {

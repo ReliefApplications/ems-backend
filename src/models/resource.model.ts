@@ -45,9 +45,6 @@ export interface Resource extends Document {
     // Whether the rule is enforced. Defaults to true; set to false to
     // keep a rule around without deleting it.
     active?: boolean;
-    // Whether to surface the actual matching records to the user,
-    // subject to their read permissions.
-    showMatches?: boolean;
     // Restricts the rule to records matching all these conditions
     // (e.g. only enforce uniqueness of an assignment's country while it is
     // the active primary assignment).
@@ -186,10 +183,6 @@ const resourceSchema = new Schema<Resource>(
         active: {
           type: Boolean,
           default: true,
-        },
-        showMatches: {
-          type: Boolean,
-          default: false,
         },
         condition: [
           {

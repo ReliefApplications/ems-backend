@@ -48,7 +48,6 @@ export type UniquenessRuleArgs = {
   severity: 'error' | 'warning';
   message?: string;
   active?: boolean;
-  showMatches?: boolean;
   condition?: UniquenessConditionArgs[];
   dateIntersection?: UniquenessDateIntersectionArgs;
 };
@@ -62,7 +61,6 @@ export const UniquenessRuleInputType = new GraphQLInputObjectType({
     severity: { type: GraphQLString, defaultValue: 'error' },
     message: { type: GraphQLString },
     active: { type: GraphQLBoolean, defaultValue: true },
-    showMatches: { type: GraphQLBoolean, defaultValue: false },
     condition: { type: new GraphQLList(UniquenessConditionInputType) },
     dateIntersection: { type: UniquenessDateIntersectionInputType },
   }),

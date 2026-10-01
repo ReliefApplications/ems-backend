@@ -1,7 +1,5 @@
-import { Ability, AbilityBuilder } from '@casl/ability';
 import { Record, Resource } from '@models';
 import { validateUniqueness } from '@utils/form';
-import { AppAbility } from '@security/defineUserAbility';
 import { DatabaseHelpers } from '../../../helpers/database-helpers';
 
 describe('validateUniqueness', () => {
@@ -755,88 +753,6 @@ describe('validateUniqueness', () => {
 
       const result = await validateUniqueness({ org_code: 'ABC' }, resource);
       expect(result.errors[0].errors[0]).toEqual('Duplicate in this resource.');
-    });
-  });
-
-  describe('showMatches', () => {
-    it('returns readable matches and counts unreadable ones separately', async () => {
-      const resource = await Resource.create({
-        name: 'Organization',
-        fields: [{ name: 'org_code' }],
-        uniquenessRules: [
-          { fields: ['org_code'], severity: 'error', showMatches: true },
-        ],
-      });
-      const readableRecord = await Record.create({
-        incrementalId: '1',
-        form: resource._id,
-        _form: { _id: resource._id, name: resource.name },
-        resource: resource._id,
-        data: { org_code: 'ABC' },
-      });
-      await Record.create({
-        incrementalId: '2',
-        form: resource._id,
-        _form: { _id: resource._id, name: resource.name },
-        resource: resource._id,
-        data: { org_code: 'ABC' },
-      });
-
-      const { can, build } = new AbilityBuilder(Ability);
-      can('read', 'Record', { incrementalId: readableRecord.incrementalId });
-      const ability = build() as unknown as AppAbility;
-
-      const result = await validateUniqueness(
-        { org_code: 'ABC' },
-        resource,
-        undefined,
-        undefined,
-        ability
-      );
-      expect(result.errors[0].matches).toEqual([
-        { id: String(readableRecord._id), incrementalId: '1' },
-      ]);
-      expect(result.errors[0].hiddenMatchCount).toEqual(1);
-    });
-
-    it('hides every match when no ability is provided (fails closed)', async () => {
-      const resource = await Resource.create({
-        name: 'Organization',
-        fields: [{ name: 'org_code' }],
-        uniquenessRules: [
-          { fields: ['org_code'], severity: 'error', showMatches: true },
-        ],
-      });
-      await Record.create({
-        incrementalId: '1',
-        form: resource._id,
-        _form: { _id: resource._id, name: resource.name },
-        resource: resource._id,
-        data: { org_code: 'ABC' },
-      });
-
-      const result = await validateUniqueness({ org_code: 'ABC' }, resource);
-      expect(result.errors[0].matches).toEqual([]);
-      expect(result.errors[0].hiddenMatchCount).toEqual(1);
-    });
-
-    it('does not compute matches when showMatches is not set', async () => {
-      const resource = await Resource.create({
-        name: 'Organization',
-        fields: [{ name: 'org_code' }],
-        uniquenessRules: [{ fields: ['org_code'], severity: 'error' }],
-      });
-      await Record.create({
-        incrementalId: '1',
-        form: resource._id,
-        _form: { _id: resource._id, name: resource.name },
-        resource: resource._id,
-        data: { org_code: 'ABC' },
-      });
-
-      const result = await validateUniqueness({ org_code: 'ABC' }, resource);
-      expect(result.errors[0].matches).toBeUndefined();
-      expect(result.errors[0].hiddenMatchCount).toBeUndefined();
     });
   });
 });

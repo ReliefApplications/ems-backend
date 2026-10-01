@@ -3,16 +3,9 @@ import { Types } from 'mongoose';
 import { castArray, escapeRegExp } from 'lodash';
 import { GraphQLError } from 'graphql';
 import { logger } from '@services/logger.service';
-import { AppAbility } from '@security/defineUserAbility';
 
 /** Translator function, as exposed by i18next (context.i18next.t / req.t) */
 export type Translator = (key: string, options?: Record<string, any>) => string;
-
-/** A matching record surfaced to the user for a violated rule */
-export interface UniquenessMatch {
-  id: string;
-  incrementalId?: string;
-}
 
 /** A single uniqueness violation, in the same shape as survey validation errors */
 export type UniquenessViolation = {
@@ -20,10 +13,6 @@ export type UniquenessViolation = {
   errors: string[];
   /** Severity of the violated rule: warnings can be bypassed by the user, errors cannot */
   severity?: 'error' | 'warning';
-  /** Matching records the requesting user is allowed to read, if `rule.showMatches` is set */
-  matches?: UniquenessMatch[];
-  /** Number of additional matching records the requesting user cannot read */
-  hiddenMatchCount?: number;
 };
 
 /** Result of a uniqueness check, split by severity */
@@ -47,8 +36,6 @@ export interface UniquenessRule {
   message?: string;
   /** Whether the rule is enforced. Defaults to true; set to false to keep a rule without deleting it. */
   active?: boolean;
-  /** Whether to surface the actual matching records to the user (subject to their read permissions) */
-  showMatches?: boolean;
   condition?: UniquenessCondition[];
   dateIntersection?: {
     startField: string;
@@ -116,11 +103,6 @@ export const getUnknownRuleField = (
       : []),
   ].find((field) => !fieldNames.includes(field));
 };
-
-/** Max number of matching record documents fetched when `showMatches` is set */
-const MATCH_FETCH_LIMIT = 20;
-/** Max number of matching records actually surfaced in a violation */
-const MATCH_DISPLAY_LIMIT = 5;
 
 /**
  * Whether a value counts as missing for uniqueness purposes.
@@ -326,33 +308,6 @@ export const interpolateMessage = (
     .replace(/{matchCount}/g, String(tokens.matchCount));
 
 /**
- * Splits matching record documents into the ones the given ability can
- * read (capped, for display) and a count of the ones it cannot (only ever
- * reported as a number, never their content).
- *
- * @param candidates matching record documents
- * @param ability the requesting user's ability, if known; when absent, every candidate is treated as readable
- * @returns readable matches (capped to MATCH_DISPLAY_LIMIT) and the number of hidden ones
- */
-const buildMatches = (
-  candidates: any[],
-  ability?: AppAbility
-): { matches: UniquenessMatch[]; hiddenMatchCount: number } => {
-  // Fail closed: without a known ability (e.g. an unauthenticated public
-  // form submission), no match is considered readable.
-  const readable = ability
-    ? candidates.filter((record) => ability.can('read', record))
-    : [];
-  return {
-    matches: readable.slice(0, MATCH_DISPLAY_LIMIT).map((record) => ({
-      id: String(record._id),
-      incrementalId: record.incrementalId,
-    })),
-    hiddenMatchCount: candidates.length - readable.length,
-  };
-};
-
-/**
  * Checks the uniqueness rules configured on a resource against the given
  * record data, and reports any duplicate found among existing records of
  * that resource.
@@ -370,15 +325,13 @@ const buildMatches = (
  * @param resource the resource the record belongs to, or null if none
  * @param excludedRecordIds id(s) of the record(s) being edited, excluded from the duplicate search
  * @param t optional translator used to localize default violation messages
- * @param ability optional requesting user's ability, used to filter which matching records ('showMatches') can be shown to them
  * @returns errors (blocking) and warnings (non-blocking) violations found
  */
 export const validateUniqueness = async (
   data: any,
   resource: Resource | null,
   excludedRecordIds?: string | Types.ObjectId | (string | Types.ObjectId)[],
-  t?: Translator,
-  ability?: AppAbility
+  t?: Translator
 ): Promise<UniquenessCheckResult> => {
   const result: UniquenessCheckResult = { errors: [], warnings: [] };
   const rules: UniquenessRule[] = resource?.uniquenessRules || [];
@@ -407,8 +360,6 @@ export const validateUniqueness = async (
     }
 
     let matchCount = 0;
-    let matches: UniquenessMatch[] | undefined;
-    let hiddenMatchCount: number | undefined;
 
     if (rule.dateIntersection?.startField && rule.dateIntersection?.endField) {
       const { startField, endField, allowAdjacent } = rule.dateIntersection;
@@ -425,17 +376,8 @@ export const validateUniqueness = async (
         );
       });
       matchCount = overlapping.length;
-      if (rule.showMatches && matchCount) {
-        ({ matches, hiddenMatchCount } = buildMatches(overlapping, ability));
-      }
     } else {
       matchCount = await RecordModel.countDocuments(query);
-      if (rule.showMatches && matchCount) {
-        const candidates = await RecordModel.find(query).limit(
-          MATCH_FETCH_LIMIT
-        );
-        ({ matches, hiddenMatchCount } = buildMatches(candidates, ability));
-      }
     }
 
     if (matchCount > 0) {
@@ -450,8 +392,6 @@ export const validateUniqueness = async (
         question: rule.name || rule.fields.join(' + '),
         errors: [message],
         severity: rule.severity === 'warning' ? 'warning' : 'error',
-        ...(matches && { matches }),
-        ...(hiddenMatchCount !== undefined && { hiddenMatchCount }),
       };
       if (rule.severity === 'warning') {
         result.warnings.push(violation);

@@ -25,7 +25,6 @@ import {
   logUniquenessError,
 } from '@utils/form';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
-import { AppAbility } from '@security/defineUserAbility';
 import pubsub from '../../server/pubsub';
 import { getFormPermissionFilter } from '@utils/filter';
 import { logger } from '@services/logger.service';
@@ -78,13 +77,9 @@ export default {
         );
       }
 
-      // Used to filter which matching records (if any) can be shown back to
-      // the user for a uniqueness violation; left undefined for
-      // unauthenticated submissions, so no match is ever surfaced to them.
-      let ability: AppAbility | undefined;
       if (user) {
         // Check the ability with permissions for this form
-        ability = await extendAbilityForRecords(user, form);
+        const ability = await extendAbilityForRecords(user, form);
         if (ability.cannot('create', 'Record')) {
           throw new GraphQLError(
             context.i18next.t('common.errors.permissionNotGranted')
@@ -209,8 +204,7 @@ export default {
           args.data,
           resource,
           undefined,
-          context.i18next.t.bind(context.i18next),
-          ability
+          context.i18next.t.bind(context.i18next)
         );
       }
       if (uniquenessResult.errors.length) {

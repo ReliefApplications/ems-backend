@@ -55,8 +55,7 @@ export default {
           record.data,
           resource,
           record._id,
-          context.i18next.t.bind(context.i18next),
-          ability
+          context.i18next.t.bind(context.i18next)
         );
         if (uniquenessResult.errors.length) {
           throw new UniquenessError(uniquenessResult.errors);
