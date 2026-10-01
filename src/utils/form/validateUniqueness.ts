@@ -4,6 +4,11 @@ import { castArray, escapeRegExp } from 'lodash';
 import { GraphQLError } from 'graphql';
 import { logger } from '@services/logger.service';
 import { resolveLocalizedString } from '@utils/i18n/resolveLocalizedString';
+import getFilter, {
+  extractFilterFields,
+} from '@utils/schema/resolvers/Query/getFilter';
+import { conditionsMatcher } from '@security/defineUserAbility';
+import { filterOperator } from '../../types';
 
 /** Translator function, as exposed by i18next (context.i18next.t / req.t) */
 export type Translator = (key: string, options?: Record<string, any>) => string;
@@ -16,17 +21,22 @@ export type UniquenessViolation = {
   severity?: 'error' | 'warning';
 };
 
+/** Part of the request context used when checking uniqueness rules */
+export type UniquenessContext = { locale?: string; user?: any };
+
 /** Result of a uniqueness check, split by severity */
 export interface UniquenessCheckResult {
   errors: UniquenessViolation[];
   warnings: UniquenessViolation[];
 }
 
-/** A single 'only apply when' condition of a uniqueness rule */
-export interface UniquenessCondition {
-  field: string;
-  operator: 'eq' | 'ne';
-  value: any;
+/**
+ * 'Only apply when' filter of a uniqueness rule, in the same format as the
+ * filters of layouts
+ */
+export interface UniquenessConditionFilter {
+  logic: 'and' | 'or';
+  filters: any[];
 }
 
 /** A uniqueness rule, as stored on a resource */
@@ -39,7 +49,8 @@ export interface UniquenessRule {
   messageTranslations?: Record<string, string>;
   /** Whether the rule is enforced. Defaults to true; set to false to keep a rule without deleting it. */
   active?: boolean;
-  condition?: UniquenessCondition[];
+  /** Restricts the rule to the records matching this filter. Rules first stored a list of equalities. */
+  condition?: UniquenessConditionFilter | any[];
   dateIntersection?: {
     startField: string;
     endField: string;
@@ -76,35 +87,6 @@ export class UniquenessError extends GraphQLError {
  */
 export const logUniquenessError = (err: UniquenessError): void => {
   logger.warn(`Record not saved, uniqueness rule violated: ${err.message}`);
-};
-
-/** Fields referenced by a uniqueness rule */
-type UniquenessRuleFields = {
-  fields: string[];
-  condition?: { field: string }[];
-  dateIntersection?: { startField: string; endField: string };
-};
-
-/**
- * Gets the first field referenced by a rule ( unique fields, conditions or
- * date range ) which does not exist on the resource, if any.
- *
- * @param rule the uniqueness rule to check
- * @param resource the resource the rule is configured on
- * @returns name of the unknown field, or undefined if all the fields exist
- */
-export const getUnknownRuleField = (
-  rule: UniquenessRuleFields,
-  resource: Resource
-): string | undefined => {
-  const fieldNames = (resource.fields || []).map((field) => field.name);
-  return [
-    ...(rule.fields || []),
-    ...(rule.condition || []).map((condition) => condition.field),
-    ...(rule.dateIntersection
-      ? [rule.dateIntersection.startField, rule.dateIntersection.endField]
-      : []),
-  ].find((field) => !fieldNames.includes(field));
 };
 
 /**
@@ -151,37 +133,101 @@ const toMatchFilter = (value: any): any =>
     : value;
 
 /**
- * Whether the given data satisfies a rule's 'only apply when' conditions.
+ * Gets the 'only apply when' filter of a rule, in the same format as the
+ * filters of layouts ( `{ logic, filters }` ). Conditions were first stored
+ * as a list of equalities, all required: they are converted to that format.
+ *
+ * @param condition condition stored on the rule
+ * @returns filter of the rule, or null if it applies to all records
+ */
+export const getConditionFilter = (
+  condition: any
+): UniquenessConditionFilter | null => {
+  if (Array.isArray(condition)) {
+    return condition.length
+      ? {
+          logic: 'and',
+          filters: condition.map((x) => ({
+            field: x.field,
+            operator:
+              x.operator === 'ne'
+                ? filterOperator.NOT_EQUAL_TO
+                : filterOperator.EQUAL_TO,
+            value: x.value,
+          })),
+        }
+      : null;
+  }
+  return condition?.filters?.length ? condition : null;
+};
+
+/**
+ * Translates the 'only apply when' filter of a rule into a Mongo filter on
+ * the records, the same way the filters of layouts are.
+ *
+ * @param rule the uniqueness rule
+ * @param resource the resource the rule is configured on
+ * @param context optional request context, used to resolve the values depending on the user
+ * @returns a Mongo filter, or null if the rule applies to all records
+ */
+export const getConditionMongoFilter = (
+  rule: UniquenessRule,
+  resource: Resource,
+  context?: any
+): Record<string, any> | null => {
+  const filter = getConditionFilter(rule.condition);
+  if (!filter) {
+    return null;
+  }
+  const mongoFilter = getFilter(filter, resource.fields || [], context);
+  return Object.keys(mongoFilter).length ? mongoFilter : null;
+};
+
+/** Fields referenced by a uniqueness rule */
+type UniquenessRuleFields = {
+  fields: string[];
+  condition?: any;
+  dateIntersection?: { startField: string; endField: string };
+};
+
+/**
+ * Gets the first field referenced by a rule ( unique fields, filter or date
+ * range ) which does not exist on the resource, if any.
+ *
+ * @param rule the uniqueness rule to check
+ * @param resource the resource the rule is configured on
+ * @returns name of the unknown field, or undefined if all the fields exist
+ */
+export const getUnknownRuleField = (
+  rule: UniquenessRuleFields,
+  resource: Resource
+): string | undefined => {
+  const fieldNames = (resource.fields || []).map((field) => field.name);
+  const conditionFilter = getConditionFilter(rule.condition);
+  return [
+    ...(rule.fields || []),
+    // Filters can target a property of a field ( e.g. 'address.city' )
+    ...(conditionFilter ? extractFilterFields(conditionFilter) : []).map(
+      (field) => field.split('.')[0]
+    ),
+    ...(rule.dateIntersection
+      ? [rule.dateIntersection.startField, rule.dateIntersection.endField]
+      : []),
+  ].find((field) => !fieldNames.includes(field));
+};
+
+/**
+ * Whether the given data satisfies the 'only apply when' filter of a rule.
+ * The Mongo filter is evaluated in memory, as the data is not saved yet.
  *
  * @param data record data to check
- * @param condition list of conditions, ANDed together
- * @returns true if there is no condition, or all of them are satisfied
+ * @param conditionFilter Mongo filter of the rule, from {@link getConditionMongoFilter}
+ * @returns true if there is no filter, or the data satisfies it
  */
 export const matchesCondition = (
   data: any,
-  condition?: UniquenessCondition[]
-): boolean =>
-  (condition || []).every((c) =>
-    c.operator === 'ne' ? data[c.field] !== c.value : data[c.field] === c.value
-  );
-
-/**
- * Translates a rule's conditions into a Mongo filter on `data.<field>`, so
- * that only records also matching the condition are considered.
- *
- * @param condition list of conditions, ANDed together
- * @returns a Mongo filter object
- */
-const conditionToMongoFilter = (
-  condition?: UniquenessCondition[]
-): Record<string, any> => {
-  const filter: Record<string, any> = {};
-  for (const c of condition || []) {
-    filter[`data.${c.field}`] =
-      c.operator === 'ne' ? { $ne: c.value } : c.value;
-  }
-  return filter;
-};
+  conditionFilter: Record<string, any> | null
+): boolean => !conditionFilter || conditionsMatcher(conditionFilter)({ data });
 
 /**
  * Parses a value into a timestamp usable for range comparison.
@@ -241,6 +287,7 @@ export const rangesOverlap = (
 
 /**
  * Default violation message for a rule, used when it has no custom message.
+ * It is the same for all rules, including the ones checking date ranges.
  * Localized via `t` when provided (e.g. context.i18next.t / req.t), so the
  * user sees the error in their own language; falls back to English otherwise.
  *
@@ -253,16 +300,8 @@ export const defaultMessage = (
   t?: Translator
 ): string => {
   const fields = rule.fields.join(', ');
-  const isDateIntersection = !!(
-    rule.dateIntersection?.startField && rule.dateIntersection?.endField
-  );
-  if (t) {
-    return isDateIntersection
-      ? t('mutations.record.uniqueness.errors.dateIntersection', { fields })
-      : t('mutations.record.uniqueness.errors.duplicate', { fields });
-  }
-  return isDateIntersection
-    ? `This would overlap with another record on the same ${fields}.`
+  return t
+    ? t('mutations.record.uniqueness.errors.duplicate', { fields })
     : `A record with the same ${fields} already exists.`;
 };
 
@@ -290,8 +329,8 @@ export const getViolationMessage = (
  * record data, and reports any duplicate found among existing records of
  * that resource.
  *
- * A rule only applies to records matching its 'only apply when' conditions,
- * if any, and only when it is active. It is skipped entirely if any of its
+ * A rule only applies to records matching its 'only apply when' filter, if
+ * any, and only when it is active. It is skipped entirely if any of its
  * scope fields (or, for a date-intersection rule, both its start and end
  * fields) is missing from the data, as uniqueness cannot be meaningfully
  * evaluated on incomplete values.
@@ -303,7 +342,7 @@ export const getViolationMessage = (
  * @param resource the resource the record belongs to, or null if none
  * @param excludedRecordIds id(s) of the record(s) being edited, excluded from the duplicate search
  * @param t optional translator used to localize default violation messages
- * @param locale optional locale of the user, used to pick the translation of custom violation messages
+ * @param context optional request context: its locale is used to pick the translation of custom violation messages, and its user to resolve the filters depending on them
  * @returns errors (blocking) and warnings (non-blocking) violations found
  */
 export const validateUniqueness = async (
@@ -311,7 +350,7 @@ export const validateUniqueness = async (
   resource: Resource | null,
   excludedRecordIds?: string | Types.ObjectId | (string | Types.ObjectId)[],
   t?: Translator,
-  locale?: string
+  context?: UniquenessContext
 ): Promise<UniquenessCheckResult> => {
   const result: UniquenessCheckResult = { errors: [], warnings: [] };
   const rules: UniquenessRule[] = resource?.uniquenessRules || [];
@@ -322,7 +361,8 @@ export const validateUniqueness = async (
   for (const rule of rules) {
     if (rule.active === false) continue;
     if (!rule.fields?.length) continue;
-    if (!matchesCondition(data, rule.condition)) continue;
+    const conditionFilter = getConditionMongoFilter(rule, resource, context);
+    if (!matchesCondition(data, conditionFilter)) continue;
     if (rule.fields.some((field) => isEmptyValue(data[field]))) continue;
 
     const query: Record<string, any> = {
@@ -330,7 +370,8 @@ export const validateUniqueness = async (
       archived: { $ne: true },
       // Drafts are not submitted yet, so they cannot be duplicates
       draft: { $ne: true },
-      ...conditionToMongoFilter(rule.condition),
+      // Only the records the rule applies to can be duplicates
+      ...(conditionFilter && { $and: [conditionFilter] }),
     };
     if (excludedRecordIds) {
       query._id = { $nin: castArray(excludedRecordIds) };
@@ -361,7 +402,7 @@ export const validateUniqueness = async (
     }
 
     if (isViolated) {
-      const message = getViolationMessage(rule, t, locale);
+      const message = getViolationMessage(rule, t, context?.locale);
       const violation: UniquenessViolation = {
         question: rule.name || rule.fields.join(' + '),
         errors: [message],

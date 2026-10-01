@@ -7,23 +7,6 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 
-/** UniquenessCondition type for queries/mutations argument */
-export type UniquenessConditionArgs = {
-  field: string;
-  operator: 'eq' | 'ne';
-  value: any;
-};
-
-/** GraphQL uniqueness rule condition input type definition */
-export const UniquenessConditionInputType = new GraphQLInputObjectType({
-  name: 'UniquenessConditionInputType',
-  fields: () => ({
-    field: { type: new GraphQLNonNull(GraphQLString) },
-    operator: { type: GraphQLString, defaultValue: 'eq' },
-    value: { type: new GraphQLNonNull(GraphQLJSON) },
-  }),
-});
-
 /** UniquenessDateIntersection type for queries/mutations argument */
 export type UniquenessDateIntersectionArgs = {
   startField: string;
@@ -49,7 +32,8 @@ export type UniquenessRuleArgs = {
   message?: string;
   messageTranslations?: Record<string, string>;
   active?: boolean;
-  condition?: UniquenessConditionArgs[];
+  /** Filter restricting the records the rule applies to, as for layouts */
+  condition?: any;
   dateIntersection?: UniquenessDateIntersectionArgs;
 };
 
@@ -63,7 +47,7 @@ export const UniquenessRuleInputType = new GraphQLInputObjectType({
     message: { type: GraphQLString },
     messageTranslations: { type: GraphQLJSON },
     active: { type: GraphQLBoolean, defaultValue: true },
-    condition: { type: new GraphQLList(UniquenessConditionInputType) },
+    condition: { type: GraphQLJSON },
     dateIntersection: { type: UniquenessDateIntersectionInputType },
   }),
 });

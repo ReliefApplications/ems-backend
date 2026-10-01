@@ -56,7 +56,7 @@ export default {
           resource,
           record._id,
           context.i18next.t.bind(context.i18next),
-          context.locale
+          context
         );
         if (uniquenessResult.errors.length) {
           throw new UniquenessError(uniquenessResult.errors);

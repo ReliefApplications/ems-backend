@@ -162,7 +162,7 @@ export default {
           resourceEditions.map((x) => x.data),
           resource,
           t,
-          context.locale
+          context
         );
         const editedIds = resourceEditions.map((x) => x.record._id);
         for (const [index, edition] of resourceEditions.entries()) {
@@ -171,7 +171,7 @@ export default {
             resource,
             editedIds,
             t,
-            context.locale
+            context
           );
           const errors = [...batchResults[index].errors, ...result.errors];
           if (errors.length) {

@@ -49,3 +49,37 @@ describe('UniquenessRuleType dateIntersection', () => {
     expect(dateIntersection.endField).toEqual('end');
   });
 });
+
+describe('UniquenessRuleType condition', () => {
+  /**
+   * Resolve the condition of a rule
+   *
+   * @param rule uniqueness rule
+   * @returns resolved condition
+   */
+  const resolve = (rule: any) =>
+    (UniquenessRuleType.getFields().condition as any).resolve(rule);
+
+  it('returns the filter of the rule', () => {
+    const condition = {
+      logic: 'or',
+      filters: [{ field: 'status', operator: 'eq', value: 'Open' }],
+    };
+    expect(resolve({ condition })).toEqual(condition);
+  });
+
+  it('returns a filter for the conditions first stored as a list', () => {
+    expect(
+      resolve({
+        condition: [{ field: 'status', operator: 'ne', value: 'Closed' }],
+      })
+    ).toEqual({
+      logic: 'and',
+      filters: [{ field: 'status', operator: 'neq', value: 'Closed' }],
+    });
+  });
+
+  it('returns null when the rule has no condition', () => {
+    expect(resolve({})).toBeNull();
+  });
+});

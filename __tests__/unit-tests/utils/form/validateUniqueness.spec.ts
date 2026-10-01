@@ -1,5 +1,9 @@
 import { Record, Resource } from '@models';
-import { validateUniqueness } from '@utils/form';
+import {
+  getConditionFilter,
+  getUnknownRuleField,
+  validateUniqueness,
+} from '@utils/form';
 import { DatabaseHelpers } from '../../../helpers/database-helpers';
 
 describe('validateUniqueness', () => {
@@ -353,6 +357,140 @@ describe('validateUniqueness', () => {
       ).toEqual([]);
     });
 
+    describe('filter in the format of layouts', () => {
+      /**
+       * Creates a resource of cases, unique by person among the cases
+       * matching the filter, and a first case.
+       *
+       * @param condition Filter of the rule
+       * @param status Status of the existing case
+       * @returns the created resource
+       */
+      const buildCases = async (condition: any, status: string) => {
+        const resource = await Resource.create({
+          name: 'Case',
+          fields: [
+            { name: 'person', type: 'text' },
+            { name: 'case_status', type: 'dropdown' },
+            { name: 'urgent', type: 'boolean' },
+            { name: 'comment', type: 'text' },
+          ],
+          uniquenessRules: [{ fields: ['person'], severity: 'error', condition }],
+        });
+        await Record.create({
+          incrementalId: '1',
+          form: resource._id,
+          _form: { _id: resource._id, name: resource.name },
+          resource: resource._id,
+          data: {
+            person: 'john-doe',
+            case_status: status,
+            urgent: true,
+            comment: 'Waiting for transport',
+          },
+        });
+        return resource;
+      };
+
+      /**
+       * Counts the blocking violations of a new case of the same person.
+       *
+       * @param resource Resource of the cases
+       * @param data Data of the new case, except the person
+       * @returns number of violated rules
+       */
+      const countErrors = async (resource: Resource, data: any) =>
+        (await validateUniqueness({ person: 'john-doe', ...data }, resource))
+          .errors.length;
+
+      it('supports the "is not equal to" operator', async () => {
+        const resource = await buildCases(
+          {
+            logic: 'and',
+            filters: [
+              { field: 'case_status', operator: 'neq', value: 'Closed' },
+            ],
+          },
+          'Open'
+        );
+        expect(await countErrors(resource, { case_status: 'Open' })).toBe(1);
+        expect(await countErrors(resource, { case_status: 'Pending' })).toBe(1);
+        // No status yet: the case is not closed
+        expect(await countErrors(resource, {})).toBe(1);
+        expect(await countErrors(resource, { case_status: 'Closed' })).toBe(0);
+      });
+
+      it('does not compare with the records which do not match the filter', async () => {
+        const resource = await buildCases(
+          {
+            logic: 'and',
+            filters: [
+              { field: 'case_status', operator: 'neq', value: 'Closed' },
+            ],
+          },
+          'Closed'
+        );
+        expect(await countErrors(resource, { case_status: 'Open' })).toBe(0);
+      });
+
+      it('supports conditions of which only one is required', async () => {
+        const resource = await buildCases(
+          {
+            logic: 'or',
+            filters: [
+              { field: 'case_status', operator: 'eq', value: 'Open' },
+              { field: 'case_status', operator: 'eq', value: 'Pending' },
+            ],
+          },
+          'Open'
+        );
+        expect(await countErrors(resource, { case_status: 'Pending' })).toBe(1);
+        expect(await countErrors(resource, { case_status: 'Closed' })).toBe(0);
+      });
+
+      it('supports groups of conditions, booleans and texts', async () => {
+        const resource = await buildCases(
+          {
+            logic: 'and',
+            filters: [
+              { field: 'urgent', operator: 'eq', value: true },
+              {
+                logic: 'or',
+                filters: [
+                  { field: 'comment', operator: 'contains', value: 'transport' },
+                  { field: 'case_status', operator: 'eq', value: 'Pending' },
+                ],
+              },
+            ],
+          },
+          'Open'
+        );
+        expect(
+          await countErrors(resource, {
+            urgent: true,
+            comment: 'Transport booked',
+          })
+        ).toBe(1);
+        expect(
+          await countErrors(resource, { urgent: true, case_status: 'Pending' })
+        ).toBe(1);
+        expect(
+          await countErrors(resource, { urgent: true, comment: 'Nothing yet' })
+        ).toBe(0);
+        expect(
+          await countErrors(resource, {
+            urgent: false,
+            comment: 'Transport booked',
+          })
+        ).toBe(0);
+      });
+
+      it('applies the rule to all records when the filter is empty', async () => {
+        const resource = await buildCases({ logic: 'and', filters: [] }, 'Open');
+        expect(await countErrors(resource, { case_status: 'Closed' })).toBe(1);
+      });
+    });
+
     it('does not match against records outside the condition (country/primary/active example)', async () => {
       const resource = await Resource.create({
         name: 'Assignment',
@@ -547,6 +685,35 @@ describe('validateUniqueness', () => {
       expect(invalidDate.errors).toEqual([]);
     });
 
+    it('uses the same default message as the other rules', async () => {
+      const resource = await buildResource();
+      await Record.create({
+        incrementalId: '1',
+        form: resource._id,
+        _form: { _id: resource._id, name: resource.name },
+        resource: resource._id,
+        data: {
+          expert: 'alice',
+          country: 'CH',
+          start_date: '2026-01-01',
+          end_date: '2026-03-01',
+        },
+      });
+
+      const result = await validateUniqueness(
+        {
+          expert: 'alice',
+          country: 'CH',
+          start_date: '2026-02-01',
+          end_date: '2026-04-01',
+        },
+        resource
+      );
+      expect(result.errors[0].errors).toEqual([
+        'A record with the same expert, country already exists.',
+      ]);
+    });
+
     it('does not flag non-overlapping periods', async () => {
       const resource = await buildResource();
       await Record.create({
@@ -700,6 +867,102 @@ describe('validateUniqueness', () => {
     });
   });
 
+  describe('getConditionFilter', () => {
+    it('returns the filter of the rule', () => {
+      const filter = {
+        logic: 'or',
+        filters: [{ field: 'status', operator: 'eq', value: 'Open' }],
+      };
+      expect(getConditionFilter(filter)).toEqual(filter);
+    });
+
+    it('converts the conditions first stored as a list of equalities', () => {
+      expect(
+        getConditionFilter([
+          { field: 'status', operator: 'ne', value: 'Closed' },
+          { field: 'active', operator: 'eq', value: true },
+        ])
+      ).toEqual({
+        logic: 'and',
+        filters: [
+          { field: 'status', operator: 'neq', value: 'Closed' },
+          { field: 'active', operator: 'eq', value: true },
+        ],
+      });
+    });
+
+    it('returns null when there is no condition', () => {
+      expect(getConditionFilter(undefined)).toBeNull();
+      expect(getConditionFilter(null)).toBeNull();
+      expect(getConditionFilter([])).toBeNull();
+      expect(getConditionFilter({ logic: 'and', filters: [] })).toBeNull();
+    });
+  });
+
+  describe('getUnknownRuleField', () => {
+    const resource = {
+      fields: [{ name: 'person' }, { name: 'status' }, { name: 'start' }],
+    } as unknown as Resource;
+
+    it('accepts rules only using fields of the resource', () => {
+      expect(
+        getUnknownRuleField(
+          {
+            fields: ['person'],
+            condition: {
+              logic: 'and',
+              filters: [
+                { field: 'status', operator: 'neq', value: 'Closed' },
+                {
+                  logic: 'or',
+                  filters: [{ field: 'start', operator: 'isnotnull' }],
+                },
+              ],
+            },
+            dateIntersection: { startField: 'start', endField: 'start' },
+          },
+          resource
+        )
+      ).toBeUndefined();
+    });
+
+    it('finds the unknown fields of a filter, including in its groups', () => {
+      expect(
+        getUnknownRuleField(
+          {
+            fields: ['person'],
+            condition: {
+              logic: 'and',
+              filters: [
+                { field: 'status', operator: 'neq', value: 'Closed' },
+                {
+                  logic: 'or',
+                  filters: [{ field: 'unknown', operator: 'eq', value: 1 }],
+                },
+              ],
+            },
+          },
+          resource
+        )
+      ).toEqual('unknown');
+    });
+
+    it('finds the unknown unique fields and date range fields', () => {
+      expect(getUnknownRuleField({ fields: ['other'] }, resource)).toEqual(
+        'other'
+      );
+      expect(
+        getUnknownRuleField(
+          {
+            fields: ['person'],
+            dateIntersection: { startField: 'start', endField: 'end' },
+          },
+          resource
+        )
+      ).toEqual('end');
+    });
+  });
+
   describe('translated custom message', () => {
     let resourceCounter = 0;
 
@@ -740,7 +1003,7 @@ describe('validateUniqueness', () => {
         resource,
         undefined,
         undefined,
-        locale
+        { locale }
       );
       return result.errors[0].errors[0];
     };

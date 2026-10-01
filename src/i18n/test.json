@@ -240,7 +240,6 @@
 			},
 			"uniqueness": {
 				"errors": {
-					"dateIntersection": "****** {{fields}} ******",
 					"duplicate": "****** {{fields}} ******"
 				}
 			}

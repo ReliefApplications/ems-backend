@@ -6,16 +6,7 @@ import {
   GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-
-/** GraphQL uniqueness rule condition type definition */
-export const UniquenessConditionType = new GraphQLObjectType({
-  name: 'UniquenessConditionType',
-  fields: () => ({
-    field: { type: GraphQLString },
-    operator: { type: GraphQLString },
-    value: { type: GraphQLJSON },
-  }),
-});
+import { getConditionFilter } from '@utils/form';
 
 /** GraphQL uniqueness rule date intersection type definition */
 export const UniquenessDateIntersectionType = new GraphQLObjectType({
@@ -43,7 +34,11 @@ export const UniquenessRuleType = new GraphQLObjectType({
     message: { type: GraphQLString },
     messageTranslations: { type: GraphQLJSON },
     active: { type: GraphQLBoolean },
-    condition: { type: new GraphQLList(UniquenessConditionType) },
+    condition: {
+      type: GraphQLJSON,
+      // Always returned as a filter, whatever the format it is stored with
+      resolve: (parent) => getConditionFilter(parent.condition),
+    },
     dateIntersection: {
       type: UniquenessDateIntersectionType,
       // Rules without date intersection are stored with an empty object

@@ -47,14 +47,10 @@ export interface Resource extends Document {
     // Whether the rule is enforced. Defaults to true; set to false to
     // keep a rule around without deleting it.
     active?: boolean;
-    // Restricts the rule to records matching all these conditions
-    // (e.g. only enforce uniqueness of an assignment's country while it is
-    // the active primary assignment).
-    condition?: {
-      field: string;
-      operator: 'eq' | 'ne';
-      value: any;
-    }[];
+    // Restricts the rule to the records matching this filter, in the same
+    // format as the filters of layouts (e.g. only enforce uniqueness of an
+    // assignment's country while it is the active primary assignment).
+    condition?: any;
     // When set, the rule checks for overlapping date ranges among records
     // sharing the same `fields` values, instead of an exact value match.
     dateIntersection?: {
@@ -190,18 +186,10 @@ const resourceSchema = new Schema<Resource>(
           type: Boolean,
           default: true,
         },
-        condition: [
-          {
-            field: String,
-            operator: {
-              type: String,
-              enum: ['eq', 'ne'],
-              default: 'eq',
-            },
-            value: mongoose.Schema.Types.Mixed,
-            _id: false,
-          },
-        ],
+        condition: {
+          type: mongoose.Schema.Types.Mixed,
+          default: undefined,
+        },
         dateIntersection: {
           startField: String,
           endField: String,

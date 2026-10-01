@@ -2,8 +2,10 @@ import { Resource } from '@models';
 import {
   Translator,
   UniquenessCheckResult,
+  UniquenessContext,
   UniquenessRule,
   UniquenessViolation,
+  getConditionMongoFilter,
   getRange,
   getViolationMessage,
   isEmptyValue,
@@ -40,16 +42,18 @@ const pushViolation = (
  * rows that match the rule's condition and have every scope field set.
  *
  * @param rows row data to group
- * @param rule the rule whose fields/condition define the grouping
+ * @param rule the rule whose fields define the grouping
+ * @param conditionFilter Mongo filter of the rule, restricting the rows it applies to
  * @returns a map from composite key to the indices of matching rows
  */
 const groupByScope = (
   rows: any[],
-  rule: UniquenessRule
+  rule: UniquenessRule,
+  conditionFilter: Record<string, any> | null
 ): Map<string, number[]> => {
   const groups = new Map<string, number[]>();
   rows.forEach((row, index) => {
-    if (!matchesCondition(row, rule.condition)) return;
+    if (!matchesCondition(row, conditionFilter)) return;
     if (rule.fields.some((field) => isEmptyValue(row[field]))) return;
     const key = JSON.stringify(
       rule.fields.map((field) => normalizeValue(row[field]))
@@ -80,14 +84,14 @@ const groupByScope = (
  * @param rows row data of the batch being imported
  * @param resource the resource the rows belong to, or null if none
  * @param t optional translator used to localize default violation messages
- * @param locale optional locale of the user, used to pick the translation of custom violation messages
+ * @param context optional request context: its locale is used to pick the translation of custom violation messages, and its user to resolve the filters depending on them
  * @returns one result per row, in the same order as `rows`
  */
 export const validateBatchUniqueness = (
   rows: any[],
   resource: Resource | null,
   t?: Translator,
-  locale?: string
+  context?: UniquenessContext
 ): UniquenessCheckResult[] => {
   const results: UniquenessCheckResult[] = rows.map(() => ({
     errors: [],
@@ -101,13 +105,15 @@ export const validateBatchUniqueness = (
   for (const rule of rules) {
     if (rule.active === false) continue;
     if (!rule.fields?.length) continue;
+    const conditionFilter = getConditionMongoFilter(rule, resource, context);
 
     if (rule.dateIntersection?.startField && rule.dateIntersection?.endField) {
       const { startField, endField, allowAdjacent } = rule.dateIntersection;
       const ranges = rows.map((row) => getRange(row, startField, endField));
       const groups = groupByScope(
         rows.map((row, index) => (ranges[index] ? row : {})),
-        rule
+        rule,
+        conditionFilter
       );
       for (const indices of groups.values()) {
         for (let i = 1; i < indices.length; i++) {
@@ -122,16 +128,16 @@ export const validateBatchUniqueness = (
               )
             );
           if (overlapsEarlier) {
-            pushViolation(results[current], rule, t, locale);
+            pushViolation(results[current], rule, t, context?.locale);
           }
         }
       }
     } else {
-      const groups = groupByScope(rows, rule);
+      const groups = groupByScope(rows, rule, conditionFilter);
       for (const indices of groups.values()) {
         for (let i = 1; i < indices.length; i++) {
           const current = indices[i];
-          pushViolation(results[current], rule, t, locale);
+          pushViolation(results[current], rule, t, context?.locale);
         }
       }
     }

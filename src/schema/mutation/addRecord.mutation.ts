@@ -205,7 +205,7 @@ export default {
           resource,
           undefined,
           context.i18next.t.bind(context.i18next),
-          context.locale
+          context
         );
       }
       if (uniquenessResult.errors.length) {

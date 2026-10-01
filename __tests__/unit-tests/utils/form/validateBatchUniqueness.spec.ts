@@ -113,8 +113,8 @@ describe('validateBatchUniqueness', () => {
     });
     const rows = [{ org_code: 'ABC' }, { org_code: 'ABC' }];
     expect(
-      validateBatchUniqueness(rows, resource, undefined, 'fr')[1].errors[0]
-        .errors
+      validateBatchUniqueness(rows, resource, undefined, { locale: 'fr' })[1]
+        .errors[0].errors
     ).toEqual(['Code déjà utilisé']);
     expect(validateBatchUniqueness(rows, resource)[1].errors[0].errors).toEqual(
       ['Code already used']
@@ -182,6 +182,40 @@ describe('validateBatchUniqueness', () => {
     expect(results[0].errors).toEqual([]);
     expect(results[1].errors).toEqual([]); // closed: condition not met
     expect(results[2].errors).toHaveLength(1); // second open case for same person
+  });
+
+  it('only flags rows matching a filter in the format of layouts', async () => {
+    const resource = await Resource.create({
+      name: 'Case',
+      fields: [
+        { name: 'person', type: 'text' },
+        { name: 'case_status', type: 'dropdown' },
+      ],
+      uniquenessRules: [
+        {
+          fields: ['person'],
+          severity: 'error',
+          condition: {
+            logic: 'or',
+            filters: [
+              { field: 'case_status', operator: 'eq', value: 'Open' },
+              { field: 'case_status', operator: 'eq', value: 'Pending' },
+            ],
+          },
+        },
+      ],
+    });
+    const results = validateBatchUniqueness(
+      [
+        { person: 'john-doe', case_status: 'Open' },
+        { person: 'john-doe', case_status: 'Closed' },
+        { person: 'john-doe', case_status: 'Pending' },
+      ],
+      resource
+    );
+    expect(results[0].errors).toEqual([]);
+    expect(results[1].errors).toEqual([]);
+    expect(results[2].errors).toHaveLength(1);
   });
 
   it('flags overlapping date ranges sharing the same scope fields', async () => {
