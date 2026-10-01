@@ -88,6 +88,35 @@ export const logUniquenessError = (err: UniquenessError): void => {
   logger.warn(`Record not saved, uniqueness rule violated: ${err.message}`);
 };
 
+/** Fields referenced by a uniqueness rule */
+type UniquenessRuleFields = {
+  fields: string[];
+  condition?: { field: string }[];
+  dateIntersection?: { startField: string; endField: string };
+};
+
+/**
+ * Gets the first field referenced by a rule ( unique fields, conditions or
+ * date range ) which does not exist on the resource, if any.
+ *
+ * @param rule the uniqueness rule to check
+ * @param resource the resource the rule is configured on
+ * @returns name of the unknown field, or undefined if all the fields exist
+ */
+export const getUnknownRuleField = (
+  rule: UniquenessRuleFields,
+  resource: Resource
+): string | undefined => {
+  const fieldNames = (resource.fields || []).map((field) => field.name);
+  return [
+    ...(rule.fields || []),
+    ...(rule.condition || []).map((condition) => condition.field),
+    ...(rule.dateIntersection
+      ? [rule.dateIntersection.startField, rule.dateIntersection.endField]
+      : []),
+  ].find((field) => !fieldNames.includes(field));
+};
+
 /** Max number of matching record documents fetched when `showMatches` is set */
 const MATCH_FETCH_LIMIT = 20;
 /** Max number of matching records actually surfaced in a violation */

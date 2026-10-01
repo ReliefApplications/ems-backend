@@ -10,7 +10,7 @@ import GraphQLJSON from 'graphql-type-json';
 /** UniquenessCondition type for queries/mutations argument */
 export type UniquenessConditionArgs = {
   field: string;
-  operator?: 'eq' | 'ne';
+  operator: 'eq' | 'ne';
   value: any;
 };
 
@@ -45,7 +45,7 @@ export const UniquenessDateIntersectionInputType = new GraphQLInputObjectType({
 export type UniquenessRuleArgs = {
   name?: string;
   fields: string[];
-  severity?: 'error' | 'warning';
+  severity: 'error' | 'warning';
   message?: string;
   active?: boolean;
   showMatches?: boolean;

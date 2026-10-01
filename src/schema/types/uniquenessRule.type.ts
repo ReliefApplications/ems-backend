@@ -1,5 +1,6 @@
 import {
   GraphQLObjectType,
+  GraphQLID,
   GraphQLString,
   GraphQLList,
   GraphQLBoolean,
@@ -39,6 +40,12 @@ export const UniquenessMatchType = new GraphQLObjectType({
 export const UniquenessRuleType = new GraphQLObjectType({
   name: 'UniquenessRuleType',
   fields: () => ({
+    id: {
+      type: GraphQLID,
+      resolve(parent) {
+        return parent._id ? parent._id : parent.id;
+      },
+    },
     name: { type: GraphQLString },
     fields: { type: new GraphQLList(GraphQLString) },
     severity: { type: GraphQLString },
@@ -46,6 +53,13 @@ export const UniquenessRuleType = new GraphQLObjectType({
     active: { type: GraphQLBoolean },
     showMatches: { type: GraphQLBoolean },
     condition: { type: new GraphQLList(UniquenessConditionType) },
-    dateIntersection: { type: UniquenessDateIntersectionType },
+    dateIntersection: {
+      type: UniquenessDateIntersectionType,
+      // Rules without date intersection are stored with an empty object
+      resolve: (parent) =>
+        parent.dateIntersection?.startField && parent.dateIntersection?.endField
+          ? parent.dateIntersection
+          : null,
+    },
   }),
 });

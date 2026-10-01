@@ -37,6 +37,7 @@ export interface Resource extends Document {
     [key: string]: any;
   }[];
   uniquenessRules: {
+    _id?: mongoose.Types.ObjectId;
     name?: string;
     fields: string[];
     severity: 'error' | 'warning';
@@ -207,7 +208,6 @@ const resourceSchema = new Schema<Resource>(
           endField: String,
           allowAdjacent: Boolean,
         },
-        _id: false,
       },
     ],
     layouts: [layoutSchema],
