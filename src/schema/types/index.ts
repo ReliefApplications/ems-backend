@@ -3,6 +3,7 @@ export * from './apiConfiguration.type';
 export * from './application.type';
 export * from './channel.type';
 export * from './dashboard.type';
+export * from './draftRecord.type';
 export * from './form.type';
 export * from './notification.type';
 export * from './page.type';
