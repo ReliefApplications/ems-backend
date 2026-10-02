@@ -58,6 +58,9 @@ import deletePullJob from './deletePullJob.mutation';
 import toggleApplicationLock from './toggleApplicationLock.mutation';
 import addUsers from './addUsers.mutation';
 import addLayout from './addLayout.mutation';
+import addUniquenessRule from './addUniquenessRule.mutation';
+import editUniquenessRule from './editUniquenessRule.mutation';
+import deleteUniquenessRule from './deleteUniquenessRule.mutation';
 import deleteLayout from './deleteLayout.mutation';
 import editLayout from './editLayout.mutation';
 import addReferenceData from './addReferenceData.mutation';
@@ -106,6 +109,7 @@ const Mutation = new GraphQLObjectType({
     addForm,
     addGroup,
     addLayout,
+    addUniquenessRule,
     addPage,
     addPositionAttribute,
     addPositionAttributeCategory,
@@ -128,6 +132,7 @@ const Mutation = new GraphQLObjectType({
     deleteForm,
     deleteGroup,
     deleteLayout,
+    deleteUniquenessRule,
     deletePage,
     deletePositionAttributeCategory,
     deletePullJob,
@@ -150,6 +155,7 @@ const Mutation = new GraphQLObjectType({
     editDashboard,
     editForm,
     editLayout,
+    editUniquenessRule,
     editPage,
     editPageContext,
     editPositionAttributeCategory,

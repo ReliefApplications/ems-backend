@@ -22,6 +22,9 @@ import {
   checkRecordValidation,
   checkRecordTriggers,
   hasInaccessibleFields,
+  validateUniqueness,
+  UniquenessError,
+  logUniquenessError,
   getNextId,
 } from '@utils/form';
 import { RecordType } from '../types';
@@ -165,7 +168,7 @@ export default {
       );
       const parentResource: Resource = await Resource.findById(
         parentForm.resource,
-        'fields'
+        'fields uniquenessRules'
       );
       if (!parentForm || !parentResource) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
@@ -220,21 +223,8 @@ export default {
           logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
         }
       }
-      if (validationErrors.length && !args.skipValidation) {
-        return Object.assign(oldRecord, { validationErrors });
-      }
-      // Generate new version, from current data. Drafts have no history:
-      // every auto-save would otherwise add a version, so the record is
-      // edited in place until it is published
-      const version = oldRecord.draft
-        ? null
-        : new Version({
-            createdAt: oldRecord.modifiedAt
-              ? oldRecord.modifiedAt
-              : oldRecord.createdAt,
-            data: oldRecord.data,
-            createdBy: user._id,
-          });
+      validationErrors = validationErrors || [];
+
       let template: Form | Resource;
       let fields: any[] = [];
       if (args.template && parentForm.resource) {
@@ -264,11 +254,75 @@ export default {
       if (!template) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
+
+      // Data of the record once updated: either the version to revert to, or
+      // the edited data, formatted as it is stored so it can be compared with
+      // the other records
+      let newData: any;
+      if (args.version) {
+        const oldVersion = await Version.findOne({
+          $and: [
+            {
+              _id: {
+                $in: oldRecord.versions.map((x) => new Types.ObjectId(x)),
+              },
+            },
+            { _id: args.version },
+          ],
+        });
+        if (!oldVersion) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
+        }
+        newData = oldVersion.data;
+      } else {
+        transformRecord(args.data, fields);
+        newData = { ...oldRecord.data, ...args.data };
+      }
+
+      // Check uniqueness rules configured on the resource, if any. As for the
+      // validation, drafts are only checked once published
+      if (!savingDraft) {
+        const uniquenessResult = await validateUniqueness(
+          newData,
+          parentResource,
+          oldRecord._id,
+          context.i18next.t.bind(context.i18next),
+          context
+        );
+        if (uniquenessResult.errors.length) {
+          throw new UniquenessError(uniquenessResult.errors);
+        }
+        // Reverting to a version cannot be confirmed by the user, so only
+        // editions are subject to warnings
+        if (!args.version) {
+          validationErrors = [
+            ...validationErrors,
+            ...uniquenessResult.warnings,
+          ];
+        }
+      }
+
+      if (validationErrors.length && !args.skipValidation) {
+        return Object.assign(oldRecord, { validationErrors });
+      }
+      // Generate new version, from current data. Drafts have no history:
+      // every auto-save would otherwise add a version, so the record is
+      // edited in place until it is published
+      const version = oldRecord.draft
+        ? null
+        : new Version({
+            createdAt: oldRecord.modifiedAt
+              ? oldRecord.modifiedAt
+              : oldRecord.createdAt,
+            data: oldRecord.data,
+            createdBy: user._id,
+          });
       // Classic edition
       if (!args.version) {
-        transformRecord(args.data, fields);
         const update: any = {
-          data: { ...oldRecord.data, ...args.data },
+          data: newData,
           lastUpdateForm: args.template,
           ...(version && { $push: { versions: version._id } }),
           _lastUpdateForm: {
@@ -313,18 +367,8 @@ export default {
         return record;
       } else {
         // Revert an old version
-        const oldVersion = await Version.findOne({
-          $and: [
-            {
-              _id: {
-                $in: oldRecord.versions.map((x) => new Types.ObjectId(x)),
-              },
-            },
-            { _id: args.version },
-          ],
-        });
         const update: any = {
-          data: oldVersion.data,
+          data: newData,
           lastUpdateForm: args.template,
           _lastUpdateForm: {
             _id: template._id,
@@ -363,6 +407,10 @@ export default {
         return updatedRecord;
       }
     } catch (err) {
+      if (err instanceof UniquenessError) {
+        logUniquenessError(err);
+        throw new GraphQLError(err.message);
+      }
       logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);

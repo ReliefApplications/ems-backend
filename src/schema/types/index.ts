@@ -30,3 +30,4 @@ export * from './customNotification.type';
 export * from './metadata.type';
 export * from './layer.type';
 export * from './emailNotification.type';
+export * from './uniquenessRule.type';

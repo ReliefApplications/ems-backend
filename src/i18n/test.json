@@ -237,6 +237,11 @@
 					"invalidArguments": "******",
 					"wrongTemplateProvided": "******"
 				}
+			},
+			"uniqueness": {
+				"errors": {
+					"duplicate": "****** {{fields}} ******"
+				}
 			}
 		},
 		"reference": {
@@ -369,7 +374,8 @@
 				"invalidCustomId": "****** {{row}} ****** {{value}} ******",
 				"invalidUserUpload": "******",
 				"missingFile": "******",
-				"noRecordsToInsert": "******"
+				"noRecordsToInsert": "******",
+				"uniquenessViolation": "******"
 			}
 		}
 	},
