@@ -1,3 +1,10 @@
+# [2.18.0-rc.13](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.12...v2.18.0-rc.13) (2026-10-07)
+
+
+### Bug Fixes
+
+* Enforce permissions on single resolver ([a192fe4](https://github.com/ReliefApplications/ems-backend/commit/a192fe44a842b43ad2d6c5d5cc8043d616e30723))
+
 # [2.18.0-rc.12](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.11...v2.18.0-rc.12) (2026-10-01)
 
 
