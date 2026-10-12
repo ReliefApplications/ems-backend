@@ -45,6 +45,11 @@ export const formatValue = (field: any, value: any): any => {
           content: x.content,
           // Files can be marked as outdated instead of being deleted
           ...(x.outdated ? { outdated: true, outdatedAt: x.outdatedAt } : {}),
+          // Language the file was uploaded for ( Files upload question ).
+          // Stored as "lang": a "language" field inside a document is treated by
+          // the records text index as a text-search language override, and rejects
+          // codes MongoDB does not support ( e.g. "uk" ).
+          ...(x.lang ? { lang: x.lang } : {}),
         }));
       }
       break;
