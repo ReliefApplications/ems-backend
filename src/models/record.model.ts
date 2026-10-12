@@ -133,6 +133,14 @@ recordSchema.index({ 'data.$**': 1 });
 recordSchema.index({ archived: 1, form: 1, resource: 1, createdAt: 1 });
 recordSchema.index({ resource: 1, archived: 1 });
 recordSchema.index({ draft: 1, form: 1, resource: 1, createdAt: 1 });
+recordSchema.index(
+  { form: 1, 'createdBy.user': 1, createdAt: 1, _id: 1 },
+  { partialFilterExpression: { draft: true } }
+);
+recordSchema.index(
+  { form: 1, 'createdBy.user': 1, modifiedAt: 1, _id: 1 },
+  { partialFilterExpression: { draft: true } }
+);
 recordSchema.index({ createdAt: 1 });
 recordSchema.index({ form: 1 });
 recordSchema.index({ versions: 1 });
