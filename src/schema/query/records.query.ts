@@ -1,4 +1,4 @@
-import { GraphQLError, GraphQLList } from 'graphql';
+import { GraphQLError, GraphQLID, GraphQLList } from 'graphql';
 import { RecordType } from '../types';
 import { Record } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
@@ -8,6 +8,14 @@ import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 import { getErrorMessage, getErrorStack } from '@utils/error';
+import { DraftRecordFilterArgs, getDraftRecordFilter } from '@utils/filter';
+import { RecordVisibilityEnumType } from '@const/enumTypes';
+
+/** Arguments for the records query. */
+type RecordsArgs = DraftRecordFilterArgs & {
+  form?: string;
+  resource?: string;
+};
 
 /**
  * List all records available for the logged user.
@@ -15,13 +23,23 @@ import { getErrorMessage, getErrorStack } from '@utils/error';
  */
 export default {
   type: new GraphQLList(RecordType),
-  async resolve(parent, args, context: Context) {
+  args: {
+    form: { type: GraphQLID },
+    resource: { type: GraphQLID },
+    recordVisibility: { type: RecordVisibilityEnumType },
+  },
+  async resolve(parent, args: RecordsArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;
       const ability = await extendAbilityForRecords(user);
-      // Return the records
-      const records = await Record.find(accessibleBy(ability, 'read').Record);
+      const records = await Record.find({
+        ...accessibleBy(ability, 'read').Record,
+        archived: { $ne: true },
+        ...(args.form && { form: args.form }),
+        ...(args.resource && { resource: args.resource }),
+        ...getDraftRecordFilter(args, user),
+      });
       return getAccessibleFields(records, ability);
     } catch (err) {
       logger.error(getErrorMessage(err), { stack: getErrorStack(err) });

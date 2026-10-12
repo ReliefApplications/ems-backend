@@ -1,3 +1,24 @@
+# [2.18.0-rc.13](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.12...v2.18.0-rc.13) (2026-10-07)
+
+
+### Bug Fixes
+
+* Enforce permissions on single resolver ([a192fe4](https://github.com/ReliefApplications/ems-backend/commit/a192fe44a842b43ad2d6c5d5cc8043d616e30723))
+
+# [2.18.0-rc.12](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.11...v2.18.0-rc.12) (2026-10-01)
+
+
+### Features
+
+* Build uniqueness constraints in resources ([#1271](https://github.com/ReliefApplications/ems-backend/issues/1271)) ([3d0c17d](https://github.com/ReliefApplications/ems-backend/commit/3d0c17da0f239fe4d61d2c50b2d0fce7882bca86)), closes [Ab#134989](https://github.com/Ab/issues/134989)
+
+# [2.18.0-rc.11](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.10...v2.18.0-rc.11) (2026-09-30)
+
+
+### Features
+
+* Enable records to be saved as draft ([#1211](https://github.com/ReliefApplications/ems-backend/issues/1211)) ([f899f5c](https://github.com/ReliefApplications/ems-backend/commit/f899f5ca719c8da2040e0d03bb2551267b80e1ae))
+
 # [2.18.0-rc.10](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.9...v2.18.0-rc.10) (2026-09-29)
 
 

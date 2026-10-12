@@ -3,11 +3,27 @@ import {
   GraphQLNonNull,
   GraphQLError,
   GraphQLString,
+  GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { RecordType } from '../types';
-import { Form, Record, Notification, Channel, Version } from '@models';
-import { transformRecord, getOwnership, getNextId } from '@utils/form';
+import {
+  Form,
+  Record,
+  Notification,
+  Channel,
+  Resource,
+  Version,
+} from '@models';
+import {
+  transformRecord,
+  getOwnership,
+  getNextId,
+  validateUniqueness,
+  UniquenessCheckResult,
+  UniquenessError,
+  logUniquenessError,
+} from '@utils/form';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import pubsub from '../../server/pubsub';
 import { getFormPermissionFilter } from '@utils/filter';
@@ -22,6 +38,8 @@ export type AddRecordArgs = {
   form?: string | Types.ObjectId;
   data: any;
   captchaToken?: string;
+  skipValidation?: boolean;
+  draft?: boolean;
   cloneRecordId?: string | Types.ObjectId;
 };
 
@@ -40,6 +58,8 @@ export default {
     form: { type: GraphQLID },
     data: { type: new GraphQLNonNull(GraphQLJSON) },
     captchaToken: { type: GraphQLString },
+    skipValidation: { type: GraphQLBoolean, defaultValue: false },
+    draft: { type: GraphQLBoolean },
     cloneRecordId: { type: GraphQLID },
   },
   async resolve(parent, args: AddRecordArgs, context: Context) {
@@ -50,6 +70,12 @@ export default {
       const form = await Form.findById(args.form);
       if (!form)
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+
+      if (args.draft && !user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
 
       if (user) {
         // Check the ability with permissions for this form
@@ -80,6 +106,7 @@ export default {
       // Check unicity of record
       if (
         user &&
+        !args.draft &&
         form.permissions.recordsUnicity &&
         form.permissions.recordsUnicity.length > 0 &&
         form.permissions.recordsUnicity[0].role
@@ -92,7 +119,7 @@ export default {
         if (unicityFilters.length > 0) {
           const uniqueRecordAlreadyExists = await Record.exists({
             $and: [
-              { form: form._id, archived: { $ne: true } },
+              { form: form._id, archived: { $ne: true }, draft: { $ne: true } },
               { $or: unicityFilters },
             ],
           });
@@ -162,10 +189,50 @@ export default {
 
       // Create the record instance
       transformRecord(args.data, form.fields);
+
+      // Check uniqueness rules configured on the resource, if any. Drafts are
+      // not checked: as for the records unicity, they are once published
+      let uniquenessResult: UniquenessCheckResult = {
+        errors: [],
+        warnings: [],
+      };
+      if (!args.draft) {
+        const resource = form.resource
+          ? await Resource.findById(form.resource)
+          : null;
+        uniquenessResult = await validateUniqueness(
+          args.data,
+          resource,
+          undefined,
+          context.i18next.t.bind(context.i18next),
+          context
+        );
+      }
+      if (uniquenessResult.errors.length) {
+        throw new UniquenessError(uniquenessResult.errors);
+      }
+      // Warn about (non-blocking) duplicates, unless the user chose to save
+      // anyway. Nothing is saved, so no incremental id is used. Unauthenticated
+      // users are not warned: they must not learn about the existing records
+      if (uniquenessResult.warnings.length && !args.skipValidation && user) {
+        return Object.assign(
+          new Record({
+            form: args.form,
+            data: args.data,
+            resource: form.resource ? form.resource : null,
+          }),
+          { validationErrors: uniquenessResult.warnings }
+        );
+      }
+
       const record = new Record({
-        incrementalId: await getNextId(
-          String(form.resource ? form.resource : args.form)
-        ),
+        // Drafts do not have an incremental id: the field is left out so they
+        // are excluded from the unique incremental id index
+        ...(!args.draft && {
+          incrementalId: await getNextId(
+            String(form.resource ? form.resource : args.form)
+          ),
+        }),
         form: args.form,
         //createdAt: new Date(),
         //modifiedAt: new Date(),
@@ -200,6 +267,7 @@ export default {
           _id: form._id,
           name: form.name,
         },
+        draft: args.draft || false,
       });
       // Update the createdBy property if we pass some owner data
       const ownership = getOwnership(form.fields, args.data);
@@ -207,18 +275,20 @@ export default {
         record.createdBy = { ...record.createdBy, ...ownership };
       }
       // send notifications to channel
-      const channel = await Channel.findOne({ form: form._id });
-      if (channel) {
-        const notification = new Notification({
-          action: `New record - ${form.name}`,
-          content: record,
-          //createdAt: new Date(),
-          channel: channel.id,
-          seenBy: [],
-        });
-        await notification.save();
-        const publisher = await pubsub();
-        publisher.publish(channel.id, { notification });
+      if (!args.draft) {
+        const channel = await Channel.findOne({ form: form._id });
+        if (channel) {
+          const notification = new Notification({
+            action: `New record - ${form.name}`,
+            content: record,
+            //createdAt: new Date(),
+            channel: channel.id,
+            seenBy: [],
+          });
+          await notification.save();
+          const publisher = await pubsub();
+          publisher.publish(channel.id, { notification });
+        }
       }
       await record.save();
       // Only store the new version once the record is saved
@@ -227,6 +297,10 @@ export default {
       }
       return record;
     } catch (err) {
+      if (err instanceof UniquenessError) {
+        logUniquenessError(err);
+        throw new GraphQLError(err.message);
+      }
       logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);

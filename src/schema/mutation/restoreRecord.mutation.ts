@@ -1,5 +1,5 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import { Record } from '@models';
+import { Record, Resource } from '@models';
 import { RecordType } from '../types';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { logger } from '@services/logger.service';
@@ -7,6 +7,11 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 import { getErrorMessage, getErrorStack } from '@utils/error';
+import {
+  validateUniqueness,
+  UniquenessError,
+  logUniquenessError,
+} from '@utils/form';
 
 /** Arguments for the restoreRecord mutation */
 type RestoreRecordArgs = {
@@ -38,6 +43,25 @@ export default {
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
+      // Check uniqueness rules configured on the resource, if any: another
+      // record may have taken the place of the archived one. Warnings cannot
+      // be confirmed by the user there, so only errors are blocking
+      if (record.resource && !record.draft) {
+        const resource = await Resource.findById(
+          record.resource,
+          'uniquenessRules'
+        );
+        const uniquenessResult = await validateUniqueness(
+          record.data,
+          resource,
+          record._id,
+          context.i18next.t.bind(context.i18next),
+          context
+        );
+        if (uniquenessResult.errors.length) {
+          throw new UniquenessError(uniquenessResult.errors);
+        }
+      }
       // Update the record
       return await Record.findByIdAndUpdate(
         record._id,
@@ -45,6 +69,10 @@ export default {
         { new: true }
       );
     } catch (err) {
+      if (err instanceof UniquenessError) {
+        logUniquenessError(err);
+        throw new GraphQLError(err.message);
+      }
       logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);

@@ -71,7 +71,8 @@ const buildApp = () => {
   const app = express();
   app.use(fileUpload());
   app.use((req: Request, res: Response, next: NextFunction) => {
-    (req as any).t = (key: string) => key;
+    // Same translator as the one the test expectations are built with
+    (req as any).t = i18next.t.bind(i18next);
     (req as any).context = { user: currentUser };
     next();
   });

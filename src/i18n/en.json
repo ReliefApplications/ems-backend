@@ -233,8 +233,14 @@
 			},
 			"edit": {
 				"errors": {
+					"cannotDemoteToDraft": "A submitted record cannot be turned into a draft.",
 					"invalidArguments": "Either data or version must be provided.",
 					"wrongTemplateProvided": "Template must sharing the same resource as the parent form of the edited record."
+				}
+			},
+			"uniqueness": {
+				"errors": {
+					"duplicate": "A record with the same {{fields}} already exists."
 				}
 			}
 		},
@@ -368,7 +374,8 @@
 				"invalidCustomId": "Row {{row}}: the value \"{{value}}\" in the _id column is not a valid 24-character hexadecimal MongoDB ID.",
 				"invalidUserUpload": "Please provide email and role for each user.",
 				"missingFile": "No file detected.",
-				"noRecordsToInsert": "No records were provided for insertion."
+				"noRecordsToInsert": "No records were provided for insertion.",
+				"uniquenessViolation": "The file was not imported: some rows violate a uniqueness rule. Fix the listed rows and upload again."
 			}
 		}
 	},

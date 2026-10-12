@@ -27,6 +27,7 @@ import {
 import { formatFilename } from '@utils/files/format.helper';
 import Exporter from '@utils/files/resourceExporter';
 import { getAccessibleFields } from '@utils/form';
+import { getDraftRecordFilter } from '@utils/filter';
 import { RecordHistory } from '@utils/history';
 import express from 'express';
 import fs from 'fs';
@@ -128,6 +129,7 @@ router.get('/form/records/:id', async (req, res) => {
       const filter = {
         form: req.params.id,
         archived: { $ne: true },
+        ...getDraftRecordFilter(),
         ...Record.find(accessibleBy(formAbility, 'read').Record).getFilter(),
       };
       const columns = await getColumns(
@@ -189,6 +191,7 @@ router.get('/form/records/:id/history', async (req, res) => {
     const record: Record = await Record.findOne({
       _id: req.params.id,
       archived: { $ne: true },
+      ...getDraftRecordFilter(),
     }).populate({
       path: 'resource',
       model: 'Resource',
@@ -310,6 +313,7 @@ router.get('/resource/records/:id', async (req, res) => {
           records = await Record.find({
             resource: req.params.id,
             archived: { $ne: true },
+            ...getDraftRecordFilter(),
           });
         }
         const rows = await getRows(columns, records, req.context?.locale);
@@ -342,6 +346,7 @@ router.get('/resource/records/:id', async (req, res) => {
  *    sortField?: string
  *    sortOrder?: 'asc' | 'desc'
  *    sortFields?: { field: string, order?: 'asc' | 'desc' }[]  // takes precedence over sortField/sortOrder when non-empty
+ *    recordVisibility?: 'submitted' | 'ownDrafts' | 'allDrafts'  // which records to export, submitted by default
  * }
  */
 router.post('/records', async (req, res) => {

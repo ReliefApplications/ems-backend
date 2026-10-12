@@ -1,6 +1,5 @@
 import { GraphQLError, valueFromASTUntyped } from 'graphql';
 import { Record, ReferenceData, User } from '@models';
-import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { decodeCursor, encodeCursor } from '@schema/types';
 import getReversedFields from '../../introspection/getReversedFields';
 import getFilter, {
@@ -17,18 +16,15 @@ import { getAccessibleFields } from '@utils/form';
 import { CalculatedFieldService } from '@services/calculatedField.service';
 import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
-import { flatten, get, isArray, set } from 'lodash';
+import { flatten, get, isArray } from 'lodash';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
-import NodeCache from 'node-cache';
-import { AppAbility } from '@security/defineUserAbility';
 import { getErrorMessage, getErrorStack } from '@utils/error';
+import { getDraftRecordFilter } from '@utils/filter';
+import getRecordsAbility from './getRecordsAbility';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
-
-/** Ability Cache, based on user id, time to live: 5min */
-const abilityCache = new NodeCache({ stdTTL: 60 * 5, checkperiod: 60 });
 
 // todo: improve by only keeping used fields in the $project stage
 /**
@@ -60,6 +56,7 @@ const projectAggregation = [
         },
       },
       modifiedAt: 1,
+      draft: 1,
       _lastUpdatedBy: {
         user: {
           id: 1,
@@ -232,6 +229,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       styles = [],
       actions = [],
       at,
+      recordVisibility,
     },
     context,
     info
@@ -241,7 +239,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     checkPageSize(first);
     try {
       const user: User = context.user;
-      const userId = user._id.toString();
       // Id of the form / resource
       const id = idsByName[entityName];
       // List of form / resource fields
@@ -462,28 +459,14 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       const basicFilters = {
         $or: [{ resource: id }, { form: id }],
         archived: { $not: { $eq: true } },
+        ...getDraftRecordFilter({ recordVisibility }, user),
       };
 
       // Additional filter from the user permissions
-      let permissionFilters;
-      // Try to get ability from cache
-      let ability = abilityCache.get<AppAbility>(userId);
-      if (!ability) {
-        // If not available, build ability
-        ability = await extendAbilityForRecords(user);
-        set(context, 'user.ability', ability);
-        permissionFilters = Record.find(
-          accessibleBy(ability, 'read').Record
-        ).getFilter();
-        // And cache it
-        abilityCache.set(userId, ability);
-      } else {
-        // Update user ability
-        set(context, 'user.ability', ability);
-        permissionFilters = Record.find(
-          accessibleBy(ability, 'read').Record
-        ).getFilter();
-      }
+      const ability = await getRecordsAbility(user, context);
+      const permissionFilters = Record.find(
+        accessibleBy(ability, 'read').Record
+      ).getFilter();
 
       // Finally putting all filters together
       const filters = {
@@ -725,6 +708,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           {
             $or: [{ _id: { $in: relatedIds } }, ...relatedFilters],
             archived: { $ne: true },
+            ...getDraftRecordFilter(),
           },
           projection
         );

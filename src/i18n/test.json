@@ -233,8 +233,14 @@
 			},
 			"edit": {
 				"errors": {
+					"cannotDemoteToDraft": "******",
 					"invalidArguments": "******",
 					"wrongTemplateProvided": "******"
+				}
+			},
+			"uniqueness": {
+				"errors": {
+					"duplicate": "****** {{fields}} ******"
 				}
 			}
 		},
@@ -368,7 +374,8 @@
 				"invalidCustomId": "****** {{row}} ****** {{value}} ******",
 				"invalidUserUpload": "******",
 				"missingFile": "******",
-				"noRecordsToInsert": "******"
+				"noRecordsToInsert": "******",
+				"uniquenessViolation": "******"
 			}
 		}
 	},

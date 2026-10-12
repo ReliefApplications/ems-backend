@@ -48,6 +48,22 @@ export const AuthEnumType = new GraphQLEnumType({
   values: objToEnum(authType),
 });
 
+/** Which records a query returns regarding drafts */
+export const recordVisibility = {
+  submitted: 'submitted',
+  ownDrafts: 'ownDrafts',
+  allDrafts: 'allDrafts',
+};
+
+/** RecordVisibility type for queries/mutations argument */
+export type RecordVisibility = keyof typeof recordVisibility;
+
+/** GraphQL record visibility enum type definition */
+export const RecordVisibilityEnumType = new GraphQLEnumType({
+  name: 'RecordVisibility',
+  values: objToEnum(recordVisibility),
+});
+
 /** Possible status */
 export const status = {
   active: 'active',

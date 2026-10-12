@@ -246,6 +246,19 @@ export const getMetaData = async (
     });
   }
 
+  // Draft status, so permissions and filters can target draft records
+  metaData.push({
+    automated: true,
+    name: 'draft',
+    type: 'boolean',
+    editor: 'boolean',
+    filter: {
+      defaultOperator: filterOperator.EQUAL_TO,
+      operators: [filterOperator.EQUAL_TO, filterOperator.NOT_EQUAL_TO],
+    },
+    canUpdate: false,
+  });
+
   /**
    * Generic field metadata
    *

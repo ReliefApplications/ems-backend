@@ -8,3 +8,4 @@ export * from './aggregation.input';
 export * from './customNotification.input';
 export * from './distributionList.input';
 export * from './template.input';
+export * from './uniquenessRule.input';

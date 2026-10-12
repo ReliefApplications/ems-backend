@@ -7,6 +7,7 @@ import extendAbilityForRecords, {
 import { getAccessibleFields } from '@utils/form';
 import { getMetaData } from '@utils/form/metadata.helper';
 import getFilter from '@utils/schema/resolvers/Query/getFilter';
+import { getDraftRecordFilter } from '@utils/filter';
 import {
   GraphQLBoolean,
   GraphQLID,
@@ -26,6 +27,7 @@ import {
   FormType,
   LayoutConnectionType,
   RecordConnectionType,
+  UniquenessRuleType,
 } from '.';
 import { resourcePermission } from '../../types/permission';
 import { isFieldsAutoGrantActive } from '@utils/form/fieldsAutoGrant';
@@ -199,7 +201,11 @@ export const ResourceType = new GraphQLObjectType({
         if (args.archived) {
           Object.assign(mongooseFilter, { archived: true });
         } else {
-          Object.assign(mongooseFilter, { archived: { $ne: true } });
+          Object.assign(
+            mongooseFilter,
+            { archived: { $ne: true } },
+            getDraftRecordFilter()
+          );
         }
         if (args.filter) {
           mongooseFilter = {
@@ -260,12 +266,14 @@ export const ResourceType = new GraphQLObjectType({
         const count = await Record.find({
           resource: parent.id,
           archived: { $ne: true },
+          ...getDraftRecordFilter(),
           ...accessibleBy(ability, 'read').Record,
         }).count();
         return count;
       },
     },
     fields: { type: GraphQLJSON },
+    uniquenessRules: { type: new GraphQLList(UniquenessRuleType) },
     relatedFields: {
       type: GraphQLJSON,
       async resolve(parent) {

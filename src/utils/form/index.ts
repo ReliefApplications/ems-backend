@@ -16,4 +16,6 @@ export * from './checkRecordValidation';
 export * from './getAccessibleFields';
 export * from './checkRecordTriggers';
 export * from './checkRecordExpressions';
+export * from './validateUniqueness';
+export * from './validateBatchUniqueness';
 export * from './fieldsAutoGrant';

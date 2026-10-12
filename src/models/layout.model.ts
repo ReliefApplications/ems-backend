@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { recordVisibility, RecordVisibility } from '@const/enumTypes';
 
 /** Mongoose layout schema declaration */
 export const layoutSchema = new Schema(
@@ -13,6 +14,11 @@ export const layoutSchema = new Schema(
     },
     display: {
       type: mongoose.Schema.Types.Mixed,
+    },
+    recordVisibility: {
+      type: String,
+      enum: Object.values(recordVisibility),
+      default: recordVisibility.submitted,
     },
   },
   {
@@ -29,4 +35,5 @@ export interface Layout extends Document {
   modifiedAt?: Date;
   query?: any;
   display?: any;
+  recordVisibility?: RecordVisibility;
 }

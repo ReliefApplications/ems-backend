@@ -6,12 +6,12 @@ import resolver from '@schema/query/recordHistory.query';
 import { GraphQLError } from 'graphql';
 
 jest.mock('@models', () => {
-  const mockRecordFindById = jest.fn();
+  const mockRecordFindOne = jest.fn();
   const mockFormFindById = jest.fn();
   const mockVersionFind = jest.fn();
   return {
     Record: {
-      findById: mockRecordFindById,
+      findOne: mockRecordFindOne,
     },
     Form: {
       findById: mockFormFindById,
@@ -34,7 +34,7 @@ describe('RecordHistory Query Resolver', () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    
+
     context = {
       i18next: {
         t: jest.fn().mockImplementation((key) => key),
@@ -53,8 +53,8 @@ describe('RecordHistory Query Resolver', () => {
     ]);
 
     (graphQLAuthCheck as jest.Mock).mockImplementation(() => {});
-    
-    (Record.findById as jest.Mock).mockImplementation(() => ({
+
+    (Record.findOne as jest.Mock).mockImplementation(() => ({
       populate: jest.fn().mockResolvedValue(mockRecord),
     }));
 
@@ -70,7 +70,7 @@ describe('RecordHistory Query Resolver', () => {
   });
 
   it('should throw error if record is not found', async () => {
-    (Record.findById as jest.Mock).mockImplementation(() => ({
+    (Record.findOne as jest.Mock).mockImplementation(() => ({
       populate: jest.fn().mockResolvedValue(null),
     }));
 

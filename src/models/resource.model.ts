@@ -36,6 +36,29 @@ export interface Resource extends Document {
     };
     [key: string]: any;
   }[];
+  uniquenessRules: {
+    _id?: mongoose.Types.ObjectId;
+    name?: string;
+    fields: string[];
+    severity: 'error' | 'warning';
+    message?: string;
+    // Translations of the message, by locale
+    messageTranslations?: { [locale: string]: string };
+    // Whether the rule is enforced. Defaults to true; set to false to
+    // keep a rule around without deleting it.
+    active?: boolean;
+    // Restricts the rule to the records matching this filter, in the same
+    // format as the filters of layouts (e.g. only enforce uniqueness of an
+    // assignment's country while it is the active primary assignment).
+    condition?: any;
+    // When set, the rule checks for overlapping date ranges among records
+    // sharing the same `fields` values, instead of an exact value match.
+    dateIntersection?: {
+      startField: string;
+      endField: string;
+      allowAdjacent?: boolean;
+    };
+  }[];
   layouts: any;
   aggregations: any;
 }
@@ -145,6 +168,35 @@ const resourceSchema = new Schema<Resource>(
       type: mongoose.Schema.Types.Mixed,
       default: [],
     },
+    uniquenessRules: [
+      {
+        name: String,
+        fields: { type: [String], required: true },
+        severity: {
+          type: String,
+          enum: ['error', 'warning'],
+          default: 'error',
+        },
+        message: String,
+        messageTranslations: {
+          type: mongoose.Schema.Types.Mixed,
+          default: undefined,
+        },
+        active: {
+          type: Boolean,
+          default: true,
+        },
+        condition: {
+          type: mongoose.Schema.Types.Mixed,
+          default: undefined,
+        },
+        dateIntersection: {
+          startField: String,
+          endField: String,
+          allowAdjacent: Boolean,
+        },
+      },
+    ],
     layouts: [layoutSchema],
     aggregations: [aggregationSchema],
   },

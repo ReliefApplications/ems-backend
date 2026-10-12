@@ -79,6 +79,10 @@ const DEFAULT_FIELDS = [
     name: 'lastUpdateForm',
     type: 'text',
   },
+  {
+    name: 'draft',
+    type: 'boolean',
+  },
 ];
 
 /** Names of the default fields */
@@ -601,6 +605,20 @@ const buildMongoFilter = (
          * @returns Mongo filter for the rule
          */
         const buildOperatorFilter = (fieldPath: string): any => {
+          // Records created before drafts existed have no draft flag: a
+          // missing flag, like a null value, means the record is submitted
+          if (
+            fieldPath === 'draft' &&
+            [filterOperator.EQUAL_TO, filterOperator.NOT_EQUAL_TO].includes(
+              filter.operator
+            ) &&
+            [true, false, 'true', 'false', null, undefined].includes(value)
+          ) {
+            const isTrue = value === true || value === 'true';
+            const isDraft =
+              filter.operator === filterOperator.EQUAL_TO ? isTrue : !isTrue;
+            return isDraft ? { draft: true } : { draft: { $ne: true } };
+          }
           switch (filter.operator) {
             case filterOperator.EQUAL_TO: {
               // user attributes
