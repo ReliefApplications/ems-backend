@@ -1,3 +1,10 @@
+# [2.18.0-rc.14](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.13...v2.18.0-rc.14) (2026-10-12)
+
+
+### Features
+
+* Add new surveyjs widgets to manage files ([#1288](https://github.com/ReliefApplications/ems-backend/issues/1288)) ([9af3928](https://github.com/ReliefApplications/ems-backend/commit/9af3928bfdbdb6e99ec19130cc1c47f8dfe086ff)), closes [AB#138121](https://github.com/AB/issues/138121)
+
 # [2.18.0-rc.13](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.12...v2.18.0-rc.13) (2026-10-07)
 
 
