@@ -34,3 +34,6 @@ files/*
 
 __blobstorage__/*
 __azurite_db_blob*
+
+# Local MongoDB dumps
+dump/

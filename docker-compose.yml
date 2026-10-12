@@ -1,22 +1,95 @@
-version: '3.7'
+# Local development stack: the API (nodemon, `npm run dev`) and a MongoDB
+# single-node replica set.
+#
+# MongoDB MUST run as a replica set: the API opens change streams
+# (`Model.watch()` in src/server/schemaUpdateTriggers.ts), which Mongo only
+# supports on replica sets. Change streams + authentication also require a
+# keyFile, which is generated on the fly in the `mongodb` command below.
+#
+# Usage:
+#   docker compose up            # API on http://localhost:3000, inspector on 9229
+#   docker compose up mongodb    # database only (eg. to run `npm run dev` on the host)
+#
+# Optional overrides (put them in .env, defaults are used otherwise):
+#   MONGO_ROOT_USER, MONGO_ROOT_PASS, MONGO_DB_NAME
+#
+# From the host (Compass, mongosh, `npm run dev` outside docker) connect with
+#   mongodb://root:root@localhost:27017/?authSource=admin&directConnection=true
+# `directConnection=true` is needed because the replica set member is
+# advertised as `mongodb:27017`, which only resolves inside the compose network.
+
+name: hems-back
+
 services:
   api:
-    container_name: ems-ui-poc-api
-    restart: always
-    env_file:
-      - .env
+    container_name: hems-back-api
     build:
       context: .
       dockerfile: Dockerfile
       target: base
+    restart: unless-stopped
+    init: true
+    env_file:
+      - .env
+    environment:
+      # Point the API at the `mongodb` service below (overrides DB_* from .env).
+      # Uses the `docker` provider of src/server/database.ts.
+      DB_PROVIDER: docker
+      DB_PREFIX: mongodb
+      DB_HOST: mongodb
+      DB_PORT: 27017
+      DB_NAME: ${MONGO_DB_NAME:-hems}
+      DB_USER: ${MONGO_ROOT_USER:-root}
+      DB_PASS: ${MONGO_ROOT_PASS:-root}
     ports:
-      - '3000:3000'
-      - '9229:9229'
-    expose:
-      - '3000'
-      - '9229'
+      - '3000:3000' # API
+      - '9229:9229' # Node.js inspector
     volumes:
       - ./config:/home/node/app/config
       - ./src:/home/node/app/src
-      - .docker/api/logs:/home/node/app/logs
+      - ./.docker/api/logs:/home/node/app/logs
+    depends_on:
+      mongodb:
+        condition: service_healthy
     command: npm run dev
+
+  mongodb:
+    container_name: hems-back-mongodb
+    image: mongo:8
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASS:-root}
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    # Generate the keyFile required by an authenticated replica set, then hand
+    # over to the official entrypoint (which creates the root user on first run).
+    command:
+      - bash
+      - -c
+      - |
+        set -e
+        openssl rand -base64 756 > /data/keyfile
+        chmod 400 /data/keyfile
+        chown mongodb:mongodb /data/keyfile
+        exec docker-entrypoint.sh mongod --replSet rs0 --keyFile /data/keyfile --bind_ip_all
+    # The healthcheck doubles as the replica set initializer: it only reports
+    # healthy once this node is the writable primary, initiating the replica
+    # set on the first run (`rs.initiate` is a no-op error afterwards).
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          mongosh --quiet -u "$$MONGO_INITDB_ROOT_USERNAME" -p "$$MONGO_INITDB_ROOT_PASSWORD"
+          --eval "if (!db.hello().isWritablePrimary) { try { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongodb:27017' }] }) } catch (e) {} quit(1) }"
+      interval: 5s
+      timeout: 10s
+      retries: 12
+      start_period: 20s
+
+volumes:
+  mongodb_data:
+  mongodb_config:

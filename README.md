@@ -43,6 +43,58 @@ docker compose up
 
 The `api` service runs `npm run dev` (nodemon) with the source mounted as a volume, so the server reloads on change. The API listens on port 3000.
 
+The `mongodb` service runs MongoDB as a single-node replica set, which is mandatory: the API opens change streams (`Model.watch()` in [src/server/schemaUpdateTriggers.ts](src/server/schemaUpdateTriggers.ts)), and MongoDB only supports them on replica sets. The API container is wired to it automatically (its `DB_*` variables override the ones of `.env`). Credentials default to `root` / `root` and the database is named `hems`; override them with `MONGO_ROOT_USER`, `MONGO_ROOT_PASS` and `MONGO_DB_NAME` in `.env`.
+
+To run only the database (eg. to use `npm run dev` on the host):
+
+```
+docker compose up -d mongodb
+```
+
+From the host (Compass, mongosh, `npm run dev` outside docker), connect with:
+
+```
+mongodb://root:root@localhost:27017/?authSource=admin&directConnection=true
+```
+
+`directConnection=true` is required because the replica set member is advertised as `mongodb:27017`, which only resolves inside the compose network.
+
+### Copy a MongoDB Atlas database into the local database
+
+`mongodump` and `mongorestore` ship with the `mongo` image, so nothing needs to be installed on the host. Replace `<ATLAS_USER>`, `<ATLAS_PASS>`, `<ATLAS_HOST>` and `<SOURCE_DB>` with the Atlas values. The data lands in the local `hems` database (use your `MONGO_DB_NAME` instead if you set one).
+
+```
+# 1. Start the database and wait until it is healthy
+docker compose up -d mongodb
+docker compose exec mongodb sh -c 'until mongosh --quiet -u root -p root --eval "db.hello().isWritablePrimary" | grep -q true; do sleep 2; done'
+
+# 2. Stream the Atlas dump straight into the local replica set
+docker compose exec -T mongodb sh -c '
+  mongodump --archive --gzip \
+    --uri="mongodb+srv://<ATLAS_USER>:<ATLAS_PASS>@<ATLAS_HOST>/<SOURCE_DB>" \
+  | mongorestore --archive --gzip --drop \
+    --nsFrom="<SOURCE_DB>.*" --nsTo="hems.*" \
+    --uri="mongodb://root:root@localhost:27017/?authSource=admin&directConnection=true"
+'
+```
+
+*   `--drop` replaces the local collections that already exist, so running the command again gives a fresh copy instead of merging.
+*   `--nsFrom` / `--nsTo` rename the Atlas database to `hems`. Drop both flags to keep the original name.
+
+To keep a dump on disk and restore it several times without hitting Atlas again:
+
+```
+# Dump to ./dump on the host (never commit it: it contains real data)
+docker run --rm -v "$PWD/dump:/dump" mongo:8 \
+  mongodump --gzip --out=/dump \
+  --uri="mongodb+srv://<ATLAS_USER>:<ATLAS_PASS>@<ATLAS_HOST>/<SOURCE_DB>"
+
+# Restore it into the running local container
+docker run --rm --network hems-back_default -v "$PWD/dump:/dump" mongo:8 \
+  mongorestore --gzip --drop --nsFrom="<SOURCE_DB>.*" --nsTo="hems.*" \
+  --uri="mongodb://root:root@mongodb:27017/?authSource=admin" /dump
+```
+
 ## Run locally
 
 ```
