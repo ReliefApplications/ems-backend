@@ -1,3 +1,10 @@
+# [2.18.0-rc.15](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.14...v2.18.0-rc.15) (2026-10-14)
+
+
+### Bug Fixes
+
+* incremental generation id could fail due to new draft feature ([3f2f87e](https://github.com/ReliefApplications/ems-backend/commit/3f2f87e9b79d3ca487e43f6e2446131b23b35f3c))
+
 # [2.18.0-rc.14](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.13...v2.18.0-rc.14) (2026-10-12)
 
 
