@@ -66,6 +66,17 @@ describe('formatValue', () => {
     ]);
   });
 
+  it('keeps the draft flag of files saved in the blob storage with a draft', () => {
+    const files = [
+      { name: 'a.txt', content: 'form/blob', draft: true },
+      { name: 'b.txt', content: 'def', draft: false },
+    ];
+    expect(formatValue({ type: 'file' }, files)).toEqual([
+      { name: 'a.txt', content: 'form/blob', draft: true },
+      { name: 'b.txt', content: 'def' },
+    ]);
+  });
+
   it('keeps valid resource ids and drops malformed 12-character ones', () => {
     const validId = '507f1f77bcf86cd799439011';
     expect(formatValue({ type: 'resource' }, validId)).toBe(validId);
