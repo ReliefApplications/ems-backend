@@ -1,3 +1,10 @@
+# [2.18.0-rc.16](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.15...v2.18.0-rc.16) (2026-10-16)
+
+
+### Bug Fixes
+
+* draft records now correctly save files ([#1291](https://github.com/ReliefApplications/ems-backend/issues/1291)) ([17a9624](https://github.com/ReliefApplications/ems-backend/commit/17a9624cd0755d8b4b54f9219d6bcf9a0fa98593)), closes [AB#138121](https://github.com/AB/issues/138121)
+
 # [2.18.0-rc.15](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.14...v2.18.0-rc.15) (2026-10-14)
 
 
