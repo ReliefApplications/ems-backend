@@ -1,3 +1,10 @@
+# [2.18.0-rc.17](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.16...v2.18.0-rc.17) (2026-10-20)
+
+
+### Bug Fixes
+
+* Unique constraints could fail due to text hyphens or date formats ([00cd6eb](https://github.com/ReliefApplications/ems-backend/commit/00cd6ebf29cf2207ab047e71f859a27697e84312))
+
 # [2.18.0-rc.16](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.15...v2.18.0-rc.16) (2026-10-16)
 
 
