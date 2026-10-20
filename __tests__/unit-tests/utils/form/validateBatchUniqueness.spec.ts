@@ -63,6 +63,50 @@ describe('validateBatchUniqueness', () => {
     expect(results[2].errors).toEqual([]);
   });
 
+  it('compares texts regardless of whitespaces and dashes', async () => {
+    const resource = await Resource.create({
+      name: 'Person',
+      fields: [{ name: 'name' }],
+      uniquenessRules: [{ fields: ['name'], severity: 'error' }],
+    });
+    const results = validateBatchUniqueness(
+      [
+        { name: 'Meril Finch' },
+        { name: 'MerilFinch' },
+        { name: 'Meril-Finch' },
+        { name: 'Meril Finche' },
+      ],
+      resource
+    );
+    expect(results[0].errors).toEqual([]);
+    expect(results[1].errors).toHaveLength(1);
+    expect(results[2].errors).toHaveLength(1);
+    expect(results[3].errors).toEqual([]);
+  });
+
+  it('compares dates by day, whatever the timezone they were entered from', async () => {
+    const resource = await Resource.create({
+      name: 'Patient',
+      fields: [{ name: 'date_of_birth', type: 'date' }],
+      uniquenessRules: [{ fields: ['date_of_birth'], severity: 'error' }],
+    });
+    const results = validateBatchUniqueness(
+      [
+        // 15/05/1990 entered from Kyiv ( UTC+2 )
+        { date_of_birth: '1990-05-14T22:00:00.000Z' },
+        // Same day, imported ( UTC midnight )
+        { date_of_birth: new Date('1990-05-15T00:00:00.000Z') },
+        { date_of_birth: '1990-05-16' },
+        { date_of_birth: 'not a date' },
+      ],
+      resource
+    );
+    expect(results[0].errors).toEqual([]);
+    expect(results[1].errors).toHaveLength(1);
+    expect(results[2].errors).toEqual([]);
+    expect(results[3].errors).toEqual([]);
+  });
+
   it('treats a missing end date as an ongoing period', async () => {
     const resource = await Resource.create({
       name: 'Assignment',

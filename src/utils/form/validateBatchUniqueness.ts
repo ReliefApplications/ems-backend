@@ -6,12 +6,14 @@ import {
   UniquenessRule,
   UniquenessViolation,
   getConditionMongoFilter,
+  getRuleFieldType,
   getRange,
   getViolationMessage,
   isEmptyValue,
   matchesCondition,
   normalizeValue,
   rangesOverlap,
+  toDay,
 } from './validateUniqueness';
 
 /**
@@ -40,24 +42,36 @@ const pushViolation = (
 /**
  * Groups row indices by the value of a rule's scope fields, only including
  * rows that match the rule's condition and have every scope field set.
+ * Values are compared the same way as in {@link validateUniqueness}: dates
+ * by day, texts regardless of their case, whitespaces and dashes.
  *
  * @param rows row data to group
  * @param rule the rule whose fields define the grouping
  * @param conditionFilter Mongo filter of the rule, restricting the rows it applies to
+ * @param resource the resource the rows belong to, defining the types of the fields
  * @returns a map from composite key to the indices of matching rows
  */
 const groupByScope = (
   rows: any[],
   rule: UniquenessRule,
-  conditionFilter: Record<string, any> | null
+  conditionFilter: Record<string, any> | null,
+  resource: Resource | null
 ): Map<string, number[]> => {
   const groups = new Map<string, number[]>();
+  const comparableValues = rule.fields.map((field) =>
+    getRuleFieldType(resource, field) === 'date'
+      ? (value: any) => toDay(value)
+      : normalizeValue
+  );
   rows.forEach((row, index) => {
     if (!matchesCondition(row, conditionFilter)) return;
     if (rule.fields.some((field) => isEmptyValue(row[field]))) return;
-    const key = JSON.stringify(
-      rule.fields.map((field) => normalizeValue(row[field]))
+    const values = rule.fields.map((field, i) =>
+      comparableValues[i](row[field])
     );
+    // Uniqueness cannot be evaluated on a date that cannot be parsed
+    if (values.some((value) => value === null)) return;
+    const key = JSON.stringify(values);
     const group = groups.get(key);
     if (group) {
       group.push(index);
@@ -113,7 +127,8 @@ export const validateBatchUniqueness = (
       const groups = groupByScope(
         rows.map((row, index) => (ranges[index] ? row : {})),
         rule,
-        conditionFilter
+        conditionFilter,
+        resource
       );
       for (const indices of groups.values()) {
         for (let i = 1; i < indices.length; i++) {
@@ -133,7 +148,7 @@ export const validateBatchUniqueness = (
         }
       }
     } else {
-      const groups = groupByScope(rows, rule, conditionFilter);
+      const groups = groupByScope(rows, rule, conditionFilter, resource);
       for (const indices of groups.values()) {
         for (let i = 1; i < indices.length; i++) {
           const current = indices[i];

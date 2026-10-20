@@ -246,6 +246,129 @@ describe('validateUniqueness', () => {
     expect(different.warnings).toEqual([]);
   });
 
+  it('compares texts regardless of whitespaces and dashes', async () => {
+    const resource = await Resource.create({
+      name: 'Person',
+      fields: [{ name: 'first_name' }, { name: 'last_name' }],
+      uniquenessRules: [
+        { fields: ['first_name', 'last_name'], severity: 'error' },
+      ],
+    });
+    await Record.create({
+      incrementalId: '1',
+      form: resource._id,
+      _form: { _id: resource._id, name: resource.name },
+      resource: resource._id,
+      data: { first_name: 'Meril Finch', last_name: 'Brown' },
+    });
+
+    for (const [first_name, last_name] of [
+      ['MerilFinch', 'BROWN'],
+      ['Meril-Finch', 'brown'],
+      ['meril finch', 'Brown'],
+      // En dash
+      ['Meril–Finch', 'Brown'],
+      [' Meril - Finch ', 'Brown'],
+    ]) {
+      const duplicate = await validateUniqueness(
+        { first_name, last_name },
+        resource
+      );
+      expect(duplicate.errors).toHaveLength(1);
+    }
+
+    const different = await validateUniqueness(
+      { first_name: 'Meril Finche', last_name: 'Brown' },
+      resource
+    );
+    expect(different.errors).toEqual([]);
+  });
+
+  it('compares non ASCII texts regardless of their case', async () => {
+    const resource = await Resource.create({
+      name: 'Person',
+      fields: [{ name: 'last_name' }],
+      uniquenessRules: [{ fields: ['last_name'], severity: 'error' }],
+    });
+    await Record.create({
+      incrementalId: '1',
+      form: resource._id,
+      _form: { _id: resource._id, name: resource.name },
+      resource: resource._id,
+      data: { last_name: 'Коваленко' },
+    });
+
+    const duplicate = await validateUniqueness(
+      { last_name: 'КОВАЛЕНКО' },
+      resource
+    );
+    expect(duplicate.errors).toHaveLength(1);
+
+    const different = await validateUniqueness(
+      { last_name: 'Коваленка' },
+      resource
+    );
+    expect(different.errors).toEqual([]);
+  });
+
+  it('compares dates by day, whatever the timezone they were entered from', async () => {
+    const resource = await Resource.create({
+      name: 'Patient',
+      fields: [
+        { name: 'first_name', type: 'text' },
+        { name: 'last_name', type: 'text' },
+        { name: 'date_of_birth', type: 'date' },
+      ],
+      uniquenessRules: [
+        {
+          fields: ['date_of_birth', 'first_name', 'last_name'],
+          severity: 'error',
+        },
+      ],
+    });
+    // 15/05/1990 entered from Kyiv ( UTC+2 ): stored as the local midnight
+    await Record.create({
+      incrementalId: '1',
+      form: resource._id,
+      _form: { _id: resource._id, name: resource.name },
+      resource: resource._id,
+      data: {
+        first_name: 'John',
+        last_name: 'Smith',
+        date_of_birth: new Date('1990-05-14T22:00:00.000Z'),
+      },
+    });
+    const patient = { first_name: 'john', last_name: 'SMITH' };
+
+    for (const date_of_birth of [
+      // Same day, imported ( UTC midnight ), as a date or as a string
+      new Date('1990-05-15T00:00:00.000Z'),
+      '1990-05-15T00:00:00.000Z',
+      // Same day, entered from New York ( UTC-4 )
+      '1990-05-15T04:00:00.000Z',
+    ]) {
+      const duplicate = await validateUniqueness(
+        { ...patient, date_of_birth },
+        resource
+      );
+      expect(duplicate.errors).toHaveLength(1);
+    }
+
+    for (const date_of_birth of [
+      // Previous and next days, from the same timezone
+      new Date('1990-05-13T22:00:00.000Z'),
+      new Date('1990-05-15T22:00:00.000Z'),
+      '1990-05-16',
+      'not a date',
+    ]) {
+      const different = await validateUniqueness(
+        { ...patient, date_of_birth },
+        resource
+      );
+      expect(different.errors).toEqual([]);
+    }
+  });
+
   it('does not interpret special characters of a text', async () => {
     const resource = await Resource.create({
       name: 'Organization',

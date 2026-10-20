@@ -49,7 +49,7 @@ export default {
       if (record.resource && !record.draft) {
         const resource = await Resource.findById(
           record.resource,
-          'uniquenessRules'
+          'fields uniquenessRules'
         );
         const uniquenessResult = await validateUniqueness(
           record.data,

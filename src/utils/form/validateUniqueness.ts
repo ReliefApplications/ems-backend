@@ -90,7 +90,33 @@ export const logUniquenessError = (err: UniquenessError): void => {
 };
 
 /**
- * Whether a value counts as missing for uniqueness purposes.
+ * Characters ignored when comparing texts: whitespaces and dashes ( hyphen,
+ * and the unicode dashes from U+2010 to U+2015 ). The characters are listed
+ * rather than matched with a unicode property, so the class can be used
+ * both in JS and in Mongo regular expressions.
+ */
+const IGNORED_CHARS_CLASS = '[\\s\\-‐-―]';
+
+/** Matcher of the characters ignored when comparing texts */
+const IGNORED_CHARS = new RegExp(IGNORED_CHARS_CLASS, 'g');
+
+/**
+ * Normalizes a value before comparing it to another one: texts are compared
+ * regardless of their case, and of their whitespaces and dashes, so that
+ * 'John  Smith ', 'john smith', 'JohnSmith' and 'John-Smith' are seen as
+ * duplicates.
+ *
+ * @param value value to normalize
+ * @returns the normalized value
+ */
+export const normalizeValue = (value: any): any =>
+  typeof value === 'string'
+    ? value.replace(IGNORED_CHARS, '').toLowerCase()
+    : value;
+
+/**
+ * Whether a value counts as missing for uniqueness purposes: a text only made
+ * of ignored characters ( whitespaces, dashes ) is missing.
  *
  * @param value value to check
  * @returns true if the value should be treated as absent
@@ -98,24 +124,30 @@ export const logUniquenessError = (err: UniquenessError): void => {
 export const isEmptyValue = (value: any): boolean =>
   value === undefined ||
   value === null ||
-  (typeof value === 'string' && value.trim() === '');
+  (typeof value === 'string' && normalizeValue(value) === '');
 
 /**
- * Normalizes a value before comparing it to another one: texts are compared
- * regardless of their case and of leading, trailing or repeated whitespaces,
- * so that 'John  Smith ' and 'john smith' are seen as duplicates.
+ * Builds the regular expression pattern matching a character regardless of
+ * its case. The 'i' option of Mongo is not relied on for non ASCII letters
+ * ( e.g. cyrillic ), so both cases are listed explicitly when they are single
+ * characters.
  *
- * @param value value to normalize
- * @returns the normalized value
+ * @param char character to match
+ * @returns pattern matching the character in both cases
  */
-export const normalizeValue = (value: any): any =>
-  typeof value === 'string'
-    ? value.trim().replace(/\s+/g, ' ').toLowerCase()
-    : value;
+const toCharPattern = (char: string): string => {
+  const lower = char.toLowerCase();
+  const upper = char.toUpperCase();
+  const isSingleChar = (x: string) => Array.from(x).length === 1;
+  return lower !== upper && isSingleChar(lower) && isSingleChar(upper)
+    ? `[${escapeRegExp(lower)}${escapeRegExp(upper)}]`
+    : escapeRegExp(char);
+};
 
 /**
  * Builds the Mongo filter matching the records with the same value, using
- * the same rules as {@link normalizeValue} for texts.
+ * the same rules as {@link normalizeValue} for texts: any number of ignored
+ * characters can appear between the significant characters of the text.
  *
  * @param value value to match
  * @returns a Mongo filter on the value
@@ -123,11 +155,9 @@ export const normalizeValue = (value: any): any =>
 const toMatchFilter = (value: any): any =>
   typeof value === 'string'
     ? {
-        $regex: `^\\s*${value
-          .trim()
-          .split(/\s+/)
-          .map(escapeRegExp)
-          .join('\\s+')}\\s*$`,
+        $regex: `^${IGNORED_CHARS_CLASS}*${Array.from(normalizeValue(value))
+          .map(toCharPattern)
+          .join(`${IGNORED_CHARS_CLASS}*`)}${IGNORED_CHARS_CLASS}*$`,
         $options: 'i',
       }
     : value;
@@ -241,6 +271,59 @@ export const toTime = (value: any): number | null => {
   return isNaN(time) ? null : time;
 };
 
+/** Duration of a day, in milliseconds */
+const DAY = 24 * 60 * 60 * 1000;
+
+/**
+ * Gets the type of a field of the resource, as stored on it.
+ *
+ * @param resource the resource the field belongs to
+ * @param field name of the field
+ * @returns type of the field, or undefined if unknown
+ */
+export const getRuleFieldType = (
+  resource: Resource | null,
+  field: string
+): string | undefined =>
+  (resource?.fields || []).find((x) => x.name === field)?.type;
+
+/**
+ * Gets the day a date ( without time ) value belongs to, as the UTC midnight
+ * of that day. A date is stored as the midnight of the day in the timezone of
+ * the user who entered it ( e.g. '2024-03-14T22:00:00.000Z' for the
+ * 15/03/2024 entered from Kyiv ), while an imported one is stored as the UTC
+ * midnight: the same day can be stored as different timestamps. The day is
+ * therefore the one the value is the closest midnight of, from 12 hours
+ * before to 12 hours after its UTC midnight, which is correct as long as the
+ * timezone of the user is between UTC-11 and UTC+12.
+ * The value can be a date or a date string, as the data checked is not
+ * always formatted yet ( e.g. rows of an import file ).
+ *
+ * @param value date value
+ * @returns timestamp of the UTC midnight of the day, or null if the value is not a valid date
+ */
+export const toDay = (value: any): number | null => {
+  const time = toTime(value);
+  return time === null ? null : Math.floor((time + DAY / 2) / DAY) * DAY;
+};
+
+/**
+ * Builds the Mongo filter matching the records with the same day as the
+ * given date value, whatever the time it was stored with ( see {@link toDay} ).
+ *
+ * @param value date value to match
+ * @returns a Mongo filter on the value, or null if it is not a valid date
+ */
+const toDateMatchFilter = (value: any): Record<string, Date> | null => {
+  const day = toDay(value);
+  return day === null
+    ? null
+    : {
+        $gte: new Date(day - DAY / 2),
+        $lt: new Date(day + DAY / 2),
+      };
+};
+
 /**
  * Gets the date range of a record, for a date-intersection rule. A missing
  * start or end date makes the range open-ended on that side ( e.g. an
@@ -335,8 +418,9 @@ export const getViolationMessage = (
  * fields) is missing from the data, as uniqueness cannot be meaningfully
  * evaluated on incomplete values.
  *
- * Text values are compared regardless of their case and of extra
- * whitespaces. Draft records are ignored.
+ * Text values are compared regardless of their case, whitespaces and dashes,
+ * and date values by day, whatever the timezone they were entered from.
+ * Draft records are ignored.
  *
  * @param data full record data (existing data merged with the proposed update)
  * @param resource the resource the record belongs to, or null if none
@@ -376,9 +460,21 @@ export const validateUniqueness = async (
     if (excludedRecordIds) {
       query._id = { $nin: castArray(excludedRecordIds) };
     }
+    let invalidDate = false;
     for (const field of rule.fields) {
-      query[`data.${field}`] = toMatchFilter(data[field]);
+      if (getRuleFieldType(resource, field) === 'date') {
+        const dateFilter = toDateMatchFilter(data[field]);
+        if (!dateFilter) {
+          invalidDate = true;
+          break;
+        }
+        query[`data.${field}`] = dateFilter;
+      } else {
+        query[`data.${field}`] = toMatchFilter(data[field]);
+      }
     }
+    // Uniqueness cannot be evaluated on a date that cannot be parsed
+    if (invalidDate) continue;
 
     let isViolated = false;
 
