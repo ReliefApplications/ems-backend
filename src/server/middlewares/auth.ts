@@ -316,7 +316,11 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
             })
             .catch((err) => done(err));
         } else {
-          logger.info(token);
+          // Token is neither a user nor a client token.
+          logger.warn('Unsupported bearer token: missing name and azp claims', {
+            issuer: token.iss,
+            claims: Object.keys(token),
+          });
           return done('error');
         }
       } catch (err) {
