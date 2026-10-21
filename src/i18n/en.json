@@ -360,6 +360,7 @@
 		"aggregation": {
 			"buildPipeline": {
 				"errors": {
+					"forbiddenCustomStage": "Custom stage uses an operator that is not allowed.",
 					"invalidCustomStage": "Custom stage cannot be parsed correctly."
 				}
 			}
