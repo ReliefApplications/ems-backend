@@ -11,6 +11,7 @@ import {
   User,
 } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
+import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import extendAbilityForRecords, {
   userHasRoleFor,
 } from '@security/extendAbilityForRecords';
@@ -443,6 +444,29 @@ router.post('/records', async (req, res) => {
 });
 
 /**
+ * Check whether the logged user is allowed to export users.
+ * Back-office export requires the global "can see users" permission.
+ * Application export also accepts the "can see users" permission of a role
+ * in that application (the users that can open the application users page).
+ *
+ * @param req current http request
+ * @param applicationId application id, when exporting the users of an application
+ * @returns true if the user can export users
+ */
+const canExportUsers = (req, applicationId?: string): boolean => {
+  const user = req.context.user;
+  const ability: AppAbility = user.ability;
+  if (ability.can('manage', 'User')) {
+    return true;
+  }
+  if (applicationId) {
+    const appAbility = extendAbilityForApplications(user, applicationId);
+    return appAbility.can('manageUsers', 'Application');
+  }
+  return false;
+};
+
+/**
  * Export the template to add new users to an application by uploading a file
  */
 router.get('/application/:id/invite', async (req, res) => {
@@ -483,27 +507,28 @@ router.get('/invite', async (req, res) => {
  */
 router.post('/users', async (req, res) => {
   try {
-    const ability: AppAbility = req.context.user.ability;
-    if (ability.can('read', 'User')) {
-      const ids =
-        req.body.users?.map((id) => new mongoose.Types.ObjectId(id)) || [];
-
-      const filters = {};
-
-      // If ids are provided, filter the users
-      if (ids && ids.length > 0)
-        Object.assign(filters, {
-          _id: { $in: ids },
-        });
-
-      const users: any[] = await User.find(filters).populate({
-        path: 'roles',
-        model: 'Role',
-        match: { application: { $eq: null } },
-      });
-      return await buildUserExport(req, res, users);
+    if (!canExportUsers(req)) {
+      return res
+        .status(403)
+        .send(i18next.t('common.errors.permissionNotGranted'));
     }
-    return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    const ids =
+      req.body.users?.map((id) => new mongoose.Types.ObjectId(id)) || [];
+
+    const filters = {};
+
+    // If ids are provided, filter the users
+    if (ids && ids.length > 0)
+      Object.assign(filters, {
+        _id: { $in: ids },
+      });
+
+    const users: any[] = await User.find(filters).populate({
+      path: 'roles',
+      model: 'Role',
+      match: { application: { $eq: null } },
+    });
+    return await buildUserExport(req, res, users);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
     return res.status(500).send(req.t('common.errors.internalServerError'));
@@ -527,50 +552,51 @@ router.get('/templates', async (req, res) => {
  */
 router.post('/application/:id/users', async (req, res) => {
   try {
-    const ability: AppAbility = req.context.user.ability;
-    if (ability.can('read', 'User')) {
-      const ids =
-        req.body.users?.map((id) => new mongoose.Types.ObjectId(id)) || [];
+    if (!canExportUsers(req, req.params.id)) {
+      return res
+        .status(403)
+        .send(i18next.t('common.errors.permissionNotGranted'));
+    }
+    const ids =
+      req.body.users?.map((id) => new mongoose.Types.ObjectId(id)) || [];
 
-      const aggregations: any[] = [
-        // Left join
-        {
-          $lookup: {
-            from: 'roles',
-            localField: 'roles',
-            foreignField: '_id',
-            as: 'roles',
-          },
+    const aggregations: any[] = [
+      // Left join
+      {
+        $lookup: {
+          from: 'roles',
+          localField: 'roles',
+          foreignField: '_id',
+          as: 'roles',
         },
-        // Replace the roles field with a filtered array, containing only roles that are part of the application.
-        {
-          $addFields: {
-            roles: {
-              $filter: {
-                input: '$roles',
-                as: 'role',
-                cond: {
-                  $eq: [
-                    '$$role.application',
-                    new mongoose.Types.ObjectId(req.params.id),
-                  ],
-                },
+      },
+      // Replace the roles field with a filtered array, containing only roles that are part of the application.
+      {
+        $addFields: {
+          roles: {
+            $filter: {
+              input: '$roles',
+              as: 'role',
+              cond: {
+                $eq: [
+                  '$$role.application',
+                  new mongoose.Types.ObjectId(req.params.id),
+                ],
               },
             },
           },
         },
-        // Filter users that have at least one role in the application.
-        { $match: { 'roles.0': { $exists: true } } },
-      ];
+      },
+      // Filter users that have at least one role in the application.
+      { $match: { 'roles.0': { $exists: true } } },
+    ];
 
-      if (ids.length > 0)
-        // Filter users that are in the list of ids.
-        aggregations.push({ $match: { _id: { $in: ids } } });
+    if (ids.length > 0)
+      // Filter users that are in the list of ids.
+      aggregations.push({ $match: { _id: { $in: ids } } });
 
-      const users = await User.aggregate(aggregations);
-      return await buildUserExport(req, res, users);
-    }
-    return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    const users = await User.aggregate(aggregations);
+    return await buildUserExport(req, res, users);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
     return res.status(500).send(req.t('common.errors.internalServerError'));
