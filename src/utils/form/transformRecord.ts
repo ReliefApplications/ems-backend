@@ -50,6 +50,10 @@ export const formatValue = (field: any, value: any): any => {
           // the records text index as a text-search language override, and rejects
           // codes MongoDB does not support ( e.g. "uk" ).
           ...(x.lang ? { lang: x.lang } : {}),
+          // Translations added through a Files management question point to
+          // the translation key of the file they translate
+          ...(x.translationKey ? { translationKey: x.translationKey } : {}),
+          ...(x.translationOf ? { translationOf: x.translationOf } : {}),
           // Saved in the blob storage along with a draft record: moved to the
           // final storage ( document management ) when the record is submitted
           ...(x.draft ? { draft: true } : {}),
