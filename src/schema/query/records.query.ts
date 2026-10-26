@@ -1,6 +1,6 @@
 import { GraphQLError, GraphQLID, GraphQLList } from 'graphql';
 import { RecordType } from '../types';
-import { Record } from '@models';
+import { findRecordsAcrossStorages } from '@utils/storage';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { getAccessibleFields } from '@utils/form';
 import { logger } from '@services/logger.service';
@@ -33,7 +33,7 @@ export default {
     try {
       const user = context.user;
       const ability = await extendAbilityForRecords(user);
-      const records = await Record.find({
+      const records = await findRecordsAcrossStorages({
         ...accessibleBy(ability, 'read').Record,
         archived: { $ne: true },
         ...(args.form && { form: args.form }),

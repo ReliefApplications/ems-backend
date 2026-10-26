@@ -7,7 +7,7 @@ import {
   GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { Record, Version, Form, Resource } from '@models';
+import { Record, Form, Resource } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import {
   transformRecord,
@@ -25,6 +25,11 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 import { getErrorMessage, getErrorStack } from '@utils/error';
+import {
+  findRecordsByIds,
+  getVersionModelFor,
+  updateRecordById,
+} from '@utils/storage';
 import { groupBy } from 'lodash';
 
 /** Interface for records with an error */
@@ -79,12 +84,11 @@ export default {
 
       // Get records and forms
       const records: RecordWithError[] = [];
-      const oldRecords: Record[] = await Record.find({
-        _id: { $in: args.ids },
-      }).populate({
-        path: 'form',
-        model: 'Form',
-      });
+      const oldRecords: Record[] = await findRecordsByIds(
+        args.ids,
+        {},
+        { populate: { path: 'form', model: 'Form' } }
+      );
 
       // Prepare the edition of each record the user can update
       const editions: RecordEdition[] = [];
@@ -204,7 +208,7 @@ export default {
           );
           continue;
         }
-        const version = new Version({
+        const version = new (getVersionModelFor(record))({
           createdAt: record.modifiedAt ? record.modifiedAt : record.createdAt,
           data: record.data,
           createdBy: user._id,
@@ -230,9 +234,7 @@ export default {
           update,
           ownership && { createdBy: { ...record.createdBy, ...ownership } }
         );
-        const newRecord = await Record.findByIdAndUpdate(record.id, update, {
-          new: true,
-        });
+        const newRecord = await updateRecordById(record, update);
         await version.save();
         records.push(newRecord);
       }

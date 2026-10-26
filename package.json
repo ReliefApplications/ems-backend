@@ -16,6 +16,7 @@
     "migrate:up": "ts-node -r tsconfig-paths/register -r dotenv/config ./src/migrations/index.ts up",
     "migrate:down": "ts-node -r tsconfig-paths/register -r dotenv/config ./src/migrations/index.ts down",
     "migrate:list": "migrate --migrations-dir=\"./migrations\" --compiler=\"ts:./src/migrations/ts-compiler.js\" list",
+    "record-storage": "ts-node -r tsconfig-paths/register -r dotenv/config ./src/scripts/recordStorage.ts",
     "semantic-release": "semantic-release",
     "postinstall": "./setup-hooks.sh"
   },

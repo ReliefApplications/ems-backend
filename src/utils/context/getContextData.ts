@@ -1,6 +1,6 @@
 import { getAccessibleFields } from '@utils/form';
 import { CalculatedFieldService } from '@services/calculatedField.service';
-import { Types } from 'mongoose';
+import { Document, Types } from 'mongoose';
 import {
   ApiConfiguration,
   Page,
@@ -15,6 +15,7 @@ import { Context } from '@server/apollo/context';
 import { CustomAPI } from '@server/apollo/dataSources';
 import { logger } from '@services/logger.service';
 import { getDraftRecordFilter } from '@utils/filter';
+import { findRecordById, getRecordModelFor } from '@utils/storage';
 
 /** Maximum recursion depth for getting the context data */
 const MAX_DEPTH = 10;
@@ -40,9 +41,9 @@ export const getContextDataForRecord = async (
       : await Resource.findById(resourceID);
 
   const record = (
-    recordID instanceof Record
+    recordID instanceof Document
       ? recordID
-      : await Record.findOne({ _id: recordID, ...getDraftRecordFilter() })
+      : await findRecordById(recordID as Types.ObjectId, getDraftRecordFilter())
   ) as Record;
 
   if (!resource || depth > MAX_DEPTH || !record?.data) {
@@ -61,7 +62,7 @@ export const getContextDataForRecord = async (
         continue;
       }
       const refRecord = getAccessibleFields(
-        await Record.findOne({ _id: refRecordID, ...getDraftRecordFilter() }),
+        await findRecordById(refRecordID, getDraftRecordFilter()),
         context.user.ability
       );
 
@@ -119,7 +120,7 @@ export const getContextDataForRecord = async (
           ...(await calculatedFieldService.build(field.expression, field.name)),
         ];
 
-        const result = await Record.aggregate(pipeline);
+        const result = await getRecordModelFor(record).aggregate(pipeline);
         const calculatedValue = result[0]?.data?.[field.name];
         if (calculatedValue !== undefined && calculatedValue !== null) {
           Object.assign(data, { [field.name]: calculatedValue });

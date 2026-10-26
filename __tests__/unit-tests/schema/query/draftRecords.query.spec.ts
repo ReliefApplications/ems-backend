@@ -4,8 +4,11 @@ import resolver from '@schema/query/draftRecords.query';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
+import { getRecordModelForForm } from '@utils/storage';
 
 jest.mock('@casl/mongoose', () => ({ accessibleBy: jest.fn() }));
+// The records of the form are queried on the model of its storage
+jest.mock('@utils/storage', () => ({ getRecordModelForForm: jest.fn() }));
 jest.mock('@models', () => ({
   Form: {
     findById: jest.fn(),
@@ -42,6 +45,7 @@ describe('DraftRecords Query Resolver', () => {
     (Form.findById as jest.Mock).mockReturnValue({
       populate: jest.fn().mockResolvedValue(form),
     });
+    (getRecordModelForForm as jest.Mock).mockResolvedValue(Record);
     (Record.find as jest.Mock).mockReturnValue({ select });
     (Record.countDocuments as jest.Mock).mockResolvedValue(12);
     lean.mockResolvedValue([

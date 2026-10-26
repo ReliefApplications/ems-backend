@@ -5,7 +5,8 @@ import {
   GraphQLList,
   GraphQLNonNull,
 } from 'graphql';
-import { Channel, Record } from '@models';
+import { Channel } from '@models';
+import { findRecordsByIds } from '@utils/storage';
 import { AppAbility } from '@security/defineUserAbility';
 import pubsubSafe from '../../server/pubsubSafe';
 import config from 'config';
@@ -48,10 +49,9 @@ export default {
         );
       }
 
-      const records = await Record.find(getDraftRecordFilter())
-        .where('_id')
-        .in(args.ids)
-        .select('data');
+      const records = await findRecordsByIds(args.ids, getDraftRecordFilter(), {
+        select: 'data',
+      });
 
       const publisher = await pubsubSafe();
       publisher.publish(

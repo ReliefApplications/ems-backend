@@ -7,6 +7,7 @@ import {
   GraphQLBoolean,
 } from 'graphql';
 import { Record } from '@models';
+import { deleteRecords, findRecordsByIds, updateRecords } from '@utils/storage';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
@@ -37,12 +38,11 @@ export default {
 
       // Get records and forms objects
       const toDelete: Record[] = [];
-      const records: Record[] = await Record.find({
-        _id: { $in: args.ids },
-      }).populate({
-        path: 'form',
-        model: 'Form',
-      });
+      const records: Record[] = await findRecordsByIds(
+        args.ids,
+        {},
+        { populate: { path: 'form', model: 'Form' } }
+      );
 
       // Create list of records to delete
       for (const record of records) {
@@ -55,19 +55,9 @@ export default {
 
       // Delete the records
       if (args.hardDelete) {
-        const result = await Record.deleteMany({
-          _id: { $in: toDelete.map((x) => x._id) },
-        });
-        return result.deletedCount;
+        return await deleteRecords(toDelete);
       } else {
-        const result = await Record.updateMany(
-          { _id: { $in: toDelete.map((x) => x._id) } },
-          {
-            $set: { archived: true },
-          },
-          { new: true }
-        );
-        return result.modifiedCount;
+        return await updateRecords(toDelete, { $set: { archived: true } });
       }
     } catch (err) {
       logger.error(getErrorMessage(err), { stack: getErrorStack(err) });

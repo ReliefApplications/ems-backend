@@ -12,6 +12,10 @@ import {
   User,
   Role,
 } from '@models';
+import {
+  getRecordModelForForm,
+  insertRecords as insertRecordsInStorage,
+} from '@utils/storage';
 import pubsub from './pubsub';
 import { CronJob } from 'cron';
 // import * as CryptoJS from 'crypto-js';
@@ -433,10 +437,13 @@ export const insertRecords = async (
   }
   // Find records already existing if any
   const selectedFields = mappedUnicityConditions.map((x) => `data.${x}`);
-  const duplicateRecords = await RecordModel.find({
-    form: pullJob.convertTo,
-    $or: filters,
-  }).select(selectedFields);
+  const recordModel = await getRecordModelForForm(form);
+  const duplicateRecords = await recordModel
+    .find({
+      form: pullJob.convertTo,
+      $or: filters,
+    })
+    .select(selectedFields);
 
   // If EIOS pullJob, build a mapping JSON to assign ownership (role ids)
   const ownershipMappingWithIds: any = {};
@@ -541,7 +548,7 @@ export const insertRecords = async (
     // If everything is fine, push it in the array for saving
     if (!isDuplicate) {
       transformRecord(mappedElement, form.fields);
-      let record = new RecordModel({
+      let record = new recordModel({
         incrementalId: await getNextId(
           String(form.resource ? form.resource : pullJob.convertTo)
         ),
@@ -565,7 +572,7 @@ export const insertRecords = async (
     }
   }
   let insertReportMessage = '';
-  const insertedRecords = await RecordModel.insertMany(records);
+  const insertedRecords = await insertRecordsInStorage(recordModel, records);
   if (fromRoute) {
     insertReportMessage = `${insertedRecords.length} new records of form "${form.name}" created from records insertion route`;
   } else {

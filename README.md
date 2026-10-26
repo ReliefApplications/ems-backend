@@ -211,6 +211,31 @@ npm run migrate:down                         # revert the last migration
 npm run migrate:list                         # list migrations and their status
 ```
 
+## Record storage
+
+By default, the records of every form live in the `records` collection of the main database, and their versions in `versions`. A form can instead be given a **storage database**: another database of the same cluster, holding the records and versions of the form in collections of the same names. The main database only keeps a _stub_ per record (its id, resource, form, flags, dates, incremental id, version ids, creator and the name of the storage database: no data, no form or user snapshots). The application behaves the same either way: the stub tells it where the record is, and every query on the form runs on its storage database.
+
+This is meant for sensitive data that must stay out of reach of people who have direct access to the main database. On the cluster, such a user gets a built-in role (`read` or `readWrite`) on the main database only, and nothing on the storage database, so they can work on everything else and only see the stubs of the stored records. Stubs still reveal that the records exist, how many, when they were created or modified and by whom: trim `STUB_FIELDS` in [src/utils/storage/stubs.ts](src/utils/storage/stubs.ts) to expose less, and run a `reconcile` afterwards. The application's own database user needs `readWrite` on the main database and on every storage database. Project-level roles of the hosting console (data explorer, backups) bypass database roles and must not be given to restricted users.
+
+The setting is never exposed to the front-end: administrators set it directly in the database, on the forms. The records of a resource stay together, so the setting goes on the core form of the resource and applies to all its forms (a standalone form carries its own):
+
+```js
+db.forms.updateOne({ _id: ObjectId('<core form id>') }, { $set: { storage: '<database name>' } })
+```
+
+Then, with the application stopped, the records are moved with the `record-storage` script:
+
+```
+npm run record-storage -- status                              # structures with a storage database, and their counts
+npm run record-storage -- move --structure <resource or form id>      # move the records and versions to the storage database
+npm run record-storage -- revert --structure <resource or form id>    # move them back, and remove the setting from the forms
+npm run record-storage -- reconcile [--structure <resource or form id>]  # fix stubs and stray records after an incident
+```
+
+The move is idempotent and can be run again after an interruption; it ends with the same consistency pass as `reconcile`. The storage database is the source of truth: `reconcile` moves records created in full in the main database, refreshes or creates the stubs, and deletes the stubs of records that no longer exist. The application reloads the list of stored forms every 30 seconds and at startup.
+
+Limitation: MongoDB cannot join collections across databases. Related fields between a stored resource and resources of the main database are not resolved in grids, aggregations and calculated fields (they behave as empty), and the `createdBy` / `lastUpdatedBy` source fields of aggregations on a stored resource are empty. Plain references by id, the record pages, the history and the exports work as usual.
+
 ## Other scripts
 
 | Command | Description |
@@ -220,3 +245,4 @@ npm run migrate:list                         # list migrations and their status
 | `npm run lint` | Lint the codebase with ESLint |
 | `npm run format` | Format `src/` with Prettier |
 | `npm run check-i18n` | Check translation files for missing keys |
+| `npm run record-storage` | Manage the storage databases of records (see [Record storage](#record-storage)) |

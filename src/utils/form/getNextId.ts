@@ -1,4 +1,4 @@
-import { Record, Form } from '@models';
+import { Record, Form, getRecordModel } from '@models';
 import i18next from 'i18next';
 import Redis from 'ioredis';
 import config from 'config';
@@ -113,22 +113,32 @@ const initCounter = async (
   }
   const legacyRecords = await Record.find(
     { ...structureFilter, incrementalId: { $in: [null, ''] } },
-    '_id'
+    '_id storage'
   ).sort({ createdAt: 1 });
   if (!legacyRecords.length) {
     return;
   }
   const bulkUpdateOps = [];
+  // Records stored in a storage database are numbered there too: the main
+  // database only holds their stubs
+  const storedOps: { [storage: string]: any[] } = {};
   for (const record of legacyRecords) {
     const count = await redis.incr(key);
-    bulkUpdateOps.push({
+    const op = {
       updateOne: {
         filter: { _id: record._id },
         update: { incrementalId: formatId(year, letter, count) },
       },
-    });
+    };
+    bulkUpdateOps.push(op);
+    if (record.storage) {
+      (storedOps[record.storage] ??= []).push(op);
+    }
   }
   await Record.bulkWrite(bulkUpdateOps);
+  for (const [storage, ops] of Object.entries(storedOps)) {
+    await getRecordModel(storage).bulkWrite(ops);
+  }
 };
 
 /**

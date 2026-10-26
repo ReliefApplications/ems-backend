@@ -1,4 +1,4 @@
-import { Record } from '@models';
+import { findRecordById } from '@utils/storage';
 import { GraphQLInt, GraphQLObjectType } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
@@ -47,7 +47,11 @@ export const DatasetType = new GraphQLObjectType({
                 ) {
                   const project = mergeArrayOfObjects(nestedFields[key]) ?? {};
                   Object.assign(project, { _id: 0 });
-                  const record = await Record.findById(value, project);
+                  const record = await findRecordById(
+                    value,
+                    {},
+                    { select: project }
+                  );
                   data[key] = record;
                 }
               }

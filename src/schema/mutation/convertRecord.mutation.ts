@@ -5,7 +5,13 @@ import {
   GraphQLBoolean,
 } from 'graphql';
 import { getNextId } from '@utils/form';
-import { Form, Record } from '@models';
+import { Form } from '@models';
+import {
+  findRecordById,
+  getRecordModelFor,
+  saveRecord,
+  updateRecordById,
+} from '@utils/storage';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { RecordType } from '../types';
 import { logger } from '@services/logger.service';
@@ -38,7 +44,10 @@ export default {
       const user = context.user;
 
       // Get the record and forms
-      const oldRecord = await Record.findById(args.id);
+      const oldRecord = await findRecordById(args.id);
+      if (!oldRecord) {
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
       const oldForm = await Form.findById(oldRecord.form);
       const targetForm = await Form.findById(args.form);
       if (!oldForm.resource.equals(targetForm.resource))
@@ -62,7 +71,8 @@ export default {
       if (args.copyRecord) {
         const data = oldRecord.data;
         const oldVersions = oldRecord.versions;
-        const targetRecord = new Record({
+        // Same resource as the converted record, hence same storage
+        const targetRecord = new (getRecordModelFor(oldRecord))({
           incrementalId: await getNextId(
             String(oldForm.resource ? oldForm.resource : args.form)
           ),
@@ -89,13 +99,13 @@ export default {
             name: targetForm.name,
           },
         });
-        return await targetRecord.save();
+        return await saveRecord(targetRecord);
       } else {
         const update: any = {
           form: args.form,
           //modifiedAt: new Date(),
         };
-        return await Record.findByIdAndUpdate(args.id, update, { new: true });
+        return await updateRecordById(oldRecord, update);
       }
     } catch (err) {
       logger.error(getErrorMessage(err), { stack: getErrorStack(err) });

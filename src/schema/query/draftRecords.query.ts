@@ -6,7 +6,8 @@ import {
   GraphQLString,
 } from 'graphql';
 import { accessibleBy } from '@casl/mongoose';
-import { Form, Record } from '@models';
+import { Form } from '@models';
+import { getRecordModelForForm } from '@utils/storage';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
@@ -103,8 +104,10 @@ export default {
           context.user
         ),
       };
+      const recordModel = await getRecordModelForForm(form);
       const [records, totalCount] = await Promise.all([
-        Record.find(filters)
+        recordModel
+          .find(filters)
           .select('_id createdAt modifiedAt')
           .sort({
             [sortField]: getSortOrder(sortOrder),
@@ -113,7 +116,7 @@ export default {
           .skip(skip)
           .limit(first)
           .lean(),
-        Record.countDocuments(filters),
+        recordModel.countDocuments(filters),
       ]);
       const nodes: DraftRecordSummary[] = records.map((record) => ({
         id: record._id.toString(),

@@ -1,6 +1,7 @@
 import { getFields } from '../../introspection/getFields';
 import { isRelationshipField } from '../../introspection/isRelationshipField';
-import { Record, ReferenceData, User } from '@models';
+import { ReferenceData, User } from '@models';
+import { getRecordModelForResource } from '@utils/storage';
 import getReversedFields from '../../introspection/getReversedFields';
 import getFilter from '../Query/getFilter';
 import getSortField from '../Query/getSortField';
@@ -62,7 +63,9 @@ export const getEntityResolver = (
             // Else, do db query
             const recordId = get(entity.data, fieldName.slice(0, -3), null);
             const record = recordId
-              ? await Record.findOne({
+              ? await (
+                  await getRecordModelForResource(field.resource)
+                ).findOne({
                   _id: recordId,
                   archived: { $ne: true },
                   ...getDraftRecordFilter(),
@@ -119,7 +122,10 @@ export const getEntityResolver = (
                   { archived: { $ne: true } },
                   getDraftRecordFilter()
                 );
-                return await Record.find(mongooseFilter)
+                return await (
+                  await getRecordModelForResource(field.resource)
+                )
+                  .find(mongooseFilter)
                   .sort([[getSortField(args.sortField), args.sortOrder]])
                   .limit(args.first);
                 // if (args.first !== null) {
@@ -308,7 +314,10 @@ export const getEntityResolver = (
                     getDraftRecordFilter()
                   );
                   mongooseFilter[`data.${x.name}`] = entity.id.toString();
-                  const records = await Record.find(mongooseFilter)
+                  const records = await (
+                    await getRecordModelForResource(ids[entityName])
+                  )
+                    .find(mongooseFilter)
                     .sort([[getSortField(args.sortField), args.sortOrder]])
                     .limit(args.first);
                   return records;

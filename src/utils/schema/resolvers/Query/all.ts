@@ -22,6 +22,10 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { getErrorMessage, getErrorStack } from '@utils/error';
 import { getDraftRecordFilter } from '@utils/filter';
 import getRecordsAbility from './getRecordsAbility';
+import {
+  findRecordsAcrossStorages,
+  getRecordModelForResource,
+} from '@utils/storage';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -243,6 +247,8 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       const id = idsByName[entityName];
       // List of form / resource fields
       const fields: any[] = fieldsByName[entityName];
+      // Model of the storage of the records of the form / resource
+      const recordModel = await getRecordModelForResource(id);
 
       // Pass display argument to children resolvers
       if (display) {
@@ -504,7 +510,8 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         ];
         // Sorts on calculated fields cannot use an index; allow spilling to
         // disk so large sorts do not hit the in-memory limit
-        const aggregation = await Record.aggregate(pipeline)
+        const aggregation = await recordModel
+          .aggregate(pipeline)
           .allowDiskUse(true)
           .facet({
             items: [
@@ -550,7 +557,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             },
           },
         ];
-        const aggregation = await Record.aggregate(pipeline);
+        const aggregation = await recordModel.aggregate(pipeline);
         items = aggregation[0].items;
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       }
@@ -704,13 +711,13 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           })
         );
         // Fetch records
-        const relatedRecords = await Record.find(
+        const relatedRecords = await findRecordsAcrossStorages(
           {
             $or: [{ _id: { $in: relatedIds } }, ...relatedFilters],
             archived: { $ne: true },
             ...getDraftRecordFilter(),
           },
-          projection
+          { select: projection }
         );
         // Update items
         for (const item of itemsToUpdate) {
@@ -763,7 +770,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         for (const style of styles) {
           const styleFilter = getFilter(style.filter, fields, context);
           // Get the records corresponding to the style filter
-          const itemsToStyle = await Record.aggregate([
+          const itemsToStyle = await recordModel.aggregate([
             {
               $match: {
                 _id: {
@@ -793,7 +800,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         const actionResults = await Promise.all(
           actions.map((action) => {
             const actionFilter = getFilter(action.filter, fields, context);
-            return Record.aggregate([
+            return recordModel.aggregate([
               {
                 $match: {
                   _id: { $in: objectIds },

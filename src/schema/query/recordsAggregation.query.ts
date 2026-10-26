@@ -29,6 +29,7 @@ import { Context } from '@server/apollo/context';
 import { CompositeFilterDescriptor } from '../../types/filter';
 import { getErrorMessage, getErrorStack } from '@utils/error';
 import { getDraftRecordFilter } from '@utils/filter';
+import { getRecordModelForResource } from '@utils/storage';
 
 /** Pagination default items per query */
 const DEFAULT_FIRST = 10;
@@ -268,6 +269,8 @@ export default {
         fields: 1,
         aggregations: 1,
       });
+      // Model of the storage of the records of the resource
+      const recordModel = await getRecordModelForResource(args.resource);
 
       // Check abilities
       const ability = await extendAbilityForRecords(user);
@@ -711,7 +714,7 @@ export default {
         });
       }
       // Get aggregated data
-      const recordAggregation = await RecordModel.aggregate(pipeline);
+      const recordAggregation = await recordModel.aggregate(pipeline);
 
       let items;
       let totalCount;

@@ -7,8 +7,9 @@ import { getGraphQLTypeName } from '@utils/validators';
 import mongoose, { Document, Schema } from 'mongoose';
 import { Channel } from './channel.model';
 import { layoutSchema } from './layout.model';
-import { Record } from './record.model';
+import { Record, getRecordModel } from './record.model';
 import { Version } from './version.model';
+import { STORAGE_NAME_REGEX } from '@utils/models/storageConnection';
 import { getErrorMessage } from '@utils/error';
 
 /** Form documents interface declaration */
@@ -37,6 +38,13 @@ interface FormDocument extends Document {
   versions?: any[];
   channel?: any;
   layouts?: any;
+  /**
+   * Name of the database holding the records and versions of the form, when
+   * they must stay out of the main database. Set directly in the database by
+   * administrators, never exposed to the front-end. The records of a resource
+   * stay together: the setting of its core form applies to all its forms.
+   */
+  storage?: string;
 }
 
 /** Interface of form */
@@ -137,6 +145,10 @@ const schema = new Schema<Form>(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Resource',
     },
+    storage: {
+      type: String,
+      match: STORAGE_NAME_REGEX,
+    },
     versions: {
       type: [mongoose.Schema.Types.ObjectId],
       ref: 'Version',
@@ -179,6 +191,34 @@ addOnBeforeDeleteMany(schema, async (forms) => {
     }
 
     const versions = forms.reduce((acc, form) => acc.concat(form.versions), []);
+    // Records stored in storage databases, then the main database: the other
+    // records, and the stubs of the stored ones
+    const resourceIds = forms.map((form) => form.resource).filter((x) => x);
+    const flagged: any[] = await mongoose
+      .model('Form')
+      .find({
+        storage: { $exists: true, $nin: [null, ''] },
+        $or: [
+          { _id: { $in: forms.map((form) => form._id) } },
+          ...(resourceIds.length ? [{ resource: { $in: resourceIds } }] : []),
+        ],
+      })
+      .select('_id resource storage')
+      .lean();
+    for (const storage of new Set(flagged.map((x) => x.storage))) {
+      const stored = flagged.filter((x) => x.storage === storage);
+      await getRecordModel(storage).deleteMany({
+        form: {
+          $in: forms.filter(
+            (form) =>
+              stored.some((x) => x._id.equals(form._id)) ||
+              stored.some(
+                (x) => form.resource && x.resource?.equals(form.resource)
+              )
+          ),
+        },
+      });
+    }
     await Record.deleteMany({ form: { $in: forms } });
     await Channel.deleteMany({ form: { $in: forms } });
     await Version.deleteMany({ _id: { $in: versions } });

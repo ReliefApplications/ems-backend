@@ -1,5 +1,6 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import { Form, Record } from '@models';
+import { Form } from '@models';
+import { findRecordById } from '@utils/storage';
 import { RecordType } from '../types';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { getAccessibleFields } from '@utils/form';
@@ -31,10 +32,10 @@ export default {
     try {
       const user = context.user;
       // Get the form and the record
-      const record = await Record.findOne({
-        _id: args.id,
-        ...getDraftRecordFilter(args, user),
-      });
+      const record = await findRecordById(
+        args.id,
+        getDraftRecordFilter(args, user)
+      );
       if (!record) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }

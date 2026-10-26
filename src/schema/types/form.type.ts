@@ -17,6 +17,7 @@ import {
   FieldMetaDataType,
 } from '.';
 import { Resource, Record, Version, Form } from '@models';
+import { getRecordModelForForm } from '@utils/storage';
 import { AppAbility } from '@security/defineUserAbility';
 import { getDraftRecordFilter, getFormPermissionFilter } from '@utils/filter';
 import { StatusEnumType } from '@const/enumTypes';
@@ -124,10 +125,13 @@ export const FormType = new GraphQLObjectType({
         const permissionFilters = Record.find(
           accessibleBy(ability, 'read').Record
         ).getFilter();
-        // Get data
-        let items = await Record.find({
-          $and: [cursorFilters, mongooseFilter, permissionFilters],
-        }).limit(args.first + 1);
+        // Get data, from the storage of the form's records
+        const recordModel = await getRecordModelForForm(parent);
+        let items = await recordModel
+          .find({
+            $and: [cursorFilters, mongooseFilter, permissionFilters],
+          })
+          .limit(args.first + 1);
         const hasNextPage = items.length > args.first;
         if (hasNextPage) {
           items = items.slice(0, items.length - 1);
@@ -146,7 +150,7 @@ export const FormType = new GraphQLObjectType({
             endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
           },
           edges,
-          totalCount: await Record.countDocuments({
+          totalCount: await recordModel.countDocuments({
             $and: [
               mongooseFilter,
               permissionFilters,
@@ -160,12 +164,16 @@ export const FormType = new GraphQLObjectType({
       type: GraphQLInt,
       async resolve(parent, args, context) {
         const ability = await extendAbilityForRecords(context.user, parent);
-        const count = await Record.find({
-          form: parent.id,
-          archived: { $ne: true },
-          ...getDraftRecordFilter(),
-          ...accessibleBy(ability, 'read').Record,
-        }).count();
+        const count = await (
+          await getRecordModelForForm(parent)
+        )
+          .find({
+            form: parent.id,
+            archived: { $ne: true },
+            ...getDraftRecordFilter(),
+            ...accessibleBy(ability, 'read').Record,
+          })
+          .count();
         return count;
       },
     },
@@ -230,7 +238,9 @@ export const FormType = new GraphQLObjectType({
             'recordsUnicity'
           );
           if (unicityFilters.length > 0) {
-            const record = await Record.findOne({
+            const record = await (
+              await getRecordModelForForm(parent)
+            ).findOne({
               $and: [
                 {
                   form: parent._id,

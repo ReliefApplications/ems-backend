@@ -4,7 +4,7 @@ import { addOnBeforeDeleteMany } from '@utils/models/deletion';
 import { Form } from './form.model';
 import { layoutSchema } from './layout.model';
 import { aggregationSchema } from './aggregation.model';
-import { Record } from './record.model';
+import { Record, getRecordModel } from './record.model';
 import { deleteFolder } from '@utils/files/deleteFolder';
 import { logger } from '@services/logger.service';
 import { getErrorMessage } from '@utils/error';
@@ -224,6 +224,16 @@ addOnBeforeDeleteMany(resourceSchema, async (resources) => {
       );
     }
 
+    // Records stored in storage databases (the setting is on the forms), then
+    // the main database: the other records, and the stubs of the stored ones
+    for (const resource of resources) {
+      const storage = forms.find(
+        (form) => form.storage && resource._id.equals(form.resource)
+      )?.storage;
+      if (storage) {
+        await getRecordModel(storage).deleteMany({ resource: resource._id });
+      }
+    }
     await Form.deleteMany({ resource: { $in: resourcesIds } });
     await Record.deleteMany({ resource: { $in: resourcesIds } });
   } catch (err) {

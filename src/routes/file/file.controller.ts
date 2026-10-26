@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
 import { RouteDefinition } from 'types/route-definition';
 import BaseController from '../../abstractions/base.controller';
-import { Record, Resource } from '@models';
+import { Resource } from '@models';
+import { getRecordModelForResource } from '@utils/storage';
 import { Types } from 'mongoose';
 import { getDraftRecordFilter } from '@utils/filter';
 
@@ -76,12 +77,15 @@ export default class FileController extends BaseController {
         },
       }));
 
-      const associatedRecord = await Record.findOne({
-        resource: new Types.ObjectId(String(resourceId)),
-        archived: { $ne: true },
-        ...getDraftRecordFilter(),
-        $or: fileFieldQueries,
-      }).select('_id');
+      const recordModel = await getRecordModelForResource(String(resourceId));
+      const associatedRecord = await recordModel
+        .findOne({
+          resource: new Types.ObjectId(String(resourceId)),
+          archived: { $ne: true },
+          ...getDraftRecordFilter(),
+          $or: fileFieldQueries,
+        })
+        .select('_id');
 
       if (!associatedRecord) {
         res.status(404).send({ error: 'Record not found' });

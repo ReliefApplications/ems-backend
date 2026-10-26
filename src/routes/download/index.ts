@@ -10,6 +10,11 @@ import {
   Role,
   User,
 } from '@models';
+import {
+  findRecordById,
+  getRecordModelForForm,
+  getRecordModelForResource,
+} from '@utils/storage';
 import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForRecords, {
   userHasRoleFor,
@@ -141,7 +146,7 @@ router.get('/form/records/:id', async (req, res) => {
       if (req.query.template) {
         return await templateBuilder(res, form.name, columns);
       } else {
-        const records = await Record.find(filter);
+        const records = await (await getRecordModelForForm(form)).find(filter);
         const rows = await getRows(
           columns,
           getAccessibleFields(records, formAbility),
@@ -188,14 +193,11 @@ router.get('/form/records/:id/history', async (req, res) => {
       );
     }
 
-    const record: Record = await Record.findOne({
-      _id: req.params.id,
-      archived: { $ne: true },
-      ...getDraftRecordFilter(),
-    }).populate({
-      path: 'resource',
-      model: 'Resource',
-    });
+    const record: Record = await findRecordById(
+      req.params.id,
+      { archived: { $ne: true }, ...getDraftRecordFilter() },
+      { populate: { path: 'resource', model: 'Resource' } }
+    );
     if (!record) {
       return res.status(404).send(req.t('common.errors.dataNotFound'));
     }
@@ -310,7 +312,9 @@ router.get('/resource/records/:id', async (req, res) => {
       } else {
         let records = [];
         if (ability.can('read', 'Record')) {
-          records = await Record.find({
+          records = await (
+            await getRecordModelForResource(resource)
+          ).find({
             resource: req.params.id,
             archived: { $ne: true },
             ...getDraftRecordFilter(),

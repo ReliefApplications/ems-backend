@@ -4,7 +4,12 @@ import {
   GraphQLError,
   GraphQLBoolean,
 } from 'graphql';
-import { Form, Record } from '@models';
+import { Form } from '@models';
+import {
+  deleteRecordById,
+  findRecordById,
+  updateRecordById,
+} from '@utils/storage';
 import { RecordType } from '../types';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { logger } from '@services/logger.service';
@@ -35,7 +40,10 @@ export default {
       const user = context.user;
 
       // Get the record and form objects
-      const record = await Record.findById(args.id);
+      const record = await findRecordById(args.id);
+      if (!record) {
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
       const form = await Form.findById(record.form);
 
       // Check the ability
@@ -48,13 +56,9 @@ export default {
 
       // Delete the record
       if (args.hardDelete) {
-        return await Record.findByIdAndDelete(record._id);
+        return await deleteRecordById(record);
       } else {
-        return await Record.findByIdAndUpdate(
-          record._id,
-          { archived: true },
-          { new: true }
-        );
+        return await updateRecordById(record, { archived: true });
       }
     } catch (err) {
       logger.error(getErrorMessage(err), { stack: getErrorStack(err) });

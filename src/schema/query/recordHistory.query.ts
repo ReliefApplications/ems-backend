@@ -11,6 +11,7 @@ import { HistoryVersionType } from '../types';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { RecordHistory } from '@utils/history';
 import { Form, Record } from '@models';
+import { findRecordById } from '@utils/storage';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
@@ -60,13 +61,11 @@ export default {
       const user = context.user;
       // Get data. Versions are fetched lazily by RecordHistory, only for the
       // requested page, instead of being populated in full here.
-      const record: Record = await Record.findOne({
-        _id: args.id,
-        ...getDraftRecordFilter(),
-      }).populate({
-        path: 'resource',
-        model: 'Resource',
-      });
+      const record: Record = await findRecordById(
+        args.id,
+        getDraftRecordFilter(),
+        { populate: { path: 'resource', model: 'Resource' } }
+      );
       if (!record) {
         throw new GraphQLError(
           context.i18next.i18n.t('common.errors.permissionNotGranted')

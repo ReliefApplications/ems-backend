@@ -8,7 +8,12 @@ import {
 import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import { FormType, UserType, VersionType } from '.';
-import { Form, Resource, Record, Version, User } from '@models';
+import { Form, Resource, User } from '@models';
+import {
+  getRecordModelFor,
+  getRecordModelForResource,
+  getVersionModelFor,
+} from '@utils/storage';
 import { Connection } from './pagination.type';
 import getDisplayText from '@utils/form/getDisplayText';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
@@ -65,7 +70,7 @@ const getCalculatedFieldsValues = async (
         ...(await calculatedFieldService.build(field.expression, field.name))
       );
     }
-    const [computed] = await Record.aggregate([
+    const [computed] = await getRecordModelFor(record).aggregate([
       { $match: { _id: record._id ?? record.id } },
       ...stages,
     ]);
@@ -185,7 +190,9 @@ export const RecordType = new GraphQLObjectType({
               // Get the display field from the linked record if any
               if (field.resource && field.displayField) {
                 try {
-                  const record = await Record.findOne({
+                  const record = await (
+                    await getRecordModelForResource(field.resource)
+                  ).findOne({
                     _id: data[name],
                     archived: { $ne: true },
                     ...getDraftRecordFilter(),
@@ -215,7 +222,10 @@ export const RecordType = new GraphQLObjectType({
     versions: {
       type: new GraphQLList(VersionType),
       async resolve(parent) {
-        const versions = await Version.find().where('_id').in(parent.versions);
+        const versions = await getVersionModelFor(parent)
+          .find()
+          .where('_id')
+          .in(parent.versions);
         return versions;
       },
     },
@@ -234,7 +244,9 @@ export const RecordType = new GraphQLObjectType({
       type: UserType,
       async resolve(parent) {
         if (parent.versions && parent.versions.length > 0) {
-          const lastVersion = await Version.findById(parent.versions.pop());
+          const lastVersion = await getVersionModelFor(parent).findById(
+            parent.versions.pop()
+          );
           if (lastVersion) {
             const user = await User.findById(lastVersion.createdBy);
             return user;

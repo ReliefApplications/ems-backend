@@ -1,5 +1,5 @@
 import { RecordHistory } from '@utils/history';
-import { Record, Version } from '@models';
+import { Record, Version, getVersionModel } from '@models';
 
 jest.mock('@models');
 
@@ -9,6 +9,8 @@ describe('RecordHistory Class Unit Tests', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Versions are fetched from the model of the record's storage
+    (getVersionModel as jest.Mock).mockReturnValue(Version);
 
     record = {
       createdAt: new Date('2026-07-01T12:00:00Z'),
@@ -59,19 +61,37 @@ describe('RecordHistory Class Unit Tests', () => {
         _id: 'versionId1',
         createdAt: new Date('2026-07-02T12:00:00Z'),
         data: { name: 'Bob', age: 25 },
-        toObject: jest.fn().mockReturnValue({ _id: 'versionId1', createdAt: new Date('2026-07-02T12:00:00Z'), data: { name: 'Bob', age: 25 } }),
+        toObject: jest
+          .fn()
+          .mockReturnValue({
+            _id: 'versionId1',
+            createdAt: new Date('2026-07-02T12:00:00Z'),
+            data: { name: 'Bob', age: 25 },
+          }),
       },
       {
         _id: 'versionId2',
         createdAt: new Date('2026-07-03T12:00:00Z'),
         data: { name: 'Bob', age: 28 },
-        toObject: jest.fn().mockReturnValue({ _id: 'versionId2', createdAt: new Date('2026-07-03T12:00:00Z'), data: { name: 'Bob', age: 28 } }),
+        toObject: jest
+          .fn()
+          .mockReturnValue({
+            _id: 'versionId2',
+            createdAt: new Date('2026-07-03T12:00:00Z'),
+            data: { name: 'Bob', age: 28 },
+          }),
       },
       {
         _id: 'versionId3',
         createdAt: new Date('2026-07-04T12:00:00Z'),
         data: { name: 'Alice', age: 28 },
-        toObject: jest.fn().mockReturnValue({ _id: 'versionId3', createdAt: new Date('2026-07-04T12:00:00Z'), data: { name: 'Alice', age: 28 } }),
+        toObject: jest
+          .fn()
+          .mockReturnValue({
+            _id: 'versionId3',
+            createdAt: new Date('2026-07-04T12:00:00Z'),
+            data: { name: 'Alice', age: 28 },
+          }),
       },
     ];
 
@@ -94,13 +114,25 @@ describe('RecordHistory Class Unit Tests', () => {
         _id: 'versionId2',
         createdAt: new Date('2026-07-03T12:00:00Z'),
         data: { name: 'Bob', age: 28 },
-        toObject: jest.fn().mockReturnValue({ _id: 'versionId2', createdAt: new Date('2026-07-03T12:00:00Z'), data: { name: 'Bob', age: 28 } }),
+        toObject: jest
+          .fn()
+          .mockReturnValue({
+            _id: 'versionId2',
+            createdAt: new Date('2026-07-03T12:00:00Z'),
+            data: { name: 'Bob', age: 28 },
+          }),
       },
       {
         _id: 'versionId3',
         createdAt: new Date('2026-07-04T12:00:00Z'),
         data: { name: 'Alice', age: 28 },
-        toObject: jest.fn().mockReturnValue({ _id: 'versionId3', createdAt: new Date('2026-07-04T12:00:00Z'), data: { name: 'Alice', age: 28 } }),
+        toObject: jest
+          .fn()
+          .mockReturnValue({
+            _id: 'versionId3',
+            createdAt: new Date('2026-07-04T12:00:00Z'),
+            data: { name: 'Alice', age: 28 },
+          }),
       },
     ];
 
@@ -128,19 +160,37 @@ describe('RecordHistory Class Unit Tests', () => {
         _id: 'versionId1',
         createdAt: new Date('2026-07-02T12:00:00Z'),
         data: { name: 'Bob', age: 25 },
-        toObject: jest.fn().mockReturnValue({ _id: 'versionId1', createdAt: new Date('2026-07-02T12:00:00Z'), data: { name: 'Bob', age: 25 } }),
+        toObject: jest
+          .fn()
+          .mockReturnValue({
+            _id: 'versionId1',
+            createdAt: new Date('2026-07-02T12:00:00Z'),
+            data: { name: 'Bob', age: 25 },
+          }),
       },
       {
         _id: 'versionId2',
         createdAt: new Date('2026-07-03T12:00:00Z'),
         data: { name: 'Bob', age: 28 },
-        toObject: jest.fn().mockReturnValue({ _id: 'versionId2', createdAt: new Date('2026-07-03T12:00:00Z'), data: { name: 'Bob', age: 28 } }),
+        toObject: jest
+          .fn()
+          .mockReturnValue({
+            _id: 'versionId2',
+            createdAt: new Date('2026-07-03T12:00:00Z'),
+            data: { name: 'Bob', age: 28 },
+          }),
       },
       {
         _id: 'versionId3',
         createdAt: new Date('2026-07-04T12:00:00Z'),
         data: { name: 'Alice', age: 28 },
-        toObject: jest.fn().mockReturnValue({ _id: 'versionId3', createdAt: new Date('2026-07-04T12:00:00Z'), data: { name: 'Alice', age: 28 } }),
+        toObject: jest
+          .fn()
+          .mockReturnValue({
+            _id: 'versionId3',
+            createdAt: new Date('2026-07-04T12:00:00Z'),
+            data: { name: 'Alice', age: 28 },
+          }),
       },
     ];
 
@@ -164,19 +214,37 @@ describe('RecordHistory Class Unit Tests', () => {
         _id: 'versionId1',
         createdAt: new Date('2026-07-02T12:00:00Z'),
         data: { name: 'Bob', age: 25 },
-        toObject: jest.fn().mockReturnValue({ _id: 'versionId1', createdAt: new Date('2026-07-02T12:00:00Z'), data: { name: 'Bob', age: 25 } }),
+        toObject: jest
+          .fn()
+          .mockReturnValue({
+            _id: 'versionId1',
+            createdAt: new Date('2026-07-02T12:00:00Z'),
+            data: { name: 'Bob', age: 25 },
+          }),
       },
       {
         _id: 'versionId2',
         createdAt: new Date('2026-07-03T12:00:00Z'),
         data: { name: 'Bob', age: 28 },
-        toObject: jest.fn().mockReturnValue({ _id: 'versionId2', createdAt: new Date('2026-07-03T12:00:00Z'), data: { name: 'Bob', age: 28 } }),
+        toObject: jest
+          .fn()
+          .mockReturnValue({
+            _id: 'versionId2',
+            createdAt: new Date('2026-07-03T12:00:00Z'),
+            data: { name: 'Bob', age: 28 },
+          }),
       },
       {
         _id: 'versionId3',
         createdAt: new Date('2026-07-04T12:00:00Z'),
         data: { name: 'Bob', age: 28 },
-        toObject: jest.fn().mockReturnValue({ _id: 'versionId3', createdAt: new Date('2026-07-04T12:00:00Z'), data: { name: 'Bob', age: 28 } }),
+        toObject: jest
+          .fn()
+          .mockReturnValue({
+            _id: 'versionId3',
+            createdAt: new Date('2026-07-04T12:00:00Z'),
+            data: { name: 'Bob', age: 28 },
+          }),
       },
     ];
     record.data = { name: 'Alice', age: 28 };
@@ -199,19 +267,37 @@ describe('RecordHistory Class Unit Tests', () => {
         _id: 'versionId1',
         createdAt: new Date('2026-07-02T12:00:00Z'),
         data: { name: 'Bob', age: 25 },
-        toObject: jest.fn().mockReturnValue({ _id: 'versionId1', createdAt: new Date('2026-07-02T12:00:00Z'), data: { name: 'Bob', age: 25 } }),
+        toObject: jest
+          .fn()
+          .mockReturnValue({
+            _id: 'versionId1',
+            createdAt: new Date('2026-07-02T12:00:00Z'),
+            data: { name: 'Bob', age: 25 },
+          }),
       },
       {
         _id: 'versionId2',
         createdAt: new Date('2026-07-03T12:00:00Z'),
         data: { name: 'Bob', age: 28 },
-        toObject: jest.fn().mockReturnValue({ _id: 'versionId2', createdAt: new Date('2026-07-03T12:00:00Z'), data: { name: 'Bob', age: 28 } }),
+        toObject: jest
+          .fn()
+          .mockReturnValue({
+            _id: 'versionId2',
+            createdAt: new Date('2026-07-03T12:00:00Z'),
+            data: { name: 'Bob', age: 28 },
+          }),
       },
       {
         _id: 'versionId3',
         createdAt: new Date('2026-07-04T12:00:00Z'),
         data: { name: 'Alice', age: 28 },
-        toObject: jest.fn().mockReturnValue({ _id: 'versionId3', createdAt: new Date('2026-07-04T12:00:00Z'), data: { name: 'Alice', age: 28 } }),
+        toObject: jest
+          .fn()
+          .mockReturnValue({
+            _id: 'versionId3',
+            createdAt: new Date('2026-07-04T12:00:00Z'),
+            data: { name: 'Alice', age: 28 },
+          }),
       },
     ];
 
@@ -242,19 +328,37 @@ describe('RecordHistory Class Unit Tests', () => {
         _id: 'versionId1',
         createdAt: new Date('2026-07-02T12:00:00Z'),
         data: { name: 'Bob', age: 25 },
-        toObject: jest.fn().mockReturnValue({ _id: 'versionId1', createdAt: new Date('2026-07-02T12:00:00Z'), data: { name: 'Bob', age: 25 } }),
+        toObject: jest
+          .fn()
+          .mockReturnValue({
+            _id: 'versionId1',
+            createdAt: new Date('2026-07-02T12:00:00Z'),
+            data: { name: 'Bob', age: 25 },
+          }),
       },
       {
         _id: 'versionId2',
         createdAt: new Date('2026-07-03T12:00:00Z'),
         data: { name: 'Bob', age: 28 },
-        toObject: jest.fn().mockReturnValue({ _id: 'versionId2', createdAt: new Date('2026-07-03T12:00:00Z'), data: { name: 'Bob', age: 28 } }),
+        toObject: jest
+          .fn()
+          .mockReturnValue({
+            _id: 'versionId2',
+            createdAt: new Date('2026-07-03T12:00:00Z'),
+            data: { name: 'Bob', age: 28 },
+          }),
       },
       {
         _id: 'versionId3',
         createdAt: new Date('2026-07-04T12:00:00Z'),
         data: { name: 'Alice', age: 28 },
-        toObject: jest.fn().mockReturnValue({ _id: 'versionId3', createdAt: new Date('2026-07-04T12:00:00Z'), data: { name: 'Alice', age: 28 } }),
+        toObject: jest
+          .fn()
+          .mockReturnValue({
+            _id: 'versionId3',
+            createdAt: new Date('2026-07-04T12:00:00Z'),
+            data: { name: 'Alice', age: 28 },
+          }),
       },
     ];
 

@@ -8,6 +8,7 @@ import axios from 'axios';
 import { logger } from '@services/logger.service';
 import { Parser } from 'json2csv';
 import { DataTransformer, Record, Resource } from '@models';
+import { getRecordModelForResource } from '@utils/storage';
 import mongoose, { FilterQuery } from 'mongoose';
 import { defaultRecordFields } from '@const/defaultRecordFields';
 import getFilter from '@utils/schema/resolvers/Query/getFilter';
@@ -307,23 +308,24 @@ export default class Exporter {
       this.resource.fields,
       this.req.context
     );
-    const countAggregation = await Record.aggregate([
-      ...(await this.recordsPipeline()),
-    ]).facet({
-      items: [
-        ...sort,
-        {
-          $project: {
-            _id: 1,
+    const recordModel = await getRecordModelForResource(this.resource);
+    const countAggregation = await recordModel
+      .aggregate([...(await this.recordsPipeline())])
+      .facet({
+        items: [
+          ...sort,
+          {
+            $project: {
+              _id: 1,
+            },
           },
-        },
-      ],
-      totalCount: [
-        {
-          $count: 'count',
-        },
-      ],
-    });
+        ],
+        totalCount: [
+          {
+            $count: 'count',
+          },
+        ],
+      });
 
     return countAggregation;
   };
@@ -335,6 +337,7 @@ export default class Exporter {
    */
   private getRecords = async () => {
     const countAggregation = await this.getRecordsCount();
+    const recordModel = await getRecordModelForResource(this.resource);
     // Get total count
     const totalCount = countAggregation?.[0]?.totalCount?.[0]?.count ?? 0;
     // Create a list of all ids
@@ -347,7 +350,7 @@ export default class Exporter {
     for (let i = 0; i < totalCount; i += pageSize) {
       recordsPromises.push(
         (async () => {
-          const items = await Record.aggregate(
+          const items = await recordModel.aggregate(
             await this.buildPipeline(this.columns, ids.slice(i, i + pageSize))
           );
           records.splice(i, items.length, ...items);
@@ -380,9 +383,9 @@ export default class Exporter {
         if (column.parent) {
           relatedResourcePromises.push(
             (async () => {
-              const relatedRecords = await Record.aggregate(
-                await this.buildReversedPipeline(column, record)
-              );
+              const relatedRecords = await (
+                await getRecordModelForResource(column.parent)
+              ).aggregate(await this.buildReversedPipeline(column, record));
               if (relatedRecords.length > 0) {
                 set(record, column.field, relatedRecords);
               }
@@ -1152,38 +1155,42 @@ export default class Exporter {
               this.req.context
             )
           : null;
-      const relatedPromises = Record.aggregate(
-        await this.buildPipeline(
-          subColumns,
-          isArray(columnValue)
-            ? Array.from(new Set(columnValue))
-                .filter((id: any) => mongoose.Types.ObjectId.isValid(id))
-                .map((id: any) => new mongoose.Types.ObjectId(id))
-            : [new mongoose.Types.ObjectId(columnValue)],
-          subFilter,
-          column.relatedResource,
-          true
+      const relatedPromises = (
+        await getRecordModelForResource(column.relatedResource ?? this.resource)
+      )
+        .aggregate(
+          await this.buildPipeline(
+            subColumns,
+            isArray(columnValue)
+              ? Array.from(new Set(columnValue))
+                  .filter((id: any) => mongoose.Types.ObjectId.isValid(id))
+                  .map((id: any) => new mongoose.Types.ObjectId(id))
+              : [new mongoose.Types.ObjectId(columnValue)],
+            subFilter,
+            column.relatedResource,
+            true
+          )
         )
-      ).then(async (relatedRecords) => {
-        if (relatedRecords.length > 0) {
-          set(
-            record,
-            fieldName,
-            isArray(columnValue) ? relatedRecords : relatedRecords[0]
-          );
-          for (let i = 0; i < columnValue.length; i++) {
-            await Promise.all(
-              subColumnsWithDisplay.map((subColumn) =>
-                this.getResourceFields(
-                  subColumn,
-                  `${fieldName}[${i}].${subColumn.field.split('.')[0]}`,
-                  record
-                )
-              )
+        .then(async (relatedRecords) => {
+          if (relatedRecords.length > 0) {
+            set(
+              record,
+              fieldName,
+              isArray(columnValue) ? relatedRecords : relatedRecords[0]
             );
+            for (let i = 0; i < columnValue.length; i++) {
+              await Promise.all(
+                subColumnsWithDisplay.map((subColumn) =>
+                  this.getResourceFields(
+                    subColumn,
+                    `${fieldName}[${i}].${subColumn.field.split('.')[0]}`,
+                    record
+                  )
+                )
+              );
+            }
           }
-        }
-      });
+        });
       return relatedPromises;
     }
   };

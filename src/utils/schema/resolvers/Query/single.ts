@@ -7,6 +7,7 @@ import { getDraftRecordFilter } from '@utils/filter';
 import { getAccessibleFields } from '@utils/form';
 import { accessibleBy } from '@casl/mongoose';
 import getRecordsAbility from './getRecordsAbility';
+import { findRecordById } from '@utils/storage';
 
 /**
  * Returns a resolver that fetches a record if the users logged
@@ -23,10 +24,9 @@ export default () =>
       const permissionFilters = Record.find(
         accessibleBy(ability, 'read').Record
       ).getFilter();
-      const record = await Record.findOne({
+      const record = await findRecordById(id, {
         $and: [
           {
-            _id: id,
             archived: { $ne: true },
             ...getDraftRecordFilter({ recordVisibility }, context.user),
           },

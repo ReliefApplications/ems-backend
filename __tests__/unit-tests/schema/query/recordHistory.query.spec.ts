@@ -1,4 +1,5 @@
-import { Record, Form } from '@models';
+import { Form } from '@models';
+import { findRecordById } from '@utils/storage';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { graphQLAuthCheck } from '@schema/shared';
 import { RecordHistory } from '@utils/history';
@@ -6,13 +7,9 @@ import resolver from '@schema/query/recordHistory.query';
 import { GraphQLError } from 'graphql';
 
 jest.mock('@models', () => {
-  const mockRecordFindOne = jest.fn();
   const mockFormFindById = jest.fn();
   const mockVersionFind = jest.fn();
   return {
-    Record: {
-      findOne: mockRecordFindOne,
-    },
     Form: {
       findById: mockFormFindById,
     },
@@ -21,6 +18,10 @@ jest.mock('@models', () => {
     },
   };
 });
+// Records are fetched through the storage helpers, wherever they are stored
+jest.mock('@utils/storage', () => ({
+  findRecordById: jest.fn(),
+}));
 jest.mock('@security/extendAbilityForRecords');
 jest.mock('@schema/shared');
 jest.mock('@utils/history');
@@ -48,15 +49,15 @@ describe('RecordHistory Query Resolver', () => {
 
     mockRecord = { id: 'recordId', form: 'formId', versions: [] };
     mockForm = { id: 'formId' };
-    mockGetHistory = jest.fn().mockResolvedValue([
-      { changes: [{ type: 'add', field: 'name', old: null, new: 'value' }] },
-    ]);
+    mockGetHistory = jest
+      .fn()
+      .mockResolvedValue([
+        { changes: [{ type: 'add', field: 'name', old: null, new: 'value' }] },
+      ]);
 
     (graphQLAuthCheck as jest.Mock).mockImplementation(() => {});
 
-    (Record.findOne as jest.Mock).mockImplementation(() => ({
-      populate: jest.fn().mockResolvedValue(mockRecord),
-    }));
+    (findRecordById as jest.Mock).mockResolvedValue(mockRecord);
 
     (Form.findById as jest.Mock).mockResolvedValue(mockForm);
 
@@ -70,9 +71,7 @@ describe('RecordHistory Query Resolver', () => {
   });
 
   it('should throw error if record is not found', async () => {
-    (Record.findOne as jest.Mock).mockImplementation(() => ({
-      populate: jest.fn().mockResolvedValue(null),
-    }));
+    (findRecordById as jest.Mock).mockResolvedValue(null);
 
     const args = { id: 'recordId' };
     await expect(resolver.resolve(null, args, context)).rejects.toThrow(

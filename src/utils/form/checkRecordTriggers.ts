@@ -1,4 +1,5 @@
 import { Form, Record } from '@models';
+import { getRecordModelFor } from '@utils/storage';
 import * as Survey from 'survey-knockout';
 
 /**
@@ -28,7 +29,7 @@ export const checkRecordTriggers = (
   if (triggers) {
     survey.runTriggers();
   }
-  const updatedRecord = new Record(record);
+  const updatedRecord = new (getRecordModelFor(record))(record);
   updatedRecord.data = survey.data;
   return updatedRecord;
 };

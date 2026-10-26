@@ -7,14 +7,7 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { RecordType } from '../types';
-import {
-  Form,
-  Record,
-  Notification,
-  Channel,
-  Resource,
-  Version,
-} from '@models';
+import { Form, Notification, Channel, Resource, Version } from '@models';
 import {
   transformRecord,
   getOwnership,
@@ -32,6 +25,12 @@ import { verifyTurnstileToken } from '@utils/captcha';
 import { isObjectIdOrHexString, Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 import { getErrorMessage, getErrorStack } from '@utils/error';
+import {
+  findRecordById,
+  getRecordModelForForm,
+  getVersionModelFor,
+  saveRecord,
+} from '@utils/storage';
 
 /** Arguments for the addRecord mutation */
 export type AddRecordArgs = {
@@ -103,6 +102,9 @@ export default {
         }
       }
 
+      // Model of the storage of the form's records
+      const recordModel = await getRecordModelForForm(form);
+
       // Check unicity of record
       if (
         user &&
@@ -117,7 +119,7 @@ export default {
           'recordsUnicity'
         );
         if (unicityFilters.length > 0) {
-          const uniqueRecordAlreadyExists = await Record.exists({
+          const uniqueRecordAlreadyExists = await recordModel.exists({
             $and: [
               { form: form._id, archived: { $ne: true }, draft: { $ne: true } },
               { $or: unicityFilters },
@@ -148,7 +150,7 @@ export default {
             )
           );
         }
-        const clonedRecord = await Record.findById(args.cloneRecordId);
+        const clonedRecord = await findRecordById(args.cloneRecordId);
         // The cloned record must belong to the same resource, or, for forms
         // without a resource, to the same form
         const sameFamily = form.resource
@@ -177,7 +179,7 @@ export default {
         // Versions are not duplicated: both records reference the same ones.
         // The current data of the cloned record is stored as a new version, so
         // the history of the new record displays what changed since then
-        clonedDataVersion = new Version({
+        clonedDataVersion = new (getVersionModelFor(clonedRecord))({
           data: clonedRecord.data,
           createdAt: clonedRecord.modifiedAt
             ? clonedRecord.modifiedAt
@@ -216,7 +218,7 @@ export default {
       // users are not warned: they must not learn about the existing records
       if (uniquenessResult.warnings.length && !args.skipValidation && user) {
         return Object.assign(
-          new Record({
+          new recordModel({
             form: args.form,
             data: args.data,
             resource: form.resource ? form.resource : null,
@@ -225,7 +227,7 @@ export default {
         );
       }
 
-      const record = new Record({
+      const record = new recordModel({
         // Drafts do not have an incremental id: the field is left out so they
         // are excluded from the unique incremental id index
         ...(!args.draft && {
@@ -290,7 +292,7 @@ export default {
           publisher.publish(channel.id, { notification });
         }
       }
-      await record.save();
+      await saveRecord(record);
       // Only store the new version once the record is saved
       if (clonedDataVersion) {
         await clonedDataVersion.save();

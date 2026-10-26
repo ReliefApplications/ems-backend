@@ -1,5 +1,6 @@
 import { accessibleBy } from '@casl/mongoose';
 import { Form, Record, Resource } from '@models';
+import { getRecordModelForResource } from '@utils/storage';
 import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForRecords, {
   userHasRoleFor,
@@ -228,13 +229,16 @@ export const ResourceType = new GraphQLObjectType({
           : {};
         // Check abilities
         const ability = await extendAbilityForRecords(context.user, parent);
-        // request the records
+        // request the records, from the storage of the resource
+        const recordModel = await getRecordModelForResource(parent);
         const permissionFilters = Record.find(
           accessibleBy(ability, 'read').Record
         ).getFilter();
-        let items = await Record.find({
-          $and: [cursorFilters, mongooseFilter, permissionFilters],
-        }).limit(args.first + 1);
+        let items = await recordModel
+          .find({
+            $and: [cursorFilters, mongooseFilter, permissionFilters],
+          })
+          .limit(args.first + 1);
         const hasNextPage = items.length > args.first;
         if (hasNextPage) {
           items = items.slice(0, items.length - 1);
@@ -253,7 +257,7 @@ export const ResourceType = new GraphQLObjectType({
             endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
           },
           edges,
-          totalCount: await Record.countDocuments({
+          totalCount: await recordModel.countDocuments({
             $and: [mongooseFilter, permissionFilters],
           }),
         };
@@ -263,12 +267,16 @@ export const ResourceType = new GraphQLObjectType({
       type: GraphQLInt,
       async resolve(parent, args, context) {
         const ability = await extendAbilityForRecords(context.user, parent);
-        const count = await Record.find({
-          resource: parent.id,
-          archived: { $ne: true },
-          ...getDraftRecordFilter(),
-          ...accessibleBy(ability, 'read').Record,
-        }).count();
+        const count = await (
+          await getRecordModelForResource(parent)
+        )
+          .find({
+            resource: parent.id,
+            archived: { $ne: true },
+            ...getDraftRecordFilter(),
+            ...accessibleBy(ability, 'read').Record,
+          })
+          .count();
         return count;
       },
     },

@@ -6,14 +6,7 @@ import {
   GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import {
-  Channel,
-  Form,
-  Notification,
-  Record,
-  Resource,
-  Version,
-} from '@models';
+import { Channel, Form, Notification, Record, Resource } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { getFormPermissionFilter } from '@utils/filter';
 import {
@@ -33,6 +26,12 @@ import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 import { getErrorMessage, getErrorStack } from '@utils/error';
+import {
+  findRecordById,
+  getRecordModelForForm,
+  getVersionModelFor,
+  updateRecordById,
+} from '@utils/storage';
 import pubsub from '../../server/pubsub';
 
 /** Arguments for the editRecord mutation */
@@ -99,7 +98,8 @@ const getDraftPublicationUpdate = async (
       'recordsUnicity'
     );
     if (unicityFilters.length > 0) {
-      const uniqueRecordAlreadyExists = await Record.exists({
+      const recordModel = await getRecordModelForForm(form);
+      const uniqueRecordAlreadyExists = await recordModel.exists({
         $and: [
           {
             form: form._id,
@@ -158,7 +158,7 @@ export default {
       const user = context.user;
 
       // Get record and form
-      const oldRecord: Record = await Record.findById(args.id);
+      const oldRecord: Record = await findRecordById(args.id);
       if (!oldRecord) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
@@ -260,7 +260,7 @@ export default {
       // the other records
       let newData: any;
       if (args.version) {
-        const oldVersion = await Version.findOne({
+        const oldVersion = await getVersionModelFor(oldRecord).findOne({
           $and: [
             {
               _id: {
@@ -312,7 +312,7 @@ export default {
       // edited in place until it is published
       const version = oldRecord.draft
         ? null
-        : new Version({
+        : new (getVersionModelFor(oldRecord))({
             createdAt: oldRecord.modifiedAt
               ? oldRecord.modifiedAt
               : oldRecord.createdAt,
@@ -355,9 +355,7 @@ export default {
           update,
           ownership && { createdBy: { ...oldRecord.createdBy, ...ownership } }
         );
-        const record = await Record.findByIdAndUpdate(args.id, update, {
-          new: true,
-        });
+        const record = await updateRecordById(oldRecord, update);
         if (version) {
           await version.save();
         }
@@ -396,7 +394,7 @@ export default {
               : { draft: args.updateDraftStatus }
           );
         }
-        const record = Record.findByIdAndUpdate(args.id, update, { new: true });
+        const record = updateRecordById(oldRecord, update);
         if (version) {
           await version.save();
         }

@@ -4,6 +4,7 @@ import pullJobScheduler from './server/pullJobScheduler';
 import customNotificationScheduler from './server/customNotificationScheduler';
 import emailEventSubscriber from './server/emailEventSubscriber';
 import { startDatabase } from './server/database';
+import { refreshStorageRegistry } from '@utils/storage';
 import config from 'config';
 import { logger } from './services/logger.service';
 import { checkConfig } from '@utils/server/checkConfig.util';
@@ -46,8 +47,10 @@ const launchServer = async () => {
 };
 
 startDatabase();
-mongoose.connection.once('open', () => {
+mongoose.connection.once('open', async () => {
   logger.log({ level: 'info', message: '📶 Connected to database' });
+  // Forms whose records live in a storage database, before serving any query
+  await refreshStorageRegistry();
   launchServer();
   // subscriberSafe();
   pullJobScheduler();

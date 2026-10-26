@@ -1,4 +1,5 @@
-import { Record, User, Role, ReferenceData, Version } from '@models';
+import { Record, User, Role, ReferenceData } from '@models';
+import { findRecordsByIds, getVersionModelFor } from '@utils/storage';
 import {
   Change,
   RecordHistory as RecordHistoryType,
@@ -387,9 +388,10 @@ export class RecordHistory {
     const vEnd = Math.min(N - 1, eMax);
     const neededIds = versionIds.slice(vStart, vEnd + 1);
 
-    const fetchedVersions = await Version.find({
-      _id: { $in: neededIds },
-    }).populate({ path: 'createdBy', model: 'User' });
+    // Users live in the main database, whatever the storage of the versions
+    const fetchedVersions = await getVersionModelFor(this.record)
+      .find({ _id: { $in: neededIds } })
+      .populate({ path: 'createdBy', model: User });
     const fetchedById = new Map(
       fetchedVersions.map((v: any) => [String(v._id), v])
     );
@@ -569,12 +571,11 @@ export class RecordHistory {
         accessibleBy(this.options.ability, 'read').Record
       )
         .where({
-          _id: { $in: ids },
           archived: { $ne: true },
           ...getDraftRecordFilter(),
         })
         .getFilter();
-      const records: Record[] = await Record.find(recordFilters);
+      const records: Record[] = await findRecordsByIds(ids, recordFilters);
       return records.map((record) => record.incrementalId);
     };
 

@@ -32,6 +32,10 @@ import { insertRecords as insertRecordsPulljob } from '@server/pullJobScheduler'
 import jwtDecode from 'jwt-decode';
 import { GraphQLError } from 'graphql';
 import { getErrorMessage, getErrorStack } from '@utils/error';
+import {
+  getRecordModelForForm,
+  insertRecords as insertRecordsInStorage,
+} from '@utils/storage';
 
 /** File size limit, in bytes  */
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
@@ -177,12 +181,14 @@ export async function insertRecords(
     .map((r) => ({ row: r.row, warnings: r.warnings }));
 
   const structureId = String(resource ? resource._id : form.id);
+  // Model of the storage of the records
+  const recordModel = await getRecordModelForForm(form);
   // Create records one by one so the incrementalId works correctly
   const records: Record[] = [];
   for (let i = 0; i < dataSets.length; i++) {
     const dataSet = dataSets[i];
     records.push(
-      new Record({
+      new recordModel({
         ...(customIds ? { _id: new Types.ObjectId(customIds[i]) } : {}),
         incrementalId: await getNextId(structureId),
         form: form.id,
@@ -214,7 +220,7 @@ export async function insertRecords(
     );
   }
   try {
-    await Record.insertMany(records);
+    await insertRecordsInStorage(recordModel, records);
     return res.status(200).send({ status: 'OK', warnings: warningRows });
   } catch (err) {
     logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
