@@ -6,6 +6,7 @@ import {
   ITokenPayload,
 } from 'passport-azure-ad';
 import { User, Client } from '@models';
+import { findClientByToken, findUserByToken } from './findPrincipal';
 import { AuthenticationType } from '../../oort.config';
 import KeycloackBearerStrategy from 'passport-keycloak-bearer';
 import { updateUser, userAuthCallback } from '@utils/user';
@@ -35,26 +36,8 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
     new KeycloackBearerStrategy(credentials, (token, done) => {
       // === USER ===
       if (token.name) {
-        // Checks if user already exists in the DB
-        User.findOne({ $or: [{ oid: token.sub }, { username: token.email }] })
-          .populate({
-            // Add to the user context all roles / permissions it has
-            path: 'roles',
-            model: 'Role',
-            populate: {
-              path: 'permissions',
-              model: 'Permission',
-            },
-          })
-          // .populate({
-          //   path: 'groups',
-          //   model: 'Group',
-          // })
-          .populate({
-            // Add to the user context all positionAttributes with corresponding categories it has
-            path: 'positionAttributes.category',
-            model: 'PositionAttributeCategory',
-          })
+        // Checks if user already exists in the DB (identity id first, username only for never-logged accounts)
+        findUserByToken({ oid: token.sub, username: token.email })
           .then((user) => {
             if (user) {
               // Returns the user if found
@@ -154,24 +137,11 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
       try {
         // === USER ===
         if (token.name) {
-          // Checks if user already exists in the DB
-          User.findOne({
-            $or: [{ oid: token.oid }, { username: token.preferred_username }],
+          // Checks if user already exists in the DB (identity id first, username only for never-logged accounts)
+          findUserByToken({
+            oid: token.oid,
+            username: token.preferred_username,
           })
-            .populate({
-              // Add to the user context all roles / permissions it has
-              path: 'roles',
-              model: 'Role',
-              populate: {
-                path: 'permissions',
-                model: 'Permission',
-              },
-            })
-            .populate({
-              // Add to the user context all positionAttributes with corresponding categories it has
-              path: 'positionAttributes.category',
-              model: 'PositionAttributeCategory',
-            })
             .then((user) => {
               if (user) {
                 // Returns the user if found but update it if needed
@@ -264,24 +234,8 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
             });
           // === CLIENT ===
         } else if (token.azp) {
-          // Checks if client already exists in the DB
-          Client.findOne({
-            $or: [{ oid: token.oid }, { clientId: token.azp }],
-          })
-            .populate({
-              // Add to the context all roles / permissions the client has
-              path: 'roles',
-              model: 'Role',
-              populate: {
-                path: 'permissions',
-                model: 'Permission',
-              },
-            })
-            .populate({
-              // Add to the context all positionAttributes with corresponding categories
-              path: 'positionAttributes.category',
-              model: 'PositionAttributeCategory',
-            })
+          // Checks if client already exists in the DB (identity id first, client id only for never-bound clients)
+          findClientByToken({ oid: token.oid, clientId: token.azp })
             .then((client) => {
               if (client) {
                 // Returns the client if found and add more information if first connection
