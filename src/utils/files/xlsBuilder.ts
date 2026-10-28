@@ -1,5 +1,6 @@
 import { Workbook } from 'exceljs';
 import get from 'lodash/get';
+import { sanitizeCellValue } from './format.helper';
 
 /**
  * Builds an XLSX file.
@@ -113,7 +114,7 @@ export default async (fileName: string, columns: any[], data) => {
         maxFieldLength = Math.max(maxFieldLength, value.length);
         temp.push('');
       } else {
-        temp.push(get(row, field.field, null));
+        temp.push(sanitizeCellValue(get(row, field.field, null)));
       }
     }
 
@@ -125,10 +126,8 @@ export default async (fileName: string, columns: any[], data) => {
         for (const field of flatColumns.filter((x: any) => x.subTitle)) {
           const value = get(row, field.field, []);
           if (value && value.length > 0) {
-            temp[field.index] = get(
-              get(row, field.field, null)[i],
-              field.subField,
-              null
+            temp[field.index] = sanitizeCellValue(
+              get(get(row, field.field, null)[i], field.subField, null)
             );
           } else {
             temp[field.index] = null;

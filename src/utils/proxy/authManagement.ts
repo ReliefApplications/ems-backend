@@ -31,7 +31,9 @@ export const getTokenID = (
  *
  * @param apiConfiguration ApiConfiguration attached to token
  * @param accessToken upstream accesstoken, is required when getToken is used for an API using authorization code authentication
- * @param ping boolean: is it a ping request? If it is, settings are already decrypted
+ * @param ping boolean: is it a ping request? If it is, settings are already decrypted,
+ * and the shared token cache is neither read nor written, so a ping tests the submitted
+ * credentials and cannot poison the token used by regular proxy requests.
  * @returns The access token to authenticate to the ApiConfiguration
  */
 export const getToken = async (
@@ -44,7 +46,7 @@ export const getToken = async (
   }
   // Return token if we don't need a refresh
   const tokenID = getTokenID(apiConfiguration.id);
-  const oldToken: string = cache.get(tokenID);
+  const oldToken: string = ping ? undefined : cache.get(tokenID);
   if (oldToken) {
     return oldToken;
   }
@@ -92,9 +94,11 @@ export const getToken = async (
         'Content-Length': `${body.length}`,
       },
       data: body,
-      maxRedirects: 35,
+      maxRedirects: ping ? 0 : 5,
     });
-    cache.set(tokenID, res.data.access_token, res.data.expires_in - 30);
+    if (!ping) {
+      cache.set(tokenID, res.data.access_token, res.data.expires_in - 30);
+    }
     return res.data.access_token;
   }
   if (apiConfiguration.authType === authType.userToService) {
@@ -107,7 +111,9 @@ export const getToken = async (
             config.get('encryption.key')
           ).toString(CryptoJS.enc.Utf8)
         );
-    cache.set(tokenID, settings.token, 3570);
+    if (!ping) {
+      cache.set(tokenID, settings.token, 3570);
+    }
     return settings.token;
   }
   if (apiConfiguration.authType === authType.authorizationCode) {

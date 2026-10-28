@@ -10,16 +10,14 @@ import {
   Application,
 } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
-import { Types } from 'mongoose';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { getUploadColumns, loadRow, uploadFile } from '@utils/files';
 import { getNextId } from '@utils/form';
 import i18next from 'i18next';
-import get from 'lodash/get';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import validator from 'email-validator';
 import { insertRecords as insertRecordsPulljob } from '@server/pullJobScheduler';
-import jwtDecode from 'jwt-decode';
 import { GraphQLError } from 'graphql';
 
 /** File size limit, in bytes  */
@@ -30,6 +28,10 @@ const router = express.Router();
 
 /**
  * Insert records from file if authorized.
+ *
+ * The caller must be allowed to create records of the form: back-office
+ * permission on records, or a role listed in the resource's canCreateRecords.
+ * A resource without canCreateRecords roles accepts no bulk upload.
  *
  * @param res Request's response.
  * @param file File with records to insert.
@@ -46,22 +48,8 @@ async function insertRecords(
   context: any
 ) {
   // Check if the user is authorized
-  const ability: AppAbility = context.user.ability;
-  let canCreate = false;
-  if (ability.can('create', 'Record')) {
-    canCreate = true;
-  } else {
-    const roles = context.user.roles.map((x) => new Types.ObjectId(x._id));
-    const canCreateRoles = get(
-      form,
-      'resource.permissions.canCreateRecords',
-      []
-    );
-    canCreate =
-      canCreateRoles.length > 0
-        ? canCreateRoles.some((x) => roles.includes(x))
-        : true;
-  }
+  const ability = await extendAbilityForRecords(context.user, form);
+  const canCreate = ability.can('create', 'Record');
   // Check unicity of record
   // TODO: this is always breaking
   // if (form.permissions.recordsUnicity) {
@@ -137,7 +125,9 @@ async function insertRecords(
       return res.status(200).send({ status: 'No record added.' });
     }
   } else {
-    return res.status(403).send(i18next.t('common.errors.dataNotFound'));
+    return res
+      .status(403)
+      .send(i18next.t('common.errors.permissionNotGranted'));
   }
 }
 
@@ -216,34 +206,53 @@ router.post('/resource/records/:id', async (req: any, res) => {
 });
 
 /**
- * Upload a list of records for a resource in json format
+ * Upload a list of records for a resource in json format.
+ *
+ * The body parameters act as a pull job (target form, mapping, unique identifiers),
+ * so the calling principal, user or client application, must be allowed to create
+ * records of the target form. Client applications get that through a role listed
+ * in the resource's canCreateRecords permission.
  */
 router.post('/resource/insert', async (req: any, res) => {
   try {
-    if (req.body.records.length < 1) {
+    const { records, parameters } = req.body || {};
+    if (
+      !Array.isArray(records) ||
+      !parameters ||
+      typeof parameters !== 'object' ||
+      !parameters.convertTo ||
+      !parameters.mapping ||
+      typeof parameters.mapping !== 'object' ||
+      !Array.isArray(parameters.uniqueIdentifiers)
+    ) {
+      return res
+        .status(400)
+        .send(req.t('routes.upload.errors.invalidInsertParameters'));
+    }
+    if (records.length < 1) {
       logger.info('No records were provided for insertion.');
       return res
         .status(200)
         .send(req.t('routes.upload.errors.noRecordsToInsert'));
     }
-    const authToken = req.headers.authorization.split(' ')[1];
-    const decodedToken = jwtDecode(authToken) as any;
-
-    const evaluateExpressions =
-      req.body.parameters.evaluateExpressions || false;
-
-    // Block if connected with user to Service
-    if (!decodedToken.email && !decodedToken.name) {
-      const insertRecordsMessage = await insertRecordsPulljob(
-        req.body.records,
-        req.body.parameters,
-        true,
-        true,
-        evaluateExpressions
-      );
-      return res.status(200).send(insertRecordsMessage);
+    const form = await Form.findById(parameters.convertTo);
+    if (!form) {
+      return res.status(404).send(req.t('common.errors.dataNotFound'));
     }
-    return res.status(400).send(req.t('common.errors.permissionNotGranted'));
+    const ability = await extendAbilityForRecords(req.context.user, form);
+    if (ability.cannot('create', 'Record')) {
+      return res.status(403).send(req.t('common.errors.permissionNotGranted'));
+    }
+
+    const evaluateExpressions = parameters.evaluateExpressions || false;
+    const insertRecordsMessage = await insertRecordsPulljob(
+      records,
+      parameters,
+      true,
+      true,
+      evaluateExpressions
+    );
+    return res.status(200).send(insertRecordsMessage);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
     return res.status(500).send(req.t('common.errors.internalServerError'));
@@ -384,7 +393,10 @@ router.post('/invite', async (req: any, res) => {
   }
 });
 
-/** Uploads file from a certain form to azure storage */
+/**
+ * Uploads file from a certain form to azure storage.
+ * Only people who can create or update records of the form may store files for it.
+ */
 router.post('/file/:form', async (req, res) => {
   try {
     // Check file
@@ -405,9 +417,18 @@ router.post('/file/:form', async (req, res) => {
 
     // Check form
     const formID = req.params.form;
-    const form = await Form.exists({ _id: formID });
+    const form = await Form.findById(formID);
     if (!form) {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    }
+    const ability = await extendAbilityForRecords(req.context.user, form);
+    if (
+      ability.cannot('create', 'Record') &&
+      ability.cannot('update', 'Record')
+    ) {
+      return res
+        .status(403)
+        .send(i18next.t('common.errors.permissionNotGranted'));
     }
     const path = await uploadFile('forms', formID, file);
     return res.status(200).send({ path });

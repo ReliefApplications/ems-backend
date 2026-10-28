@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { ApiConfiguration } from '@models';
-import { getToken } from '@utils/proxy';
+import { assertPublicUrl, ForbiddenUrlError, getToken } from '@utils/proxy';
+import { AppAbility } from '@security/defineUserAbility';
 import { get, isEmpty, lowerCase } from 'lodash';
 import i18next from 'i18next';
 import { logger } from '@services/logger.service';
@@ -69,7 +70,8 @@ const proxyAPIRequest = async (
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        maxRedirects: 35,
+        // A ping must not follow redirects: the target host has been checked, a redirect could point elsewhere
+        maxRedirects: ping ? 0 : 35,
         ...(!isEmpty(req.body) && {
           data: JSON.stringify(req.body),
         }),
@@ -98,7 +100,8 @@ const proxyAPIRequest = async (
               })
               .then(() => logger.info(`REDIS: set key : ${cacheKey}`));
           }
-          res.status(200).send(data);
+          // A ping only reports that the API answered: the upstream body is never returned
+          res.status(200).send(ping ? { status } : data);
         })
         .catch((err) => {
           logger.error(err.message, { stack: err.stack });
@@ -111,60 +114,90 @@ const proxyAPIRequest = async (
   }
 };
 
+/**
+ * Test an API configuration, as submitted from the API configuration page.
+ *
+ * The caller must be allowed to update the configuration: the stored credentials
+ * are decrypted and merged with the submitted values, so the request would otherwise
+ * let any user send the integration's client id / secret to a host of their choice.
+ * The endpoint and the authentication URL must also be public hosts, so the server
+ * cannot be used to reach the private network.
+ */
 router.post('/ping/**', async (req: Request, res: Response) => {
   try {
     const body = req.body;
-    if (body) {
-      const api = await ApiConfiguration.findById(req.body.id).select(
-        'name authType endpoint pingUrl settings id'
-      );
-      if (!api) {
-        return res.status(404).send(i18next.t('common.errors.dataNotFound'));
-      }
-      // Decrypt settings
-      const settings: {
-        authTargetUrl: string;
-        apiClientID: string;
-        safeSecret: string;
-        scope: string;
-      } = !isEmpty(api.settings)
-        ? JSON.parse(
-            CryptoJS.AES.decrypt(
-              api.settings,
-              config.get('encryption.key')
-            ).toString(CryptoJS.enc.Utf8)
-          )
-        : {};
-      const parameters: ApiConfiguration = {
-        ...body,
-        authType: api.authType,
-        settings: {
-          authTargetUrl:
-            get(body, 'settings.authTargetUrl', SETTING_PLACEHOLDER) !==
-            SETTING_PLACEHOLDER
-              ? get(body, 'settings.authTargetUrl')
-              : get(settings, 'authTargetUrl'),
-          apiClientID:
-            get(body, 'settings.apiClientID', SETTING_PLACEHOLDER) !==
-            SETTING_PLACEHOLDER
-              ? get(body, 'settings.apiClientID')
-              : get(settings, 'apiClientID'),
-          safeSecret:
-            get(body, 'settings.safeSecret', SETTING_PLACEHOLDER) !==
-            SETTING_PLACEHOLDER
-              ? get(body, 'settings.safeSecret')
-              : get(settings, 'safeSecret'),
-          scope:
-            get(body, 'settings.scope', SETTING_PLACEHOLDER) !==
-            SETTING_PLACEHOLDER
-              ? get(body, 'settings.scope')
-              : get(settings, 'scope'),
-        },
-      };
-
-      req.method = 'GET';
-      await proxyAPIRequest(req, res, parameters, api.pingUrl, true);
+    if (!body || !body.id) {
+      return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
+    const api = await ApiConfiguration.findById(body.id).select(
+      'name authType endpoint pingUrl settings permissions id'
+    );
+    if (!api) {
+      return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    }
+    const ability: AppAbility = req.context.user.ability;
+    if (ability.cannot('update', api)) {
+      return res
+        .status(403)
+        .send(i18next.t('common.errors.permissionNotGranted'));
+    }
+    // Decrypt settings
+    const settings: {
+      authTargetUrl: string;
+      apiClientID: string;
+      safeSecret: string;
+      scope: string;
+    } = !isEmpty(api.settings)
+      ? JSON.parse(
+          CryptoJS.AES.decrypt(
+            api.settings,
+            config.get('encryption.key')
+          ).toString(CryptoJS.enc.Utf8)
+        )
+      : {};
+    /**
+     * Get a setting from the request body, falling back on the stored one
+     * when the body contains the placeholder shown in the UI.
+     *
+     * @param key setting name
+     * @returns setting value
+     */
+    const setting = (key: keyof typeof settings): string =>
+      get(body, `settings.${key}`, SETTING_PLACEHOLDER) !== SETTING_PLACEHOLDER
+        ? get(body, `settings.${key}`)
+        : get(settings, key);
+    const parameters = {
+      id: api.id,
+      name: api.name,
+      authType: api.authType,
+      pingUrl: api.pingUrl,
+      endpoint: get(body, 'endpoint') || api.endpoint,
+      settings: {
+        authTargetUrl: setting('authTargetUrl'),
+        apiClientID: setting('apiClientID'),
+        safeSecret: setting('safeSecret'),
+        scope: setting('scope'),
+      },
+    } as ApiConfiguration;
+
+    // Never let the server call a non-public host on behalf of the user
+    try {
+      await assertPublicUrl(parameters.endpoint);
+      if (api.authType === authType.serviceToService) {
+        await assertPublicUrl(parameters.settings.authTargetUrl);
+      }
+    } catch (err) {
+      if (err instanceof ForbiddenUrlError) {
+        logger.warn(
+          `Ping of API configuration ${api.id} refused: ${err.message}`
+        );
+        return res.status(400).send(i18next.t('common.errors.invalidAPI'));
+      }
+      throw err;
+    }
+
+    req.method = 'GET';
+    await proxyAPIRequest(req, res, parameters, api.pingUrl, true);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
     return res.status(500).send(req.t('common.errors.internalServerError'));

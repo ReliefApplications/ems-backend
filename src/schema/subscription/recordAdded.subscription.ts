@@ -5,6 +5,7 @@ import pubsub from '../../server/pubsub';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /** Arguments for the recordAdded subscription */
 type RecordAddedArgs = {
@@ -21,6 +22,7 @@ export default {
     form: { type: GraphQLID },
   },
   subscribe: async (parent, args: RecordAddedArgs, context: Context) => {
+    graphQLAuthCheck(context);
     const subscriber: RedisPubSub = await pubsub();
     return withFilter(
       () => subscriber.asyncIterator('record_added'),

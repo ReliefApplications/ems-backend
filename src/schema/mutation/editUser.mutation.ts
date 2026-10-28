@@ -6,6 +6,7 @@ import { UserType } from '../types';
 import { PositionAttributeInputType, PositionAttributeArgs } from '../inputs';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { rolesBelongToApplication } from '@utils/user';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 
@@ -20,6 +21,10 @@ type EditUserArgs = {
 /**
  * Edits an user's roles and groups, providing its id and the list of roles/groups.
  * Throws an error if not logged or authorized.
+ *
+ * With an application, only the roles of that application are replaced, and the
+ * given roles must all belong to it: application user managers cannot grant
+ * back-office roles or roles of another application.
  */
 export default {
   type: UserType,
@@ -35,7 +40,6 @@ export default {
     try {
       const user = context.user;
       const ability: AppAbility = context.user.ability;
-      let roles = args.roles;
       if (args.application) {
         if (ability.cannot('update', 'User')) {
           // Check applications permissions if we don't have the global one
@@ -53,15 +57,28 @@ export default {
             );
           }
         }
-        const nonAppRoles = await User.findById(args.id).populate({
-          path: 'roles',
-          model: 'Role',
-          match: { application: { $ne: args.application } }, // Only returns roles not attached to the application
-        });
-        roles = nonAppRoles.roles.map((x) => x._id).concat(roles);
-        const update = {
-          roles,
-        };
+        const update = {};
+        if (args.roles) {
+          // Roles can only be replaced by roles of the application
+          if (!(await rolesBelongToApplication(args.roles, args.application))) {
+            throw new GraphQLError(
+              context.i18next.t('mutations.user.edit.errors.invalidRoles')
+            );
+          }
+          const nonAppRoles = await User.findById(args.id).populate({
+            path: 'roles',
+            model: 'Role',
+            match: { application: { $ne: args.application } }, // Only returns roles not attached to the application
+          });
+          if (!nonAppRoles) {
+            throw new GraphQLError(
+              context.i18next.t('common.errors.dataNotFound')
+            );
+          }
+          Object.assign(update, {
+            roles: nonAppRoles.roles.map((x) => x._id).concat(args.roles),
+          });
+        }
         if (args.positionAttributes) {
           const positionAttributes = args.positionAttributes.filter(
             (element) => element.value.length > 0
@@ -91,8 +108,9 @@ export default {
             model: 'Role',
             match: { application: { $ne: null } }, // Returns roles attached to any application
           });
-          roles = appRoles.roles.map((x) => x._id).concat(roles);
-          Object.assign(update, { roles: roles });
+          Object.assign(update, {
+            roles: appRoles.roles.map((x) => x._id).concat(args.roles),
+          });
         }
         if (args.groups) {
           Object.assign(update, { groups: args.groups });

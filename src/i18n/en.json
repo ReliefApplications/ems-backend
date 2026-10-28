@@ -259,6 +259,13 @@
 				}
 			}
 		},
+		"role": {
+			"edit": {
+				"errors": {
+					"globalPermissions": "Application roles cannot hold back-office permissions."
+				}
+			}
+		},
 		"step": {
 			"add": {
 				"errors": {
@@ -272,9 +279,15 @@
 			}
 		},
 		"user": {
+			"add": {
+				"errors": {
+					"invalidRoles": "Roles must belong to the application."
+				}
+			},
 			"edit": {
 				"errors": {
-					"invalidArguments": "Either groups or roles must be provided."
+					"invalidArguments": "Either groups or roles must be provided.",
+					"invalidRoles": "Roles must belong to the application."
 				}
 			}
 		},
@@ -309,6 +322,7 @@
 		},
 		"email": {
 			"errors": {
+				"invalidAttachmentsFolder": "The attachments folder is invalid.",
 				"missingFile": "No file detected."
 			},
 			"subscription": {
@@ -341,6 +355,7 @@
 		},
 		"upload": {
 			"errors": {
+				"invalidInsertParameters": "Records must be a list, and parameters must provide convertTo, mapping and uniqueIdentifiers.",
 				"invalidUserUpload": "Please provide email and role for each user.",
 				"missingFile": "No file detected.",
 				"noRecordsToInsert": "No records were provided for insertion."
@@ -360,6 +375,7 @@
 		"aggregation": {
 			"buildPipeline": {
 				"errors": {
+					"forbiddenCustomStage": "Custom stage uses an operator that is not allowed.",
 					"invalidCustomStage": "Custom stage cannot be parsed correctly."
 				}
 			}

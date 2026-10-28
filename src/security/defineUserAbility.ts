@@ -136,9 +136,13 @@ export default function defineUserAbility(user: User | Client): AppAbility {
   const abilityBuilder = new AbilityBuilder(appAbility);
   const can = abilityBuilder.can;
 
+  // Only back-office roles grant global permissions: an application role is
+  // scoped to its application, whatever permissions it holds.
   const userGlobalPermissions: string[] =
     user?.roles?.flatMap((role: Role) =>
-      role.permissions.filter((p) => p.global).map((p) => p.type)
+      role.application
+        ? []
+        : role.permissions.filter((p) => p.global).map((p) => p.type)
     ) || [];
 
   /* ===

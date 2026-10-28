@@ -403,9 +403,9 @@ router.post('/feature', async (req, res) => {
           );
           const contextDataSource = (
             await buildDataSource(apiConfiguration.name, {
-              // Passing upstream request so accesstoken can be used for authentication
-              req: req,
-            } as any)
+              // Passing upstream access token so it can be used for authentication
+              accessToken: req.headers.accesstoken,
+            })
           )();
           const dataSource = contextDataSource[
             apiConfiguration.name

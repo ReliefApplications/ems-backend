@@ -1,39 +1,45 @@
-version: "3.7"
-
+# Local test stack (CI runs `npm run test` directly, without docker).
+#
+#   docker compose -f docker-compose.test.yml run --rm test-server
+#   docker compose -f docker-compose.test.yml run --rm test-server npm run test -- <path_to_file>
+#
+# `npm run test` on the host boots an in-memory MongoDB. That library has no
+# Alpine build, so inside the container the tests use the mongodb_test service
+# instead, through MONGO_URI (see __tests__/helpers/global-setup.ts).
 services:
   test-server:
+    container_name: hems-api-test
     build:
       context: .
       dockerfile: Dockerfile
       target: base
     volumes:
       - ./:/home/node/app/
-    container_name: ems-ui-poc-api-test
-    expose:
-      - 4000
-    ports:
-      - 4000:4000
-    command: npm run test
-    depends_on:
-      - mongodb_test
-    links:
-      - mongodb_test
+      # Keep the image's node_modules instead of the host's (native binaries differ)
+      - /home/node/app/node_modules
     environment:
-      - NODE_CONFIG_ENV=test
-      - NODE_OPTIONS=--max-old-space-size=8192
+      NODE_CONFIG_ENV: test
+      NODE_OPTIONS: --max-old-space-size=8192
+      MONGO_URI: mongodb://root:123@mongodb_test:27017/?authSource=admin
+    depends_on:
+      mongodb_test:
+        condition: service_healthy
+    command: npm run test
 
   mongodb_test:
-    image: mongo:6
-    restart: unless-stopped
+    image: mongo:latest
+    container_name: hems-mongodb-test
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=123
-    ports:
-      - 27017:27017
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: '123'
     volumes:
       - mongodb_test:/data/db
     command: mongod --quiet --logpath /dev/null
+    healthcheck:
+      test: ['CMD', 'mongosh', '--quiet', '--eval', 'db.runCommand({ ping: 1 }).ok']
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
 volumes:
   mongodb_test:
-    driver: local

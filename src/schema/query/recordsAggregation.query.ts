@@ -7,7 +7,7 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
-import { cloneDeep, get, isEqual } from 'lodash';
+import { cloneDeep, get, isEqual, isNil } from 'lodash';
 import { Form, Record as RecordModel, ReferenceData, Resource } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import buildPipeline from '@utils/aggregation/buildPipeline';
@@ -183,6 +183,22 @@ export default {
         fields: 1,
         aggregations: 1,
       });
+
+      // Request-time pipeline / sourceFields are only meant for the preview of
+      // the aggregation builder: only users allowed to edit the resource can
+      // run a pipeline that is not stored on it.
+      if (!isNil(args.pipeline) || !isNil(args.sourceFields)) {
+        const canUpdateResource = await Resource.exists(
+          Resource.find(accessibleBy(user.ability, 'update').Resource)
+            .where({ _id: args.resource })
+            .getFilter()
+        );
+        if (!canUpdateResource) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.permissionNotGranted')
+          );
+        }
+      }
 
       // Check abilities
       const ability = await extendAbilityForRecords(user);

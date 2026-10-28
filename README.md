@@ -41,9 +41,42 @@ Create a `.env` file at the root of the project. It provides the environment var
 docker compose up
 ```
 
-The `api` service runs `npm run dev` (nodemon) with the source mounted as a volume, so the server reloads on change. The API listens on port 3000.
+This starts the three services defined in [docker-compose.yml](docker-compose.yml):
+
+| Service | Image | Host ports | Notes |
+| --- | --- | --- | --- |
+| `api` | built from the [Dockerfile](Dockerfile) | 3000 (API), 9229 (inspector) | Runs `npm run dev` (nodemon) with `config/` and `src/` mounted, so the server reloads on change |
+| `mongodb` | `mongo:8` | 27017 | Single-node replica set with authentication (the API opens change streams, which MongoDB only supports on replica sets) |
+| `redis` | `redis:7-alpine` | 6379 | Caching and GraphQL subscriptions, no persistence |
+
+The `api` service loads `.env`, but its `DB_*` and `REDIS_*` variables are overridden to point at the `mongodb` and `redis` services: no database configuration is needed in `.env` to run the stack. The default credentials can be changed with optional variables in `.env`:
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `MONGO_ROOT_USER` / `MONGO_ROOT_PASS` | `root` / `root` | MongoDB root user |
+| `MONGO_DB_NAME` | `hems` | MongoDB database name |
+| `REDIS_PASSWORD` | `redis` | Redis password |
+
+MongoDB data persists in the `mongodb_data` and `mongodb_config` volumes; run `docker compose down -v` to reset it.
+
+To start only the databases, for example to run the API on the host:
+
+```
+docker compose up mongodb redis
+```
+
+From the host (Compass, mongosh, redis-cli), connect with:
+
+```
+mongodb://root:root@localhost:27017/?authSource=admin&directConnection=true
+redis://localhost:6379   (password: redis)
+```
+
+`directConnection=true` is required because the replica set member is advertised as `mongodb:27017`, which only resolves inside the compose network. The `docker` database provider of the API does not set it, so to run `npm run dev` on the host against this MongoDB, map `mongodb` to `127.0.0.1` in your hosts file and use `DB_PROVIDER=docker`, `DB_HOST=mongodb`, `DB_PORT=27017`, `DB_USER=root`, `DB_PASS=root` in `.env`.
 
 ## Run locally
+
+Requires a MongoDB database and a Redis instance reachable through the variables in `.env` (see [Configuration](#configuration)), or the compose databases above.
 
 ```
 npm run dev
@@ -84,8 +117,10 @@ The dev command exposes the Node.js inspector on port 9229 (also mapped by docke
 
 In order to execute tests locally, you can execute the command:
 ```
-docker compose -f docker-compose.test.yml run test-server npm run test
+docker compose -f docker-compose.test.yml run --rm test-server
 ```
+
+Inside the container the tests run against the `mongodb_test` service, as the in-memory MongoDB used by `npm run test` has no Alpine build. CI runs `npm run test` directly.
 
 Or this command:
 ```
@@ -94,7 +129,7 @@ npm run test
 
 It is also possible to run tests on a single file, by passing it as a parameter:
 ```
-docker compose -f docker-compose.test.yml run test-server npm run test -- <path_to_file>
+docker compose -f docker-compose.test.yml run --rm test-server npm run test -- <path_to_file>
 ```
 
 Or with this command:

@@ -1,13 +1,10 @@
 import { GraphQLError } from 'graphql';
 import { Resource } from '@models';
-import {
-  forbiddenKeywords,
-  operatorsMapping,
-  PipelineStage,
-} from '@const/aggregation';
+import { operatorsMapping, PipelineStage } from '@const/aggregation';
 import getFilter from '../schema/resolvers/Query/getFilter';
 import { isEmpty } from 'lodash';
 import { selectableDefaultRecordFieldsFlat } from '@const/defaultRecordFields';
+import { getCustomStageErrorKey, parseCustomStage } from './parseCustomStage';
 
 /**
  * Unnests a nested field in a MongoDB aggregation pipeline and performs specified operations.
@@ -280,21 +277,13 @@ const buildPipeline = (
         break;
       }
       case PipelineStage.CUSTOM: {
-        const custom: string = stage.form.raw;
-        if (forbiddenKeywords.some((x: string) => custom.includes(x))) {
-          throw new GraphQLError(
-            context.i18next.t(
-              'utils.aggregation.buildPipeline.errors.invalidCustomStage'
-            )
-          );
-        }
+        // Parse first, then validate the parsed object: a substring check on
+        // the raw string can be bypassed with JSON escape sequences.
         try {
-          pipeline.push(JSON.parse(custom));
-        } catch {
+          pipeline.push(parseCustomStage(stage.form?.raw));
+        } catch (err) {
           throw new GraphQLError(
-            context.i18next.t(
-              'utils.aggregation.buildPipeline.errors.invalidCustomStage'
-            )
+            context.i18next.t(getCustomStageErrorKey(err))
           );
         }
         break;
