@@ -322,6 +322,7 @@
 		},
 		"email": {
 			"errors": {
+				"invalidAttachmentsFolder": "******",
 				"missingFile": "******"
 			},
 			"subscription": {

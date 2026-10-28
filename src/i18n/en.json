@@ -322,6 +322,7 @@
 		},
 		"email": {
 			"errors": {
+				"invalidAttachmentsFolder": "The attachments folder is invalid.",
 				"missingFile": "No file detected."
 			},
 			"subscription": {
