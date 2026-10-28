@@ -259,6 +259,13 @@
 				}
 			}
 		},
+		"role": {
+			"edit": {
+				"errors": {
+					"globalPermissions": "Application roles cannot hold back-office permissions."
+				}
+			}
+		},
 		"step": {
 			"add": {
 				"errors": {

@@ -259,6 +259,13 @@
 				}
 			}
 		},
+		"role": {
+			"edit": {
+				"errors": {
+					"globalPermissions": "******"
+				}
+			}
+		},
 		"step": {
 			"add": {
 				"errors": {

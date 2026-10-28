@@ -1,4 +1,4 @@
-import { Role } from '@models';
+import { Permission, Role } from '@models';
 import { Types } from 'mongoose';
 import { uniq } from 'lodash';
 
@@ -26,4 +26,28 @@ export const rolesBelongToApplication = async (
     application: applicationId,
   }).select('_id');
   return roles.length === ids.length;
+};
+
+/**
+ * Check that every given permission is an application permission (not a back-office one).
+ *
+ * Application role managers may only put application permissions on their roles:
+ * a back-office (global) permission on an application role would be counted as a
+ * global permission for everyone holding the role.
+ *
+ * @param permissionIds permission ids to check
+ * @returns true when every permission exists and is not global
+ */
+export const permissionsAreApplicationScoped = async (
+  permissionIds: (string | Types.ObjectId)[]
+): Promise<boolean> => {
+  const ids = uniq((permissionIds || []).map((x) => x.toString()));
+  if (ids.length === 0) {
+    return true;
+  }
+  const count = await Permission.countDocuments({
+    _id: { $in: ids },
+    global: { $ne: true },
+  });
+  return count === ids.length;
 };

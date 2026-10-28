@@ -13,6 +13,7 @@ import { RoleType } from '../types';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { permissionsAreApplicationScoped } from '@utils/user';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 
@@ -29,6 +30,9 @@ type EditRoleArgs = {
 /**
  * Edit a role's admin permissions, providing its id and the list of admin permissions.
  * Throw an error if not logged or authorized.
+ *
+ * An application role can only hold application permissions: back-office (global)
+ * permissions are refused, as they would be granted platform-wide to the role holders.
  */
 export default {
   type: RoleType,
@@ -77,6 +81,23 @@ export default {
       const filters = Role.find(accessibleBy(ability, 'update').Role)
         .where({ _id: args.id })
         .getFilter();
+
+      if (args.permissions) {
+        const role = await Role.findOne(filters).select('application');
+        if (!role) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.permissionNotGranted')
+          );
+        }
+        if (
+          role.application &&
+          !(await permissionsAreApplicationScoped(args.permissions))
+        ) {
+          throw new GraphQLError(
+            context.i18next.t('mutations.role.edit.errors.globalPermissions')
+          );
+        }
+      }
 
       // Save operations. Adding try / catch to detect duplication issues.
       try {
