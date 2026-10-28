@@ -354,6 +354,7 @@
 		},
 		"upload": {
 			"errors": {
+				"invalidInsertParameters": "Records must be a list, and parameters must provide convertTo, mapping and uniqueIdentifiers.",
 				"invalidUserUpload": "Please provide email and role for each user.",
 				"missingFile": "No file detected.",
 				"noRecordsToInsert": "No records were provided for insertion."
