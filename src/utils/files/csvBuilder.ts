@@ -1,5 +1,6 @@
 import { Parser } from 'json2csv';
 import get from 'lodash/get';
+import { sanitizeCellValue } from './format.helper';
 
 /**
  * Builds a CSV file.
@@ -22,7 +23,7 @@ export default (columns: any[], data) => {
       if (field.subColumns) {
         temp[field.name] = get(row, field.name, []).length;
       } else {
-        temp[field.name] = get(row, field.name, null);
+        temp[field.name] = sanitizeCellValue(get(row, field.name, null));
       }
     }
     tempCsv.push(temp);

@@ -24,6 +24,7 @@ import getSearchFilter from '@utils/schema/resolvers/Query/getSearchFilter';
 import getSortAggregation from '@utils/schema/resolvers/Query/getSortAggregation';
 import dataSources from '@server/apollo/dataSources';
 import sanitizeHtml from 'sanitize-html';
+import { sanitizeCellValue } from './format.helper';
 
 /**
  * Export batch parameters interface
@@ -140,7 +141,7 @@ export default class Exporter {
               const columnValue = get(row, column.name, null);
               temp[column.name] = isArray(columnValue)
                 ? columnValue.length
-                : columnValue;
+                : sanitizeCellValue(columnValue);
             }
             csvData.push(temp);
           }
@@ -766,7 +767,8 @@ export default class Exporter {
   };
 
   /**
-   * Sanitize string content for excel cells
+   * Sanitize string content for excel cells: strips HTML, neutralises formulas,
+   * and keeps the content within the Excel cell limit.
    *
    * @param content Cell content, only strings will be sanitized
    * @returns Sanitized string
@@ -780,7 +782,7 @@ export default class Exporter {
     });
 
     // Excel has a maximum cell content length of 32,767 characters
-    return str.substring(0, 32000);
+    return sanitizeCellValue(str.substring(0, 32000));
   }
 
   /**
