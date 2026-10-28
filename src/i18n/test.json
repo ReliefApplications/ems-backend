@@ -272,9 +272,15 @@
 			}
 		},
 		"user": {
+			"add": {
+				"errors": {
+					"invalidRoles": "******"
+				}
+			},
 			"edit": {
 				"errors": {
-					"invalidArguments": "******"
+					"invalidArguments": "******",
+					"invalidRoles": "******"
 				}
 			}
 		},

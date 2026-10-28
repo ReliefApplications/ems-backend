@@ -272,9 +272,15 @@
 			}
 		},
 		"user": {
+			"add": {
+				"errors": {
+					"invalidRoles": "Roles must belong to the application."
+				}
+			},
 			"edit": {
 				"errors": {
-					"invalidArguments": "Either groups or roles must be provided."
+					"invalidArguments": "Either groups or roles must be provided.",
+					"invalidRoles": "Roles must belong to the application."
 				}
 			}
 		},

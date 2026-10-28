@@ -4,7 +4,11 @@ import { User, Application } from '@models';
 import { UserType } from '../types';
 import permissions from '@const/permissions';
 import * as EmailValidator from 'email-validator';
-import { sendAppInvitation, sendCreateAccountInvitation } from '@utils/user';
+import {
+  rolesBelongToApplication,
+  sendAppInvitation,
+  sendCreateAccountInvitation,
+} from '@utils/user';
 import config from 'config';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
@@ -19,7 +23,10 @@ type AddUsersArgs = {
 };
 
 /**
- * Add new users.
+ * Add new users, or add a role to existing ones.
+ *
+ * With an application, the given roles must all belong to it: application
+ * user managers cannot grant back-office roles or roles of another application.
  */
 export default {
   type: new GraphQLList(UserType),
@@ -58,6 +65,17 @@ export default {
       ) {
         throw new GraphQLError(
           context.i18next.t('common.errors.invalidEmailsInput')
+        );
+      }
+      if (
+        args.application &&
+        !(await rolesBelongToApplication(
+          args.users.map((x) => x.role),
+          args.application
+        ))
+      ) {
+        throw new GraphQLError(
+          context.i18next.t('mutations.user.add.errors.invalidRoles')
         );
       }
       // Separate registered users and new users
