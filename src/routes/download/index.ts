@@ -238,9 +238,9 @@ router.get('/form/records/:id/history', async (req, res) => {
             // Need to use 'any' in order to use a class which is supposed to initialize with Apollo context
             dataSources: (
               await dataSources({
-                // Passing upstream request so accesstoken can be used for authentication
-                req: req,
-              } as any)
+                // Passing upstream access token so it can be used for authentication
+                accessToken: req.headers.accesstoken,
+              })
             )(),
             token: req.headers.authorization,
             ...(req.headers.accesstoken && {

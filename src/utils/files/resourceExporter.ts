@@ -276,9 +276,9 @@ export default class Exporter {
     set(this.req.context.user, 'ability', ability);
     const contextDataSources = (
       await dataSources({
-        // Passing upstream request so accesstoken can be used for authentication
-        req: this.req,
-      } as any)
+        // Passing upstream access token so it can be used for authentication
+        accessToken: this.req.headers.accesstoken,
+      })
     )();
     set(this.req.context, 'dataSources', contextDataSources);
     // The calc service's displayValue fetches choicesByUrl / choicesByGraphQL

@@ -28,16 +28,20 @@ interface UserWithAbility extends User {
 export default (server: ApolloServer<Context>) =>
   async ({ req }): Promise<Context> => {
     if (req) {
-      // Attaching the request object to server since it needs to be used by datasources
-      // eslint-disable-next-line @typescript-eslint/dot-notation
-      server['req'] = req;
       return {
         // Makes the translation library accessible in the context object.
         // https://github.com/i18next/i18next-http-middleware
         i18next: req.res.locals,
         // not a clean fix but that works for now
         user: (req as any).user,
-        dataSources: (await dataSources(server))(),
+        // Data sources are built per request and receive the request's own
+        // upstream access token (never stored on the shared server instance)
+        dataSources: (
+          await dataSources({
+            cache: server.cache,
+            accessToken: req.headers.accesstoken,
+          })
+        )(),
         token: req.headers.authorization,
         timeZone: req.headers.usertimezone || 'UTC',
         locale: getICULocale(req?.headers?.language),
