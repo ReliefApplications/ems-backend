@@ -19,6 +19,7 @@ import context, { Context } from './apollo/context';
 import { WebSocketServer } from 'ws';
 import { useServer } from 'graphql-ws/lib/use/ws';
 import onConnect from './apollo/onConnect';
+import formatError, { isProduction } from './apollo/formatError';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import {
   INTROSPECTION_QUERY,
@@ -111,6 +112,9 @@ class SafeServer {
     this.apolloServer = new ApolloServer<Context>({
       schema: schema,
       introspection: true,
+      // Never return stack traces or raw internal error messages in production
+      includeStacktraceInErrorResponses: !isProduction,
+      formatError,
       plugins: [
         ApolloServerPluginLandingPageLocalDefault(),
         // Proper shutdown for the WebSocket server.

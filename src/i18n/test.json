@@ -287,6 +287,13 @@
 				}
 			}
 		},
+		"role": {
+			"edit": {
+				"errors": {
+					"globalPermissions": "******"
+				}
+			}
+		},
 		"step": {
 			"add": {
 				"errors": {
@@ -300,9 +307,15 @@
 			}
 		},
 		"user": {
+			"add": {
+				"errors": {
+					"invalidRoles": "******"
+				}
+			},
 			"edit": {
 				"errors": {
-					"invalidArguments": "******"
+					"invalidArguments": "******",
+					"invalidRoles": "******"
 				}
 			}
 		},
@@ -337,6 +350,7 @@
 		},
 		"email": {
 			"errors": {
+				"invalidAttachmentsFolder": "******",
 				"missingFile": "******"
 			},
 			"subscription": {
@@ -372,6 +386,7 @@
 				"duplicateCustomId": "****** {{row}} ****** {{value}} ******",
 				"existingCustomId": "****** {{row}} ****** {{value}} ******",
 				"invalidCustomId": "****** {{row}} ****** {{value}} ******",
+				"invalidInsertParameters": "******",
 				"invalidUserUpload": "******",
 				"missingFile": "******",
 				"noRecordsToInsert": "******",
@@ -392,6 +407,7 @@
 		"aggregation": {
 			"buildPipeline": {
 				"errors": {
+					"forbiddenCustomStage": "******",
 					"invalidCustomStage": "******"
 				}
 			}

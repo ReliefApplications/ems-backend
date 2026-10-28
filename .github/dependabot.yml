@@ -1,0 +1,88 @@
+# Dependabot configuration
+# Docs: https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+#
+# Commit messages use the "chore(deps)" prefix so semantic-release's commit
+# analyzer does not treat dependency bumps as releasable changes.
+version: 2
+
+updates:
+  # npm dependencies (package.json / package-lock.json)
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Paris
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+    commit-message:
+      prefix: chore
+      prefix-development: chore
+      include: scope
+    groups:
+      # One PR per week for all minor/patch bumps of runtime dependencies
+      production-dependencies:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+      # One PR per week for all minor/patch bumps of dev dependencies
+      development-dependencies:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+    # Major bumps still open as individual PRs, except for the packages below
+    # whose majors require a dedicated migration.
+    ignore:
+      # bson must stay aligned with the MongoDB driver bundled by mongoose
+      - dependency-name: bson
+        update-types: ["version-update:semver-major"]
+      # ESLint 9 drops .eslintrc and the --ext flag used by `npm run lint`
+      - dependency-name: eslint
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@typescript-eslint/*"
+        update-types: ["version-update:semver-major"]
+      # TypeScript majors need a dedicated upgrade of the toolchain
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+
+  # Base image in the Dockerfile (node:24-alpine)
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Paris
+    labels:
+      - dependencies
+      - docker
+    commit-message:
+      prefix: chore
+      include: scope
+    ignore:
+      # Node major version is tied to the "engines" field and the CI matrix
+      - dependency-name: node
+        update-types: ["version-update:semver-major"]
+
+  # Actions used in .github/workflows
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Paris
+    labels:
+      - dependencies
+      - github-actions
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      github-actions:
+        patterns:
+          - "*"

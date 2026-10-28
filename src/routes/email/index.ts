@@ -12,6 +12,7 @@ import { preprocess, sendEmail, senderAddress } from '@utils/email';
 import xlsBuilder from '@utils/files/xlsBuilder';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
+import path from 'path';
 import i18next from 'i18next';
 import sanitize from 'sanitize-filename';
 import { logger } from '@services/logger.service';
@@ -19,6 +20,32 @@ import { getErrorMessage, getErrorStack } from '@utils/error';
 
 /** File size limit, in bytes  */
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
+
+/** Local folder where attachments are downloaded before being sent */
+const ATTACHMENTS_ROOT = path.resolve('files');
+
+/**
+ * Resolve a local path inside the attachments folder.
+ * The value is sanitised and the resolved path must stay inside the folder,
+ * so a request can never read or delete anything else on the server.
+ *
+ * @param relativePath folder id (as returned by POST /email/files) or blob name
+ * @returns absolute path, or null when the value does not resolve inside the attachments folder
+ */
+const resolveAttachmentPath = (relativePath: unknown): string | null => {
+  if (typeof relativePath !== 'string') {
+    return null;
+  }
+  const safeSegments = relativePath
+    .split(/[\\/]/)
+    .map((segment) => sanitize(segment))
+    .filter((segment) => segment.length > 0);
+  if (safeSegments.length === 0) {
+    return null;
+  }
+  const resolved = path.resolve(ATTACHMENTS_ROOT, ...safeSegments);
+  return resolved.startsWith(ATTACHMENTS_ROOT + path.sep) ? resolved : null;
+};
 
 /**
  * Handles email generation for grids, from template, and selected records.
@@ -102,36 +129,44 @@ router.post('/', async (req, res) => {
     const email = await generateEmail(req, res);
 
     if (req.body.files) {
-      const blobs = await listFolderFiles('temp', sanitize(req.body.files));
+      // Folder of the attachments uploaded through POST /email/files: must stay inside the attachments folder
+      const folderPath = resolveAttachmentPath(req.body.files);
+      if (!folderPath) {
+        return res
+          .status(400)
+          .send(i18next.t('routes.email.errors.invalidAttachmentsFolder'));
+      }
+      const folderName = path.basename(folderPath);
+      const blobs = await listFolderFiles('temp', folderName);
       const promises: Promise<any>[] = [];
       for (const blob of blobs) {
-        promises.push(downloadFile('temp', blob.name, `files/${blob.name}`));
+        const blobPath = resolveAttachmentPath(blob.name);
+        if (blobPath) {
+          promises.push(downloadFile('temp', blob.name, blobPath));
+        }
       }
       await Promise.all(promises);
       await new Promise((resolve, reject) => {
-        fs.readdir(`files/${sanitize(req.body.files)}`, async (err, files) => {
+        fs.readdir(folderPath, async (err, files) => {
           if (err) {
             reject(err);
           }
           for (const file of files) {
             await new Promise((resolve2, reject2) => {
-              fs.readFile(
-                `files/${sanitize(req.body.files)}/${file}`,
-                (err2, data) => {
-                  if (err2) {
-                    reject2(err2);
-                  }
-                  email.attachments.push({
-                    filename: file,
-                    content: data,
-                  });
-                  resolve2(null);
+              fs.readFile(path.join(folderPath, file), (err2, data) => {
+                if (err2) {
+                  reject2(err2);
                 }
-              );
+                email.attachments.push({
+                  filename: file,
+                  content: data,
+                });
+                resolve2(null);
+              });
             });
           }
           await new Promise((resolve2, reject2) => {
-            fs.rm(`files/${req.body.files}`, { recursive: true }, (err2) => {
+            fs.rm(folderPath, { recursive: true }, (err2) => {
               if (err2) {
                 reject2(err2);
               }

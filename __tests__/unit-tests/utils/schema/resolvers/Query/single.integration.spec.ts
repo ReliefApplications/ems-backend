@@ -72,7 +72,7 @@ describe('single record query permissions', () => {
     userId = new mongoose.Types.ObjectId()
   ) => {
     (extendAbilityForRecords as jest.Mock).mockResolvedValue(ability);
-    const context = {
+    const context: any = {
       user: { _id: userId, attributes: {}, ability },
       i18next: { t: (key: string) => key },
     };

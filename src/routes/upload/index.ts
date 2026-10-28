@@ -11,6 +11,7 @@ import {
   Application,
 } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import {
   getUploadColumns,
   loadRow,
@@ -24,12 +25,10 @@ import {
   validateUniqueness,
 } from '@utils/form';
 import i18next from 'i18next';
-import get from 'lodash/get';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import validator from 'email-validator';
 import { insertRecords as insertRecordsPulljob } from '@server/pullJobScheduler';
-import jwtDecode from 'jwt-decode';
 import { GraphQLError } from 'graphql';
 import { getErrorMessage, getErrorStack } from '@utils/error';
 
@@ -41,6 +40,11 @@ const router = express.Router();
 
 /**
  * Insert records from file if authorized.
+ *
+ * The caller must be allowed to upload records of the form: back-office
+ * permission on resources, or a role listed in the resource's
+ * canUploadRecords permission. A resource without canUploadRecords roles
+ * accepts no bulk upload from application users.
  *
  * If the resource has uniqueness rules configured, every row is checked
  * both against already-persisted records and against the rest of the file;
@@ -66,29 +70,11 @@ export async function insertRecords(
   resource: Resource | null,
   t: Translator
 ) {
-  // Check if the user is authorized
-  const ability: AppAbility = context.user.ability;
-  let canCreate = false;
-  if (ability.can('create', 'Record') || ability.can('upload', 'Record')) {
-    canCreate = true;
-  } else {
-    const roles = context.user.roles.map((x) => String(x._id));
-
-    const canUploadRoles = get(
-      resource,
-      'permissions.canUploadRecords',
-      []
-    ).map((x: any) => String(x.role || x));
-
-    const hasUploadRole =
-      canUploadRoles.length > 0
-        ? canUploadRoles.some((x) => roles.includes(x))
-        : false;
-
-    canCreate = hasUploadRole;
-  }
-  if (!canCreate) {
-    return res.status(403).send(t('common.errors.dataNotFound'));
+  // Check if the user is authorized: back-office permission on resources, or
+  // a role listed in the resource's canUploadRecords permission.
+  const ability = await extendAbilityForRecords(context.user, form);
+  if (ability.cannot('upload', 'Record')) {
+    return res.status(403).send(t('common.errors.permissionNotGranted'));
   }
 
   const dataSets: {
@@ -317,34 +303,53 @@ router.post('/resource/records/:id', async (req: any, res) => {
 });
 
 /**
- * Upload a list of records for a resource in json format
+ * Upload a list of records for a resource in json format.
+ *
+ * The body parameters act as a pull job (target form, mapping, unique identifiers),
+ * so the calling principal, user or client application, must be allowed to create
+ * records of the target form. Client applications get that through a role listed
+ * in the resource's canCreateRecords permission.
  */
 router.post('/resource/insert', async (req: any, res) => {
   try {
-    if (req.body.records.length < 1) {
+    const { records, parameters } = req.body || {};
+    if (
+      !Array.isArray(records) ||
+      !parameters ||
+      typeof parameters !== 'object' ||
+      !parameters.convertTo ||
+      !parameters.mapping ||
+      typeof parameters.mapping !== 'object' ||
+      !Array.isArray(parameters.uniqueIdentifiers)
+    ) {
+      return res
+        .status(400)
+        .send(req.t('routes.upload.errors.invalidInsertParameters'));
+    }
+    if (records.length < 1) {
       logger.info('No records were provided for insertion.');
       return res
         .status(200)
         .send(req.t('routes.upload.errors.noRecordsToInsert'));
     }
-    const authToken = req.headers.authorization.split(' ')[1];
-    const decodedToken = jwtDecode(authToken) as any;
-
-    const evaluateExpressions =
-      req.body.parameters.evaluateExpressions || false;
-
-    // Block if connected with user to Service
-    if (!decodedToken.email && !decodedToken.name) {
-      const insertRecordsMessage = await insertRecordsPulljob(
-        req.body.records,
-        req.body.parameters,
-        true,
-        true,
-        evaluateExpressions
-      );
-      return res.status(200).send(insertRecordsMessage);
+    const form = await Form.findById(parameters.convertTo);
+    if (!form) {
+      return res.status(404).send(req.t('common.errors.dataNotFound'));
     }
-    return res.status(400).send(req.t('common.errors.permissionNotGranted'));
+    const ability = await extendAbilityForRecords(req.context.user, form);
+    if (ability.cannot('create', 'Record')) {
+      return res.status(403).send(req.t('common.errors.permissionNotGranted'));
+    }
+
+    const evaluateExpressions = parameters.evaluateExpressions || false;
+    const insertRecordsMessage = await insertRecordsPulljob(
+      records,
+      parameters,
+      true,
+      true,
+      evaluateExpressions
+    );
+    return res.status(200).send(insertRecordsMessage);
   } catch (err) {
     logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
     return res.status(500).send(req.t('common.errors.internalServerError'));
@@ -485,7 +490,10 @@ router.post('/invite', async (req: any, res) => {
   }
 });
 
-/** Uploads file from a certain form to azure storage */
+/**
+ * Uploads file from a certain form to azure storage.
+ * Only people who can create or update records of the form may store files for it.
+ */
 router.post('/file/:form', async (req, res) => {
   try {
     // Check file
@@ -506,9 +514,18 @@ router.post('/file/:form', async (req, res) => {
 
     // Check form
     const formID = req.params.form;
-    const form = await Form.exists({ _id: formID });
+    const form = await Form.findById(formID);
     if (!form) {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    }
+    const ability = await extendAbilityForRecords(req.context.user, form);
+    if (
+      ability.cannot('create', 'Record') &&
+      ability.cannot('update', 'Record')
+    ) {
+      return res
+        .status(403)
+        .send(i18next.t('common.errors.permissionNotGranted'));
     }
     const path = await uploadFile('forms', formID, file);
     return res.status(200).send({ path });

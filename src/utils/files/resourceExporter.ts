@@ -27,6 +27,7 @@ import sanitizeHtml from 'sanitize-html';
 import { getErrorMessage } from '@utils/error';
 import { getDraftRecordFilter } from '@utils/filter';
 import { RecordVisibility } from '@const/enumTypes';
+import { sanitizeCellValue } from './format.helper';
 
 /**
  * Export batch parameters interface
@@ -149,7 +150,7 @@ export default class Exporter {
               const columnValue = get(row, column.name, null);
               temp[column.name] = isArray(columnValue)
                 ? columnValue.length
-                : columnValue;
+                : sanitizeCellValue(columnValue);
             }
             csvData.push(temp);
           }
@@ -285,9 +286,9 @@ export default class Exporter {
     set(this.req.context.user, 'ability', ability);
     const contextDataSources = (
       await dataSources({
-        // Passing upstream request so accesstoken can be used for authentication
-        req: this.req,
-      } as any)
+        // Passing upstream access token so it can be used for authentication
+        accessToken: this.req.headers.accesstoken,
+      })
     )();
     set(this.req.context, 'dataSources', contextDataSources);
     // The calc service's displayValue fetches choicesByUrl / choicesByGraphQL
@@ -783,7 +784,8 @@ export default class Exporter {
   };
 
   /**
-   * Sanitize string content for excel cells
+   * Sanitize string content for excel cells: strips HTML, neutralises formulas,
+   * and keeps the content within the Excel cell limit.
    *
    * @param content Cell content, only strings will be sanitized
    * @returns Sanitized string
@@ -797,7 +799,7 @@ export default class Exporter {
     });
 
     // Excel has a maximum cell content length of 32,767 characters
-    return str.substring(0, 32000);
+    return sanitizeCellValue(str.substring(0, 32000));
   }
 
   /**
