@@ -23,7 +23,6 @@ import { useServer } from 'graphql-ws/lib/use/ws';
 import onConnect from './apollo/onConnect';
 import formatError, { isProduction } from './apollo/formatError';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
-import { ApolloServerPluginLandingPageDisabled } from '@apollo/server/plugin/disabled';
 import config from 'config';
 import {
   INTROSPECTION_QUERY,
@@ -124,10 +123,8 @@ class SafeServer {
       includeStacktraceInErrorResponses: !isProduction,
       formatError,
       plugins: [
-        // The landing page needs a relaxed content security policy, see securityHeaders
-        isProduction
-          ? ApolloServerPluginLandingPageDisabled()
-          : ApolloServerPluginLandingPageLocalDefault(),
+        // Kept in every environment, its content security policy is relaxed in securityHeaders
+        ApolloServerPluginLandingPageLocalDefault(),
         // Proper shutdown for the WebSocket server.
         {
           async serverWillStart() {
