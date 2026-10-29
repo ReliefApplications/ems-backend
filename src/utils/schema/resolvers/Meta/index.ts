@@ -64,6 +64,7 @@ export const getMetaResolver = (
           });
         }
       }
+      return resolvers;
     },
     {}
   );
@@ -221,6 +222,7 @@ export const getMetaResolver = (
           [field.name]: getMetaReferenceDataResolver(field, referenceData),
         });
       }
+      return resolvers;
     }, {});
 
   return Object.assign(

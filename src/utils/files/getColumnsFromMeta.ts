@@ -74,7 +74,7 @@ export const getColumnsFromMeta = (
         label,
       });
     } else {
-      const queryField = fields.find((x) => x.name === key);
+      const queryField = fields?.find((x) => x.name === key);
       if ((queryField && queryField.subFields) || queryField?.kind === 'LIST') {
         // List of related objects
         const fullName = prefix ? `${prefix}.${key}` : key;
