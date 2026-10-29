@@ -1,5 +1,4 @@
 import axios from 'axios';
-import config from 'config';
 import { TranslationService } from '@services/translation.service';
 
 jest.mock('axios');
@@ -35,14 +34,14 @@ describe('TranslationService', () => {
     });
 
     it('should throw an error in production environment', async () => {
-      jest.spyOn(config.util, 'getEnv').mockReturnValue('production');
+      process.env.NODE_ENV = 'production';
       await expect(service.translate('Hello', null, 'uk')).rejects.toThrow(
         'Azure Translator key is not configured'
       );
     });
 
     it('should return stub translation in non-production environments', async () => {
-      jest.spyOn(config.util, 'getEnv').mockReturnValue('development');
+      process.env.NODE_ENV = 'development';
       const res = await service.translate('Hello', null, 'uk');
       expect(res).toBe('[Translated to uk]: Hello');
     });
