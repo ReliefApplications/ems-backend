@@ -1,6 +1,5 @@
 import expressWinston from 'express-winston';
 import { transports, format } from 'winston';
-import config from 'config';
 import winston from 'winston';
 
 /**
@@ -62,7 +61,7 @@ const loggerTransports: winston.transport[] = [
 // If we're not in production then log to the `console` with the format:
 // `${info.level}: ${info.message} JSON.stringify({ ...rest }) `
 //
-if (config.util.getEnv('NODE_ENV') !== 'production') {
+if (process.env.NODE_ENV !== 'production') {
   loggerTransports.push(new transports.Console());
 }
 
