@@ -1,18 +1,58 @@
 import { EventEmitter } from 'events';
 import { Form, ReferenceData, Resource } from '@models';
 import {
+  changeRequiresRecordsAbilityReload,
   formChangeRequiresSchemaReload,
   listenToSchemaUpdateTriggers,
   referenceDataChangeRequiresSchemaReload,
   resourceChangeRequiresSchemaReload,
   resourceUpdateRequiresSchemaReload,
 } from '@server/schemaUpdateTriggers';
+import { clearRecordsAbilityCache } from '@utils/schema/resolvers/Query/getRecordsAbility';
 
 jest.mock('@models', () => ({
   Form: { watch: jest.fn() },
   ReferenceData: { watch: jest.fn() },
   Resource: { watch: jest.fn() },
 }));
+jest.mock('@utils/schema/resolvers/Query/getRecordsAbility', () => ({
+  clearRecordsAbilityCache: jest.fn(),
+}));
+
+describe('changeRequiresRecordsAbilityReload', () => {
+  it.each(['insert', 'replace', 'delete'])(
+    'should reload on %s',
+    (operationType) => {
+      expect(changeRequiresRecordsAbilityReload({ operationType })).toBe(true);
+    }
+  );
+
+  it.each([
+    { permissions: {} },
+    { 'permissions.canSeeRecords': [] },
+    { 'fields.3.permissions': {} },
+    { fields: [] },
+    { resource: 'id' },
+  ])('should reload when %o is updated', (updatedFields) => {
+    expect(
+      changeRequiresRecordsAbilityReload({
+        operationType: 'update',
+        updateDescription: { updatedFields },
+      })
+    ).toBe(true);
+  });
+
+  it('should not reload on unrelated updates', () => {
+    expect(
+      changeRequiresRecordsAbilityReload({
+        operationType: 'update',
+        updateDescription: {
+          updatedFields: { modifiedAt: new Date('2026-07-07'), name: 'x' },
+        },
+      })
+    ).toBe(false);
+  });
+});
 
 describe('resourceUpdateRequiresSchemaReload', () => {
   describe('positional array updates (dotted keys)', () => {
@@ -273,5 +313,29 @@ describe('listenToSchemaUpdateTriggers', () => {
     });
 
     expect(onSchemaUpdate).not.toHaveBeenCalled();
+  });
+
+  it('should clear the records ability cache on form and resource permission changes', () => {
+    formStream.emit('change', {
+      operationType: 'update',
+      updateDescription: { updatedFields: { permissions: {} } },
+    });
+    resourceStream.emit('change', {
+      operationType: 'update',
+      updateDescription: { updatedFields: { 'permissions.canSeeRecords': [] } },
+    });
+
+    expect(clearRecordsAbilityCache).toHaveBeenCalledTimes(2);
+    expect(onSchemaUpdate).not.toHaveBeenCalled();
+  });
+
+  it('should not clear the records ability cache on other changes', () => {
+    formStream.emit('change', {
+      operationType: 'update',
+      updateDescription: { updatedFields: { name: 'Form' } },
+    });
+    referenceDataStream.emit('change', { operationType: 'delete' });
+
+    expect(clearRecordsAbilityCache).not.toHaveBeenCalled();
   });
 });
