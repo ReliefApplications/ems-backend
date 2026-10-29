@@ -1,3 +1,17 @@
+# [2.18.0-rc.19](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.18...v2.18.0-rc.19) (2026-10-29)
+
+
+### Bug Fixes
+
+* **meta:** keep accumulated resolvers when a relationship field does not match ([afdb523](https://github.com/ReliefApplications/ems-backend/commit/afdb523220cee97dfe183b6918a843578c6d3692))
+
+# [2.18.0-rc.18](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.17...v2.18.0-rc.18) (2026-10-26)
+
+
+### Features
+
+* Enable translation of files ([#1292](https://github.com/ReliefApplications/ems-backend/issues/1292)) ([fdd0d59](https://github.com/ReliefApplications/ems-backend/commit/fdd0d5932902e8145aa1499822a45e8bbd69bac8)), closes [AB#138121](https://github.com/AB/issues/138121)
+
 # [2.18.0-rc.17](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.16...v2.18.0-rc.17) (2026-10-20)
 
 
