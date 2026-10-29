@@ -4,6 +4,8 @@ import {
   corsMiddleware,
   authMiddleware,
   graphqlMiddleware,
+  securityHeadersMiddleware,
+  noStoreMiddleware,
 } from './middlewares';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
@@ -21,6 +23,8 @@ import { useServer } from 'graphql-ws/lib/use/ws';
 import onConnect from './apollo/onConnect';
 import formatError, { isProduction } from './apollo/formatError';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+import { ApolloServerPluginLandingPageDisabled } from '@apollo/server/plugin/disabled';
+import config from 'config';
 import {
   INTROSPECTION_QUERY,
   IntrospectionResult as IntrospectionQueryResult,
@@ -70,6 +74,8 @@ class SafeServer {
     introspectionResult = null;
     // === EXPRESS ===
     this.app = express();
+    // Number of proxies in front of the server ( Azure Front Door, App Service ), so req.ip is the client's
+    this.app.set('trust proxy', config.get('server.trustProxy'));
 
     // === REQUEST SIZE ===
     this.app.use('/upload/resource/insert', express.json({ limit: '100mb' }));
@@ -78,6 +84,8 @@ class SafeServer {
 
     // === ADD MIDDLEWARES ===
     this.app.use(winstonLogger);
+    this.app.use(securityHeadersMiddleware);
+    this.app.use(noStoreMiddleware);
 
     i18next
       .use(Backend)
@@ -116,7 +124,10 @@ class SafeServer {
       includeStacktraceInErrorResponses: !isProduction,
       formatError,
       plugins: [
-        ApolloServerPluginLandingPageLocalDefault(),
+        // The landing page needs a relaxed content security policy, see securityHeaders
+        isProduction
+          ? ApolloServerPluginLandingPageDisabled()
+          : ApolloServerPluginLandingPageLocalDefault(),
         // Proper shutdown for the WebSocket server.
         {
           async serverWillStart() {
