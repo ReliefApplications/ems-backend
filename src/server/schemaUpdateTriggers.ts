@@ -1,4 +1,5 @@
 import { Form, ReferenceData, Resource } from '@models';
+import { clearRecordsAbilityCache } from '@utils/schema/resolvers/Query/getRecordsAbility';
 
 /** Change event emitted by a collection watch stream */
 interface CollectionChange {
@@ -107,8 +108,29 @@ export const resourceChangeRequiresSchemaReload = (
 };
 
 /**
+ * Checks whether a form or resource change invalidates the cached records
+ * abilities, built from their permissions and fields ( and from the resource
+ * of the forms ). Insertions, replacements and deletions always do.
+ *
+ * @param data change event from the form or resource collection watch stream
+ * @returns true if the records ability cache should be cleared
+ */
+export const changeRequiresRecordsAbilityReload = (
+  data: CollectionChange
+): boolean => {
+  if (data.operationType === 'update') {
+    return Object.keys(data.updateDescription?.updatedFields ?? {}).some(
+      (key) => ['permissions', 'fields', 'resource'].includes(key.split('.')[0])
+    );
+  }
+  return ['insert', 'replace', 'delete'].includes(data.operationType ?? '');
+};
+
+/**
  * Watches the collections that define the GraphQL schema and invokes the
  * given callback whenever a change requires the schema to be rebuilt.
+ * Also clears the cached records abilities when the permissions or fields of
+ * forms and resources change.
  *
  * @param onSchemaUpdate callback triggering the schema rebuild
  */
@@ -116,6 +138,9 @@ export const listenToSchemaUpdateTriggers = (
   onSchemaUpdate: () => void
 ): void => {
   Form.watch().on('change', (data) => {
+    if (changeRequiresRecordsAbilityReload(data)) {
+      clearRecordsAbilityCache();
+    }
     if (formChangeRequiresSchemaReload(data)) {
       onSchemaUpdate();
     }
@@ -126,6 +151,9 @@ export const listenToSchemaUpdateTriggers = (
     }
   });
   Resource.watch().on('change', (data) => {
+    if (changeRequiresRecordsAbilityReload(data)) {
+      clearRecordsAbilityCache();
+    }
     if (resourceChangeRequiresSchemaReload(data)) {
       onSchemaUpdate();
     }
