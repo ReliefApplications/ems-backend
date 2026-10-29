@@ -1,3 +1,10 @@
+# [2.18.0-rc.19](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.18...v2.18.0-rc.19) (2026-10-29)
+
+
+### Bug Fixes
+
+* **meta:** keep accumulated resolvers when a relationship field does not match ([afdb523](https://github.com/ReliefApplications/ems-backend/commit/afdb523220cee97dfe183b6918a843578c6d3692))
+
 # [2.18.0-rc.18](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.17...v2.18.0-rc.18) (2026-10-26)
 
 
