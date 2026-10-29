@@ -8,6 +8,9 @@ module.exports = {
     allowedOrigins: [],
     protectedShortcuts: [],
     url: '',
+    // Express 'trust proxy' setting: number of proxies in front of the server
+    // ( e.g. 2 behind Azure Front Door and App Service ), false when exposed directly
+    trustProxy: false,
     rateLimit: {
       enable: true,
       windowMs: 1 * 60 * 1000, // 1 minute

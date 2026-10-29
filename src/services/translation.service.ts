@@ -33,7 +33,7 @@ export class TranslationService {
     }
 
     if (!this.apiKey) {
-      if (config.util.getEnv('NODE_ENV') === 'production') {
+      if (process.env.NODE_ENV === 'production') {
         throw new Error('Azure Translator key is not configured');
       }
       logger.warn(
