@@ -1,7 +1,6 @@
 import { unwrapResolverError } from '@apollo/server/errors';
 import { GraphQLError, GraphQLFormattedError } from 'graphql';
 import i18next from 'i18next';
-import config from 'config';
 import { logger } from '@services/logger.service';
 
 /**
@@ -44,8 +43,12 @@ export const buildFormatError =
     return { ...formattedError, extensions };
   };
 
-/** Whether the server runs in production */
-export const isProduction = config.util.getEnv('NODE_ENV') === 'production';
+/**
+ * Whether the server runs in production.
+ * Read from process.env: config.util.getEnv('NODE_ENV') returns NODE_CONFIG_ENV when it is
+ * set (e.g. who-dev, who-prod), so it would never equal 'production' on deployed servers.
+ */
+export const isProduction = process.env.NODE_ENV === 'production';
 
 /** Apollo formatError hook for the current environment */
 export default buildFormatError(isProduction);

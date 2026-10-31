@@ -7,6 +7,10 @@ module.exports = {
     url: 'SERVER_URL',
     allowedOrigins: 'SERVER_ALLOWED_ORIGINS',
     protectedShortcuts: 'SERVER_PROTECTED_SHORTCUTS',
+    trustProxy: {
+      __name: 'SERVER_TRUST_PROXY',
+      __format: 'json',
+    },
   },
   frontOffice: {
     uri: 'FRONT_OFFICE_URI',

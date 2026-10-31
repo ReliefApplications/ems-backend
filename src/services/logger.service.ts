@@ -46,22 +46,27 @@ if (config.get('logger.keep') === true) {
   loggerTransports.push(new transports.DailyRotateFile(options.fileInfo));
 }
 
+/**
+ * Colors the level outside production only: in production the console is read
+ * raw ( App Service Log stream ), where color codes show up as noise.
+ */
+const colorize =
+  process.env.NODE_ENV === 'production' ? [] : [format.colorize()];
+
 //
-// If we're not in production then log to the `console` with the format:
-// `${info.level}: ${info.message} JSON.stringify({ ...rest }) `
+// Log to the `console` in every environment, so the logs show up in the App Service Log stream,
+// with the format: `${info.level}: ${info.message} JSON.stringify({ ...rest }) `
 //
-if (config.util.getEnv('NODE_ENV') !== 'production') {
-  loggerTransports.push(
-    new transports.Console({
-      format: format.combine(
-        format.colorize(),
-        format.splat(),
-        format.timestamp(),
-        customFormat
-      ),
-    })
-  );
-}
+loggerTransports.push(
+  new transports.Console({
+    format: format.combine(
+      ...colorize,
+      format.splat(),
+      format.timestamp(),
+      customFormat
+    ),
+  })
+);
 
 /**
  * Custom winston logger.
@@ -70,7 +75,7 @@ if (config.util.getEnv('NODE_ENV') !== 'production') {
 export const logger: any = winston.createLogger({
   level: 'info',
   format: format.combine(
-    format.colorize(),
+    ...colorize,
     format.splat(),
     format.timestamp(),
     customFormat
