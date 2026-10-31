@@ -4,6 +4,8 @@ import {
   corsMiddleware,
   authMiddleware,
   graphqlMiddleware,
+  securityHeadersMiddleware,
+  noStoreMiddleware,
 } from './middlewares';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
@@ -14,6 +16,10 @@ import i18nextMiddleware from 'i18next-http-middleware';
 import { logger } from '../services/logger.service';
 import { winstonLogger } from './middlewares/winston';
 import { Form, ReferenceData, Resource } from '@models';
+import {
+  changeRequiresRecordsAbilityReload,
+  clearRecordsAbilityCache,
+} from '@utils/schema/resolvers/Query/getRecordsAbility';
 import buildSchema from '@utils/schema/buildSchema';
 import { GraphQLSchema } from 'graphql';
 import context, { Context } from './apollo/context';
@@ -22,6 +28,7 @@ import { useServer } from 'graphql-ws/lib/use/ws';
 import onConnect from './apollo/onConnect';
 import formatError, { isProduction } from './apollo/formatError';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+import config from 'config';
 import {
   INTROSPECTION_QUERY,
   IntrospectionResult as IntrospectionQueryResult,
@@ -54,9 +61,15 @@ class SafeServer {
 
   public status = new EventEmitter();
 
-  /** Adds listeners to relevant collections in order to rebuild schema */
+  /**
+   * Adds listeners to relevant collections in order to rebuild schema, and to
+   * clear the cached records abilities when form or resource permissions change
+   */
   constructor() {
     Form.watch().on('change', (data) => {
+      if (changeRequiresRecordsAbilityReload(data)) {
+        clearRecordsAbilityCache();
+      }
       if (data.operationType === 'insert') {
         // Reload schema on new form or form deletion
         this.update();
@@ -102,6 +115,9 @@ class SafeServer {
 
     // All resource changes require schema update
     Resource.watch().on('change', (data) => {
+      if (changeRequiresRecordsAbilityReload(data)) {
+        clearRecordsAbilityCache();
+      }
       if (data.operationType === 'delete') {
         // Reload schema on resource deletion
         this.update();
@@ -137,6 +153,8 @@ class SafeServer {
     introspectionResult = null;
     // === EXPRESS ===
     this.app = express();
+    // Number of proxies in front of the server ( Azure Front Door, App Service ), so req.ip is the client's
+    this.app.set('trust proxy', config.get('server.trustProxy'));
 
     // === REQUEST SIZE ===
     this.app.use('/upload/resource/insert', express.json({ limit: '100mb' }));
@@ -145,6 +163,8 @@ class SafeServer {
 
     // === ADD MIDDLEWARES ===
     this.app.use(winstonLogger);
+    this.app.use(securityHeadersMiddleware);
+    this.app.use(noStoreMiddleware);
 
     i18next
       .use(Backend)
@@ -183,6 +203,7 @@ class SafeServer {
       includeStacktraceInErrorResponses: !isProduction,
       formatError,
       plugins: [
+        // Kept in every environment, its content security policy is relaxed in securityHeaders
         ApolloServerPluginLandingPageLocalDefault(),
         // Proper shutdown for the WebSocket server.
         {
