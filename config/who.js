@@ -4,6 +4,8 @@
  */
 module.exports = {
   server: {
+    // Azure Front Door, then the App Service front end, in front of the container
+    trustProxy: 2,
     rateLimit: {
       enable: false,
       max: 500,

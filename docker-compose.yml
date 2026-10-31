@@ -1,20 +1,24 @@
-# Local development stack: the API (nodemon, `npm run dev`) and a MongoDB
-# single-node replica set.
+# Local development stack: the API (nodemon, `npm run dev`), a MongoDB
+# single-node replica set and a Redis instance.
 #
 # MongoDB MUST run as a replica set: the API opens change streams
 # (`Model.watch()` in src/server/schemaUpdateTriggers.ts), which Mongo only
 # supports on replica sets. Change streams + authentication also require a
 # keyFile, which is generated on the fly in the `mongodb` command below.
 #
+# Redis backs the reference data cache and the GraphQL subscriptions
+# (src/server/redis.ts, src/server/pubsub.ts, src/server/apollo/dataSources.ts).
+#
 # Usage:
-#   docker compose up            # API on http://localhost:3000, inspector on 9229
-#   docker compose up mongodb    # database only (eg. to run `npm run dev` on the host)
+#   docker compose up                 # API on http://localhost:3000, inspector on 9229
+#   docker compose up mongodb redis   # databases only (eg. to run `npm run dev` on the host)
 #
 # Optional overrides (put them in .env, defaults are used otherwise):
-#   MONGO_ROOT_USER, MONGO_ROOT_PASS, MONGO_DB_NAME
+#   MONGO_ROOT_USER, MONGO_ROOT_PASS, MONGO_DB_NAME, REDIS_PASSWORD
 #
-# From the host (Compass, mongosh, `npm run dev` outside docker) connect with
+# From the host (Compass, mongosh, redis-cli, `npm run dev` outside docker) connect with
 #   mongodb://root:root@localhost:27017/?authSource=admin&directConnection=true
+#   redis://localhost:6379 (password: redis)
 # `directConnection=true` is needed because the replica set member is
 # advertised as `mongodb:27017`, which only resolves inside the compose network.
 
@@ -41,6 +45,9 @@ services:
       DB_NAME: ${MONGO_DB_NAME:-hems}
       DB_USER: ${MONGO_ROOT_USER:-root}
       DB_PASS: ${MONGO_ROOT_PASS:-root}
+      # Point the API at the `redis` service below (overrides REDIS_* from .env).
+      REDIS_URL: redis://redis:6379
+      REDIS_PASS: ${REDIS_PASSWORD:-redis}
     ports:
       - '3000:3000' # API
       - '9229:9229' # Node.js inspector
@@ -50,6 +57,8 @@ services:
       - ./.docker/api/logs:/home/node/app/logs
     depends_on:
       mongodb:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     command: npm run dev
 
@@ -89,6 +98,27 @@ services:
       timeout: 10s
       retries: 12
       start_period: 20s
+
+  redis:
+    container_name: hems-back-redis
+    image: redis:7-alpine
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis}
+    ports:
+      - '6379:6379'
+    # Cache and pub/sub data are ephemeral: no persistence, no volume.
+    command:
+      - sh
+      - -c
+      - exec redis-server --save "" --appendonly no --requirepass "$$REDIS_PASSWORD"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - redis-cli -a "$$REDIS_PASSWORD" --no-auth-warning ping | grep -q PONG
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   mongodb_data:

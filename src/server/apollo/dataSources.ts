@@ -1,12 +1,14 @@
-import { AugmentedRequest, RESTDataSource } from '@apollo/datasource-rest';
+import {
+  AugmentedRequest,
+  DataSourceConfig,
+  RESTDataSource,
+} from '@apollo/datasource-rest';
 import { status, referenceDataType } from '@const/enumTypes';
 import { ApiConfiguration, ReferenceData } from '@models';
 import { getToken } from '@utils/proxy';
 import { get, isEmpty, memoize, set } from 'lodash';
 import { logger } from '@services/logger.service';
 import { JSONPath } from 'jsonpath-plus';
-import { ApolloServer } from '@apollo/server';
-import { Context } from './context';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import gql from 'graphql-tag';
 // eslint-disable-next-line import/no-extraneous-dependencies
@@ -57,6 +59,19 @@ const transformGraphQLVariables = (query: string, variables: any = {}) => {
 };
 
 /**
+ * Per-request options of a data source.
+ * Apollo builds the data sources once per incoming request: everything the
+ * request carries (the delegated upstream access token) is captured here, at
+ * construction, so that two concurrent requests can never read each other's values.
+ */
+export interface CustomAPIOptions {
+  /** Shared cache (Apollo server cache), optional */
+  cache?: DataSourceConfig['cache'];
+  /** Upstream access token of the request (accesstoken header), used by authorization code APIs */
+  accessToken?: string | string[];
+}
+
+/**
  * CustomAPI class to create a dataSource fetching from an APIConfiguration.
  * If nothing is passed in the constructor, it will only be a standard REST DataSource.
  * Data sources are invoked, for example, when using reference data in a context involving the display of data, such as in a grid, or when fetching or downloading historical record items.
@@ -71,16 +86,25 @@ export class CustomAPI extends RESTDataSource {
   private memoizedReferenceDataGraphQLItems: any;
 
   /**
+   * Upstream access token of the request this data source was built for.
+   * Never read from a shared object: the previous implementation stored the
+   * current request on the Apollo server instance and read it back after
+   * awaits, so concurrent requests could swap their delegated tokens (H-07).
+   */
+  private readonly accessToken: string | string[];
+
+  /**
    * Construct a CustomAPI.
    *
-   * @param server Apollo server instance.
+   * @param options per-request options (cache, upstream access token)
    * @param apiConfiguration optional argument used to initialize the calls using the passed ApiConfiguration
    */
   constructor(
-    public server: ApolloServer<Context>,
+    options: CustomAPIOptions = {},
     apiConfiguration?: ApiConfiguration
   ) {
-    super(server ? { cache: server.cache } : undefined);
+    super(options.cache ? { cache: options.cache } : undefined);
+    this.accessToken = options.accessToken ?? '';
     if (apiConfiguration) {
       this.apiConfiguration = apiConfiguration;
       // We add the final '/' to make sure it is not removed when using URL builder
@@ -99,8 +123,10 @@ export class CustomAPI extends RESTDataSource {
    */
   async willSendRequest(_: string, request: AugmentedRequest) {
     if (this.apiConfiguration) {
-      const accessToken = (this.server as any).req.headers.accesstoken ?? '';
-      const token: string = await getToken(this.apiConfiguration, accessToken);
+      const token: string = await getToken(
+        this.apiConfiguration,
+        this.accessToken
+      );
       // eslint-disable-next-line @typescript-eslint/dot-notation
       request.headers['authorization'] = `Bearer ${token}`;
     }
@@ -302,10 +328,10 @@ export class CustomAPI extends RESTDataSource {
 /**
  * Creates a data source for each active apiConfiguration. Create also an additional one for classic REST requests.
  *
- * @param server Apollo server instance.
+ * @param options per-request options (cache, upstream access token).
  * @returns Definitions of the data sources.
  */
-const buildDataSources = async (server?: ApolloServer<Context>) => {
+const buildDataSources = async (options: CustomAPIOptions = {}) => {
   const apiConfigurations = await ApiConfiguration.find({
     status: status.active,
   });
@@ -314,10 +340,10 @@ const buildDataSources = async (server?: ApolloServer<Context>) => {
       ...apiConfigurations.reduce((o, apiConfiguration) => {
         return {
           ...o,
-          [apiConfiguration.name]: new CustomAPI(server, apiConfiguration),
+          [apiConfiguration.name]: new CustomAPI(options, apiConfiguration),
         };
       }, {}),
-      _rest: new CustomAPI(server),
+      _rest: new CustomAPI(options),
     } as Record<string, CustomAPI> & { _rest: CustomAPI });
 };
 
@@ -325,12 +351,12 @@ const buildDataSources = async (server?: ApolloServer<Context>) => {
  * Create a single data source, fetching api by name. Create also an additional one for classic REST requests.
  *
  * @param apiName Name of the api configuration
- * @param server Apollo server instance.
+ * @param options per-request options (cache, upstream access token).
  * @returns Definitions of the data sources.
  */
 export const buildDataSource = async (
   apiName: string,
-  server?: ApolloServer<Context>
+  options: CustomAPIOptions = {}
 ) => {
   const apiConfiguration = await ApiConfiguration.findOne({
     status: status.active,
@@ -338,8 +364,8 @@ export const buildDataSource = async (
   });
   return () =>
     ({
-      ...{ [apiConfiguration.name]: new CustomAPI(server, apiConfiguration) },
-      _rest: new CustomAPI(server),
+      ...{ [apiConfiguration.name]: new CustomAPI(options, apiConfiguration) },
+      _rest: new CustomAPI(options),
     } as Record<string, CustomAPI> & { _rest: CustomAPI });
 };
 

@@ -123,13 +123,64 @@ export const operatorsMapping: {
 ];
 
 /**
- * Lists of forbidden pipelines operators.
- * Using one of them should throw an error.
+ * Aggregation stage operators a custom stage is allowed to start with.
+ * Every stage listed here only reshapes / filters the documents already
+ * selected by the permission filters, so it can safely be exposed to builders.
+ * Anything not listed (cross-collection joins, writes, server-side JS,
+ * admin / diagnostic stages...) is rejected.
  */
-export const forbiddenKeywords: string[] = [
+export const allowedCustomStageOperators: string[] = [
+  '$addFields',
+  '$bucket',
+  '$bucketAuto',
+  '$count',
+  '$densify',
+  '$facet',
+  '$fill',
+  '$group',
+  '$limit',
+  '$match',
+  '$project',
+  '$redact',
+  '$replaceRoot',
+  '$replaceWith',
+  '$sample',
+  '$set',
+  '$setWindowFields',
+  '$skip',
+  '$sort',
+  '$sortByCount',
+  '$unset',
+  '$unwind',
+];
+
+/**
+ * Operators that must never appear anywhere in a custom stage, at any depth
+ * (e.g. inside a $facet sub-pipeline or an expression), because they read
+ * other collections, write to the database or execute server-side JavaScript.
+ */
+export const forbiddenPipelineOperators: string[] = [
   '$accumulator',
+  '$changeStream',
+  '$collStats',
+  '$currentOp',
+  '$documents',
   '$function',
   '$graphLookup',
-  '$unionWith',
+  '$indexStats',
+  '$listLocalSessions',
+  '$listSampledQueries',
+  '$listSearchIndexes',
+  '$listSessions',
   '$lookup',
+  '$merge',
+  '$out',
+  '$planCacheStats',
+  '$queryStats',
+  '$search',
+  '$searchMeta',
+  '$shardedDataDistribution',
+  '$unionWith',
+  '$vectorSearch',
+  '$where',
 ];

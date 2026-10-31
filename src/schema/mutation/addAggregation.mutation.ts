@@ -12,6 +12,10 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 import { getErrorMessage, getErrorStack } from '@utils/error';
+import {
+  getCustomStageErrorKey,
+  validatePipelineCustomStages,
+} from '@utils/aggregation/parseCustomStage';
 
 /** Arguments for the addDashboard mutation */
 type AddAggregationArgs = {
@@ -38,6 +42,12 @@ export default {
         throw new GraphQLError(
           context.i18next.t('mutations.aggregation.add.errors.invalidArguments')
         );
+      }
+      // Reject custom stages using forbidden operators before saving them
+      try {
+        validatePipelineCustomStages(args.aggregation.pipeline);
+      } catch (err) {
+        throw new GraphQLError(context.i18next.t(getCustomStageErrorKey(err)));
       }
       const user = context.user;
       const ability: AppAbility = user.ability;

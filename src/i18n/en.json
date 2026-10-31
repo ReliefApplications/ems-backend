@@ -287,6 +287,13 @@
 				}
 			}
 		},
+		"role": {
+			"edit": {
+				"errors": {
+					"globalPermissions": "Application roles cannot hold back-office permissions."
+				}
+			}
+		},
 		"step": {
 			"add": {
 				"errors": {
@@ -300,9 +307,15 @@
 			}
 		},
 		"user": {
+			"add": {
+				"errors": {
+					"invalidRoles": "Roles must belong to the application."
+				}
+			},
 			"edit": {
 				"errors": {
-					"invalidArguments": "Either groups or roles must be provided."
+					"invalidArguments": "Either groups or roles must be provided.",
+					"invalidRoles": "Roles must belong to the application."
 				}
 			}
 		},
@@ -337,6 +350,7 @@
 		},
 		"email": {
 			"errors": {
+				"invalidAttachmentsFolder": "The attachments folder is invalid.",
 				"missingFile": "No file detected."
 			},
 			"subscription": {
@@ -372,6 +386,7 @@
 				"duplicateCustomId": "Row {{row}}: the _id value \"{{value}}\" is duplicated within the file. Each _id must be unique.",
 				"existingCustomId": "Row {{row}}: a record with _id \"{{value}}\" already exists in the system.",
 				"invalidCustomId": "Row {{row}}: the value \"{{value}}\" in the _id column is not a valid 24-character hexadecimal MongoDB ID.",
+				"invalidInsertParameters": "Records must be a list, and parameters must provide convertTo, mapping and uniqueIdentifiers.",
 				"invalidUserUpload": "Please provide email and role for each user.",
 				"missingFile": "No file detected.",
 				"noRecordsToInsert": "No records were provided for insertion.",
@@ -392,6 +407,7 @@
 		"aggregation": {
 			"buildPipeline": {
 				"errors": {
+					"forbiddenCustomStage": "Custom stage uses an operator that is not allowed.",
 					"invalidCustomStage": "Custom stage cannot be parsed correctly."
 				}
 			}

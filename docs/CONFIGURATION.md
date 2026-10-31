@@ -22,6 +22,7 @@ The server checks the following keys at startup ([checkConfig.util.ts](../src/ut
 | `SERVER_URL` | `server.url` | – | Public URL of the API. **Mandatory** |
 | `SERVER_ALLOWED_ORIGINS` | `server.allowedOrigins` | `[]` | Origins allowed by CORS. **Mandatory** |
 | `SERVER_PROTECTED_SHORTCUTS` | `server.protectedShortcuts` | `[]` | Reserved shortcuts that cannot be used by applications. **Mandatory** |
+| `SERVER_TRUST_PROXY` | `server.trustProxy` | `false` | Express [`trust proxy`](https://expressjs.com/en/guide/behind-proxies.html) setting, parsed as JSON: the number of proxies in front of the server (`2` in the WHO environments, behind Azure Front Door and App Service, set in [config/who.js](../config/who.js)), so `req.ip` and the rate limiter see the client's address. Check `req.ips` after deploy |
 
 ### Front-ends
 

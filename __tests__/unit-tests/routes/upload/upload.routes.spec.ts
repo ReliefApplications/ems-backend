@@ -295,7 +295,7 @@ describe('Upload routes', () => {
 
       expect(response.status).toBe(403);
       expect(response.text).toEqual(
-        i18next.t('common.errors.dataNotFound')
+        i18next.t('common.errors.permissionNotGranted')
       );
       expect(getNextId).not.toHaveBeenCalled();
       expect(await Record.countDocuments({ form: form._id })).toEqual(0);

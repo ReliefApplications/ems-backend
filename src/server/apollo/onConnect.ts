@@ -21,8 +21,19 @@ export default (ctx: Context) => {
   ) {
     const request = ctx.extra.request;
     request.headers.authorization = `Bearer ${connectionParams.authToken}`;
-    return new Promise((res) => {
+    return new Promise((res, rej) => {
       graphqlMiddleware(request, {} as any, () => {
+        // The middleware calls next() even when the token is invalid: refuse the connection then
+        if (!(request as any).user) {
+          rej(
+            new GraphQLError(i18next.t('common.errors.userNotLogged'), {
+              extensions: {
+                code: 'UNAUTHENTICATED',
+              },
+            })
+          );
+          return;
+        }
         res(request);
       });
     });

@@ -78,7 +78,11 @@ describe('insertRecords (bulk upload uniqueness enforcement)', () => {
         name: 'Test User',
         username: 'test@user.com',
         roles: [{ _id: new Types.ObjectId() }],
-        ability: { can: jest.fn().mockReturnValue(true) },
+        // Ability granting everything: the records ability is not extended
+        ability: {
+          can: jest.fn().mockReturnValue(true),
+          cannot: jest.fn().mockReturnValue(false),
+        },
       },
     };
   });

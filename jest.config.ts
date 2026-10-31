@@ -27,11 +27,17 @@ module.exports = {
   testMatch: ['**/__tests__/**/*.spec.ts'],
   collectCoverageFrom: ['src/**/*.{js,jsx,ts,tsx}'],
   transform: {
-    '^.+\\.tsx?$': [
+    '^.+\\.[tj]sx?$': [
       'ts-jest',
       { tsconfig: '<rootDir>/__tests__/tsconfig.json' },
     ],
   },
+  // sanitize-html >= 2.18 depends on htmlparser2 >= 12 and its dom-* siblings, which ship
+  // ESM only. Node resolves them at runtime but Jest's CommonJS loader cannot, so these
+  // packages (hoisted or nested under sanitize-html) are compiled to CommonJS by ts-jest.
+  transformIgnorePatterns: [
+    '/node_modules/(?!(?:sanitize-html/node_modules/)?(?:htmlparser2|domhandler|domutils|entities|dom-serializer|domelementtype)/)',
+  ],
   // A map from regular expressions to module names or to arrays of module names that allow to stub out resources with a single module
   moduleNameMapper: pathsToModuleNameMapper(paths, {
     prefix: '<rootDir>/src/',

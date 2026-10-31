@@ -287,6 +287,13 @@
 				}
 			}
 		},
+		"role": {
+			"edit": {
+				"errors": {
+					"globalPermissions": "Ролі додатка не можуть мати дозволи бек-офісу."
+				}
+			}
+		},
 		"step": {
 			"add": {
 				"errors": {
@@ -300,9 +307,15 @@
 			}
 		},
 		"user": {
+			"add": {
+				"errors": {
+					"invalidRoles": "Ролі повинні належати додатку."
+				}
+			},
 			"edit": {
 				"errors": {
-					"invalidArguments": "Необхідно надати groups або Ролі."
+					"invalidArguments": "Необхідно надати groups або Ролі.",
+					"invalidRoles": "Ролі повинні належати додатку."
 				}
 			}
 		},
@@ -337,6 +350,7 @@
 		},
 		"email": {
 			"errors": {
+				"invalidAttachmentsFolder": "Папка вкладень недійсна.",
 				"missingFile": "Файл не виявлено."
 			},
 			"subscription": {
@@ -372,6 +386,7 @@
 				"duplicateCustomId": "Рядок {{row}}: значення _id \"{{value}}\" повторюється у файлі. Кожен _id має бути унікальним.",
 				"existingCustomId": "Рядок {{row}}: запис з _id \"{{value}}\" вже існує в системі.",
 				"invalidCustomId": "Рядок {{row}}: значення \"{{value}}\" у стовпці _id не є дійсним 24-символьним шістнадцятковим ідентифікатором MongoDB.",
+				"invalidInsertParameters": "Записи повинні бути списком, а параметри повинні містити convertTo, mapping та uniqueIdentifiers.",
 				"invalidUserUpload": "Будь ласка, вкажіть email та Роль для кожного користувача.",
 				"missingFile": "Файл не виявлено.",
 				"noRecordsToInsert": "Не було надано записів для вставки.",
@@ -392,6 +407,7 @@
 		"aggregation": {
 			"buildPipeline": {
 				"errors": {
+					"forbiddenCustomStage": "Власний етап використовує недозволений оператор.",
 					"invalidCustomStage": "Власний етап не вдалося коректно проаналізувати."
 				}
 			}

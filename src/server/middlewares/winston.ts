@@ -1,6 +1,5 @@
 import expressWinston from 'express-winston';
 import { transports, format } from 'winston';
-import config from 'config';
 import winston from 'winston';
 
 /**
@@ -59,12 +58,17 @@ const loggerTransports: winston.transport[] = [
 ];
 
 //
-// If we're not in production then log to the `console` with the format:
-// `${info.level}: ${info.message} JSON.stringify({ ...rest }) `
+// Log to the `console` in every environment, so the logs show up in the App Service Log stream,
+// with the format: `${info.level}: ${info.message} JSON.stringify({ ...rest }) `
 //
-if (config.util.getEnv('NODE_ENV') !== 'production') {
-  loggerTransports.push(new transports.Console());
-}
+loggerTransports.push(new transports.Console());
+
+/**
+ * Colors the level outside production only: in production the console is read
+ * raw ( App Service Log stream ), where color codes show up as noise.
+ */
+const colorize =
+  process.env.NODE_ENV === 'production' ? [] : [format.colorize()];
 
 /**
  * Custom winston logger.
@@ -79,7 +83,7 @@ export const winstonLogger = expressWinston.logger({
   },
   requestFilter: customRequestFilter,
   format: format.combine(
-    format.colorize(), //Needs to be at the first position, otherwise there will be no colors.
+    ...colorize, //Needs to be at the first position, otherwise there will be no colors.
     format.timestamp(),
     customFormat
   ),

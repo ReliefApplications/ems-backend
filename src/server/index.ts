@@ -4,6 +4,8 @@ import {
   corsMiddleware,
   authMiddleware,
   graphqlMiddleware,
+  securityHeadersMiddleware,
+  noStoreMiddleware,
 } from './middlewares';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
@@ -19,7 +21,9 @@ import context, { Context } from './apollo/context';
 import { WebSocketServer } from 'ws';
 import { useServer } from 'graphql-ws/lib/use/ws';
 import onConnect from './apollo/onConnect';
+import formatError, { isProduction } from './apollo/formatError';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+import config from 'config';
 import {
   INTROSPECTION_QUERY,
   IntrospectionResult as IntrospectionQueryResult,
@@ -69,6 +73,8 @@ class SafeServer {
     introspectionResult = null;
     // === EXPRESS ===
     this.app = express();
+    // Number of proxies in front of the server ( Azure Front Door, App Service ), so req.ip is the client's
+    this.app.set('trust proxy', config.get('server.trustProxy'));
 
     // === REQUEST SIZE ===
     this.app.use('/upload/resource/insert', express.json({ limit: '100mb' }));
@@ -77,6 +83,8 @@ class SafeServer {
 
     // === ADD MIDDLEWARES ===
     this.app.use(winstonLogger);
+    this.app.use(securityHeadersMiddleware);
+    this.app.use(noStoreMiddleware);
 
     i18next
       .use(Backend)
@@ -111,7 +119,11 @@ class SafeServer {
     this.apolloServer = new ApolloServer<Context>({
       schema: schema,
       introspection: true,
+      // Never return stack traces or raw internal error messages in production
+      includeStacktraceInErrorResponses: !isProduction,
+      formatError,
       plugins: [
+        // Kept in every environment, its content security policy is relaxed in securityHeaders
         ApolloServerPluginLandingPageLocalDefault(),
         // Proper shutdown for the WebSocket server.
         {

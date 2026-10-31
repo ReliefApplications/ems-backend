@@ -1,6 +1,7 @@
 import { Borders, Fill, Workbook } from 'exceljs';
 import { RecordHistory, RecordHistoryMeta, Change } from '@models';
 import getTimeWithTimezone from '@utils/date/getTimeWithTimezone';
+import { sanitizeCellValue } from './format.helper';
 
 /**
  * Check if an object value is detected in the change.
@@ -182,7 +183,7 @@ const historyBuilder = async (
   for (const prop in meta) {
     const metaTitle = options.translate(`history.headers.${prop}`);
     if (prop === 'exportDate') worksheet.addRow([]);
-    worksheet.addRow([metaTitle, meta[prop]]);
+    worksheet.addRow([metaTitle, sanitizeCellValue(meta[prop])]);
   }
 
   // styling for metadata section
@@ -254,7 +255,8 @@ const historyBuilder = async (
       }
     }
   });
-  worksheet.addRows(changeRows);
+  // Field names and values come from records: neutralise formula-like texts
+  worksheet.addRows(changeRows.map((row) => row.map(sanitizeCellValue)));
   whiteText.forEach((row) => {
     if (row > 0) {
       ['A', 'B', 'C'].forEach((col) => {
