@@ -89,14 +89,12 @@ describe('POST /email - attachments folder (H-08 path traversal)', () => {
   });
 
   it('reads and deletes only the folder of the given id', async () => {
-    const res = await request(buildApp())
-      .post('/email')
-      .send({
-        recipient: 'a@who.int',
-        subject: 'Hi',
-        body: 'Hello',
-        files: FOLDER_ID,
-      });
+    const res = await request(buildApp()).post('/email').send({
+      recipient: 'a@who.int',
+      subject: 'Hi',
+      body: 'Hello',
+      files: FOLDER_ID,
+    });
     expect(res.status).toBe(200);
     expect(listFolderFiles).toHaveBeenCalledWith('temp', FOLDER_ID);
     expect(downloadFile).toHaveBeenCalledWith(
@@ -171,14 +169,12 @@ describe('POST /email - attachments folder (H-08 path traversal)', () => {
       { name: `${FOLDER_ID}/../../escape.txt` },
       { name: `${FOLDER_ID}/ok.txt` },
     ]);
-    await request(buildApp())
-      .post('/email')
-      .send({
-        recipient: 'a@who.int',
-        subject: 'Hi',
-        body: 'Hello',
-        files: FOLDER_ID,
-      });
+    await request(buildApp()).post('/email').send({
+      recipient: 'a@who.int',
+      subject: 'Hi',
+      body: 'Hello',
+      files: FOLDER_ID,
+    });
     for (const call of (downloadFile as jest.Mock).mock.calls) {
       expect(insideRoot(call[2])).toBe(true);
       expect(call[2]).not.toContain('..');
