@@ -1,3 +1,10 @@
+## [2.17.2](https://github.com/ReliefApplications/ems-backend/compare/v2.17.1...v2.17.2) (2026-11-02)
+
+
+### Bug Fixes
+
+* users with changing oid couldn't connect ([d5ccff3](https://github.com/ReliefApplications/ems-backend/commit/d5ccff3ff3ce1e210f975a860e88a73fe79fa269))
+
 ## [2.17.1](https://github.com/ReliefApplications/ems-backend/compare/v2.17.0...v2.17.1) (2026-07-28)
 
 
