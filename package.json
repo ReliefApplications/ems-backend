@@ -96,7 +96,7 @@
     "passport-azure-ad": "^4.3.4",
     "passport-keycloak-bearer": "^2.4.0",
     "pug": "^3.0.2",
-    "redis": "^4.6.7",
+    "redis": "^6.3.0",
     "sanitize-filename": "^1.6.3",
     "sanitize-html": "^2.18.1",
     "sass": "^1.99.0",
