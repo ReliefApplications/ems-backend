@@ -36,13 +36,18 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
     new KeycloackBearerStrategy(credentials, (token, done) => {
       // === USER ===
       if (token.name) {
-        // Checks if user already exists in the DB (identity id first, username only for never-logged accounts)
-        findUserByToken({ oid: token.sub, username: token.email })
+        // Checks if user already exists in the DB (identity id first, then username:
+        // a single realm is trusted, so an account recreated in it keeps its access)
+        findUserByToken(
+          { oid: token.sub, username: token.email },
+          { allowIdentityChange: true }
+        )
           .then((user) => {
             if (user) {
               // Returns the user if found
               // return done(null, user, token);
-              if (!user.oid) {
+              // Never logged in, or account recreated in the realm: bind it to the token identity
+              if (user.oid !== token.sub) {
                 user.firstName = token.given_name;
                 user.lastName = token.family_name;
                 user.name = token.name;
@@ -137,15 +142,21 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
       try {
         // === USER ===
         if (token.name) {
-          // Checks if user already exists in the DB (identity id first, username only for never-logged accounts)
-          findUserByToken({
-            oid: token.oid,
-            username: token.preferred_username,
-          })
+          // Checks if user already exists in the DB (identity id first, then username:
+          // for any account when a single tenant is trusted, so an account recreated in
+          // it keeps its access; else only for never-logged accounts)
+          findUserByToken(
+            {
+              oid: token.oid,
+              username: token.preferred_username,
+            },
+            { allowIdentityChange: !!config.get('auth.tenantId') }
+          )
             .then((user) => {
               if (user) {
                 // Returns the user if found but update it if needed
-                if (!user.oid) {
+                // Never logged in, or account recreated in the tenant: bind it to the token identity
+                if (user.oid !== token.oid) {
                   user.firstName = token.given_name;
                   user.lastName = token.family_name;
                   user.name = token.name;

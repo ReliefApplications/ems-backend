@@ -88,6 +88,53 @@ describe('findPrincipal (L-05)', () => {
       await expect(findUserByToken({})).resolves.toBeNull();
       expect(User.findOne).not.toHaveBeenCalled();
     });
+
+    describe('with allowIdentityChange (single trusted directory)', () => {
+      it('still matches the identity id first', async () => {
+        const bound = { _id: 'bound', oid: OID };
+        mockFindOne([[(f) => f.oid === OID, bound]]);
+        await expect(
+          findUserByToken(
+            { oid: OID, username: 'someone@who.int' },
+            { allowIdentityChange: true }
+          )
+        ).resolves.toBe(bound);
+        expect(User.findOne).toHaveBeenCalledTimes(1);
+      });
+
+      it('returns the account bound to a previous identity id with the same username', async () => {
+        const recreated = {
+          _id: new Types.ObjectId(),
+          username: 'someone@who.int',
+          oid: new Types.ObjectId().toHexString(),
+        };
+        mockFindOne([
+          [(f) => f.username === 'someone@who.int' && !('oid' in f), recreated],
+        ]);
+        await expect(
+          findUserByToken(
+            { oid: OID, username: 'someone@who.int' },
+            { allowIdentityChange: true }
+          )
+        ).resolves.toBe(recreated);
+        expect(User.findOne).toHaveBeenLastCalledWith({
+          username: 'someone@who.int',
+        });
+      });
+
+      it('keeps the never-logged filter when the token has no identity id', async () => {
+        mockFindOne([]);
+        await findUserByToken(
+          { username: 'someone@who.int' },
+          { allowIdentityChange: true }
+        );
+        expect(User.findOne).toHaveBeenCalledTimes(1);
+        expect(User.findOne).toHaveBeenCalledWith({
+          username: 'someone@who.int',
+          oid: null,
+        });
+      });
+    });
   });
 
   describe('findClientByToken', () => {

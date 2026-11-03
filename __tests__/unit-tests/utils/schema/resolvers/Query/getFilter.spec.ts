@@ -30,6 +30,9 @@ const EMERGENCY_FIELDS = [
   { name: 'grade', type: 'dropdown', choices: [] },
 ];
 
+/**
+ *
+ */
 const CONTEXT = {
   resourceFieldsById: { emergencyResourceId: EMERGENCY_FIELDS },
 };

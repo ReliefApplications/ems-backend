@@ -66,7 +66,7 @@ const client = {
   ability: {},
 };
 
-/** Valid insert body, as sent by the pull function */
+/** @returns Valid insert body, as sent by the pull function */
 const insertBody = () => ({
   records: [{ EventID: 1, Title: 'Outbreak' }],
   parameters: {
