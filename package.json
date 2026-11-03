@@ -1,6 +1,6 @@
 {
   "name": "ems-backend",
-  "version": "2.18.0-rc.19",
+  "version": "2.18.0-rc.20",
   "description": "",
   "main": "index.js",
   "scripts": {
