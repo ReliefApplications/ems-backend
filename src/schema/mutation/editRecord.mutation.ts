@@ -6,26 +6,17 @@ import {
   GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import {
-  Channel,
-  Form,
-  Notification,
-  Record,
-  Resource,
-  Version,
-} from '@models';
+import { Form, Record, Resource, Version } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
-import { getFormPermissionFilter } from '@utils/filter';
 import {
   transformRecord,
   getOwnership,
   checkRecordValidation,
   checkRecordTriggers,
-  hasInaccessibleFields,
+  canEditRecord,
   validateUniqueness,
   UniquenessError,
   logUniquenessError,
-  getNextId,
 } from '@utils/form';
 import { RecordType } from '../types';
 import { Types } from 'mongoose';
@@ -33,7 +24,6 @@ import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 import { getErrorMessage, getErrorStack } from '@utils/error';
-import pubsub from '../../server/pubsub';
 
 /** Arguments for the editRecord mutation */
 export type EditRecordArgs = {
@@ -43,94 +33,15 @@ export type EditRecordArgs = {
   template?: string | Types.ObjectId;
   lang?: string;
   draft?: boolean;
-  updateDraftStatus?: boolean;
   skipValidation: boolean;
-};
-
-/**
- * Publishes a notification when a draft becomes a submitted record.
- *
- * @param record Published record.
- * @param form Parent form.
- */
-const publishDraftSubmissionNotification = async (
-  record: Record,
-  form: Form
-): Promise<void> => {
-  const channel = await Channel.findOne({ form: form._id });
-  if (!channel) {
-    return;
-  }
-
-  const notification = new Notification({
-    action: `New record published - ${form.name}`,
-    content: record,
-    channel: channel.id,
-    seenBy: [],
-  });
-  await notification.save();
-  const publisher = await pubsub();
-  publisher.publish(channel.id, { notification });
-};
-
-/**
- * Builds updates needed when converting a draft into a submitted record.
- *
- * @param oldRecord Existing draft record.
- * @param form Parent form.
- * @param user Current user.
- * @param context GraphQL context.
- * @returns Update fields for draft publication.
- */
-const getDraftPublicationUpdate = async (
-  oldRecord: Record,
-  form: Form,
-  user: Context['user'],
-  context: Context
-): Promise<Partial<Record>> => {
-  if (
-    form.permissions.recordsUnicity &&
-    form.permissions.recordsUnicity.length > 0 &&
-    form.permissions.recordsUnicity[0].role
-  ) {
-    const unicityFilters = getFormPermissionFilter(
-      user,
-      form,
-      'recordsUnicity'
-    );
-    if (unicityFilters.length > 0) {
-      const uniqueRecordAlreadyExists = await Record.exists({
-        $and: [
-          {
-            form: form._id,
-            archived: { $ne: true },
-            draft: { $ne: true },
-            _id: { $ne: oldRecord._id },
-          },
-          { $or: unicityFilters },
-        ],
-      });
-      if (uniqueRecordAlreadyExists) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
-      }
-    }
-  }
-
-  return {
-    draft: false,
-    ...(!oldRecord.incrementalId && {
-      incrementalId: await getNextId(
-        String(form.resource ? form.resource : oldRecord.form)
-      ),
-    }),
-  };
 };
 
 /**
  * Edit an existing record.
  * Create also an new version to store previous configuration.
+ * Drafts are edited in place, without validation nor history. A draft is
+ * submitted with the addRecord mutation, which creates the record and deletes
+ * the draft.
  */
 export default {
   type: RecordType,
@@ -141,7 +52,6 @@ export default {
     template: { type: GraphQLID },
     lang: { type: GraphQLString },
     draft: { type: GraphQLBoolean },
-    updateDraftStatus: { type: GraphQLBoolean },
     skipValidation: { type: GraphQLBoolean, defaultValue: false },
   },
   async resolve(parent, args: EditRecordArgs, context: Context) {
@@ -174,12 +84,10 @@ export default {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
 
-      // Check permissions with two layers
+      // Check permissions: drafts are records being created, so they follow
+      // the permission to add records
       const ability = await extendAbilityForRecords(user, parentForm);
-      if (
-        ability.cannot('update', oldRecord) ||
-        hasInaccessibleFields(oldRecord, args.data, ability, parentResource)
-      ) {
+      if (!canEditRecord(oldRecord, args.data, ability, parentResource, user)) {
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
@@ -196,16 +104,7 @@ export default {
         return triggeredRecord;
       }
 
-      // A submitted record cannot be turned back into a draft
-      if (args.updateDraftStatus === true && oldRecord.draft !== true) {
-        throw new GraphQLError(
-          context.i18next.t('mutations.record.edit.errors.cannotDemoteToDraft')
-        );
-      }
-
-      const publishingDraft =
-        oldRecord.draft === true && args.updateDraftStatus === false;
-      const savingDraft = oldRecord.draft === true && !publishingDraft;
+      const savingDraft = oldRecord.draft === true;
 
       // Update record
       // Put a try catch for record validation + check the structure of this form
@@ -282,7 +181,7 @@ export default {
       }
 
       // Check uniqueness rules configured on the resource, if any. As for the
-      // validation, drafts are only checked once published
+      // validation, drafts are only checked once submitted
       if (!savingDraft) {
         const uniquenessResult = await validateUniqueness(
           newData,
@@ -309,8 +208,8 @@ export default {
       }
       // Generate new version, from current data. Drafts have no history:
       // every auto-save would otherwise add a version, so the record is
-      // edited in place until it is published
-      const version = oldRecord.draft
+      // edited in place until it is submitted
+      const version = savingDraft
         ? null
         : new Version({
             createdAt: oldRecord.modifiedAt
@@ -337,19 +236,6 @@ export default {
             },
           },
         };
-        if (args.updateDraftStatus !== undefined) {
-          Object.assign(
-            update,
-            publishingDraft
-              ? await getDraftPublicationUpdate(
-                  oldRecord,
-                  parentForm,
-                  user,
-                  context
-                )
-              : { draft: args.updateDraftStatus }
-          );
-        }
         const ownership = getOwnership(fields, args.data); // Update with template during merge
         Object.assign(
           update,
@@ -360,9 +246,6 @@ export default {
         });
         if (version) {
           await version.save();
-        }
-        if (publishingDraft && record) {
-          await publishDraftSubmissionNotification(record, parentForm);
         }
         return record;
       } else {
@@ -383,28 +266,11 @@ export default {
           },
           ...(version && { $push: { versions: version._id } }),
         };
-        if (args.updateDraftStatus !== undefined) {
-          Object.assign(
-            update,
-            publishingDraft
-              ? await getDraftPublicationUpdate(
-                  oldRecord,
-                  parentForm,
-                  user,
-                  context
-                )
-              : { draft: args.updateDraftStatus }
-          );
-        }
         const record = Record.findByIdAndUpdate(args.id, update, { new: true });
         if (version) {
           await version.save();
         }
-        const updatedRecord = await record;
-        if (publishingDraft && updatedRecord) {
-          await publishDraftSubmissionNotification(updatedRecord, parentForm);
-        }
-        return updatedRecord;
+        return await record;
       }
     } catch (err) {
       if (err instanceof UniquenessError) {

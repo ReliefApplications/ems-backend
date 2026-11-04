@@ -138,87 +138,50 @@ describe('editRecord Resolver', () => {
       expect(await Version.countDocuments()).toEqual(versionsBefore);
     });
 
-    it('should start the history of a published draft from its publication', async () => {
+    it('should let the author edit a draft with the permission to add records only', async () => {
+      (extendAbilityForRecords as jest.Mock).mockResolvedValue({
+        can: jest.fn((action: string) => action === 'create'),
+        cannot: jest.fn((action: string) => action !== 'create'),
+      });
       const draft = await createRecord(true);
-      const versionsBefore = await Version.countDocuments();
-      const published = await editRecord.resolve(
-        null,
-        buildArgs({
-          id: draft.id,
-          data: { description: 'published' },
-          updateDraftStatus: false,
-        }),
-        context
-      );
-      expect(published.versions).toHaveLength(0);
-      expect(await Version.countDocuments()).toEqual(versionsBefore);
-
-      // Once published, edits are versioned as for any record
-      const edited = await editRecord.resolve(
+      const record = await editRecord.resolve(
         null,
         buildArgs({ id: draft.id, data: { description: 'edited' } }),
         context
       );
-      expect(edited.versions).toHaveLength(1);
-      expect(await Version.countDocuments()).toEqual(versionsBefore + 1);
-      const version = await Version.findById(edited.versions[0]);
-      expect(version.data.description).toEqual('published');
+      expect(record.data.description).toEqual('edited');
     });
 
-    it('should publish a draft, with validation and an incremental id', async () => {
+    it('should not edit a draft without the permission to add records', async () => {
+      (extendAbilityForRecords as jest.Mock).mockResolvedValue({
+        can: jest.fn((action: string) => action === 'update'),
+        cannot: jest.fn((action: string) => action !== 'update'),
+      });
       const draft = await createRecord(true);
-      const record = await editRecord.resolve(
-        null,
-        buildArgs({
-          id: draft.id,
-          data: { description: 'published' },
-          updateDraftStatus: false,
-        }),
-        context
-      );
-      expect(record.draft).toBe(false);
-      expect(record.incrementalId).toMatch(/^2026-P\d{8}$/);
-      expect(checkRecordValidation).toHaveBeenCalled();
-    });
-
-    it('should not publish a draft with validation errors', async () => {
-      const draft = await createRecord(true);
-      (checkRecordValidation as jest.Mock).mockReturnValue([
-        { question: 'description', errors: ['Required'] },
-      ]);
-      const record = (await editRecord.resolve(
-        null,
-        buildArgs({
-          id: draft.id,
-          data: { description: '' },
-          updateDraftStatus: false,
-        }),
-        context
-      )) as RecordWithValidationErrors;
-      expect(record.validationErrors).toHaveLength(1);
+      await expect(
+        editRecord.resolve(
+          null,
+          buildArgs({ id: draft.id, data: { description: 'edited' } }),
+          context
+        )
+      ).rejects.toThrow('common.errors.permissionNotGranted');
       const stored = await Record.findById(draft._id);
-      expect(stored.draft).toBe(true);
-      expect(stored.incrementalId).toBeUndefined();
+      expect(stored.data.description).toEqual('initial');
     });
 
-    it('should not turn a submitted record into a draft', async () => {
-      const submitted = await createRecord(false);
-      const result = editRecord.resolve(
-        null,
-        buildArgs({
-          id: submitted.id,
-          data: { description: 'demoted' },
-          updateDraftStatus: true,
-        }),
-        context
+    it('should not edit the draft of another user', async () => {
+      const draft = await createRecord(true);
+      await Record.updateOne(
+        { _id: draft._id },
+        { 'createdBy.user': new Types.ObjectId() }
       );
-      await expect(result).rejects.toThrow(GraphQLError);
-      expect(context.i18next.t).toHaveBeenCalledWith(
-        'mutations.record.edit.errors.cannotDemoteToDraft'
-      );
-      const stored = await Record.findById(submitted._id);
-      expect(stored.draft).toBe(false);
-      expect(stored.data.description).toEqual('initial');
+      await expect(
+        editRecord.resolve(
+          null,
+          buildArgs({ id: draft.id, data: { description: 'edited' } }),
+          context
+        )
+      ).rejects.toThrow('common.errors.permissionNotGranted');
     });
 
     it('should keep editing a submitted record when no draft status is given', async () => {
@@ -257,6 +220,7 @@ describe('editRecord Resolver', () => {
         resource: uniqueResource._id,
         data: { org_code: orgCode },
         draft,
+        createdBy: { user: context.user._id },
       });
 
     beforeEach(async () => {
@@ -423,22 +387,6 @@ describe('editRecord Resolver', () => {
       );
       expect(updated.draft).toBe(true);
       expect(updated.data.org_code).toEqual('ABC');
-    });
-
-    it('should not publish a draft with a duplicate value', async () => {
-      const draft = await createUniqueRecord('ABC', true);
-      const result = editRecord.resolve(
-        null,
-        buildArgs({
-          id: draft.id,
-          data: { org_code: 'ABC' },
-          updateDraftStatus: false,
-        }),
-        context
-      );
-      await expect(result).rejects.toThrow(GraphQLError);
-      const stored = await Record.findById(draft._id);
-      expect(stored.draft).toBe(true);
     });
   });
 });

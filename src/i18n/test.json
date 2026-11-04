@@ -223,7 +223,8 @@
 			"add": {
 				"errors": {
 					"invalidCloneRecordId": "******",
-					"invalidCloneRecordResource": "******"
+					"invalidCloneRecordResource": "******",
+					"invalidDraftRecord": "******"
 				}
 			},
 			"convert": {
@@ -233,7 +234,6 @@
 			},
 			"edit": {
 				"errors": {
-					"cannotDemoteToDraft": "******",
 					"invalidArguments": "******",
 					"wrongTemplateProvided": "******"
 				}

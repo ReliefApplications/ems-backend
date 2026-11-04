@@ -13,7 +13,7 @@ import {
   transformRecord,
   getOwnership,
   checkRecordValidation,
-  hasInaccessibleFields,
+  canEditRecord,
   validateUniqueness,
   validateBatchUniqueness,
   UniquenessError,
@@ -94,10 +94,8 @@ export default {
           record.form.resource,
           'fields uniquenessRules'
         );
-        if (
-          ability.can('update', record) &&
-          !hasInaccessibleFields(record, args.data, ability, parentResource)
-        ) {
+        // Drafts follow the permission to add records
+        if (canEditRecord(record, args.data, ability, parentResource, user)) {
           const validationErrors = checkRecordValidation(
             record,
             args.data,
