@@ -14,6 +14,7 @@ import mongoose from 'mongoose';
 import buildReferenceDataAggregation from '@utils/aggregation/buildReferenceDataAggregation';
 import { getAccessibleFields } from '@utils/form';
 import { CalculatedFieldService } from '@services/calculatedField.service';
+import addRelatedCalculatedFields from './addRelatedCalculatedFields';
 import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { flatten, get, isArray } from 'lodash';
@@ -711,6 +712,22 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             ...getDraftRecordFilter(),
           },
           projection
+        );
+        // Calculated fields are not stored: compute the ones requested on
+        // the related records ( e.g. displayed as a grid column )
+        await addRelatedCalculatedFields(
+          relatedRecords,
+          resourcesFields.concat(relatedFields).map((x: any) => ({
+            entityName:
+              x.relatedEntityName ??
+              Object.keys(idsByName).find(
+                (key) => idsByName[key] == x.resource
+              ),
+            fields: x.fields,
+          })),
+          fieldsByName,
+          idsByName,
+          context
         );
         // Update items
         for (const item of itemsToUpdate) {
