@@ -45,6 +45,26 @@ export const downloadFile = async (
 };
 
 /**
+ * Download a file from Azure storage, in memory.
+ *
+ * @param containerName Azure blob container name.
+ * @param blobName Azure blob name.
+ * @returns content of the file.
+ */
+export const downloadFileBuffer = async (
+  containerName: string,
+  blobName: string
+): Promise<Buffer> => {
+  const blobServiceClient = BlobServiceClient.fromConnectionString(
+    AZURE_STORAGE_CONNECTION_STRING
+  );
+  return blobServiceClient
+    .getContainerClient(containerName)
+    .getBlockBlobClient(blobName)
+    .downloadToBuffer();
+};
+
+/**
  * List files in a blob folder
  *
  * @param containerName container name

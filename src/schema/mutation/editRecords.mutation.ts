@@ -18,7 +18,8 @@ import {
   validateBatchUniqueness,
   UniquenessError,
   logUniquenessError,
-  clearDraftFiles,
+  submitRecordDraftFiles,
+  createDraftFilesCache,
   getNestedDrafts,
   submitNestedDrafts,
   NestedDraft,
@@ -137,10 +138,6 @@ export default {
               fields = template.fields;
             }
             transformRecord(data, fields);
-            // Draft files only exist in drafts
-            if (!record.draft) {
-              clearDraftFiles(data, fields);
-            }
             editions.push({
               record,
               resource: parentResource,
@@ -214,6 +211,19 @@ export default {
             await getNestedDrafts(edition.data, edition.fields, context)
           );
         }
+      }
+      // Draft files only exist in drafts: the ones of the submitted records,
+      // and of the drafts submitted along with them, reach their final
+      // storage first. A file shared by the records is only uploaded once
+      const draftFilesCache = createDraftFilesCache();
+      for (const [edition, drafts] of nestedDrafts) {
+        await submitRecordDraftFiles(
+          edition.data,
+          edition.fields,
+          drafts,
+          context,
+          draftFilesCache
+        );
       }
 
       // Apply the editions

@@ -8,6 +8,11 @@ import { logger } from '@services/logger.service';
 import { getErrorMessage, getErrorStack } from '@utils/error';
 import pubsub from '../../server/pubsub';
 import { getNextId } from './getNextId';
+import {
+  createDraftFilesCache,
+  DraftFilesCache,
+  submitDraftFiles,
+} from './submitDraftFiles';
 import { UniquenessError, validateUniqueness } from './validateUniqueness';
 
 /** Draft record referenced by a submitted record, with the form it belongs to */
@@ -21,27 +26,6 @@ type DraftFormContext = {
   form: Form | null;
   resource: Resource | null;
   canCreate: boolean;
-};
-
-/**
- * Removes the draft flag of the files of a record. Draft files are saved in
- * the back-end storage along with a draft record: once the record is
- * submitted, a file still there is in its final storage.
- *
- * @param data Data of the record, edited in place
- * @param fields Fields of the form of the record
- * @returns Data of the record
- */
-export const clearDraftFiles = (data: any, fields: any[]): any => {
-  for (const field of fields || []) {
-    const value = field.type === 'file' ? data?.[field.name] : null;
-    if (Array.isArray(value) && value.some((file) => file?.draft)) {
-      data[field.name] = value.map((file) =>
-        file?.draft ? omit(file, 'draft') : file
-      );
-    }
-  }
-  return data;
 };
 
 /**
@@ -100,6 +84,9 @@ const getReferencedIds = (data: any, fields: any[]): string[] => {
  * Nothing is saved: the drafts are only checked, so the record is not saved
  * if one of them cannot be submitted. Only the drafts of the user are
  * submitted, as they are the only ones the user can see and edit.
+ *
+ * Their draft files are moved to their final storage before the record is
+ * saved: see {@link submitRecordDraftFiles}.
  *
  * @param data Data of the record being submitted
  * @param fields Fields of the form of the record
@@ -197,6 +184,49 @@ export const getNestedDrafts = async (
 };
 
 /**
+ * Moves the draft files of a record being submitted to their final storage
+ * ( see {@link submitDraftFiles} ), as well as the ones of the drafts
+ * submitted along with it. Done before the record is saved: if a file cannot
+ * be uploaded, nothing is submitted.
+ *
+ * The files uploaded for a draft are saved in the draft straight away, so
+ * they are not uploaded again if the record is submitted again.
+ *
+ * @param data Data of the record being submitted, edited in place
+ * @param fields Fields of the form of the record
+ * @param nestedDrafts Drafts to submit, from {@link getNestedDrafts}
+ * @param context Request context
+ * @param cache Cache of the request, when it submits several records
+ * @throws If a file cannot be uploaded
+ */
+export const submitRecordDraftFiles = async (
+  data: any,
+  fields: any[],
+  nestedDrafts: NestedDraft[],
+  context: Context,
+  cache: DraftFilesCache = createDraftFilesCache()
+): Promise<void> => {
+  await submitDraftFiles(data, fields, context, cache);
+  for (const { draft, form } of nestedDrafts) {
+    const draftData = { ...draft.data };
+    const editedFields = await submitDraftFiles(
+      draftData,
+      form.fields,
+      context,
+      cache
+    );
+    if (!editedFields.length) {
+      continue;
+    }
+    const update: { [path: string]: any } = {};
+    for (const field of editedFields) {
+      update[`data.${field}`] = draftData[field];
+    }
+    await Record.updateOne({ _id: draft._id, draft: true }, { $set: update });
+  }
+};
+
+/**
  * Submits a draft: as for any submitted draft, a record is inserted from it
  * and the draft is deleted. The record keeps the id of the draft, so the
  * records referencing it are left untouched.
@@ -228,7 +258,6 @@ const submitDraft = async ({
   const record = new Record({
     ...omit(consumedDraft, ['createdAt', 'modifiedAt', '__v']),
     incrementalId,
-    data: clearDraftFiles({ ...consumedDraft.data }, form.fields),
     draft: false,
   });
   try {

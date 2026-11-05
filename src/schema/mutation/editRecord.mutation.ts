@@ -17,7 +17,7 @@ import {
   validateUniqueness,
   UniquenessError,
   logUniquenessError,
-  clearDraftFiles,
+  submitRecordDraftFiles,
   getNestedDrafts,
   submitNestedDrafts,
   NestedDraft,
@@ -183,11 +183,6 @@ export default {
         newData = oldVersion.data;
       } else {
         transformRecord(args.data, fields);
-        // Draft files only exist in drafts: a file still flagged when the
-        // record is submitted stays where it is
-        if (!savingDraft) {
-          clearDraftFiles(args.data, fields);
-        }
         newData = { ...oldRecord.data, ...args.data };
       }
 
@@ -223,6 +218,11 @@ export default {
         savingDraft || args.version
           ? []
           : await getNestedDrafts(newData, fields, context);
+      // Draft files only exist in drafts: the ones of the record, and of the
+      // drafts submitted along with it, reach their final storage first
+      if (!savingDraft && !args.version) {
+        await submitRecordDraftFiles(newData, fields, nestedDrafts, context);
+      }
       // Generate new version, from current data. Drafts have no history:
       // every auto-save would otherwise add a version, so the record is
       // edited in place until it is submitted

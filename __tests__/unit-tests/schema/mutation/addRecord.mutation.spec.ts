@@ -8,6 +8,8 @@ import { logger } from '@services/logger.service';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { verifyTurnstileToken } from '@utils/captcha';
 import { getNextId } from '@utils/form';
+import { uploadDocument } from '@utils/commonServices/uploadDocument';
+import { downloadFileBuffer } from '@utils/files/downloadFile';
 
 jest.mock('@services/logger.service');
 
@@ -21,6 +23,14 @@ jest.mock('@security/extendAbilityForRecords', () => ({
 jest.mock('@utils/captcha', () => ({
   __esModule: true,
   verifyTurnstileToken: jest.fn(),
+}));
+
+// Mock the storages of the files
+jest.mock('@utils/commonServices/uploadDocument', () => ({
+  uploadDocument: jest.fn(),
+}));
+jest.mock('@utils/files/downloadFile', () => ({
+  downloadFileBuffer: jest.fn(),
 }));
 
 // Mock getNextId only, as it relies on Redis
@@ -692,18 +702,82 @@ describe('addRecord Resolver', () => {
       expect(record.data.files).toEqual([{ name: 'a.pdf', content: 'form/a' }]);
     });
 
-    it('should keep the draft flag of the files of a draft', async () => {
-      args = {
-        form: parentForm.id,
-        data: { files: [{ name: 'a.pdf', content: 'form/a', draft: true }] },
-        draft: true,
-      };
+    it('should upload the draft files of the nested drafts to document management', async () => {
+      const upload = { driveId: 'drive', body: { DocumentType: [2] } };
+      const child = await createDraft(childForm, {
+        files: [
+          { name: 'a.pdf', content: `${childForm.id}/a`, draft: true, upload },
+        ],
+      });
+      args = { form: parentForm.id, data: { children: [child.id] } };
+      context.accesstoken = 'user-access-token';
+      (downloadFileBuffer as jest.Mock).mockResolvedValue(Buffer.from('a'));
+      (uploadDocument as jest.Mock).mockResolvedValue({
+        driveId: 'drive',
+        itemId: 'item',
+      });
+
+      await addRecord.resolve(null, args, context);
+
+      expect(uploadDocument).toHaveBeenCalledWith(
+        { name: 'a.pdf', data: Buffer.from('a') },
+        upload,
+        'user-access-token'
+      );
+      const submitted = await Record.findById(child._id);
+      expect(submitted.draft).toBe(false);
+      expect(submitted.data.files).toEqual([
+        { name: 'a.pdf', content: { driveId: 'drive', itemId: 'item' } },
+      ]);
+    });
+
+    it('should not save the record if a draft file cannot be uploaded', async () => {
+      const child = await createDraft(childForm, {
+        files: [
+          {
+            name: 'a.pdf',
+            content: `${childForm.id}/a`,
+            draft: true,
+            upload: { driveId: 'drive' },
+          },
+        ],
+      });
+      args = { form: parentForm.id, data: { children: [child.id] } };
+      context.accesstoken = 'user-access-token';
+      (downloadFileBuffer as jest.Mock).mockResolvedValue(Buffer.from('a'));
+      (uploadDocument as jest.Mock).mockRejectedValue(new Error('Refused'));
+      const parentsBefore = await Record.countDocuments({
+        form: parentForm._id,
+      });
+
+      const result = addRecord.resolve(null, args, context);
+
+      await expect(result).rejects.toThrow(
+        'utils.files.uploadFile.errors.fileCannotBeUploaded ( a.pdf )'
+      );
+      expect(await Record.countDocuments({ form: parentForm._id })).toEqual(
+        parentsBefore
+      );
+      const draft = await Record.findById(child._id);
+      expect(draft.draft).toBe(true);
+      expect(draft.data.files[0].draft).toBe(true);
+    });
+
+    it('should keep the draft files of a draft as they are', async () => {
+      const files = [
+        {
+          name: 'a.pdf',
+          content: 'form/a',
+          draft: true,
+          upload: { driveId: 'drive', body: { DocumentType: [2] } },
+        },
+      ];
+      args = { form: parentForm.id, data: { files }, draft: true };
 
       const record = await addRecord.resolve(null, args, context);
 
-      expect(record.data.files).toEqual([
-        { name: 'a.pdf', content: 'form/a', draft: true },
-      ]);
+      expect(record.data.files).toEqual(files);
+      expect(uploadDocument).not.toHaveBeenCalled();
     });
   });
 

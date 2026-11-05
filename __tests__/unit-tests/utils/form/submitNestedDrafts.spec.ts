@@ -1,9 +1,9 @@
 import { Form, Record, Resource, Version } from '@models';
 import {
-  clearDraftFiles,
   getNestedDrafts,
   getNextId,
   submitNestedDrafts,
+  submitRecordDraftFiles,
   UniquenessError,
 } from '@utils/form';
 import { Types } from 'mongoose';
@@ -12,6 +12,8 @@ import { DatabaseHelpers } from '../../../helpers/database-helpers';
 import { Context } from '@server/apollo/context';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { logger } from '@services/logger.service';
+import { uploadDocument } from '@utils/commonServices/uploadDocument';
+import { downloadFileBuffer } from '@utils/files/downloadFile';
 
 jest.mock('@services/logger.service');
 
@@ -19,6 +21,14 @@ jest.mock('@services/logger.service');
 jest.mock('@security/extendAbilityForRecords', () => ({
   __esModule: true,
   default: jest.fn(),
+}));
+
+// Mock the storages of the files
+jest.mock('@utils/commonServices/uploadDocument', () => ({
+  uploadDocument: jest.fn(),
+}));
+jest.mock('@utils/files/downloadFile', () => ({
+  downloadFileBuffer: jest.fn(),
 }));
 
 // Mock getNextId, as it relies on Redis
@@ -69,8 +79,11 @@ describe('submitNestedDrafts', () => {
    *
    * @param data Data of the record
    */
-  const submit = async (data: any) =>
-    submitNestedDrafts(await getNestedDrafts(data, parentForm.fields, context));
+  const submit = async (data: any) => {
+    const drafts = await getNestedDrafts(data, parentForm.fields, context);
+    await submitRecordDraftFiles(data, parentForm.fields, drafts, context);
+    await submitNestedDrafts(drafts);
+  };
 
   beforeAll(async () => {
     databaseHelpers = new DatabaseHelpers();
@@ -126,6 +139,7 @@ describe('submitNestedDrafts', () => {
         roles: [],
         positionAttributes: [],
       },
+      accesstoken: 'user-access-token',
       i18next: { t: jest.fn((key: string) => key) },
       timeZone: 'UTC',
     } as unknown as Context;
@@ -134,6 +148,11 @@ describe('submitNestedDrafts', () => {
       can: jest.fn().mockReturnValue(true),
       cannot: jest.fn().mockReturnValue(false),
     });
+    (downloadFileBuffer as jest.Mock).mockResolvedValue(Buffer.from('content'));
+    (uploadDocument as jest.Mock).mockImplementation(async (file) => ({
+      driveId: 'drive',
+      itemId: `item-${file.name}`,
+    }));
     (getNextId as jest.Mock).mockImplementation(async () => {
       nextIdCounter += 1;
       return `2026-S${String(nextIdCounter).padStart(8, '0')}`;
@@ -142,32 +161,6 @@ describe('submitNestedDrafts', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
-  });
-
-  describe('clearDraftFiles', () => {
-    it('should remove the draft flag of the files, and nothing else', () => {
-      const data = {
-        name: 'record',
-        files: [
-          { name: 'a.pdf', content: 'form/a', draft: true, lang: 'en' },
-          { name: 'b.pdf', content: { driveId: 'drive', itemId: 'item' } },
-        ],
-        // Not a file question
-        child: [{ name: 'c.pdf', content: 'form/c', draft: true }],
-      };
-      clearDraftFiles(data, childForm.fields);
-      expect(data.files).toEqual([
-        { name: 'a.pdf', content: 'form/a', lang: 'en' },
-        { name: 'b.pdf', content: { driveId: 'drive', itemId: 'item' } },
-      ]);
-      expect(data.child[0].draft).toBe(true);
-    });
-
-    it('should ignore empty file questions', () => {
-      expect(clearDraftFiles({ files: null }, childForm.fields)).toEqual({
-        files: null,
-      });
-    });
   });
 
   describe('Submitting the drafts', () => {
@@ -300,7 +293,7 @@ describe('submitNestedDrafts', () => {
       expect(getNextId).toHaveBeenCalledTimes(2);
     });
 
-    it('should clear the draft flag of the files, whatever the depth', async () => {
+    it('should keep the draft files without upload in the back-end storage, whatever the depth', async () => {
       const file = { name: 'a.pdf', content: 'form/a', draft: true };
       const grandchild = await createRecord(grandchildForm, { files: [file] });
       const child = await createRecord(childForm, {
@@ -318,6 +311,107 @@ describe('submitNestedDrafts', () => {
       expect((await Record.findById(grandchild._id)).data.files).toEqual([
         { name: 'a.pdf', content: 'form/a' },
       ]);
+      expect(uploadDocument).not.toHaveBeenCalled();
+    });
+
+    it('should upload the draft files to document management, whatever the depth', async () => {
+      const upload = { driveId: 'drive', body: { DocumentType: [2] } };
+      const grandchild = await createRecord(grandchildForm, {
+        files: [
+          {
+            name: 'deep.pdf',
+            content: `${grandchildForm.id}/deep`,
+            draft: true,
+            upload,
+          },
+        ],
+      });
+      const child = await createRecord(childForm, {
+        name: 'uploaded',
+        files: [
+          {
+            name: 'a.pdf',
+            content: `${childForm.id}/a`,
+            draft: true,
+            upload,
+          },
+        ],
+        grandchildren: [grandchild.id],
+      });
+
+      await submit({ child: child.id });
+
+      expect(downloadFileBuffer).toHaveBeenCalledWith(
+        'forms',
+        `${grandchildForm.id}/deep`
+      );
+      expect(uploadDocument).toHaveBeenCalledTimes(2);
+      expect(uploadDocument).toHaveBeenCalledWith(
+        { name: 'a.pdf', data: Buffer.from('content') },
+        upload,
+        'user-access-token'
+      );
+      const records = await Record.find({
+        _id: { $in: [child._id, grandchild._id] },
+      }).sort({ 'data.name': 1 });
+      expect(records.map((x) => x.draft)).toEqual([false, false]);
+      expect(records.map((x) => x.data.files)).toEqual([
+        [
+          {
+            name: 'deep.pdf',
+            content: { driveId: 'drive', itemId: 'item-deep.pdf' },
+          },
+        ],
+        [
+          {
+            name: 'a.pdf',
+            content: { driveId: 'drive', itemId: 'item-a.pdf' },
+          },
+        ],
+      ]);
+    });
+
+    it('should save the uploaded files in the drafts, and submit nothing, when a file cannot be uploaded', async () => {
+      const upload = { driveId: 'drive' };
+      const first = await createRecord(childForm, {
+        name: 'upload first',
+        files: [
+          { name: 'a.pdf', content: `${childForm.id}/a`, draft: true, upload },
+        ],
+      });
+      const second = await createRecord(childForm, {
+        name: 'upload second',
+        files: [
+          {
+            name: 'failing.pdf',
+            content: `${childForm.id}/failing`,
+            draft: true,
+            upload,
+          },
+        ],
+      });
+      (uploadDocument as jest.Mock).mockImplementation(async (file) => {
+        if (file.name === 'failing.pdf') {
+          throw new Error('Document management error');
+        }
+        return { driveId: 'drive', itemId: 'item' };
+      });
+
+      const result = submit({ children: [first.id, second.id] });
+
+      await expect(result).rejects.toThrow(
+        'utils.files.uploadFile.errors.fileCannotBeUploaded ( failing.pdf )'
+      );
+      const records = await Record.find({
+        _id: { $in: [first._id, second._id] },
+      }).sort({ 'data.name': 1 });
+      expect(records.map((x) => x.draft)).toEqual([true, true]);
+      // Not uploaded again when the record is submitted again
+      expect(records[0].data.files).toEqual([
+        { name: 'a.pdf', content: { driveId: 'drive', itemId: 'item' } },
+      ]);
+      expect(records[0].data.name).toEqual('upload first');
+      expect(records[1].data.files[0].draft).toBe(true);
     });
   });
 

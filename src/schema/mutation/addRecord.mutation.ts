@@ -16,7 +16,7 @@ import {
   UniquenessCheckResult,
   UniquenessError,
   logUniquenessError,
-  clearDraftFiles,
+  submitRecordDraftFiles,
   getNestedDrafts,
   submitNestedDrafts,
   notifyRecordAdded,
@@ -226,11 +226,6 @@ export default {
 
       // Create the record instance
       transformRecord(args.data, form.fields);
-      // Draft files only exist in drafts: a file still flagged when the record
-      // is submitted stays where it is
-      if (!args.draft) {
-        clearDraftFiles(args.data, form.fields);
-      }
 
       // Check uniqueness rules configured on the resource, if any. Drafts are
       // not checked: as for the records unicity, they are once published
@@ -269,6 +264,17 @@ export default {
             resource: form.resource ? form.resource : null,
           }),
           { validationErrors: uniquenessResult.warnings }
+        );
+      }
+
+      // Draft files only exist in drafts: the ones of the record, and of the
+      // drafts submitted along with it, reach their final storage first
+      if (!args.draft) {
+        await submitRecordDraftFiles(
+          args.data,
+          form.fields,
+          nestedDrafts,
+          context
         );
       }
 

@@ -77,6 +77,19 @@ describe('formatValue', () => {
     ]);
   });
 
+  it('keeps how to upload a draft file to document management', () => {
+    const upload = { driveId: 'drive', body: { DocumentType: [2] } };
+    const files = [
+      { name: 'a.txt', content: 'form/blob', draft: true, upload },
+      // Only draft files are uploaded when the record is submitted
+      { name: 'b.txt', content: 'def', upload },
+    ];
+    expect(formatValue({ type: 'file' }, files)).toEqual([
+      { name: 'a.txt', content: 'form/blob', draft: true, upload },
+      { name: 'b.txt', content: 'def' },
+    ]);
+  });
+
   it('keeps valid resource ids and drops malformed 12-character ones', () => {
     const validId = '507f1f77bcf86cd799439011';
     expect(formatValue({ type: 'resource' }, validId)).toBe(validId);
