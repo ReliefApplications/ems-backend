@@ -12,6 +12,7 @@ const changeType = new GraphQLObjectType({
     displayType: { type: GraphQLString },
     field: { type: GraphQLString },
     displayName: { type: GraphQLString },
+    lang: { type: GraphQLString },
     old: { type: GraphQLString },
     new: { type: GraphQLString },
   }),
