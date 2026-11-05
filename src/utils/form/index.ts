@@ -6,6 +6,9 @@ export * from './findDuplicateFields';
 export * from './extractFields';
 export * from './getFieldType';
 export * from './hasInaccessibleFields';
+export * from './canEditRecord';
+export * from './submitDraftFiles';
+export * from './submitNestedDrafts';
 
 // === RECORDS ===
 export * from './transformRecord';

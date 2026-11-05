@@ -57,6 +57,9 @@ export const formatValue = (field: any, value: any): any => {
           // Saved in the blob storage along with a draft record: moved to the
           // final storage ( document management ) when the record is submitted
           ...(x.draft ? { draft: true } : {}),
+          // How to upload a draft file to document management, once the
+          // record is submitted ( see submitDraftFiles )
+          ...(x.draft && x.upload ? { upload: x.upload } : {}),
         }));
       }
       break;

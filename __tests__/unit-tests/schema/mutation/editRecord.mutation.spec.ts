@@ -18,10 +18,14 @@ jest.mock('@security/extendAbilityForRecords', () => ({
   default: jest.fn(),
 }));
 
-// Mock getNextId, as it relies on Redis, and the survey validation
+// Mock getNextId, as it relies on Redis
+jest.mock('@utils/form/getNextId', () => ({
+  getNextId: jest.fn(),
+}));
+
+// Mock the survey validation
 jest.mock('@utils/form', () => ({
   ...jest.requireActual('@utils/form'),
-  getNextId: jest.fn(),
   checkRecordValidation: jest.fn(),
 }));
 
@@ -138,87 +142,50 @@ describe('editRecord Resolver', () => {
       expect(await Version.countDocuments()).toEqual(versionsBefore);
     });
 
-    it('should start the history of a published draft from its publication', async () => {
+    it('should let the author edit a draft with the permission to add records only', async () => {
+      (extendAbilityForRecords as jest.Mock).mockResolvedValue({
+        can: jest.fn((action: string) => action === 'create'),
+        cannot: jest.fn((action: string) => action !== 'create'),
+      });
       const draft = await createRecord(true);
-      const versionsBefore = await Version.countDocuments();
-      const published = await editRecord.resolve(
-        null,
-        buildArgs({
-          id: draft.id,
-          data: { description: 'published' },
-          updateDraftStatus: false,
-        }),
-        context
-      );
-      expect(published.versions).toHaveLength(0);
-      expect(await Version.countDocuments()).toEqual(versionsBefore);
-
-      // Once published, edits are versioned as for any record
-      const edited = await editRecord.resolve(
+      const record = await editRecord.resolve(
         null,
         buildArgs({ id: draft.id, data: { description: 'edited' } }),
         context
       );
-      expect(edited.versions).toHaveLength(1);
-      expect(await Version.countDocuments()).toEqual(versionsBefore + 1);
-      const version = await Version.findById(edited.versions[0]);
-      expect(version.data.description).toEqual('published');
+      expect(record.data.description).toEqual('edited');
     });
 
-    it('should publish a draft, with validation and an incremental id', async () => {
+    it('should not edit a draft without the permission to add records', async () => {
+      (extendAbilityForRecords as jest.Mock).mockResolvedValue({
+        can: jest.fn((action: string) => action === 'update'),
+        cannot: jest.fn((action: string) => action !== 'update'),
+      });
       const draft = await createRecord(true);
-      const record = await editRecord.resolve(
-        null,
-        buildArgs({
-          id: draft.id,
-          data: { description: 'published' },
-          updateDraftStatus: false,
-        }),
-        context
-      );
-      expect(record.draft).toBe(false);
-      expect(record.incrementalId).toMatch(/^2026-P\d{8}$/);
-      expect(checkRecordValidation).toHaveBeenCalled();
-    });
-
-    it('should not publish a draft with validation errors', async () => {
-      const draft = await createRecord(true);
-      (checkRecordValidation as jest.Mock).mockReturnValue([
-        { question: 'description', errors: ['Required'] },
-      ]);
-      const record = (await editRecord.resolve(
-        null,
-        buildArgs({
-          id: draft.id,
-          data: { description: '' },
-          updateDraftStatus: false,
-        }),
-        context
-      )) as RecordWithValidationErrors;
-      expect(record.validationErrors).toHaveLength(1);
+      await expect(
+        editRecord.resolve(
+          null,
+          buildArgs({ id: draft.id, data: { description: 'edited' } }),
+          context
+        )
+      ).rejects.toThrow('common.errors.permissionNotGranted');
       const stored = await Record.findById(draft._id);
-      expect(stored.draft).toBe(true);
-      expect(stored.incrementalId).toBeUndefined();
+      expect(stored.data.description).toEqual('initial');
     });
 
-    it('should not turn a submitted record into a draft', async () => {
-      const submitted = await createRecord(false);
-      const result = editRecord.resolve(
-        null,
-        buildArgs({
-          id: submitted.id,
-          data: { description: 'demoted' },
-          updateDraftStatus: true,
-        }),
-        context
+    it('should not edit the draft of another user', async () => {
+      const draft = await createRecord(true);
+      await Record.updateOne(
+        { _id: draft._id },
+        { 'createdBy.user': new Types.ObjectId() }
       );
-      await expect(result).rejects.toThrow(GraphQLError);
-      expect(context.i18next.t).toHaveBeenCalledWith(
-        'mutations.record.edit.errors.cannotDemoteToDraft'
-      );
-      const stored = await Record.findById(submitted._id);
-      expect(stored.draft).toBe(false);
-      expect(stored.data.description).toEqual('initial');
+      await expect(
+        editRecord.resolve(
+          null,
+          buildArgs({ id: draft.id, data: { description: 'edited' } }),
+          context
+        )
+      ).rejects.toThrow('common.errors.permissionNotGranted');
     });
 
     it('should keep editing a submitted record when no draft status is given', async () => {
@@ -232,6 +199,134 @@ describe('editRecord Resolver', () => {
       expect(record.incrementalId).toEqual(submitted.incrementalId);
       expect(record.data.description).toEqual('edited');
       expect(checkRecordValidation).toHaveBeenCalled();
+    });
+  });
+
+  describe('Nested drafts', () => {
+    let parentForm: Form;
+    let parentResource: Resource;
+
+    /**
+     * Creates a record of the parent form.
+     *
+     * @param draft Whether the record is a draft
+     * @returns the created record
+     */
+    const createParent = async (draft: boolean) =>
+      Record.create({
+        ...(!draft && {
+          incrementalId: `2026-R${String(++nextIdCounter).padStart(8, '0')}`,
+        }),
+        form: parentForm._id,
+        _form: { _id: parentForm._id, name: parentForm.name },
+        resource: parentResource._id,
+        data: {},
+        draft,
+        createdBy: { user: context.user._id },
+      });
+
+    beforeAll(async () => {
+      const fields = [
+        { name: 'children', type: 'resources' },
+        { name: 'files', type: 'file' },
+      ];
+      parentResource = await Resource.create({
+        name: 'Edit record parent resource',
+        fields,
+      });
+      parentForm = await Form.create({
+        name: 'Edit record parent form',
+        graphQLTypeName: 'EditRecordParentForm',
+        resource: parentResource._id,
+        core: true,
+        structure: '{}',
+        fields,
+      });
+    });
+
+    it('should submit the drafts created from a submitted record', async () => {
+      const child = await createRecord(true);
+      const parent = await createParent(false);
+
+      const record = await editRecord.resolve(
+        null,
+        buildArgs({ id: parent.id, data: { children: [child.id] } }),
+        context
+      );
+
+      expect(record.data.children).toEqual([child.id]);
+      const submitted = await Record.findById(child._id);
+      expect(submitted.draft).toBe(false);
+      expect(submitted.incrementalId).toMatch(/^2026-P\d{8}$/);
+    });
+
+    it('should submit the drafts a submitted record references already', async () => {
+      const child = await createRecord(true);
+      const parent = await createParent(false);
+      await Record.updateOne(
+        { _id: parent._id },
+        { data: { children: [child.id] } }
+      );
+
+      await editRecord.resolve(
+        null,
+        buildArgs({ id: parent.id, data: { files: [] } }),
+        context
+      );
+
+      expect((await Record.findById(child._id)).draft).toBe(false);
+    });
+
+    it('should leave the nested drafts of a draft as they are', async () => {
+      const child = await createRecord(true);
+      const parent = await createParent(true);
+
+      await editRecord.resolve(
+        null,
+        buildArgs({ id: parent.id, data: { children: [child.id] } }),
+        context
+      );
+
+      expect((await Record.findById(child._id)).draft).toBe(true);
+      expect(getNextId).not.toHaveBeenCalled();
+    });
+
+    it('should leave the nested drafts as they are when the record is not saved', async () => {
+      (checkRecordValidation as jest.Mock).mockReturnValue([
+        { question: 'children', errors: ['Invalid'] },
+      ]);
+      const child = await createRecord(true);
+      const parent = await createParent(false);
+
+      await editRecord.resolve(
+        null,
+        buildArgs({ id: parent.id, data: { children: [child.id] } }),
+        context
+      );
+
+      expect((await Record.findById(child._id)).draft).toBe(true);
+    });
+
+    it('should only keep the draft flag of the files of a draft', async () => {
+      const files = [{ name: 'a.pdf', content: 'form/a', draft: true }];
+      const draft = await createParent(true);
+      const submitted = await createParent(false);
+
+      const editedDraft = await editRecord.resolve(
+        null,
+        buildArgs({ id: draft.id, data: { files } }),
+        context
+      );
+      const editedRecord = await editRecord.resolve(
+        null,
+        buildArgs({ id: submitted.id, data: { files } }),
+        context
+      );
+
+      expect(editedDraft.data.files).toEqual(files);
+      expect(editedRecord.data.files).toEqual([
+        { name: 'a.pdf', content: 'form/a' },
+      ]);
     });
   });
 
@@ -257,6 +352,7 @@ describe('editRecord Resolver', () => {
         resource: uniqueResource._id,
         data: { org_code: orgCode },
         draft,
+        createdBy: { user: context.user._id },
       });
 
     beforeEach(async () => {
@@ -423,22 +519,6 @@ describe('editRecord Resolver', () => {
       );
       expect(updated.draft).toBe(true);
       expect(updated.data.org_code).toEqual('ABC');
-    });
-
-    it('should not publish a draft with a duplicate value', async () => {
-      const draft = await createUniqueRecord('ABC', true);
-      const result = editRecord.resolve(
-        null,
-        buildArgs({
-          id: draft.id,
-          data: { org_code: 'ABC' },
-          updateDraftStatus: false,
-        }),
-        context
-      );
-      await expect(result).rejects.toThrow(GraphQLError);
-      const stored = await Record.findById(draft._id);
-      expect(stored.draft).toBe(true);
     });
   });
 });

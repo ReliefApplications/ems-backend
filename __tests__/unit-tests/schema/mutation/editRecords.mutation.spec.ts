@@ -16,6 +16,11 @@ jest.mock('@security/extendAbilityForRecords', () => ({
   default: jest.fn(),
 }));
 
+// Mock getNextId, as it relies on Redis
+jest.mock('@utils/form/getNextId', () => ({
+  getNextId: jest.fn().mockResolvedValue('2026-N00000001'),
+}));
+
 // Mock the survey validation
 jest.mock('@utils/form', () => ({
   ...jest.requireActual('@utils/form'),
@@ -92,6 +97,7 @@ describe('editRecords Resolver', () => {
     const fields = [
       { name: 'name', type: 'text' },
       { name: 'country', type: 'text' },
+      { name: 'partners', type: 'resources' },
     ];
     resource = await Resource.create({
       name: `Organization-${new Types.ObjectId()}`,
@@ -129,6 +135,39 @@ describe('editRecords Resolver', () => {
     );
     expect(updated).toHaveLength(2);
     expect(await storedValues(records, 'country')).toEqual(['FR', 'FR']);
+  });
+
+  it('submits the drafts created from the edited records', async () => {
+    const records = [
+      await createRecord({ name: 'Red Cross', country: 'CH' }),
+      await createRecord({ name: 'Red Crescent', country: 'CH' }),
+    ];
+    const draft = await Record.create({
+      form: form._id,
+      _form: { _id: form._id, name: form.name },
+      resource: resource._id,
+      data: { name: 'Partner', country: 'CH' },
+      draft: true,
+      createdBy: { user: context.user._id },
+    });
+
+    await editRecords.resolve(
+      null,
+      {
+        ids: records.map((x) => x.id),
+        data: { partners: [draft.id] },
+        skipValidation: true,
+      },
+      context
+    );
+
+    expect(await storedValues(records, 'partners')).toEqual([
+      [draft.id],
+      [draft.id],
+    ]);
+    const submitted = await Record.findById(draft._id);
+    expect(submitted.draft).toBe(false);
+    expect(submitted.incrementalId).toEqual('2026-N00000001');
   });
 
   it('does not update any record when one duplicates another record (error severity)', async () => {

@@ -7,14 +7,7 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { RecordType } from '../types';
-import {
-  Form,
-  Record,
-  Notification,
-  Channel,
-  Resource,
-  Version,
-} from '@models';
+import { Form, Record, Resource, Version } from '@models';
 import {
   transformRecord,
   getOwnership,
@@ -23,13 +16,17 @@ import {
   UniquenessCheckResult,
   UniquenessError,
   logUniquenessError,
+  submitRecordDraftFiles,
+  getNestedDrafts,
+  submitNestedDrafts,
+  notifyRecordAdded,
+  NestedDraft,
 } from '@utils/form';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
-import pubsub from '../../server/pubsub';
 import { getFormPermissionFilter } from '@utils/filter';
 import { logger } from '@services/logger.service';
 import { verifyTurnstileToken } from '@utils/captcha';
-import { isObjectIdOrHexString, Types } from 'mongoose';
+import { FilterQuery, isObjectIdOrHexString, Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 import { getErrorMessage, getErrorStack } from '@utils/error';
 
@@ -41,6 +38,7 @@ export type AddRecordArgs = {
   skipValidation?: boolean;
   draft?: boolean;
   cloneRecordId?: string | Types.ObjectId;
+  draftId?: string | Types.ObjectId;
 };
 
 /**
@@ -49,6 +47,11 @@ export type AddRecordArgs = {
  * a valid Cloudflare Turnstile captcha token. In that case, the ability check
  * is skipped.
  * If a record to clone is provided, the new record reuses its history.
+ * If a draft is provided, the record is submitted from it: the draft is
+ * deleted once the new record is saved. Submitted records are therefore always
+ * inserted, never converted from a draft.
+ * The drafts created from the resource(s) questions of the record are
+ * submitted along with it, whatever their depth.
  * Throw a GraphQL error if not logged or authorized, or form not found.
  * TODO: we have to check form by form for that.
  */
@@ -61,6 +64,7 @@ export default {
     skipValidation: { type: GraphQLBoolean, defaultValue: false },
     draft: { type: GraphQLBoolean },
     cloneRecordId: { type: GraphQLID },
+    draftId: { type: GraphQLID },
   },
   async resolve(parent, args: AddRecordArgs, context: Context) {
     try {
@@ -187,6 +191,39 @@ export default {
         versions = [...(clonedRecord.versions || []), clonedDataVersion._id];
       }
 
+      // If a draft is provided, the user must own it, and it must belong to
+      // the same resource, or, for forms without a resource, to the same form
+      let draftFilter: FilterQuery<Record>;
+      if (args.draftId) {
+        if (!user) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.userNotLogged')
+          );
+        }
+        if (args.draft || !isObjectIdOrHexString(args.draftId)) {
+          throw new GraphQLError(
+            context.i18next.t('mutations.record.add.errors.invalidDraftRecord')
+          );
+        }
+        draftFilter = {
+          _id: new Types.ObjectId(String(args.draftId)),
+          draft: true,
+          archived: { $ne: true },
+          'createdBy.user': user._id,
+          ...(form.resource ? { resource: form.resource } : { form: form._id }),
+        };
+        const draftRecord = await Record.findOne(draftFilter, 'versions');
+        if (!draftRecord) {
+          throw new GraphQLError(
+            context.i18next.t('mutations.record.add.errors.invalidDraftRecord')
+          );
+        }
+        // Keep the history the draft may hold, unless a clone provides one
+        if (!args.cloneRecordId && draftRecord.versions?.length) {
+          versions = draftRecord.versions;
+        }
+      }
+
       // Create the record instance
       transformRecord(args.data, form.fields);
 
@@ -211,6 +248,11 @@ export default {
       if (uniquenessResult.errors.length) {
         throw new UniquenessError(uniquenessResult.errors);
       }
+      // Drafts created from the resource(s) questions of the record, to submit
+      // along with it. They are checked before anything is saved
+      const nestedDrafts: NestedDraft[] = args.draft
+        ? []
+        : await getNestedDrafts(args.data, form.fields, context);
       // Warn about (non-blocking) duplicates, unless the user chose to save
       // anyway. Nothing is saved, so no incremental id is used. Unauthenticated
       // users are not warned: they must not learn about the existing records
@@ -222,6 +264,17 @@ export default {
             resource: form.resource ? form.resource : null,
           }),
           { validationErrors: uniquenessResult.warnings }
+        );
+      }
+
+      // Draft files only exist in drafts: the ones of the record, and of the
+      // drafts submitted along with it, reach their final storage first
+      if (!args.draft) {
+        await submitRecordDraftFiles(
+          args.data,
+          form.fields,
+          nestedDrafts,
+          context
         );
       }
 
@@ -274,26 +327,35 @@ export default {
       if (ownership) {
         record.createdBy = { ...record.createdBy, ...ownership };
       }
-      // send notifications to channel
-      if (!args.draft) {
-        const channel = await Channel.findOne({ form: form._id });
-        if (channel) {
-          const notification = new Notification({
-            action: `New record - ${form.name}`,
-            content: record,
-            //createdAt: new Date(),
-            channel: channel.id,
-            seenBy: [],
-          });
-          await notification.save();
-          const publisher = await pubsub();
-          publisher.publish(channel.id, { notification });
-        }
+      // Take the draft before inserting the record: the deletion is atomic, so
+      // a draft submitted twice at the same time only gives one record. The
+      // driver is called directly to skip the deletion hook of the model: the
+      // versions of the draft are moved to the new record, not deleted
+      const consumedDraft = draftFilter
+        ? (await Record.collection.findOneAndDelete(draftFilter)).value
+        : null;
+      if (draftFilter && !consumedDraft) {
+        throw new GraphQLError(
+          context.i18next.t('mutations.record.add.errors.invalidDraftRecord')
+        );
       }
-      await record.save();
+      try {
+        await record.save();
+      } catch (err) {
+        // The record could not be saved: give the user their draft back
+        if (consumedDraft) {
+          await Record.collection.insertOne(consumedDraft);
+        }
+        throw err;
+      }
       // Only store the new version once the record is saved
       if (clonedDataVersion) {
         await clonedDataVersion.save();
+      }
+      await submitNestedDrafts(nestedDrafts);
+      // send notifications to channel
+      if (!args.draft) {
+        await notifyRecordAdded(record, form);
       }
       return record;
     } catch (err) {
