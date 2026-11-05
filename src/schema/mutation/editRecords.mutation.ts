@@ -18,6 +18,10 @@ import {
   validateBatchUniqueness,
   UniquenessError,
   logUniquenessError,
+  clearDraftFiles,
+  getNestedDrafts,
+  submitNestedDrafts,
+  NestedDraft,
 } from '@utils/form';
 import { RecordType } from '../types';
 import { logger } from '@services/logger.service';
@@ -51,6 +55,8 @@ type RecordEdition = {
   template: Form;
   /** Data of the record, once updated */
   data: any;
+  /** Fields the data of the record is formatted with */
+  fields: any[];
   validationErrors: RecordWithError['validationErrors'];
 };
 
@@ -109,6 +115,7 @@ export default {
               resource: parentResource,
               template: record.form,
               data: record.data,
+              fields: record.form.fields,
               validationErrors,
             });
           } else {
@@ -130,11 +137,16 @@ export default {
               fields = template.fields;
             }
             transformRecord(data, fields);
+            // Draft files only exist in drafts
+            if (!record.draft) {
+              clearDraftFiles(data, fields);
+            }
             editions.push({
               record,
               resource: parentResource,
               template,
               data: { ...record.data, ...data },
+              fields,
               validationErrors: [],
             });
           }
@@ -191,6 +203,19 @@ export default {
         throw new UniquenessError(uniquenessErrors.join('\n'));
       }
 
+      // Drafts created from the resource(s) questions of the submitted
+      // records, to submit along with them. They are checked before anything
+      // is saved. The ones of a draft wait for the draft to be submitted
+      const nestedDrafts = new Map<RecordEdition, NestedDraft[]>();
+      for (const edition of editions) {
+        if (!edition.validationErrors.length && !edition.record.draft) {
+          nestedDrafts.set(
+            edition,
+            await getNestedDrafts(edition.data, edition.fields, context)
+          );
+        }
+      }
+
       // Apply the editions
       for (const edition of editions) {
         const { record, template } = edition;
@@ -232,6 +257,7 @@ export default {
           new: true,
         });
         await version.save();
+        await submitNestedDrafts(nestedDrafts.get(edition) || []);
         records.push(newRecord);
       }
       return records;

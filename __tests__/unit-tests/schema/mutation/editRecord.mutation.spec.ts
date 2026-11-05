@@ -18,10 +18,14 @@ jest.mock('@security/extendAbilityForRecords', () => ({
   default: jest.fn(),
 }));
 
-// Mock getNextId, as it relies on Redis, and the survey validation
+// Mock getNextId, as it relies on Redis
+jest.mock('@utils/form/getNextId', () => ({
+  getNextId: jest.fn(),
+}));
+
+// Mock the survey validation
 jest.mock('@utils/form', () => ({
   ...jest.requireActual('@utils/form'),
-  getNextId: jest.fn(),
   checkRecordValidation: jest.fn(),
 }));
 
@@ -195,6 +199,134 @@ describe('editRecord Resolver', () => {
       expect(record.incrementalId).toEqual(submitted.incrementalId);
       expect(record.data.description).toEqual('edited');
       expect(checkRecordValidation).toHaveBeenCalled();
+    });
+  });
+
+  describe('Nested drafts', () => {
+    let parentForm: Form;
+    let parentResource: Resource;
+
+    /**
+     * Creates a record of the parent form.
+     *
+     * @param draft Whether the record is a draft
+     * @returns the created record
+     */
+    const createParent = async (draft: boolean) =>
+      Record.create({
+        ...(!draft && {
+          incrementalId: `2026-R${String(++nextIdCounter).padStart(8, '0')}`,
+        }),
+        form: parentForm._id,
+        _form: { _id: parentForm._id, name: parentForm.name },
+        resource: parentResource._id,
+        data: {},
+        draft,
+        createdBy: { user: context.user._id },
+      });
+
+    beforeAll(async () => {
+      const fields = [
+        { name: 'children', type: 'resources' },
+        { name: 'files', type: 'file' },
+      ];
+      parentResource = await Resource.create({
+        name: 'Edit record parent resource',
+        fields,
+      });
+      parentForm = await Form.create({
+        name: 'Edit record parent form',
+        graphQLTypeName: 'EditRecordParentForm',
+        resource: parentResource._id,
+        core: true,
+        structure: '{}',
+        fields,
+      });
+    });
+
+    it('should submit the drafts created from a submitted record', async () => {
+      const child = await createRecord(true);
+      const parent = await createParent(false);
+
+      const record = await editRecord.resolve(
+        null,
+        buildArgs({ id: parent.id, data: { children: [child.id] } }),
+        context
+      );
+
+      expect(record.data.children).toEqual([child.id]);
+      const submitted = await Record.findById(child._id);
+      expect(submitted.draft).toBe(false);
+      expect(submitted.incrementalId).toMatch(/^2026-P\d{8}$/);
+    });
+
+    it('should submit the drafts a submitted record references already', async () => {
+      const child = await createRecord(true);
+      const parent = await createParent(false);
+      await Record.updateOne(
+        { _id: parent._id },
+        { data: { children: [child.id] } }
+      );
+
+      await editRecord.resolve(
+        null,
+        buildArgs({ id: parent.id, data: { files: [] } }),
+        context
+      );
+
+      expect((await Record.findById(child._id)).draft).toBe(false);
+    });
+
+    it('should leave the nested drafts of a draft as they are', async () => {
+      const child = await createRecord(true);
+      const parent = await createParent(true);
+
+      await editRecord.resolve(
+        null,
+        buildArgs({ id: parent.id, data: { children: [child.id] } }),
+        context
+      );
+
+      expect((await Record.findById(child._id)).draft).toBe(true);
+      expect(getNextId).not.toHaveBeenCalled();
+    });
+
+    it('should leave the nested drafts as they are when the record is not saved', async () => {
+      (checkRecordValidation as jest.Mock).mockReturnValue([
+        { question: 'children', errors: ['Invalid'] },
+      ]);
+      const child = await createRecord(true);
+      const parent = await createParent(false);
+
+      await editRecord.resolve(
+        null,
+        buildArgs({ id: parent.id, data: { children: [child.id] } }),
+        context
+      );
+
+      expect((await Record.findById(child._id)).draft).toBe(true);
+    });
+
+    it('should only keep the draft flag of the files of a draft', async () => {
+      const files = [{ name: 'a.pdf', content: 'form/a', draft: true }];
+      const draft = await createParent(true);
+      const submitted = await createParent(false);
+
+      const editedDraft = await editRecord.resolve(
+        null,
+        buildArgs({ id: draft.id, data: { files } }),
+        context
+      );
+      const editedRecord = await editRecord.resolve(
+        null,
+        buildArgs({ id: submitted.id, data: { files } }),
+        context
+      );
+
+      expect(editedDraft.data.files).toEqual(files);
+      expect(editedRecord.data.files).toEqual([
+        { name: 'a.pdf', content: 'form/a' },
+      ]);
     });
   });
 

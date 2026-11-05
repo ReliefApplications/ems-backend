@@ -7,14 +7,7 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { RecordType } from '../types';
-import {
-  Form,
-  Record,
-  Notification,
-  Channel,
-  Resource,
-  Version,
-} from '@models';
+import { Form, Record, Resource, Version } from '@models';
 import {
   transformRecord,
   getOwnership,
@@ -23,9 +16,13 @@ import {
   UniquenessCheckResult,
   UniquenessError,
   logUniquenessError,
+  clearDraftFiles,
+  getNestedDrafts,
+  submitNestedDrafts,
+  notifyRecordAdded,
+  NestedDraft,
 } from '@utils/form';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
-import pubsub from '../../server/pubsub';
 import { getFormPermissionFilter } from '@utils/filter';
 import { logger } from '@services/logger.service';
 import { verifyTurnstileToken } from '@utils/captcha';
@@ -53,6 +50,8 @@ export type AddRecordArgs = {
  * If a draft is provided, the record is submitted from it: the draft is
  * deleted once the new record is saved. Submitted records are therefore always
  * inserted, never converted from a draft.
+ * The drafts created from the resource(s) questions of the record are
+ * submitted along with it, whatever their depth.
  * Throw a GraphQL error if not logged or authorized, or form not found.
  * TODO: we have to check form by form for that.
  */
@@ -227,6 +226,11 @@ export default {
 
       // Create the record instance
       transformRecord(args.data, form.fields);
+      // Draft files only exist in drafts: a file still flagged when the record
+      // is submitted stays where it is
+      if (!args.draft) {
+        clearDraftFiles(args.data, form.fields);
+      }
 
       // Check uniqueness rules configured on the resource, if any. Drafts are
       // not checked: as for the records unicity, they are once published
@@ -249,6 +253,11 @@ export default {
       if (uniquenessResult.errors.length) {
         throw new UniquenessError(uniquenessResult.errors);
       }
+      // Drafts created from the resource(s) questions of the record, to submit
+      // along with it. They are checked before anything is saved
+      const nestedDrafts: NestedDraft[] = args.draft
+        ? []
+        : await getNestedDrafts(args.data, form.fields, context);
       // Warn about (non-blocking) duplicates, unless the user chose to save
       // anyway. Nothing is saved, so no incremental id is used. Unauthenticated
       // users are not warned: they must not learn about the existing records
@@ -337,20 +346,10 @@ export default {
       if (clonedDataVersion) {
         await clonedDataVersion.save();
       }
+      await submitNestedDrafts(nestedDrafts);
       // send notifications to channel
       if (!args.draft) {
-        const channel = await Channel.findOne({ form: form._id });
-        if (channel) {
-          const notification = new Notification({
-            action: `New record - ${form.name}`,
-            content: record,
-            channel: channel.id,
-            seenBy: [],
-          });
-          await notification.save();
-          const publisher = await pubsub();
-          publisher.publish(channel.id, { notification });
-        }
+        await notifyRecordAdded(record, form);
       }
       return record;
     } catch (err) {

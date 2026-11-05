@@ -17,6 +17,10 @@ import {
   validateUniqueness,
   UniquenessError,
   logUniquenessError,
+  clearDraftFiles,
+  getNestedDrafts,
+  submitNestedDrafts,
+  NestedDraft,
 } from '@utils/form';
 import { RecordType } from '../types';
 import { Types } from 'mongoose';
@@ -42,6 +46,8 @@ export type EditRecordArgs = {
  * Drafts are edited in place, without validation nor history. A draft is
  * submitted with the addRecord mutation, which creates the record and deletes
  * the draft.
+ * When a submitted record is edited, the drafts created from its resource(s)
+ * questions are submitted along with it, whatever their depth.
  */
 export default {
   type: RecordType,
@@ -177,6 +183,11 @@ export default {
         newData = oldVersion.data;
       } else {
         transformRecord(args.data, fields);
+        // Draft files only exist in drafts: a file still flagged when the
+        // record is submitted stays where it is
+        if (!savingDraft) {
+          clearDraftFiles(args.data, fields);
+        }
         newData = { ...oldRecord.data, ...args.data };
       }
 
@@ -206,6 +217,12 @@ export default {
       if (validationErrors.length && !args.skipValidation) {
         return Object.assign(oldRecord, { validationErrors });
       }
+      // Drafts created from the resource(s) questions of the record, to submit
+      // along with it. The ones of a draft wait for the draft to be submitted
+      const nestedDrafts: NestedDraft[] =
+        savingDraft || args.version
+          ? []
+          : await getNestedDrafts(newData, fields, context);
       // Generate new version, from current data. Drafts have no history:
       // every auto-save would otherwise add a version, so the record is
       // edited in place until it is submitted
@@ -247,6 +264,7 @@ export default {
         if (version) {
           await version.save();
         }
+        await submitNestedDrafts(nestedDrafts);
         return record;
       } else {
         // Revert an old version

@@ -24,8 +24,7 @@ jest.mock('@utils/captcha', () => ({
 }));
 
 // Mock getNextId only, as it relies on Redis
-jest.mock('@utils/form', () => ({
-  ...jest.requireActual('@utils/form'),
+jest.mock('@utils/form/getNextId', () => ({
   getNextId: jest.fn(),
 }));
 
@@ -462,11 +461,7 @@ describe('addRecord Resolver', () => {
       expect(await Record.exists({ _id: draft._id })).toBeTruthy();
 
       // Once the user confirms, the record is submitted and the draft deleted
-      await addRecord.resolve(
-        null,
-        { ...args, skipValidation: true },
-        context
-      );
+      await addRecord.resolve(null, { ...args, skipValidation: true }, context);
       expect(await Record.exists({ _id: draft._id })).toBeNull();
     });
 
@@ -563,6 +558,152 @@ describe('addRecord Resolver', () => {
         'common.errors.userNotLogged'
       );
       expect(await Record.exists({ _id: draft._id })).toBeTruthy();
+    });
+  });
+
+  describe('Nested drafts', () => {
+    let parentForm: Form;
+    let childForm: Form;
+
+    /**
+     * Creates a draft.
+     *
+     * @param form Form of the draft
+     * @param data Data of the draft
+     * @returns the created draft
+     */
+    const createDraft = async (form: Form, data: any) =>
+      Record.create({
+        form: form._id,
+        _form: { _id: form._id, name: form.name },
+        resource: form.resource,
+        data,
+        draft: true,
+        createdBy: { user: context.user._id },
+      });
+
+    beforeAll(async () => {
+      childForm = await Form.create({
+        name: 'Nested child form',
+        graphQLTypeName: 'NestedChildForm',
+        resource: new Types.ObjectId(),
+        fields: [
+          { name: 'description', type: 'text' },
+          { name: 'files', type: 'file' },
+          { name: 'children', type: 'resources' },
+        ],
+      });
+      parentForm = await Form.create({
+        name: 'Nested parent form',
+        graphQLTypeName: 'NestedParentForm',
+        resource: new Types.ObjectId(),
+        fields: [
+          { name: 'description', type: 'text' },
+          { name: 'files', type: 'file' },
+          { name: 'children', type: 'resources' },
+        ],
+      });
+    });
+
+    it('should submit the drafts created from the record, whatever their depth', async () => {
+      const grandchild = await createDraft(childForm, {
+        files: [{ name: 'a.pdf', content: 'form/a', draft: true }],
+      });
+      const child = await createDraft(childForm, {
+        children: [grandchild.id],
+      });
+      args = { form: parentForm.id, data: { children: [child.id] } };
+
+      const record = await addRecord.resolve(null, args, context);
+
+      expect(record.data.children).toEqual([child.id]);
+      const nested = await Record.find({
+        _id: { $in: [child._id, grandchild._id] },
+      });
+      expect(nested).toHaveLength(2);
+      for (const nestedRecord of nested) {
+        expect(nestedRecord.draft).toBe(false);
+        expect(nestedRecord.incrementalId).toMatch(/^2026-P\d{8}$/);
+      }
+      expect((await Record.findById(grandchild._id)).data.files).toEqual([
+        { name: 'a.pdf', content: 'form/a' },
+      ]);
+    });
+
+    it('should submit the nested drafts of a submitted draft', async () => {
+      const child = await createDraft(childForm, { description: 'child' });
+      const draft = await createDraft(parentForm, { children: [child.id] });
+      args = {
+        form: parentForm.id,
+        data: { children: [child.id] },
+        draftId: draft.id,
+      };
+
+      await addRecord.resolve(null, args, context);
+
+      expect((await Record.findById(child._id)).draft).toBe(false);
+    });
+
+    it('should leave the nested drafts of a draft as they are', async () => {
+      const child = await createDraft(childForm, { description: 'child' });
+      args = {
+        form: parentForm.id,
+        data: { children: [child.id] },
+        draft: true,
+      };
+
+      await addRecord.resolve(null, args, context);
+
+      expect((await Record.findById(child._id)).draft).toBe(true);
+    });
+
+    it('should not save the record if a nested draft cannot be submitted', async () => {
+      const child = await createDraft(childForm, { description: 'child' });
+      args = { form: parentForm.id, data: { children: [child.id] } };
+      const parentsBefore = await Record.countDocuments({
+        form: parentForm._id,
+      });
+      (extendAbilityForRecords as jest.Mock).mockImplementation(
+        async (user, form) => {
+          const granted = !childForm._id.equals(form._id);
+          return { can: () => granted, cannot: () => !granted };
+        }
+      );
+
+      const result = addRecord.resolve(null, args, context);
+
+      await expect(result).rejects.toThrow(
+        'common.errors.permissionNotGranted'
+      );
+      expect(await Record.countDocuments({ form: parentForm._id })).toEqual(
+        parentsBefore
+      );
+      expect((await Record.findById(child._id)).draft).toBe(true);
+    });
+
+    it('should clear the draft flag of the files of a submitted record', async () => {
+      args = {
+        form: parentForm.id,
+        data: { files: [{ name: 'a.pdf', content: 'form/a', draft: true }] },
+      };
+
+      const record = await addRecord.resolve(null, args, context);
+
+      expect(record.data.files).toEqual([{ name: 'a.pdf', content: 'form/a' }]);
+    });
+
+    it('should keep the draft flag of the files of a draft', async () => {
+      args = {
+        form: parentForm.id,
+        data: { files: [{ name: 'a.pdf', content: 'form/a', draft: true }] },
+        draft: true,
+      };
+
+      const record = await addRecord.resolve(null, args, context);
+
+      expect(record.data.files).toEqual([
+        { name: 'a.pdf', content: 'form/a', draft: true },
+      ]);
     });
   });
 
