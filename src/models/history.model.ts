@@ -5,6 +5,8 @@ export type Change = {
   displayType: string;
   field: string;
   displayName: string;
+  /** Target language of a translated field (its translateTo), if any */
+  lang?: string;
   old?: any;
   new?: any;
 };
