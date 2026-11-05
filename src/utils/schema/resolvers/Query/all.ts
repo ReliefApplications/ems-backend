@@ -72,6 +72,40 @@ const projectAggregation = [
 ];
 
 /**
+ * Builds the projection of the records of a page, keeping what the sort
+ * reads from the records linked through resource questions.
+ *
+ * Linked records are joined as `_<field>` to sort on their fields ( e.g.
+ * `patient.firstname` ). The default projection drops them: the sort, which
+ * comes after it, would then have nothing to read and leave the records
+ * unsorted.
+ *
+ * @param linkedFields Names of the resource fields the query sorts on
+ * @returns Projection stages, before the sort
+ */
+const getProjectAggregation = (linkedFields: string[]): any[] => {
+  if (linkedFields.length === 0) {
+    return projectAggregation;
+  }
+  // Data of the linked record, and its record-level fields ( e.g. createdAt )
+  const linkedRecordProjection = FLAT_DEFAULT_FIELDS.reduce(
+    (projection, field) => ({ ...projection, [field]: 1 }),
+    { data: 1 }
+  );
+  return [
+    {
+      $project: linkedFields.reduce(
+        (projection, field) => ({
+          ...projection,
+          [`_${field}`]: linkedRecordProjection,
+        }),
+        projectAggregation[0].$project
+      ),
+    },
+  ];
+};
+
+/**
  * Build At aggregation, filtering out items created after this date, and using version that matches date
  *
  * @param at Date
@@ -503,16 +537,42 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             ? [...calculatedFieldsAggregation, { $match: filters }]
             : [{ $match: filters }, ...calculatedFieldsAggregation]),
         ];
+        // Resource fields the query sorts on a field of: their linked record
+        // is kept until the records are sorted
+        const sortedLinkedFields = [
+          ...new Set(
+            sortDescriptors
+              .map((x) => (x.field || '').split('.'))
+              .filter((path) => path.length > 1)
+              .map((path) => path[0])
+              .filter((name) => resourcesToQuery.includes(name))
+          ),
+        ];
         // Sorts on calculated fields cannot use an index; allow spilling to
         // disk so large sorts do not hit the in-memory limit
         const aggregation = await Record.aggregate(pipeline)
           .allowDiskUse(true)
           .facet({
             items: [
-              ...projectAggregation,
+              ...getProjectAggregation(sortedLinkedFields),
               ...sort,
               { $skip: skip },
               { $limit: first + 1 },
+              // The linked records are fetched again for the records of the
+              // page, with the requested fields only
+              ...(sortedLinkedFields.length > 0
+                ? [
+                    {
+                      $project: sortedLinkedFields.reduce(
+                        (projection, field) => ({
+                          ...projection,
+                          [`_${field}`]: 0,
+                        }),
+                        {}
+                      ),
+                    },
+                  ]
+                : []),
               ...pageCalculatedFieldsAggregation,
             ],
             totalCount: [

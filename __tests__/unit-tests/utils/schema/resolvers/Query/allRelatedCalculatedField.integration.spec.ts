@@ -89,17 +89,21 @@ describe('records query displaying a calculated field of related records', () =>
    * @param nodeFields Fields selected on the records
    * @returns Query result
    */
-  const query = (nodeFields: NodeField[]): Promise<any> =>
+  const query = (nodeFields: NodeField[], args: any = {}): Promise<any> =>
     getAllResolver(
       'Parent',
-      { Parent: parent.fields, Child: child.fields },
+      // The resolver adds the fields of the linked records it uses to the list
+      { Parent: [...parent.fields], Child: child.fields },
       { Parent: parent._id, Child: child._id }
     )(
       null,
-      { first: 50, skip: 0, filter: {} } as any,
+      { first: 50, skip: 0, filter: {}, ...args } as any,
       context,
       buildInfo(nodeFields)
     );
+
+  /** Query arguments selecting the record displaying its related records */
+  const onlyP1 = { filter: { field: 'code', operator: 'eq', value: 'P1' } };
 
   beforeAll(async () => {
     databaseHelpers = new DatabaseHelpers();
@@ -157,6 +161,18 @@ describe('records query displaying a calculated field of related records', () =>
       patient: john.id,
       family: [john.id, jane.id],
     });
+    // Only used by the sort tests, which filter on them
+    const zoe = await createRecord(child, {
+      firstname: 'Zoe',
+      lastname: 'Adams',
+    });
+    const adam = await createRecord(child, {
+      firstname: 'Adam',
+      lastname: 'Young',
+    });
+    await createRecord(parent, { code: 'S1', patient: zoe.id });
+    await createRecord(parent, { code: 'S2', patient: adam.id });
+    await createRecord(parent, { code: 'S3', patient: jane.id });
 
     const ability = new Ability([{ action: 'manage', subject: 'all' }]);
     (extendAbilityForRecords as jest.Mock).mockResolvedValue(ability);
@@ -176,23 +192,21 @@ describe('records query displaying a calculated field of related records', () =>
   });
 
   it('computes the calculated field of the record of a resource question', async () => {
-    const result = await query([
-      'id',
-      'code',
-      { name: 'patient', fields: ['full_name', 'firstname'] },
-    ]);
+    const result = await query(
+      ['id', 'code', { name: 'patient', fields: ['full_name', 'firstname'] }],
+      onlyP1
+    );
 
-    expect(result.totalCount).toBe(1);
     const patient = result.edges[0].node._relatedRecords.patient;
     expect(patient.data.full_name).toBe('John Smith');
     expect(patient.data.firstname).toBe('John');
   });
 
   it('computes the calculated field of the records of a resources question', async () => {
-    const result = await query([
-      'id',
-      { name: 'family', fields: ['full_name'] },
-    ]);
+    const result = await query(
+      ['id', { name: 'family', fields: ['full_name'] }],
+      onlyP1
+    );
 
     const family = result.edges[0].node._relatedRecords.family;
     expect(family.map((x: any) => x.data.full_name).sort()).toEqual([
@@ -202,10 +216,10 @@ describe('records query displaying a calculated field of related records', () =>
   });
 
   it('leaves the calculated fields which are not requested', async () => {
-    const result = await query([
-      'id',
-      { name: 'patient', fields: ['firstname'] },
-    ]);
+    const result = await query(
+      ['id', { name: 'patient', fields: ['firstname'] }],
+      onlyP1
+    );
 
     const patient = result.edges[0].node._relatedRecords.patient;
     expect(patient.data.firstname).toBe('John');
@@ -213,13 +227,63 @@ describe('records query displaying a calculated field of related records', () =>
   });
 
   it('still returns the related records when an expression is broken', async () => {
-    const result = await query([
-      'id',
-      { name: 'patient', fields: ['broken', 'firstname'] },
-    ]);
+    const result = await query(
+      ['id', { name: 'patient', fields: ['broken', 'firstname'] }],
+      onlyP1
+    );
 
     const patient = result.edges[0].node._relatedRecords.patient;
     expect(patient.data.firstname).toBe('John');
     expect(patient.data.broken).toBeUndefined();
+  });
+
+  describe('sorting on a field of the record of a resource question', () => {
+    /**
+     * Gets the codes of the records, sorted on a field of their patient.
+     *
+     * @param sortField Field to sort on
+     * @param sortOrder Sort order
+     * @returns Codes of the records, in the order of the query
+     */
+    const sortedCodes = async (sortField: string, sortOrder: string) => {
+      const result = await query(
+        ['id', 'code', { name: 'patient', fields: ['firstname'] }],
+        {
+          sortField,
+          sortOrder,
+          filter: { field: 'code', operator: 'startswith', value: 'S' },
+        }
+      );
+      return result.edges.map((x: any) => x.node.data.code);
+    };
+
+    it('sorts on a stored field', async () => {
+      // Adam, Jane, Zoe
+      expect(await sortedCodes('patient.firstname', 'asc')).toEqual([
+        'S2',
+        'S3',
+        'S1',
+      ]);
+      expect(await sortedCodes('patient.firstname', 'desc')).toEqual([
+        'S1',
+        'S3',
+        'S2',
+      ]);
+    });
+
+    it('sorts on a calculated field', async () => {
+      // Adam Young, Jane Doe, Zoe Adams
+      expect(await sortedCodes('patient.full_name', 'asc')).toEqual([
+        'S2',
+        'S3',
+        'S1',
+      ]);
+      // Adams, Doe, Young
+      expect(await sortedCodes('patient.lastname', 'asc')).toEqual([
+        'S1',
+        'S3',
+        'S2',
+      ]);
+    });
   });
 });
