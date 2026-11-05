@@ -287,6 +287,35 @@ describe('RecordHistory Class Unit Tests', () => {
     expect(secondPage).toEqual([]);
   });
 
+  it('should tag changes on translated fields with their language', async () => {
+    const translatedRecord = {
+      ...record,
+      versions: [],
+      resource: {
+        fields: [
+          { name: 'diagnosis', title: 'Brief diagnosis' },
+          {
+            name: 'diagnosis_uk',
+            title: 'Brief diagnosis',
+            translateField: 'diagnosis',
+            translateTo: 'uk',
+          },
+        ],
+      },
+      form: {},
+      data: { diagnosis: 'test', diagnosis_uk: 'тест' },
+    };
+    const recordHistory = new RecordHistory(translatedRecord, options);
+
+    const history = await recordHistory.getHistory();
+
+    const byField = Object.fromEntries(
+      history[0].changes.map((change) => [change.field, change])
+    );
+    expect(byField.diagnosis_uk.lang).toBe('uk');
+    expect(byField.diagnosis).not.toHaveProperty('lang');
+  });
+
   it('should not report a deletion when a nil value becomes a missing key', async () => {
     // Updates store empty questions as null, while inserts omit them: this is
     // what a cloned record looks like compared to the version it starts from

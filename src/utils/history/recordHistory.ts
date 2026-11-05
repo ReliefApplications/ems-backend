@@ -111,6 +111,18 @@ export class RecordHistory {
   }
 
   /**
+   * Gets the language of a translated field, so that it can be told apart
+   * from its source field, which usually shares the same title.
+   *
+   * @param key Name of the field
+   * @returns The language the field is translated to, if any
+   */
+  private getLang(key: string): Pick<Change, 'lang'> {
+    const lang = this.fields.find((item) => item.name === key)?.translateTo;
+    return lang ? { lang } : {};
+  }
+
+  /**
    * Get the change object for value insertion
    *
    * @param key The field name
@@ -122,6 +134,7 @@ export class RecordHistory {
       type: 'add',
       displayType: this.options.translate('history.value.add'),
       displayName: this.getDisplayName(key),
+      ...this.getLang(key),
       field: key,
       new: get(next, key),
     };
@@ -140,6 +153,7 @@ export class RecordHistory {
       type: 'modify',
       displayType: this.options.translate('history.value.change'),
       displayName: this.getDisplayName(key),
+      ...this.getLang(key),
       field: key,
       old: get(previous, key),
       new: get(next, key),
@@ -158,6 +172,7 @@ export class RecordHistory {
       type: 'remove',
       displayType: this.options.translate('history.value.delete'),
       displayName: this.getDisplayName(key),
+      ...this.getLang(key),
       field: key,
       old: get(previous, key),
     };

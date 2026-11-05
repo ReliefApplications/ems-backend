@@ -215,6 +215,10 @@ const historyBuilder = async (
     for (const change of version.changes) {
       const date = version.createdAt.toLocaleDateString(options.dateLocale);
       const time = getTimeWithTimezone(version.createdAt, options.dateLocale);
+      // Translated fields usually share the title of their source field
+      const displayName = change.lang
+        ? `${change.displayName} (${change.lang.toUpperCase()})`
+        : change.displayName;
       if (changeValueIsObject(change)) {
         const keys = Object.keys(change.new) || Object.keys(change.old);
         for (const key of keys) {
@@ -229,7 +233,7 @@ const historyBuilder = async (
               time,
               createdBy: version.createdBy,
               displayType: change.displayType,
-              displayName: `${change.displayName}.${key}`,
+              displayName: `${displayName}.${key}`,
               new: newVal,
               old: oldVal,
             },
@@ -246,7 +250,7 @@ const historyBuilder = async (
             time,
             createdBy: version.createdBy,
             displayType: change.displayType,
-            displayName: change.displayName,
+            displayName,
             new: change.new,
             old: change.old,
           },
