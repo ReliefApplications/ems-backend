@@ -1,3 +1,10 @@
+# [2.18.0-rc.21](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.20...v2.18.0-rc.21) (2026-11-05)
+
+
+### Features
+
+* **history:** tag translated fields with their target language ([#1311](https://github.com/ReliefApplications/ems-backend/issues/1311)) ([98140f6](https://github.com/ReliefApplications/ems-backend/commit/98140f653242754e3b709264d84e1df9bbf91f05))
+
 # [2.18.0-rc.20](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.19...v2.18.0-rc.20) (2026-11-03)
 
 
