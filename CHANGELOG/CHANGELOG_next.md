@@ -1,3 +1,10 @@
+# [2.18.0-rc.22](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.21...v2.18.0-rc.22) (2026-11-09)
+
+
+### Bug Fixes
+
+* Enable draft records to hold 100MB files ([8ee1d84](https://github.com/ReliefApplications/ems-backend/commit/8ee1d849d22fcadccdc37b4ca5c07771f508dc7f))
+
 # [2.18.0-rc.21](https://github.com/ReliefApplications/ems-backend/compare/v2.18.0-rc.20...v2.18.0-rc.21) (2026-11-05)
 
 
