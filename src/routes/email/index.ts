@@ -241,9 +241,11 @@ router.post('/files', async (req: any, res) => {
       for (const file of files) {
         // Check file size
         if (file.size > FILE_SIZE_LIMIT) {
-          return res
-            .status(400)
-            .send(i18next.t('common.errors.fileSizeLimitReached'));
+          return res.status(400).send(
+            i18next.t('common.errors.fileSizeLimitReached', {
+              size: FILE_SIZE_LIMIT / (1024 * 1024),
+            })
+          );
         } else {
           await uploadFile('temp', folderName, file, {
             filename: `${folderName}/${sanitize(file.name)}`,

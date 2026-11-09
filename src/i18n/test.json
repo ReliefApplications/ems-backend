@@ -8,7 +8,7 @@
 			"dataNotFound": "******",
 			"duplicatedGraphQLTypeName": "******",
 			"fileExtensionNotAllowed": "******",
-			"fileSizeLimitReached": "******",
+			"fileSizeLimitReached": "****** {{size}} ******",
 			"fileTotalSizeLimitReached": "******",
 			"internalServerError": "******",
 			"invalidAPI": "******",

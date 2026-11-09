@@ -8,7 +8,7 @@
 			"dataNotFound": "Дані не знайдено",
 			"duplicatedGraphQLTypeName": "Форма або довідкові дані з подібним Ім'ям вже існують. Будь ласка, вкажіть інше Ім'я.",
 			"fileExtensionNotAllowed": "Розширення файлу не дозволено",
-			"fileSizeLimitReached": "Розмір файлу перевищує 7 МБ",
+			"fileSizeLimitReached": "Розмір файлу перевищує {{size}} МБ",
 			"fileTotalSizeLimitReached": "Загальний розмір файлів перевищує 7 МБ",
 			"internalServerError": "Внутрішня помилка сервера",
 			"invalidAPI": "API недоступне.",

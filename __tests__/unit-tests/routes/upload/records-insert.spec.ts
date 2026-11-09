@@ -272,5 +272,30 @@ describe('Upload routes - record insertion (H-03)', () => {
         );
       }
     );
+
+    it('stores files larger than 7 MB, up to the 100 MB limit of file questions', async () => {
+      grant(['create']);
+      (uploadFile as jest.Mock).mockResolvedValue('forms/abc/large.pdf');
+      const res = await request(buildApp(client))
+        .post(`/upload/file/${FORM_ID}`)
+        .attach('file', Buffer.alloc(8 * 1024 * 1024), 'large.pdf');
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({ path: 'forms/abc/large.pdf' });
+      expect(uploadFile).toHaveBeenCalledWith(
+        'forms',
+        FORM_ID,
+        expect.objectContaining({ name: 'large.pdf', size: 8 * 1024 * 1024 })
+      );
+    });
+
+    it('refuses files larger than 100 MB', async () => {
+      grant(['create']);
+      const res = await request(buildApp(client))
+        .post(`/upload/file/${FORM_ID}`)
+        .attach('file', Buffer.alloc(100 * 1024 * 1024 + 1), 'too-large.pdf');
+      expect(res.status).toBe(400);
+      expect(res.text).toBe('common.errors.fileSizeLimitReached');
+      expect(uploadFile).not.toHaveBeenCalled();
+    });
   });
 });

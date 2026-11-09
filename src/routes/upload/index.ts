@@ -35,6 +35,23 @@ import { getErrorMessage, getErrorStack } from '@utils/error';
 /** File size limit, in bytes  */
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
 
+/**
+ * Size limit of the files attached to records, in bytes.
+ * Matches the highest "Maximum file size" a file question accepts in the form builder.
+ */
+const RECORD_FILE_SIZE_LIMIT = 100 * 1024 * 1024;
+
+/**
+ * Builds the message sent when a file exceeds a size limit.
+ *
+ * @param limit size limit, in bytes
+ * @returns translated error message
+ */
+const fileSizeLimitReached = (limit: number): string =>
+  i18next.t('common.errors.fileSizeLimitReached', {
+    size: limit / (1024 * 1024),
+  });
+
 /** Import data from user-uploaded files */
 const router = express.Router();
 
@@ -222,9 +239,7 @@ router.post('/form/records/:id', async (req: any, res) => {
     const file = req.files.excelFile;
     // Check file size
     if (file.size > FILE_SIZE_LIMIT)
-      return res
-        .status(400)
-        .send(i18next.t('common.errors.fileSizeLimitReached'));
+      return res.status(400).send(fileSizeLimitReached(FILE_SIZE_LIMIT));
     // Check file extension (only allowed .xlsx)
     if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
       return res
@@ -271,9 +286,7 @@ router.post('/resource/records/:id', async (req: any, res) => {
     const file = req.files.excelFile;
     // Check file size
     if (file.size > FILE_SIZE_LIMIT)
-      return res
-        .status(400)
-        .send(i18next.t('common.errors.fileSizeLimitReached'));
+      return res.status(400).send(fileSizeLimitReached(FILE_SIZE_LIMIT));
     // Check file extension (only allowed .xlsx)
     if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
       return res
@@ -370,9 +383,7 @@ router.post('/application/:id/invite', async (req: any, res) => {
     const file = req.files.excelFile;
     // Check file size
     if (file.size > FILE_SIZE_LIMIT)
-      return res
-        .status(400)
-        .send(i18next.t('common.errors.fileSizeLimitReached'));
+      return res.status(400).send(fileSizeLimitReached(FILE_SIZE_LIMIT));
     // Check file extension (only allowed .xlsx)
     if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
       return res
@@ -443,9 +454,7 @@ router.post('/invite', async (req: any, res) => {
     const file = req.files.excelFile;
     // Check file size
     if (file.size > FILE_SIZE_LIMIT)
-      return res
-        .status(400)
-        .send(i18next.t('common.errors.fileSizeLimitReached'));
+      return res.status(400).send(fileSizeLimitReached(FILE_SIZE_LIMIT));
     // Check file extension (only allowed .xlsx)
     if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
       return res
@@ -506,10 +515,8 @@ router.post('/file/:form', async (req, res) => {
       : req.files.file;
 
     // Check file size
-    if (file.size > FILE_SIZE_LIMIT) {
-      return res
-        .status(400)
-        .send(i18next.t('common.errors.fileSizeLimitReached'));
+    if (file.size > RECORD_FILE_SIZE_LIMIT) {
+      return res.status(400).send(fileSizeLimitReached(RECORD_FILE_SIZE_LIMIT));
     }
 
     // Check form
@@ -550,9 +557,7 @@ router.post('/style/:application', async (req, res) => {
 
     // Check file size
     if (file.size > FILE_SIZE_LIMIT) {
-      return res
-        .status(400)
-        .send(i18next.t('common.errors.fileSizeLimitReached'));
+      return res.status(400).send(fileSizeLimitReached(FILE_SIZE_LIMIT));
     }
     // Authentication check
     // todo: check if useless
