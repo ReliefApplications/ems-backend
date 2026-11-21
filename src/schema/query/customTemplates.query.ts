@@ -1,6 +1,13 @@
 import { graphQLAuthCheck } from '@schema/shared';
 import { logger } from '@services/logger.service';
-import { GraphQLBoolean, GraphQLError, GraphQLID, GraphQLInt } from 'graphql';
+import {
+  GraphQLBoolean,
+  GraphQLError,
+  GraphQLID,
+  GraphQLInt,
+  GraphQLList,
+  GraphQLNonNull,
+} from 'graphql';
 import { Context } from '@server/apollo/context';
 import { decodeCursor, encodeCursor } from '@schema/types';
 import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
@@ -42,17 +49,20 @@ export default {
     limit: { type: GraphQLInt, defaultValue: 0 },
     skip: { type: GraphQLInt, defaultValue: 0 },
     isFromEmailNotification: { type: GraphQLBoolean },
+    ids: { type: new GraphQLList(new GraphQLNonNull(GraphQLID)) },
   },
   async resolve(_, args, context: Context) {
     graphQLAuthCheck(context);
     try {
-      const customTemplates = await CustomTemplate.find({
+      const query = {
         isDeleted: { $ne: 1 },
+        ...(args.ids && { _id: { $in: args.ids } }),
         ...(args.applicationId && { applicationId: args.applicationId }),
         ...(!args.isFromEmailNotification && {
           isFromEmailNotification: { $ne: true },
         }),
-      })
+      };
+      const customTemplates = await CustomTemplate.find(query)
         .sort(SORT_FIELDS[0].sort('desc'))
         .skip(args.skip)
         .limit(args.limit);
@@ -63,12 +73,12 @@ export default {
 
       return {
         pageInfo: {
-          hasNextPage: edges.length === args.limit,
+          hasNextPage: args.limit > 0 && edges.length === args.limit,
           startCursor: edges.length > 0 ? edges[0].cursor : null,
           endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
         },
         edges,
-        totalCount: await CustomTemplate.countDocuments(),
+        totalCount: await CustomTemplate.countDocuments(query),
       };
     } catch (err) {
       logger.error(getErrorMessage(err), { stack: getErrorStack(err) });
