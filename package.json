@@ -44,7 +44,7 @@
     "@casl/ability": "^6.8.1",
     "@casl/mongoose": "^7.2.1",
     "@graphql-tools/schema": "^10.0.0",
-    "@turf/helpers": "^6.5.0",
+    "@turf/helpers": "^7.4.0",
     "@turf/turf": "^6.5.0",
     "@ucast/mongo2js": "^1.3.3",
     "apollo-server-cache-redis": "^3.3.1",
