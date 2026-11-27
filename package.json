@@ -42,7 +42,7 @@
     "@apollo/server": "^4.13.0",
     "@azure/storage-blob": "^12.31.0",
     "@casl/ability": "^6.8.1",
-    "@casl/mongoose": "^7.2.1",
+    "@casl/mongoose": "^9.0.2",
     "@graphql-tools/schema": "^10.0.0",
     "@turf/helpers": "^6.5.0",
     "@turf/turf": "^6.5.0",
